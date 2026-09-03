@@ -148,7 +148,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-dashboard-title-text"', false)
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
-            ->assertSee('css/mobile/admin/dashboard.css?v=2', false)
+            ->assertSee('css/mobile/admin/dashboard.css?v=3', false)
             ->assertSee('grid-template-columns: repeat(5, minmax(0, 1fr));', false)
             ->assertSee('max-width: min(42vw, 12rem);', false)
             ->assertDontSee('class="db-sidebar"', false);
@@ -172,7 +172,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-dashboard-title-text"', false)
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
-            ->assertSee('css/desktop/admin/dashboard.css?v=2', false)
+            ->assertSee('css/desktop/admin/dashboard.css?v=3', false)
             ->assertSee('class="db-sidebar"', false)
             ->assertDontSee('id="mob-content"', false);
     }

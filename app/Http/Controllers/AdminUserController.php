@@ -15,7 +15,6 @@ use App\Models\Profile;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
-use App\Models\VoiceSession;
 use App\Services\CsvExportService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
@@ -224,8 +223,6 @@ class AdminUserController extends Controller
         $learningActiveCount = LearningProgress::where('user_id', $user->id)
             ->whereIn('status', ['enrolled', 'in_progress'])
             ->count();
-        $voiceSessionCount = VoiceSession::where('user_id', $user->id)->count();
-        $latestVoiceSession = VoiceSession::where('user_id', $user->id)->latest()->first();
         $gameLevelsCompleted = GameProgress::where('user_id', $user->id)
             ->where('status', 'completed')
             ->count();
@@ -254,21 +251,6 @@ class AdminUserController extends Controller
                     'quiz_score' => $progress->quiz_score === null ? null : (int) $progress->quiz_score,
                     'learning_hours' => (float) ($progress->learning_hours ?? 0),
                     'updated' => optional($progress->updated_at)->diffForHumans(),
-                ];
-            });
-
-        $voiceSessions = VoiceSession::where('user_id', $user->id)
-            ->orderByDesc('created_at')
-            ->take(5)
-            ->get()
-            ->map(function ($session) {
-                return [
-                    'category' => $session->category ?: 'General Job Interview',
-                    'clarity_score' => $session->clarity_score === null ? null : (int) $session->clarity_score,
-                    'confidence_score' => $session->confidence_score === null ? null : (int) $session->confidence_score,
-                    'wpm' => $session->wpm === null ? null : (int) $session->wpm,
-                    'duration_seconds' => $session->duration_seconds === null ? null : (int) $session->duration_seconds,
-                    'created' => optional($session->created_at)->format('M d, Y h:i A'),
                 ];
             });
 
@@ -403,8 +385,6 @@ class AdminUserController extends Controller
                 'readiness_rating' => $readinessRating,
                 'learning_completed' => $learningCompletedCount,
                 'learning_active' => $learningActiveCount,
-                'voice_rehearsals' => $voiceSessionCount,
-                'latest_voice_clarity' => $latestVoiceSession?->clarity_score === null ? null : (int) $latestVoiceSession->clarity_score,
                 'game_levels_completed' => $gameLevelsCompleted,
                 'game_sessions_completed' => $gameSessionsCompleted,
                 'experience_points' => (int) ($profile->experience_points ?? 0),
@@ -417,7 +397,6 @@ class AdminUserController extends Controller
             ],
             'interviews' => $completedInterviews,
             'learning_progress' => $learningProgress,
-            'voice_sessions' => $voiceSessions,
             'game_sessions' => $gameSessions,
             'coach_conversations' => $coachConversations,
             'game_certificates' => $certificates,

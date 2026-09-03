@@ -39,14 +39,14 @@
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">5</div>
                         <h3 class="fs-5 fw-semibold mb-2">Train With Modules And Games</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Build skills through modules, quizzes, voice rehearsal, missions, learning games, and the AI coach.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Build skills through modules, quizzes, learning games, and the AI coach.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">6</div>
                         <h3 class="fs-5 fw-semibold mb-2">Track Progress And Share</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Follow readiness trends, personal mastery, reports, certificates, and private review links over time.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Follow readiness trends, reports, certificates, and private review links over time.</p>
                      </div>
                   </div>
                </div>

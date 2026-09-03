@@ -5,23 +5,22 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\InterviewSession;
 use App\Models\LearningModule;
-use App\Models\Profile;
 use App\Models\Score;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class UserDashboardFunctionalityTest extends TestCase
+class AdminAlgorithmDashboardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_dashboard_hides_admin_algorithm_checks_when_score_history_exists(): void
+    public function test_admin_dashboard_shows_algorithm_checks(): void
     {
-        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $targetUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $peer = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
 
-        Profile::create(['user_id' => $user->id, 'readiness_score' => 81]);
         LearningModule::create([
             'title' => 'Grammar Fluency Practice',
             'description' => 'Practice grammar sentence control language fluency and clear word choice.',
@@ -33,10 +32,10 @@ class UserDashboardFunctionalityTest extends TestCase
         ]);
 
         $this->completedSessionWithScore($peer, $category, [
-            'clarity_score' => 84,
+            'clarity_score' => 88,
             'relevance_score' => 86,
-            'grammar_score' => 80,
-            'professionalism_score' => 82,
+            'grammar_score' => 82,
+            'professionalism_score' => 85,
             'overall_readiness_score' => 86,
             'readiness_band' => 'Ready for Simulation',
         ]);
@@ -57,14 +56,6 @@ class UserDashboardFunctionalityTest extends TestCase
             'readiness_band' => 'Nearly Ready',
         ]);
         $this->completedSessionWithScore($peer, $category, [
-            'clarity_score' => 85,
-            'relevance_score' => 85,
-            'grammar_score' => 79,
-            'professionalism_score' => 81,
-            'overall_readiness_score' => 84,
-            'readiness_band' => 'Ready for Simulation',
-        ]);
-        $this->completedSessionWithScore($peer, $category, [
             'clarity_score' => 35,
             'relevance_score' => 40,
             'grammar_score' => 45,
@@ -72,35 +63,48 @@ class UserDashboardFunctionalityTest extends TestCase
             'overall_readiness_score' => 40,
             'readiness_band' => 'Developing',
         ]);
-        $this->completedSessionWithScore($user, $category, [
+        $this->completedSessionWithScore($peer, $category, [
+            'clarity_score' => 45,
+            'relevance_score' => 48,
+            'grammar_score' => 52,
+            'professionalism_score' => 50,
+            'overall_readiness_score' => 49,
+            'readiness_band' => 'Developing',
+        ]);
+        $this->completedSessionWithScore($targetUser, $category, [
             'clarity_score' => 82,
             'relevance_score' => 84,
-            'grammar_score' => 78,
+            'grammar_score' => 76,
             'professionalism_score' => 80,
             'overall_readiness_score' => 81,
             'readiness_band' => 'Ready for Simulation',
         ]);
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $response = $this->actingAs($admin)->get(route('admin.dashboard'));
 
         $response->assertOk()
-            ->assertDontSee('KNN Readiness Match')
-            ->assertDontSee('Algorithm Checks')
-            ->assertDontSee('Decision Tree')
-            ->assertDontSee('TF-IDF Cosine Similarity')
-            ->assertViewMissing('knnReadiness')
-            ->assertViewMissing('readinessAlgorithms');
-    }
-
-    public function test_removed_application_and_pack_urls_are_not_available(): void
-    {
-        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-
-        foreach (['/applications', '/applications/1/practice', '/practice-plan/1/toggle', '/packs', '/packs/1/practice'] as $url) {
-            $this->actingAs($user)
-                ->get($url)
-                ->assertNotFound();
-        }
+            ->assertSee('Algorithm Checks')
+            ->assertSee('Weighted Scoring')
+            ->assertSee('Decision Tree')
+            ->assertSee('Naive Bayes')
+            ->assertSee('Logistic Regression')
+            ->assertSee('K-Means Clustering')
+            ->assertSee('Random Forest')
+            ->assertSee('TF-IDF Cosine Similarity')
+            ->assertViewHas('readinessAlgorithms', function ($suite) {
+                return $suite
+                    && $suite->algorithm_count === 7
+                    && $suite->available_count === 7
+                    && $suite->algorithms->pluck('key')->all() === [
+                        'weighted_scoring',
+                        'decision_tree',
+                        'naive_bayes',
+                        'logistic_regression',
+                        'k_means',
+                        'random_forest',
+                        'tfidf_cosine',
+                    ];
+            });
     }
 
     private function category(array $overrides = []): Category
@@ -142,18 +146,5 @@ class UserDashboardFunctionalityTest extends TestCase
         ], $scoreAttributes));
 
         return $session;
-    }
-
-    private function interviewPayload(Category $category): array
-    {
-        return [
-            'category_id' => $category->id,
-            'difficulty' => 'medium',
-            'target_position' => 'Developer',
-            'num_questions' => 5,
-            'response_mode' => 'text',
-            'time_limit' => 0,
-            'ai_provider' => 'local',
-        ];
     }
 }

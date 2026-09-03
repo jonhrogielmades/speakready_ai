@@ -53,8 +53,6 @@ class InterviewSessionSchema
             $table->id();
             self::foreignId($table, 'user_id', 'users');
             self::foreignId($table, 'game_level_id', 'game_levels', true);
-            self::foreignId($table, 'job_application_id', 'job_applications', true);
-            self::foreignId($table, 'interview_pack_id', 'interview_packs', true);
             self::foreignId($table, 'category_id', 'categories', true);
             $table->string('difficulty')->default('medium');
             $table->string('target_position')->nullable();
@@ -103,12 +101,6 @@ class InterviewSessionSchema
         }
         if (self::isMissing($missing, 'game_level_id')) {
             self::foreignId($table, 'game_level_id', 'game_levels', true);
-        }
-        if (self::isMissing($missing, 'job_application_id')) {
-            self::foreignId($table, 'job_application_id', 'job_applications', true);
-        }
-        if (self::isMissing($missing, 'interview_pack_id')) {
-            self::foreignId($table, 'interview_pack_id', 'interview_packs', true);
         }
         if (self::isMissing($missing, 'category_id')) {
             self::foreignId($table, 'category_id', 'categories', true);
@@ -259,8 +251,6 @@ class InterviewSessionSchema
         return [
             'user_id',
             'game_level_id',
-            'job_application_id',
-            'interview_pack_id',
             'category_id',
             'difficulty',
             'target_position',

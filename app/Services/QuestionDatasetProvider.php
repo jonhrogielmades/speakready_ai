@@ -243,7 +243,7 @@ class QuestionDatasetProvider
             ],
             'ph_scholarship' => [
                 'key' => 'ph_scholarship',
-                'name' => 'PH Scholarship Applications',
+                'name' => 'PH Scholarship Interviews',
                 'category' => 'Scholarship Interview',
                 'country' => 'Philippines',
                 'source_type' => 'philippines_official_scholarship_source',
@@ -532,7 +532,7 @@ class QuestionDatasetProvider
                 'questions' => $questions,
             ];
         } catch (Throwable $exception) {
-            Log::warning('Reliable question bank could not be loaded; using built-in question packs.', [
+            Log::warning('Reliable question bank could not be loaded; using built-in question sets.', [
                 'error' => $exception->getMessage(),
             ]);
 
@@ -621,11 +621,11 @@ class QuestionDatasetProvider
         $questionBank = $dataset['storage_question_bank'] ?? null;
         $questionBankSummary = is_array($questionBank)
             ? "Reliable question-bank version: ".($questionBank['version'] ?? 'unknown')
-                ."; normalized records connected to this source pack: ".($questionBank['records_used'] ?? 0)
+                ."; normalized records connected to this source dataset: ".($questionBank['records_used'] ?? 0)
                 ."; manifest: ".($questionBank['manifest_path'] ?? 'private dataset manifest')."\n"
             : '';
 
-        return "Source pack: {$dataset['name']} ({$dataset['country']})\n"
+        return "Source dataset: {$dataset['name']} ({$dataset['country']})\n"
             . "Description: {$dataset['description']}\n"
             . $questionBankSummary
             . "Trusted public sources:\n{$sources}\n"

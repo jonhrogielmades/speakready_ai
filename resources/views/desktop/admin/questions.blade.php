@@ -15,7 +15,7 @@
             <button class="btn btn-outline-info py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#aiGenerateModal"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate PH Question</button>
             <a href="{{ route('admin.questions.export') }}" class="btn btn-outline-secondary py-2" style="font-size:.85rem"><i class="fa-solid fa-download me-1"></i> Export</a>
             <button class="btn btn-outline-secondary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#importQuestionsModal"><i class="fa-solid fa-upload me-1"></i> Import</button>
-            <button class="btn btn-outline-primary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#datasetsModal"><i class="fa-solid fa-globe me-1"></i> PH Source Packs</button>
+            <button class="btn btn-outline-primary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#datasetsModal"><i class="fa-solid fa-globe me-1"></i> PH Question Sources</button>
             <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addQuestionModal" onclick="clearGeneratedQuestionSource()"><i class="fa-solid fa-plus me-1"></i> Add PH Question</button>
         </div>
     </div>
@@ -395,11 +395,11 @@
                         </option>
                     @endforeach
                 </select>
-                <label class="olbl">Reliable Philippines Source Pack</label>
+                <label class="olbl">Reliable Philippines Question Source</label>
                 <select class="oinp mb-3" id="aiDataset">
                     <option value="auto">Auto-select from PH category</option>
-                    @foreach($datasetPacks ?? [] as $key => $pack)
-                        <option value="{{ $key }}">{{ $pack['name'] }}</option>
+                    @foreach($questionDatasets ?? [] as $key => $dataset)
+                        <option value="{{ $key }}">{{ $dataset['name'] }}</option>
                     @endforeach
                 </select>
                 <label class="olbl">Target Position/Role in the Philippines</label>
@@ -424,22 +424,22 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="border:1px solid var(--bd)">
             <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-globe me-2"></i> Philippines Interview Source Packs</h5>
+                <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-globe me-2"></i> Philippines Interview Question Sources</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
             </div>
             <div class="modal-body">
                 <p style="color:var(--tx3); font-size:.85rem; margin-bottom: 20px;">Import predefined question sets grounded in public Philippines career, education, scholarship, and TESDA sources.</p>
                 <div class="row">
-                    @foreach($datasetPacks ?? [] as $key => $pack)
+                    @foreach($questionDatasets ?? [] as $key => $dataset)
                     <div class="col-md-6 mb-3">
                         <div style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px;height:100%;display:flex;flex-direction:column;">
                             <div class="d-flex justify-content-between gap-2 mb-2">
-                                <h6 style="color:var(--tx);font-weight:700;margin:0;">{{ $pack['name'] }}</h6>
-                                <span class="badge bg-info text-dark">{{ count($pack['questions'] ?? []) }}</span>
+                                <h6 style="color:var(--tx);font-weight:700;margin:0;">{{ $dataset['name'] }}</h6>
+                                <span class="badge bg-info text-dark">{{ count($dataset['questions'] ?? []) }}</span>
                             </div>
-                            <p style="color:var(--tx3);font-size:.8rem;flex-grow:1;margin-bottom:12px;">{{ $pack['description'] }}</p>
+                            <p style="color:var(--tx3);font-size:.8rem;flex-grow:1;margin-bottom:12px;">{{ $dataset['description'] }}</p>
                             <div style="font-size:.75rem;color:var(--tx3);margin-bottom:12px;">
-                                <i class="fa-solid fa-link me-1"></i>{{ $pack['sources'][0]['name'] ?? 'Reliable Philippines source' }}
+                                <i class="fa-solid fa-link me-1"></i>{{ $dataset['sources'][0]['name'] ?? 'Reliable Philippines source' }}
                             </div>
                             <form action="{{ route('admin.questions.import-dataset') }}" method="POST">
                                 @csrf

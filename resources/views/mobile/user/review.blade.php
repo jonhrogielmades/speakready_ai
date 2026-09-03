@@ -643,7 +643,7 @@
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="shareHideSensitive" checked>
-                    <label class="form-check-label" for="shareHideSensitive">Hide name and private application details</label>
+                    <label class="form-check-label" for="shareHideSensitive">Hide name and private details</label>
                 </div>
                 <div class="alert alert-danger mt-3 mb-0" id="shareError" style="display:none;"></div>
             </div>

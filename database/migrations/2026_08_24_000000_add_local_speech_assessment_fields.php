@@ -20,17 +20,6 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('voice_sessions')) {
-            Schema::table('voice_sessions', function (Blueprint $table) {
-                if (! Schema::hasColumn('voice_sessions', 'pronunciation_analysis')) {
-                    $table->json('pronunciation_analysis')->nullable()->after('ai_improved_answer');
-                }
-
-                if (! Schema::hasColumn('voice_sessions', 'pronunciation_score')) {
-                    $table->unsignedTinyInteger('pronunciation_score')->nullable()->after('pronunciation_analysis');
-                }
-            });
-        }
     }
 
     public function down(): void
@@ -48,17 +37,5 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('voice_sessions')) {
-            Schema::table('voice_sessions', function (Blueprint $table) {
-                $columns = array_values(array_filter([
-                    Schema::hasColumn('voice_sessions', 'pronunciation_score') ? 'pronunciation_score' : null,
-                    Schema::hasColumn('voice_sessions', 'pronunciation_analysis') ? 'pronunciation_analysis' : null,
-                ]));
-
-                if ($columns !== []) {
-                    $table->dropColumn($columns);
-                }
-            });
-        }
     }
 };

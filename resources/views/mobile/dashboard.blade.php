@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=12') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=18') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -150,7 +150,8 @@
                     </div>
                     <div class="sr-image-speech" aria-hidden="true">
                         <strong>Hi! {{ $welcomeName }}</strong>
-                        <span>You're <span class="sr-image-speech-accent">ready</span> to practice confidently and <span class="sr-image-speech-accent is-success">succeed</span> today!</span>
+                        <span>You're <span class="sr-image-speech-accent">ready</span> to practice and <span class="sr-image-speech-accent is-success">succeed</span> today!</span>
+                        <span class="sr-image-speech-action">Click the robot for AI Chatbot Coach.</span>
                     </div>
                     <div class="sr-image-head-icons" aria-hidden="true">
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-microphone"></i></span></span>
@@ -160,8 +161,20 @@
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-graduation-cap"></i></span></span>
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-star"></i></span></span>
                     </div>
-                    <img class="sr-image-robot" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="">
-                    <img class="sr-image-robot-hand" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true">
+                    <button
+                        type="button"
+                        class="sr-image-robot sr-image-coach-trigger"
+                        id="dashboardCoachImageTrigger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#dashboardCoachModal"
+                        aria-controls="dashboardCoachModal"
+                        aria-label="Open AI Chatbot Coach"
+                        title="AI Chatbot Coach"
+                    >
+                        <img src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true" draggable="false">
+                        <span class="visually-hidden">Open AI Chatbot Coach</span>
+                    </button>
+                    <img class="sr-image-robot-hand" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true" draggable="false">
                 </div>
             </section>
 
@@ -670,6 +683,249 @@
     </div>
 </div>
 
+<div class="modal fade sr-dashboard-coach-modal" id="dashboardCoachModal" tabindex="-1" aria-labelledby="dashboardCoachModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="dashboardCoachForm" action="{{ route('user.coach.chat') }}" method="POST" data-full-coach-url="{{ route('user.coach') }}" data-conversation-url="{{ url('/coach/conversation') }}">
+                @csrf
+                <div class="modal-header">
+                    <div class="sr-dashboard-coach-heading">
+                        <span class="sr-dashboard-coach-icon"><i class="fa-solid fa-robot"></i></span>
+                        <div>
+                            <h5 class="modal-title" id="dashboardCoachModalTitle">AI Chatbot Coach</h5>
+                            <p>Ask for focused interview guidance.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="sr-dashboard-coach-label" for="dashboardCoachMessage">Question or focus</label>
+                    <textarea class="sr-dashboard-coach-input" id="dashboardCoachMessage" name="message" rows="4" maxlength="10000" required placeholder="Example: Help me prepare a stronger answer for a customer service interview."></textarea>
+                    <div class="sr-dashboard-coach-status" id="dashboardCoachStatus" role="status" aria-live="polite"></div>
+                    <div class="sr-dashboard-coach-response" id="dashboardCoachResponse" hidden>
+                        <div class="sr-dashboard-coach-response-head">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Coach reply</span>
+                        </div>
+                        <div class="sr-dashboard-coach-response-body" id="dashboardCoachResponseBody"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="sr-dashboard-coach-danger" id="dashboardCoachClear"><i class="fa-solid fa-broom"></i> Clear convo</button>
+                    <a href="{{ route('user.coach') }}" class="sr-dashboard-coach-link">Open full coach</a>
+                    <button type="button" class="sr-dashboard-coach-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="sr-dashboard-coach-submit" id="dashboardCoachSubmit"><i class="fa-solid fa-paper-plane"></i> Ask Coach</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    (function() {
+        function initDashboardCoachModal() {
+            const form = document.getElementById('dashboardCoachForm');
+            if (!form || form.dataset.bound === 'true') return;
+
+            form.dataset.bound = 'true';
+
+            const modal = document.getElementById('dashboardCoachModal');
+            const textarea = document.getElementById('dashboardCoachMessage');
+            const submitButton = document.getElementById('dashboardCoachSubmit');
+            const clearButton = document.getElementById('dashboardCoachClear');
+            const status = document.getElementById('dashboardCoachStatus');
+            const responsePanel = document.getElementById('dashboardCoachResponse');
+            const responseBody = document.getElementById('dashboardCoachResponseBody');
+            const defaultSubmitHtml = submitButton ? submitButton.innerHTML : '';
+            const defaultClearHtml = clearButton ? clearButton.innerHTML : '';
+            let conversationId = null;
+            const chatHistory = [];
+
+            function csrfToken() {
+                return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                    || form.querySelector('input[name="_token"]')?.value
+                    || '';
+            }
+
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function formatCoachReply(value) {
+                const escaped = escapeHtml(value || 'The coach did not return a message.');
+                const withInline = escaped
+                    .replace(/`([^`]+)`/g, '<code>$1</code>')
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+                return '<p>' + withInline
+                    .replace(/\n{2,}/g, '</p><p>')
+                    .replace(/\n/g, '<br>') + '</p>';
+            }
+
+            function setStatus(message, type = 'info') {
+                if (!status) return;
+
+                status.textContent = message || '';
+                status.dataset.type = type;
+                status.classList.toggle('show', Boolean(message));
+            }
+
+            function setSending(isSending) {
+                if (!submitButton) return;
+
+                submitButton.disabled = isSending;
+                submitButton.setAttribute('aria-busy', isSending ? 'true' : 'false');
+                submitButton.innerHTML = isSending
+                    ? '<i class="fa-solid fa-spinner fa-spin"></i> Asking...'
+                    : defaultSubmitHtml;
+            }
+
+            function setClearing(isClearing) {
+                if (!clearButton) return;
+
+                clearButton.disabled = isClearing;
+                clearButton.setAttribute('aria-busy', isClearing ? 'true' : 'false');
+                clearButton.innerHTML = isClearing
+                    ? '<i class="fa-solid fa-spinner fa-spin"></i> Clearing...'
+                    : defaultClearHtml;
+            }
+
+            function resetConversationUi(message = 'Conversation cleared.') {
+                conversationId = null;
+                chatHistory.length = 0;
+                if (textarea) {
+                    textarea.value = '';
+                    resizeTextarea();
+                }
+                if (responseBody) responseBody.innerHTML = '';
+                if (responsePanel) responsePanel.hidden = true;
+                setStatus(message, 'success');
+            }
+
+            function resizeTextarea() {
+                if (!textarea) return;
+
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 220) + 'px';
+            }
+
+            textarea?.addEventListener('input', resizeTextarea);
+            modal?.addEventListener('shown.bs.modal', () => {
+                textarea?.focus();
+                resizeTextarea();
+            });
+
+            clearButton?.addEventListener('click', async () => {
+                if (!conversationId && !chatHistory.length && !(textarea?.value || '').trim()) {
+                    setStatus('No modal conversation to clear.', 'info');
+                    return;
+                }
+
+                const idToDelete = conversationId;
+                setClearing(true);
+
+                try {
+                    if (idToDelete) {
+                        const baseUrl = form.dataset.conversationUrl || '';
+                        const response = await fetch(baseUrl + '/' + encodeURIComponent(idToDelete), {
+                            method: 'DELETE',
+                            credentials: 'same-origin',
+                            headers: {
+                                Accept: 'application/json',
+                                'X-CSRF-TOKEN': csrfToken(),
+                            },
+                        });
+                        const data = await response.json().catch(() => ({}));
+
+                        if (!response.ok) {
+                            throw new Error(data.message || 'Could not clear this conversation. Please try again.');
+                        }
+                    }
+
+                    resetConversationUi();
+                } catch (error) {
+                    setStatus(error.message || 'Could not clear this conversation. Please try again.', 'error');
+                } finally {
+                    setClearing(false);
+                }
+            });
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const message = textarea ? textarea.value.trim() : '';
+                if (!message) {
+                    setStatus('Add a question first.', 'warning');
+                    textarea?.focus();
+                    return;
+                }
+
+                setSending(true);
+                setStatus('Asking the coach...', 'info');
+                if (responsePanel) responsePanel.hidden = true;
+
+                try {
+                    const formData = new FormData(form);
+                    formData.set('message', message);
+                    formData.set('history', JSON.stringify(chatHistory));
+                    if (conversationId) {
+                        formData.set('conversation_id', conversationId);
+                    }
+
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-CSRF-TOKEN': csrfToken(),
+                        },
+                    });
+                    const data = await response.json().catch(() => ({}));
+
+                    if (!response.ok) {
+                        throw new Error(data.message || data.response || 'Could not reach the coach. Please try again.');
+                    }
+
+                    const reply = data.response || 'The coach did not return a message.';
+                    conversationId = data.conversation_id || conversationId;
+                    chatHistory.push({ role: 'user', content: message });
+                    chatHistory.push({ role: 'ai', content: reply });
+
+                    if (responseBody) responseBody.innerHTML = formatCoachReply(reply);
+                    if (responsePanel) responsePanel.hidden = false;
+                    if (textarea) {
+                        textarea.value = '';
+                        resizeTextarea();
+                    }
+                    setStatus('Coach replied.', 'success');
+                } catch (error) {
+                    setStatus(error.message || 'Could not reach the coach. Please try again.', 'error');
+                } finally {
+                    setSending(false);
+                }
+            });
+        }
+
+        function initDashboardCoach() {
+            initDashboardCoachModal();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDashboardCoach);
+        } else {
+            initDashboardCoach();
+        }
+    })();
+</script>
+@endpush
+
 @push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -1064,19 +1320,19 @@ document.addEventListener("DOMContentLoaded", function() {
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
             { element: '.sr-mobile-stat-grid', popover: { title: 'Practice Snapshot', description: 'Track interviews, ratings, XP, and streaks without opening a report.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to choose the module, drill, challenge, or interview that fits your latest gaps.', side: 'top', align: 'start' }},
+            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to choose the module, challenge, or interview that fits your latest gaps.', side: 'top', align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
             { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused Philippines interview task for XP, streak progress, and sharper answer structure.', side: 'top', align: 'start' }},
             { element: '#mobThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable view.', side: 'bottom', align: 'end' }}
         ];
 
         const stepsDesktop = [
-            { element: '#dbSidebar', popover: { title: 'Practice Navigation', description: 'Open Mock Interview, Modules, Voice Rehearsal, Missions, Challenges, Readiness Coach, Progress, Feedback, Reports, and Mastery.', side: 'right', align: 'start' }},
+            { element: '#dbSidebar', popover: { title: 'Practice Navigation', description: 'Open Mock Interview, Modules, Challenges, AI Chatbot Coach, Progress, Feedback, and Reports.', side: 'right', align: 'start' }},
             { element: '#dbTutorialBtn', popover: { title: 'Replay Tutorial', description: 'Restart this walkthrough whenever the page changes or you want a quick orientation.', side: 'bottom', align: 'center' }},
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed interviews, ratings, XP, streaks, and active practice days at a glance.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to choose the module, drill, challenge, or interview that fits your latest gaps.', side: 'bottom', align: 'start' }},
+            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to choose the module, challenge, or interview that fits your latest gaps.', side: 'bottom', align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
             { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused Philippines interview task for XP, streak progress, and sharper answer structure.', side: 'left', align: 'start' }},
             { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: 'bottom', align: 'center' }},

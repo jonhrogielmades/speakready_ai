@@ -11,7 +11,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1" aria-expanded="true" aria-controls="f1">What is SpeakReady AI?</button></h2>
                            <div id="f1" class="accordion-collapse collapse show" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">SpeakReady AI is a Philippine-focused interview practice system with AI mock interviews, role-based setup, voice rehearsal, learning modules, games, rubric feedback, progress tracking, reports, and private review sharing.</div>
+                              <div class="accordion-body">SpeakReady AI is a Philippine-focused interview practice system with AI mock interviews, role-based setup, learning modules, games, rubric feedback, progress tracking, reports, and private review sharing.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
@@ -23,7 +23,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3" aria-expanded="false" aria-controls="f3">Is my data secure?</button></h2>
                            <div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Interview records are private by default. Optional review links can expire, use a password, restrict comments, and hide sensitive identity or application context.</div>
+                              <div class="accordion-body">Interview records are private by default. Optional review links can expire, use a password, restrict comments, and hide sensitive identity or interview context.</div>
                            </div>
                         </div>
                         <div class="accordion-item">

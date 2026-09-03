@@ -23,7 +23,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=34') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=35') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -99,20 +99,15 @@
                 <div class="db-nav-section">Interview Practice</div>
                 <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}" title="Mock Interview"><i class="fa-solid fa-microphone-lines"></i><span class="db-nav-label">Mock Interview</span></a>
 
-                <div class="db-nav-section">Specialized Training</div>
+               <div class="db-nav-section">Specialized Training</div>
                <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.modules.*') ? 'active' : '' }}" title="Modules"><i class="fa-solid fa-book-open"></i><span class="db-nav-label">Modules</span></a>
-               <a href="{{ route('user.drills.voice') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}" title="Voice Rehearsal"><i class="fa-solid fa-wave-square"></i><span class="db-nav-label">Voice Rehearsal</span></a>
-               <a href="{{ route('user.missions') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.missions') ? 'active' : '' }}" title="Missions"><i class="fa-solid fa-user-check"></i><span class="db-nav-label">Missions</span></a>
                <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}" title="Challenges"><i class="fa-solid fa-trophy"></i><span class="db-nav-label">Challenges</span></a>
-               <a href="{{ route('user.coach') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.coach') ? 'active' : '' }}" title="Readiness Coach"><i class="fa-solid fa-robot"></i><span class="db-nav-label">Readiness Coach</span></a>
+               <a href="{{ route('user.coach') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.coach') ? 'active' : '' }}" title="AI Chatbot Coach"><i class="fa-solid fa-robot"></i><span class="db-nav-label">AI Chatbot Coach</span></a>
 
                <div class="db-nav-section">Performance</div>
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>
                <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
-
-               <div class="db-nav-section">Personal Goals</div>
-               <a href="{{ route('user.leaderboard') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}" title="Mastery"><i class="fa-solid fa-crown"></i><span class="db-nav-label">Mastery</span></a>
             </div>
             <div class="db-bottom">
                <a href="{{ route('user.skills') }}" class="db-upgrade-card" title="View skill perks">
@@ -816,12 +811,9 @@
          #feedbackModulesLikeHero.feedback-hero,
          #sec-interview-setup .setup-hero,
          #interview-modules-page .modules-hero,
-         #voice-rehearsal-page .sr-page-hero.vr-hero,
-         #mission-mode-page .mission-progress-hero.sr-page-hero,
          #learning-games-page .sr-learning-hero,
          #ai-coach-page .sr-page-hero.coach-progress-hero,
          #portfolioReport .sr-page-hero,
-         #personal-mastery-page .mastery-hero-card,
          #notifications-page .notif-hero,
          #account-page .sr-page-hero,
          #skill-trees-page .sr-page-hero.skill-tree-hero,
@@ -838,12 +830,9 @@
          :root:not(.lm) #feedbackModulesLikeHero.feedback-hero,
          :root:not(.lm) #sec-interview-setup .setup-hero,
          :root:not(.lm) #interview-modules-page .modules-hero,
-         :root:not(.lm) #voice-rehearsal-page .sr-page-hero.vr-hero,
-         :root:not(.lm) #mission-mode-page .mission-progress-hero.sr-page-hero,
          :root:not(.lm) #learning-games-page .sr-learning-hero,
          :root:not(.lm) #ai-coach-page .sr-page-hero.coach-progress-hero,
          :root:not(.lm) #portfolioReport .sr-page-hero,
-         :root:not(.lm) #personal-mastery-page .mastery-hero-card,
          :root:not(.lm) #notifications-page .notif-hero,
          :root:not(.lm) #account-page .sr-page-hero,
          :root:not(.lm) #skill-trees-page .sr-page-hero.skill-tree-hero,
@@ -852,12 +841,9 @@
          .dm #feedbackModulesLikeHero.feedback-hero,
          .dm #sec-interview-setup .setup-hero,
          .dm #interview-modules-page .modules-hero,
-         .dm #voice-rehearsal-page .sr-page-hero.vr-hero,
-         .dm #mission-mode-page .mission-progress-hero.sr-page-hero,
          .dm #learning-games-page .sr-learning-hero,
          .dm #ai-coach-page .sr-page-hero.coach-progress-hero,
          .dm #portfolioReport .sr-page-hero,
-         .dm #personal-mastery-page .mastery-hero-card,
          .dm #notifications-page .notif-hero,
          .dm #account-page .sr-page-hero,
          .dm #skill-trees-page .sr-page-hero.skill-tree-hero,
@@ -874,12 +860,9 @@
          #feedbackModulesLikeHero :is(.feedback-title, .feedback-subtitle, .feedback-chat-mark),
          #sec-interview-setup .setup-hero :is(.setup-hero-title, .setup-hero-subtitle, .setup-hero-icon),
          #interview-modules-page .modules-hero :is(.modules-hero-title, .modules-hero-subtitle, .modules-hero-icon),
-         #voice-rehearsal-page .vr-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .vr-hero-icon),
-         #mission-mode-page .mission-progress-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .mission-hero-icon),
          #learning-games-page .sr-learning-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .learning-hero-icon),
          #ai-coach-page .coach-progress-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .coach-hero-icon),
          #portfolioReport .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .reports-hero-icon),
-         #personal-mastery-page .mastery-hero-card :is(.mastery-title, .mastery-subtitle, .mastery-badge),
          #notifications-page .notif-hero :is(.notif-hero-title, .notif-hero-subtitle, .notif-hero-icon),
          #account-page .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .account-hero-icon),
          #skill-trees-page .skill-tree-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .skill-tree-hero-icon),
@@ -908,12 +891,9 @@
          #feedbackModulesLikeHero .feedback-subtitle,
          #sec-interview-setup .setup-hero-subtitle,
          #interview-modules-page .modules-hero-subtitle,
-         #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle,
-         #mission-mode-page .mission-progress-hero .sr-page-hero-subtitle,
          #learning-games-page .sr-learning-hero .sr-page-hero-subtitle,
          #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle,
          #portfolioReport .sr-page-hero-subtitle,
-         #personal-mastery-page .mastery-subtitle,
          #notifications-page .notif-hero-subtitle,
          #account-page .sr-page-hero-subtitle,
          #skill-trees-page .skill-tree-hero .sr-page-hero-subtitle,
@@ -925,12 +905,9 @@
          #progressModulesLikeHero .progress-hero-icon,
          #sec-interview-setup .setup-hero-icon,
          #interview-modules-page .modules-hero-icon,
-         #voice-rehearsal-page .vr-hero-icon,
-         #mission-mode-page .mission-hero-icon,
          #learning-games-page .learning-hero-icon,
          #ai-coach-page .coach-hero-icon,
          #portfolioReport .reports-hero-icon,
-         #personal-mastery-page .mastery-badge,
          #notifications-page .notif-hero-icon,
          #account-page .account-hero-icon,
          #skill-trees-page .skill-tree-hero-icon,

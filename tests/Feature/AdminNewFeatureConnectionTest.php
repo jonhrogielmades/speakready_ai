@@ -47,14 +47,6 @@ class AdminNewFeatureConnectionTest extends TestCase
             ->assertStatus(403)
             ->assertJsonPath('error', 'coach_disabled');
 
-        Setting::setVal('vr_recording', false, 'general', 'boolean');
-        $this->actingAs($user)
-            ->get(route('user.drills.voice'))
-            ->assertRedirect(route('dashboard'));
-        $this->actingAs($user)
-            ->postJson(route('user.drills.voice.save'), ['category' => 'Behavioral'])
-            ->assertStatus(403);
-
         Setting::setVal('ll_modules', false, 'general', 'boolean');
         $this->actingAs($user)
             ->get(route('user.modules.index'))
@@ -110,16 +102,6 @@ class AdminNewFeatureConnectionTest extends TestCase
             ->assertRedirect();
 
         $this->actingAs($user)
-            ->postJson(route('user.drills.voice.save'), [
-                'category' => 'Leadership',
-                'prompt' => 'Tell me about a leadership moment.',
-                'transcript' => 'I led a team project and improved the delivery process.',
-                'duration_seconds' => 30,
-            ])
-            ->assertOk()
-            ->assertJsonPath('success', true);
-
-        $this->actingAs($user)
             ->post(route('user.modules.progress', $module), [
                 'progress_percentage' => 100,
                 'quiz_score' => 92,
@@ -151,10 +133,6 @@ class AdminNewFeatureConnectionTest extends TestCase
             'user_id' => $user->id,
             'action' => 'language_updated',
             'description' => 'Visible Candidate changed preferred language to Cebuano.',
-        ]);
-        $this->assertDatabaseHas('activity_logs', [
-            'user_id' => $user->id,
-            'action' => 'voice_rehearsal_saved',
         ]);
         $this->assertDatabaseHas('activity_logs', [
             'user_id' => $user->id,
@@ -196,13 +174,11 @@ class AdminNewFeatureConnectionTest extends TestCase
             ->assertOk()
             ->assertJsonPath('user.preferred_language_label', 'Cebuano')
             ->assertJsonPath('stats.learning_completed', 1)
-            ->assertJsonPath('stats.voice_rehearsals', 1)
-            ->assertJsonPath('stats.experience_points', 10)
+            ->assertJsonPath('stats.experience_points', 0)
             ->assertJsonPath('stats.certificates', 1)
             ->assertJsonPath('stats.coach_conversations', 1)
             ->assertJsonPath('stats.unlocked_perks', 1)
             ->assertJsonFragment(['module' => 'Interview Basics'])
-            ->assertJsonFragment(['category' => 'Leadership'])
             ->assertJsonFragment(['title' => 'Who developed SpeakReady AI?'])
             ->assertJsonFragment(['name' => 'Energy Efficiency'])
             ->assertJsonFragment(['path' => 'Certificate Path']);

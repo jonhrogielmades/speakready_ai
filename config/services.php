@@ -51,6 +51,16 @@ return [
         'timeout' => env('AI_TTS_TIMEOUT', 30),
     ],
 
+    'ai_transcription' => [
+        'provider_priority' => env('AI_TRANSCRIPTION_PROVIDER_PRIORITY', 'openai,gemini'),
+        'chunk_ms' => env('AI_TRANSCRIPTION_CHUNK_MS', 4000),
+        'mobile_chunk_ms' => env('AI_TRANSCRIPTION_MOBILE_CHUNK_MS', 5000),
+        'drain_timeout_ms' => env('AI_TRANSCRIPTION_DRAIN_TIMEOUT_MS', 20000),
+        'request_timeout_ms' => env('AI_TRANSCRIPTION_REQUEST_TIMEOUT_MS', 30000),
+        'max_in_flight' => env('AI_TRANSCRIPTION_MAX_IN_FLIGHT', 2),
+        'rate_limit_cooldown_seconds' => env('AI_TRANSCRIPTION_RATE_LIMIT_COOLDOWN_SECONDS', 90),
+    ],
+
     'openai' => [
         'tts_enabled' => env('AI_TTS_ENABLED', false),
         'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
@@ -65,6 +75,20 @@ return [
         'tts_model' => env('GEMINI_TTS_MODEL', 'gemini-3.1-flash-tts-preview'),
         'tts_voice' => env('GEMINI_TTS_VOICE', 'Kore'),
         'tts_style' => env('GEMINI_TTS_STYLE', 'Say in a warm, clear, professional interviewer voice with natural Philippine English pronunciation and steady pacing'),
+        'transcription_model' => env('GEMINI_TRANSCRIPTION_MODEL', env('GEMINI_MODEL', 'gemini-3.6-flash')),
+    ],
+
+    'elevenlabs' => [
+        'api_key' => env('ELEVENLABS_API_KEY'),
+        'api_endpoint' => env('ELEVENLABS_API_URL', 'https://api.elevenlabs.io/v1'),
+        'tts_model' => env('ELEVENLABS_TTS_MODEL', 'eleven_multilingual_v2'),
+        'tts_voice_id' => env('ELEVENLABS_TTS_VOICE_ID', 'XrExE9yKIg1WjnnlVkGX'),
+        'tts_output_format' => env('ELEVENLABS_TTS_OUTPUT_FORMAT', 'mp3_44100_128'),
+        'tts_language_code' => env('ELEVENLABS_TTS_LANGUAGE_CODE'),
+        'tts_stability' => env('ELEVENLABS_TTS_STABILITY', 0.45),
+        'tts_similarity_boost' => env('ELEVENLABS_TTS_SIMILARITY_BOOST', 0.75),
+        'tts_style' => env('ELEVENLABS_TTS_STYLE', 0.15),
+        'tts_speaker_boost' => env('ELEVENLABS_TTS_SPEAKER_BOOST', true),
     ],
 
     'local_speech' => [

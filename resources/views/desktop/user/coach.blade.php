@@ -1,5 +1,5 @@
 @extends('desktop.layouts.app')
-@section('title', 'Philippines Readiness Coach')
+@section('title', 'Philippines AI Chatbot Coach')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/coach.css?v=1') }}" data-page-style="user-coach">
@@ -29,7 +29,7 @@
                 <div>
                     <h4 class="sr-page-hero-title text-gradient-primary">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 0-7 7v3a4 4 0 0 0 4 4h1v-6H7v-1a5 5 0 0 1 10 0v1h-3v6h1a4 4 0 0 0 4-4v-3a7 7 0 0 0-7-7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        Philippines Readiness Coach
+                        Philippines AI Chatbot Coach
                     </h4>
                     <p class="sr-page-hero-subtitle">Ask for advice, resume feedback, and focused practice guidance.</p>
                 </div>
@@ -820,13 +820,13 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your Readiness Coach responds here with Philippines interview prep, resume, application, and career guidance.', side: 'bottom', align: 'center' }},
+            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Chatbot Coach responds here with Philippines interview prep, resume, job-description, and career guidance.', side: 'bottom', align: 'center' }},
             { element: '#coach-input-area', popover: { title: 'Ask Or Attach', description: 'Type a prep question, paste an answer, or attach a resume, certificate, or job description for coaching.', side: 'top', align: 'center' }}
         ];
 
         const stepsDesktop = [
             { element: '#coach-sidebar', popover: { title: 'Conversation History', description: 'Start a new chat or return to an earlier coaching conversation.', side: 'right', align: 'start' }},
-            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your Readiness Coach responds here with Philippines interview prep, resume, application, and career guidance.', side: 'bottom', align: 'center' }},
+            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Chatbot Coach responds here with Philippines interview prep, resume, job-description, and career guidance.', side: 'bottom', align: 'center' }},
             { element: '#coach-input-area', popover: { title: 'Ask Or Attach', description: 'Type a prep question, paste an answer, or attach a resume, certificate, or job description for coaching.', side: 'top', align: 'center' }}
         ];
 

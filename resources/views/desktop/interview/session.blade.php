@@ -281,7 +281,7 @@
                 <p id="interviewStartDescription">{{ $hasSavedInterviewState ? 'Your saved interview is ready to resume.' : 'Your customized interview session is ready to begin.' }}</p>
                 <div class="interview-start-meta interview-meta-line">
                     <span class="session-chip"><i class="fa-solid fa-flag"></i>{{ $scenarioLabel }}</span>
-                    <span class="session-chip"><i class="fa-solid fa-microphone"></i>{{ ucfirst($sessionRecord->response_mode) }} Mode</span>
+                <span class="session-chip"><i class="fa-solid fa-microphone"></i>{{ ['text' => 'Text', 'voice' => 'Voice', 'hybrid' => 'Hybrid', 'voice_and_text' => 'Hybrid'][strtolower((string) $sessionRecord->response_mode)] ?? 'Text' }} Mode</span>
                     <span class="session-chip"><i class="fa-solid fa-list-check"></i>{{ $num }} Questions</span>
                     <span class="session-chip"><i class="fa-solid fa-video"></i>Camera {{ $cameraDetectionEnabled ? 'ON' : 'OFF' }}</span>
                 </div>
@@ -335,6 +335,11 @@
             const sessionScenarioLabel = @json($scenarioLabel ?? 'Philippines Interview');
             const sessionDifficultyLabel = @json(ucfirst((string) ($sessionRecord->difficulty ?? 'medium')));
             const responseMode = @json($sessionRecord->response_mode ?? 'voice');
+            const canonicalResponseMode = (() => {
+                const mode = String(responseMode || 'text').toLowerCase().trim();
+                if (mode === 'voice_and_text') return 'hybrid';
+                return ['text', 'voice', 'hybrid'].includes(mode) ? mode : 'text';
+            })();
             const perQuestionLimitSeconds = {{ (int) (($sessionRecord->time_limit ?? 0) * 60) }};
             const assistanceLevel = @json($sessionRecord->ai_assistance_level ?? 'standard');
             const liveFeedbackMode = @json($sessionRecord->live_feedback_mode ?? 'coaching');
@@ -342,7 +347,7 @@
             const cameraPreviewEnabled = cameraDetectionEnabled;
             let cameraUnavailableReason = null;
             @php
-                $serverAiVoiceEnabledForUi = filter_var(config('services.ai_tts.enabled', config('services.openai.tts_enabled', false)), FILTER_VALIDATE_BOOLEAN);
+                $serverAiVoiceEnabledForUi = \App\Services\AIService::speechSynthesisAvailable();
             @endphp
             const serverAiVoiceEnabled = @json($serverAiVoiceEnabledForUi);
             let currentQIdx = Number(savedSessionState.currentQIdx ?? {{ (int) ($sessionRecord->current_question_index ?? 0) }}) || 0;
@@ -515,10 +520,17 @@
             let serverTranscriptionStream = null;
             let serverTranscriptionQueue = [];
             let serverTranscriptionProcessing = false;
+            let serverTranscriptionActiveRequests = 0;
+            let serverTranscriptionResults = new Map();
+            let serverTranscriptionNextSequence = 0;
+            let serverTranscriptionNextCommitSequence = 0;
             let serverTranscriptionDrainResolver = null;
             let serverTranscriptionDrainTimer = null;
             let serverTranscriptionUnavailable = false;
+            let serverTranscriptionConsecutiveFailures = 0;
             let serverTranscriptionSessionToken = 0;
+            let farFieldAudioContext = null;
+            let farFieldAudioNodes = [];
             let cameraTrackingInFlight = false;
             window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null, handLandmarker: null };
             const cameraMovementBaselines = {};
@@ -540,10 +552,19 @@
                     'audio/ogg'
                 ].find(type => MediaRecorder.isTypeSupported(type)) || '';
             })();
+            const serverTranscriptionTimesliceMs = mobileSpeechSurface
+                ? {{ max(2500, min(8000, (int) config('services.ai_transcription.mobile_chunk_ms', 5000))) }}
+                : {{ max(2500, min(8000, (int) config('services.ai_transcription.chunk_ms', 4000))) }};
+            const serverTranscriptionDrainTimeoutMs = {{ max(8000, min(60000, (int) config('services.ai_transcription.drain_timeout_ms', 20000))) }};
+            const serverTranscriptionRequestTimeoutMs = {{ max(10000, min(60000, (int) config('services.ai_transcription.request_timeout_ms', 30000))) }};
+            const serverTranscriptionMaxInFlight = {{ max(1, min(3, (int) config('services.ai_transcription.max_in_flight', 2))) }};
+            const serverTranscriptionFailureLimit = 3;
             const serverTranscriptionSupported = serverTranscriptionEnabled
                 && Boolean(window.MediaRecorder)
                 && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-            let activeTranscriptionEngine = serverTranscriptionSupported ? 'server' : (BrowserSpeechRecognition ? 'browser' : null);
+            let activeTranscriptionEngine = isVoiceTranscriptionMode()
+                ? (BrowserSpeechRecognition ? 'browser' : (serverTranscriptionSupported ? 'server' : null))
+                : null;
             const duplicateSafeWordSet = new Set([
                 'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
                 'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
@@ -729,17 +750,21 @@
             }
 
             function syncSpeechRecognitionBufferFromManualEdit() {
+                const ta = document.getElementById('answerTextarea');
+                const rawText = ta ? String(ta.value || '') : '';
+                const answerState = answersData[currentQIdx] || defaultAnswerState();
+                answerState.text = rawText;
+                answersData[currentQIdx] = answerState;
+
                 if (!isRecording) return;
 
-                const ta = document.getElementById('answerTextarea');
-                const currentText = ta ? cleanTranscriptText(ta.value) : '';
+                const currentText = cleanTranscriptText(rawText);
                 preRecordingText = currentText;
                 committedSpeechTranscript = '';
                 liveSpeechInterim = '';
                 lastCommittedSpeech = '';
                 lastCommittedAt = 0;
 
-                const answerState = answersData[currentQIdx] || defaultAnswerState();
                 answerState.speech_transcript = currentText;
                 answersData[currentQIdx] = answerState;
             }
@@ -795,7 +820,13 @@
                 if (!ta) return;
 
                 const recognizedTranscript = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
-                ta.value = mergeTranscriptParts(preRecordingText, recognizedTranscript);
+                const renderedTranscript = mergeTranscriptParts(preRecordingText, recognizedTranscript);
+                ta.value = renderedTranscript;
+
+                const answerState = answersData[currentQIdx] || defaultAnswerState();
+                answerState.text = renderedTranscript;
+                answersData[currentQIdx] = answerState;
+
                 triggerAnalysis();
             }
 
@@ -830,6 +861,9 @@
             function restoreSubmittedAnswerInput(answerText) {
                 const textarea = document.getElementById('answerTextarea');
                 if (textarea) textarea.value = answerText || '';
+                if (answersData[currentQIdx]) {
+                    answersData[currentQIdx].text = textarea ? String(textarea.value || '') : String(answerText || '');
+                }
                 resetSpeechRecognitionBufferFromTextarea();
                 triggerAnalysis();
             }
@@ -861,9 +895,12 @@
             function audioCaptureConstraints() {
                 return {
                     audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
+                        echoCancellation: { ideal: true },
+                        noiseSuppression: { ideal: true },
+                        autoGainControl: { ideal: true },
+                        channelCount: { ideal: 1 },
+                        sampleRate: { ideal: 48000 },
+                        sampleSize: { ideal: 16 }
                     }
                 };
             }
@@ -871,6 +908,76 @@
             function stopMediaStream(stream) {
                 if (!stream) return;
                 stream.getTracks().forEach(track => track.stop());
+            }
+
+            function releaseFarFieldAudio() {
+                farFieldAudioNodes.forEach(node => {
+                    try {
+                        if (node && typeof node.disconnect === 'function') node.disconnect();
+                    } catch (error) {
+                        console.warn('Far-field audio node cleanup failed:', error);
+                    }
+                });
+                farFieldAudioNodes = [];
+
+                if (farFieldAudioContext) {
+                    try {
+                        farFieldAudioContext.close();
+                    } catch (error) {
+                        console.warn('Far-field audio context cleanup failed:', error);
+                    }
+                    farFieldAudioContext = null;
+                }
+            }
+
+            function enhanceFarFieldAudioStream(stream) {
+                releaseFarFieldAudio();
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass || !stream?.getAudioTracks?.().length) return stream;
+
+                try {
+                    farFieldAudioContext = new AudioContextClass({ sampleRate: 48000 });
+                    const source = farFieldAudioContext.createMediaStreamSource(stream);
+                    const highpass = farFieldAudioContext.createBiquadFilter();
+                    highpass.type = 'highpass';
+                    highpass.frequency.value = 90;
+                    highpass.Q.value = 0.7;
+
+                    const lowpass = farFieldAudioContext.createBiquadFilter();
+                    lowpass.type = 'lowpass';
+                    lowpass.frequency.value = 8200;
+                    lowpass.Q.value = 0.7;
+
+                    const compressor = farFieldAudioContext.createDynamicsCompressor();
+                    compressor.threshold.value = -48;
+                    compressor.knee.value = 30;
+                    compressor.ratio.value = 12;
+                    compressor.attack.value = 0.004;
+                    compressor.release.value = 0.28;
+
+                    const gain = farFieldAudioContext.createGain();
+                    gain.gain.value = mobileSpeechSurface ? 2.6 : 2.2;
+
+                    const destination = farFieldAudioContext.createMediaStreamDestination();
+                    source.connect(highpass);
+                    highpass.connect(lowpass);
+                    lowpass.connect(compressor);
+                    compressor.connect(gain);
+                    gain.connect(destination);
+                    farFieldAudioNodes = [source, highpass, lowpass, compressor, gain, destination];
+
+                    if (farFieldAudioContext.state === 'suspended') {
+                        farFieldAudioContext.resume().catch(error => {
+                            console.warn('Far-field audio context resume failed:', error);
+                        });
+                    }
+
+                    return destination.stream;
+                } catch (error) {
+                    console.warn('Far-field audio enhancement unavailable:', error);
+                    releaseFarFieldAudio();
+                    return stream;
+                }
             }
 
             async function requestMicrophoneStream() {
@@ -921,13 +1028,14 @@
             }
 
             function canUseServerTranscription() {
-                return serverTranscriptionSupported && !serverTranscriptionUnavailable && !microphoneRequiresSecureOrigin();
+                return isVoiceTranscriptionMode() && serverTranscriptionSupported && !serverTranscriptionUnavailable && !microphoneRequiresSecureOrigin();
             }
 
             function preferredTranscriptionEngine() {
+                if (!isVoiceTranscriptionMode()) return null;
                 if (microphoneRequiresSecureOrigin()) return null;
-                if (canUseServerTranscription()) return 'server';
                 if (recognition) return 'browser';
+                if (canUseServerTranscription()) return 'server';
                 return null;
             }
 
@@ -973,7 +1081,8 @@
                     setTranscriptionStatus('Requesting microphone permission', '#fbbf24');
                     microphoneReadyPromise = requestMicrophoneStream().then(stream => {
                         if (engine === 'server') {
-                            serverTranscriptionStream = stream;
+                            microphoneStream = stream;
+                            serverTranscriptionStream = enhanceFarFieldAudioStream(stream);
                         } else {
                             stopMediaStream(stream);
                         }
@@ -990,8 +1099,6 @@
             }
 
             function releaseMicrophoneStream() {
-                stopMediaStream(microphoneStream);
-                microphoneStream = null;
                 releaseServerTranscriptionStream();
             }
 
@@ -1007,6 +1114,9 @@
             function releaseServerTranscriptionStream() {
                 stopMediaStream(serverTranscriptionStream);
                 serverTranscriptionStream = null;
+                releaseFarFieldAudio();
+                stopMediaStream(microphoneStream);
+                microphoneStream = null;
             }
 
             function serverTranscriptionFilename(blob) {
@@ -1019,7 +1129,12 @@
             }
 
             function resolveServerTranscriptionDrain() {
-                if (serverTranscriptionQueue.length > 0 || serverTranscriptionProcessing || !serverTranscriptionDrainResolver) {
+                if (
+                    serverTranscriptionQueue.length > 0
+                    || serverTranscriptionActiveRequests > 0
+                    || serverTranscriptionResults.size > 0
+                    || !serverTranscriptionDrainResolver
+                ) {
                     return;
                 }
 
@@ -1034,7 +1149,11 @@
             }
 
             function waitForServerTranscriptionDrain(timeoutMs = 10000) {
-                if (serverTranscriptionQueue.length === 0 && !serverTranscriptionProcessing) {
+                if (
+                    serverTranscriptionQueue.length === 0
+                    && serverTranscriptionActiveRequests === 0
+                    && serverTranscriptionResults.size === 0
+                ) {
                     return Promise.resolve();
                 }
 
@@ -1050,35 +1169,142 @@
             }
 
             function queueServerTranscriptionChunk(blob) {
-                if (!blob || blob.size < 128 || !questions[currentQIdx]) return;
+                if (serverTranscriptionUnavailable || !blob || blob.size < 128 || !questions[currentQIdx]) return;
 
                 serverTranscriptionQueue.push({
                     blob,
                     questionIndex: currentQIdx,
                     questionId: questions[currentQIdx].id,
+                    previousTranscript: cleanTranscriptText(answersData[currentQIdx]?.speech_transcript || '').slice(-3000),
+                    sequence: serverTranscriptionNextSequence++,
                     token: serverTranscriptionSessionToken
                 });
                 processServerTranscriptionQueue();
             }
 
-            async function processServerTranscriptionQueue() {
-                if (serverTranscriptionProcessing) return;
-                serverTranscriptionProcessing = true;
+            function disableServerTranscription(message) {
+                serverTranscriptionUnavailable = true;
+                serverTranscriptionSessionToken++;
+                serverTranscriptionQueue = [];
+                serverTranscriptionResults = new Map();
+                serverTranscriptionNextSequence = 0;
+                serverTranscriptionNextCommitSequence = 0;
+                resolveServerTranscriptionDrain();
 
-                while (serverTranscriptionQueue.length > 0) {
-                    const job = serverTranscriptionQueue.shift();
+                if (serverTranscriptionRecorder && serverTranscriptionRecorder.state !== 'inactive') {
                     try {
-                        await transcribeServerChunk(job);
+                        serverTranscriptionRecorder.ondataavailable = null;
+                        serverTranscriptionRecorder.stop();
                     } catch (error) {
-                        if (error.name !== 'AbortError') {
-                            console.warn('Server transcription failed:', error);
-                            setTranscriptionStatus('Server transcription is temporarily unavailable.', '#f87171');
-                        }
+                        console.warn('Server transcription recorder stop failed:', error);
                     }
                 }
+                serverTranscriptionRecorder = null;
+                releaseServerTranscriptionStream();
 
-                serverTranscriptionProcessing = false;
+                if (isRecording && recognition) {
+                    activeTranscriptionEngine = 'browser';
+                    shouldAutoRestartRecognition = true;
+                    setTranscriptionStatus('Server transcription paused - using browser captions', '#fbbf24');
+                    ensureMicrophoneReady('browser').then(ready => {
+                        if (ready && isRecording && activeTranscriptionEngine === 'browser') {
+                            startSpeechRecognitionEngine();
+                        }
+                    });
+                    return;
+                }
+
+                setTranscriptionStatus(message || 'Server transcription is temporarily unavailable.', '#f87171');
+            }
+
+            function handleServerTranscriptionFailure(error) {
+                serverTranscriptionConsecutiveFailures++;
+                const errorCode = String(error?.errorCode || '');
+                const rateLimited = errorCode === 'speech_transcription_rate_limited' || error?.status === 429;
+                const hardUnavailable = errorCode === 'speech_transcription_unavailable'
+                    || error?.status === 401
+                    || error?.status === 403
+                    || error?.status === 419;
+
+                if (rateLimited) {
+                    const waitSeconds = Number(error?.retryAfterSeconds || 0);
+                    const message = waitSeconds > 0
+                        ? `AI transcription is rate limited. Try again in ${Math.ceil(waitSeconds)}s.`
+                        : 'AI transcription is rate limited. Continue with browser captions or type your answer.';
+                    disableServerTranscription(message);
+                    return;
+                }
+
+                if (hardUnavailable || serverTranscriptionConsecutiveFailures >= serverTranscriptionFailureLimit) {
+                    disableServerTranscription(error?.message || 'Server transcription is temporarily unavailable.');
+                    return;
+                }
+
+                if (isRecording && activeTranscriptionEngine === 'server') {
+                    setTranscriptionStatus('Still listening - retrying transcription', '#fbbf24');
+                }
+            }
+
+            function processServerTranscriptionQueue() {
+                while (
+                    serverTranscriptionQueue.length > 0
+                    && serverTranscriptionActiveRequests < serverTranscriptionMaxInFlight
+                ) {
+                    const job = serverTranscriptionQueue.shift();
+                    serverTranscriptionActiveRequests++;
+                    serverTranscriptionProcessing = true;
+
+                    transcribeServerChunk(job).then(result => {
+                        if (job.token === serverTranscriptionSessionToken) {
+                            serverTranscriptionConsecutiveFailures = 0;
+                            serverTranscriptionResults.set(job.sequence, { job, result });
+                        }
+                    }).catch(error => {
+                        if (error.name !== 'AbortError') {
+                            console.warn('Server transcription failed:', error);
+                            handleServerTranscriptionFailure(error);
+                        }
+                        if (job.token === serverTranscriptionSessionToken) {
+                            serverTranscriptionResults.set(job.sequence, { job, result: null });
+                        }
+                    }).finally(() => {
+                        serverTranscriptionActiveRequests = Math.max(0, serverTranscriptionActiveRequests - 1);
+                        commitReadyServerTranscriptionResults();
+                        serverTranscriptionProcessing = serverTranscriptionQueue.length > 0 || serverTranscriptionActiveRequests > 0;
+                        processServerTranscriptionQueue();
+                        resolveServerTranscriptionDrain();
+                    });
+                }
+
                 resolveServerTranscriptionDrain();
+            }
+
+            function commitReadyServerTranscriptionResults() {
+                while (serverTranscriptionResults.has(serverTranscriptionNextCommitSequence)) {
+                    const entry = serverTranscriptionResults.get(serverTranscriptionNextCommitSequence);
+                    serverTranscriptionResults.delete(serverTranscriptionNextCommitSequence);
+                    serverTranscriptionNextCommitSequence++;
+
+                    const job = entry?.job;
+                    const result = entry?.result;
+                    if (!job || !result || job.token !== serverTranscriptionSessionToken) continue;
+
+                    recordLocalSpeechAnalysis(job.questionIndex, result.pronunciationAnalysis || null);
+
+                    const transcript = cleanTranscriptText(result.transcript || '');
+                    if (!transcript || job.questionIndex !== currentQIdx) continue;
+
+                    if (commitSpeechSegment(transcript)) {
+                        recordFillerEvents(transcript);
+                        captureTranscriptTimeline('server_transcript');
+                    }
+                    liveSpeechInterim = '';
+                    renderSpeechTranscript();
+                }
+
+                if (isRecording && activeTranscriptionEngine === 'server') {
+                    setTranscriptionStatus('Listening - AI transcription (updates every few seconds)');
+                }
             }
 
             async function transcribeServerChunk(job) {
@@ -1088,36 +1314,30 @@
                 formData.append('_token', '{{ csrf_token() }}');
                 formData.append('session_id', interviewSessionId);
                 formData.append('question_id', job.questionId);
+                formData.append('previous_transcript', job.previousTranscript || '');
                 formData.append('audio', job.blob, serverTranscriptionFilename(job.blob));
 
                 const response = await managedFetch('{{ route("interview.transcribe") }}', {
                     method: 'POST',
                     body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    timeoutMs: serverTranscriptionRequestTimeoutMs
                 });
                 const data = await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-                    if (response.status === 503) {
-                        serverTranscriptionUnavailable = true;
-                    }
-                    throw new Error(data.error || 'Transcription request failed.');
+                    const error = new Error(data.error || 'Transcription request failed.');
+                    error.status = response.status;
+                    error.errorCode = data.error_code || '';
+                    error.retryAfterSeconds = Number(data.retry_after_seconds || 0) || null;
+                    throw error;
                 }
 
-                recordLocalSpeechAnalysis(job.questionIndex, data.pronunciation_analysis || null);
-
-                const transcript = cleanTranscriptText(data.transcript || '');
-                if (!transcript || job.token !== serverTranscriptionSessionToken || job.questionIndex !== currentQIdx) return;
-
-                if (commitSpeechSegment(transcript)) {
-                    recordFillerEvents(transcript);
-                    captureTranscriptTimeline('server_transcript');
-                }
-                liveSpeechInterim = '';
-                renderSpeechTranscript();
-                if (isRecording && activeTranscriptionEngine === 'server') {
-                    setTranscriptionStatus('Listening - server transcription');
-                }
+                return {
+                    transcript: cleanTranscriptText(data.transcript || ''),
+                    status: data.transcription_status || 'transcribed',
+                    pronunciationAnalysis: data.pronunciation_analysis || null
+                };
             }
 
             function localSpeechScoreFrom(analysis) {
@@ -1229,13 +1449,20 @@
                     const options = serverTranscriptionMimeType ? { mimeType: serverTranscriptionMimeType } : undefined;
                     serverTranscriptionRecorder = new MediaRecorder(serverTranscriptionStream, options);
                     serverTranscriptionSessionToken++;
+                    serverTranscriptionQueue = [];
+                    serverTranscriptionResults = new Map();
+                    serverTranscriptionActiveRequests = 0;
+                    serverTranscriptionNextSequence = 0;
+                    serverTranscriptionNextCommitSequence = 0;
+                    serverTranscriptionProcessing = false;
+                    serverTranscriptionConsecutiveFailures = 0;
                     serverTranscriptionRecorder.ondataavailable = event => queueServerTranscriptionChunk(event.data);
                     serverTranscriptionRecorder.onerror = event => {
                         console.warn('MediaRecorder transcription error:', event.error || event);
                         setTranscriptionStatus('Microphone recording failed. Try again.', '#f87171');
                     };
-                    serverTranscriptionRecorder.start(5200);
-                    setTranscriptionStatus('Listening - server transcription');
+                    serverTranscriptionRecorder.start(serverTranscriptionTimesliceMs);
+                    setTranscriptionStatus('Listening - AI transcription (updates every few seconds)');
                     return true;
                 } catch (error) {
                     console.error('Server transcription recorder failed:', error);
@@ -1279,7 +1506,7 @@
                     setTimeout(finish, 8000);
                 });
 
-                await waitForServerTranscriptionDrain();
+                await waitForServerTranscriptionDrain(serverTranscriptionDrainTimeoutMs);
             }
 
             async function activateServerTranscriptionFallback(message = 'Using server transcription fallback') {
@@ -1312,7 +1539,7 @@
 
                 recognition.onstart = function() {
                     recognitionActive = true;
-                    setTranscriptionStatus('Transcribing');
+                    setTranscriptionStatus('Listening - live captions');
                 };
                 
                 recognition.onsoundstart = function() {
@@ -1364,7 +1591,7 @@
                         setTranscriptionStatus(microphoneErrorMessage(error), '#f87171');
                     } else if (error === 'no-speech' && isRecording) {
                         shouldAutoRestartRecognition = true;
-                        setTranscriptionStatus('Still listening - speak close to the mic', '#fbbf24');
+                        setTranscriptionStatus('Still listening - distant speech is quiet', '#fbbf24');
                     }
                 };
 
@@ -1725,18 +1952,63 @@
             const serverSpeechUrlCache = new Map();
 
             function isVoiceTranscriptionMode() {
-                return responseMode === 'voice' || responseMode === 'hybrid' || responseMode === 'voice_and_text';
+                return canonicalResponseMode === 'voice' || canonicalResponseMode === 'hybrid';
+            }
+
+            function responseModePlaceholder() {
+                if (canonicalResponseMode === 'text') {
+                    return 'Type your answer using your own Philippine school, work, internship, or project evidence...';
+                }
+
+                if (canonicalResponseMode === 'voice') {
+                    return 'Speak your answer. Your voice-to-text transcript will appear here...';
+                }
+
+                return 'Speak your answer, then edit the transcript here if needed...';
+            }
+
+            function applyResponseModeUi() {
+                const voiceControls = document.getElementById('voiceControls');
+                const recordingTimer = document.getElementById('recordingTimer');
+                const textarea = document.getElementById('answerTextarea');
+
+                if (textarea) {
+                    textarea.placeholder = responseModePlaceholder();
+                }
+
+                if (!isVoiceTranscriptionMode()) {
+                    if (voiceControls) voiceControls.style.display = 'none';
+                    if (recordingTimer) {
+                        recordingTimer.style.display = 'none';
+                        recordingTimer.innerText = '00:00';
+                    }
+                    activeTranscriptionEngine = null;
+                    setVoiceControlsEnabled(false, 'Voice recording is disabled in Text Mode');
+                    setTranscriptionStatus('');
+                    return;
+                }
+
+                if (voiceControls && interviewStarted) voiceControls.style.display = 'flex';
+                if (recordingTimer) recordingTimer.style.display = 'block';
             }
 
             function managedFetch(url, options = {}) {
                 const controller = new AbortController();
+                const timeoutMs = Number(options.timeoutMs || 0);
+                const fetchOptions = { ...options };
+                delete fetchOptions.timeoutMs;
+                const timeout = timeoutMs > 0
+                    ? setTimeout(() => controller.abort(), Math.max(1000, timeoutMs))
+                    : null;
+
                 pendingFetchControllers.add(controller);
 
                 return fetch(url, {
                     credentials: 'same-origin',
-                    ...options,
+                    ...fetchOptions,
                     signal: controller.signal
                 }).finally(() => {
+                    if (timeout) clearTimeout(timeout);
                     pendingFetchControllers.delete(controller);
                 });
             }
@@ -2630,7 +2902,11 @@
                 appendChatMessage('interviewer', introText);
                 showInterviewerConversation(introText, 'Intro');
                 scheduleStateSave();
-                await speakQuestion(introText, { startTimerAfterSpeech: false, phase: 'intro' });
+                await speakQuestion(introText, {
+                    startTimerAfterSpeech: false,
+                    phase: 'intro',
+                    speechText: introText
+                });
 
                 if (interviewTerminated) return;
 
@@ -2659,7 +2935,7 @@
             async function concludeAndFinishInterview() {
                 if (interviewEnding) return;
 
-                if (isRecording) await stopRecording();
+                await finalizeCurrentTranscriptionForSubmit();
                 interviewEnding = true;
                 setAnswerInputEnabled(false);
                 await playClosingConversationAndSubmit();
@@ -2794,7 +3070,7 @@
                 if (cameraDetectionEnabled) initCamera();
                 
                 if(isVoiceTranscriptionMode()) {
-                    document.getElementById('voiceControls').style.display = 'flex';
+                    applyResponseModeUi();
                     const transcriptionEngine = preferredTranscriptionEngine();
                     if (!transcriptionEngine) {
                         const message = transcriptionUnavailableMessage();
@@ -2803,10 +3079,12 @@
                         showSessionNotice(`${message} You can type your answer instead.`, 'warning');
                     } else if (transcriptionEngine === 'server') {
                         setVoiceControlsEnabled(true);
-                        setTranscriptionStatus('Server transcription ready');
+                        setTranscriptionStatus('AI transcription ready (updates every few seconds)');
                     } else {
                         setVoiceControlsEnabled(true);
                     }
+                } else {
+                    applyResponseModeUi();
                 }
 
                 timerInterval = setInterval(() => {
@@ -2876,9 +3154,13 @@
                     displayedQuestionIds.add(questionDisplayKey);
                 }
 
-                // Restore answer state if navigated back (though disabled in chat mode)
-                document.getElementById('answerTextarea').value = answersData[idx] ? answersData[idx].text : '';
-                syncSelfConfidenceControl(answersData[idx]?.confidence_score ?? answersData[idx]?.self_reported_confidence ?? 0);
+                const answerState = answersData[idx] || defaultAnswerState();
+                const restoredAnswerText = String(answerState.text || answerState.speech_transcript || '');
+                answerState.text = restoredAnswerText;
+                answersData[idx] = answerState;
+                document.getElementById('answerTextarea').value = restoredAnswerText;
+                applyResponseModeUi();
+                syncSelfConfidenceControl(answerState.confidence_score ?? answerState.self_reported_confidence ?? 0);
                 resetSpeechRecognitionBufferFromTextarea();
                 lastTimelineCaptureAt = 0;
                 
@@ -3320,6 +3602,13 @@
             async function startRecording(options = {}) {
                 const silent = options && options.silent === true;
                 if (isRecording) return true;
+                if (!isVoiceTranscriptionMode()) {
+                    const message = 'Voice recording is disabled in Text Mode.';
+                    setTranscriptionStatus('');
+                    setVoiceControlsEnabled(false, message);
+                    if(!silent) showSessionNotice(message);
+                    return false;
+                }
 
                 let engine = preferredTranscriptionEngine();
                 if (!engine) {
@@ -3409,6 +3698,11 @@
             }
 
             function toggleRecordingPause() {
+                if (!isVoiceTranscriptionMode()) {
+                    showSessionNotice('Voice recording is disabled in Text Mode.');
+                    return;
+                }
+
                 if (isRecording) {
                     pauseRecording();
                     return;
@@ -3459,6 +3753,28 @@
                 return true;
             }
 
+            async function finalizeCurrentTranscriptionForSubmit() {
+                finalizeInterimTranscript();
+
+                if (isRecording) {
+                    await stopRecording();
+                    return;
+                }
+
+                if (
+                    activeTranscriptionEngine === 'server'
+                    && (
+                        serverTranscriptionQueue.length > 0
+                        || serverTranscriptionActiveRequests > 0
+                        || serverTranscriptionResults.size > 0
+                    )
+                ) {
+                    setTranscriptionStatus('Finalizing transcription', '#fbbf24');
+                    await waitForServerTranscriptionDrain(serverTranscriptionDrainTimeoutMs);
+                    commitReadyServerTranscriptionResults();
+                }
+            }
+
             function saveCurrentAnswer(isSkipped = false, timedOut = false) {
                 if (interviewTerminated) return Promise.reject(new Error('Interview session has been terminated.'));
                 stopQuestionTimer();
@@ -3477,7 +3793,7 @@
                 formData.append('is_skipped', isSkipped);
                 formData.append('timed_out', timedOut);
                 formData.append('elapsed_seconds', answersData[currentQIdx].elapsed_seconds || getQuestionElapsedSeconds());
-                formData.append('response_mode', responseMode);
+                formData.append('response_mode', canonicalResponseMode);
                 formData.append('wpm', answersData[currentQIdx].wpm);
                 formData.append('voice_duration', answersData[currentQIdx].voice_duration);
                 formData.append('filler_words_count', answersData[currentQIdx].filler_words);
@@ -3597,13 +3913,19 @@
 
             async function submitAnswer(options = {}) {
                 if (isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted) return;
-                if(isRecording) await stopRecording();
+                isSubmittingAnswer = true;
+                try {
+                    await finalizeCurrentTranscriptionForSubmit();
+                } catch (error) {
+                    console.warn('Final transcription flush before submit failed:', error);
+                }
                 
                 const timedOut = options.timedOut === true;
                 let answerText = document.getElementById('answerTextarea').value.trim();
                 const wasSkipped = options.skipped === true || (timedOut && !answerText);
 
                 if(!answerText && !timedOut && !wasSkipped) {
+                    isSubmittingAnswer = false;
                     showSessionNotice('Please provide an answer before submitting.');
                     document.getElementById('answerTextarea')?.focus();
                     return;
@@ -3613,7 +3935,6 @@
                     document.getElementById('answerTextarea').value = answerText;
                 }
 
-                isSubmittingAnswer = true;
                 setAnswerInputEnabled(false);
 
                 answersData[currentQIdx].text = answerText;
@@ -3677,7 +3998,7 @@
                 formData.append('is_skipped', wasSkipped);
                 formData.append('timed_out', timedOut);
                 formData.append('elapsed_seconds', answersData[currentQIdx].elapsed_seconds || getQuestionElapsedSeconds());
-                formData.append('response_mode', responseMode);
+                formData.append('response_mode', canonicalResponseMode);
                 formData.append('wpm', answersData[currentQIdx].wpm);
                 formData.append('voice_duration', answersData[currentQIdx].voice_duration);
                 formData.append('filler_words_count', answersData[currentQIdx].filler_words);
@@ -3733,13 +4054,13 @@
             }
 
             async function skipQuestion() {
-                if(isRecording) await stopRecording();
+                await finalizeCurrentTranscriptionForSubmit();
                 document.getElementById('answerTextarea').value = "[User skipped the question]";
                 submitAnswer({ skipped: true });
             }
 
             async function prevQuestion() {
-                if(isRecording) await stopRecording();
+                await finalizeCurrentTranscriptionForSubmit();
                 if (currentQIdx > 0) {
                     loadQuestion(currentQIdx - 1);
                 }
@@ -3777,6 +4098,10 @@
                 serverTranscriptionRecorder = null;
                 serverTranscriptionSessionToken++;
                 serverTranscriptionQueue = [];
+                serverTranscriptionActiveRequests = 0;
+                serverTranscriptionResults = new Map();
+                serverTranscriptionNextSequence = 0;
+                serverTranscriptionNextCommitSequence = 0;
                 serverTranscriptionProcessing = false;
                 resolveServerTranscriptionDrain();
                 isRecording = false;
@@ -3838,7 +4163,7 @@
                 formData.append('is_skipped', false);
                 formData.append('timed_out', false);
                 formData.append('elapsed_seconds', answerState.elapsed_seconds || getQuestionElapsedSeconds());
-                formData.append('response_mode', responseMode);
+                formData.append('response_mode', canonicalResponseMode);
                 formData.append('wpm', answerState.wpm || 0);
                 formData.append('voice_duration', answerState.voice_duration || 0);
                 formData.append('filler_words_count', answerState.filler_words || 0);
@@ -3852,10 +4177,17 @@
 
             async function abortInterviewSession() {
                 if (interviewTerminated) return;
-                interviewTerminated = true;
                 interviewEnding = true;
                 finalAnswerSubmitted = true;
                 setAnswerInputEnabled(false);
+
+                try {
+                    await finalizeCurrentTranscriptionForSubmit();
+                } catch (error) {
+                    console.warn('Final transcription flush before ending failed:', error);
+                }
+
+                interviewTerminated = true;
                 cleanupInterviewProcesses({ abortFetches: true });
 
                 const formData = new FormData();

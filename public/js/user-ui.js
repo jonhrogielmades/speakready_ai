@@ -842,13 +842,9 @@
             '/skills',
             '/modules',
             '/game/match',
-            '/missions',
-            '/drills/voice',
             '/progress',
             '/session/',
             '/reports',
-            '/personal-mastery',
-            '/community/leaderboard'
         ];
 
         return userPrefixes.some(function (prefix) {
@@ -982,12 +978,9 @@
             '/account',
             '/notifications',
             '/modules',
-            '/drills/voice',
-            '/missions',
             '/learning',
             '/coach',
-            '/reports',
-            '/personal-mastery'
+            '/reports'
         ];
 
         return morePaths.some(function (basePath) {

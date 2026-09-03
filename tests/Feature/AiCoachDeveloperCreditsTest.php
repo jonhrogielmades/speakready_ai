@@ -452,7 +452,7 @@ class AiCoachDeveloperCreditsTest extends TestCase
                 ])
                 ->assertOk()
                 ->assertJsonPath('language', 'en')
-                ->assertJsonPath('response', 'I can only help with Philippines interview preparation, resumes/CVs, job applications, skill certificates, and career coaching. Send an interview question, answer, target role, resume, certificate, or job description and I will help you from there.');
+                ->assertJsonPath('response', 'I can only help with Philippines interview preparation, resumes/CVs, skill certificates, job descriptions, and career coaching. Send an interview question, answer, target role, resume, certificate, or job description and I will help you from there.');
         }
 
         $this->assertSame(4, ChatbotMessage::count());

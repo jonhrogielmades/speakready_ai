@@ -80,18 +80,6 @@
         </button>
     </div>
         <div class="col-6 col-md-4 col-lg-3">
-        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#8b5cf640';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-5">
-            <!-- Background glow -->
-            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #8b5cf6; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
-            
-            <div style="width: 64px; height: 64px; border-radius: 18px; background: #8b5cf615; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #8b5cf630;">
-                <i class="fa-solid fa-podcast fa-fw fa-2x" style="color: #8b5cf6;"></i>
-            </div>
-            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Voice Rehearsal</span>
-            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
-        </button>
-    </div>
-        <div class="col-6 col-md-4 col-lg-3">
         <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#14b8a640';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-6">
             <!-- Background glow -->
             <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #14b8a6; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
@@ -449,42 +437,6 @@
                                 <div class="form-check form-switch fs-4 mb-0">
                                     <input class="form-check-input" type="checkbox" name="int_ai_eval" value="true" {{ $settingChecked('int_ai_eval') }}>
                                 </div>
-                            </div>
-            </div>
-            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
-                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
-                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 5. Voice Rehearsal Settings -->
-                    <!-- Modal 5 -->
-<div class="modal fade" id="modal-5" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
-            <div class="modal-header border-bottom-0">
-                <h5 class="modal-title text-white fw-bold">Voice Rehearsal</h5>
-                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
-            </div>
-            <div class="modal-body pt-0">
-                            
-                            <div class="custom-switch-container">
-                                <div><h6 class="mb-1 text-white">Enable Voice Recording</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_recording" value="true" {{ $settingChecked('vr_recording') }}></div>
-                            </div>
-                            <div class="custom-switch-container">
-                                <div><h6 class="mb-1 text-white">Enable Speech-to-Text</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_stt" value="true" {{ $settingChecked('vr_stt') }}></div>
-                            </div>
-                            <div class="custom-switch-container">
-                                <div><h6 class="mb-1 text-white">Enable Delivery Stability Analysis</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_confidence" value="true" {{ $settingChecked('vr_confidence') }}></div>
-                            </div>
-                            <div class="custom-switch-container">
-                                <div><h6 class="mb-1 text-white">Enable Filler Word Detection</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_filler" value="true" {{ $settingChecked('vr_filler') }}></div>
                             </div>
             </div>
             <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">

@@ -572,7 +572,7 @@
                 actionsTitle: 'Available actions',
                 actionsDescription: 'Use the primary buttons and controls here to continue the workflow for this page.',
                 navigationTitle: 'User navigation',
-                navigationDescription: 'Move between mock interviews, modules, voice drills, missions, challenges, coach, reports, and mastery.',
+                navigationDescription: 'Move between mock interviews, modules, challenges, coach, progress, feedback, and reports.',
                 toolsTitle: 'Page tools',
                 toolsDescription: 'Use search, replay this tutorial, switch fullscreen or theme, check notifications, and manage account or language options.',
                 heroSelectors: [],
@@ -591,7 +591,7 @@
                     metricsTitle: 'Readiness snapshot',
                     metricsDescription: 'Your score, XP, streak, rating, and trend summarize recent practice across interviews, challenges, and drills.',
                     actionsTitle: 'Start practice',
-                    actionsDescription: 'Jump into a mock interview, challenge, voice drill, module, or coach prompt from the visible action buttons.',
+                    actionsDescription: 'Jump into a mock interview, challenge, module, or coach prompt from the visible action buttons.',
                     heroSelectors: ['.sr-hero-image-panel', '.sr-score-panel', '#srDashboardTitle'],
                     workspaceSelectors: ['#card-ai-recommendations', '#card-recent-sessions', '#dashboardCoachForm'],
                     metricsSelectors: ['.sr-mobile-stat-grid', '.sr-stats-desktop', '#card-progress-chart', '#card-skill-radar'],
@@ -653,16 +653,16 @@
             if (routeMatches(routeName, ['user.progress'])) {
                 return withDefaults({
                     heroTitle: 'Progress analytics',
-                    heroDescription: 'Track readiness movement, practice consistency, learning progress, voice drills, goals, and badges in one private dashboard.',
+                    heroDescription: 'Track readiness movement, practice consistency, learning progress, goals, and badges in one private dashboard.',
                     workspaceTitle: 'Practice plan and trends',
                     workspaceDescription: 'Follow personalized practice recommendations and compare readiness trends across your completed sessions.',
                     metricsTitle: 'Skill signals',
-                    metricsDescription: 'Scenario, skill, STAR, voice, activity, milestone, and achievement panels show where growth is happening.',
+                    metricsDescription: 'Scenario, skill, STAR, activity, milestone, and achievement panels show where growth is happening.',
                     actionsTitle: 'Open next work',
                     actionsDescription: 'Use suggested modules, session history, and goal links to continue the most useful next practice.',
                     heroSelectors: ['#progressModulesLikeHero', '#progress-stats'],
                     workspaceSelectors: ['#personalized-practice-plan', '#readiness-trend', '#history-table'],
-                    metricsSelectors: ['#category-perf', '#skill-tracker', '#strengths-tracker', '#voice-progress', '#activity-calendar', '#goals-milestones', '#achievements-badges'],
+                    metricsSelectors: ['#category-perf', '#skill-tracker', '#strengths-tracker', '#activity-calendar', '#goals-milestones', '#achievements-badges'],
                     actionSelectors: ['#recommended-next', '#learning-progress', '.progress-actions'],
                 });
             }
@@ -686,8 +686,8 @@
 
             if (routeMatches(routeName, ['user.coach'])) {
                 return withDefaults({
-                    heroTitle: 'Readiness Coach',
-                    heroDescription: 'Chat with the interview coach for Philippines preparation, resumes, applications, answer evidence, and career planning.',
+                    heroTitle: 'AI Chatbot Coach',
+                    heroDescription: 'Chat with the interview coach for Philippines preparation, resumes, job descriptions, answer evidence, and career planning.',
                     workspaceTitle: 'Coach conversation',
                     workspaceDescription: 'Messages appear in the chat area, while the input supports prompts, documents, resumes, and job descriptions.',
                     metricsTitle: 'Conversation history',
@@ -735,74 +735,6 @@
                 });
             }
 
-            if (routeMatches(routeName, ['user.drills.voice'])) {
-                return withDefaults({
-                    heroTitle: 'Voice rehearsal',
-                    heroDescription: 'Practice spoken answers with prompts, transcript feedback, pacing, filler words, clarity, and saved voice progress.',
-                    workspaceTitle: 'Recording workspace',
-                    workspaceDescription: 'Choose a scenario and intention, record your response, then review the live transcript and highlighted speech patterns.',
-                    metricsTitle: 'Voice assessment',
-                    metricsDescription: 'Assessment cards summarize clarity, delivery, pace, filler words, keywords, and practice history.',
-                    actionsTitle: 'Recording controls',
-                    actionsDescription: 'Start, stop, reset, save, switch tabs, or generate a new prompt from the visible voice-drill controls.',
-                    heroSelectors: ['#voice-rehearsal-page .vr-hero', '#voice-rehearsal-page .sr-page-hero'],
-                    workspaceSelectors: ['#voiceCategoryButton', '#transcriptView', '#promptCard'],
-                    metricsSelectors: ['#analysisPanel', '#moduleTabs', '.voice-live-stats', '.instant-feedback-panel', '.intention-coach-panel'],
-                    actionSelectors: ['#btnStart', '#btnStop', '#categorySelect', '#intentionSelect'],
-                });
-            }
-
-            if (routeMatches(routeName, ['user.missions'])) {
-                return withDefaults({
-                    heroTitle: 'Mission mode',
-                    heroDescription: 'Missions create practical speaking tasks for interviews, school panels, workplace conversations, and role-specific preparation.',
-                    workspaceTitle: 'Mission board',
-                    workspaceDescription: 'Pick a prepared mission or generate one from your target goal, then use the prompt, timer, typed answer, and voice practice.',
-                    metricsTitle: 'Mission result',
-                    metricsDescription: 'Scoring checks structure, evidence, tone, and next actions for the selected mission.',
-                    actionsTitle: 'Mission controls',
-                    actionsDescription: 'Generate a mission, start the timer, record voice practice, score your answer, or reset the task.',
-                    heroSelectors: ['#mission-mode-page .mission-progress-hero', '#mission-mode-page .sr-page-hero'],
-                    workspaceSelectors: ['#missionGrid', '#missionTool', '#missionAnswer'],
-                    metricsSelectors: ['#missionResultPanel', '#missionScoreRing', '#missionFeedbackList'],
-                    actionSelectors: ['#generateMissionBtn', '#missionTimerBtn', '#missionScoreBtn'],
-                });
-            }
-
-            if (routeMatches(routeName, ['user.applications'])) {
-                return withDefaults({
-                    heroTitle: 'Job application tracker',
-                    heroDescription: 'Track target jobs, compare resume and job-description evidence, and generate role-specific practice plans.',
-                    workspaceTitle: 'Application planner',
-                    workspaceDescription: 'Add the job details, resume, description, stage, deadline, and notes so SpeakReady can build a smart preparation plan.',
-                    metricsTitle: 'Tracked applications',
-                    metricsDescription: 'Application cards show match score, missing keywords, deadlines, stages, and plan completion.',
-                    actionsTitle: 'Plan actions',
-                    actionsDescription: 'Add or update jobs, practice from a saved target, and check off preparation tasks as they are completed.',
-                    heroSelectors: ['#job-tracker-page .sr-page-hero', '#job-tracker-summary'],
-                    workspaceSelectors: ['#job-tracker-form', '#job-tracker-list'],
-                    metricsSelectors: ['#job-tracker-summary', '.tracker-application-card', '.match-ring'],
-                    actionSelectors: ['.plan-item', '.tracker-actions', 'button[type="submit"]'],
-                });
-            }
-
-            if (routeMatches(routeName, ['user.packs'])) {
-                return withDefaults({
-                    heroTitle: 'Interview packs',
-                    heroDescription: 'Use curated company, role, focus, persona, pressure-mode, and sample-question packs to start targeted practice.',
-                    workspaceTitle: 'Pack browser',
-                    workspaceDescription: 'Search by company, role, focus, or question and filter by difficulty before choosing a pack.',
-                    metricsTitle: 'Pack details',
-                    metricsDescription: 'Each card shows difficulty, focus, persona, pressure mode, and sample questions for the simulation.',
-                    actionsTitle: 'Start pack practice',
-                    actionsDescription: 'Open a pack to launch a practice session with its role and interview scenario prefilled.',
-                    heroSelectors: ['#interview-packs-page .sr-page-hero', '#pack-summary'],
-                    workspaceSelectors: ['#pack-browser', '#packSearch', '#packDifficulty'],
-                    metricsSelectors: ['#pack-summary', '.pack-card'],
-                    actionSelectors: ['.pack-card a', '.pack-card button'],
-                });
-            }
-
             if (routeMatches(routeName, ['user.skills'])) {
                 return withDefaults({
                     heroTitle: 'Skill Trees',
@@ -817,23 +749,6 @@
                     workspaceSelectors: ['.perks-panel', '.perk-card'],
                     metricsSelectors: ['.skill-xp-overview', '.stat-card'],
                     actionSelectors: ['.btn-unlock', '.skill-back-link'],
-                });
-            }
-
-            if (routeMatches(routeName, ['user.leaderboard']) || path.includes('/personal-mastery')) {
-                return withDefaults({
-                    heroTitle: 'Personal Mastery',
-                    heroDescription: 'Track private readiness growth, best scores, streaks, STAR stories, checklist progress, and milestones without public ranking.',
-                    workspaceTitle: 'Mastery plan',
-                    workspaceDescription: 'Use recommended drills, career tracks, STAR story bank, weekly review, and coach shortcuts to keep practice focused.',
-                    metricsTitle: 'Private growth metrics',
-                    metricsDescription: 'Personal best, latest score, baseline growth, streak, badges, and checklist completion stay centered on your own progress.',
-                    actionsTitle: 'Mastery actions',
-                    actionsDescription: 'Save truthful STAR stories, toggle checklist items, open coach shortcuts, or jump back to progress analytics.',
-                    heroSelectors: ['#personal-mastery-page .mastery-hero-card', '#leaderboard-page .sr-page-hero'],
-                    workspaceSelectors: ['#mastery-next-action', '#mastery-drills', '#mastery-story-bank', '#leaderboard-container'],
-                    metricsSelectors: ['.mastery-stats-grid', '#mastery-tracks', '#mastery-badges', '#col-xp', '#col-streak'],
-                    actionSelectors: ['#masteryStoryForm', '#mastery-checklist', '.mastery-progress-btn'],
                 });
             }
 
@@ -988,7 +903,6 @@
                 '#userAppContent .module-card',
                 '#userAppContent .ll-module-card',
                 '#userAppContent .level-card',
-                '#userAppContent .tracker-panel',
                 '#userAppContent .mastery-panel',
                 '#userAppContent .feedback-insight-panel',
                 '#userAppContent .notifications-list-panel',
@@ -1004,7 +918,6 @@
                 '#mob-content .module-card',
                 '#mob-content .ll-module-card',
                 '#mob-content .level-card',
-                '#mob-content .tracker-panel',
                 '#mob-content .mastery-panel',
                 '#mob-content .feedback-insight-panel',
                 '#mob-content .notifications-list-panel',
@@ -1029,8 +942,6 @@
                 '#dashboard-stats',
                 '#progress-stats',
                 '#userAppContent .mastery-stats-grid',
-                '#userAppContent .tracker-stats',
-                '#userAppContent .pack-summary',
                 '#userAppContent .stat-grid',
                 '#userAppContent .db-stat-card',
                 '#userAppContent .sr-stat-card',
@@ -1039,8 +950,6 @@
                 '#userAppContent table',
                 '#userAppContent .list-group',
                 '#mob-content .mastery-stats-grid',
-                '#mob-content .tracker-stats',
-                '#mob-content .pack-summary',
                 '#mob-content .stat-grid',
                 '#mob-content .db-stat-card',
                 '#mob-content .sr-stat-card',
@@ -1064,7 +973,6 @@
                 ...(tourProfile.actionSelectors || []),
                 '#userAppContent .sr-page-actions',
                 '#userAppContent .progress-actions',
-                '#userAppContent .tracker-actions',
                 '#userAppContent .coach-actions',
                 '#userAppContent .start-challenge-btn',
                 '#userAppContent .mission-btn-primary',
@@ -1074,7 +982,6 @@
                 '#userAppContent a.btn',
                 '#mob-content .sr-page-actions',
                 '#mob-content .progress-actions',
-                '#mob-content .tracker-actions',
                 '#mob-content .coach-actions',
                 '#mob-content .start-challenge-btn',
                 '#mob-content .mission-btn-primary',

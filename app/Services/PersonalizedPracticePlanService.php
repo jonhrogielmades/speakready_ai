@@ -6,7 +6,6 @@ use App\Models\InterviewSession;
 use App\Models\Profile;
 use App\Models\Score;
 use App\Models\Setting;
-use App\Models\VoiceSession;
 use Illuminate\Support\Collection;
 
 class PersonalizedPracticePlanService
@@ -66,24 +65,17 @@ class PersonalizedPracticePlanService
         $scoredSessions = $this->recentScoredSessions($userId);
         $weakAreas = $this->weakAreasFor($scoredSessions);
         $modulesEnabled = Setting::enabled('ll_modules');
-        $voiceEnabled = Setting::enabled('vr_recording');
         $coachEnabled = Setting::enabled('aic_enable');
 
         $moduleRecommendations = $modulesEnabled
             ? $this->recommendations->forUser($userId, 3)
             : collect();
 
-        $latestVoice = VoiceSession::where('user_id', $userId)
-            ->latest()
-            ->first();
-
         $profile = Profile::where('user_id', $userId)->first();
 
         return collect([
             $this->learningPlanItem($moduleRecommendations, $weakAreas, $coachEnabled),
-            $voiceEnabled
-                ? $this->voicePlanItem($latestVoice)
-                : $this->speakingFallbackPlanItem($weakAreas, $coachEnabled),
+            $this->speakingPlanEntry($weakAreas, $coachEnabled),
             $this->mockInterviewPlanItem($scoredSessions, $weakAreas, $profile),
             $this->reviewPlanItem($scoredSessions, $weakAreas),
         ])
@@ -147,75 +139,19 @@ class PersonalizedPracticePlanService
         );
     }
 
-    private function voicePlanItem(?VoiceSession $latestVoice): object
-    {
-        $focus = 'Voice Baseline';
-        $action = 'Record a 90-second answer and save it so the app can track clarity, pace, and filler words.';
-        $reason = 'No voice rehearsal has been saved yet.';
-        $tasks = ['Record one answer', 'Replay it once before saving'];
-
-        if ($latestVoice) {
-            $clarity = $this->number($latestVoice->clarity_score);
-            $confidence = $this->number($latestVoice->confidence_score);
-            $fillers = $this->number($latestVoice->filler_words) ?? 0;
-            $pace = $this->number($latestVoice->speaking_pace ?? $latestVoice->wpm);
-
-            if ($clarity !== null && $clarity < 75) {
-                $focus = 'Voice Clarity';
-                $action = 'Repeat your latest prompt with slower phrasing and stronger sentence endings.';
-                $reason = "Your latest voice clarity is {$clarity}%.";
-                $tasks = ['Pause after each main point', 'Repeat once with clearer endings'];
-            } elseif ($confidence !== null && $confidence < 75) {
-                $focus = 'Delivery Stability';
-                $action = 'Record the same answer twice and choose the steadier version.';
-                $reason = "Your latest delivery stability is {$confidence}%.";
-                $tasks = ['Stand or sit upright', 'Keep pace steady for 90 seconds'];
-            } elseif ($fillers >= 5) {
-                $focus = 'Filler Control';
-                $action = 'Record one answer with silent pauses instead of filler words.';
-                $reason = "Your latest rehearsal had {$fillers} filler words.";
-                $tasks = ['Pause silently before details', 'Limit fillers to 3 or fewer'];
-            } elseif ($pace !== null && ($pace < 110 || $pace > 170)) {
-                $focus = 'Speaking Pace';
-                $action = 'Record one answer and aim for a natural 110 to 170 words per minute pace.';
-                $reason = "Your latest speaking pace was {$pace} wpm.";
-                $tasks = ['Use a 90-second timer', 'Keep sentences short'];
-            } else {
-                $focus = 'Delivery Consistency';
-                $action = 'Record a fresh answer to keep your speaking rhythm sharp.';
-                $reason = 'Your latest voice metrics look steady, so keep the habit active.';
-                $tasks = ['Record one fresh answer', 'Compare it with your previous attempt'];
-            }
-        }
-
-        return $this->item(
-            'Next',
-            $focus,
-            'Speaking Practice',
-            $action,
-            $reason,
-            10,
-            route('user.drills.voice'),
-            'Rehearse',
-            'fa-ear-listen',
-            '#ec4899',
-            $tasks
-        );
-    }
-
-    private function speakingFallbackPlanItem(Collection $weakAreas, bool $coachEnabled): object
+    private function speakingPlanEntry(Collection $weakAreas, bool $coachEnabled): object
     {
         $primaryArea = $weakAreas->first();
         $focus = $primaryArea?->label ?: 'Speaking Practice';
 
         return $this->item(
             'Next',
-            'Practice Speaking Without Recording',
+            'Practice One Answer Aloud',
             $focus,
             $primaryArea
                 ? "Practice one answer aloud with extra attention to {$primaryArea->label}."
                 : 'Practice one answer aloud, then write the sentence you would improve.',
-            'Voice rehearsal is currently disabled, so this step uses an available practice path.',
+            'This step uses the available coach or mock interview workflow.',
             10,
             $coachEnabled ? route('user.coach') : route('interview.setup'),
             $coachEnabled ? 'Ask Coach' : 'Start Interview',

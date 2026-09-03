@@ -304,7 +304,7 @@
                                 && (($answer->eye_contact_score ?? 0) > 0 || ($answer->posture_score ?? 0) > 0);
                         @endphp
 
-                        <!-- Feature 11: Voice Rehearsal Feedback -->
+                        <!-- Delivery Feedback -->
                         @if($hasDeliveryMetrics)
                         <div class="row g-3 mb-4">
                             <div class="col-md-3 col-6">

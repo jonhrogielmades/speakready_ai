@@ -960,6 +960,7 @@
     .sr-score-note i {
         color: #fbbf24;
     }
+
     .sr-score-top .sr-status-pill.score-low {
         color: #dc2626 !important;
         background: rgba(239, 68, 68, 0.11) !important;
@@ -5940,6 +5941,38 @@
         object-position: center bottom;
     }
 
+    .sr-image-coach-trigger {
+        display: block;
+        aspect-ratio: 3 / 2;
+        padding: 0;
+        border: 0;
+        margin: 0;
+        appearance: none;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        line-height: 0;
+        pointer-events: auto;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .sr-image-coach-trigger:focus-visible {
+        outline: 3px solid rgba(255, 255, 255, 0.86);
+        outline-offset: 4px;
+        border-radius: 22px;
+    }
+
+    .sr-image-coach-trigger > img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center bottom;
+        pointer-events: none;
+        user-select: none;
+    }
+
     .sr-image-robot {
         z-index: 2;
         filter: drop-shadow(0 24px 28px rgba(6, 24, 76, 0.22));
@@ -6237,6 +6270,13 @@
     .sr-image-speech-accent.is-success {
         color: var(--sr-speech-success) !important;
         -webkit-text-fill-color: var(--sr-speech-success) !important;
+    }
+
+    .sr-image-speech > .sr-image-speech-action {
+        margin-top: 5px;
+        color: var(--sr-speech-accent) !important;
+        -webkit-text-fill-color: var(--sr-speech-accent) !important;
+        font-weight: 950;
     }
 
 
@@ -8381,14 +8421,6 @@ body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
     color: var(--sr-saas-muted, #64748b);
 }
 
-.sr-dashboard-coach-prompts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.sr-dashboard-coach-prompts button,
 .sr-dashboard-coach-link,
 .sr-dashboard-coach-danger,
 .sr-dashboard-coach-secondary,
@@ -8403,13 +8435,6 @@ body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
     font-weight: 900;
     text-decoration: none;
     white-space: nowrap;
-}
-
-.sr-dashboard-coach-prompts button {
-    padding: 8px 10px;
-    border: 1px solid rgba(37, 99, 235, 0.15);
-    background: rgba(37, 99, 235, 0.08);
-    color: var(--sr-saas-primary, #2563eb);
 }
 
 .sr-dashboard-coach-link,
@@ -8901,58 +8926,6 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
         white-space: normal;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
-    }
-
-    body.user-desktop-shell:not(.admin-shell) .sr-saas-command-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-        min-width: 0;
-    }
-
-    body.user-desktop-shell:not(.admin-shell) .sr-saas-action {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        min-height: 36px;
-        padding: 8px 12px;
-        border: 1px solid var(--sr-saas-border);
-        border-radius: 8px;
-        appearance: none;
-        background: var(--sr-saas-surface-soft);
-        color: var(--sr-saas-muted-strong);
-        font-family: inherit;
-        text-decoration: none;
-        font-size: 0.72rem;
-        line-height: 1;
-        font-weight: 900;
-        white-space: nowrap;
-        cursor: pointer;
-        transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
-    }
-
-    body.user-desktop-shell:not(.admin-shell) .sr-saas-action:hover {
-        transform: translateY(-1px);
-        border-color: rgba(37, 99, 235, 0.28);
-        color: var(--sr-saas-primary);
-    }
-
-    body.user-desktop-shell:not(.admin-shell) .sr-saas-action.primary {
-        color: #ffffff;
-        border-color: transparent;
-        background: linear-gradient(135deg, #2563eb, #0891b2);
-        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
-    }
-
-    body.user-desktop-shell:not(.admin-shell) .sr-saas-action.primary:hover {
-        color: #ffffff;
-    }
-
-    body.user-desktop-shell:not(.admin-shell) .sr-saas-action.icon-only {
-        width: 38px;
-        padding: 0;
     }
 
     body.user-desktop-shell:not(.admin-shell) .sr-dashboard .sr-card,

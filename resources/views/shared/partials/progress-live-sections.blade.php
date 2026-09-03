@@ -13,15 +13,6 @@
         : 0;
     $recommendations = collect($moduleRecommendations ?? [])->take(3)->values();
     $planItems = collect($practicePlan ?? [])->take(4)->values();
-    $latestVoice = $voiceSummary->latest ?? null;
-    $voicePaceRaw = $latestVoice?->speaking_pace ?? $latestVoice?->wpm;
-    $voiceClarity = is_numeric($latestVoice?->clarity_score) ? max(0, min(100, (int) round($latestVoice->clarity_score))) : null;
-    $voiceConfidence = is_numeric($latestVoice?->confidence_score) ? max(0, min(100, (int) round($latestVoice->confidence_score))) : null;
-    $voicePace = is_numeric($voicePaceRaw) ? max(0, (int) round($voicePaceRaw)) : null;
-    $voiceFillers = is_numeric($latestVoice?->filler_words) ? max(0, (int) round($latestVoice->filler_words)) : null;
-    $voiceReduction = is_numeric($voiceSummary->filler_reduction ?? null) ? (int) round($voiceSummary->filler_reduction) : null;
-    $voicePrompt = trim((string) ($latestVoice?->prompt ?? 'Voice rehearsal'));
-    $voicePrompt = $voicePrompt !== '' ? $voicePrompt : 'Voice rehearsal';
     $safeCssColor = fn ($value, $fallback = '#3b82f6') => preg_match('/^#[0-9a-fA-F]{3,8}$/', trim((string) $value)) ? trim((string) $value) : $fallback;
     $percent = fn ($value) => max(0, min(100, (int) round((float) $value)));
     $moduleColors = ['#0ea5e9', '#7c3aed', '#10b981'];
@@ -35,7 +26,7 @@
                 <div class="practice-plan-heading-icon"><i class="fa-solid fa-route"></i></div>
                 <div>
                     <h5 class="practice-plan-heading-title">Personalized Practice Plan</h5>
-                    <p class="practice-plan-heading-text">Next steps from your latest interview, voice, and module activity.</p>
+                    <p class="practice-plan-heading-text">Next steps from your latest interview and module activity.</p>
                 </div>
             </div>
             <div class="practice-plan-list">
@@ -69,7 +60,7 @@
 @endif
 
 <div class="row g-4 mb-4 progress-live-grid">
-    <div class="col-12 col-lg-4 progress-live-card" id="learning-progress">
+    <div class="col-12 col-lg-6 progress-live-card" id="learning-progress">
         <div class="learning-panel" style="--panel-accent:#0ea5e9;">
             <div class="learning-heading">
                 <div class="learning-heading-icon"><i class="fa-solid fa-book-open"></i></div>
@@ -118,7 +109,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-lg-4 progress-live-card" id="recommended-next">
+    <div class="col-12 col-lg-6 progress-live-card" id="recommended-next">
         <div class="recommend-panel" style="--panel-accent:#7c3aed;">
             <div class="recommend-heading">
                 <div class="recommend-heading-icon"><i class="fa-solid fa-compass"></i></div>
@@ -148,68 +139,6 @@
                     </a>
                 @endforelse
             </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-lg-4 progress-live-card" id="voice-progress">
-        <div class="voice-panel" style="--panel-accent:#ec4899;">
-            <div class="voice-heading">
-                <div class="voice-heading-icon"><i class="fa-solid fa-wave-square"></i></div>
-                <div>
-                    <h5 class="voice-title">Voice Progress</h5>
-                    <p class="voice-subtitle">Delivery signals from saved voice drills.</p>
-                </div>
-            </div>
-
-            @if($latestVoice)
-                <div class="row text-center">
-                    <div class="col-4">
-                        <h3>{{ $voiceClarity === null ? 'N/A' : $voiceClarity.'%' }}</h3>
-                        <small>Clarity</small>
-                    </div>
-                    <div class="col-4">
-                        <h3>{{ $voiceConfidence === null ? 'N/A' : $voiceConfidence.'%' }}</h3>
-                        <small>Confidence</small>
-                    </div>
-                    <div class="col-4">
-                        <h3>{{ $voicePace === null ? 'N/A' : $voicePace }}</h3>
-                        <small>Pace WPM</small>
-                    </div>
-                </div>
-                <div class="p-3 rounded-4" style="background:rgba(236,72,153,0.08);">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="min-w-0">
-                            <small style="color:var(--tx3);font-weight:800;text-transform:uppercase;">Latest drill</small>
-                            <h2 class="mb-0" style="color:var(--tx);font-weight:950;">{{ \Illuminate\Support\Str::limit($voicePrompt, 54) }}</h2>
-                        </div>
-                        <a href="{{ route('user.drills.voice') }}" class="btn btn-sm btn-outline-primary flex-shrink-0">Practice Again</a>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <span style="color:var(--tx3);font-weight:700;">Filler words</span>
-                        <strong style="color:var(--tx);">{{ $voiceFillers === null ? 'N/A' : $voiceFillers }}</strong>
-                    </div>
-                    <p class="mb-0 mt-2" style="color:var(--tx3);font-size:.78rem;line-height:1.35;">
-                        @if($voiceReduction === null)
-                            Save another voice drill to measure filler-word change.
-                        @elseif($voiceReduction > 0)
-                            Filler words are down {{ $voiceReduction }}% from the previous drill.
-                        @elseif($voiceReduction < 0)
-                            Filler words are up {{ abs($voiceReduction) }}%; practice silent pauses next.
-                        @else
-                            Filler words held steady compared with the previous drill.
-                        @endif
-                    </p>
-                </div>
-            @else
-                <div class="voice-empty">
-                    <div>
-                        <div class="voice-empty-icon"><i class="fa-solid fa-microphone-lines"></i></div>
-                        <h6 class="voice-empty-title">No voice drills saved yet</h6>
-                        <p class="voice-empty-text">Record a short answer to track clarity, pace, and filler words.</p>
-                        <a href="{{ route('user.drills.voice') }}" class="btn btn-outline-primary mt-3"><i class="fa-solid fa-play"></i> Start Voice Drill</a>
-                    </div>
-                </div>
-            @endif
         </div>
     </div>
 </div>

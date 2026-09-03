@@ -7,7 +7,7 @@
 
 @section('content')
 @php
-    $sourcePacks = $sourcePacks ?? [];
+    $sourceDatasets = $sourceDatasets ?? [];
     $interviewCategories = ($categories ?? collect())
         ->filter(function ($category): bool {
             $title = strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title)) ?? ''));
@@ -30,12 +30,6 @@
                 || str_contains($title, 'admission interview');
         })
         ->values();
-    $selectedApplication = $selectedApplication ?? null;
-    $selectedPack = $selectedPack ?? null;
-    $packQuestionTypes = collect($selectedPack?->question_types ?? [])
-        ->filter(fn ($type) => in_array($type, ['Behavioral', 'Situational', 'Technical', 'Personal'], true))
-        ->values()
-        ->all();
 
     $scenarioLabelForCategory = function (?string $categoryTitle): string {
         $title = trim((string) $categoryTitle);
@@ -76,17 +70,16 @@
     };
 
     $scenarioOptions = $interviewCategories
-        ->map(function ($category) use ($sourcePacks, $scenarioLabelForCategory, $focusForCategory) {
+        ->map(function ($category) use ($sourceDatasets, $scenarioLabelForCategory, $focusForCategory) {
             $key = \App\Services\QuestionDatasetProvider::defaultKeyForCategory($category->title);
-            $pack = $sourcePacks[$key] ?? collect($sourcePacks)->first() ?? [];
+            $sourceDataset = $sourceDatasets[$key] ?? collect($sourceDatasets)->first() ?? [];
             $label = $scenarioLabelForCategory($category->title);
-            $sourceSummary = collect($pack['sources'] ?? [])
+            $sourceSummary = collect($sourceDataset['sources'] ?? [])
                 ->pluck('name')
                 ->take(3)
                 ->implode(', ');
 
             return [
-                'key' => $key,
                 'category_id' => $category->id,
                 'label' => $label,
                 'focus' => $focusForCategory($category->title, $label),
@@ -96,57 +89,23 @@
         })
         ->values();
     $firstScenario = $scenarioOptions->first();
-    $packText = strtolower(implode(' ', array_filter([
-        $selectedPack?->name,
-        $selectedPack?->company,
-        $selectedPack?->role_family,
-        $selectedPack?->interview_focus,
-        $selectedPack?->company_persona,
-    ])));
-    $packScenario = null;
-    if ($packText !== '') {
-        $packScenarioNeedles = match (true) {
-            str_contains($packText, 'college') || str_contains($packText, 'school') || str_contains($packText, 'admission') => ['school admission', 'college', 'admission'],
-            default => ['job interview', 'job interviews'],
-        };
-
-        $packScenario = $scenarioOptions->first(function ($scenario) use ($packScenarioNeedles) {
-            $label = strtolower($scenario['label'].' '.$scenario['focus']);
-
-            foreach ($packScenarioNeedles as $needle) {
-                if (str_contains($label, $needle)) {
-                    return true;
-                }
-            }
-
-            return false;
-        });
-    }
-    $selectedCategoryId = (int) old('category_id', $packScenario['category_id'] ?? ($firstScenario['category_id'] ?? 0));
-    $selectedSourcePackKey = old('source_pack_key');
+    $selectedCategoryId = (int) old('category_id', $firstScenario['category_id'] ?? 0);
     $selectedScenario = $scenarioOptions->first(fn ($scenario) => (int) $scenario['category_id'] === $selectedCategoryId)
-        ?? $scenarioOptions->firstWhere('key', $selectedSourcePackKey)
         ?? $scenarioOptions->first();
-    $packDifficulty = in_array($selectedPack?->difficulty, ['easy', 'medium', 'hard'], true)
-        ? $selectedPack->difficulty
-        : 'medium';
     $targetPositionDefault = old(
         'target_position',
-        $selectedApplication?->job_title
-            ?? ($selectedPack?->role_family ? $selectedPack->role_family.' Role' : ($selectedPack?->name ?? ''))
+        ''
     );
-    $companyPersonaDefault = $selectedPack?->company_persona
-        ?? ($selectedApplication?->company_name ? $selectedApplication->company_name.' hiring context' : 'Philippines hiring context');
     $setupDefaults = [
-        'difficulty' => old('difficulty', $selectedPack ? $packDifficulty : 'medium'),
+        'difficulty' => old('difficulty', 'medium'),
         'num_questions' => (string) old('num_questions', 10),
-        'time_limit' => (string) old('time_limit', $selectedPack?->pressure_mode ? 2 : 0),
-        'interview_focus' => old('interview_focus', $selectedPack?->interview_focus ?? ($selectedScenario['focus'] ?? 'Philippines Job Interview')),
+        'time_limit' => (string) old('time_limit', 0),
+        'interview_focus' => old('interview_focus', $selectedScenario['focus'] ?? 'Philippines Job Interview'),
         'ai_assistance_level' => old('ai_assistance_level', 'standard'),
-        'interviewer_strictness' => old('interviewer_strictness', $selectedPack?->pressure_mode ? 'strict' : 'neutral'),
-        'live_feedback_mode' => old('live_feedback_mode', $selectedPack?->pressure_mode ? 'real_interview' : 'coaching'),
+        'interviewer_strictness' => old('interviewer_strictness', 'neutral'),
+        'live_feedback_mode' => old('live_feedback_mode', 'coaching'),
         'response_mode' => old('response_mode', 'voice'),
-        'company_persona' => old('company_persona', $companyPersonaDefault),
+        'company_persona' => old('company_persona', 'Philippines hiring context'),
         'interview_format' => old('interview_format', 'standard'),
     ];
     $interviewerStrictnessLabels = [
@@ -156,7 +115,7 @@
         'executive' => 'Executive Panel',
     ];
     $interviewerStrictnessSummary = $interviewerStrictnessLabels[$setupDefaults['interviewer_strictness']] ?? 'Neutral HR Interviewer';
-    $selectedQuestionTypes = old('question_types', $packQuestionTypes ?: ['Behavioral', 'Situational']);
+    $selectedQuestionTypes = old('question_types', ['Behavioral', 'Situational']);
     $hasScenarioOptions = $scenarioOptions->isNotEmpty();
 @endphp
 
@@ -212,14 +171,6 @@
 
     <form action="{{ route('interview.start') }}" method="POST" id="setupForm">
         @csrf
-        @if($selectedApplication)
-            <input type="hidden" name="job_application_id" value="{{ $selectedApplication->id }}">
-            <textarea name="resume_text" hidden>{{ old('resume_text', $selectedApplication->resume_text) }}</textarea>
-            <textarea name="job_description" hidden>{{ old('job_description', $selectedApplication->job_description) }}</textarea>
-        @endif
-        @if($selectedPack)
-            <input type="hidden" name="interview_pack_id" value="{{ $selectedPack->id }}">
-        @endif
         <div class="row g-4">
             <!-- Left Column: Form Settings -->
             <div class="col-lg-8" id="setup-left-col">
@@ -255,7 +206,6 @@
                                 <select class="oinp setup-input" name="category_id" id="valScenario" aria-describedby="scenarioHelp{{ $hasScenarioOptions ? '' : ' scenarioEmptyState' }}" aria-invalid="{{ $hasScenarioOptions ? 'false' : 'true' }}" required>
                                 @forelse($scenarioOptions as $scenario)
                                     <option value="{{ $scenario['category_id'] }}"
-                                        data-source-pack-key="{{ $scenario['key'] }}"
                                         data-focus="{{ $scenario['focus'] }}"
                                         data-context-label="{{ $scenario['context_label'] }}"
                                         data-source-summary="{{ $scenario['source_summary'] }}"
@@ -267,7 +217,6 @@
                                 @endforelse
                                 </select>
                             </div>
-                            <input type="hidden" name="source_pack_key" id="valSourcePack" value="{{ $selectedScenario['key'] ?? '' }}">
                             <input type="hidden" name="interview_focus" id="valFocus" value="{{ $setupDefaults['interview_focus'] }}" class="setup-input">
                             <div class="desc-text" id="scenarioHelp">Choose either job interviews or school admission interviews.</div>
                             @unless($hasScenarioOptions)
@@ -606,7 +555,7 @@
         'panel-structure': ['valNumQuestions', 'valTimeLimit', 'valInterviewFormat'],
         'panel-content': ['valAssistance', 'valStrictness', 'valFeedbackMode'],
     };
-    const defaultCompanyPersona = @json($companyPersonaDefault ?: 'Philippines hiring context');
+    const defaultCompanyPersona = @json($setupDefaults['company_persona'] ?: 'Philippines hiring context');
     let setupValidationVisible = false;
     const setupFieldErrorIds = {
         valPosition: 'targetPositionError',
@@ -801,7 +750,6 @@
         if (scenarioSelect) {
             const selectedOption = scenarioSelect.options[scenarioSelect.selectedIndex];
             setSummaryValue('sumScenario', selectedOption?.dataset.contextLabel || selectedOption?.text || '', detailsReady);
-            document.getElementById('valSourcePack').value = selectedOption?.dataset.sourcePackKey || '';
             document.getElementById('valFocus').value = selectedOption?.dataset.focus || 'Philippines Job Interview';
             const sourceSummary = document.getElementById('sourceSummary');
             if (sourceSummary) {

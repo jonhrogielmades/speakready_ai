@@ -9,9 +9,7 @@ use App\Models\Feedback;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
 use App\Models\InterviewAnswer;
-use App\Models\InterviewPack;
 use App\Models\InterviewSession;
-use App\Models\JobApplication;
 use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
@@ -24,15 +22,15 @@ use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
-use App\Support\CareerPlanningSchema;
 use App\Support\FeedbackCoachingRepair;
 use App\Support\FeedbackSchema;
+use App\Support\GameSchema;
 use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
-use App\Support\GameSchema;
 use App\Support\QuestionSchema;
 use App\Support\ScoreSchema;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -43,6 +41,10 @@ use Illuminate\Validation\Rule;
 
 class InterviewController extends Controller
 {
+    private const ACCEPTED_RESPONSE_MODES = ['text', 'voice', 'hybrid', 'voice_and_text'];
+
+    private const VOICE_RESPONSE_MODES = ['voice', 'hybrid'];
+
     public function start(Request $request)
     {
         if (! Auth::check()) {
@@ -69,7 +71,7 @@ class InterviewController extends Controller
             'job_description' => 'nullable|string|max:20000',
             'num_questions' => ['nullable', 'integer', Rule::in([1, 3, 5, 10, 15, 20, 25, 30])],
             'coach_focus_mode' => 'nullable|string|max:80',
-            'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid'])],
+            'response_mode' => ['nullable', Rule::in(self::ACCEPTED_RESPONSE_MODES)],
             'interview_focus' => 'nullable|string|max:120',
             'company_persona' => 'nullable|string|max:120',
             'interviewer_strictness' => ['nullable', Rule::in(['friendly', 'neutral', 'strict', 'executive'])],
@@ -79,7 +81,6 @@ class InterviewController extends Controller
             'ai_assistance_level' => ['nullable', Rule::in(['beginner', 'standard', 'challenge'])],
             'live_feedback_mode' => ['nullable', Rule::in(['coaching', 'real_interview'])],
             'interview_format' => ['nullable', Rule::in(['standard', 'hr_screen', 'hiring_manager', 'panel', 'phone', 'asynchronous', 'technical', 'case', 'presentation'])],
-            'source_pack_key' => ['nullable', Rule::in(array_keys(QuestionDatasetProvider::all()))],
             'camera_detection' => 'nullable|boolean',
             'camera_coaching' => 'nullable|boolean',
             'separate_language_scoring' => 'nullable|boolean',
@@ -87,22 +88,9 @@ class InterviewController extends Controller
             'captions' => 'nullable|boolean',
             'reduced_distraction' => 'nullable|boolean',
             'simplified_questions' => 'nullable|boolean',
-            'job_application_id' => [
-                'nullable',
-                Rule::exists('job_applications', 'id')->where(fn ($query) => $query->where('user_id', Auth::id())),
-            ],
-            'interview_pack_id' => [
-                'nullable',
-                Rule::exists('interview_packs', 'id')->where(fn ($query) => $query->where('status', 'active')),
-            ],
         ]);
 
-        $application = ! empty($validated['job_application_id'])
-            ? JobApplication::where('user_id', Auth::id())->findOrFail($validated['job_application_id'])
-            : null;
-        $pack = ! empty($validated['interview_pack_id'])
-            ? InterviewPack::where('status', 'active')->findOrFail($validated['interview_pack_id'])
-            : null;
+        $validated['response_mode'] = $this->normalizeResponseMode($validated['response_mode'] ?? 'voice');
 
         $activeCoreCategories = Category::where('status', 'active')->where('type', 'core');
         $category = ! empty($validated['category_id'])
@@ -118,11 +106,7 @@ class InterviewController extends Controller
                 ->withInput();
         }
 
-        $categoryDatasetKey = QuestionDatasetProvider::defaultKeyForCategory($category->title);
-        $requestedDataset = QuestionDatasetProvider::find($validated['source_pack_key'] ?? null);
-        $dataset = ($requestedDataset && ($requestedDataset['key'] ?? null) === $categoryDatasetKey)
-            ? $requestedDataset
-            : QuestionDatasetProvider::forCategory($category);
+        $dataset = QuestionDatasetProvider::forCategory($category);
         if (($dataset['country'] ?? null) !== 'Philippines') {
             return back()
                 ->withErrors(['category_id' => 'Interview setup is limited to Philippines interview practice.'])
@@ -134,34 +118,11 @@ class InterviewController extends Controller
             $position = $validated['custom_position'];
         }
 
-        if ($application) {
-            if (blank($validated['resume_text'] ?? null)) {
-                $validated['resume_text'] = $application->resume_text;
-            }
-
-            if (blank($validated['job_description'] ?? null)) {
-                $validated['job_description'] = $application->job_description;
-            }
-        }
-
         $questionTypes = $validated['question_types'] ?? [];
-        if (empty($questionTypes) && $pack) {
-            $questionTypes = collect($pack->question_types ?? [])
-                ->filter(fn ($type) => in_array($type, ['Behavioral', 'Situational', 'Technical', 'Personal'], true))
-                ->values()
-                ->all();
-        }
 
         $validated['interview_focus'] = $this->philippinesInterviewFocus($validated['interview_focus'] ?? null);
-        $persona = $validated['company_persona'] ?? null;
-        if (blank($persona) && $pack?->company_persona) {
-            $persona = $pack->company_persona;
-        }
-        if (blank($persona) && $application?->company_name) {
-            $persona = $application->company_name.' hiring context';
-        }
-        $validated['company_persona'] = $this->philippinesCompanyPersona($persona);
-        $pressureMode = (bool) ($pack?->pressure_mode ?? false);
+        $validated['company_persona'] = $this->philippinesCompanyPersona($validated['company_persona'] ?? null);
+        $pressureMode = false;
 
         // Provider choice is an administrator concern. Users receive the same versioned rubric
         // regardless of which healthy provider the configured fallback chain selects.
@@ -191,8 +152,6 @@ class InterviewController extends Controller
 
         $session = InterviewSession::create([
             'user_id' => Auth::id(),
-            'job_application_id' => $application?->id,
-            'interview_pack_id' => $pack?->id,
             'category_id' => $category->id,
             'difficulty' => $validated['difficulty'],
             'target_position' => $position,
@@ -319,7 +278,7 @@ class InterviewController extends Controller
         }
 
         if (! $this->hasNonOpeningQuestion($session)) {
-            Log::warning('Interview setup used built-in fallback questions because no AI, pack, or bank questions were available.', [
+            Log::warning('Interview setup used built-in fallback questions because no AI or question-bank questions were available.', [
                 'session_id' => $session->id,
                 'category_id' => $category->id,
                 'provider' => $provider,
@@ -375,7 +334,7 @@ class InterviewController extends Controller
             'pronunciation_analysis' => 'nullable|string|max:100000',
             'paste_event_count' => 'nullable|integer|min:0|max:500',
             'pasted_character_count' => 'nullable|integer|min:0|max:20000',
-            'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
+            'response_mode' => ['nullable', Rule::in(self::ACCEPTED_RESPONSE_MODES)],
             'is_skipped' => 'nullable',
             'timed_out' => 'nullable',
             'elapsed_seconds' => 'nullable|integer|min:0|max:7200',
@@ -463,7 +422,7 @@ class InterviewController extends Controller
             'paste_event_count' => 'nullable|integer|min:0|max:500',
             'pasted_character_count' => 'nullable|integer|min:0|max:20000',
             'question_id' => 'required|exists:questions,id',
-            'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
+            'response_mode' => ['nullable', Rule::in(self::ACCEPTED_RESPONSE_MODES)],
             'is_skipped' => 'nullable',
             'timed_out' => 'nullable',
             'elapsed_seconds' => 'nullable|integer|min:0|max:7200',
@@ -699,6 +658,7 @@ class InterviewController extends Controller
         $validated = $request->validate([
             'session_id' => 'nullable|exists:interview_sessions,id',
             'question_id' => 'required|exists:questions,id',
+            'previous_transcript' => 'nullable|string|max:3000',
             'audio' => [
                 'required',
                 'file',
@@ -718,23 +678,71 @@ class InterviewController extends Controller
         }
 
         $speechAssessment = app(LocalSpeechAssessmentService::class)
-            ->assessUploadedAudio($request->file('audio'), null, $this->currentLanguageConfig());
+            ->assessUploadedAudio($validated['audio'], null, $this->currentLanguageConfig());
         $transcript = app(LocalSpeechAssessmentService::class)->transcriptFrom($speechAssessment);
         $transcriptionSource = $transcript !== null ? 'local_speech' : 'openai';
+        $transcriptionStatus = $transcript !== null ? 'transcribed' : null;
+        $transcriptionErrorCode = null;
+        $transcriptionRetryAfterSeconds = null;
 
         if ($transcript === null) {
-            $transcript = AIService::transcribeSpeech($request->file('audio'), $this->currentLanguageConfig());
+            $aiTranscription = AIService::transcribeSpeechResult(
+                $validated['audio'],
+                $this->currentLanguageConfig(),
+                $this->transcriptionContext($session, $question, (string) ($validated['previous_transcript'] ?? ''))
+            );
+            if (is_array($aiTranscription)) {
+                $transcript = array_key_exists('transcript', $aiTranscription)
+                    ? (string) $aiTranscription['transcript']
+                    : null;
+                $transcriptionSource = (string) ($aiTranscription['provider'] ?? 'ai');
+                $transcriptionStatus = (string) ($aiTranscription['status'] ?? ($transcript !== '' ? 'transcribed' : 'empty'));
+                $transcriptionErrorCode = (string) ($aiTranscription['error_code'] ?? '');
+                $transcriptionRetryAfterSeconds = $aiTranscription['retry_after_seconds'] ?? null;
+            }
         }
 
-        if ($transcript === null) {
-            return response()->json(['error' => 'Live transcription is not available.'], 503);
+        if ($transcript === null || ($transcriptionStatus === 'failed' && trim((string) $transcript) === '')) {
+            $rateLimited = $transcriptionErrorCode === 'rate_limited';
+            $payload = [
+                'error' => 'Live transcription is not available.',
+                'error_code' => AIService::speechTranscriptionAvailable()
+                    ? ($rateLimited ? 'speech_transcription_rate_limited' : 'speech_transcription_failed')
+                    : 'speech_transcription_unavailable',
+                'transcription_status' => $transcriptionStatus ?: 'unavailable',
+                'pronunciation_analysis' => $speechAssessment,
+            ];
+
+            if ($rateLimited && is_numeric($transcriptionRetryAfterSeconds)) {
+                $payload['retry_after_seconds'] = max(1, (int) $transcriptionRetryAfterSeconds);
+            }
+
+            $response = response()->json($payload, $rateLimited ? 429 : 503);
+            if (isset($payload['retry_after_seconds'])) {
+                $response->header('Retry-After', (string) $payload['retry_after_seconds']);
+            }
+
+            return $response;
         }
 
         return response()->json([
             'transcript' => TranscriptService::clean($transcript),
             'transcription_source' => $transcriptionSource,
+            'transcription_status' => $transcriptionStatus ?: 'transcribed',
             'pronunciation_analysis' => $speechAssessment,
         ]);
+    }
+
+    private function transcriptionContext(InterviewSession $session, Question $question, string $previousTranscript = ''): array
+    {
+        return [
+            'previous_transcript' => $previousTranscript,
+            'question_text' => $question->question_text,
+            'target_position' => $session->target_position,
+            'interview_focus' => $session->interview_focus,
+            'company_persona' => $session->company_persona,
+            'country' => $session->country,
+        ];
     }
 
     public function finish(Request $request)
@@ -1212,7 +1220,6 @@ class InterviewController extends Controller
 
     private function ensureInterviewRuntimeSchema(): void
     {
-        CareerPlanningSchema::ensure();
         InterviewSessionSchema::ensure();
         QuestionSchema::ensure();
         InterviewAnswerSchema::ensure();
@@ -1245,7 +1252,7 @@ class InterviewController extends Controller
             'pronunciation_analysis' => 'nullable|string|max:100000',
             'paste_event_count' => 'nullable|integer|min:0|max:500',
             'pasted_character_count' => 'nullable|integer|min:0|max:20000',
-            'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
+            'response_mode' => ['nullable', Rule::in(self::ACCEPTED_RESPONSE_MODES)],
             'is_skipped' => 'nullable',
             'timed_out' => 'nullable',
             'elapsed_seconds' => 'nullable|integer|min:0|max:7200',
@@ -1339,7 +1346,7 @@ class InterviewController extends Controller
             'pronunciation_analysis' => 'nullable|string|max:100000',
             'paste_event_count' => 'nullable|integer|min:0|max:500',
             'pasted_character_count' => 'nullable|integer|min:0|max:20000',
-            'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
+            'response_mode' => ['nullable', Rule::in(self::ACCEPTED_RESPONSE_MODES)],
             'wpm' => 'nullable|integer|min:0|max:400',
             'voice_duration' => 'nullable|integer|min:0|max:7200',
             'filler_words_count' => 'nullable|integer|min:0|max:500',
@@ -1707,6 +1714,8 @@ class InterviewController extends Controller
 
     private function answerPersistencePayload(InterviewSession $session, Question $question, array $validated, ?string $answerText = null): array
     {
+        $responseMode = $this->normalizeResponseMode($validated['response_mode'] ?? $session->response_mode ?? 'text');
+        $validated['response_mode'] = $responseMode;
         $answerText ??= $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
         $deliveryTranscript = $this->deliveryTranscriptFrom($validated, $answerText);
         $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
@@ -1729,7 +1738,7 @@ class InterviewController extends Controller
         $pronunciationScore = app(LocalSpeechAssessmentService::class)->scoreFrom($pronunciationAnalysis);
 
         $metrics = array_merge($deliveryMetrics, [
-            'response_mode' => $validated['response_mode'] ?? 'text',
+            'response_mode' => $responseMode,
             'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
             'pronunciation_analysis' => $pronunciationAnalysis,
             'pronunciation_score' => $pronunciationScore,
@@ -1762,7 +1771,7 @@ class InterviewController extends Controller
             'pronunciation_analysis' => $pronunciationAnalysis,
             'pronunciation_score' => $pronunciationScore,
             'coaching_feedback' => $coachingFeedback,
-            'response_mode' => $validated['response_mode'] ?? 'text',
+            'response_mode' => $responseMode,
             'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
             'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
             'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
@@ -1839,7 +1848,7 @@ class InterviewController extends Controller
 
     private function fallbackSessionCoachingSummary($answers): array
     {
-        $answers = $answers instanceof \Illuminate\Support\Collection
+        $answers = $answers instanceof Collection
             ? $answers->values()
             : collect($answers)->values();
         $contentOverview = [
@@ -1953,8 +1962,7 @@ class InterviewController extends Controller
 
     private function fallbackDeliveryMetrics(array $input): array
     {
-        $responseMode = strtolower(trim((string) ($input['response_mode'] ?? 'text')));
-        $isVoiceMode = in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true);
+        $isVoiceMode = $this->isVoiceResponseMode($input['response_mode'] ?? 'text');
 
         return [
             'wpm' => $isVoiceMode ? $this->clampInt($input['wpm'] ?? 0, 0, 400) : 0,
@@ -1993,8 +2001,7 @@ class InterviewController extends Controller
     {
         $duration = $this->clampInt($metrics['voice_duration'] ?? 0, 0, 7200);
         $wordCount = TranscriptService::wordCount($deliveryTranscript);
-        $responseMode = strtolower(trim((string) ($metrics['response_mode'] ?? 'text')));
-        $deliveryMeasured = in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true)
+        $deliveryMeasured = $this->isVoiceResponseMode($metrics['response_mode'] ?? 'text')
             && $duration > 0
             && $wordCount > 0;
         $fillerWords = $deliveryMeasured ? $this->clampInt($metrics['filler_words_count'] ?? 0, 0, 500) : 0;
@@ -2286,7 +2293,7 @@ class InterviewController extends Controller
         int $starScore,
         int $jobEvidenceScore
     ): array {
-        $answers = $answers instanceof \Illuminate\Support\Collection
+        $answers = $answers instanceof Collection
             ? $answers->values()
             : collect($answers)->values();
         $starApplicable = $answers->contains(
@@ -2461,10 +2468,23 @@ class InterviewController extends Controller
         return Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
     }
 
+    private function normalizeResponseMode(mixed $mode): string
+    {
+        return match (strtolower(trim((string) $mode))) {
+            'voice' => 'voice',
+            'hybrid', 'voice_and_text' => 'hybrid',
+            default => 'text',
+        };
+    }
+
+    private function isVoiceResponseMode(mixed $mode): bool
+    {
+        return in_array($this->normalizeResponseMode($mode), self::VOICE_RESPONSE_MODES, true);
+    }
+
     private function deliveryMetricsFrom(array $input, string $deliveryTranscript): array
     {
-        $responseMode = strtolower(trim((string) ($input['response_mode'] ?? 'text')));
-        $isVoiceMode = in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true);
+        $isVoiceMode = $this->isVoiceResponseMode($input['response_mode'] ?? 'text');
         $voiceDuration = $isVoiceMode
             ? $this->clampInt($input['voice_duration'] ?? 0, 0, 7200)
             : 0;
@@ -2555,8 +2575,7 @@ class InterviewController extends Controller
 
     private function deliveryTranscriptFrom(array $input, string $answerText): string
     {
-        $responseMode = strtolower(trim((string) ($input['response_mode'] ?? 'text')));
-        if (! in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true)) {
+        if (! $this->isVoiceResponseMode($input['response_mode'] ?? 'text')) {
             return '';
         }
 
@@ -3440,7 +3459,7 @@ class InterviewController extends Controller
     {
         if (in_array($weakestSkill, ['Speaking Steadiness', 'Grammar'], true)) {
             return [
-                ['label' => 'Voice Drill', 'url' => route('user.drills.voice')],
+                ['label' => 'AI Coach', 'url' => route('user.coach')],
                 ['label' => 'PH Mock Interview', 'url' => route('interview.setup')],
             ];
         }
@@ -3741,6 +3760,7 @@ class InterviewController extends Controller
 
         return AIService::generateFeedback($sessionData, $answersData, $feedbackProvider ?: AIService::defaultProviderKey());
     }
+
     private function learningGameFeedback(GameLevel $gameLevel, array $sessionData, array $answersData): array
     {
         $perQuestion = collect($answersData)

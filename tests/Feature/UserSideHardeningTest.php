@@ -13,7 +13,6 @@ use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
 use App\Models\User;
-use App\Services\TrustworthyAssessmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
@@ -270,8 +269,6 @@ class UserSideHardeningTest extends TestCase
             ->assertSee('value="'.$admissionCategory->id.'"', false)
             ->assertSee('Philippines Job Interviews')
             ->assertSee('Philippines School Admission Interviews')
-            ->assertSee('data-source-pack-key="ph_job_interview"', false)
-            ->assertSee('data-source-pack-key="ph_college_admission"', false)
             ->assertDontSee('Philippines BPO / Customer Support Interview')
             ->assertDontSee('Philippines IT / Programming Interview')
             ->assertDontSee('Philippines Scholarship Interview')
@@ -404,6 +401,29 @@ class UserSideHardeningTest extends TestCase
         ]);
     }
 
+    public function test_interview_start_accepts_and_normalizes_all_response_modes(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+
+        foreach ([
+            'text' => 'text',
+            'voice' => 'voice',
+            'hybrid' => 'hybrid',
+            'voice_and_text' => 'hybrid',
+        ] as $submittedMode => $expectedMode) {
+            $this->actingAs($user)
+                ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+                    'response_mode' => $submittedMode,
+                ]))
+                ->assertRedirect(route('interview.session'));
+
+            $session = InterviewSession::where('user_id', $user->id)->latest('id')->firstOrFail();
+
+            $this->assertSame($expectedMode, $session->response_mode);
+        }
+    }
+
     public function test_interview_start_stores_camera_detection_setting(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -453,14 +473,13 @@ class UserSideHardeningTest extends TestCase
         }
     }
 
-    public function test_interview_start_uses_category_source_pack_when_posted_pack_mismatches(): void
+    public function test_interview_start_uses_category_source_dataset(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category(['title' => 'College Admission']);
 
         $this->actingAs($user)
             ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
-                'source_pack_key' => 'ph_bpo_communication',
                 'question_types' => ['Situational'],
             ]))
             ->assertRedirect(route('interview.session'));
@@ -546,112 +565,6 @@ class UserSideHardeningTest extends TestCase
         ]);
     }
 
-    public function test_voice_session_save_recomputes_measurable_metrics(): void
-    {
-        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-
-        $this->actingAs($user)
-            ->postJson(route('user.drills.voice.save'), [
-                'category' => 'Behavioral',
-                'prompt' => 'Tell me about a project.',
-                'transcript' => 'Um I solved the issue clearly Um I solved the issue clearly',
-                'duration_seconds' => 60,
-                'wpm' => 400,
-                'filler_words' => 200,
-                'clarity_score' => 100,
-                'confidence_score' => 100,
-                'speaking_pace' => 400,
-            ])
-            ->assertOk()
-            ->assertJson(['success' => true]);
-
-        $this->assertDatabaseHas('voice_sessions', [
-            'user_id' => $user->id,
-            'transcript' => 'Um I solved the issue clearly',
-            'wpm' => 6,
-            'speaking_pace' => 6,
-            'filler_words' => 1,
-            'clarity_score' => 58,
-            'confidence_score' => 60,
-        ]);
-    }
-
-    public function test_voice_session_without_transcript_does_not_trust_client_scores(): void
-    {
-        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-
-        $this->actingAs($user)
-            ->postJson(route('user.drills.voice.save'), [
-                'category' => 'Behavioral',
-                'transcript' => '',
-                'duration_seconds' => 60,
-                'wpm' => 180,
-                'filler_words' => 0,
-                'clarity_score' => 100,
-                'confidence_score' => 100,
-            ])
-            ->assertOk();
-
-        $this->assertDatabaseHas('voice_sessions', [
-            'user_id' => $user->id,
-            'transcript' => '',
-            'wpm' => 0,
-            'speaking_pace' => 0,
-            'clarity_score' => 0,
-            'confidence_score' => 0,
-        ]);
-    }
-
-    public function test_voice_analysis_returns_json_fallback_when_ai_and_revision_services_fail(): void
-    {
-        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-
-        Http::fake([
-            '*' => Http::response(['error' => 'provider unavailable'], 500),
-        ]);
-
-        $this->app->instance(TrustworthyAssessmentService::class, new class extends TrustworthyAssessmentService
-        {
-            public function answerEvidence(string $answer, ?string $feedback = null, Question|array|null $question = null): array
-            {
-                throw new \RuntimeException('Revision helper unavailable.');
-            }
-        });
-
-        $this->actingAs($user)
-            ->postJson(route('user.drills.voice.analyze'), [
-                'prompt' => 'Tell me about a time you handled customer feedback.',
-                'transcript' => 'I listened to the customer feedback, clarified the main concern, coordinated with my team, and followed up with a clearer response so the customer knew the next step.',
-            ])
-            ->assertOk()
-            ->assertJsonStructure([
-                'strengths',
-                'weaknesses',
-                'improved_answer',
-            ])
-            ->assertJsonPath('improved_answer', 'We could not make a better answer draft because the service had an error.');
-    }
-
-    public function test_voice_prompt_returns_local_fallback_when_ai_prompt_is_unavailable(): void
-    {
-        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-
-        Http::fake([
-            '*' => Http::response(['error' => 'provider unavailable'], 500),
-        ]);
-
-        $this->actingAs($user)
-            ->postJson(route('user.drills.voice.prompt'), [
-                'category' => 'School Admission',
-            ])
-            ->assertOk()
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('source', 'fallback')
-            ->assertJson(fn ($json) => $json
-                ->where('prompt', fn ($prompt) => is_string($prompt) && trim($prompt) !== '')
-                ->etc());
-    }
-
     public function test_interview_answer_recomputes_delivery_metrics_from_server_evidence(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -695,6 +608,65 @@ class UserSideHardeningTest extends TestCase
         $this->assertSame('I did it.', $savedAnswer->delivery_transcript);
         $this->assertSame('not_measured', data_get($savedAnswer->observation_data, 'camera.status'));
         $this->assertNotEmpty($savedAnswer->coaching_feedback);
+    }
+
+    public function test_interview_answer_respects_text_voice_hybrid_and_legacy_response_modes(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+
+        foreach ([
+            'text' => ['stored' => 'text', 'expects_voice_delivery' => false],
+            'voice' => ['stored' => 'voice', 'expects_voice_delivery' => true],
+            'hybrid' => ['stored' => 'hybrid', 'expects_voice_delivery' => true],
+            'voice_and_text' => ['stored' => 'hybrid', 'expects_voice_delivery' => true],
+        ] as $submittedMode => $expectation) {
+            $session = $this->sessionFor($user, $category, [
+                'response_mode' => $submittedMode,
+            ]);
+            $question = $this->question($category, [
+                'interview_session_id' => $session->id,
+                'question_text' => "Describe a {$submittedMode} response.",
+            ]);
+            $spokenAnswer = 'I handled a support escalation and documented the result.';
+
+            $this->actingAs($user)
+                ->withSession(['active_interview_id' => $session->id])
+                ->postJson(route('interview.answer'), [
+                    'question_id' => $question->id,
+                    'answer_text' => $submittedMode === 'text'
+                        ? 'I typed a separate answer with my own project evidence.'
+                        : $spokenAnswer,
+                    'speech_transcript' => $spokenAnswer,
+                    'response_mode' => $submittedMode,
+                    'voice_duration' => 30,
+                    'wpm' => 400,
+                    'filler_words_count' => 99,
+                    'pause_count' => 2,
+                ])
+                ->assertOk();
+
+            $answer = InterviewAnswer::where('interview_session_id', $session->id)
+                ->where('question_id', $question->id)
+                ->firstOrFail();
+
+            $this->assertSame($expectation['stored'], $answer->response_mode);
+
+            if ($expectation['expects_voice_delivery']) {
+                $this->assertSame($spokenAnswer, $answer->delivery_transcript);
+                $this->assertSame(30, $answer->voice_duration);
+                $this->assertGreaterThan(0, $answer->wpm);
+                $this->assertNotSame(400, $answer->wpm);
+                $this->assertSame(0, $answer->filler_words_count);
+                $this->assertSame('measured', data_get($answer->observation_data, 'delivery.status'));
+            } else {
+                $this->assertNull($answer->delivery_transcript);
+                $this->assertSame(0, $answer->voice_duration);
+                $this->assertSame(0, $answer->wpm);
+                $this->assertSame(0, $answer->filler_words_count);
+                $this->assertSame('not_measured', data_get($answer->observation_data, 'delivery.status'));
+            }
+        }
     }
 
     public function test_interview_answer_rejects_out_of_range_delivery_metrics(): void
@@ -1392,14 +1364,11 @@ class UserSideHardeningTest extends TestCase
                 'feedback_audit_logs',
                 'feedback_complaints',
                 'mentor_review_comments',
-                'practice_plan_items',
                 'feedback',
                 'scores',
                 'interview_answers',
                 'questions',
                 'interview_sessions',
-                'job_applications',
-                'interview_packs',
             ] as $table) {
                 Schema::dropIfExists($table);
             }
@@ -1411,9 +1380,6 @@ class UserSideHardeningTest extends TestCase
     private function assertInterviewRuntimeTablesReady(): void
     {
         foreach ([
-            'job_applications',
-            'interview_packs',
-            'practice_plan_items',
             'interview_sessions',
             'questions',
             'interview_answers',
@@ -1425,8 +1391,6 @@ class UserSideHardeningTest extends TestCase
         foreach ([
             'user_id',
             'game_level_id',
-            'job_application_id',
-            'interview_pack_id',
             'category_id',
             'difficulty',
             'target_position',

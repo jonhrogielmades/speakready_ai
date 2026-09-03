@@ -102,20 +102,6 @@
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
-                <a id="ucp-destination-voice" class="ucp-result" href="{{ route('user.drills.voice') }}" data-ucp-item>
-                    <span class="ucp-result-icon ucp-rose"><i class="fa-solid fa-ear-listen" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Voice Rehearsal</strong><small>Improve clarity, pace, and delivery for interview answers</small></span>
-                    <span class="ucp-result-group">Training</span>
-                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
-                </a>
-
-                <a id="ucp-destination-missions" class="ucp-result" href="{{ route('user.missions') }}" data-ucp-item>
-                    <span class="ucp-result-icon ucp-cyan"><i class="fa-solid fa-route" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Missions</strong><small>Practice real-life speaking tasks with goal-based scoring</small></span>
-                    <span class="ucp-result-group">Training</span>
-                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
-                </a>
-
                 <a id="ucp-destination-learning" class="ucp-result" href="{{ route('user.learning') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Challenges</strong><small>Sharpen interview skills through scenario challenges</small></span>
@@ -147,13 +133,6 @@
                 <a id="ucp-destination-reports" class="ucp-result" href="{{ route('user.reports') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-cyan"><i class="fa-solid fa-folder-open" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Reports</strong><small>Open your interview records and results</small></span>
-                    <span class="ucp-result-group">Insights</span>
-                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
-                </a>
-
-                <a id="ucp-destination-leaderboard" class="ucp-result" href="{{ route('user.leaderboard') }}" data-ucp-item>
-                    <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-trophy" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Mastery</strong><small>Compare with your own assessment baseline</small></span>
                     <span class="ucp-result-group">Insights</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>

@@ -260,30 +260,6 @@
                                        ],
                                     ],
                                     [
-                                       'image' => 'img/mobile-preview-voice-rehearsal-shell.png',
-                                       'alt' => 'SpeakReady AI mobile voice rehearsal preview',
-                                       'kicker' => 'Voice Rehearsal',
-                                       'title' => 'Practice answers out loud.',
-                                       'text' => 'Record responses, check pacing, and review speaking metrics from the mobile interview practice screen.',
-                                       'points' => [
-                                          'Record spoken interview answers',
-                                          'Switch prompts and confidence level',
-                                          'Track duration, WPM, stability, and fillers',
-                                       ],
-                                    ],
-                                    [
-                                       'image' => 'img/mobile-preview-mission-mode-shell.png',
-                                       'alt' => 'SpeakReady AI mobile mission mode preview',
-                                       'kicker' => 'Mission Mode',
-                                       'title' => 'Generate real-life practice tasks.',
-                                       'text' => 'Turn target situations into mission tasks, then score written or spoken answers against the prompt.',
-                                       'points' => [
-                                          'Generate personalized mission tasks',
-                                          'Practice with text or voice',
-                                          'Score mission-specific answers',
-                                       ],
-                                    ],
-                                    [
                                        'image' => 'img/mobile-preview-challenges-shell.png',
                                        'alt' => 'SpeakReady AI mobile interview challenges preview',
                                        'kicker' => 'Interview Challenges',
@@ -298,7 +274,7 @@
                                     [
                                        'image' => 'img/mobile-preview-readiness-coach-shell.png',
                                        'alt' => 'SpeakReady AI mobile readiness coach preview',
-                                       'kicker' => 'Readiness Coach',
+                                       'kicker' => 'AI Chatbot Coach',
                                        'title' => 'Ask for focused interview help.',
                                        'text' => 'Use the coach chat for interview, resume, certificate, and practice guidance while keeping claims truthful.',
                                        'points' => [
@@ -317,18 +293,6 @@
                                           'Start a scored interview',
                                           'Review generated report status',
                                           'Export reports as PDF or Excel',
-                                       ],
-                                    ],
-                                    [
-                                       'image' => 'img/mobile-preview-personal-mastery-shell.png',
-                                       'alt' => 'SpeakReady AI mobile personal mastery preview',
-                                       'kicker' => 'Personal Mastery',
-                                       'title' => 'Track private growth over time.',
-                                       'text' => 'Follow personal bests, baseline growth, practice streaks, and recommended drills from one progress hub.',
-                                       'points' => [
-                                          'Compare baseline and latest score',
-                                          'Start a scored mock interview',
-                                          'Drill recommended weak areas',
                                        ],
                                     ],
                                     [
@@ -570,8 +534,6 @@
                                     <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-microphone-lines"></i>Mock Interview</span>
                                     <span class="ui-desktop-wire-nav-section">Specialized Training</span>
                                     <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-book-open-reader"></i>Modules</span>
-                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-ear-listen"></i>Voice Rehearsal</span>
-                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-route"></i>Missions</span>
                                     <span class="ui-desktop-wire-nav-section">Performance</span>
                                     <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-chart-line"></i>Progress</span>
                                     <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-clipboard-check"></i>Feedback</span>
@@ -810,7 +772,7 @@
                                                 </div>
                                                 <div class="ui-desktop-wire-rec-row">
                                                    <span class="ui-desktop-wire-icon"><i class="fa-solid fa-robot"></i></span>
-                                                   <div><strong>Ask Readiness Coach</strong><span>Refine one weak answer.</span></div>
+                                                   <div><strong>Ask AI Chatbot Coach</strong><span>Refine one weak answer.</span></div>
                                                    <i class="fa-solid fa-chevron-right"></i>
                                                 </div>
                                              </div>
@@ -939,13 +901,6 @@
                          <p style="font-size:.85rem;color:var(--tx2)">Compare your resume and role details to focus practice on the skills a job asks for.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.15s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#8b5cf6;--feature-icon-bg:rgba(139,92,246,.14);--feature-icon-border:rgba(139,92,246,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-ear-listen fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Voice Rehearsal Studio</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Improve pacing, clarity, delivery stability, and filler-word control without treating speaking style as personality.</p>
-                     </div>
-                  </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ef4444;--feature-icon-bg:rgba(239,68,68,.14);--feature-icon-border:rgba(239,68,68,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-book-open-reader fa-lg"></i></div>
@@ -978,7 +933,7 @@
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#3b82f6;--feature-icon-bg:rgba(59,130,246,.14);--feature-icon-border:rgba(59,130,246,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-chart-line fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Progress Tracking</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Visualize readiness, STAR structure, skill breakdowns, learning progress, and voice rehearsal growth.</p>
+                        <p style="font-size:.85rem;color:var(--tx2)">Visualize readiness, STAR structure, skill breakdowns, learning progress, and practice consistency.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.45s">
@@ -993,13 +948,6 @@
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#6366f1;--feature-icon-bg:rgba(99,102,241,.14);--feature-icon-border:rgba(99,102,241,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-network-wired fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Skill Trees</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Earn leadership, communication, technical, and problem-solving XP, then unlock perks as you improve.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.55s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#eab308;--feature-icon-bg:rgba(234,179,8,.14);--feature-icon-border:rgba(234,179,8,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-trophy fa-lg"></i></div>
-                         <h3 class="fs-6 fw-bold mb-2">Personal Mastery</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Compare only against your own assessment baseline, personal best, and competency growth.</p>
                      </div>
                   </div>
                   </div>
@@ -1057,14 +1005,14 @@
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">5</div>
                         <h3 class="fs-5 fw-semibold mb-2">Train With Modules And Games</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Build skills through modules, quizzes, voice rehearsal, missions, learning games, and the AI coach.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Build skills through modules, quizzes, learning games, and the AI coach.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">6</div>
                         <h3 class="fs-5 fw-semibold mb-2">Track Progress And Share</h3>
-                         <p style="font-size:.875rem;color:var(--tx2)">Follow readiness trends, personal mastery, reports, certificates, and private review links over time.</p>
+                         <p style="font-size:.875rem;color:var(--tx2)">Follow readiness trends, reports, certificates, and private review links over time.</p>
                      </div>
                   </div>
                   </div>
@@ -1170,7 +1118,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1" aria-expanded="true" aria-controls="f1">What is SpeakReady AI?</button></h2>
                            <div id="f1" class="accordion-collapse collapse show" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">SpeakReady AI is a Philippine-focused interview practice system with AI mock interviews, role-based setup, voice rehearsal, learning modules, games, rubric feedback, progress tracking, reports, and private review sharing.</div>
+                              <div class="accordion-body">SpeakReady AI is a Philippine-focused interview practice system with AI mock interviews, role-based setup, learning modules, games, rubric feedback, progress tracking, reports, and private review sharing.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
@@ -1182,7 +1130,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3" aria-expanded="false" aria-controls="f3">Is my data secure?</button></h2>
                            <div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                               <div class="accordion-body">Interview records are private by default. When you choose to share a review, you can set an expiry, optional password, reviewer permissions, and hide sensitive identity or application context.</div>
+                               <div class="accordion-body">Interview records are private by default. When you choose to share a review, you can set an expiry, optional password, reviewer permissions, and hide sensitive identity or interview context.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
@@ -1299,7 +1247,7 @@
                         <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i footer-logo">
                         <span>SpeakReady AI</span>
                      </a>
-                     <p class="footer-copy">Your Philippine interview practice system for AI mock interviews, voice rehearsal, learning modules, progress reports, and private feedback sharing.</p>
+                     <p class="footer-copy">Your Philippine interview practice system for AI mock interviews, learning modules, progress reports, and private feedback sharing.</p>
                   </div>
                   <nav class="footer-nav-grid" aria-label="Footer navigation">
                      <div>

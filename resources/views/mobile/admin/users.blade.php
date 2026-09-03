@@ -434,19 +434,15 @@
                                 <div class="premium-card p-3">
                                     <h6 class="fw-bold mb-3 border-bottom pb-2" style="border-color:var(--bd)!important;"><i class="fa-solid fa-arrows-rotate me-2 text-info"></i>User Side Updates</h6>
                                     <div class="row text-center">
-                                        <div class="col-6 col-md-3 mb-3 mb-md-0">
+                                        <div class="col-6 col-md-4 mb-3 mb-md-0">
                                             <h4 id="userDetailLearningCompleted" class="fw-bold text-success mb-0">0</h4>
                                             <div style="font-size:0.72rem;color:var(--tx3);text-transform:uppercase;">Modules Completed</div>
                                         </div>
-                                        <div class="col-6 col-md-3 mb-3 mb-md-0">
-                                            <h4 id="userDetailVoiceSessions" class="fw-bold text-info mb-0">0</h4>
-                                            <div style="font-size:0.72rem;color:var(--tx3);text-transform:uppercase;">Voice Rehearsals</div>
-                                        </div>
-                                        <div class="col-6 col-md-3">
+                                        <div class="col-6 col-md-4">
                                             <h4 id="userDetailGameLevels" class="fw-bold text-warning mb-0">0</h4>
                                             <div style="font-size:0.72rem;color:var(--tx3);text-transform:uppercase;">Game Levels Done</div>
                                         </div>
-                                        <div class="col-6 col-md-3">
+                                        <div class="col-6 col-md-4">
                                             <h4 id="userDetailXp" class="fw-bold text-primary mb-0">0 XP</h4>
                                             <div style="font-size:0.72rem;color:var(--tx3);text-transform:uppercase;">Total XP</div>
                                         </div>
@@ -499,14 +495,6 @@
                                                 <tr><td colspan="5" class="text-center text-muted py-3">Select a user to load learning updates.</td></tr>
                                             </tbody>
                                         </table>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="premium-card p-3 h-100">
-                                    <h6 class="fw-bold mb-3">Voice Rehearsals</h6>
-                                    <div id="userDetailVoiceHistory" class="timeline">
-                                        <div class="text-muted text-center py-3" style="font-size:0.9rem;">Select a user to load voice updates.</div>
                                     </div>
                                 </div>
                             </div>
@@ -874,7 +862,6 @@
                 document.getElementById('userDetailStreak').textContent = `${stats.current_streak ?? 0} Days`;
                 document.getElementById('userDetailRating').textContent = `Readiness Rating: ${stats.readiness_rating || 'No scored sessions'}`;
                 document.getElementById('userDetailLearningCompleted').textContent = stats.learning_completed ?? 0;
-                document.getElementById('userDetailVoiceSessions').textContent = stats.voice_rehearsals ?? 0;
                 document.getElementById('userDetailGameLevels').textContent = stats.game_levels_completed ?? 0;
                 document.getElementById('userDetailXp').textContent = `${stats.experience_points ?? 0} XP`;
 
@@ -899,15 +886,6 @@
                     </tr>
                 `).join('');
                 document.getElementById('userDetailLearningProgress').innerHTML = learningRows || '<tr><td colspan="5" class="text-center text-muted py-3">No learning module updates found.</td></tr>';
-
-                const voiceRows = (data.voice_sessions || []).map(session => `
-                    <div class="timeline-item">
-                        <div style="font-size:0.85rem;"><strong>${escapeHtml(session.category)}</strong></div>
-                        <div style="font-size:0.78rem;color:var(--tx2);">Clarity ${scoreText(session.clarity_score)} - Confidence ${scoreText(session.confidence_score)} - ${durationText(session.duration_seconds)}</div>
-                        <div style="font-size:0.75rem;color:var(--tx3);">${escapeHtml(session.created || '--')}</div>
-                    </div>
-                `).join('');
-                document.getElementById('userDetailVoiceHistory').innerHTML = voiceRows || '<div class="text-muted text-center py-3" style="font-size:0.9rem;">No voice rehearsal updates found.</div>';
 
                 const gameRows = (data.game_sessions || []).map(session => `
                     <div class="timeline-item">

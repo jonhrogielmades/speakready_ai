@@ -58,19 +58,6 @@ class TrustworthyReadinessFeaturesTest extends TestCase
         $this->get(route('shared.review', $session->share_token))->assertGone();
     }
 
-    public function test_personal_mastery_exposes_no_other_users(): void
-    {
-        $user = $this->user(['name' => 'Current User']);
-        $other = $this->user(['name' => 'Another Candidate']);
-        $this->completedSession($user, 72);
-        $this->completedSession($other, 99);
-
-        $this->actingAs($user)->get(route('user.leaderboard'))
-            ->assertOk()
-            ->assertSee('Personal Mastery')
-            ->assertDontSee('Another Candidate');
-    }
-
     private function user(array $attributes = []): User
     {
         return User::factory()->create(array_merge([

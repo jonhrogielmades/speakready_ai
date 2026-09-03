@@ -13,8 +13,6 @@ class InterviewSession extends Model
     protected $fillable = [
         'user_id',
         'game_level_id',
-        'job_application_id',
-        'interview_pack_id',
         'category_id',
         'difficulty',
         'target_position',
@@ -140,16 +138,6 @@ class InterviewSession extends Model
     public function gameLevel()
     {
         return $this->belongsTo(GameLevel::class);
-    }
-
-    public function jobApplication()
-    {
-        return $this->belongsTo(JobApplication::class);
-    }
-
-    public function interviewPack()
-    {
-        return $this->belongsTo(InterviewPack::class);
     }
 
     public function answers()

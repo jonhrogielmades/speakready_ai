@@ -8,13 +8,10 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InterviewController;
-use App\Http\Controllers\InterviewPackController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\MentorReviewController;
-use App\Http\Controllers\UserApplicationController;
 use App\Http\Controllers\UserController;
 use App\Services\LandingStatsService;
-use App\Support\CareerPlanningSchema;
 use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
 use App\Support\QuestionSchema;
@@ -75,7 +72,6 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/interview/setup', function () {
-        CareerPlanningSchema::ensure();
         InterviewSessionSchema::ensure();
         QuestionSchema::ensure();
         InterviewAnswerSchema::ensure();
@@ -111,25 +107,12 @@ Route::middleware(['auth', 'user'])->group(function () {
                 ->filter($isSupportedInterviewCategory)
                 ->values()
             : collect();
-        $sourcePacks = \App\Services\QuestionDatasetProvider::all();
-        $selectedApplication = null;
-        $selectedPack = null;
+        $sourceDatasets = \App\Services\QuestionDatasetProvider::all();
 
-        if (request()->filled('application')) {
-            $selectedApplication = \App\Models\JobApplication::where('user_id', Auth::id())
-                ->findOrFail(request()->integer('application'));
-        }
-
-        if (request()->filled('pack')) {
-            $selectedPack = \App\Models\InterviewPack::where('status', 'active')
-                ->findOrFail(request()->integer('pack'));
-        }
-
-        return mobile_view('interview.setup', compact('categories', 'sourcePacks', 'selectedApplication', 'selectedPack'));
+        return mobile_view('interview.setup', compact('categories', 'sourceDatasets'));
     })->name('interview.setup');
 
     Route::get('/interview/session', function () {
-        CareerPlanningSchema::ensure();
         InterviewSessionSchema::ensure();
         QuestionSchema::ensure();
         InterviewAnswerSchema::ensure();
@@ -196,16 +179,6 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/skills', [UserController::class, 'skills'])->name('user.skills');
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');
 
-    Route::get('/applications', [UserApplicationController::class, 'index'])->name('user.applications.index');
-    Route::post('/applications', [UserApplicationController::class, 'store'])->name('user.applications.store');
-    Route::put('/applications/{application}', [UserApplicationController::class, 'update'])->name('user.applications.update');
-    Route::delete('/applications/{application}', [UserApplicationController::class, 'destroy'])->name('user.applications.destroy');
-    Route::get('/applications/{application}/practice', [UserApplicationController::class, 'practice'])->name('user.applications.practice');
-    Route::post('/practice-plan/{item}/toggle', [UserApplicationController::class, 'togglePlanItem'])->name('user.practice-plan.toggle');
-
-    Route::get('/packs', [InterviewPackController::class, 'index'])->name('user.packs.index');
-    Route::get('/packs/{pack}/practice', [InterviewPackController::class, 'practice'])->name('user.packs.practice');
-
     // User Learning Modules
     Route::get('/modules', [UserController::class, 'modules'])->name('user.modules.index');
     Route::post('/modules/{id}/progress', [UserController::class, 'updateModuleProgress'])->name('user.modules.progress');
@@ -220,24 +193,12 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/game/certificates/{category}/download', [\App\Http\Controllers\GameController::class, 'downloadCertificate'])->name('user.game.certificate.download');
 
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');
-    Route::get('/missions', [UserController::class, 'missions'])->name('user.missions');
-    Route::post('/missions/generate', [UserController::class, 'generateMissionTask'])->name('user.missions.generate');
-    Route::get('/drills/voice', [UserController::class, 'voiceRehearsal'])->name('user.drills.voice');
-    Route::post('/drills/voice/prompt', [UserController::class, 'generateVoicePrompt'])->name('user.drills.voice.prompt');
-    Route::post('/drills/voice/analyze', [UserController::class, 'analyzeVoiceSession'])->name('user.drills.voice.analyze');
-    Route::post('/drills/voice/save', [UserController::class, 'saveVoiceSession'])->name('user.drills.voice.save');
-    Route::delete('/drills/voice/sessions', [UserController::class, 'clearVoiceSessions'])->name('user.drills.voice.clear');
     Route::get('/progress', [UserController::class, 'progress'])->name('user.progress');
     Route::get('/session/{id}/review', [UserController::class, 'review'])->name('user.review');
     Route::get('/session/{session}/export', [UserController::class, 'exportSession'])->name('user.sessions.export');
     Route::delete('/session/{id}', [UserController::class, 'destroySession'])->name('user.sessions.destroy');
     Route::delete('/sessions/clear', [UserController::class, 'clearSessions'])->name('user.sessions.clear');
     Route::get('/reports', [UserController::class, 'reports'])->name('user.reports');
-    Route::get('/personal-mastery', [UserController::class, 'personalMastery'])->name('user.leaderboard');
-    Route::post('/personal-mastery/stories', [UserController::class, 'storeMasteryStory'])->name('user.mastery.stories.store');
-    Route::delete('/personal-mastery/stories/{item}', [UserController::class, 'destroyMasteryStory'])->name('user.mastery.stories.destroy');
-    Route::post('/personal-mastery/checklist/{item}/toggle', [UserController::class, 'toggleMasteryChecklist'])->name('user.mastery.checklist.toggle');
-    Route::redirect('/community/leaderboard', '/personal-mastery', 301);
 });
 
 // Admin Routes

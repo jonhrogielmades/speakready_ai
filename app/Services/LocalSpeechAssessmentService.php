@@ -288,6 +288,6 @@ class LocalSpeechAssessmentService
             $language = 'tl';
         }
 
-        return preg_match('/^[a-z]{2}$/', $language) ? $language : null;
+        return preg_match('/^[a-z]{2,3}$/', $language) ? $language : null;
     }
 }

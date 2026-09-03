@@ -1435,7 +1435,6 @@
                .panel,
                .tracker-panel,
                .tracker-card,
-               .pack-card,
                .module-card,
                .ll-module-card,
                .level-card,
@@ -1457,7 +1456,6 @@
                .panel,
                .tracker-panel,
                .tracker-card,
-               .pack-card,
                .module-card,
                .ll-module-card,
                .level-card,
@@ -1653,12 +1651,12 @@
                line-height: 1.2;
             }
 
-            #mob-content :is(.pack-chip, .keyword-chip, .status-pill) {
+            #mob-content :is(.keyword-chip, .status-pill) {
                padding: 6px 9px !important;
                font-size: 0.7rem !important;
             }
 
-            #mob-content :is(.pack-card, .module-card, .ll-module-card, .level-card, .perk-card) .btn {
+            #mob-content :is(.module-card, .ll-module-card, .level-card, .perk-card) .btn {
                width: 100%;
                min-height: 42px;
             }
@@ -2986,12 +2984,9 @@
                 <div class="mob-profile-section-title">Pages</div>
                 <div class="mob-profile-grid">
                 <a href="{{ route('user.modules.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i><span>Modules</span></a>
-                <a href="{{ route('user.drills.voice') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i><span>Voice</span></a>
-               <a href="{{ route('user.missions') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('user.missions') ? 'active' : '' }}"><i class="fa-solid fa-route"></i><span>Missions</span></a>
                <a href="{{ route('user.learning') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.learning*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Challenges</span></a>
                <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>Coach</span></a>
                <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>Reports</span></a>
-               <a href="{{ route('user.leaderboard') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-medal"></i><span>Mastery</span></a>
                <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
                <a href="{{ route('user.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('user.account') ? 'active' : '' }}"><i class="fa-solid fa-user-gear"></i><span>Account</span></a>
                </div>
@@ -3101,7 +3096,7 @@
                <span class="mob-nav-icon"><i class="fa-solid fa-clipboard-check"></i></span>
                <span>Feedback</span>
             </a>
-            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.modules.*', 'user.drills.voice', 'user.missions', 'user.learning*', 'user.coach*', 'user.reports', 'user.leaderboard') ? 'active' : '' }}"
+            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.modules.*', 'user.learning*', 'user.coach*', 'user.reports') ? 'active' : '' }}"
                     id="mobnav-more"
                     type="button"
                     aria-controls="mobProfileDropdown"
@@ -3681,12 +3676,9 @@
          #feedbackModulesLikeHero.feedback-hero,
          #sec-interview-setup .setup-hero,
          #interview-modules-page .modules-hero,
-         #voice-rehearsal-page .sr-page-hero.vr-hero,
-         #mission-mode-page .mission-progress-hero.sr-page-hero,
          #learning-games-page .sr-learning-hero,
          #ai-coach-page .sr-page-hero.coach-progress-hero,
          #portfolioReport .sr-page-hero,
-         #personal-mastery-page .mastery-hero-card,
          #notifications-page .notif-hero,
          #account-page .sr-page-hero,
          #skill-trees-page .sr-page-hero.skill-tree-hero,
@@ -3703,12 +3695,9 @@
          :root:not(.lm) #feedbackModulesLikeHero.feedback-hero,
          :root:not(.lm) #sec-interview-setup .setup-hero,
          :root:not(.lm) #interview-modules-page .modules-hero,
-         :root:not(.lm) #voice-rehearsal-page .sr-page-hero.vr-hero,
-         :root:not(.lm) #mission-mode-page .mission-progress-hero.sr-page-hero,
          :root:not(.lm) #learning-games-page .sr-learning-hero,
          :root:not(.lm) #ai-coach-page .sr-page-hero.coach-progress-hero,
          :root:not(.lm) #portfolioReport .sr-page-hero,
-         :root:not(.lm) #personal-mastery-page .mastery-hero-card,
          :root:not(.lm) #notifications-page .notif-hero,
          :root:not(.lm) #account-page .sr-page-hero,
          :root:not(.lm) #skill-trees-page .sr-page-hero.skill-tree-hero,
@@ -3717,12 +3706,9 @@
          .dm #feedbackModulesLikeHero.feedback-hero,
          .dm #sec-interview-setup .setup-hero,
          .dm #interview-modules-page .modules-hero,
-         .dm #voice-rehearsal-page .sr-page-hero.vr-hero,
-         .dm #mission-mode-page .mission-progress-hero.sr-page-hero,
          .dm #learning-games-page .sr-learning-hero,
          .dm #ai-coach-page .sr-page-hero.coach-progress-hero,
          .dm #portfolioReport .sr-page-hero,
-         .dm #personal-mastery-page .mastery-hero-card,
          .dm #notifications-page .notif-hero,
          .dm #account-page .sr-page-hero,
          .dm #skill-trees-page .sr-page-hero.skill-tree-hero,
@@ -3739,12 +3725,9 @@
          #feedbackModulesLikeHero :is(.feedback-title, .feedback-subtitle, .feedback-chat-mark),
          #sec-interview-setup .setup-hero :is(.setup-hero-title, .setup-hero-subtitle, .setup-hero-icon),
          #interview-modules-page .modules-hero :is(.modules-hero-title, .modules-hero-subtitle, .modules-hero-icon),
-         #voice-rehearsal-page .vr-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .vr-hero-icon),
-         #mission-mode-page .mission-progress-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .mission-hero-icon),
          #learning-games-page .sr-learning-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .learning-hero-icon),
          #ai-coach-page .coach-progress-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .coach-hero-icon),
          #portfolioReport .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .reports-hero-icon),
-         #personal-mastery-page .mastery-hero-card :is(.mastery-title, .mastery-subtitle, .mastery-badge),
          #notifications-page .notif-hero :is(.notif-hero-title, .notif-hero-subtitle, .notif-hero-icon),
          #account-page .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .account-hero-icon),
          #skill-trees-page .skill-tree-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .skill-tree-hero-icon),
@@ -3773,12 +3756,9 @@
          #feedbackModulesLikeHero .feedback-subtitle,
          #sec-interview-setup .setup-hero-subtitle,
          #interview-modules-page .modules-hero-subtitle,
-         #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle,
-         #mission-mode-page .mission-progress-hero .sr-page-hero-subtitle,
          #learning-games-page .sr-learning-hero .sr-page-hero-subtitle,
          #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle,
          #portfolioReport .sr-page-hero-subtitle,
-         #personal-mastery-page .mastery-subtitle,
          #notifications-page .notif-hero-subtitle,
          #account-page .sr-page-hero-subtitle,
          #skill-trees-page .skill-tree-hero .sr-page-hero-subtitle,
@@ -3790,12 +3770,9 @@
          #progressModulesLikeHero .progress-hero-icon,
          #sec-interview-setup .setup-hero-icon,
          #interview-modules-page .modules-hero-icon,
-         #voice-rehearsal-page .vr-hero-icon,
-         #mission-mode-page .mission-hero-icon,
          #learning-games-page .learning-hero-icon,
          #ai-coach-page .coach-hero-icon,
          #portfolioReport .reports-hero-icon,
-         #personal-mastery-page .mastery-badge,
          #notifications-page .notif-hero-icon,
          #account-page .account-hero-icon,
          #skill-trees-page .skill-hero-icon,

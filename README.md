@@ -1,6 +1,6 @@
 # SpeakReady AI
 
-SpeakReady AI is a Laravel-based interview preparation and career readiness platform. It combines mock interview sessions, AI-assisted feedback, voice rehearsal, learning modules, practice missions, learning games, progress reporting, mentor review links, and an admin console for managing the whole system.
+SpeakReady AI is a Laravel-based interview preparation and career readiness platform. It combines mock interview sessions, AI-assisted feedback, learning modules, learning games, progress reporting, mentor review links, and an admin console for managing the whole system.
 
 The current system includes separate desktop and mobile Blade experiences, a redesigned guest/landing experience, legal and security pages, richer user dashboards, AI provider fallbacks, local speech assessment hooks, Render deployment hardening, and automated schema repair commands for production reliability.
 
@@ -19,12 +19,10 @@ The current system includes separate desktop and mobile Blade experiences, a red
 - Email/password authentication, password reset, Google OAuth login/register, logout, and account reactivation requests.
 - User dashboard with interview history, progress summaries, recommendations, readiness metrics, notifications, and quick access to practice tools.
 - Mock interview setup and live interview session flow with text answers, speech transcription, answer retries, state saving, abort, finish, review, and share controls.
-- AI coaching, feedback generation, interview chat replies, voice prompt generation, mission generation, and attachment/text extraction support.
-- Voice rehearsal drills with prompt generation, voice analysis, saved sessions, and clear-history actions.
+- AI coaching, feedback generation, interview chat replies, and attachment/text extraction support.
 - Learning modules with chapters, resources, quizzes, progress tracking, and personalized recommendations.
 - Learning Games with admin-generated levels, user sessions, answer scoring, progress, energy, and downloadable certificates.
-- Job applications and interview packs for targeted practice.
-- Progress, feedback, reports, session exports, personal mastery checklist/stories, skills/perks, and account settings.
+- Progress, feedback, reports, session exports, skills/perks, and account settings.
 - Public shared review pages with optional unlock flow and mentor comments.
 - Public contact form, newsletter subscription response, privacy policy, terms of service, security page, and cookie preferences page.
 - Admin console for users, categories, questions, modules, learning games, interview sessions, contacts, feedback audits, AI providers, settings, notifications, and activity logs.
@@ -68,22 +66,50 @@ Regular users can access:
 - `/progress`, `/feedback`, `/reports`, and `/session/{id}/review` for results and reflection.
 - `/coach` for AI coaching conversations.
 - `/learning`, `/modules`, `/modules/{id}`, and `/skills` for learning content and unlockable perks.
-- `/applications` and `/packs` for targeted interview preparation.
-- `/missions` for AI-generated practice tasks.
-- `/drills/voice` for voice rehearsal.
-- `/personal-mastery` for personal goals, checklist items, and stories.
 - `/notifications` and `/account` for utility workflows.
 
 ### Interviews And Feedback
 
 Interview sessions support:
 
-- Category, pack, application, resume, and job-description context.
+- Category, resume, and job-description context.
 - Live answer submission and saved in-progress session state.
 - Speech-to-text through OpenAI when configured, with browser speech APIs as no-key fallback behavior where the UI supports it.
 - Optional local speech assessment for ASR evidence, pronunciation evidence, alignment data, and GOP integration.
 - Evidence-based coaching and AI provider fallback handling when external providers are unavailable or return incomplete JSON.
+- Admin-side KNN readiness matching support, comparing a scored interview with similar historical scored sessions as a secondary readiness signal.
 - Shareable review links and mentor comments for external review.
+
+### KNN Readiness Matching
+
+The system includes a K-Nearest Neighbors readiness match through `App\Services\KnnReadinessClassifier`.
+It uses score features such as clarity, relevance, grammar, professionalism, confidence, delivery stability,
+job evidence match, and STAR method when those fields are available.
+
+The weighted Euclidean distance formula is:
+
+```text
+d = sqrt(sum(weight_i * (target_i - neighbor_i)^2) / sum(weight_i))
+```
+
+The classifier selects the nearest scored sessions, applies inverse-distance weighting, predicts a readiness
+score and band, and reports a confidence/reliability band. This is a comparison aid, not a guarantee of hiring
+success or perfect scoring accuracy.
+
+### Readiness Algorithm Suite
+
+The admin dashboard also runs `App\Services\ReadinessAlgorithmSuite` as a secondary analysis layer. It does not replace
+the saved readiness score; it adds explainable checks that support readiness review and module recommendations.
+
+Implemented algorithms:
+
+- Weighted Scoring: `(sum(score_i * weight_i)) / sum(weight_i)`
+- TF-IDF Cosine Similarity: `(A dot B) / (||A|| * ||B||)`
+- Decision Tree: `IF/ELSE` score thresholds for readiness bands
+- Naive Bayes: `argmax P(class) * product P(feature_i | class)`
+- Logistic Regression: `1 / (1 + e^-(b0 + b1x1 + ... + bnxn))`
+- K-Means Clustering: assign score patterns to nearest centroids
+- Random Forest: majority vote from multiple bootstrapped decision trees
 
 ### Learning Games
 
@@ -443,12 +469,19 @@ php artisan ai:train-feedback-model --force
 
 ### Speech, Transcription, And Voice Analysis
 
-OpenAI transcription and optional TTS:
+Browser live captions are used first for real-time interview transcription where supported. OpenAI/Gemini transcription can be configured as a cloud fallback when browser speech recognition is unavailable or fails. Cloud fallback availability still depends on provider API quotas.
 
 ```env
 OPENAI_API_KEY=
+AI_TRANSCRIPTION_PROVIDER_PRIORITY=openai,gemini
 OPENAI_TRANSCRIPTION_MODEL=gpt-transcribe
 AI_TRANSCRIPTION_TIMEOUT=45
+AI_TRANSCRIPTION_CHUNK_MS=4000
+AI_TRANSCRIPTION_MOBILE_CHUNK_MS=5000
+AI_TRANSCRIPTION_DRAIN_TIMEOUT_MS=20000
+AI_TRANSCRIPTION_REQUEST_TIMEOUT_MS=30000
+AI_TRANSCRIPTION_MAX_IN_FLIGHT=2
+AI_TRANSCRIPTION_RATE_LIMIT_COOLDOWN_SECONDS=90
 AI_TTS_ENABLED=false
 OPENAI_TTS_MODEL=gpt-4o-mini-tts
 OPENAI_TTS_VOICE=alloy

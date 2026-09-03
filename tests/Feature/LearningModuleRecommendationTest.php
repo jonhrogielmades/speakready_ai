@@ -178,7 +178,7 @@ class LearningModuleRecommendationTest extends TestCase
         $this->assertSame('Today', $plan->first()->day);
         $this->assertSame('Clarity', $plan->first()->focus);
         $this->assertStringContainsString($clarityModule->title, $plan->first()->action);
-        $this->assertTrue($plan->contains(fn ($item) => $item->cta === 'Rehearse'));
+        $this->assertTrue($plan->contains(fn ($item) => $item->cta === 'Ask Coach'));
         $this->assertTrue($plan->contains(fn ($item) => $item->cta === 'Start Interview'));
     }
 
@@ -205,16 +205,28 @@ class LearningModuleRecommendationTest extends TestCase
             ->assertDontSee('Personalized Practice Plan')
             ->assertDontSee('id="card-practice-plan"', false)
             ->assertSee('Clear Answer Structure')
-            ->assertSee('id="dashboardMockTrigger"', false)
-            ->assertSee('data-bs-target="#dashboardMockModal"', false)
+            ->assertDontSee('id="dashboardMockTrigger"', false)
+            ->assertDontSee('sr-saas-command-actions', false)
+            ->assertDontSee('aria-label="Open progress"', false)
+            ->assertSee('id="dashboardMockModal"', false)
             ->assertSee('id="dashboardMockForm"', false)
             ->assertSee(route('interview.start'), false)
             ->assertSee('id="dashboardMockCategory"', false)
             ->assertSee('name="target_position"', false)
             ->assertSee('Philippines Job Interviews')
             ->assertSee('initDashboardMockModal', false)
-            ->assertSee('id="dashboardCoachTrigger"', false)
+            ->assertDontSee('id="dashboardCoachTrigger"', false)
+            ->assertDontSee('id="dashboardCoachFloatingLauncher"', false)
+            ->assertDontSee('data-dashboard-coach-launcher', false)
+            ->assertSee('id="dashboardCoachImageTrigger"', false)
+            ->assertSee('AI Chatbot Coach')
+            ->assertDontSee('Readiness Coach')
+            ->assertSee('Click the robot for AI Chatbot Coach.')
             ->assertSee('data-bs-target="#dashboardCoachModal"', false)
+            ->assertDontSee('data-dashboard-coach-prompt', false)
+            ->assertDontSee('Quick plan')
+            ->assertDontSee('STAR help')
+            ->assertDontSee('HR screening')
             ->assertSee('id="dashboardCoachForm"', false)
             ->assertSee('id="dashboardCoachClear"', false)
             ->assertSee(route('user.coach.chat'), false)
@@ -229,7 +241,6 @@ class LearningModuleRecommendationTest extends TestCase
         $this->module('Clear Answer Structure', 'Build clarity with concise, organized interview answers.', ['clarity']);
 
         Setting::setVal('ll_modules', false, 'general', 'boolean');
-        Setting::setVal('vr_recording', false, 'general', 'boolean');
         Setting::setVal('aic_enable', false, 'general', 'boolean');
 
         $session = $this->completedSessionFor($user, $category);
@@ -246,10 +257,11 @@ class LearningModuleRecommendationTest extends TestCase
         $plan = app(PersonalizedPracticePlanService::class)->forUser($user->id, 4);
         $urls = $plan->pluck('url');
 
-        $this->assertFalse($urls->contains(route('user.drills.voice')));
         $this->assertFalse($urls->contains(route('user.coach')));
         $this->assertTrue($urls->contains(route('interview.setup')));
-        $this->assertTrue($plan->contains(fn ($item) => str_contains($item->reason, 'disabled')));
+        $this->assertSame('Drill Clarity', $plan->first()->title);
+        $this->assertSame('Start Interview', $plan->first()->cta);
+        $this->assertSame(route('interview.setup'), $plan->first()->url);
     }
 
     private function category(string $title): Category

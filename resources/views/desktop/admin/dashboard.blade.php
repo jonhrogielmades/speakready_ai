@@ -1,10 +1,14 @@
 @extends('desktop.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/dashboard.css?v=2') }}" data-page-style="admin-dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/dashboard.css?v=3') }}" data-page-style="admin-dashboard">
 @endpush
 
 @section('content')
+@php
+    $readinessAlgorithms = $readinessAlgorithms ?? null;
+    $algorithmChecks = collect($readinessAlgorithms?->algorithms ?? []);
+@endphp
 
 <div class="db-section active admin-dashboard-shell" id="sec-overview">
     @if(session('message'))
@@ -96,6 +100,35 @@
                     <canvas id="readinessBarChart"></canvas>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="premium-card dashboard-panel admin-algorithm-panel mb-4">
+        <div class="admin-algorithm-header">
+            <div class="admin-algorithm-title-wrap">
+                <div class="admin-algorithm-main-icon"><i class="fa-solid fa-microchip"></i></div>
+                <div>
+                    <h6 class="fw-bold m-0">Algorithm Checks</h6>
+                    <p>Secondary readiness and recommendation checks from multiple algorithms.</p>
+                </div>
+            </div>
+            <span class="admin-algorithm-badge">{{ $readinessAlgorithms?->available_count ?? 0 }}/{{ $readinessAlgorithms?->algorithm_count ?? 7 }} active</span>
+        </div>
+        <div class="admin-algorithm-grid">
+            @foreach($algorithmChecks as $algorithm)
+                <div class="admin-algorithm-item {{ $algorithm->available ? 'is-active' : 'is-pending' }}">
+                    <div class="admin-algorithm-icon"><i class="fa-solid {{ $algorithm->icon }}"></i></div>
+                    <div class="admin-algorithm-body">
+                        <div class="admin-algorithm-name">{{ $algorithm->name }}</div>
+                        <div class="admin-algorithm-value">{{ $algorithm->available ? $algorithm->prediction : $algorithm->message }}</div>
+                    </div>
+                    @if($algorithm->available)
+                        <span class="admin-algorithm-score">{{ $algorithm->confidence }}%</span>
+                    @else
+                        <span class="admin-algorithm-score is-muted">--</span>
+                    @endif
+                </div>
+            @endforeach
         </div>
     </div>
 

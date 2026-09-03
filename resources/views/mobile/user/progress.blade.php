@@ -391,7 +391,7 @@
                     <div class="activity-heading-icon"><i class="fa-regular fa-calendar"></i></div>
                     <div>
                         <h5 class="activity-title">Practice Activity Calendar</h5>
-                        <p class="activity-subtitle">Last 28 days across interviews and voice drills.</p>
+                        <p class="activity-subtitle">Last 28 days across completed interviews.</p>
                     </div>
                 </div>
                 @if($activityCalendar->range_active_days > 0)
@@ -945,7 +945,6 @@
             { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
             { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Review active module progress connected to your readiness growth.', side: 'top', align: 'start' }},
             { element: '#recommended-next', popover: { title: 'Recommended Next', description: 'Open suggested modules based on your latest practice signals.', side: 'top', align: 'start' }},
-            { element: '#voice-progress', popover: { title: 'Voice Progress', description: 'Track saved voice-drill clarity, delivery, pace, and filler signals.', side: 'top', align: 'start' }},
             { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Use the calendar to spot consistent practice days and gaps.', side: 'top', align: 'start' }},
             { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'top', align: 'start' }},
             { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'top', align: 'start' }}
@@ -961,7 +960,6 @@
             { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
             { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Review active module progress connected to your readiness growth.', side: 'top', align: 'start' }},
             { element: '#recommended-next', popover: { title: 'Recommended Next', description: 'Open suggested modules based on your latest practice signals.', side: 'top', align: 'start' }},
-            { element: '#voice-progress', popover: { title: 'Voice Progress', description: 'Track saved voice-drill clarity, delivery, pace, and filler signals.', side: 'top', align: 'start' }},
             { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Use the calendar to spot consistent practice days and gaps.', side: 'top', align: 'start' }},
             { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'right', align: 'start' }},
             { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'left', align: 'start' }}

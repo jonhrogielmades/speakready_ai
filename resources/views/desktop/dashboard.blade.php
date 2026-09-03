@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=27') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=33') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -154,11 +154,6 @@
                 <strong>{{ $goalTarget }}%</strong>
             </div>
         </div>
-        <div class="sr-saas-command-actions" aria-label="Dashboard actions">
-            <button type="button" class="sr-saas-action primary" id="dashboardMockTrigger" data-bs-toggle="modal" data-bs-target="#dashboardMockModal" aria-controls="dashboardMockModal"><i class="fa-solid fa-play"></i> Start Mock</button>
-            <a href="{{ route('user.coach') }}" class="sr-saas-action" id="dashboardCoachTrigger" data-bs-toggle="modal" data-bs-target="#dashboardCoachModal" aria-controls="dashboardCoachModal"><i class="fa-solid fa-robot"></i> Coach</a>
-            <a href="{{ route('user.progress') }}" class="sr-saas-action icon-only" aria-label="Open progress"><i class="fa-solid fa-chart-line"></i></a>
-        </div>
     </section>
 
     <div class="sr-summary-grid">
@@ -191,7 +186,8 @@
                     </div>
                     <div class="sr-image-speech" aria-hidden="true">
                         <strong>Hi! {{ $welcomeName }}</strong>
-                        <span>You're <span class="sr-image-speech-accent">ready</span> to practice confidently and <span class="sr-image-speech-accent is-success">succeed</span> today!</span>
+                        <span>You're <span class="sr-image-speech-accent">ready</span> to practice and <span class="sr-image-speech-accent is-success">succeed</span> today!</span>
+                        <span class="sr-image-speech-action">Click the robot for AI Chatbot Coach.</span>
                     </div>
                     <div class="sr-image-head-icons" aria-hidden="true">
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-microphone"></i></span></span>
@@ -201,8 +197,20 @@
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-graduation-cap"></i></span></span>
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-star"></i></span></span>
                     </div>
-                    <img class="sr-image-robot" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="">
-                    <img class="sr-image-robot-hand" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true">
+                    <button
+                        type="button"
+                        class="sr-image-robot sr-image-coach-trigger"
+                        id="dashboardCoachImageTrigger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#dashboardCoachModal"
+                        aria-controls="dashboardCoachModal"
+                        aria-label="Open AI Chatbot Coach"
+                        title="AI Chatbot Coach"
+                    >
+                        <img src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true" draggable="false">
+                        <span class="visually-hidden">Open AI Chatbot Coach</span>
+                    </button>
+                    <img class="sr-image-robot-hand" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true" draggable="false">
                 </div>
             </section>
 
@@ -726,7 +734,6 @@
         <div class="modal-content">
             <form id="dashboardMockForm" action="{{ route('interview.start') }}" method="POST">
                 @csrf
-                <input type="hidden" name="source_pack_key" id="dashboardMockSourcePack" value="{{ $dashboardMockSelectedScenario['source_pack_key'] ?? '' }}">
                 <input type="hidden" name="interview_focus" id="dashboardMockFocus" value="{{ $dashboardMockSelectedScenario['interview_focus'] ?? 'Philippines Job Interview' }}">
                 <input type="hidden" name="coach_focus_mode" value="balanced">
                 <input type="hidden" name="company_persona" value="Philippines hiring context">
@@ -751,7 +758,6 @@
                             <select class="sr-dashboard-mock-control" name="category_id" id="dashboardMockCategory" required {{ $dashboardMockHasScenarios ? '' : 'disabled' }}>
                                 @forelse($dashboardMockScenarios as $scenario)
                                     <option value="{{ $scenario['category_id'] }}"
-                                        data-source-pack-key="{{ $scenario['source_pack_key'] }}"
                                         data-focus="{{ $scenario['interview_focus'] }}"
                                         {{ (string) $dashboardMockSelectedCategoryId === (string) $scenario['category_id'] ? 'selected' : '' }}>
                                         {{ $scenario['label'] }}
@@ -854,7 +860,7 @@
                     <div class="sr-dashboard-coach-heading">
                         <span class="sr-dashboard-coach-icon"><i class="fa-solid fa-robot"></i></span>
                         <div>
-                            <h5 class="modal-title" id="dashboardCoachModalTitle">Readiness Coach</h5>
+                            <h5 class="modal-title" id="dashboardCoachModalTitle">AI Chatbot Coach</h5>
                             <p>Ask for focused interview guidance.</p>
                         </div>
                     </div>
@@ -863,11 +869,6 @@
                 <div class="modal-body">
                     <label class="sr-dashboard-coach-label" for="dashboardCoachMessage">Question or focus</label>
                     <textarea class="sr-dashboard-coach-input" id="dashboardCoachMessage" name="message" rows="4" maxlength="10000" required placeholder="Example: Help me prepare a stronger answer for a customer service interview."></textarea>
-                    <div class="sr-dashboard-coach-prompts" role="group" aria-label="Quick coach prompts">
-                        <button type="button" data-dashboard-coach-prompt="Give me a quick plan for my next Philippines mock interview.">Quick plan</button>
-                        <button type="button" data-dashboard-coach-prompt="Help me improve one weak interview answer using the STAR method.">STAR help</button>
-                        <button type="button" data-dashboard-coach-prompt="Suggest role-fit points I can practice for a local HR screening.">HR screening</button>
-                    </div>
                     <div class="sr-dashboard-coach-status" id="dashboardCoachStatus" role="status" aria-live="polite"></div>
                     <div class="sr-dashboard-coach-response" id="dashboardCoachResponse" hidden>
                         <div class="sr-dashboard-coach-response-head">
@@ -1280,7 +1281,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
             const modal = document.getElementById('dashboardMockModal');
             const scenarioSelect = document.getElementById('dashboardMockCategory');
-            const sourcePackInput = document.getElementById('dashboardMockSourcePack');
             const focusInput = document.getElementById('dashboardMockFocus');
             const positionInput = document.getElementById('dashboardMockPosition');
             const submitButton = document.getElementById('dashboardMockSubmit');
@@ -1291,9 +1291,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 const selectedOption = scenarioSelect?.selectedOptions?.[0];
                 if (!selectedOption) return;
 
-                if (sourcePackInput) {
-                    sourcePackInput.value = selectedOption.dataset.sourcePackKey || '';
-                }
                 if (focusInput) {
                     focusInput.value = selectedOption.dataset.focus || 'Philippines Job Interview';
                 }
@@ -1448,16 +1445,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 textarea.style.height = Math.min(textarea.scrollHeight, 220) + 'px';
             }
 
-            document.querySelectorAll('[data-dashboard-coach-prompt]').forEach((button) => {
-                button.addEventListener('click', () => {
-                    if (!textarea) return;
-
-                    textarea.value = button.dataset.dashboardCoachPrompt || '';
-                    resizeTextarea();
-                    textarea.focus();
-                });
-            });
-
             textarea?.addEventListener('input', resizeTextarea);
             modal?.addEventListener('shown.bs.modal', () => {
                 textarea?.focus();
@@ -1581,12 +1568,12 @@ document.addEventListener("DOMContentLoaded", function() {
         const stepsMobile = [];
 
         const stepsDesktop = [
-            { element: '#dbSidebar', popover: { title: 'Practice Navigation', description: 'Open Mock Interview, Modules, Voice Rehearsal, Missions, Challenges, Readiness Coach, Progress, Feedback, Reports, and Mastery.', side: 'right', align: 'start' }},
+            { element: '#dbSidebar', popover: { title: 'Practice Navigation', description: 'Open Mock Interview, Modules, Challenges, AI Chatbot Coach, Progress, Feedback, and Reports.', side: 'right', align: 'start' }},
             { element: '#dbTutorialBtn', popover: { title: 'Replay Tutorial', description: 'Restart this walkthrough whenever the page changes or you want a quick orientation.', side: 'bottom', align: 'center' }},
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed interviews, ratings, XP, streaks, and active practice days at a glance.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to choose the module, drill, challenge, or interview that fits your latest gaps.', side: 'bottom', align: 'start' }},
+            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to choose the module, challenge, or interview that fits your latest gaps.', side: 'bottom', align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
             { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused Philippines interview task for XP, streak progress, and sharper answer structure.', side: 'left', align: 'start' }},
             { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: 'bottom', align: 'center' }},

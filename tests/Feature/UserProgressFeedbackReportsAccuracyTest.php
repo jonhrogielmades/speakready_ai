@@ -13,7 +13,6 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
-use App\Models\VoiceSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
@@ -105,19 +104,6 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             ],
         ]);
 
-        VoiceSession::create([
-            'user_id' => $user->id,
-            'category' => 'Behavioral',
-            'prompt' => 'Practice your STAR story.',
-            'transcript' => 'I coordinated the team and solved the issue.',
-            'speaking_pace' => 128,
-            'clarity_score' => 81,
-            'confidence_score' => 80,
-            'filler_words' => 1,
-            'duration_seconds' => 34,
-            'wpm' => 128,
-        ]);
-
         $response = $this->actingAs($user)->get(route('user.progress'));
 
         $response->assertOk()
@@ -131,8 +117,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
                 && $progress->overall_percent === 75
                 && $progress->analyzed_answers === 1)
             ->assertViewHas('activityCalendar', fn ($calendar) => $calendar
-                && $calendar->range_active_days === 3
-                && $calendar->current_streak === 3)
+                && $calendar->range_active_days === 2
+                && $calendar->current_streak === 2)
             ->assertViewHas('badges', fn ($badges) => collect($badges)
                 ->where('title', 'First Interview')->first()?->unlocked === true
                 && collect($badges)->where('title', '3-Day Streak')->first()?->unlocked === true
@@ -157,9 +143,10 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             ->assertViewHas('goalNote', fn ($note) => $note && $note->title === 'First milestone waiting');
     }
 
-    public function test_progress_page_renders_live_learning_plan_recommendation_and_voice_activity(): void
+    public function test_progress_page_renders_live_learning_plan_recommendation_and_interview_activity(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category('Behavioral');
 
         $module = LearningModule::create([
             'title' => 'Answer Clarity Sprint',
@@ -174,20 +161,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             'progress_percentage' => 60,
         ]);
 
-        $this->voiceSessionFor($user, now()->subDay(), [
-            'prompt' => 'Introduce yourself for a Philippines interview.',
-            'clarity_score' => 72,
-            'confidence_score' => 70,
-            'filler_words' => 4,
-            'speaking_pace' => 118,
-        ]);
-        $this->voiceSessionFor($user, now(), [
-            'prompt' => 'Explain your strongest role fit proof.',
-            'clarity_score' => 84,
-            'confidence_score' => 82,
-            'filler_words' => 2,
-            'speaking_pace' => 132,
-        ]);
+        $this->completedSessionFor($user, $category, 70, now()->subDay());
+        $this->completedSessionFor($user, $category, 78, now());
 
         $response = $this->actingAs($user)->get(route('user.progress'));
 
@@ -196,22 +171,21 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             ->assertSee('Learning Progress')
             ->assertSee('Answer Clarity Sprint')
             ->assertSee('Recommended Next')
-            ->assertSee('Voice Progress')
-            ->assertSee('Explain your strongest role fit proof.')
-            ->assertSee('Filler words are down 50%')
+            ->assertSee('Practice Activity Calendar')
+            ->assertDontSee('Voice Progress')
             ->assertViewHas('currentStreak', 2)
             ->assertViewHas('totalPracticeDays', 2)
             ->assertViewHas('activityCalendar', fn ($calendar) => $calendar
                 && $calendar->active_days === 2
                 && $calendar->current_streak === 2
-                && $calendar->total_voice_sessions === 2);
+                && $calendar->total_interviews === 2);
 
         $this->actingAs($user)
             ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1')
             ->get(route('user.progress'))
             ->assertOk()
             ->assertSee('Personalized Practice Plan')
-            ->assertSee('Voice Progress');
+            ->assertDontSee('Voice Progress');
     }
 
     public function test_feedback_marks_unscored_completed_sessions_as_pending(): void
@@ -430,11 +404,11 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Pending')
-            ->assertSee('Practice voice delivery')
+            ->assertSee('Practice delivery')
             ->assertSee('Rebuild answer structure')
             ->assertSee('Strengthen role proof')
             ->assertViewHas('feedbackSummary', fn ($summary) => $summary && $summary->overall === null)
-            ->assertViewHas('practiceRecommendations', fn ($items) => $items->contains(fn ($item) => $item->title === 'Practice voice delivery')
+            ->assertViewHas('practiceRecommendations', fn ($items) => $items->contains(fn ($item) => $item->title === 'Practice delivery')
                 && $items->contains(fn ($item) => $item->title === 'Rebuild answer structure'));
     }
 
@@ -445,7 +419,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         $session = $this->completedSessionFor($user, $category, null, now());
 
         Setting::setVal('ll_modules', false, 'general', 'boolean');
-        Setting::setVal('vr_recording', false, 'general', 'boolean');
+        Setting::setVal('aic_enable', false, 'general', 'boolean');
 
         Feedback::create([
             'interview_session_id' => $session->id,
@@ -456,7 +430,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         $response = $this->actingAs($user)->get(route('user.feedback'));
 
         $response->assertOk()
-            ->assertDontSee('Practice voice delivery')
+            ->assertDontSee('Practice delivery')
             ->assertDontSee('Rebuild answer structure')
             ->assertDontSee('Strengthen role proof')
             ->assertSee('Retake a coached mock')
@@ -933,26 +907,4 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         return $session;
     }
 
-    private function voiceSessionFor(User $user, $createdAt, array $overrides = []): VoiceSession
-    {
-        $session = VoiceSession::create(array_merge([
-            'user_id' => $user->id,
-            'category' => 'Behavioral',
-            'prompt' => 'Practice a concise answer.',
-            'transcript' => 'I practiced one concise answer with clear evidence.',
-            'speaking_pace' => 125,
-            'clarity_score' => 80,
-            'confidence_score' => 78,
-            'filler_words' => 1,
-            'duration_seconds' => 45,
-            'wpm' => 125,
-        ], $overrides));
-
-        $session->forceFill([
-            'created_at' => $createdAt,
-            'updated_at' => $createdAt,
-        ])->save();
-
-        return $session;
-    }
 }

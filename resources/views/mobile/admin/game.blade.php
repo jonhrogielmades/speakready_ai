@@ -8,7 +8,7 @@
     <div class="mb-4 d-flex justify-content-between align-items-center admin-game-header">
         <div>
             <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Philippines Interview Learning Games</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage gamified Philippine interview drills, local practice missions, and coaching modifiers.</p>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage gamified Philippine interview drills, local practice prompts, and coaching modifiers.</p>
         </div>
         <div class="d-flex gap-2 admin-game-actions">
             <button class="btn btn-outline-info px-3 py-2" style="font-size:.85rem;font-weight:600" data-bs-toggle="modal" data-bs-target="#generateGameModal">

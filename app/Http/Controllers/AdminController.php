@@ -12,6 +12,7 @@ use App\Models\LearningModule;
 use App\Services\AIService;
 use App\Services\CsvExportService;
 use App\Services\QuestionDatasetProvider;
+use App\Services\ReadinessAlgorithmSuite;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -94,6 +95,8 @@ class AdminController extends Controller
                 ->count();
         }
 
+        $readinessAlgorithms = app(ReadinessAlgorithmSuite::class)->forAdminOverview();
+
         return $this->mobileView('admin.dashboard', compact(
             'registeredUsersCount',
             'onlineTodayCount',
@@ -113,7 +116,8 @@ class AdminController extends Controller
             'readinessData',
             'userGrowthLabels',
             'userGrowthData',
-            'recentActivities'
+            'recentActivities',
+            'readinessAlgorithms'
         ));
     }
 
@@ -469,7 +473,7 @@ class AdminController extends Controller
             ->take(3)
             ->get();
 
-        $datasetPacks = QuestionDatasetProvider::all();
+        $questionDatasets = QuestionDatasetProvider::all();
         $aiProviderOptions = $this->questionProviderOptions();
 
         return $this->mobileView('admin.questions', compact(
@@ -479,7 +483,7 @@ class AdminController extends Controller
             'activeQuestions',
             'totalCategories',
             'mostUsedQuestions',
-            'datasetPacks',
+            'questionDatasets',
             'aiProviderOptions'
         ));
     }
@@ -604,8 +608,8 @@ class AdminController extends Controller
 
         foreach ($questionsToImport as $q) {
             $category = Category::firstOrCreate(
-                ['title' => $q['category'] ?? 'Philippines Source Packs', 'type' => 'core'],
-                ['description' => 'Imported from reliable Philippines source packs', 'status' => 'active']
+                ['title' => $q['category'] ?? 'Philippines Question Sources', 'type' => 'core'],
+                ['description' => 'Imported from reliable Philippines question sources', 'status' => 'active']
             );
 
             $question = Question::firstOrCreate(
@@ -715,7 +719,7 @@ class AdminController extends Controller
 
         $prompt = "Create an action-focused Philippines interview preparation learning module about: " . $request->prompt . ".
         Focus only on what the learner needs to do before and during the interview: what to prepare, what to write, what to rehearse, what to revise, and what to check before marking the module complete.
-        Keep every action grounded in Philippine hiring and education interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate applications, scholarship or college admission interviews, professional communication, salary expectations, and availability/work-setup questions when relevant.
+        Keep every action grounded in Philippine hiring and education interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate interviews, scholarship or college admission interviews, professional communication, salary expectations, and availability/work-setup questions when relevant.
         Avoid broad lectures, history, trivia, generic motivation, feature promotion, or content that does not tell the user a concrete interview-preparation action.
         Return ONLY a JSON object with the following structure:
         {
@@ -800,7 +804,7 @@ class AdminController extends Controller
         $prompt = "Create action-focused Philippines interview preparation content for an educational learning module titled: '" . $module->title . "'.
         The category is '" . $module->category . "' and difficulty is '" . $module->difficulty . "'.
         Focus only on what the learner needs to do before and during the interview: what to prepare, what to write, what to rehearse, what to revise, and what to check before marking the module complete.
-        Ground every task in Philippine hiring and education interview practice, including local HR screening, BPO/customer support, IT roles, fresh graduate applications, scholarship or college admission interviews, communication clarity, salary expectations, and availability/work-setup questions when relevant.
+        Ground every task in Philippine hiring and education interview practice, including local HR screening, BPO/customer support, IT roles, fresh graduate interviews, scholarship or college admission interviews, communication clarity, salary expectations, and availability/work-setup questions when relevant.
         Avoid broad lectures, history, trivia, generic motivation, feature promotion, or content that does not tell the user a concrete interview-preparation action.
         Return ONLY a JSON object with the following structure:
         {

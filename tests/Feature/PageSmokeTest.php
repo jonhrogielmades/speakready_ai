@@ -81,14 +81,9 @@ class PageSmokeTest extends TestCase
             route('user.reports'),
             route('user.coach'),
             route('user.learning', ['category_id' => $gameCategory->id]),
-            route('user.applications.index'),
-            route('user.packs.index'),
             route('user.modules.index'),
             route('user.modules.show', $module),
             route('user.skills'),
-            route('user.leaderboard'),
-            route('user.missions'),
-            route('user.drills.voice'),
             route('user.review', $session),
             route('interview.review', $session),
         ];
@@ -242,26 +237,6 @@ class PageSmokeTest extends TestCase
             ->assertSee(route('interview.setup'), false);
 
         $this->actingAs($user)
-            ->get(route('user.drills.voice'))
-            ->assertOk()
-            ->assertSee(route('user.drills.voice.prompt'), false)
-            ->assertSee(route('user.drills.voice.analyze'), false)
-            ->assertSee(route('user.drills.voice.save'), false)
-            ->assertSee('function voiceJson', false)
-            ->assertSee("credentials: 'same-origin'", false)
-            ->assertSee("'Accept': 'application/json'", false)
-            ->assertSee('onclick="startRec()"', false)
-            ->assertSee('onclick="saveSession()"', false);
-
-        $this->actingAs($user)
-            ->get(route('user.missions'))
-            ->assertOk()
-            ->assertSee(route('user.missions.generate'), false)
-            ->assertSee('id="generateMissionBtn"', false)
-            ->assertSee('id="scoreMissionBtn"', false)
-            ->assertSee(route('user.drills.voice'), false);
-
-        $this->actingAs($user)
             ->get(route('user.learning', ['category_id' => $gameCategory->id]))
             ->assertOk()
             ->assertSee(route('user.skills'), false)
@@ -298,13 +273,6 @@ class PageSmokeTest extends TestCase
             ->assertSee('id="exportExcelBtn"', false)
             ->assertSee(route('user.sessions.export', $session), false)
             ->assertSee(route('interview.setup'), false);
-
-        $this->actingAs($user)
-            ->get(route('user.leaderboard'))
-            ->assertOk()
-            ->assertSee(route('user.mastery.stories.store'), false)
-            ->assertSee('mastery-checklist', false)
-            ->assertSee(route('user.progress'), false);
 
         $this->actingAs($user)
             ->get(route('user.notifications'))
