@@ -314,6 +314,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Admin AI Providers Features
     Route::prefix('admin/ai')->name('admin.ai.')->group(function () {
+        Route::get('/evaluation', [\App\Http\Controllers\AdminAiController::class, 'evaluation'])->name('evaluation');
+        Route::get('/evaluation/realtime', [\App\Http\Controllers\AdminAiController::class, 'evaluationRealtime'])->name('evaluation.realtime');
+        Route::post('/evaluation/run', [\App\Http\Controllers\AdminAiController::class, 'runEvaluation'])->name('evaluation.run');
+        Route::get('/evaluation/export', [\App\Http\Controllers\AdminAiController::class, 'exportEvaluation'])->name('evaluation.export');
+        Route::post('/evaluation/clear', [\App\Http\Controllers\AdminAiController::class, 'clearEvaluation'])->name('evaluation.clear');
+        Route::get('/evaluation/report', [\App\Http\Controllers\AdminAiController::class, 'evaluationReport'])->name('evaluation.report');
         Route::get('/providers', [\App\Http\Controllers\AdminAiController::class, 'providers'])->name('providers');
         Route::post('/providers', [\App\Http\Controllers\AdminAiController::class, 'storeProvider'])->name('providers.store');
         Route::put('/providers/{provider}', [\App\Http\Controllers\AdminAiController::class, 'updateProvider'])->name('providers.update');

@@ -3408,12 +3408,19 @@ class UserController extends Controller
     {
         $maxEnergy = Profile::MAX_ENERGY;
         $lastRefill = $profile->energy_last_refilled_at;
+        $currentEnergy = (int) ($profile->energy ?? 0);
+        $cappedEnergy = max(0, min($currentEnergy, $maxEnergy));
 
         if ($lastRefill && $lastRefill->isSameDay(now())) {
+            if ($currentEnergy !== $cappedEnergy) {
+                $profile->energy = $cappedEnergy;
+                $profile->save();
+            }
+
             return;
         }
 
-        $profile->energy = max((int) ($profile->energy ?? 0), $maxEnergy);
+        $profile->energy = $maxEnergy;
         $profile->energy_last_refilled_at = now();
         $profile->save();
     }

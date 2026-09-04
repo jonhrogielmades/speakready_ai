@@ -2561,7 +2561,8 @@
 
                <div class="mob-profile-section-title">System</div>
                <div class="mob-profile-grid mb-2">
-                  <a href="{{ route('admin.ai.providers') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.ai.*') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i><span>AI Providers</span></a>
+                  <a href="{{ route('admin.ai.providers') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.ai.providers*') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i><span>AI Providers</span></a>
+                  <a href="{{ route('admin.ai.evaluation') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.ai.evaluation*') ? 'active' : '' }}"><i class="fa-solid fa-chart-simple"></i><span>AI Evaluation</span></a>
                   <a href="{{ route('admin.settings.index') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
                </div>
             </div>

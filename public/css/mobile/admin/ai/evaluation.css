@@ -1,0 +1,891 @@
+#sec-admin-ai-evaluation,
+#sec-admin-ai-evaluation * {
+    box-sizing: border-box;
+}
+
+#sec-admin-ai-evaluation {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+#sec-admin-ai-evaluation .alert {
+    border-radius: 8px;
+    border: 1px solid var(--bd);
+    background: var(--sf);
+    color: var(--tx);
+}
+
+#sec-admin-ai-evaluation .ai-eval-header {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+#sec-admin-ai-evaluation .ai-eval-header h4 {
+    font-size: 1.2rem;
+    line-height: 1.25;
+    color: var(--tx);
+    overflow-wrap: anywhere;
+}
+
+#sec-admin-ai-evaluation .ai-eval-header p {
+    color: var(--tx2);
+    font-size: .88rem;
+}
+
+#sec-admin-ai-evaluation .ai-eval-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+#sec-admin-ai-evaluation .ai-eval-actions .btn,
+#sec-admin-ai-evaluation .ai-eval-actions form,
+#sec-admin-ai-evaluation .ai-eval-filter .btn {
+    width: 100%;
+}
+
+#sec-admin-ai-evaluation .ai-eval-actions .btn,
+#sec-admin-ai-evaluation .ai-eval-filter .btn {
+    min-height: 40px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+#sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #991b1b;
+    background: #fff1f2;
+    border: 1px solid rgba(220, 38, 38, .35);
+    box-shadow: 0 8px 20px rgba(220, 38, 38, .12);
+}
+
+#sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn:hover,
+#sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn:focus-visible {
+    color: #ffffff;
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+html.dm #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn,
+html[data-theme="dark"] #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn,
+body.dm #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn {
+    color: #fecaca;
+    background: rgba(127, 29, 29, .42);
+    border-color: rgba(248, 113, 113, .52);
+    box-shadow: none;
+}
+
+html.dm #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn:hover,
+html.dm #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn:focus-visible,
+html[data-theme="dark"] #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn:hover,
+html[data-theme="dark"] #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn:focus-visible,
+body.dm #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn:hover,
+body.dm #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn:focus-visible {
+    color: #ffffff;
+    background: #ef4444;
+    border-color: #fca5a5;
+}
+
+#sec-admin-ai-evaluation .ai-eval-filter {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--sf);
+}
+
+#sec-admin-ai-evaluation .ai-eval-filter label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--tx2);
+    font-size: .74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+#sec-admin-ai-evaluation .ai-eval-realtime-bar {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(34, 197, 94, .26);
+    border-radius: 8px;
+    background: rgba(34, 197, 94, .08);
+}
+
+#sec-admin-ai-evaluation .ai-eval-realtime-bar div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+#sec-admin-ai-evaluation .ai-eval-realtime-bar strong {
+    color: var(--tx);
+    font-size: .86rem;
+}
+
+#sec-admin-ai-evaluation .ai-eval-realtime-bar small {
+    color: var(--tx2);
+    font-size: .78rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+#sec-admin-ai-evaluation .ai-eval-realtime-bar small[data-state="loading"] {
+    color: #38bdf8;
+}
+
+#sec-admin-ai-evaluation .ai-eval-realtime-bar small[data-state="error"] {
+    color: #f87171;
+}
+
+#sec-admin-ai-evaluation .ai-panelist-requirement {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 9px;
+    margin-bottom: 14px;
+    padding: 12px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--sf);
+    color: var(--tx);
+}
+
+#sec-admin-ai-evaluation .ai-panelist-requirement strong,
+#sec-admin-ai-evaluation .ai-panelist-requirement small {
+    display: block;
+}
+
+#sec-admin-ai-evaluation .ai-panelist-requirement strong {
+    font-weight: 900;
+    line-height: 1.25;
+}
+
+#sec-admin-ai-evaluation .ai-panelist-requirement small {
+    margin-top: 3px;
+    color: var(--tx2);
+    font-size: .76rem;
+    font-weight: 700;
+}
+
+#sec-admin-ai-evaluation .ai-panelist-requirement span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 5px 9px;
+    border-radius: 8px;
+    color: var(--tx);
+    font-size: .78rem;
+    font-weight: 900;
+}
+
+#sec-admin-ai-evaluation .ai-panelist-requirement.met {
+    border-color: rgba(34, 197, 94, .36);
+    background: rgba(34, 197, 94, .10);
+}
+
+#sec-admin-ai-evaluation .ai-panelist-requirement.met span {
+    background: rgba(34, 197, 94, .16);
+}
+
+#sec-admin-ai-evaluation .ai-panelist-requirement.warning {
+    border-color: rgba(245, 158, 11, .42);
+    background: rgba(245, 158, 11, .12);
+}
+
+#sec-admin-ai-evaluation .ai-panelist-requirement.warning span {
+    background: rgba(245, 158, 11, .18);
+}
+
+#sec-admin-ai-evaluation .ai-live-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, .42);
+    animation: ai-live-pulse 1.7s ease-out infinite;
+}
+
+@keyframes ai-live-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, .42);
+    }
+
+    70% {
+        box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+#sec-admin-ai-evaluation .ai-eval-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+#sec-admin-ai-evaluation .ai-eval-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 12px;
+    min-height: 104px;
+    padding: 14px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--sf);
+}
+
+#sec-admin-ai-evaluation .ai-eval-card-icon {
+    grid-row: span 3;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: var(--bg3);
+    font-size: 1.15rem;
+}
+
+#sec-admin-ai-evaluation .ai-eval-card strong {
+    color: var(--tx);
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+}
+
+#sec-admin-ai-evaluation .ai-eval-card small {
+    color: var(--tx3);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+#sec-admin-ai-evaluation .ai-eval-card b {
+    color: var(--tx2);
+    font-size: .78rem;
+}
+
+#sec-admin-ai-evaluation .ai-eval-panel {
+    width: 100%;
+    max-width: 100%;
+    padding: 14px;
+    border-radius: 8px !important;
+}
+
+#sec-admin-ai-evaluation .ai-eval-panel-title {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+#sec-admin-ai-evaluation .ai-eval-panel-title h5 {
+    font-size: .98rem;
+    line-height: 1.3;
+}
+
+#sec-admin-ai-evaluation .ai-output-context {
+    display: block;
+    margin-top: 5px;
+    color: var(--tx2);
+    font-size: .76rem;
+    font-weight: 700;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+#sec-admin-ai-evaluation .table-responsive {
+    overflow-x: auto;
+}
+
+#sec-admin-ai-evaluation .custom-table {
+    min-width: 920px;
+    table-layout: fixed;
+}
+
+#sec-admin-ai-evaluation .custom-table th,
+#sec-admin-ai-evaluation .custom-table td {
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+#sec-admin-ai-evaluation .custom-table th {
+    color: var(--tx2);
+    font-size: .72rem;
+    text-transform: uppercase;
+}
+
+#sec-admin-ai-evaluation .ai-eval-provider-name {
+    color: var(--tx);
+    font-weight: 800;
+}
+
+#sec-admin-ai-evaluation td small,
+#sec-admin-ai-evaluation .ai-eval-evidence-level {
+    color: var(--tx2);
+}
+
+#sec-admin-ai-evaluation .ai-eval-evidence-level {
+    display: inline-block;
+    font-weight: 800;
+}
+
+#sec-admin-ai-evaluation .stat-badge.secondary {
+    background: rgba(148, 163, 184, .12);
+    border: 1px solid rgba(148, 163, 184, .24);
+    color: var(--tx2);
+}
+
+#sec-admin-ai-evaluation .ai-eval-metric-list {
+    display: grid;
+    gap: 9px;
+}
+
+#sec-admin-ai-evaluation .ai-eval-metric-list div {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--bg3);
+}
+
+#sec-admin-ai-evaluation .ai-eval-metric-list span {
+    color: var(--tx2);
+}
+
+#sec-admin-ai-evaluation .ai-eval-metric-list strong {
+    color: var(--tx);
+}
+
+#sec-admin-ai-evaluation details summary {
+    cursor: pointer;
+    color: var(--tx);
+    font-weight: 700;
+}
+
+#sec-admin-ai-evaluation details pre {
+    max-height: 220px;
+    margin-top: 8px;
+    padding: 10px;
+    overflow: auto;
+    white-space: pre-wrap;
+    color: var(--tx);
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--bg3);
+}
+
+#sec-admin-ai-evaluation .ai-generated-output-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+#sec-admin-ai-evaluation .ai-provider-output-card {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--bg3);
+}
+
+#sec-admin-ai-evaluation .ai-provider-output-head {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#sec-admin-ai-evaluation .ai-provider-output-head strong,
+#sec-admin-ai-evaluation .ai-feedback-question {
+    color: var(--tx);
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+#sec-admin-ai-evaluation .ai-provider-output-head small {
+    display: block;
+    color: var(--tx3);
+    font-weight: 700;
+}
+
+#sec-admin-ai-evaluation .ai-provider-output-head span {
+    color: var(--tx2);
+    font-size: .74rem;
+    font-weight: 700;
+}
+
+#sec-admin-ai-evaluation .ai-provider-output-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 7px;
+}
+
+#sec-admin-ai-evaluation .ai-provider-output-head .ai-provider-output-meta span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 23px;
+    padding: 3px 7px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--sf);
+    color: var(--tx2);
+    font-size: .68rem;
+    font-weight: 800;
+}
+
+#sec-admin-ai-evaluation .ai-provider-output-head .ai-provider-output-meta .ai-provider-output-rank {
+    border-color: rgba(34, 197, 94, .35);
+    background: rgba(34, 197, 94, .12);
+    color: var(--tx);
+}
+
+#sec-admin-ai-evaluation .ai-best-action-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+}
+
+#sec-admin-ai-evaluation .ai-best-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-width: 0;
+    min-height: 38px;
+    padding: 8px 9px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--sf);
+    color: var(--tx);
+    font-size: .78rem;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: normal;
+}
+
+#sec-admin-ai-evaluation .ai-best-action-btn.question {
+    border-color: rgba(59, 130, 246, .32);
+    background: rgba(59, 130, 246, .10);
+}
+
+#sec-admin-ai-evaluation .ai-best-action-btn.feedback {
+    border-color: rgba(34, 197, 94, .32);
+    background: rgba(34, 197, 94, .10);
+}
+
+#sec-admin-ai-evaluation .ai-best-action-btn:hover,
+#sec-admin-ai-evaluation .ai-best-action-btn[aria-expanded="true"] {
+    border-color: rgba(99, 102, 241, .55);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .10);
+}
+
+#sec-admin-ai-evaluation .ai-best-action-btn b {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 21px;
+    min-height: 21px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: var(--bg3);
+    color: var(--tx);
+    font-size: .68rem;
+}
+
+#sec-admin-ai-evaluation .ai-best-panel {
+    display: grid;
+    gap: 9px;
+    padding: 10px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--sf);
+}
+
+#sec-admin-ai-evaluation .ai-best-panel[hidden] {
+    display: none;
+}
+
+#sec-admin-ai-evaluation .ai-best-panel h6 {
+    margin: 0;
+    color: var(--tx);
+    font-size: .78rem;
+    font-weight: 900;
+}
+
+#sec-admin-ai-evaluation .ai-best-list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+#sec-admin-ai-evaluation ol.ai-best-list {
+    padding-left: 1.15rem;
+}
+
+#sec-admin-ai-evaluation div.ai-best-list {
+    padding-left: 0;
+}
+
+#sec-admin-ai-evaluation .ai-best-list li,
+#sec-admin-ai-evaluation .ai-best-feedback-item {
+    padding: 9px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--bg3);
+    color: var(--tx);
+}
+
+#sec-admin-ai-evaluation .ai-best-list span,
+#sec-admin-ai-evaluation .ai-best-feedback-item strong {
+    display: block;
+    color: var(--tx);
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+#sec-admin-ai-evaluation .ai-best-list small,
+#sec-admin-ai-evaluation .ai-best-feedback-item small {
+    display: block;
+    margin-top: 5px;
+    color: var(--tx3);
+    font-size: .68rem;
+    font-weight: 700;
+}
+
+#sec-admin-ai-evaluation .ai-output-section {
+    display: grid;
+    gap: 9px;
+}
+
+#sec-admin-ai-evaluation .ai-output-section h6 {
+    margin: 0;
+    color: var(--tx2);
+    font-size: .74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+#sec-admin-ai-evaluation .ai-question-list,
+#sec-admin-ai-evaluation .ai-evidence-quotes ul {
+    margin: 0;
+    padding-left: 1.15rem;
+}
+
+#sec-admin-ai-evaluation .ai-question-list {
+    display: grid;
+    gap: 8px;
+}
+
+#sec-admin-ai-evaluation .ai-question-list li {
+    padding: 8px 9px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--sf);
+    color: var(--tx);
+    line-height: 1.45;
+}
+
+#sec-admin-ai-evaluation .ai-feedback-list {
+    display: grid;
+    gap: 10px;
+}
+
+#sec-admin-ai-evaluation .ai-feedback-item {
+    padding: 10px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--sf);
+}
+
+#sec-admin-ai-evaluation .ai-feedback-scores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+#sec-admin-ai-evaluation .ai-feedback-scores span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 7px;
+    border: 1px solid rgba(59, 130, 246, .22);
+    border-radius: 8px;
+    background: rgba(59, 130, 246, .10);
+    color: var(--tx2);
+    font-size: .68rem;
+    font-weight: 800;
+    text-transform: capitalize;
+}
+
+#sec-admin-ai-evaluation .ai-feedback-text {
+    margin: 8px 0 0;
+    color: var(--tx2);
+    line-height: 1.5;
+}
+
+#sec-admin-ai-evaluation .ai-feedback-text strong,
+#sec-admin-ai-evaluation .ai-evidence-quotes strong {
+    color: var(--tx);
+}
+
+#sec-admin-ai-evaluation .ai-evidence-quotes {
+    margin-top: 8px;
+    padding: 9px 9px 9px 11px;
+    border-left: 3px solid rgba(34, 197, 94, .55);
+    border-radius: 8px;
+    background: rgba(34, 197, 94, .08);
+    color: var(--tx2);
+}
+
+#sec-admin-ai-evaluation .ai-evidence-quotes ul {
+    display: grid;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+#sec-admin-ai-evaluation .ai-output-empty {
+    margin: 0;
+    color: var(--tx3);
+    font-size: .8rem;
+}
+
+#sec-admin-ai-evaluation .ai-eval-empty {
+    display: grid;
+    place-items: center;
+    gap: 8px;
+    min-height: 150px;
+    text-align: center;
+    color: var(--tx2);
+}
+
+#sec-admin-ai-evaluation .ai-eval-empty i {
+    font-size: 1.8rem;
+    color: var(--tx3);
+}
+
+#sec-admin-ai-evaluation .ai-eval-empty strong {
+    color: var(--tx);
+}
+
+#sec-admin-ai-evaluation .ai-report-paper {
+    width: 100%;
+    padding: 16px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--sf);
+    color: var(--tx);
+}
+
+#sec-admin-ai-evaluation .ai-report-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+#sec-admin-ai-evaluation .ai-report-title img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #fff;
+}
+
+#sec-admin-ai-evaluation .ai-report-title h1 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+#sec-admin-ai-evaluation .ai-report-title p,
+#sec-admin-ai-evaluation .ai-report-note {
+    color: var(--tx2);
+}
+
+#sec-admin-ai-evaluation .ai-report-summary {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+#sec-admin-ai-evaluation .ai-report-summary div {
+    padding: 10px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--bg3);
+}
+
+#sec-admin-ai-evaluation .ai-report-summary span {
+    display: block;
+    color: var(--tx2);
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+#sec-admin-ai-evaluation .ai-report-summary strong {
+    display: block;
+    margin-top: 4px;
+    color: var(--tx);
+}
+
+#sec-admin-ai-evaluation .ai-report-summary small {
+    display: block;
+    margin-top: 4px;
+    color: var(--tx2);
+    font-size: .76rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+#sec-admin-ai-evaluation .ai-report-paper h2 {
+    margin: 20px 0 10px;
+    color: var(--tx);
+    font-size: .95rem;
+}
+
+#sec-admin-ai-evaluation .ai-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+    font-size: .78rem;
+}
+
+#sec-admin-ai-evaluation .ai-report-table th,
+#sec-admin-ai-evaluation .ai-report-table td {
+    padding: 7px;
+    border: 1px solid var(--bd);
+    text-align: left;
+    vertical-align: top;
+}
+
+#sec-admin-ai-evaluation .ai-report-table th {
+    color: var(--tx);
+    background: var(--bg3);
+}
+
+#sec-admin-ai-evaluation .ai-report-output-provider {
+    margin-bottom: 12px;
+    padding: 10px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--bg3);
+    page-break-inside: avoid;
+}
+
+#sec-admin-ai-evaluation .ai-report-output-provider h3 {
+    margin: 0 0 8px;
+    color: var(--tx);
+    font-size: .86rem;
+}
+
+#sec-admin-ai-evaluation .ai-report-output-provider h3 span {
+    color: var(--tx2);
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+#sec-admin-ai-evaluation .ai-report-output-block {
+    margin-top: 9px;
+}
+
+#sec-admin-ai-evaluation .ai-report-output-block strong {
+    color: var(--tx);
+}
+
+#sec-admin-ai-evaluation .ai-report-output-block ol {
+    margin: 6px 0 0;
+    padding-left: 1.15rem;
+}
+
+#sec-admin-ai-evaluation .ai-report-output-block li,
+#sec-admin-ai-evaluation .ai-report-output-block p {
+    color: var(--tx2);
+    line-height: 1.45;
+}
+
+#sec-admin-ai-evaluation .ai-report-feedback-item {
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    background: var(--sf);
+}
+
+#sec-admin-ai-evaluation .ai-report-feedback-item p {
+    margin: 0 0 6px;
+}
+
+#sec-admin-ai-evaluation .ai-report-feedback-item p:last-child {
+    margin-bottom: 0;
+}
+
+@media print {
+    body.admin-shell,
+    body.admin-mobile-shell {
+        background: #fff !important;
+    }
+
+    .db-sidebar,
+    .db-top,
+    #mob-header,
+    #mob-bottom-nav,
+    .btn-no-print {
+        display: none !important;
+    }
+
+    .db-main,
+    #mob-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #sec-admin-ai-evaluation {
+        color: #111827 !important;
+        background: #fff !important;
+    }
+
+    #sec-admin-ai-evaluation .ai-report-paper {
+        max-width: none;
+        padding: 0;
+        border: 0;
+        color: #111827;
+        background: #fff;
+    }
+
+    #sec-admin-ai-evaluation .ai-report-table th,
+    #sec-admin-ai-evaluation .ai-report-table td {
+        border-color: #cbd5e1;
+    }
+
+    #sec-admin-ai-evaluation .ai-report-summary div,
+    #sec-admin-ai-evaluation .ai-report-table th {
+        background: #f8fafc !important;
+    }
+}

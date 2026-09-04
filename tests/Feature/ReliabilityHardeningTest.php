@@ -17,11 +17,12 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
 use App\Services\EvidenceBasedCoachingService;
-use App\Services\QuestionIntentService;
 use App\Services\QuestionDatasetProvider;
+use App\Services\QuestionIntentService;
 use App\Services\TrustworthyAssessmentService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -373,6 +374,7 @@ class ReliabilityHardeningTest extends TestCase
             'interview_session_id' => $session->id,
             'category_id' => $category->id,
             'question_text' => $roleAlignedQuestionText,
+            'ai_provider' => 'openai',
         ]);
 
         $this->assertDatabaseHas('questions', [
@@ -380,6 +382,7 @@ class ReliabilityHardeningTest extends TestCase
             'category_id' => $category->id,
             'question_text' => $roleAlignedQuestionText,
             'source_type' => 'ai_adapted_source_backed',
+            'ai_provider' => 'openai',
         ]);
     }
 
@@ -440,6 +443,7 @@ class ReliabilityHardeningTest extends TestCase
             'interview_session_id' => $session->id,
             'category_id' => $category->id,
             'question_text' => $roleAlignedFollowUpText,
+            'ai_provider' => 'openai',
         ]);
 
         $this->assertDatabaseHas('questions', [
@@ -447,6 +451,7 @@ class ReliabilityHardeningTest extends TestCase
             'category_id' => $category->id,
             'question_text' => $roleAlignedFollowUpText,
             'source_type' => 'ai_adapted_source_backed',
+            'ai_provider' => 'openai',
         ]);
     }
 
@@ -833,6 +838,7 @@ class ReliabilityHardeningTest extends TestCase
         $savedAnswer = $answer->fresh();
         $savedFeedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
         $this->assertNotEmpty($savedAnswer->ai_feedback);
+        $this->assertSame('openai', $savedAnswer->ai_provider);
         $this->assertNotEmpty($savedAnswer->coaching_feedback);
         $this->assertSame('not_measured', data_get($savedAnswer->coaching_feedback, 'delivery.status'));
         $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'question.tip'));
@@ -954,7 +960,7 @@ class ReliabilityHardeningTest extends TestCase
                 throw new \RuntimeException('Revision template unavailable.');
             }
 
-            public function sessionMetadata(InterviewSession $session, \Illuminate\Support\Collection $answers, array $metrics, int $starScore, int $jobEvidenceScore): array
+            public function sessionMetadata(InterviewSession $session, Collection $answers, array $metrics, int $starScore, int $jobEvidenceScore): array
             {
                 throw new \RuntimeException('Session metadata unavailable.');
             }

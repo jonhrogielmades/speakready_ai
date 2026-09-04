@@ -94,7 +94,8 @@ class UserSideHardeningTest extends TestCase
             ->assertOk()
             ->assertSee('class="user-mobile-shell mobile-shell"', false)
             ->assertSee('css/mobile/user/learning.css?v=1', false)
-            ->assertSee('id="learningSearchInput"', false)
+            ->assertDontSee('id="learningSearchInput"', false)
+            ->assertDontSee('Search challenges, skills, scenarios...', false)
             ->assertSee('data-search-text=', false)
             ->assertSee('learning-badge-row-active', false)
             ->assertSee('start-challenge-form', false)
@@ -825,6 +826,25 @@ class UserSideHardeningTest extends TestCase
             'status' => 'in_progress',
         ]);
         $this->assertDatabaseCount('interview_sessions', 0);
+    }
+
+    public function test_learning_caps_existing_energy_to_three_lives(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create([
+            'user_id' => $user->id,
+            'energy' => 20,
+            'energy_last_refilled_at' => now(),
+        ]);
+        $category = $this->category(['type' => 'game']);
+        $this->gameLevel($category);
+
+        $this->actingAs($user)
+            ->get(route('user.learning', ['category_id' => $category->id]))
+            ->assertOk()
+            ->assertSee('3 / 3 Lives');
+
+        $this->assertSame(3, Profile::where('user_id', $user->id)->first()->energy);
     }
 
     public function test_game_start_repairs_missing_game_session_tables_before_insert(): void

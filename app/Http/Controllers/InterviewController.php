@@ -15,6 +15,7 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Services\AIService;
+use App\Services\AiProviderEvaluationService;
 use App\Services\EvidenceBasedCoachingService;
 use App\Services\LearningGameCertificateService;
 use App\Services\LocalSpeechAssessmentService;
@@ -124,9 +125,9 @@ class InterviewController extends Controller
         $validated['company_persona'] = $this->philippinesCompanyPersona($validated['company_persona'] ?? null);
         $pressureMode = false;
 
-        // Provider choice is an administrator concern. Users receive the same versioned rubric
-        // regardless of which healthy provider the configured fallback chain selects.
-        $provider = AIService::defaultProviderKey();
+        // Provider choice follows the latest admin evaluation evidence.
+        $provider = $this->bestEvaluatedInterviewProvider('question_generation');
+        $feedbackProvider = $this->bestEvaluatedInterviewProvider('feedback_generation', $provider);
         $profilePreferences = Profile::firstOrCreate(['user_id' => Auth::id()])->inclusive_preferences ?? [];
         $cameraDetectionEnabled = filter_var(
             $validated['camera_detection']
@@ -300,6 +301,7 @@ class InterviewController extends Controller
         session([
             'active_interview_id' => $session->id,
             'active_interview_provider' => $provider,
+            'active_interview_feedback_provider' => $feedbackProvider,
             'active_interview_context' => 'interview',
         ]);
 
@@ -503,7 +505,11 @@ class InterviewController extends Controller
             })->toArray();
 
         // 3. Generate Follow-up via AI
-        $provider = session('active_interview_provider', AIService::defaultProviderKey());
+        $provider = $this->bestEvaluatedInterviewProvider(
+            'question_generation',
+            session('active_interview_provider', AIService::defaultProviderKey())
+        );
+        session(['active_interview_provider' => $provider]);
         $isFinal = $currentQuestionIndex >= $targetQuestionCount - 2;
         if (! $followUpEnabled) {
             $provider = 'local';
@@ -887,9 +893,15 @@ class InterviewController extends Controller
                 $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
             }
 
-            // Provider routing is controlled by the configured primary/fallback chain, not by users.
-            $feedbackProvider = $gameLevel ? null : session('active_interview_provider', AIService::defaultProviderKey());
+            $feedbackProvider = $gameLevel ? null : $this->bestEvaluatedInterviewProvider(
+                'feedback_generation',
+                session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
+            );
+            if (! $gameLevel) {
+                session(['active_interview_feedback_provider' => $feedbackProvider]);
+            }
             $aiFeedback = $this->safeInterviewFeedback($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+            $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($aiFeedback, $feedbackProvider);
             $assessment = app(TrustworthyAssessmentService::class);
             DB::beginTransaction();
             $reportTransactionStarted = true;
@@ -958,6 +970,7 @@ class InterviewController extends Controller
                         'recommendation_text' => $rubric['next_level'],
                         'improved_answer_source' => 'candidate_facts',
                         'coaching_feedback' => $coachingFeedback,
+                        'ai_provider' => $feedbackEvidenceProvider,
                     ]);
                 } else {
                     throw new \RuntimeException("Missing validated AI feedback for answer {$answer->id}.");
@@ -1370,7 +1383,11 @@ class InterviewController extends Controller
             'question_id' => $answer->question_id,
         ], $answerPayload));
 
-        $provider = session('active_interview_provider', AIService::defaultProviderKey());
+        $provider = $this->bestEvaluatedInterviewProvider(
+            'feedback_generation',
+            session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
+        );
+        session(['active_interview_feedback_provider' => $provider]);
         try {
             $feedback = AIService::generateFeedback([
                 'target_position' => $session->target_position,
@@ -1395,6 +1412,7 @@ class InterviewController extends Controller
             $feedback = ['per_question_feedback' => []];
         }
 
+        $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($feedback, $provider);
         $qFeedback = $feedback['per_question_feedback'][0] ?? null;
         if ($qFeedback) {
             $retryScore = $this->scoreValue($qFeedback['score'] ?? 0);
@@ -1447,6 +1465,7 @@ class InterviewController extends Controller
                     'recommendation_text' => $rubric['next_level'],
                     'improved_answer_source' => 'candidate_facts',
                     'coaching_feedback' => $coachingFeedback,
+                    'ai_provider' => $feedbackEvidenceProvider,
                 ]);
             } catch (\Throwable $error) {
                 Log::warning('Retry answer optional feedback update failed after answer save.', [
@@ -1571,12 +1590,19 @@ class InterviewController extends Controller
             $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
         }
 
-        $feedbackProvider = $gameLevel ? null : session('active_interview_provider', AIService::defaultProviderKey());
+        $feedbackProvider = $gameLevel ? null : $this->bestEvaluatedInterviewProvider(
+            'feedback_generation',
+            session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
+        );
+        if (! $gameLevel) {
+            session(['active_interview_feedback_provider' => $feedbackProvider]);
+        }
         $aiFeedback = $this->safeInterviewFeedback($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+        $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($aiFeedback, $feedbackProvider);
 
         $assessment = app(TrustworthyAssessmentService::class);
 
-        DB::transaction(function () use ($session, $answers, $aiFeedback, $assessment) {
+        DB::transaction(function () use ($session, $answers, $aiFeedback, $assessment, $feedbackEvidenceProvider) {
             $totalClarity = 0;
             $totalRelevance = 0;
             $totalGrammar = 0;
@@ -1636,6 +1662,7 @@ class InterviewController extends Controller
                     'recommendation_text' => $rubric['next_level'],
                     'improved_answer_source' => 'candidate_facts',
                     'coaching_feedback' => $coachingFeedback,
+                    'ai_provider' => $feedbackEvidenceProvider,
                 ]);
             }
 
@@ -2857,6 +2884,7 @@ class InterviewController extends Controller
             'source_name' => $sourceMetadata['source_name'] ?? null,
             'source_url' => $sourceMetadata['source_url'] ?? null,
             'source_type' => $sourceMetadata['source_type'] ?? null,
+            'ai_provider' => $this->evidenceProviderKey($sourceMetadata['ai_provider'] ?? null),
         ];
 
         $sessionQuestion = Question::create(array_merge($questionData, [
@@ -3323,6 +3351,7 @@ class InterviewController extends Controller
                     'source_name' => $questionData['source_name'] ?? null,
                     'source_url' => $questionData['source_url'] ?? null,
                     'source_type' => $questionData['source_type'] ?? null,
+                    'ai_provider' => $questionData['ai_provider'] ?? null,
                 ]
             );
         } catch (\Throwable $e) {
@@ -3341,7 +3370,60 @@ class InterviewController extends Controller
             'source_name' => mb_substr($sourceName !== '' ? $sourceName : 'Curated Philippines interview source', 0, 255),
             'source_url' => $sourceMetadata['source_url'] ?? null,
             'source_type' => 'ai_adapted_source_backed',
+            'ai_provider' => $this->evidenceProviderKey($provider),
         ];
+    }
+
+    private function bestEvaluatedInterviewProvider(string $taskType, ?string $fallbackProvider = null): string
+    {
+        $fallbackKey = AIService::normalizeProviderKey($fallbackProvider);
+        $fallback = AIService::defaultProviderKey($fallbackProvider);
+        if (
+            $fallbackKey !== ''
+            && $fallbackKey !== 'local'
+            && AIService::providerIsSupported($fallbackKey)
+            && $this->simulatedProviderFallbackIsAllowed()
+        ) {
+            $fallback = $fallbackKey;
+        }
+
+        try {
+            $rankedProvider = app(AiProviderEvaluationService::class)->bestProviderKeyForInterviewTask($taskType);
+
+            if ($rankedProvider && AIService::providerIsConfigured($rankedProvider)) {
+                return $rankedProvider;
+            }
+        } catch (\Throwable $error) {
+            Log::warning('AI provider ranking lookup failed; using configured default provider.', [
+                'task_type' => $taskType,
+                'fallback_provider' => $fallback,
+                'error_type' => $error::class,
+            ]);
+        }
+
+        return $fallback;
+    }
+
+    private function simulatedProviderFallbackIsAllowed(): bool
+    {
+        return app()->environment('testing')
+            && ! filter_var(env('AI_LIVE_TESTS', false), FILTER_VALIDATE_BOOL);
+    }
+
+    private function feedbackEvidenceProvider(array $feedback, ?string $requestedProvider = null): ?string
+    {
+        return $this->evidenceProviderKey($feedback['_provider_key'] ?? $requestedProvider);
+    }
+
+    private function evidenceProviderKey(?string $provider): ?string
+    {
+        $providerKey = AIService::normalizeProviderKey($provider);
+
+        if ($providerKey === '' || ! AIService::providerIsSupported($providerKey)) {
+            return null;
+        }
+
+        return $providerKey;
     }
 
     private function questionTypeForIndex(string $questionText, array $selectedTypes, int $index): string
@@ -3588,7 +3670,12 @@ class InterviewController extends Controller
 
     private function forgetActiveInterviewKeys(): void
     {
-        session()->forget(['active_interview_id', 'active_interview_provider', 'active_interview_context']);
+        session()->forget([
+            'active_interview_id',
+            'active_interview_provider',
+            'active_interview_feedback_provider',
+            'active_interview_context',
+        ]);
     }
 
     private function forgetCompletedSessionState(InterviewSession $session, ?GameLevel $gameLevel): void
@@ -3758,7 +3845,11 @@ class InterviewController extends Controller
             return $this->learningGameFeedback($gameLevel, $sessionData, $answersData);
         }
 
-        return AIService::generateFeedback($sessionData, $answersData, $feedbackProvider ?: AIService::defaultProviderKey());
+        return AIService::generateFeedback(
+            $sessionData,
+            $answersData,
+            $feedbackProvider ?: $this->bestEvaluatedInterviewProvider('feedback_generation')
+        );
     }
 
     private function learningGameFeedback(GameLevel $gameLevel, array $sessionData, array $answersData): array

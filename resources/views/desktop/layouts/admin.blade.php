@@ -172,7 +172,8 @@
                
                <div class="db-nav-section">System</div>
                
-               <a href="{{ route('admin.ai.providers') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.ai.*') ? 'active' : '' }}" title="AI Providers"><i class="fa-solid fa-microchip"></i><span class="db-nav-label">AI Providers</span></a>
+               <a href="{{ route('admin.ai.providers') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.ai.providers*') ? 'active' : '' }}" title="AI Providers"><i class="fa-solid fa-microchip"></i><span class="db-nav-label">AI Providers</span></a>
+               <a href="{{ route('admin.ai.evaluation') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.ai.evaluation*') ? 'active' : '' }}" title="AI Evaluation"><i class="fa-solid fa-chart-simple"></i><span class="db-nav-label">AI Evaluation</span></a>
                
                <a href="{{ route('admin.settings.index') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" title="System Settings"><i class="fa-solid fa-gear"></i><span class="db-nav-label">System Settings</span></a>
             </div>

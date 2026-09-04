@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Question extends Model
@@ -19,6 +18,7 @@ class Question extends Model
         'source_name',
         'source_url',
         'source_type',
+        'ai_provider',
     ];
 
     protected $casts = [
@@ -34,5 +34,4 @@ class Question extends Model
     {
         return $this->hasMany(InterviewAnswer::class);
     }
-
 }

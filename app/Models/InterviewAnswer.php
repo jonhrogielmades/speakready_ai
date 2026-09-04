@@ -53,6 +53,7 @@ class InterviewAnswer extends Model
         'evidence_map',
         'rubric_level',
         'improved_answer_source',
+        'ai_provider',
     ];
 
     protected $casts = [

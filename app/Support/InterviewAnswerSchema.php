@@ -159,6 +159,9 @@ class InterviewAnswerSchema
                 if (self::isMissing($missing, 'improved_answer_source')) {
                     $table->string('improved_answer_source')->default('illustrative');
                 }
+                if (self::isMissing($missing, 'ai_provider')) {
+                    $table->string('ai_provider')->nullable()->index();
+                }
                 if (self::isMissing($missing, 'created_at')) {
                     $table->timestamp('created_at')->nullable();
                 }
@@ -225,6 +228,7 @@ class InterviewAnswerSchema
             $table->json('evidence_map')->nullable();
             $table->string('rubric_level')->nullable();
             $table->string('improved_answer_source')->default('illustrative');
+            $table->string('ai_provider')->nullable()->index();
             $table->timestamps();
         });
     }
@@ -297,6 +301,7 @@ class InterviewAnswerSchema
             'evidence_map',
             'rubric_level',
             'improved_answer_source',
+            'ai_provider',
             'created_at',
             'updated_at',
         ];

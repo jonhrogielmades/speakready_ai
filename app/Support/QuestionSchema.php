@@ -37,6 +37,7 @@ class QuestionSchema
             'source_name',
             'source_url',
             'source_type',
+            'ai_provider',
             'created_at',
             'updated_at',
         ]);
@@ -76,6 +77,9 @@ class QuestionSchema
                 if (self::isMissing($missing, 'source_type')) {
                     $table->string('source_type')->nullable();
                 }
+                if (self::isMissing($missing, 'ai_provider')) {
+                    $table->string('ai_provider')->nullable()->index();
+                }
                 if (self::isMissing($missing, 'created_at')) {
                     $table->timestamp('created_at')->nullable();
                 }
@@ -103,6 +107,7 @@ class QuestionSchema
                 'source_name',
                 'source_url',
                 'source_type',
+                'ai_provider',
                 'created_at',
                 'updated_at',
             ]) === [];
@@ -123,6 +128,7 @@ class QuestionSchema
             $table->string('source_name')->nullable();
             $table->text('source_url')->nullable();
             $table->string('source_type')->nullable();
+            $table->string('ai_provider')->nullable()->index();
             $table->timestamps();
         });
     }

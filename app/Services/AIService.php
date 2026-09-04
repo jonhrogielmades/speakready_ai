@@ -7,6 +7,7 @@ use App\Exceptions\AiSpeechTranscriptionException;
 use App\Models\AiProvider;
 use App\Models\AiProviderLog;
 use App\Models\Setting;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\StrayRequestException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -112,7 +113,7 @@ class AIService
         'cohere' => 'command-r7b-12-2024',
     ];
 
-    public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null, $questionTypes = [], $assistanceLevel = 'standard', $strictness = 'neutral', $datasetContext = null, $targetLanguage = null, $interviewFormat = 'standard', $simplifiedQuestions = false)
+    public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null, $questionTypes = [], $assistanceLevel = 'standard', $strictness = 'neutral', $datasetContext = null, $targetLanguage = null, $interviewFormat = 'standard', $simplifiedQuestions = false, array $requestOptions = [])
     {
         $jobDescription = self::truncateText($jobDescription);
         $resumeText = self::truncateText($resumeText);
@@ -178,7 +179,11 @@ class AIService
         while ($attempt < $maxRetries) {
             try {
                 $questions = self::normalizeGeneratedQuestions(
-                    self::callStructuredProvider($provider, $prompt)
+                    self::callStructuredProvider(
+                        $provider,
+                        $prompt,
+                        array_merge(['module' => 'question_generation'], $requestOptions)
+                    )
                 );
 
                 if (! empty($questions)) {
@@ -751,7 +756,7 @@ class AIService
         ];
     }
 
-    public static function generateFeedback($sessionData, $answersData, $provider)
+    public static function generateFeedback($sessionData, $answersData, $provider, bool $providerOnly = false, bool $allowLocalRepair = true)
     {
         if ($answersData === []) {
             throw new \RuntimeException('No saved answers were available for AI feedback.');
@@ -1122,11 +1127,17 @@ EOT;
         $prompt .= "You must return one per_question_feedback item for every required answer id and no extra ids.\n";
 
         $maxAttempts = max(1, min(2, (int) env('AI_FEEDBACK_ATTEMPTS', 1)));
-        $providers = self::feedbackProviderPriority($provider);
+        $providers = $providerOnly
+            ? array_values(array_filter(
+                [self::normalizeProviderName($provider)],
+                fn (string $providerName): bool => $providerName !== '' && self::feedbackProviderCanRun($providerName)
+            ))
+            : self::feedbackProviderPriority($provider);
         if ($providers === []) {
             throw new AiFeedbackProviderFailureException([]);
         }
         $requestOptions = [
+            'module' => 'feedback_generation',
             'timeout_seconds' => max(5, min(30, (int) env('AI_FEEDBACK_TIMEOUT', 15))),
             'attempts' => max(1, min(2, (int) env('AI_FEEDBACK_HTTP_ATTEMPTS', 1))),
             'response_format' => self::feedbackResponseFormat(),
@@ -1172,7 +1183,11 @@ EOT;
 
                     $validationErrors = self::feedbackResponseValidationErrors($response, $answersData);
                     if ($validationErrors === []) {
-                        return self::normalizeFeedbackResponse($response, $answersData, $sessionData, true);
+                        return self::withFeedbackProviderMetadata(
+                            self::normalizeFeedbackResponse($response, $answersData, $sessionData, true),
+                            $currentProvider,
+                            $attemptedProviders
+                        );
                     }
 
                     Log::warning("AI Feedback Generation rejected an untrusted response from {$currentProvider} on attempt {$attempt}.", [
@@ -1193,7 +1208,7 @@ EOT;
             }
         }
 
-        if (is_array($repairableProviderResponse)) {
+        if ($allowLocalRepair && is_array($repairableProviderResponse)) {
             try {
                 Log::warning('AI feedback provider response was repaired with local evidence safeguards.', [
                     'provider' => $repairableProvider,
@@ -1201,7 +1216,11 @@ EOT;
                     'providers_reached' => $attemptedProviders,
                 ]);
 
-                return self::normalizeFeedbackResponse($repairableProviderResponse, $answersData, $sessionData, false);
+                return self::withFeedbackProviderMetadata(
+                    self::normalizeFeedbackResponse($repairableProviderResponse, $answersData, $sessionData, false),
+                    $repairableProvider,
+                    $attemptedProviders
+                );
             } catch (\Throwable $repairError) {
                 Log::warning('Repairing provider feedback response failed; falling back to local report path.', [
                     'provider' => $repairableProvider,
@@ -1225,10 +1244,21 @@ EOT;
             throw new \RuntimeException('No saved answers were available for feedback.');
         }
 
-        return self::normalizeFeedbackResponse([
+        return self::withFeedbackProviderMetadata(self::normalizeFeedbackResponse([
             'per_question_feedback' => [],
             'session_feedback' => [],
-        ], $answersData, $sessionData, false);
+        ], $answersData, $sessionData, false), 'local', ['local']);
+    }
+
+    private static function withFeedbackProviderMetadata(array $feedback, ?string $provider, array $attemptedProviders = []): array
+    {
+        $feedback['_provider_key'] = self::normalizeProviderKey($provider);
+        $feedback['_providers_attempted'] = array_values(array_filter(array_map(
+            fn ($attemptedProvider): string => self::normalizeProviderKey($attemptedProvider),
+            $attemptedProviders
+        )));
+
+        return $feedback;
     }
 
     public static function generateGame($topic, $provider = 'openai')
@@ -1697,6 +1727,7 @@ PROMPT;
             $cooldownRemaining = self::transcriptionProviderCooldownRemaining($provider);
             if ($cooldownRemaining > 0) {
                 $skippedProviders[] = $provider;
+
                 continue;
             }
 
@@ -1988,7 +2019,7 @@ PROMPT;
 
     private static function transcriptionRetryPolicy(\Throwable $exception): bool
     {
-        if (! $exception instanceof \Illuminate\Http\Client\RequestException) {
+        if (! $exception instanceof RequestException) {
             return true;
         }
 
@@ -3165,8 +3196,9 @@ PROMPT;
             ? $requestOptions['response_format']
             : null;
         $model = trim((string) ($requestOptions['model'] ?? '')) ?: null;
+        $module = trim((string) ($requestOptions['module'] ?? 'structured_json')) ?: 'structured_json';
 
-        return self::recordProviderAttempt($provider, 'structured_json', function () use ($provider, $prompt, $timeoutSeconds, $attempts, $responseFormat, $model) {
+        return self::recordProviderAttempt($provider, $module, function () use ($provider, $prompt, $timeoutSeconds, $attempts, $responseFormat, $model) {
             $response = match ($provider) {
                 'openai' => self::callOpenAI(
                     $prompt,

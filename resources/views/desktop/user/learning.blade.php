@@ -73,7 +73,7 @@
         <!-- Energy/Lives -->
         @php
             $maxEnergy = \App\Models\Profile::MAX_ENERGY;
-            $currentEnergy = $profile?->energy ?? $maxEnergy;
+            $currentEnergy = max(0, min((int) ($profile?->energy ?? $maxEnergy), $maxEnergy));
         @endphp
         <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.2s">
             <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">

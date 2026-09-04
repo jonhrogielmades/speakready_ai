@@ -33,10 +33,6 @@
         </svg>
     </div>
     <div class="sr-page-actions learning-actions">
-        <div id="tour-search" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
-            <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
-            <input type="text" id="learningSearchInput" placeholder="Search challenges, skills, scenarios..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
-        </div>
         <div class="learning-mobile-control-row">
             <div class="learning-category-select-wrap">
                 <select id="learningCategorySelect" class="learning-category-select" aria-label="Select challenge path">
@@ -79,7 +75,7 @@
         <!-- Energy/Lives -->
         @php
             $maxEnergy = \App\Models\Profile::MAX_ENERGY;
-            $currentEnergy = $profile?->energy ?? $maxEnergy;
+            $currentEnergy = max(0, min((int) ($profile?->energy ?? $maxEnergy), $maxEnergy));
         @endphp
         <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.2s">
             <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
