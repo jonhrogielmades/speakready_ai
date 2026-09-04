@@ -38,21 +38,22 @@ class AppServiceProvider extends ServiceProvider
             $request = request();
 
             if (!$request->attributes->has('languageViewData')) {
-                $languageConfig = Setting::SUPPORTED_LANGUAGES['en'];
-                $languageCode = null;
+                $languageCode = 'en';
 
-                if (auth()->check()) {
-                    try {
-                        if (Schema::hasTable('settings')) {
-                            $languageCode = (string) Setting::getVal('sys_language', 'en');
-                        }
-
-                        if (Setting::preferredLanguageFor(auth()->user())) {
-                            $languageCode = Setting::preferredLanguageFor(auth()->user());
-                        }
-                    } catch (\Throwable $e) {
-                        $languageCode = 'en';
+                try {
+                    if (Schema::hasTable('settings')) {
+                        $languageCode = (string) Setting::getVal('sys_language', 'en');
                     }
+
+                    if (auth()->check()) {
+                        $preferredLanguage = Setting::preferredLanguageFor(auth()->user());
+
+                        if ($preferredLanguage) {
+                            $languageCode = $preferredLanguage;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $languageCode = 'en';
                 }
 
                 $languageConfig = Setting::languageConfig($languageCode);

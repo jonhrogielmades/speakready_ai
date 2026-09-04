@@ -411,6 +411,28 @@ OPENAI_API_KEY=
 
 Provider URLs and model names are already listed in `.env.example`. Configure at least one provider key for AI generation, coaching, and feedback features.
 
+Recommended hosted AI runtime limits:
+
+```env
+AI_FEEDBACK_TIMEOUT=15
+AI_FEEDBACK_DEADLINE_SECONDS=25
+AI_FEEDBACK_MAX_PROVIDERS=6
+AI_FEEDBACK_ATTEMPTS=1
+AI_FEEDBACK_HTTP_ATTEMPTS=1
+AI_FEEDBACK_RETRY_DELAY_MS=200
+AI_VOICE_ANALYSIS_TIMEOUT=12
+AI_VOICE_ANALYSIS_MAX_PROVIDERS=2
+AI_VOICE_ANALYSIS_HTTP_ATTEMPTS=1
+AI_PROVIDER_TIMEOUT=45
+AI_PROVIDER_CONNECT_TIMEOUT=5
+AI_PROVIDER_RETRIES=2
+AI_PROVIDER_RETRY_DELAY_MS=250
+AI_JSON_MAX_TOKENS=4096
+AI_CHAT_MAX_TOKENS=1000
+```
+
+The `AI_VOICE_ANALYSIS_*` values are reserved for hosted voice-analysis tuning. Current voice recording, transcription, and delivery coaching behavior is controlled by the transcription, TTS, and feedback settings below.
+
 ### Local Feedback Model Training
 
 SpeakReady can train a private local feedback scoring model from reviewed interview answers. This is meant for answer scoring and coaching support, not question generation or general chat.
@@ -482,6 +504,9 @@ AI_TRANSCRIPTION_DRAIN_TIMEOUT_MS=20000
 AI_TRANSCRIPTION_REQUEST_TIMEOUT_MS=30000
 AI_TRANSCRIPTION_MAX_IN_FLIGHT=2
 AI_TRANSCRIPTION_RATE_LIMIT_COOLDOWN_SECONDS=90
+AI_VOICE_ANALYSIS_TIMEOUT=12
+AI_VOICE_ANALYSIS_MAX_PROVIDERS=2
+AI_VOICE_ANALYSIS_HTTP_ATTEMPTS=1
 AI_TTS_ENABLED=false
 OPENAI_TTS_MODEL=gpt-4o-mini-tts
 OPENAI_TTS_VOICE=alloy
@@ -525,6 +550,9 @@ Recommended Render settings:
 - `APP_ENV=production`
 - `APP_DEBUG=false`
 - `SESSION_SECURE_COOKIE=true`
+- `CACHE_DRIVER=file`
+- `QUEUE_CONNECTION=sync`
+- `SESSION_DRIVER=file`
 
 On startup, `render-start.sh`:
 
@@ -546,6 +574,8 @@ RENDER_REPAIR_FEEDBACK_LIMIT=250
 ```
 
 Use this only when older completed interviews need feedback coaching backfill during startup.
+
+Do not set `RUN_RENDER_DATA_CLEANUP=true` during normal deploys. That maintenance flag intentionally wipes user data while preserving the admin account.
 
 ## Useful Artisan Commands
 

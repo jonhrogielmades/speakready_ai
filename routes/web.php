@@ -21,12 +21,21 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 
 Route::get('/', function (LandingStatsService $landingStatsService) {
-    if (Auth::check()) {
-        if (Auth::user()->is_admin) {
-            return redirect()->route('admin.dashboard');
-        }
+    try {
+        if (Auth::check()) {
+            if (Auth::user()->is_admin) {
+                return redirect()->route('admin.dashboard');
+            }
 
-        return redirect()->route('dashboard');
+            return redirect()->route('dashboard');
+        }
+    } catch (\Throwable) {
+        // Keep the public landing page available when the local database is offline.
+        try {
+            Auth::logout();
+        } catch (\Throwable) {
+            //
+        }
     }
 
     return mobile_view('welcome', [
