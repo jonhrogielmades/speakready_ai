@@ -362,6 +362,63 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('id="cameraDetectionStatus"', false);
     }
 
+    public function test_voice_and_hybrid_interview_sessions_use_full_recording_transcript_action(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $category = Category::create([
+            'title' => 'Behavioral',
+            'description' => 'Behavioral questions',
+            'status' => 'active',
+            'type' => 'core',
+        ]);
+        $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        foreach (['voice', 'hybrid'] as $responseMode) {
+            $session = InterviewSession::create([
+                'user_id' => $user->id,
+                'category_id' => $category->id,
+                'difficulty' => 'medium',
+                'target_position' => 'Developer',
+                'num_questions' => 1,
+                'response_mode' => $responseMode,
+                'status' => 'in_progress',
+            ]);
+            Question::create([
+                'category_id' => $category->id,
+                'interview_session_id' => $session->id,
+                'question_text' => "Describe a {$responseMode} response.",
+                'difficulty' => 'medium',
+                'type' => 'Behavioral',
+                'status' => 'active',
+            ]);
+
+            foreach ([$desktopUserAgent, $iphoneUserAgent] as $userAgent) {
+                $this->actingAs($user)
+                    ->withSession(['active_interview_id' => $session->id])
+                    ->withHeader('User-Agent', $userAgent)
+                    ->get(route('interview.session'))
+                    ->assertOk()
+                    ->assertSee('id="voiceSessionTranscript"', false)
+                    ->assertSee('<span>Transcript</span>', false)
+                    ->assertSee('async function transcribeVoiceSessionRecording', false)
+                    ->assertSee('function autoCorrectTranscriptText', false)
+                    ->assertSee('function appendVoiceSessionRecordingUpload', false)
+                    ->assertSee("formData.append('voice_audio'", false)
+                    ->assertSee('Voice answer saved for feedback. Transcript is unavailable, but playback will be available in your AI feedback review.', false)
+                    ->assertSee('transcriptWordCorrections', false)
+                    ->assertSee('/interview/transcribe', false)
+                    ->assertDontSee('mobile-response-end-session-action', false)
+                    ->assertDontSee('mobile-response-end-session-btn', false)
+                    ->assertDontSee('id="voiceSessionDownload"', false)
+                    ->assertDontSee('<span>Download</span>', false);
+            }
+        }
+    }
+
     public function test_mobile_interview_session_uses_camera_detection_gate_and_fullscreen_script(): void
     {
         $user = User::factory()->create([
@@ -408,8 +465,8 @@ class MobileLayoutTest extends TestCase
             ->assertSee('function clearSubmittedAnswerInput()', false)
             ->assertSee("chatContainer.innerHTML = ''", false)
             ->assertSee('if (!isSubmittingAnswer)', false)
-            ->assertSee('mobile-response-end-session-action', false)
-            ->assertSee('mobile-response-end-session-btn', false)
+            ->assertDontSee('mobile-response-end-session-action', false)
+            ->assertDontSee('mobile-response-end-session-btn', false)
             ->assertSee('id="responseFullscreenToggle"', false)
             ->assertSee('enterMobileFullscreen({ requestBrowser: false });', false)
             ->assertSee('enterMobileFullscreen();', false)

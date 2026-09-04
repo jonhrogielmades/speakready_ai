@@ -281,6 +281,14 @@
             </h2>
             <div id="collapse{{ $index }}" class="accordion-collapse collapse" data-bs-parent="#answersAccordion">
                 <div class="accordion-body" style="border-top:1px solid var(--bd);padding:24px;">
+                    @php
+                        $canPlayStoredVoiceAnswer = auth()->check()
+                            && (int) ($sessionRecord->user_id ?? 0) === (int) auth()->id()
+                            && trim((string) ($answer->voice_recording_path ?? '')) !== '';
+                    @endphp
+                    @if($canPlayStoredVoiceAnswer)
+                        @include('shared.partials.interview-answer-voice-recording', ['answer' => $answer])
+                    @endif
                     
                     @if($answer->is_skipped)
                         <div class="alert alert-warning border-0" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b;">
@@ -452,9 +460,10 @@
                         <!-- Feature 8: Suggested Answer Improvement -->
                         <div class="row g-4 mb-4">
                             <div class="col-md-6">
+                                @php $originalAnswerText = trim((string) ($answer->answer_text ?? '')); @endphp
                                 <label style="font-size:0.85rem;color:var(--tx3);font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-user me-2"></i>Original Answer</label>
                                 <div style="color:var(--tx);background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid var(--bd);height:100%;font-size:0.95rem;line-height:1.6;">
-                                    {{ $answer->answer_text }}
+                                    {{ $originalAnswerText !== '' ? $originalAnswerText : ($canPlayStoredVoiceAnswer ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'Transcript unavailable for this answer.') }}
                                 </div>
                             </div>
                             <div class="col-md-6">

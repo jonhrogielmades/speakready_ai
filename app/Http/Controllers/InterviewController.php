@@ -31,12 +31,14 @@ use App\Support\InterviewSessionSchema;
 use App\Support\QuestionSchema;
 use App\Support\ScoreSchema;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -45,6 +47,10 @@ class InterviewController extends Controller
     private const ACCEPTED_RESPONSE_MODES = ['text', 'voice', 'hybrid', 'voice_and_text'];
 
     private const VOICE_RESPONSE_MODES = ['voice', 'hybrid'];
+
+    private const VOICE_RECORDING_MAX_KILOBYTES = 25600;
+
+    private const VOICE_RECORDING_MIME_TYPES = 'audio/webm,audio/mp4,audio/mpeg,audio/mpga,audio/m4a,audio/x-m4a,audio/wav,audio/x-wav,audio/ogg,video/webm,video/mp4,application/octet-stream';
 
     public function start(Request $request)
     {
@@ -342,6 +348,9 @@ class InterviewController extends Controller
             'elapsed_seconds' => 'nullable|integer|min:0|max:7200',
             'wpm' => 'nullable|integer|min:0|max:400',
             'voice_duration' => 'nullable|integer|min:0|max:7200',
+            'voice_audio' => $this->voiceRecordingUploadRules(),
+            'voice_recording_duration_seconds' => 'nullable|integer|min:0|max:7200',
+            'voice_recording_transcription_status' => 'nullable|string|max:40',
             'filler_words_count' => 'nullable|integer|min:0|max:500',
             'pause_count' => 'nullable|integer|min:0|max:500',
             'confidence_score' => 'nullable|integer|min:0|max:100',
@@ -361,8 +370,18 @@ class InterviewController extends Controller
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
 
+        $answerText = $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
+        if (! $this->answerSubmissionHasContent($validated, $answerText)) {
+            return response()->json([
+                'message' => 'Please record, transcribe, type, skip, or wait for the timer before submitting this answer.',
+                'errors' => [
+                    'answer_text' => ['Please provide an answer before submitting.'],
+                ],
+            ], 422);
+        }
+
         try {
-            $this->persistInterviewAnswer($session, $question, $validated);
+            $this->persistInterviewAnswer($session, $question, $validated, $answerText);
         } catch (\Throwable $error) {
             Log::error('Interview answer save failed.', [
                 'session_id' => $session->id,
@@ -415,7 +434,7 @@ class InterviewController extends Controller
 
         $validated = $request->validate([
             'session_id' => 'nullable|exists:interview_sessions,id',
-            'answer_text' => 'required|string|max:20000',
+            'answer_text' => 'nullable|string|max:20000',
             'speech_transcript' => 'nullable|string|max:20000',
             'conversation_context' => 'nullable|string|max:50000',
             'transcript_timeline' => 'nullable|string|max:50000',
@@ -430,6 +449,9 @@ class InterviewController extends Controller
             'elapsed_seconds' => 'nullable|integer|min:0|max:7200',
             'wpm' => 'nullable|integer|min:0|max:400',
             'voice_duration' => 'nullable|integer|min:0|max:7200',
+            'voice_audio' => $this->voiceRecordingUploadRules(),
+            'voice_recording_duration_seconds' => 'nullable|integer|min:0|max:7200',
+            'voice_recording_transcription_status' => 'nullable|string|max:40',
             'filler_words_count' => 'nullable|integer|min:0|max:500',
             'pause_count' => 'nullable|integer|min:0|max:500',
             'confidence_score' => 'nullable|integer|min:0|max:100',
@@ -449,9 +471,20 @@ class InterviewController extends Controller
         if (! $question) {
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
-        $candidateTurnText = trim((string) $validated['answer_text']);
-        $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
+        $candidateTurnText = trim((string) ($validated['answer_text'] ?? ''));
+        $answerText = $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
+        if (! $this->answerSubmissionHasContent($validated, $answerText)) {
+            return response()->json([
+                'message' => 'Please record, transcribe, type, skip, or wait for the timer before submitting this answer.',
+                'errors' => [
+                    'answer_text' => ['Please provide an answer before submitting.'],
+                ],
+            ], 422);
+        }
         $interviewerInputText = $candidateTurnText !== '' ? $candidateTurnText : $answerText;
+        if ($interviewerInputText === '' && $this->hasSubmittedVoiceRecording($validated)) {
+            $interviewerInputText = 'The candidate submitted a saved voice recording, but automatic transcription was unavailable.';
+        }
         $conversationContext = $this->normalizedConversationContextFrom(
             $this->jsonPayloadFrom($validated['conversation_context'] ?? null)
         );
@@ -500,7 +533,7 @@ class InterviewController extends Controller
             ->map(function ($ans) {
                 return [
                     'question' => $ans->question->question_text ?? '',
-                    'answer' => $ans->answer_text,
+                    'answer' => $this->answerTextForFeedback($ans),
                 ];
             })->toArray();
 
@@ -858,7 +891,7 @@ class InterviewController extends Controller
                     'id' => $answer->id,
                     'question' => $answer->question->question_text ?? '',
                     'question_type' => $answer->question->type ?? null,
-                    'answer' => $answer->is_skipped ? '(Skipped or no answer)' : ($answer->answer_text ?? ''),
+                    'answer' => $this->answerTextForFeedback($answer),
                     'is_skipped' => (bool) $answer->is_skipped,
                     'expected_guide' => $answer->question->expected_guide ?? null,
                     'mapped_skills' => $answer->question->mapped_skills ?? [],
@@ -1557,7 +1590,7 @@ class InterviewController extends Controller
             'id' => $answer->id,
             'question' => $answer->question->question_text ?? '',
             'question_type' => $answer->question->type ?? null,
-            'answer' => $answer->is_skipped ? '(Skipped or no answer)' : ($answer->answer_text ?? ''),
+            'answer' => $this->answerTextForFeedback($answer),
             'is_skipped' => (bool) $answer->is_skipped,
             'expected_guide' => $answer->question->expected_guide ?? null,
             'mapped_skills' => $answer->question->mapped_skills ?? [],
@@ -1729,7 +1762,7 @@ class InterviewController extends Controller
     {
         InterviewAnswerSchema::ensure();
 
-        return InterviewAnswer::updateOrCreate(
+        $answer = InterviewAnswer::updateOrCreate(
             [
                 'interview_session_id' => $session->id,
                 'question_id' => $question->id,
@@ -1737,12 +1770,167 @@ class InterviewController extends Controller
             ],
             $this->answerPersistencePayload($session, $question, $validated, $answerText)
         );
+
+        $this->storeSubmittedVoiceRecording($answer, $session, $question, $validated);
+
+        return $answer->refresh();
+    }
+
+    private function voiceRecordingUploadRules(): array
+    {
+        return [
+            'nullable',
+            'file',
+            'max:'.self::VOICE_RECORDING_MAX_KILOBYTES,
+            'mimetypes:'.self::VOICE_RECORDING_MIME_TYPES,
+        ];
+    }
+
+    private function answerSubmissionHasContent(array $validated, string $answerText): bool
+    {
+        if (filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            return true;
+        }
+
+        if (filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            return true;
+        }
+
+        return trim($answerText) !== '' || $this->hasSubmittedVoiceRecording($validated);
+    }
+
+    private function hasSubmittedVoiceRecording(array $validated): bool
+    {
+        if (! $this->isVoiceResponseMode($validated['response_mode'] ?? 'text')) {
+            return false;
+        }
+
+        $upload = $this->submittedVoiceRecording($validated);
+        if (! $upload || ! $upload->isValid()) {
+            return false;
+        }
+
+        $size = (int) ($upload->getSize() ?: 0);
+
+        return $size >= 128 && $size <= self::VOICE_RECORDING_MAX_KILOBYTES * 1024;
+    }
+
+    private function submittedVoiceRecording(array $validated): ?UploadedFile
+    {
+        $upload = $validated['voice_audio'] ?? null;
+
+        return $upload instanceof UploadedFile ? $upload : null;
+    }
+
+    private function storeSubmittedVoiceRecording(
+        InterviewAnswer $answer,
+        InterviewSession $session,
+        Question $question,
+        array $validated
+    ): void {
+        if (! $this->hasSubmittedVoiceRecording($validated)) {
+            return;
+        }
+
+        $upload = $this->submittedVoiceRecording($validated);
+        if (! $upload) {
+            return;
+        }
+
+        $disk = 'local';
+        $extension = $this->voiceRecordingExtensionForUpload($upload);
+        $directory = 'interview_voice_answers/user_'.$session->user_id.'/session_'.$session->id;
+        $path = $directory.'/question_'.$question->id.'_answer_'.$answer->id.'_'.Str::uuid().'.'.$extension;
+
+        $stored = Storage::disk($disk)->putFileAs(
+            $directory,
+            $upload,
+            basename($path)
+        );
+
+        if (! is_string($stored) || $stored === '' || ! Storage::disk($disk)->exists($stored)) {
+            throw new \RuntimeException('Voice recording could not be stored.');
+        }
+
+        $previousDisk = (string) ($answer->voice_recording_disk ?: $disk);
+        $previousPath = (string) ($answer->voice_recording_path ?: '');
+
+        $answer->forceFill([
+            'voice_recording_disk' => $disk,
+            'voice_recording_path' => $stored,
+            'voice_recording_mime_type' => $this->safeVoiceRecordingMimeType($upload),
+            'voice_recording_byte_size' => (int) ($upload->getSize() ?: 0),
+            'voice_recording_original_name' => Str::limit((string) $upload->getClientOriginalName(), 255, ''),
+            'voice_recording_transcription_status' => $this->safeVoiceRecordingTranscriptionStatus($validated['voice_recording_transcription_status'] ?? null),
+            'voice_recording_uploaded_at' => now(),
+        ])->save();
+
+        if ($previousPath !== '' && $previousPath !== $stored && $previousDisk === $disk) {
+            Storage::disk($disk)->delete($previousPath);
+        }
+    }
+
+    private function voiceRecordingExtensionForUpload(UploadedFile $upload): string
+    {
+        $extension = strtolower((string) $upload->guessExtension());
+        if (in_array($extension, ['webm', 'm4a', 'mp4', 'mp3', 'mpeg', 'wav', 'ogg'], true)) {
+            return $extension === 'mpeg' ? 'mp3' : $extension;
+        }
+
+        return match ($this->safeVoiceRecordingMimeType($upload)) {
+            'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'video/mp4' => 'm4a',
+            'audio/mpeg', 'audio/mpga' => 'mp3',
+            'audio/wav', 'audio/x-wav' => 'wav',
+            'audio/ogg' => 'ogg',
+            default => 'webm',
+        };
+    }
+
+    private function safeVoiceRecordingMimeType(UploadedFile $upload): string
+    {
+        $acceptedMimeTypes = explode(',', self::VOICE_RECORDING_MIME_TYPES);
+        $mimeCandidates = [
+            strtolower((string) $upload->getClientMimeType()),
+            strtolower((string) $upload->getMimeType()),
+        ];
+
+        foreach ($mimeCandidates as $mimeType) {
+            if (in_array($mimeType, $acceptedMimeTypes, true)) {
+                return $this->normalizeStoredVoiceRecordingMimeType($mimeType);
+            }
+        }
+
+        return 'audio/webm';
+    }
+
+    private function normalizeStoredVoiceRecordingMimeType(string $mimeType): string
+    {
+        return match (strtolower(trim($mimeType))) {
+            'video/webm' => 'audio/webm',
+            'video/mp4' => 'audio/mp4',
+            default => strtolower(trim($mimeType)),
+        };
+    }
+
+    private function safeVoiceRecordingTranscriptionStatus(mixed $status): ?string
+    {
+        $status = strtolower(trim((string) $status));
+        $status = preg_replace('/[^a-z0-9_\-]/', '', $status) ?: '';
+
+        return $status !== '' ? Str::limit($status, 40, '') : null;
     }
 
     private function answerPersistencePayload(InterviewSession $session, Question $question, array $validated, ?string $answerText = null): array
     {
         $responseMode = $this->normalizeResponseMode($validated['response_mode'] ?? $session->response_mode ?? 'text');
         $validated['response_mode'] = $responseMode;
+        if ($this->isVoiceResponseMode($responseMode)) {
+            $recordingDuration = $this->clampInt($validated['voice_recording_duration_seconds'] ?? 0, 0, 7200);
+            $submittedDuration = $this->clampInt($validated['voice_duration'] ?? 0, 0, 7200);
+            if ($recordingDuration > $submittedDuration) {
+                $validated['voice_duration'] = $recordingDuration;
+            }
+        }
         $answerText ??= $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
         $deliveryTranscript = $this->deliveryTranscriptFrom($validated, $answerText);
         $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
@@ -4196,6 +4384,153 @@ class InterviewController extends Controller
         }
 
         return max(0, min(100, (int) round($score)));
+    }
+
+    private function answerTextForFeedback(InterviewAnswer $answer): string
+    {
+        if ((bool) ($answer->is_skipped ?? false)) {
+            return '(Skipped or no answer)';
+        }
+
+        $answerText = trim((string) ($answer->answer_text ?? ''));
+        if ($answerText !== '') {
+            return $answerText;
+        }
+
+        if ($this->answerHasStoredVoiceRecording($answer)) {
+            return '[Voice answer saved for playback. Automatic transcription was unavailable, so text-based AI feedback is limited.]';
+        }
+
+        return '';
+    }
+
+    private function answerHasStoredVoiceRecording(InterviewAnswer $answer): bool
+    {
+        return trim((string) ($answer->voice_recording_path ?? '')) !== '';
+    }
+
+    public function voiceRecording(InterviewAnswer $answer)
+    {
+        if (! Auth::check()) {
+            abort(403);
+        }
+
+        $this->ensureInterviewRuntimeSchema();
+
+        $answer->loadMissing('interviewSession');
+        $session = $answer->interviewSession;
+        abort_unless($session && (int) $session->user_id === (int) Auth::id(), 403);
+
+        $disk = (string) ($answer->voice_recording_disk ?: 'local');
+        $path = trim((string) ($answer->voice_recording_path ?: ''));
+        abort_unless($disk === 'local' && $path !== '', 404, 'Voice recording metadata was not found.');
+
+        $storage = Storage::disk($disk);
+        abort_unless($storage->exists($path), 404, 'Voice recording file was not found.');
+
+        $mimeType = $this->safeStoredVoiceRecordingMimeType($answer->voice_recording_mime_type);
+        $fileName = 'voice-answer-'.$answer->id.'.'.$this->voiceRecordingExtensionForMimeType($mimeType);
+
+        return $this->voiceRecordingFileResponse($storage->path($path), $mimeType, $fileName, (int) $storage->size($path));
+    }
+
+    private function safeStoredVoiceRecordingMimeType(mixed $mimeType): string
+    {
+        $mimeType = strtolower(trim((string) $mimeType));
+
+        return in_array($mimeType, explode(',', self::VOICE_RECORDING_MIME_TYPES), true)
+            ? $this->normalizeStoredVoiceRecordingMimeType($mimeType)
+            : 'audio/webm';
+    }
+
+    private function voiceRecordingExtensionForMimeType(string $mimeType): string
+    {
+        return match ($this->safeStoredVoiceRecordingMimeType($mimeType)) {
+            'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'video/mp4' => 'm4a',
+            'audio/mpeg', 'audio/mpga' => 'mp3',
+            'audio/wav', 'audio/x-wav' => 'wav',
+            'audio/ogg' => 'ogg',
+            default => 'webm',
+        };
+    }
+
+    private function voiceRecordingFileResponse(string $absolutePath, string $mimeType, string $fileName, ?int $knownFileSize = null)
+    {
+        $fileSize = $knownFileSize ?: filesize($absolutePath);
+        abort_unless(is_int($fileSize) && $fileSize > 0, 404, 'Voice recording file is empty.');
+
+        $start = 0;
+        $end = $fileSize - 1;
+        $status = 200;
+        $range = request()->headers->get('Range');
+
+        if (is_string($range) && preg_match('/bytes=(\d*)-(\d*)/i', $range, $matches)) {
+            $requestedStart = $matches[1] !== '' ? (int) $matches[1] : null;
+            $requestedEnd = $matches[2] !== '' ? (int) $matches[2] : null;
+
+            if ($requestedStart !== null && $requestedStart >= $fileSize) {
+                return response('', 416, [
+                    'Content-Range' => 'bytes */'.$fileSize,
+                    'Accept-Ranges' => 'bytes',
+                ]);
+            }
+
+            if ($requestedStart === null && $requestedEnd !== null) {
+                $start = max(0, $fileSize - $requestedEnd);
+            } else {
+                $start = max(0, $requestedStart ?? 0);
+            }
+
+            $end = $requestedEnd !== null ? min($fileSize - 1, max($start, $requestedEnd)) : $fileSize - 1;
+            $status = 206;
+        }
+
+        $length = $end - $start + 1;
+        $headers = [
+            'Content-Type' => $mimeType,
+            'Content-Length' => (string) $length,
+            'Accept-Ranges' => 'bytes',
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'Content-Disposition' => 'inline; filename="'.$this->safeInlineFileName($fileName).'"',
+        ];
+
+        if ($status === 206) {
+            $headers['Content-Range'] = "bytes {$start}-{$end}/{$fileSize}";
+        }
+
+        return response()->stream($this->streamFileRange($absolutePath, $start, $length), $status, $headers);
+    }
+
+    private function safeInlineFileName(string $fileName): string
+    {
+        return str_replace(['\\', '"', "\r", "\n"], ['_', '', '', ''], $fileName);
+    }
+
+    private function streamFileRange(string $absolutePath, int $start, int $length): \Closure
+    {
+        return static function () use ($absolutePath, $start, $length): void {
+            $handle = fopen($absolutePath, 'rb');
+            if (! $handle) {
+                return;
+            }
+
+            try {
+                fseek($handle, $start);
+                $remaining = $length;
+
+                while ($remaining > 0 && ! feof($handle)) {
+                    $chunk = fread($handle, min(8192, $remaining));
+                    if ($chunk === false || $chunk === '') {
+                        break;
+                    }
+
+                    echo $chunk;
+                    $remaining -= strlen($chunk);
+                }
+            } finally {
+                fclose($handle);
+            }
+        };
     }
 
     public function review($id)

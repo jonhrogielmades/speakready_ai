@@ -72,6 +72,27 @@ class InterviewAnswerSchema
                 if (self::isMissing($missing, 'pronunciation_score')) {
                     $table->unsignedTinyInteger('pronunciation_score')->nullable();
                 }
+                if (self::isMissing($missing, 'voice_recording_disk')) {
+                    $table->string('voice_recording_disk')->nullable();
+                }
+                if (self::isMissing($missing, 'voice_recording_path')) {
+                    $table->string('voice_recording_path')->nullable();
+                }
+                if (self::isMissing($missing, 'voice_recording_mime_type')) {
+                    $table->string('voice_recording_mime_type')->nullable();
+                }
+                if (self::isMissing($missing, 'voice_recording_byte_size')) {
+                    $table->unsignedInteger('voice_recording_byte_size')->default(0);
+                }
+                if (self::isMissing($missing, 'voice_recording_original_name')) {
+                    $table->string('voice_recording_original_name')->nullable();
+                }
+                if (self::isMissing($missing, 'voice_recording_transcription_status')) {
+                    $table->string('voice_recording_transcription_status', 40)->nullable();
+                }
+                if (self::isMissing($missing, 'voice_recording_uploaded_at')) {
+                    $table->timestamp('voice_recording_uploaded_at')->nullable();
+                }
                 if (self::isMissing($missing, 'coaching_feedback')) {
                     $table->json('coaching_feedback')->nullable();
                 }
@@ -199,6 +220,13 @@ class InterviewAnswerSchema
             $table->json('observation_data')->nullable();
             $table->json('pronunciation_analysis')->nullable();
             $table->unsignedTinyInteger('pronunciation_score')->nullable();
+            $table->string('voice_recording_disk')->nullable();
+            $table->string('voice_recording_path')->nullable();
+            $table->string('voice_recording_mime_type')->nullable();
+            $table->unsignedInteger('voice_recording_byte_size')->default(0);
+            $table->string('voice_recording_original_name')->nullable();
+            $table->string('voice_recording_transcription_status', 40)->nullable();
+            $table->timestamp('voice_recording_uploaded_at')->nullable();
             $table->json('coaching_feedback')->nullable();
             $table->string('response_mode')->default('text');
             $table->text('ai_feedback')->nullable();
@@ -272,6 +300,13 @@ class InterviewAnswerSchema
             'observation_data',
             'pronunciation_analysis',
             'pronunciation_score',
+            'voice_recording_disk',
+            'voice_recording_path',
+            'voice_recording_mime_type',
+            'voice_recording_byte_size',
+            'voice_recording_original_name',
+            'voice_recording_transcription_status',
+            'voice_recording_uploaded_at',
             'coaching_feedback',
             'response_mode',
             'ai_feedback',

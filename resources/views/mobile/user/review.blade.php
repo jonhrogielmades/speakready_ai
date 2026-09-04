@@ -346,9 +346,13 @@
             </h2>
             <div id="collapse{{ $index }}" class="accordion-collapse collapse" data-bs-parent="#answersAccordion">
                 <div class="accordion-body answer-review-body" style="border-top:1px solid var(--bd);padding:24px;">
+                    @include('shared.partials.interview-answer-voice-recording', ['answer' => $answer])
                     
                     @if($sessionEndedEarly)
-                        @php $savedAnswerText = trim((string) ($answer->answer_text ?? '')); @endphp
+                        @php
+                            $savedAnswerText = trim((string) ($answer->answer_text ?? ''));
+                            $hasSavedVoiceRecording = trim((string) ($answer->voice_recording_path ?? '')) !== '';
+                        @endphp
                         <div class="early-ended-answer-note mb-4">
                             <i class="fa-solid fa-circle-info"></i>
                             <span>No feedback was generated for this response because the session was ended early.</span>
@@ -356,7 +360,7 @@
                         <div class="mb-0 p-4 early-ended-response-card">
                             <label style="font-size:0.85rem;color:var(--tx3);font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-user me-2"></i>Saved Response</label>
                             <div style="color:var(--tx);background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid var(--bd);height:100%;font-size:0.95rem;line-height:1.6;">
-                                {{ $savedAnswerText !== '' ? $savedAnswerText : 'No response was saved for this question before the session ended.' }}
+                                {{ $savedAnswerText !== '' ? $savedAnswerText : ($hasSavedVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No response was saved for this question before the session ended.') }}
                             </div>
                         </div>
                     @elseif($answer->is_skipped)
@@ -499,9 +503,10 @@
                         <!-- Feature 8: Suggested Answer Improvement -->
                         <div class="row g-4 mb-4">
                             <div class="col-md-6">
+                                @php $originalAnswerText = trim((string) ($answer->answer_text ?? '')); @endphp
                                 <label style="font-size:0.85rem;color:var(--tx3);font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-user me-2"></i>Original Answer</label>
                                 <div style="color:var(--tx);background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid var(--bd);height:100%;font-size:0.95rem;line-height:1.6;">
-                                    {{ $answer->answer_text }}
+                                    {{ $originalAnswerText !== '' ? $originalAnswerText : 'Transcript unavailable. Listen to the saved voice answer above.' }}
                                 </div>
                             </div>
                             <div class="col-md-6">

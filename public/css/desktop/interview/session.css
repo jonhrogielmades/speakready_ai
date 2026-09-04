@@ -189,6 +189,165 @@
         font-weight: 700;
         line-height: 1.2;
     }
+    #voiceSessionPanel[hidden] {
+        display: none !important;
+    }
+    .voice-session-panel {
+        width: 100%;
+        box-sizing: border-box;
+        margin: 10px 0;
+        padding: 10px 12px;
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        background: linear-gradient(180deg, rgba(14, 165, 233, 0.08), rgba(34, 197, 94, 0.04));
+        color: var(--tx);
+    }
+    .voice-session-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+    .voice-session-title {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--tx);
+        font-size: 0.78rem;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+    .voice-session-title i {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(14, 165, 233, 0.13);
+        color: #0284c7;
+    }
+    .voice-session-badge {
+        flex: 0 0 auto;
+        min-height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(14, 165, 233, 0.24);
+        border-radius: 999px;
+        padding: 4px 9px;
+        background: rgba(14, 165, 233, 0.08);
+        color: #0284c7;
+        font-size: 0.68rem;
+        font-weight: 900;
+        line-height: 1;
+        white-space: nowrap;
+    }
+    .voice-session-panel[data-state="recording"] .voice-session-badge {
+        border-color: rgba(239, 68, 68, 0.36);
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    .voice-session-panel[data-state="paused"] .voice-session-badge,
+    .voice-session-panel[data-state="saving"] .voice-session-badge,
+    .voice-session-panel[data-state="transcribing"] .voice-session-badge {
+        border-color: rgba(245, 158, 11, 0.36);
+        background: rgba(245, 158, 11, 0.12);
+        color: #b45309;
+    }
+    .voice-session-panel[data-state="transcribed"] .voice-session-badge {
+        border-color: rgba(34, 197, 94, 0.36);
+        background: rgba(34, 197, 94, 0.1);
+        color: #15803d;
+    }
+    .voice-session-panel[data-state="error"] .voice-session-badge,
+    .voice-session-panel[data-state="unavailable"] .voice-session-badge {
+        border-color: rgba(148, 163, 184, 0.35);
+        background: rgba(148, 163, 184, 0.12);
+        color: var(--tx3);
+    }
+    .voice-session-controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+    }
+    .voice-session-playback {
+        width: 100%;
+        min-width: 0;
+        height: 36px;
+        display: block;
+    }
+    .voice-session-playback.audio-disabled {
+        opacity: 0.45;
+        pointer-events: none;
+        filter: saturate(0.55);
+    }
+    .voice-session-transcript {
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        border: 0;
+        border-radius: 10px;
+        padding: 8px 12px;
+        background: #0ea5e9;
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(14, 165, 233, 0.24);
+        font-size: 0.74rem;
+        font-weight: 900;
+        line-height: 1;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .voice-session-transcript:hover,
+    .voice-session-transcript:focus {
+        color: #fff;
+        background: #0284c7;
+        text-decoration: none;
+    }
+    .voice-session-transcript.disabled,
+    .voice-session-transcript:disabled {
+        pointer-events: none;
+        border: 1px solid var(--bd);
+        background: var(--bg3);
+        color: var(--tx3);
+        box-shadow: none;
+        opacity: 0.55;
+    }
+    .voice-session-footer {
+        min-height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 7px;
+        color: var(--tx3);
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+    #voiceSessionMeta {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+    @media (max-width: 575.98px) {
+        .voice-session-controls {
+            grid-template-columns: 1fr;
+        }
+        .voice-session-transcript {
+            width: 100%;
+        }
+        .voice-session-footer {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 3px;
+        }
+    }
     .panel-title > i {
         width: 28px;
         height: 28px;

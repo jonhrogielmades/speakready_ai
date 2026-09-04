@@ -14,8 +14,10 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class UserSideHardeningTest extends TestCase
@@ -668,6 +670,82 @@ class UserSideHardeningTest extends TestCase
                 $this->assertSame('not_measured', data_get($answer->observation_data, 'delivery.status'));
             }
         }
+    }
+
+    public function test_voice_answer_upload_submits_without_transcript_and_plays_back_in_review(): void
+    {
+        Storage::fake('local');
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['response_mode' => 'voice']);
+        $question = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about a time you helped a customer.',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.answer'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => '',
+                'speech_transcript' => '',
+                'response_mode' => 'voice',
+                'voice_duration' => 14,
+                'voice_recording_duration_seconds' => 14,
+                'voice_recording_transcription_status' => 'failed',
+                'voice_audio' => UploadedFile::fake()
+                    ->createWithContent('answer.webm', str_repeat('A', 4096))
+                    ->mimeType('audio/webm'),
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $answer = InterviewAnswer::where('interview_session_id', $session->id)
+            ->where('question_id', $question->id)
+            ->firstOrFail();
+
+        $this->assertSame('', $answer->answer_text);
+        $this->assertFalse((bool) $answer->is_skipped);
+        $this->assertSame('voice', $answer->response_mode);
+        $this->assertSame(14, $answer->voice_duration);
+        $this->assertSame('local', $answer->voice_recording_disk);
+        $this->assertSame('audio/webm', $answer->voice_recording_mime_type);
+        $this->assertSame('failed', $answer->voice_recording_transcription_status);
+        $this->assertGreaterThan(0, $answer->voice_recording_byte_size);
+        $this->assertNotEmpty($answer->voice_recording_path);
+        Storage::disk('local')->assertExists($answer->voice_recording_path);
+
+        $this->actingAs($user)
+            ->get(route('interview.answer.voiceRecording', $answer))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/webm')
+            ->assertHeader('Accept-Ranges', 'bytes');
+
+        $this->actingAs($user)
+            ->withHeader('Range', 'bytes=0-15')
+            ->get(route('interview.answer.voiceRecording', $answer))
+            ->assertStatus(206)
+            ->assertHeader('Content-Range', 'bytes 0-15/'.$answer->voice_recording_byte_size);
+
+        $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $this->actingAs($otherUser)
+            ->get(route('interview.answer.voiceRecording', $answer))
+            ->assertForbidden();
+
+        $session->update([
+            'status' => 'ended',
+            'action_plan' => ['ended_early' => true],
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session->id))
+            ->assertOk()
+            ->assertSee('Voice Answer')
+            ->assertSee(route('interview.answer.voiceRecording', $answer), false)
+            ->assertSee('Transcript unavailable. Your voice recording was still saved for playback and review.')
+            ->assertSee('Transcript unavailable. Listen to the saved voice answer above.');
     }
 
     public function test_interview_answer_rejects_out_of_range_delivery_metrics(): void

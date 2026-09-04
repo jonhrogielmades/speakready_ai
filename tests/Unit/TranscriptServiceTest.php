@@ -49,6 +49,26 @@ class TranscriptServiceTest extends TestCase
         );
     }
 
+    public function test_it_auto_corrects_common_transcription_word_errors(): void
+    {
+        $transcript = 'teh api improovement helped alot because im responsable for qa and didnt miss teh sla.';
+
+        $this->assertSame(
+            "the API improvement helped a lot because I'm responsible for QA and didn't miss the SLA.",
+            TranscriptService::clean($transcript)
+        );
+    }
+
+    public function test_it_preserves_fillers_and_local_words_during_auto_correction(): void
+    {
+        $transcript = 'Um um opo po trabaho tabang maayo.';
+
+        $this->assertSame(
+            'Um um opo po trabaho tabang maayo.',
+            TranscriptService::clean($transcript)
+        );
+    }
+
     public function test_it_counts_common_fillers_as_phrases(): void
     {
         $this->assertSame(

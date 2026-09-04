@@ -2058,6 +2058,7 @@ PROMPT;
     {
         return "Return ONLY valid JSON in this exact shape: {\"transcript\":\"...\"}.\n"
             ."Transcribe the candidate speech exactly as spoken. Do not translate.\n"
+            ."Correct obvious word spelling and casing errors, but do not rewrite grammar or change meaning.\n"
             ."Preserve Philippine English, Tagalog/Filipino, Cebuano, Binisaya, and Bisaya words when clear.\n"
             ."Preserve filler words, names, acronyms, local words, punctuation, and capitalization when clear.\n"
             .self::openAiTranscriptionPrompt($targetLanguage, $context);
@@ -2567,6 +2568,7 @@ PROMPT;
         return trim(
             'This is a Philippine job interview practice answer. Transcribe only the candidate speech exactly as spoken.'
             .' Do not translate Tagalog, Filipino, Cebuano, Binisaya, or Bisaya words into English.'
+            .' Correct obvious word spelling and casing errors, but do not rewrite grammar, remove filler words, or change the speaker\'s meaning.'
             .' Preserve filler words, names, acronyms, local words, punctuation, and capitalization when clear.'
             .' Prefer common local spellings when the audio is clear, such as po, opo, salamat, pasensya, trabaho, eskwela, serbisyo, kustomer, tawag, reklamo, ako, ikaw, siya, kami, kayo, sila, tabang, maayo, daghan, kinahanglan, kabalo, trabaho, pamilya, and estudyante.'
             .$languageContext

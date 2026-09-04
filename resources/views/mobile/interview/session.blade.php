@@ -198,6 +198,27 @@
                             </div>
                         </div>
 
+                        <div id="voiceSessionPanel" class="voice-session-panel" hidden data-state="idle">
+                            <div class="voice-session-summary">
+                                <div class="voice-session-title">
+                                    <i class="fa-solid fa-wave-square"></i>
+                                    <span>Voice Session</span>
+                                </div>
+                                <span id="voiceSessionBadge" class="voice-session-badge">Ready</span>
+                            </div>
+                            <div class="voice-session-controls">
+                                <audio id="voiceSessionPlayback" class="voice-session-playback audio-disabled" controls preload="metadata"></audio>
+                                <button type="button" id="voiceSessionTranscript" class="voice-session-transcript disabled" disabled title="Transcribe full voice recording" aria-label="Transcribe full voice recording" onclick="transcribeVoiceSessionRecording()">
+                                    <i class="fa-solid fa-file-lines"></i>
+                                    <span>Transcript</span>
+                                </button>
+                            </div>
+                            <div class="voice-session-footer">
+                                <span id="voiceSessionStatus">Ready</span>
+                                <span id="voiceSessionMeta"></span>
+                            </div>
+                        </div>
+
                         <div class="interview-confidence-control" id="realtimeConfidenceControl" data-confidence-band="empty">
                             <div class="confidence-meter-label" id="realtimeConfidenceLabel">
                                 <span><i class="fa-solid fa-chart-simple"></i> Realtime confidence</span>
@@ -216,14 +237,7 @@
                             </div>
                         </div>
 
-                        <!-- Bottom mobile buttons moved to unified control panel above -->
                     </form>
-                </div>
-
-                <div class="mobile-response-end-session-action d-md-none animate-fade-up delay-200">
-                    <button type="button" class="btn btn-outline-danger mobile-response-end-session-btn" onclick="requestAbortInterviewSession()">
-                        <i class="fa-solid fa-flag-checkered me-2"></i>End Session
-                    </button>
                 </div>
             </div>
 
@@ -384,6 +398,21 @@
             let sessionNoticeTimer = null;
             
             // Answers state
+            function defaultVoiceRecordingState() {
+                return {
+                    available: false,
+                    local_only: true,
+                    mime_type: '',
+                    byte_size: 0,
+                    duration_seconds: 0,
+                    filename: '',
+                    transcribed: false,
+                    transcription_status: '',
+                    transcription_source: '',
+                    transcribed_at: ''
+                };
+            }
+
             function defaultAnswerState() {
                 return {
                     text: '',
@@ -408,8 +437,32 @@
                         camera_detection_enabled: cameraDetectionEnabled,
                         camera_unavailable_reason: cameraDetectionEnabled ? cameraUnavailableReason : null
                     },
-                    pronunciation_analysis: null
+                    pronunciation_analysis: null,
+                    voice_recording: defaultVoiceRecordingState()
                 };
+            }
+
+            function normalizeVoiceRecordingAnswerState(answerState) {
+                const state = answerState && typeof answerState === 'object' ? answerState : defaultAnswerState();
+                const meta = state.voice_recording && typeof state.voice_recording === 'object'
+                    ? state.voice_recording
+                    : {};
+                state.voice_recording = {
+                    ...defaultVoiceRecordingState(),
+                    ...meta,
+                    available: Boolean(meta.available),
+                    local_only: true,
+                    byte_size: Math.max(0, Math.round(Number(meta.byte_size || 0))),
+                    duration_seconds: Math.max(0, Math.round(Number(meta.duration_seconds || 0))),
+                    mime_type: String(meta.mime_type || ''),
+                    filename: String(meta.filename || ''),
+                    transcribed: Boolean(meta.transcribed),
+                    transcription_status: String(meta.transcription_status || ''),
+                    transcription_source: String(meta.transcription_source || ''),
+                    transcribed_at: String(meta.transcribed_at || '')
+                };
+
+                return state;
             }
 
             function normalizeCameraDetectionObservationState(answerState) {
@@ -453,7 +506,7 @@
                     }
                 });
             }
-            answersData = answersData.map(answerState => normalizeCameraDetectionObservationState(answerState));
+            answersData = answersData.map(answerState => normalizeVoiceRecordingAnswerState(normalizeCameraDetectionObservationState(answerState)));
 
             function normalizeSelfConfidence(value) {
                 const numeric = Number(value);
@@ -512,6 +565,8 @@
             let isRecordingPaused = false;
             let recTimerSeconds = 0;
             let recTimerInterval;
+            let recordingStartPromise = null;
+            let recordingStopPromise = null;
             let preRecordingText = '';
             let committedSpeechTranscript = '';
             let liveSpeechInterim = '';
@@ -555,11 +610,26 @@
                     'audio/ogg'
                 ].find(type => MediaRecorder.isTypeSupported(type)) || '';
             })();
+            const voiceSessionMimeType = (() => {
+                if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+                return [
+                    'audio/webm;codecs=opus',
+                    'audio/webm',
+                    'audio/mp4;codecs=mp4a.40.2',
+                    'audio/mp4',
+                    'audio/ogg;codecs=opus',
+                    'audio/ogg'
+                ].find(type => MediaRecorder.isTypeSupported(type)) || '';
+            })();
+            const voiceSessionTimesliceMs = 1000;
+            const voiceSessionStopTimeoutMs = 8000;
             const serverTranscriptionTimesliceMs = mobileSpeechSurface
                 ? {{ max(2500, min(8000, (int) config('services.ai_transcription.mobile_chunk_ms', 5000))) }}
                 : {{ max(2500, min(8000, (int) config('services.ai_transcription.chunk_ms', 4000))) }};
             const serverTranscriptionDrainTimeoutMs = {{ max(8000, min(60000, (int) config('services.ai_transcription.drain_timeout_ms', 20000))) }};
             const serverTranscriptionRequestTimeoutMs = {{ max(10000, min(60000, (int) config('services.ai_transcription.request_timeout_ms', 30000))) }};
+            const voiceSessionTranscriptionMaxBytes = 25600 * 1024;
+            const voiceSessionFullTranscriptionTimeoutMs = Math.max(serverTranscriptionRequestTimeoutMs, 60000);
             const serverTranscriptionMaxInFlight = {{ max(1, min(3, (int) config('services.ai_transcription.max_in_flight', 2))) }};
             const serverTranscriptionFailureLimit = 3;
             const serverTranscriptionSupported = serverTranscriptionEnabled
@@ -575,9 +645,154 @@
             const transcriptDuplicatePhraseMaxWords = 32;
             const transcriptOverlapMaxWords = 64;
             const transcriptRecentDuplicateScanWords = 180;
+            const voiceSessionRecordings = new Map();
+            let voiceSessionRecorder = null;
+            let voiceSessionStream = null;
+            let voiceSessionChunks = [];
+            let voiceSessionQuestionKey = null;
+            let voiceSessionQuestionIndex = null;
+            let voiceSessionStopPromise = null;
+            let voiceSessionStartPromise = null;
+            let voiceSessionTranscriptPromise = null;
+            let voiceSessionTranscriptQuestionKey = null;
+            let voiceSessionTrackListeners = [];
+            let voiceSessionUiState = 'idle';
+            let voiceSessionUiMessage = '';
+            let voiceSessionUiQuestionKey = null;
+
+            const transcriptWordCorrections = Object.freeze({
+                i: 'I',
+                im: "I'm",
+                ive: "I've",
+                dont: "don't",
+                doesnt: "doesn't",
+                didnt: "didn't",
+                cant: "can't",
+                couldnt: "couldn't",
+                shouldnt: "shouldn't",
+                wouldnt: "wouldn't",
+                wont: "won't",
+                isnt: "isn't",
+                arent: "aren't",
+                wasnt: "wasn't",
+                werent: "weren't",
+                hasnt: "hasn't",
+                havent: "haven't",
+                hadnt: "hadn't",
+                alot: 'a lot',
+                teh: 'the',
+                recieve: 'receive',
+                recieved: 'received',
+                recieving: 'receiving',
+                seperate: 'separate',
+                definately: 'definitely',
+                occured: 'occurred',
+                acheive: 'achieve',
+                acheived: 'achieved',
+                acheiving: 'achieving',
+                accomodate: 'accommodate',
+                accomodated: 'accommodated',
+                adress: 'address',
+                responsable: 'responsible',
+                responsibilty: 'responsibility',
+                experiance: 'experience',
+                enviroment: 'environment',
+                improvment: 'improvement',
+                improovement: 'improvement',
+                communcation: 'communication',
+                communicaton: 'communication',
+                managment: 'management',
+                opurtunity: 'opportunity',
+                oppurtunity: 'opportunity',
+                recomend: 'recommend',
+                recomended: 'recommended',
+                coustomer: 'customer',
+                custumer: 'customer',
+                costomer: 'customer',
+                requirment: 'requirement',
+                requriement: 'requirement',
+                succesful: 'successful',
+                sucessful: 'successful',
+                sucessfully: 'successfully',
+                benifit: 'benefit',
+                benifits: 'benefits',
+                proffesional: 'professional',
+                proffesionalism: 'professionalism',
+                api: 'API',
+                ai: 'AI',
+                bpo: 'BPO',
+                crm: 'CRM',
+                css: 'CSS',
+                html: 'HTML',
+                js: 'JS',
+                kpi: 'KPI',
+                ojt: 'OJT',
+                qa: 'QA',
+                sla: 'SLA',
+                sql: 'SQL',
+                ui: 'UI',
+                ux: 'UX',
+                github: 'GitHub',
+                javascript: 'JavaScript',
+                laravel: 'Laravel',
+                vue: 'Vue'
+            });
+            const transcriptNaturalCasePattern = /[A-Z]{2,}|[a-z][A-Z]|^I(?:['\u2019]|$)/u;
+
+            function transcriptCorrectionKey(word) {
+                return String(word || '')
+                    .replace(/\u2019/g, "'")
+                    .toLocaleLowerCase(speechLocale)
+                    .replace(/^[-']+|[-']+$/g, '');
+            }
+
+            function transcriptLettersOnly(value) {
+                return String(value || '').replace(/[^\p{L}]+/gu, '');
+            }
+
+            function isAllUpperTranscriptWord(value) {
+                const letters = transcriptLettersOnly(value);
+                if (!letters) return false;
+                return letters === letters.toLocaleUpperCase(speechLocale)
+                    && letters !== letters.toLocaleLowerCase(speechLocale);
+            }
+
+            function isTitleCaseTranscriptWord(value) {
+                const letters = transcriptLettersOnly(value);
+                const chars = Array.from(letters);
+                if (!chars.length) return false;
+                const first = chars[0];
+                const rest = chars.slice(1).join('');
+                return first === first.toLocaleUpperCase(speechLocale)
+                    && rest === rest.toLocaleLowerCase(speechLocale)
+                    && letters !== letters.toLocaleLowerCase(speechLocale);
+            }
+
+            function upperFirstTranscript(value) {
+                const chars = Array.from(String(value || ''));
+                if (!chars.length) return '';
+                return chars[0].toLocaleUpperCase(speechLocale) + chars.slice(1).join('');
+            }
+
+            function applyTranscriptCorrectionCase(original, correction) {
+                if (transcriptNaturalCasePattern.test(correction)) return correction;
+                if (isAllUpperTranscriptWord(original)) return correction.toLocaleUpperCase(speechLocale);
+                if (isTitleCaseTranscriptWord(original)) return upperFirstTranscript(correction);
+                return correction;
+            }
+
+            function autoCorrectTranscriptText(value) {
+                const text = String(value || '');
+                if (!text.trim()) return '';
+
+                return text.replace(/[\p{L}\p{N}][\p{L}\p{N}'\u2019-]*/gu, word => {
+                    const correction = transcriptWordCorrections[transcriptCorrectionKey(word)];
+                    return correction ? applyTranscriptCorrectionCase(word, correction) : word;
+                }).replace(/\s+/g, ' ').trim();
+            }
 
             function cleanTranscriptText(value) {
-                return String(value || '').replace(/\s+/g, ' ').trim();
+                return autoCorrectTranscriptText(String(value || '').replace(/\s+/g, ' ').trim());
             }
 
             function normalizeTranscriptForMatch(value) {
@@ -841,6 +1056,681 @@
                 status.style.display = message ? 'inline-block' : 'none';
             }
 
+            function voiceSessionRecorderSupported() {
+                return Boolean(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+            }
+
+            function voiceSessionKeyFor(index = currentQIdx) {
+                const question = questions[index];
+                return question?.id ? `question:${question.id}` : `index:${index}`;
+            }
+
+            function voiceSessionExtension(mimeType = '') {
+                const type = String(mimeType || '').toLowerCase();
+                if (type.includes('mp4')) return 'm4a';
+                if (type.includes('ogg')) return 'ogg';
+                if (type.includes('mpeg')) return 'mp3';
+                if (type.includes('wav')) return 'wav';
+                return 'webm';
+            }
+
+            function voiceSessionFilename(index = currentQIdx, mimeType = '') {
+                const questionNumber = Math.max(1, Number(questionDisplayNumber(index) || index + 1));
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                return `speakready-session-${interviewSessionId}-q${questionNumber}-${timestamp}.${voiceSessionExtension(mimeType)}`;
+            }
+
+            function formatFileSize(bytes) {
+                const size = Math.max(0, Number(bytes || 0));
+                if (size >= 1048576) {
+                    return `${(size / 1048576).toFixed(size >= 10485760 ? 0 : 1)} MB`;
+                }
+                if (size > 0) {
+                    return `${Math.max(1, Math.round(size / 1024))} KB`;
+                }
+                return '';
+            }
+
+            function createVoiceSessionRecorder(stream) {
+                const attempts = voiceSessionMimeType ? [{ mimeType: voiceSessionMimeType }, null] : [null];
+                let lastError = null;
+
+                for (const options of attempts) {
+                    try {
+                        return options ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
+                    } catch (error) {
+                        lastError = error;
+                    }
+                }
+
+                throw lastError || new Error('MediaRecorder could not start.');
+            }
+
+            function clearVoiceSessionTrackListeners() {
+                voiceSessionTrackListeners.forEach(({ track, eventName, handler }) => {
+                    try {
+                        track.removeEventListener(eventName, handler);
+                    } catch (error) {
+                        console.warn('Voice session track listener cleanup failed:', error);
+                    }
+                });
+                voiceSessionTrackListeners = [];
+            }
+
+            function attachVoiceSessionTrackGuards(stream, key) {
+                clearVoiceSessionTrackListeners();
+                if (!stream || typeof stream.getAudioTracks !== 'function') return;
+
+                stream.getAudioTracks().forEach(track => {
+                    const handleEnded = () => {
+                        if (voiceSessionQuestionKey !== key) return;
+                        setVoiceSessionUiState('error', 'Microphone stopped unexpectedly', key);
+                        Promise.resolve(stopVoiceSessionRecorder()).catch(error => {
+                            console.warn('Voice session stop after track ended failed:', error);
+                        });
+                    };
+
+                    track.addEventListener('ended', handleEnded, { once: true });
+                    voiceSessionTrackListeners.push({ track, eventName: 'ended', handler: handleEnded });
+                });
+            }
+
+            function releaseVoiceSessionStream() {
+                clearVoiceSessionTrackListeners();
+                stopMediaStream(voiceSessionStream);
+                voiceSessionStream = null;
+            }
+
+            function revokeVoiceSessionRecording(recording) {
+                if (recording?.url) URL.revokeObjectURL(recording.url);
+            }
+
+            function clearVoiceSessionRecordingFor(keyOrIndex = currentQIdx) {
+                const key = typeof keyOrIndex === 'string' ? keyOrIndex : voiceSessionKeyFor(keyOrIndex);
+                const recording = voiceSessionRecordings.get(key);
+                if (recording) revokeVoiceSessionRecording(recording);
+                voiceSessionRecordings.delete(key);
+                if (key === voiceSessionKeyFor(currentQIdx)) {
+                    updateAnswerVoiceRecordingMetadata(currentQIdx, null);
+                }
+            }
+
+            function updateAnswerVoiceRecordingMetadata(index = currentQIdx, recording = null) {
+                if (!answersData[index]) return;
+                answersData[index].voice_recording = recording
+                    ? {
+                        available: true,
+                        local_only: true,
+                        mime_type: recording.mimeType || '',
+                        byte_size: Math.max(0, Number(recording.size || 0)),
+                        duration_seconds: Math.max(0, Number(recording.durationSeconds || 0)),
+                        filename: recording.filename || '',
+                        transcribed: Boolean(recording.transcript),
+                        transcription_status: String(recording.transcriptionStatus || ''),
+                        transcription_source: String(recording.transcriptionSource || ''),
+                        transcribed_at: String(recording.transcribedAt || '')
+                    }
+                    : defaultVoiceRecordingState();
+            }
+
+            function submittableVoiceSessionRecording(index = currentQIdx, recording = null) {
+                if (!isVoiceTranscriptionMode()) return null;
+                const currentRecording = recording || voiceSessionRecordings.get(voiceSessionKeyFor(index));
+                if (!currentRecording?.blob) return null;
+                const size = Math.max(0, Number(currentRecording.blob.size || currentRecording.size || 0));
+                if (size < 128 || size > voiceSessionTranscriptionMaxBytes) return null;
+                return currentRecording;
+            }
+
+            function appendVoiceSessionRecordingUpload(formData, index = currentQIdx, recording = null) {
+                const currentRecording = submittableVoiceSessionRecording(index, recording);
+                if (!currentRecording) return false;
+
+                const blob = currentRecording.blob;
+                const mimeType = currentRecording.mimeType || blob.type || '';
+                const durationSeconds = Math.max(0, Math.round(Number(currentRecording.durationSeconds || 0)));
+                const transcriptionStatus = String(currentRecording.transcriptionStatus || (currentRecording.transcript ? 'transcribed' : 'unavailable'));
+
+                formData.append('voice_audio', blob, currentRecording.filename || voiceSessionFilename(index, mimeType));
+                formData.append('voice_recording_duration_seconds', durationSeconds);
+                formData.append('voice_recording_transcription_status', transcriptionStatus);
+                return true;
+            }
+
+            function setVoiceSessionUiState(state, message = '', key = voiceSessionQuestionKey || voiceSessionKeyFor()) {
+                voiceSessionUiState = state || 'idle';
+                voiceSessionUiMessage = message || '';
+                voiceSessionUiQuestionKey = key;
+                renderVoiceSessionPanel();
+            }
+
+            function renderVoiceSessionPanel(index = currentQIdx) {
+                const panel = document.getElementById('voiceSessionPanel');
+                if (!panel) return;
+
+                const shouldShow = isVoiceTranscriptionMode();
+                panel.hidden = !shouldShow;
+                if (!shouldShow) return;
+
+                const key = voiceSessionKeyFor(index);
+                const recording = voiceSessionRecordings.get(key);
+                const activeForQuestion = voiceSessionRecorder && voiceSessionQuestionKey === key;
+                const transcribingForQuestion = voiceSessionTranscriptPromise && voiceSessionTranscriptQuestionKey === key;
+                let state = recording?.transcript ? 'transcribed' : (recording ? 'ready' : 'idle');
+                let message = recording?.transcript ? 'Transcript added to answer' : (recording ? 'Playback ready' : 'Ready');
+
+                if (activeForQuestion && voiceSessionRecorder.state === 'recording') {
+                    state = 'recording';
+                    message = 'Recording';
+                } else if (activeForQuestion && voiceSessionRecorder.state === 'paused') {
+                    state = 'paused';
+                    message = 'Paused';
+                } else if (transcribingForQuestion) {
+                    state = 'transcribing';
+                    message = 'Transcribing full voice recording';
+                } else if (voiceSessionUiQuestionKey === key && voiceSessionUiMessage) {
+                    state = voiceSessionUiState;
+                    message = voiceSessionUiMessage;
+                }
+
+                if (!recording && !activeForQuestion && (!voiceSessionRecorderSupported() || microphoneRequiresSecureOrigin())) {
+                    state = 'unavailable';
+                    message = microphoneRequiresSecureOrigin()
+                        ? 'Microphone needs HTTPS or localhost'
+                        : 'Audio recorder unavailable';
+                }
+
+                panel.dataset.state = state;
+
+                const badge = document.getElementById('voiceSessionBadge');
+                const status = document.getElementById('voiceSessionStatus');
+                const meta = document.getElementById('voiceSessionMeta');
+                const player = document.getElementById('voiceSessionPlayback');
+                const transcriptButton = document.getElementById('voiceSessionTranscript');
+                const labels = {
+                    idle: 'Ready',
+                    recording: 'Recording',
+                    paused: 'Paused',
+                    ready: 'Ready',
+                    saving: 'Saving',
+                    transcribing: 'Transcribing',
+                    transcribed: 'Transcribed',
+                    unavailable: 'Unavailable',
+                    error: 'Check mic'
+                };
+
+                if (badge) badge.textContent = labels[state] || labels.idle;
+                if (status) status.textContent = message;
+                if (meta) {
+                    if (recording) {
+                        meta.textContent = [formatSeconds(recording.durationSeconds), formatFileSize(recording.size)].filter(Boolean).join(' / ');
+                    } else if (activeForQuestion && recTimerSeconds > 0) {
+                        meta.textContent = formatSeconds(recTimerSeconds);
+                    } else {
+                        meta.textContent = '';
+                    }
+                }
+
+                const hasPlayback = Boolean(recording?.url);
+                if (player) {
+                    if (hasPlayback) {
+                        if (player.dataset.voiceUrl !== recording.url) {
+                            player.src = recording.url;
+                            player.dataset.voiceUrl = recording.url;
+                            player.load();
+                        }
+                    } else if (player.dataset.voiceUrl) {
+                        player.pause();
+                        player.removeAttribute('src');
+                        delete player.dataset.voiceUrl;
+                        player.load();
+                    }
+                    player.classList.toggle('audio-disabled', !hasPlayback);
+                    player.setAttribute('aria-disabled', String(!hasPlayback));
+                }
+
+                if (transcriptButton) {
+                    const tooLarge = Boolean(recording?.size && recording.size > voiceSessionTranscriptionMaxBytes);
+                    const transcriptDisabled = !hasPlayback || !recording?.blob || tooLarge || Boolean(transcribingForQuestion);
+                    transcriptButton.disabled = transcriptDisabled;
+                    transcriptButton.classList.toggle('disabled', transcriptDisabled);
+                    transcriptButton.setAttribute('aria-disabled', String(transcriptDisabled));
+                    transcriptButton.title = tooLarge
+                        ? 'Recording is too large to transcribe'
+                        : (recording?.transcript ? 'Refresh transcript from full voice recording' : 'Transcribe full voice recording');
+                    transcriptButton.setAttribute('aria-label', transcriptButton.title);
+                    transcriptButton.innerHTML = transcribingForQuestion
+                        ? '<i class="fa-solid fa-spinner fa-spin"></i><span>Transcribing</span>'
+                        : '<i class="fa-solid fa-file-lines"></i><span>Transcript</span>';
+                }
+            }
+
+            function voiceSessionTranscriptionErrorMessage(error) {
+                const errorCode = String(error?.errorCode || '');
+                if (error?.name === 'AbortError') {
+                    return 'Full voice transcription timed out. Try again with a shorter answer.';
+                }
+                if (errorCode === 'speech_transcription_rate_limited' || error?.status === 429) {
+                    const waitSeconds = Number(error?.retryAfterSeconds || 0);
+                    return waitSeconds > 0
+                        ? `AI transcription is rate limited. Try again in ${Math.ceil(waitSeconds)}s.`
+                        : 'AI transcription is rate limited. Try again in a moment.';
+                }
+                if (errorCode === 'speech_transcription_unavailable' || error?.status === 503) {
+                    return 'Full voice transcription is unavailable right now.';
+                }
+                return error?.message || 'Full voice transcription failed. Please try again.';
+            }
+
+            function mergeFullVoiceTranscriptWithAnswer(existingText, previousSpeechTranscript, fullTranscript) {
+                const existing = cleanTranscriptText(existingText);
+                const previousSpeech = cleanTranscriptText(previousSpeechTranscript);
+                const transcript = cleanTranscriptText(fullTranscript);
+                if (!transcript) return existing;
+                if (!existing) return transcript;
+
+                if (previousSpeech && existing.includes(previousSpeech)) {
+                    return collapseRepeatedSpeech(cleanTranscriptText(existing.replace(previousSpeech, transcript)));
+                }
+
+                const existingNorm = normalizeTranscriptForMatch(existing);
+                const previousNorm = normalizeTranscriptForMatch(previousSpeech);
+                const transcriptNorm = normalizeTranscriptForMatch(transcript);
+
+                if (!transcriptNorm) return existing;
+                if (existingNorm === previousNorm || existingNorm === transcriptNorm || transcriptNorm.includes(existingNorm)) {
+                    return transcript;
+                }
+                if (existingNorm.includes(transcriptNorm)) {
+                    return existing;
+                }
+
+                return mergeTranscriptParts(existing, transcript);
+            }
+
+            function applyVoiceSessionTranscript(index, transcript, data = {}, recording = null) {
+                const cleanTranscript = cleanTranscriptText(transcript);
+                if (!cleanTranscript || !answersData[index]) return '';
+
+                const answerState = answersData[index] || defaultAnswerState();
+                const textarea = index === currentQIdx ? document.getElementById('answerTextarea') : null;
+                const existingText = textarea ? String(textarea.value || '') : String(answerState.text || '');
+                const mergedAnswerText = mergeFullVoiceTranscriptWithAnswer(existingText, answerState.speech_transcript || '', cleanTranscript);
+                const voiceDuration = Math.max(
+                    Number(answerState.voice_duration || 0),
+                    Number(recording?.durationSeconds || 0),
+                    Number(answerState.voice_recording?.duration_seconds || 0)
+                );
+                const wordCount = wordsForTranscript(cleanTranscript).length;
+
+                answerState.speech_transcript = cleanTranscript;
+                answerState.text = mergedAnswerText;
+                answerState.voice_duration = Math.max(0, Math.round(voiceDuration));
+                answerState.wpm = answerState.voice_duration > 0
+                    ? Math.round((wordCount / Math.max(1, answerState.voice_duration)) * 60)
+                    : answerState.wpm;
+                answersData[index] = answerState;
+
+                recordLocalSpeechAnalysis(index, data.pronunciation_analysis || null);
+
+                if (recording) {
+                    recording.transcript = cleanTranscript;
+                    recording.transcriptionStatus = data.transcription_status || 'transcribed';
+                    recording.transcriptionSource = data.transcription_source || 'ai';
+                    recording.transcribedAt = new Date().toISOString();
+                    updateAnswerVoiceRecordingMetadata(index, recording);
+                }
+
+                if (index === currentQIdx) {
+                    if (textarea) textarea.value = mergedAnswerText;
+                    committedSpeechTranscript = cleanTranscript;
+                    liveSpeechInterim = '';
+                    resetSpeechRecognitionBufferFromTextarea();
+
+                    const durationTarget = document.getElementById('vaDuration');
+                    if (durationTarget) durationTarget.innerText = answerState.voice_duration + 's';
+                    const wpmTarget = document.getElementById('vaWpm');
+                    if (wpmTarget) wpmTarget.innerText = answerState.wpm;
+                    captureTranscriptTimeline('full_voice_transcript', true, {
+                        source: data.transcription_source || 'voice_session',
+                        status: data.transcription_status || 'transcribed'
+                    });
+                    triggerAnalysis();
+                }
+
+                scheduleStateSave();
+                return cleanTranscript;
+            }
+
+            async function requestFullVoiceSessionTranscript(recording, question, previousTranscript = '') {
+                const attempts = 2;
+                let lastError = null;
+
+                for (let attempt = 1; attempt <= attempts; attempt++) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('_token', '{{ csrf_token() }}');
+                        formData.append('session_id', interviewSessionId);
+                        formData.append('question_id', question.id);
+                        formData.append('previous_transcript', cleanTranscriptText(previousTranscript).slice(-3000));
+                        formData.append('audio', recording.blob, recording.filename || serverTranscriptionFilename(recording.blob));
+
+                        const response = await managedFetch('{{ route("interview.transcribe") }}', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                            timeoutMs: voiceSessionFullTranscriptionTimeoutMs
+                        });
+                        const payload = await parseResponsePayload(response);
+
+                        if (!response.ok) {
+                            const error = new Error(responseErrorMessage(response, payload, 'Full voice transcription failed.'));
+                            error.status = response.status;
+                            error.errorCode = payload.data?.error_code || '';
+                            error.retryAfterSeconds = Number(payload.data?.retry_after_seconds || 0) || null;
+                            throw error;
+                        }
+
+                        return payload.data || {};
+                    } catch (error) {
+                        lastError = error;
+                        if (attempt >= attempts || !isRetryableRequestError(error)) {
+                            throw error;
+                        }
+                        setVoiceSessionUiState('transcribing', 'Retrying full voice transcription', voiceSessionTranscriptQuestionKey || voiceSessionKeyFor());
+                        setTranscriptionStatus('Retrying full voice transcription', '#fbbf24');
+                        await waitForRequestRetry(900 * attempt);
+                    }
+                }
+
+                throw lastError || new Error('Full voice transcription failed.');
+            }
+
+            async function transcribeVoiceSessionRecording(index = currentQIdx, options = {}) {
+                if (voiceSessionTranscriptPromise) return voiceSessionTranscriptPromise;
+
+                const silent = options.silent === true;
+                const key = voiceSessionKeyFor(index);
+                voiceSessionTranscriptQuestionKey = key;
+
+                voiceSessionTranscriptPromise = (async () => {
+                    if (index === currentQIdx && (recordingStartPromise || recordingStopPromise || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise)) {
+                        await stopRecording();
+                    }
+
+                    if (voiceSessionStopPromise) {
+                        await voiceSessionStopPromise.catch(error => {
+                            console.warn('Voice session stop wait before transcript failed:', error);
+                        });
+                    }
+
+                    const recording = voiceSessionRecordings.get(key);
+                    const question = questions[index];
+                    if (!question?.id) {
+                        throw new Error('Interview question is not ready for transcription.');
+                    }
+                    if (!recording?.blob || recording.blob.size < 128) {
+                        throw new Error('Record your answer first, then generate the transcript.');
+                    }
+                    if (recording.blob.size > voiceSessionTranscriptionMaxBytes) {
+                        throw new Error('Recording is too large to transcribe. Record a shorter answer, then try again.');
+                    }
+
+                    setVoiceSessionUiState('transcribing', 'Transcribing full voice recording', key);
+                    setTranscriptionStatus('Transcribing full voice recording', '#fbbf24');
+
+                    const previousTranscript = answersData[index]?.speech_transcript || '';
+                    const data = await requestFullVoiceSessionTranscript(recording, question, previousTranscript);
+                    const transcript = cleanTranscriptText(data.transcript || '');
+                    if (!transcript) {
+                        throw new Error('No speech was detected in the voice recording.');
+                    }
+
+                    const appliedTranscript = applyVoiceSessionTranscript(index, transcript, data, recording);
+                    setVoiceSessionUiState('transcribed', 'Transcript added to answer', key);
+                    setTranscriptionStatus('Full voice transcript added', '#16a34a');
+                    if (!silent) {
+                        showSessionNotice('Transcript added to your answer. You can edit it before sending for feedback.', 'success');
+                    }
+                    return appliedTranscript;
+                })().catch(error => {
+                    const message = voiceSessionTranscriptionErrorMessage(error);
+                    console.warn('Full voice transcription failed:', error);
+                    const recording = voiceSessionRecordings.get(key);
+                    if (recording) {
+                        recording.transcriptionStatus = 'failed';
+                        updateAnswerVoiceRecordingMetadata(index, recording);
+                    }
+                    setVoiceSessionUiState('error', message, key);
+                    setTranscriptionStatus(message, '#f87171');
+                    if (!silent) showSessionNotice(message, 'warning');
+                    return '';
+                }).finally(() => {
+                    voiceSessionTranscriptPromise = null;
+                    voiceSessionTranscriptQuestionKey = null;
+                    renderVoiceSessionPanel(index);
+                });
+
+                return voiceSessionTranscriptPromise;
+            }
+
+            async function startVoiceSessionRecorder() {
+                if (voiceSessionStartPromise) return voiceSessionStartPromise;
+                voiceSessionStartPromise = startVoiceSessionRecorderInternal().finally(() => {
+                    voiceSessionStartPromise = null;
+                });
+                return voiceSessionStartPromise;
+            }
+
+            async function startVoiceSessionRecorderInternal() {
+                const key = voiceSessionKeyFor();
+                if (!isVoiceTranscriptionMode()) return false;
+
+                if (!voiceSessionRecorderSupported() || microphoneRequiresSecureOrigin()) {
+                    setVoiceSessionUiState('unavailable', microphoneRequiresSecureOrigin()
+                        ? 'Microphone needs HTTPS or localhost'
+                        : 'Audio recorder unavailable', key);
+                    return false;
+                }
+
+                if (voiceSessionRecorder && voiceSessionQuestionKey === key && voiceSessionRecorder.state === 'paused') {
+                    try {
+                        voiceSessionRecorder.resume();
+                        setVoiceSessionUiState('recording', 'Recording', key);
+                        return true;
+                    } catch (error) {
+                        console.warn('Voice session resume failed:', error);
+                    }
+                }
+
+                if (voiceSessionRecorder && voiceSessionQuestionKey === key && voiceSessionRecorder.state === 'recording') {
+                    return true;
+                }
+
+                if (voiceSessionRecorder && voiceSessionRecorder.state !== 'inactive') {
+                    await stopVoiceSessionRecorder({ discard: true, skipStartWait: true });
+                }
+
+                if (!isRecordingPaused) {
+                    clearVoiceSessionRecordingFor(key);
+                }
+
+                try {
+                    releaseVoiceSessionStream();
+                    const sourceStream = mediaStreamHasLiveAudio(microphoneStream)
+                        ? microphoneStream.clone()
+                        : await requestMicrophoneStream();
+                    ensureLiveMicrophoneStream(sourceStream);
+                    const recorder = createVoiceSessionRecorder(sourceStream);
+
+                    voiceSessionStream = sourceStream;
+                    voiceSessionRecorder = recorder;
+                    voiceSessionQuestionKey = key;
+                    voiceSessionQuestionIndex = currentQIdx;
+                    voiceSessionChunks = [];
+                    voiceSessionStopPromise = null;
+                    attachVoiceSessionTrackGuards(sourceStream, key);
+                    updateAnswerVoiceRecordingMetadata(currentQIdx, null);
+
+                    recorder.ondataavailable = event => {
+                        if (event.data && event.data.size > 0) {
+                            voiceSessionChunks.push(event.data);
+                        }
+                    };
+                    recorder.onerror = event => {
+                        console.warn('Voice session recorder error:', event.error || event);
+                        setVoiceSessionUiState('error', 'Audio recording interrupted', key);
+                    };
+                    recorder.onpause = () => setVoiceSessionUiState('paused', 'Paused', key);
+                    recorder.onresume = () => setVoiceSessionUiState('recording', 'Recording', key);
+                    recorder.start(voiceSessionTimesliceMs);
+                    setVoiceSessionUiState('recording', 'Recording', key);
+                    return true;
+                } catch (error) {
+                    console.warn('Voice session recorder could not start:', error);
+                    clearVoiceSessionTrackListeners();
+                    releaseVoiceSessionStream();
+                    voiceSessionRecorder = null;
+                    voiceSessionChunks = [];
+                    setVoiceSessionUiState('error', microphoneErrorMessage(error), key);
+                    return false;
+                }
+            }
+
+            function pauseVoiceSessionRecorder() {
+                if (!voiceSessionRecorder || voiceSessionRecorder.state !== 'recording') return;
+                try {
+                    try {
+                        voiceSessionRecorder.requestData();
+                    } catch (error) {
+                        console.warn('Voice session flush before pause failed:', error);
+                    }
+                    voiceSessionRecorder.pause();
+                    setVoiceSessionUiState('paused', 'Paused', voiceSessionQuestionKey);
+                } catch (error) {
+                    console.warn('Voice session pause failed:', error);
+                }
+            }
+
+            function discardVoiceSessionRecorder(options = {}) {
+                const revokeSaved = options.revokeSaved === true;
+                if (voiceSessionRecorder && voiceSessionRecorder.state !== 'inactive') {
+                    try {
+                        voiceSessionRecorder.ondataavailable = null;
+                        voiceSessionRecorder.onstop = null;
+                        voiceSessionRecorder.stop();
+                    } catch (error) {
+                        console.warn('Voice session cleanup failed:', error);
+                    }
+                }
+                voiceSessionRecorder = null;
+                voiceSessionChunks = [];
+                voiceSessionQuestionKey = null;
+                voiceSessionQuestionIndex = null;
+                voiceSessionStopPromise = null;
+                releaseVoiceSessionStream();
+
+                if (revokeSaved) {
+                    voiceSessionRecordings.forEach(revokeVoiceSessionRecording);
+                    voiceSessionRecordings.clear();
+                }
+
+                setVoiceSessionUiState('idle', '', voiceSessionKeyFor());
+            }
+
+            async function stopVoiceSessionRecorder(options = {}) {
+                const discard = options.discard === true;
+                if (!options.skipStartWait && voiceSessionStartPromise) {
+                    await voiceSessionStartPromise.catch(error => {
+                        console.warn('Voice session start wait before stop failed:', error);
+                    });
+                }
+
+                const recorder = voiceSessionRecorder;
+                if (!recorder) return Promise.resolve(null);
+                if (voiceSessionStopPromise) return voiceSessionStopPromise;
+
+                const key = voiceSessionQuestionKey;
+                const questionIndex = voiceSessionQuestionIndex ?? currentQIdx;
+                const chunks = voiceSessionChunks;
+
+                setVoiceSessionUiState(discard ? 'idle' : 'saving', discard ? '' : 'Preparing playback', key);
+
+                voiceSessionStopPromise = new Promise(resolve => {
+                    let settled = false;
+                    const finish = () => {
+                        if (settled) return;
+                        settled = true;
+
+                        releaseVoiceSessionStream();
+                        voiceSessionRecorder = null;
+                        voiceSessionChunks = [];
+                        voiceSessionQuestionKey = null;
+                        voiceSessionQuestionIndex = null;
+                        voiceSessionStopPromise = null;
+
+                        let recording = null;
+                        if (!discard && chunks.length > 0) {
+                            const mimeType = recorder.mimeType || voiceSessionMimeType || chunks.find(chunk => chunk?.type)?.type || 'audio/webm';
+                            const blob = new Blob(chunks, { type: mimeType });
+                            if (blob.size > 0) {
+                                recording = {
+                                    blob,
+                                    url: URL.createObjectURL(blob),
+                                    mimeType,
+                                    size: blob.size,
+                                    durationSeconds: Math.max(answersData[questionIndex]?.voice_duration || 0, recTimerSeconds || 0),
+                                    filename: voiceSessionFilename(questionIndex, mimeType),
+                                    createdAt: new Date().toISOString()
+                                };
+                                const previous = voiceSessionRecordings.get(key);
+                                if (previous) revokeVoiceSessionRecording(previous);
+                                voiceSessionRecordings.set(key, recording);
+                                updateAnswerVoiceRecordingMetadata(questionIndex, recording);
+                                scheduleStateSave();
+                            }
+                        }
+
+                        if (recording) {
+                            setVoiceSessionUiState('ready', 'Playback ready', key);
+                        } else if (!discard) {
+                            updateAnswerVoiceRecordingMetadata(questionIndex, null);
+                            setVoiceSessionUiState('idle', 'No audio captured', key);
+                        } else {
+                            setVoiceSessionUiState('idle', '', key);
+                        }
+
+                        resolve(recording);
+                    };
+
+                    recorder.onstop = finish;
+                    try {
+                        if (recorder.state !== 'inactive') {
+                            try {
+                                recorder.requestData();
+                            } catch (error) {
+                                console.warn('Voice session final data flush failed:', error);
+                            }
+                            try {
+                                recorder.stop();
+                            } catch (error) {
+                                console.warn('Voice session stop failed:', error);
+                                finish();
+                            }
+                        } else {
+                            finish();
+                        }
+                    } catch (error) {
+                        console.warn('Voice session stop failed:', error);
+                        finish();
+                    }
+
+                    setTimeout(finish, voiceSessionStopTimeoutMs);
+                });
+
+                return voiceSessionStopPromise;
+            }
+
             function clearSubmittedAnswerInput() {
                 const textarea = document.getElementById('answerTextarea');
                 if (textarea) textarea.value = '';
@@ -859,6 +1749,7 @@
 
                 resetSpeechRecognitionBufferFromTextarea();
                 setTranscriptionStatus('');
+                renderVoiceSessionPanel();
             }
 
             function restoreSubmittedAnswerInput(answerText) {
@@ -911,6 +1802,23 @@
             function stopMediaStream(stream) {
                 if (!stream) return;
                 stream.getTracks().forEach(track => track.stop());
+            }
+
+            function mediaStreamHasLiveAudio(stream) {
+                return Boolean(
+                    stream
+                    && stream.active
+                    && typeof stream.getAudioTracks === 'function'
+                    && stream.getAudioTracks().some(track => track.readyState === 'live')
+                );
+            }
+
+            function ensureLiveMicrophoneStream(stream) {
+                if (mediaStreamHasLiveAudio(stream)) return stream;
+                stopMediaStream(stream);
+                const error = new Error('No live microphone audio track was available.');
+                error.name = 'NotFoundError';
+                throw error;
             }
 
             function releaseFarFieldAudio() {
@@ -985,10 +1893,12 @@
 
             async function requestMicrophoneStream() {
                 try {
-                    return await navigator.mediaDevices.getUserMedia(audioCaptureConstraints());
+                    const stream = await navigator.mediaDevices.getUserMedia(audioCaptureConstraints());
+                    return ensureLiveMicrophoneStream(stream);
                 } catch (error) {
                     if (error?.name === 'OverconstrainedError' || error?.name === 'ConstraintNotSatisfiedError') {
-                        return navigator.mediaDevices.getUserMedia({ audio: true });
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        return ensureLiveMicrophoneStream(stream);
                     }
                     throw error;
                 }
@@ -1028,6 +1938,19 @@
                     return 'Microphone access is not available in this browser.';
                 }
                 return 'Live transcription is not available on this device.';
+            }
+
+            function voiceRecordingUnavailableMessage() {
+                if (microphoneRequiresSecureOrigin()) {
+                    return 'Microphone access requires HTTPS online, or http://localhost for local testing.';
+                }
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    return 'Microphone access is not available in this browser.';
+                }
+                if (!window.MediaRecorder) {
+                    return 'Playable voice recording is not supported in this browser.';
+                }
+                return '';
             }
 
             function canUseServerTranscription() {
@@ -1983,11 +2906,14 @@
                     activeTranscriptionEngine = null;
                     setVoiceControlsEnabled(false, 'Voice recording is disabled in Text Mode');
                     setTranscriptionStatus('');
+                    renderVoiceSessionPanel();
                     return;
                 }
 
                 if (voiceControls && interviewStarted) voiceControls.style.display = 'flex';
                 if (recordingTimer) recordingTimer.style.display = 'block';
+                setRecordingControlButtons(isRecording ? 'recording' : (isRecordingPaused ? 'paused' : 'idle'));
+                renderVoiceSessionPanel();
             }
 
             function managedFetch(url, options = {}) {
@@ -2870,9 +3796,10 @@
                 
                 if(isVoiceTranscriptionMode()) {
                     applyResponseModeUi();
-                    const transcriptionEngine = preferredTranscriptionEngine();
-                    if (!transcriptionEngine) {
-                        const message = transcriptionUnavailableMessage();
+                    const recorderUnavailableMessage = voiceRecordingUnavailableMessage();
+                    const transcriptionEngine = recorderUnavailableMessage ? null : preferredTranscriptionEngine();
+                    if (recorderUnavailableMessage || !transcriptionEngine) {
+                        const message = recorderUnavailableMessage || transcriptionUnavailableMessage();
                         setTranscriptionStatus(message, '#f87171');
                         setVoiceControlsEnabled(false, message);
                         showSessionNotice(`${message} You can type your answer instead.`, 'warning');
@@ -2904,11 +3831,11 @@
                     
                     holdBtn.addEventListener('mousedown', startHold);
                     holdBtn.addEventListener('mouseup', endHold);
-                    holdBtn.addEventListener('mouseleave', (e) => { if(isRecording) endHold(e); });
+                    holdBtn.addEventListener('mouseleave', (e) => { if(isRecording || recordingStartPromise) endHold(e); });
                     
                     holdBtn.addEventListener('touchstart', startHold, {passive: false});
                     holdBtn.addEventListener('touchend', endHold, {passive: false});
-                    holdBtn.addEventListener('touchcancel', (e) => { if(isRecording) endHold(e); });
+                    holdBtn.addEventListener('touchcancel', (e) => { if(isRecording || recordingStartPromise) endHold(e); });
                 }
 
                 const restoredChat = restoreChatHistory();
@@ -2929,6 +3856,21 @@
                     }
                     document.addEventListener('visibilitychange', () => {
                         if (document.visibilityState === 'hidden') autoSaveState();
+                    });
+                    window.addEventListener('beforeunload', event => {
+                        if (recordingStartPromise || recordingStopPromise || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise || voiceSessionTranscriptPromise) {
+                            event.preventDefault();
+                            event.returnValue = '';
+                        }
+                    });
+                    window.addEventListener('pagehide', () => {
+                        if (voiceSessionTranscriptPromise) {
+                            abortManagedFetches();
+                        }
+                        if (voiceSessionRecorder || voiceSessionStream) {
+                            discardVoiceSessionRecorder();
+                        }
+                        releaseMicrophoneStream();
                     });
                 }
             }
@@ -2961,6 +3903,7 @@
                 applyResponseModeUi();
                 syncSelfConfidenceControl(answerState.confidence_score ?? answerState.self_reported_confidence ?? 0);
                 resetSpeechRecognitionBufferFromTextarea();
+                renderVoiceSessionPanel(idx);
                 lastTimelineCaptureAt = 0;
                 
                 setRepeatPrompt(q.question_text, {
@@ -3365,18 +4308,23 @@
                 const pauseBtn = document.getElementById('micPauseBtn');
                 const stopBtn = document.getElementById('micStopBtn');
                 const timer = document.getElementById('recordingTimer');
+                const isIdle = state === 'idle';
+                const isPaused = state === 'paused';
 
                 if (pauseBtn) {
                     pauseBtn.style.display = 'inline-flex';
-                    pauseBtn.innerHTML = state === 'paused'
-                        ? '<i class="fa-solid fa-play"></i>'
-                        : '<i class="fa-solid fa-pause"></i>';
-                    pauseBtn.setAttribute('aria-label', state === 'paused' ? 'Resume recording' : 'Pause recording');
-                    pauseBtn.setAttribute('title', state === 'paused' ? 'Resume recording' : 'Pause recording');
+                    pauseBtn.innerHTML = isIdle
+                        ? '<i class="fa-solid fa-microphone"></i>'
+                        : (isPaused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>');
+                    const pauseLabel = isIdle ? 'Start recording' : (isPaused ? 'Resume recording' : 'Pause recording');
+                    pauseBtn.setAttribute('aria-label', pauseLabel);
+                    pauseBtn.setAttribute('title', pauseLabel);
                 }
 
                 if (stopBtn) {
                     stopBtn.style.display = 'inline-flex';
+                    stopBtn.disabled = isIdle;
+                    stopBtn.classList.toggle('voice-control-disabled', isIdle);
                     stopBtn.setAttribute('aria-label', 'Stop recording');
                     stopBtn.setAttribute('title', 'Stop recording');
                 }
@@ -3396,9 +4344,26 @@
                     button.setAttribute('title', title);
                     button.setAttribute('aria-label', title);
                 });
+                if (enabled && isVoiceTranscriptionMode()) {
+                    setRecordingControlButtons(isRecording ? 'recording' : (isRecordingPaused ? 'paused' : 'idle'));
+                }
             }
 
             async function startRecording(options = {}) {
+                if (recordingStartPromise) return recordingStartPromise;
+                if (recordingStopPromise) {
+                    await recordingStopPromise.catch(error => {
+                        console.warn('Recording stop wait before start failed:', error);
+                    });
+                }
+
+                recordingStartPromise = startRecordingInternal(options).finally(() => {
+                    recordingStartPromise = null;
+                });
+                return recordingStartPromise;
+            }
+
+            async function startRecordingInternal(options = {}) {
                 const silent = options && options.silent === true;
                 if (isRecording) return true;
                 if (!isVoiceTranscriptionMode()) {
@@ -3409,9 +4374,10 @@
                     return false;
                 }
 
-                let engine = preferredTranscriptionEngine();
-                if (!engine) {
-                    const message = transcriptionUnavailableMessage();
+                const recorderUnavailableMessage = voiceRecordingUnavailableMessage();
+                let engine = recorderUnavailableMessage ? null : preferredTranscriptionEngine();
+                if (recorderUnavailableMessage || !engine) {
+                    const message = recorderUnavailableMessage || transcriptionUnavailableMessage();
                     setTranscriptionStatus(message, '#f87171');
                     setVoiceControlsEnabled(false, message);
                     if(!silent) showSessionNotice(`${message} You can type your answer instead.`);
@@ -3427,6 +4393,17 @@
                         const message = document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage();
                         showSessionNotice(`${message} You can type your answer instead.`);
                     }
+                    return false;
+                }
+
+                const voiceRecordingStarted = await startVoiceSessionRecorder();
+                if (!voiceRecordingStarted) {
+                    const message = document.getElementById('voiceSessionStatus')?.textContent || 'Audio recording could not start.';
+                    const unavailable = !voiceSessionRecorderSupported() || microphoneRequiresSecureOrigin();
+                    setTranscriptionStatus(message, '#f87171');
+                    setVoiceControlsEnabled(!unavailable, message);
+                    if (!unavailable) setRecordingControlButtons('idle');
+                    if(!silent) showSessionNotice(`${message} Check microphone permission, then try again. You can type your answer for feedback.`, 'warning');
                     return false;
                 }
 
@@ -3450,6 +4427,7 @@
                     shouldAutoRestartRecognition = false;
                     isRecording = false;
                     isRecordingPaused = false;
+                    await stopVoiceSessionRecorder({ discard: true, skipStartWait: true });
                     const message = document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage();
                     setVoiceControlsEnabled(false, message);
                     if(!silent) showSessionNotice(`${message} You can type your answer instead.`);
@@ -3480,6 +4458,7 @@
                     const wpmTarget = document.getElementById('vaWpm');
                     if (wpmTarget) wpmTarget.innerText = wpm;
                     answersData[currentQIdx].wpm = wpm;
+                    renderVoiceSessionPanel();
                     if (recTimerSeconds % 2 === 0) {
                         triggerAnalysis();
                     }
@@ -3511,6 +4490,17 @@
             }
 
             async function pauseRecording() {
+                if (recordingStartPromise) {
+                    await recordingStartPromise.catch(error => {
+                        console.warn('Recording start wait before pause failed:', error);
+                    });
+                }
+
+                if (!isRecording && !voiceSessionRecorder) {
+                    if (!isRecordingPaused) setRecordingControlButtons('idle');
+                    return false;
+                }
+
                 finalizeInterimTranscript();
                 shouldAutoRestartRecognition = false;
 
@@ -3525,6 +4515,7 @@
                 isRecording = false;
                 isRecordingPaused = true;
                 clearInterval(recTimerInterval);
+                pauseVoiceSessionRecorder();
                 setRecordingControlButtons('paused');
                 const scannerBox = document.getElementById('faceScannerBox');
                 if (scannerBox) scannerBox.style.display = 'none';
@@ -3540,22 +4531,38 @@
             }
 
             async function stopRecording() {
+                if (recordingStartPromise) {
+                    await recordingStartPromise.catch(error => {
+                        console.warn('Recording start wait before stop failed:', error);
+                    });
+                }
+
+                if (recordingStopPromise) return recordingStopPromise;
+                recordingStopPromise = stopRecordingInternal().finally(() => {
+                    recordingStopPromise = null;
+                });
+                return recordingStopPromise;
+            }
+
+            async function stopRecordingInternal() {
                 await pauseRecording();
+                await stopVoiceSessionRecorder();
                 clearTimeout(autoStartAfterQuestionTimer);
                 isRecordingPaused = false;
                 recTimerSeconds = 0;
                 const timer = document.getElementById('recordingTimer');
                 if (timer) timer.innerText = '00:00';
-                setRecordingControlButtons('recording');
+                setRecordingControlButtons('idle');
                 resetSpeechRecognitionBufferFromTextarea();
                 setTranscriptionStatus('');
+                renderVoiceSessionPanel();
                 return true;
             }
 
             async function finalizeCurrentTranscriptionForSubmit() {
                 finalizeInterimTranscript();
 
-                if (isRecording) {
+                if (recordingStartPromise || recordingStopPromise || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise) {
                     await stopRecording();
                     return;
                 }
@@ -3595,6 +4602,7 @@
                 formData.append('response_mode', canonicalResponseMode);
                 formData.append('wpm', answersData[currentQIdx].wpm);
                 formData.append('voice_duration', answersData[currentQIdx].voice_duration);
+                appendVoiceSessionRecordingUpload(formData, currentQIdx);
                 formData.append('filler_words_count', answersData[currentQIdx].filler_words);
                 formData.append('pause_count', answersData[currentQIdx].pause_count);
                 const realtimeConfidence = syncSelfConfidenceControl(answersData[currentQIdx].confidence_score ?? 0);
@@ -3721,15 +4729,46 @@
                 
                 const timedOut = options.timedOut === true;
                 let answerText = document.getElementById('answerTextarea').value.trim();
-                const wasSkipped = options.skipped === true || (timedOut && !answerText);
+                const localVoiceRecording = isVoiceTranscriptionMode()
+                    ? voiceSessionRecordings.get(voiceSessionKeyFor())
+                    : null;
+                const hasLocalVoiceRecording = isVoiceTranscriptionMode()
+                    && Boolean(localVoiceRecording || answersData[currentQIdx]?.voice_recording?.available);
 
-                if(!answerText && !timedOut && !wasSkipped) {
+                if (
+                    localVoiceRecording?.blob
+                    && !localVoiceRecording.transcript
+                    && !timedOut
+                    && options.skipped !== true
+                ) {
+                    await transcribeVoiceSessionRecording(currentQIdx, { silent: Boolean(answerText) });
+                    answerText = document.getElementById('answerTextarea').value.trim();
+                } else if (!answerText && hasLocalVoiceRecording && !timedOut && options.skipped !== true) {
+                    await transcribeVoiceSessionRecording(currentQIdx, { silent: true });
+                    answerText = document.getElementById('answerTextarea').value.trim();
+                }
+
+                const hasSubmittableVoiceRecording = Boolean(submittableVoiceSessionRecording(currentQIdx, localVoiceRecording));
+                if (hasSubmittableVoiceRecording && localVoiceRecording?.durationSeconds) {
+                    answersData[currentQIdx].voice_duration = Math.max(
+                        Number(answersData[currentQIdx].voice_duration || 0),
+                        Math.round(Number(localVoiceRecording.durationSeconds || 0))
+                    );
+                }
+
+                const wasSkipped = options.skipped === true || (timedOut && !answerText && !hasSubmittableVoiceRecording);
+                if(!answerText && !timedOut && !wasSkipped && !hasSubmittableVoiceRecording) {
                     isSubmittingAnswer = false;
-                    showSessionNotice('Please provide an answer before submitting.');
+                    showSessionNotice(hasLocalVoiceRecording
+                        ? 'This recording cannot be submitted. Record again, generate the transcript, or type the answer before submitting.'
+                        : 'Please provide an answer before submitting.');
                     document.getElementById('answerTextarea')?.focus();
                     return;
                 }
-                if(!answerText && timedOut) {
+                if(!answerText && hasSubmittableVoiceRecording && !wasSkipped) {
+                    showSessionNotice('Voice answer saved for feedback. Transcript is unavailable, but playback will be available in your AI feedback review.', 'warning');
+                }
+                if(!answerText && timedOut && !hasSubmittableVoiceRecording) {
                     answerText = "[Time expired with no answer]";
                     document.getElementById('answerTextarea').value = answerText;
                 }
@@ -3740,7 +4779,8 @@
                 answersData[currentQIdx].is_skipped = wasSkipped;
                 answersData[currentQIdx].timed_out = timedOut;
 
-                appendChatMessage('user', answerText);
+                const submittedDisplayText = answerText || (hasSubmittableVoiceRecording ? 'Voice answer recorded (transcript unavailable).' : answerText);
+                appendChatMessage('user', submittedDisplayText);
                 clearSubmittedAnswerInput();
 
                 const answeredOpeningQuestion = isOpeningQuestion(questions[currentQIdx]);
@@ -3800,6 +4840,7 @@
                 formData.append('response_mode', canonicalResponseMode);
                 formData.append('wpm', answersData[currentQIdx].wpm);
                 formData.append('voice_duration', answersData[currentQIdx].voice_duration);
+                appendVoiceSessionRecordingUpload(formData, currentQIdx);
                 formData.append('filler_words_count', answersData[currentQIdx].filler_words);
                 formData.append('pause_count', answersData[currentQIdx].pause_count);
                 const realtimeConfidence = syncSelfConfidenceControl(answersData[currentQIdx].confidence_score ?? 0);
@@ -3906,6 +4947,7 @@
                 isRecording = false;
                 isRecordingPaused = false;
                 releaseMicrophoneStream();
+                discardVoiceSessionRecorder({ revokeSaved: true });
                 setTranscriptionStatus('');
                 cancelQuestionSpeechOutput();
                 serverSpeechUrlCache.forEach(url => URL.revokeObjectURL(url));

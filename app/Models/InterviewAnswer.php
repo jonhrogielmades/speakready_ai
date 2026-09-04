@@ -24,6 +24,13 @@ class InterviewAnswer extends Model
         'observation_data',
         'pronunciation_analysis',
         'pronunciation_score',
+        'voice_recording_disk',
+        'voice_recording_path',
+        'voice_recording_mime_type',
+        'voice_recording_byte_size',
+        'voice_recording_original_name',
+        'voice_recording_transcription_status',
+        'voice_recording_uploaded_at',
         'coaching_feedback',
         'response_mode',
         'ai_feedback',
@@ -66,6 +73,7 @@ class InterviewAnswer extends Model
         'is_skipped' => 'boolean',
         'timed_out' => 'boolean',
         'evidence_map' => 'array',
+        'voice_recording_uploaded_at' => 'datetime',
     ];
 
     public static function hasColumn(string $column): bool

@@ -494,6 +494,53 @@ class InterviewSecurityTest extends TestCase
         });
     }
 
+    public function test_transcription_response_auto_corrects_common_word_errors(): void
+    {
+        config(['services.openai.transcription_model' => 'gpt-transcribe']);
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/transcriptions' => Http::response([
+                'text' => 'teh api improovement helped alot because im responsable for qa.',
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.transcribe'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'audio' => UploadedFile::fake()->create('speech.webm', 32, 'audio/webm'),
+            ])
+            ->assertOk()
+            ->assertJson([
+                'transcript' => "the API improvement helped a lot because I'm responsible for QA.",
+                'transcription_source' => 'openai',
+            ]);
+
+        Http::assertSent(function ($request): bool {
+            $parts = collect($request->data());
+            $fields = $parts
+                ->filter(fn ($part) => is_array($part) && isset($part['name']))
+                ->groupBy('name')
+                ->map(fn ($parts) => $parts->pluck('contents')->all());
+
+            return $request->url() === 'https://api.openai.com/v1/audio/transcriptions'
+                && str_contains((string) data_get($fields, 'prompt.0'), 'Correct obvious word spelling and casing errors');
+        });
+    }
+
     public function test_empty_transcription_chunk_returns_successful_empty_result(): void
     {
         config([

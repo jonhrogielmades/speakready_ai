@@ -6,6 +6,84 @@ final class TranscriptService
 {
     private const MAX_DUPLICATE_PHRASE_WORDS = 32;
 
+    private const WORD_CORRECTIONS = [
+        'i' => 'I',
+        'im' => "I'm",
+        'ive' => "I've",
+        'dont' => "don't",
+        'doesnt' => "doesn't",
+        'didnt' => "didn't",
+        'cant' => "can't",
+        'couldnt' => "couldn't",
+        'shouldnt' => "shouldn't",
+        'wouldnt' => "wouldn't",
+        'wont' => "won't",
+        'isnt' => "isn't",
+        'arent' => "aren't",
+        'wasnt' => "wasn't",
+        'werent' => "weren't",
+        'hasnt' => "hasn't",
+        'havent' => "haven't",
+        'hadnt' => "hadn't",
+        'alot' => 'a lot',
+        'teh' => 'the',
+        'recieve' => 'receive',
+        'recieved' => 'received',
+        'recieving' => 'receiving',
+        'seperate' => 'separate',
+        'definately' => 'definitely',
+        'occured' => 'occurred',
+        'acheive' => 'achieve',
+        'acheived' => 'achieved',
+        'acheiving' => 'achieving',
+        'accomodate' => 'accommodate',
+        'accomodated' => 'accommodated',
+        'adress' => 'address',
+        'responsable' => 'responsible',
+        'responsibilty' => 'responsibility',
+        'experiance' => 'experience',
+        'enviroment' => 'environment',
+        'improvment' => 'improvement',
+        'improovement' => 'improvement',
+        'communcation' => 'communication',
+        'communicaton' => 'communication',
+        'managment' => 'management',
+        'opurtunity' => 'opportunity',
+        'oppurtunity' => 'opportunity',
+        'recomend' => 'recommend',
+        'recomended' => 'recommended',
+        'coustomer' => 'customer',
+        'custumer' => 'customer',
+        'costomer' => 'customer',
+        'requirment' => 'requirement',
+        'requriement' => 'requirement',
+        'succesful' => 'successful',
+        'sucessful' => 'successful',
+        'sucessfully' => 'successfully',
+        'benifit' => 'benefit',
+        'benifits' => 'benefits',
+        'proffesional' => 'professional',
+        'proffesionalism' => 'professionalism',
+        'api' => 'API',
+        'ai' => 'AI',
+        'bpo' => 'BPO',
+        'crm' => 'CRM',
+        'css' => 'CSS',
+        'html' => 'HTML',
+        'js' => 'JS',
+        'kpi' => 'KPI',
+        'ojt' => 'OJT',
+        'qa' => 'QA',
+        'sla' => 'SLA',
+        'sql' => 'SQL',
+        'ui' => 'UI',
+        'ux' => 'UX',
+        'github' => 'GitHub',
+        'javascript' => 'JavaScript',
+        'laravel' => 'Laravel',
+        'vue' => 'Vue',
+    ];
+
     private const DUPLICATE_SAFE_WORDS = [
         'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
         'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like',
@@ -15,8 +93,33 @@ final class TranscriptService
     {
         $text = trim((string) $transcript);
         $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
+        $text = self::correctWords($text);
 
         return self::collapseAdjacentDuplicates($text);
+    }
+
+    public static function correctWords(?string $transcript): string
+    {
+        $text = (string) $transcript;
+        if (trim($text) === '') {
+            return trim($text);
+        }
+
+        $corrected = preg_replace_callback(
+            '/[\p{L}\p{N}][\p{L}\p{N}\'\x{2019}-]*/u',
+            static function (array $matches): string {
+                $word = (string) ($matches[0] ?? '');
+                $key = self::correctionKey($word);
+                if ($key === '' || ! array_key_exists($key, self::WORD_CORRECTIONS)) {
+                    return $word;
+                }
+
+                return self::applyCorrectionCase($word, self::WORD_CORRECTIONS[$key]);
+            },
+            $text
+        );
+
+        return trim(preg_replace('/\s+/u', ' ', $corrected ?? $text) ?? ($corrected ?? $text));
     }
 
     public static function wordCount(?string $transcript): int
@@ -110,6 +213,73 @@ final class TranscriptService
         }
 
         return trim(implode(' ', $words));
+    }
+
+    private static function correctionKey(string $word): string
+    {
+        $normalized = str_replace("\xE2\x80\x99", "'", $word);
+        $normalized = function_exists('mb_strtolower')
+            ? mb_strtolower($normalized, 'UTF-8')
+            : strtolower($normalized);
+
+        return trim($normalized, "-'");
+    }
+
+    private static function applyCorrectionCase(string $original, string $correction): string
+    {
+        if (preg_match('/[A-Z]{2,}|[a-z][A-Z]|^I(?:[\'\x{2019}]|$)/u', $correction) === 1) {
+            return $correction;
+        }
+
+        $lettersOnly = preg_replace('/[^\p{L}]+/u', '', $original) ?? $original;
+        if ($lettersOnly !== '' && self::isAllUpper($lettersOnly)) {
+            return function_exists('mb_strtoupper') ? mb_strtoupper($correction, 'UTF-8') : strtoupper($correction);
+        }
+
+        if (self::isTitleCase($lettersOnly)) {
+            return self::ucfirstUtf8($correction);
+        }
+
+        return $correction;
+    }
+
+    private static function isAllUpper(string $value): bool
+    {
+        if ($value === '') {
+            return false;
+        }
+
+        $upper = function_exists('mb_strtoupper') ? mb_strtoupper($value, 'UTF-8') : strtoupper($value);
+        $lower = function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+
+        return $value === $upper && $value !== $lower;
+    }
+
+    private static function isTitleCase(string $value): bool
+    {
+        if ($value === '') {
+            return false;
+        }
+
+        $first = function_exists('mb_substr') ? mb_substr($value, 0, 1, 'UTF-8') : substr($value, 0, 1);
+        $rest = function_exists('mb_substr') ? mb_substr($value, 1, null, 'UTF-8') : substr($value, 1);
+        $upperFirst = function_exists('mb_strtoupper') ? mb_strtoupper($first, 'UTF-8') : strtoupper($first);
+        $lowerRest = function_exists('mb_strtolower') ? mb_strtolower($rest, 'UTF-8') : strtolower($rest);
+
+        return $first === $upperFirst && $rest === $lowerRest;
+    }
+
+    private static function ucfirstUtf8(string $value): string
+    {
+        if ($value === '') {
+            return '';
+        }
+
+        $first = function_exists('mb_substr') ? mb_substr($value, 0, 1, 'UTF-8') : substr($value, 0, 1);
+        $rest = function_exists('mb_substr') ? mb_substr($value, 1, null, 'UTF-8') : substr($value, 1);
+        $upperFirst = function_exists('mb_strtoupper') ? mb_strtoupper($first, 'UTF-8') : strtoupper($first);
+
+        return $upperFirst.$rest;
     }
 
     private static function phraseKey(array $words): string

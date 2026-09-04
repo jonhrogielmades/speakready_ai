@@ -573,6 +573,8 @@ class ReliabilityHardeningTest extends TestCase
             ->assertJson(['success' => true]);
 
         $this->assertTrue(Schema::hasColumn('interview_answers', 'retry_of_answer_id'));
+        $this->assertTrue(Schema::hasColumn('interview_answers', 'voice_recording_path'));
+        $this->assertTrue(Schema::hasColumn('interview_answers', 'voice_recording_mime_type'));
         $this->assertDatabaseHas('interview_answers', [
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
