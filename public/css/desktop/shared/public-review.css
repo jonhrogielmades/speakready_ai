@@ -178,3 +178,105 @@ input::placeholder, textarea::placeholder, .form-control::placeholder { font-wei
         min-width: 380px;
     }
 }
+
+.answer-review-card {
+    border-radius: 16px !important;
+}
+
+.answer-review-toggle {
+    align-items: center;
+    column-gap: 14px;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-width: 0;
+    padding: 20px 24px !important;
+}
+
+.answer-review-toggle::after {
+    align-self: center;
+    flex: 0 0 auto;
+    grid-column: 2;
+    margin-left: 0;
+    margin-top: 0;
+}
+
+.answer-review-header {
+    align-items: center !important;
+    display: grid !important;
+    gap: 16px !important;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    min-width: 0;
+    padding-right: 0 !important;
+    width: 100%;
+}
+
+.answer-review-title {
+    display: block;
+    flex: none;
+    font-size: 1rem !important;
+    line-height: 1.38;
+    min-width: 0;
+    overflow-wrap: break-word;
+}
+
+.answer-review-score {
+    display: flex !important;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 8px !important;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.answer-review-score .badge {
+    align-items: center;
+    border-radius: 8px;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: .82rem !important;
+    justify-content: center;
+    line-height: 1.15;
+    min-height: 36px;
+    padding: 7px 12px !important;
+    text-align: center;
+    white-space: nowrap;
+}
+
+@media (max-width: 991.98px) {
+    .answer-review-header {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px !important;
+    }
+
+    .answer-review-score {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .answer-review-toggle {
+        align-items: flex-start;
+        column-gap: 10px;
+        padding: 14px !important;
+    }
+
+    .answer-review-toggle::after {
+        align-self: flex-start;
+        margin-top: 5px;
+    }
+
+    .answer-review-title {
+        font-size: .95rem !important;
+        line-height: 1.42;
+    }
+
+    .answer-review-score {
+        width: 100%;
+    }
+
+    .answer-review-score .badge {
+        min-height: 32px;
+        white-space: normal;
+    }
+}

@@ -353,9 +353,8 @@
     }
     .voice-session-controls {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr);
         align-items: center;
-        gap: 10px;
     }
     .voice-session-playback {
         width: 100%;
@@ -367,39 +366,6 @@
         opacity: 0.45;
         pointer-events: none;
         filter: saturate(0.55);
-    }
-    .voice-session-transcript {
-        min-height: 36px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        border: 0;
-        border-radius: 10px;
-        padding: 8px 12px;
-        background: #0ea5e9;
-        color: #fff;
-        box-shadow: 0 6px 16px rgba(14, 165, 233, 0.24);
-        font-size: 0.74rem;
-        font-weight: 900;
-        line-height: 1;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-    .voice-session-transcript:hover,
-    .voice-session-transcript:focus {
-        color: #fff;
-        background: #0284c7;
-        text-decoration: none;
-    }
-    .voice-session-transcript.disabled,
-    .voice-session-transcript:disabled {
-        pointer-events: none;
-        border: 1px solid var(--bd);
-        background: var(--bg3);
-        color: var(--tx3);
-        box-shadow: none;
-        opacity: 0.55;
     }
     .voice-session-footer {
         min-height: 18px;
@@ -420,9 +386,6 @@
     @media (max-width: 575.98px) {
         .voice-session-controls {
             grid-template-columns: 1fr;
-        }
-        .voice-session-transcript {
-            width: 100%;
         }
         .voice-session-footer {
             align-items: flex-start;
@@ -3292,5 +3255,184 @@
 
         html body .interview-confirm-modal .interview-start-actions {
             grid-template-columns: 1fr;
+        }
+    }
+
+    html body #sec-interview-session .answer-transcript-stage {
+        position: relative;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    html body #sec-interview-session .answer-transcript-stage #answerTextarea {
+        display: block !important;
+        margin-bottom: 0 !important;
+        padding: 12px 12px 68px !important;
+    }
+
+    html body #sec-interview-session .answer-transcript-controls {
+        position: absolute;
+        left: 50%;
+        bottom: 12px;
+        z-index: 6;
+        width: max-content;
+        max-width: calc(100% - 18px);
+        min-height: 42px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 4px 6px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+        transform: translateX(-50%);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        white-space: nowrap;
+    }
+
+    html body #sec-interview-session .answer-transcript-controls[hidden] {
+        display: none !important;
+    }
+
+    html:not(.lm) body #sec-interview-session .answer-transcript-controls,
+    html[data-theme="dark"] body #sec-interview-session .answer-transcript-controls,
+    body.dm #sec-interview-session .answer-transcript-controls,
+    .dm #sec-interview-session .answer-transcript-controls {
+        background: rgba(15, 23, 42, 0.78);
+        box-shadow: 0 10px 24px rgba(2, 6, 23, 0.24);
+    }
+
+    html body #sec-interview-session .answer-transcript-controls #recordingTimer {
+        min-width: 54px !important;
+        min-height: 40px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        color: #f87171 !important;
+        font-size: 0.82rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+        line-height: 1 !important;
+    }
+
+    html body #sec-interview-session .answer-transcript-controls #voiceControls {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+
+    html body #sec-interview-session .answer-transcript-controls #voiceControls .d-flex.gap-2 {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    html body #sec-interview-session .answer-transcript-controls #voiceControls .btn {
+        flex: 0 0 40px !important;
+        width: 40px !important;
+        min-width: 40px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        padding: 0 !important;
+        border-radius: 10px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: none !important;
+    }
+
+    html body #sec-interview-session .answer-transcript-controls #voiceControls .btn i {
+        margin: 0 !important;
+        font-size: 0.84rem !important;
+    }
+
+    html body #sec-interview-session .answer-transcript-controls #holdToTalkBtn {
+        width: auto !important;
+        min-width: 78px !important;
+        min-height: 40px !important;
+        padding: 0 12px !important;
+    }
+
+    html body #sec-interview-session .answer-transcript-controls #transcriptionStatus:not(:empty) {
+        min-width: 0 !important;
+        max-width: clamp(72px, 20vw, 190px) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        color: var(--tx2) !important;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        overflow: hidden !important;
+        text-align: left !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    @media (max-width: 575.98px) {
+        html body #sec-interview-session .answer-transcript-stage #answerTextarea {
+            padding-bottom: 64px !important;
+        }
+
+        html body #sec-interview-session .answer-transcript-controls {
+            bottom: 10px;
+            gap: 8px;
+            min-height: 40px;
+            padding: 3px 4px;
+        }
+
+        html body #sec-interview-session .answer-transcript-controls #recordingTimer {
+            min-width: 46px !important;
+            min-height: 38px !important;
+            font-size: 0.72rem !important;
+        }
+
+        html body #sec-interview-session .answer-transcript-controls #voiceControls .btn {
+            flex-basis: 38px !important;
+            width: 38px !important;
+            min-width: 38px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+        }
+
+        html body #sec-interview-session .answer-transcript-controls #transcriptionStatus:not(:empty) {
+            max-width: 74px !important;
+            font-size: 0.78rem !important;
+        }
+    }
+
+    @media (max-width: 360px) {
+        html body #sec-interview-session .answer-transcript-controls {
+            gap: 6px;
+        }
+
+        html body #sec-interview-session .answer-transcript-controls #recordingTimer {
+            min-width: 42px !important;
+            font-size: 0.66rem !important;
+        }
+
+        html body #sec-interview-session .answer-transcript-controls #voiceControls .d-flex.gap-2 {
+            gap: 6px !important;
+        }
+
+        html body #sec-interview-session .answer-transcript-controls #voiceControls .btn {
+            flex-basis: 34px !important;
+            width: 34px !important;
+            min-width: 34px !important;
+            height: 34px !important;
+            min-height: 34px !important;
+        }
+
+        html body #sec-interview-session .answer-transcript-controls #transcriptionStatus:not(:empty) {
+            max-width: 58px !important;
+            font-size: 0.7rem !important;
         }
     }

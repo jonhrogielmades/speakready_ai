@@ -53,8 +53,8 @@ return [
 
  'ai_transcription' => [
  'provider_priority' => env('AI_TRANSCRIPTION_PROVIDER_PRIORITY', 'openai,gemini'),
- 'chunk_ms' => env('AI_TRANSCRIPTION_CHUNK_MS', 4000),
- 'mobile_chunk_ms' => env('AI_TRANSCRIPTION_MOBILE_CHUNK_MS', 5000),
+ 'chunk_ms' => env('AI_TRANSCRIPTION_CHUNK_MS', 1200),
+ 'mobile_chunk_ms' => env('AI_TRANSCRIPTION_MOBILE_CHUNK_MS', 1500),
  'drain_timeout_ms' => env('AI_TRANSCRIPTION_DRAIN_TIMEOUT_MS', 20000),
  'request_timeout_ms' => env('AI_TRANSCRIPTION_REQUEST_TIMEOUT_MS', 30000),
  'max_in_flight' => env('AI_TRANSCRIPTION_MAX_IN_FLIGHT', 2),

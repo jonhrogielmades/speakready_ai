@@ -36,7 +36,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -314,56 +313,6 @@ class InterviewController extends Controller
  );
 
  return redirect()->route('interview.session');
- }
-
- public function targetSuggestions(Request $request)
- {
- if (! Auth::check()) {
- abort(403);
- }
-
- if (! Schema::hasTable('categories')) {
- return response()->json([
- 'suggestions' => [],
- 'source' => 'fallback',
- 'provider' => null,
- 'scenario_kind' => 'job',
- ]);
- }
-
- $validated = $request->validate([
- 'category_id' => [
- 'nullable',
- Rule::exists('categories', 'id')->where('status', 'active')->where('type', 'core'),
- ],
- 'query' => 'nullable|string|max:80',
- 'limit' => 'nullable|integer|min:1|max:8',
- ]);
-
- $category = $this->resolveInterviewCategory($validated['category_id']?? null);
- if (! $category) {
- return response()->json([
- 'suggestions' => [],
- 'source' => 'fallback',
- 'provider' => null,
- 'scenario_kind' => 'job',
- ]);
- }
-
- $scenarioKind = $this->interviewScenarioKind($category);
- $query = trim((string) ($validated['query']?? ''));
- $limit = max(1, min(8, (int) ($validated['limit']?? 7)));
- $fallbackSuggestions = $this->fallbackTargetSuggestions($scenarioKind, $query, $limit);
- $provider = $this->bestEvaluatedInterviewProvider('question_generation', AIService::defaultProviderKey());
- $aiSuggestions = $this->aiTargetSuggestions($provider, $scenarioKind, $query, $limit);
- $suggestions = $this->mergeTargetSuggestions($aiSuggestions, $fallbackSuggestions, $scenarioKind, $limit);
-
- return response()->json([
- 'suggestions' => $suggestions,
- 'source' => empty($aiSuggestions)? 'fallback': 'ai',
- 'provider' => empty($aiSuggestions)? null: $this->evidenceProviderKey($provider),
- 'scenario_kind' => $scenarioKind,
- ]);
  }
 
  public function answer(Request $request)
@@ -816,15 +765,15 @@ class InterviewController extends Controller
  Question $question,
  string $previousTranscript = ''
  ): array {
- $speechAssessment = app(LocalSpeechAssessmentService::class)
- ->assessUploadedAudio($audioFile, null, $this->currentLanguageConfig());
- $transcript = app(LocalSpeechAssessmentService::class)->transcriptFrom($speechAssessment);
- $transcriptionSource = $transcript!== null? 'local_speech': 'openai';
- $transcriptionStatus = $transcript!== null? 'transcribed': null;
+ $localSpeechService = app(LocalSpeechAssessmentService::class);
+ $speechAssessment = $localSpeechService->assessUploadedAudio($audioFile, null, $this->currentLanguageConfig());
+ $localTranscript = $localSpeechService->transcriptFrom($speechAssessment);
+ $transcript = null;
+ $transcriptionSource = 'ai';
+ $transcriptionStatus = null;
  $transcriptionErrorCode = null;
  $transcriptionRetryAfterSeconds = null;
 
- if ($transcript === null) {
  $aiTranscription = AIService::transcribeSpeechResult(
  $audioFile,
  $this->currentLanguageConfig(),
@@ -832,11 +781,27 @@ class InterviewController extends Controller
  );
  if (is_array($aiTranscription)) {
  $transcript = array_key_exists('transcript', $aiTranscription)? (string) $aiTranscription['transcript']: null;
- $transcriptionSource = (string) ($aiTranscription['provider']?? 'ai');
- $transcriptionStatus = (string) ($aiTranscription['status']?? ($transcript!== ''? 'transcribed': 'empty'));
+ $transcriptionSource = trim((string) ($aiTranscription['provider']?? 'ai'))?: 'ai';
+ $transcriptionStatus = trim((string) ($aiTranscription['status']?? ''));
+ if ($transcriptionStatus === '' && $transcript!== null) {
+ $transcriptionStatus = $transcript!== ''? 'transcribed': 'empty';
+ }
  $transcriptionErrorCode = (string) ($aiTranscription['error_code']?? '');
  $transcriptionRetryAfterSeconds = $aiTranscription['retry_after_seconds']?? null;
  }
+
+ if (
+ $localTranscript!== null
+ && (
+ $transcript === null
+ || ($transcriptionStatus === 'failed' && trim((string) $transcript) === '')
+ )
+ ) {
+ $transcript = $localTranscript;
+ $transcriptionSource = 'local_speech';
+ $transcriptionStatus = 'transcribed';
+ $transcriptionErrorCode = null;
+ $transcriptionRetryAfterSeconds = null;
  }
 
  return [
@@ -2492,25 +2457,21 @@ class InterviewController extends Controller
  'status' => 'not_measured',
  'sample_count' => 0,
  'detection_count' => 0,
- 'camera_facing_count' => 0,
- 'centered_count' => 0,
- 'pose_detected_count' => 0,
- 'hands_visible_count' => 0,
- 'gesture_active_count' => 0,
- 'shoulders_visible_count' => 0,
- 'shoulders_level_count' => 0,
- 'shoulders_level_measured_count' => 0,
+            'camera_facing_count' => 0,
+            'centered_count' => 0,
+            'pose_detected_count' => 0,
+            'shoulders_visible_count' => 0,
+            'shoulders_level_count' => 0,
+            'shoulders_level_measured_count' => 0,
  'upright_posture_count' => 0,
  'upright_posture_measured_count' => 0,
  'movement_measured_count' => 0,
- 'high_movement_count' => 0,
- 'face_visibility_percent' => null,
- 'camera_facing_percent' => null,
- 'hands_visible_percent' => null,
- 'gesture_activity_percent' => null,
- 'shoulders_level_percent' => null,
- 'upright_posture_percent' => null,
- 'average_movement_score' => null,
+            'high_movement_count' => 0,
+            'face_visibility_percent' => null,
+            'camera_facing_percent' => null,
+            'shoulders_level_percent' => null,
+            'upright_posture_percent' => null,
+            'average_movement_score' => null,
  'high_movement_percent' => null,
  'samples' => [],
  'source' => null,
@@ -2548,14 +2509,14 @@ class InterviewController extends Controller
  ]: [],
  'limitation' => 'Automatic speaking coaching was not available, so the saved details are shown without a full review.',
  ];
- $cameraFeedback = [
- 'status' => $cameraStatus === 'insufficient_data'? 'insufficient_data': 'not_measured',
- 'observation' => 'Optional camera detection was not measured for this answer.',
- 'tip' => 'Use steady front lighting and keep your face, shoulders, and hands within the preview when possible.',
- 'tips' => ['Use steady front lighting and keep your face, shoulders, and hands within the preview when possible.'],
- 'evidence' => [],
- 'limitation' => 'Camera detection was not available or could not be used for this request.',
- ];
+        $cameraFeedback = [
+            'status' => $cameraStatus === 'insufficient_data'? 'insufficient_data': 'not_measured',
+            'observation' => 'Optional camera detection was not measured for this answer.',
+            'tip' => 'Use steady front lighting and keep your face and shoulders within the preview when possible.',
+            'tips' => ['Use steady front lighting and keep your face and shoulders within the preview when possible.'],
+            'evidence' => [],
+            'limitation' => 'Camera detection was not available or could not be used for this request.',
+        ];
  $contentAlignment = [
  'answer_id' => $metrics['answer_id']?? null,
  'question_id' => $questionId,
@@ -3607,362 +3568,6 @@ class InterviewController extends Controller
  }
 
  return $category;
- }
-
- private function fallbackTargetSuggestions(string $scenarioKind, string $query, int $limit): array
- {
- $catalog = $this->fallbackTargetSuggestionCatalog()[$scenarioKind]?? [];
- $query = trim($query);
- $limit = max(1, min(8, $limit));
-
- if ($query === '') {
- return array_slice(array_map(fn (array $item): string => $item['value'], $catalog), 0, $limit);
- }
-
- return collect($catalog)
- ->map(fn (array $item, int $index): array => [
- 'value' => $item['value'],
- 'score' => $this->targetSuggestionScore($item, $query),
- 'value_starts_query' => $this->targetSuggestionValueStartsQuery((string) $item['value'], $query)? 0: 1,
- 'rank_weight' => $scenarioKind === 'job'? mb_strlen($this->normalizeScenarioTargetText((string) $item['value'])): $index,
- 'index' => $index,
- ])
- ->filter(fn (array $item): bool => is_finite($item['score']))
- ->sortBy([
- ['score', 'asc'],
- ['value_starts_query', 'asc'],
- ['rank_weight', 'asc'],
- ['index', 'asc'],
- ])
- ->pluck('value')
- ->take($limit)
- ->values()
- ->all();
- }
-
- private function fallbackTargetSuggestionCatalog(): array
- {
- return [
- 'job' => [
- ['value' => 'Software Developer', 'aliases' => ['developer', 'software', 'programmer', 'coding']],
- ['value' => 'Web Developer', 'aliases' => ['web dev', 'frontend', 'backend', 'full stack', 'website developer']],
- ['value' => 'Mobile App Developer', 'aliases' => ['mobile developer', 'app developer', 'android developer', 'ios developer']],
- ['value' => 'IT Specialist', 'aliases' => ['it', 'info tech', 'information tech', 'information technology', 'tech support']],
- ['value' => 'Network Administrator', 'aliases' => ['network admin', 'net admin', 'network', 'system administrator', 'systems administrator', 'sysadmin']],
- ['value' => 'Network Engineer', 'aliases' => ['networking engineer', 'network support', 'network infrastructure']],
- ['value' => 'Systems Administrator', 'aliases' => ['system administrator', 'sysadmin', 'server administrator', 'windows administrator', 'linux administrator']],
- ['value' => 'Technical Support Specialist', 'aliases' => ['technical support', 'tech support', 'it support', 'help desk']],
- ['value' => 'Database Administrator', 'aliases' => ['dba', 'database admin', 'sql administrator']],
- ['value' => 'Cloud Engineer', 'aliases' => ['cloud', 'aws engineer', 'azure engineer', 'cloud support']],
- ['value' => 'Cybersecurity Analyst', 'aliases' => ['cyber security', 'security analyst', 'information security', 'soc analyst']],
- ['value' => 'QA Tester', 'aliases' => ['qa', 'quality assurance', 'software tester', 'test analyst']],
- ['value' => 'Data Analyst', 'aliases' => ['data analytics', 'analytics', 'excel analyst', 'reporting analyst']],
- ['value' => 'Business Analyst', 'aliases' => ['ba', 'business systems analyst', 'process analyst']],
- ['value' => 'Project Manager', 'aliases' => ['project management', 'pm', 'project coordinator']],
- ['value' => 'Program Manager', 'aliases' => ['program management', 'program lead', 'program coordinator']],
- ['value' => 'Call Center Agent', 'aliases' => ['call center', 'bpo', 'agent']],
- ['value' => 'Customer Service Representative', 'aliases' => ['customer service', 'representative', 'support']],
- ['value' => 'Teacher', 'aliases' => ['teach', 'teaching', 'instructor']],
- ['value' => 'HR Assistant', 'aliases' => ['hr', 'human resources', 'assistant']],
- ['value' => 'Sales Associate', 'aliases' => ['sales', 'selling', 'retail']],
- ['value' => 'Marketing Associate', 'aliases' => ['marketing', 'marketer', 'brand assistant']],
- ['value' => 'Digital Marketing Specialist', 'aliases' => ['digital marketing', 'social media marketing', 'seo', 'content marketing']],
- ['value' => 'Social Media Manager', 'aliases' => ['social media', 'content manager', 'community manager']],
- ['value' => 'Graphic Designer', 'aliases' => ['graphics', 'designer', 'visual designer', 'creative']],
- ['value' => 'UI UX Designer', 'aliases' => ['ui designer', 'ux designer', 'product designer', 'user interface']],
- ['value' => 'Content Writer', 'aliases' => ['writer', 'copywriter', 'content creator']],
- ['value' => 'Video Editor', 'aliases' => ['editor', 'editing', 'media editor']],
- ['value' => 'Administrative Assistant', 'aliases' => ['admin', 'office assistant', 'clerical']],
- ['value' => 'Office Staff', 'aliases' => ['office', 'office clerk', 'clerical staff']],
- ['value' => 'Virtual Assistant', 'aliases' => ['va', 'remote assistant', 'admin assistant']],
- ['value' => 'Executive Assistant', 'aliases' => ['ea', 'secretary', 'personal assistant']],
- ['value' => 'Front Desk Officer', 'aliases' => ['front desk', 'reception', 'receptionist']],
- ['value' => 'Receptionist', 'aliases' => ['reception', 'front office', 'front desk']],
- ['value' => 'Data Encoder', 'aliases' => ['data entry', 'encoder', 'typing']],
- ['value' => 'Accountant', 'aliases' => ['accounting', 'finance', 'bookkeeper']],
- ['value' => 'Financial Analyst', 'aliases' => ['finance analyst', 'investment analyst', 'budget analyst']],
- ['value' => 'Bank Teller', 'aliases' => ['banking', 'teller', 'cash teller']],
- ['value' => 'Nurse', 'aliases' => ['nursing', 'healthcare', 'medical']],
- ['value' => 'Nursing Assistant', 'aliases' => ['healthcare assistant', 'nurse aide', 'care assistant']],
- ['value' => 'Medical Assistant', 'aliases' => ['clinic assistant', 'healthcare assistant', 'medical staff']],
- ['value' => 'Caregiver', 'aliases' => ['care giving', 'care worker', 'healthcare aide']],
- ['value' => 'Pharmacy Assistant', 'aliases' => ['pharmacy aide', 'pharmacist assistant', 'drugstore assistant']],
- ['value' => 'Security Guard', 'aliases' => ['security', 'guard']],
- ['value' => 'Driver', 'aliases' => ['drive', 'delivery', 'transport']],
- ['value' => 'Delivery Rider', 'aliases' => ['delivery', 'rider', 'courier']],
- ['value' => 'Warehouse Staff', 'aliases' => ['warehouse', 'inventory staff', 'stock clerk']],
- ['value' => 'Logistics Coordinator', 'aliases' => ['logistics', 'supply chain', 'dispatch coordinator']],
- ['value' => 'Cook', 'aliases' => ['cooking', 'kitchen', 'chef']],
- ['value' => 'Barista', 'aliases' => ['coffee', 'cafe', 'service crew']],
- ['value' => 'Service Crew', 'aliases' => ['crew', 'food service', 'restaurant staff']],
- ['value' => 'Waiter', 'aliases' => ['server', 'waitstaff', 'food attendant']],
- ['value' => 'Cashier', 'aliases' => ['cash handling', 'retail cashier', 'payment']],
- ['value' => 'Store Manager', 'aliases' => ['retail manager', 'shop manager', 'store supervisor']],
- ['value' => 'Civil Engineer', 'aliases' => ['civil engineering', 'site engineer', 'construction engineer']],
- ['value' => 'Electrical Engineer', 'aliases' => ['electrical engineering', 'power engineer', 'electronics engineer']],
- ['value' => 'Mechanical Engineer', 'aliases' => ['mechanical engineering', 'maintenance engineer', 'plant engineer']],
- ['value' => 'Cleaner', 'aliases' => ['clean', 'cleaning', 'cleaning work']],
- ['value' => 'Cleaning Staff', 'aliases' => ['clean', 'cleaning', 'janitorial']],
- ['value' => 'Cleaning Supervisor', 'aliases' => ['clean', 'cleaning', 'janitorial supervisor']],
- ['value' => 'Janitor', 'aliases' => ['clean', 'cleaning', 'janitorial', 'maintenance']],
- ['value' => 'Housekeeping Attendant', 'aliases' => ['clean', 'cleaning', 'housekeeping', 'hotel cleaner']],
- ['value' => 'Janitorial Services', 'aliases' => ['clean', 'cleaning', 'janitorial services', 'custodian']],
- ],
- 'school' => [
- ['value' => 'BS Information Technology', 'aliases' => ['bsit', 'it', 'info tech', 'information tech', 'information technology', 'technology']],
- ['value' => 'BS Computer Science', 'aliases' => ['bscs', 'computer science', 'cs', 'programming']],
- ['value' => 'BS Information Systems', 'aliases' => ['bsis', 'information systems', 'is', 'business technology']],
- ['value' => 'BS Computer Engineering', 'aliases' => ['bscpe', 'computer engineering', 'computer engineer', 'engineering']],
- ['value' => 'BS Software Engineering', 'aliases' => ['software engineering', 'software engineer', 'bsse']],
- ['value' => 'BS Data Science', 'aliases' => ['data science', 'analytics', 'data analytics']],
- ['value' => 'BS Cybersecurity', 'aliases' => ['cybersecurity', 'cyber security', 'information security']],
- ['value' => 'BS Nursing', 'aliases' => ['bsn', 'nursing', 'nurse', 'healthcare']],
- ['value' => 'BS Accountancy', 'aliases' => ['bsa', 'accountancy', 'accounting', 'finance']],
- ['value' => 'BS Business Administration', 'aliases' => ['bsba', 'business administration', 'business', 'management']],
- ['value' => 'BS Financial Management', 'aliases' => ['financial management', 'finance', 'business']],
- ['value' => 'BS Marketing Management', 'aliases' => ['marketing management', 'marketing', 'business']],
- ['value' => 'BS Entrepreneurship', 'aliases' => ['entrepreneurship', 'business startup', 'business']],
- ['value' => 'BS Office Administration', 'aliases' => ['office administration', 'office admin', 'administration']],
- ['value' => 'BS Hospitality Management', 'aliases' => ['bshm', 'hospitality', 'hotel', 'restaurant']],
- ['value' => 'BS Tourism Management', 'aliases' => ['bstm', 'tourism', 'travel', 'hospitality']],
- ['value' => 'BS Psychology', 'aliases' => ['bspsych', 'psychology', 'behavior', 'mental health']],
- ['value' => 'BS Criminology', 'aliases' => ['bscrim', 'criminology', 'law enforcement', 'criminal justice']],
- ['value' => 'Bachelor of Secondary Education', 'aliases' => ['education', 'teacher', 'teaching']],
- ['value' => 'Bachelor of Elementary Education', 'aliases' => ['elementary education', 'education', 'teaching']],
- ['value' => 'BS Architecture', 'aliases' => ['architecture', 'architect', 'design']],
- ['value' => 'BS Civil Engineering', 'aliases' => ['bsce', 'civil engineering', 'engineering']],
- ['value' => 'BS Mechanical Engineering', 'aliases' => ['bsme', 'mechanical engineering', 'engineering']],
- ['value' => 'BS Electrical Engineering', 'aliases' => ['bsee', 'electrical engineering', 'engineering']],
- ['value' => 'BS Electronics Engineering', 'aliases' => ['bsece', 'electronics engineering', 'ece', 'engineering']],
- ['value' => 'BS Industrial Engineering', 'aliases' => ['bsie', 'industrial engineering', 'engineering']],
- ['value' => 'BS Medical Technology', 'aliases' => ['bsmt', 'medical technology', 'medtech', 'laboratory']],
- ['value' => 'BS Pharmacy', 'aliases' => ['bspharm', 'pharmacy', 'pharmacist', 'medicine']],
- ['value' => 'BS Biology', 'aliases' => ['biology', 'science', 'pre med']],
- ['value' => 'BS Public Administration', 'aliases' => ['public administration', 'government', 'public service']],
- ['value' => 'BS Social Work', 'aliases' => ['social work', 'community development', 'social services']],
- ['value' => 'Law School', 'aliases' => ['law', 'legal', 'juris doctor']],
- ['value' => 'Master of Business Administration', 'aliases' => ['mba', 'business administration', 'graduate program']],
- ['value' => 'Master in Information Technology', 'aliases' => ['mit', 'master information technology', 'graduate it']],
- ['value' => 'Senior High STEM Strand', 'aliases' => ['stem', 'senior high', 'strand']],
- ['value' => 'Senior High HUMSS Strand', 'aliases' => ['humss', 'senior high', 'strand']],
- ['value' => 'Senior High ABM Strand', 'aliases' => ['abm', 'senior high', 'accountancy business management']],
- ['value' => 'Senior High GAS Strand', 'aliases' => ['gas', 'senior high', 'general academic strand']],
- ['value' => 'Senior High ICT Strand', 'aliases' => ['ict', 'senior high', 'information communications technology']],
- ],
- ];
- }
-
- private function aiTargetSuggestions(string $provider, string $scenarioKind, string $query, int $limit): array
- {
- $query = trim($query);
- $provider = AIService::normalizeProviderKey($provider);
-
- if ($query === '' || $provider === '' || $provider === 'local' ||! AIService::providerIsConfigured($provider)) {
- return [];
- }
-
- $cacheKey = 'interview_target_suggestions:'.$provider.':'.$scenarioKind.':'.sha1(Str::lower($query)).':'.$limit;
-
- return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($provider, $scenarioKind, $query, $limit): array {
- try {
- $response = json_decode(AIService::generateJson(
- $this->targetSuggestionAiPrompt($scenarioKind, $query, $limit),
- $provider
- ), true);
- } catch (\Throwable $error) {
- Log::warning('AI target suggestions failed.', [
- 'provider' => $provider,
- 'scenario_kind' => $scenarioKind,
- 'error_type' => $error::class,
- ]);
-
- return [];
- }
-
- if (! is_array($response)) {
- return [];
- }
-
- $items = $response['suggestions']?? $response['targets']?? $response;
- if (! is_array($items)) {
- return [];
- }
-
- $suggestions = [];
- foreach ($items as $item) {
- $value = is_array($item)? ($item['value']?? $item['target']?? $item['position']?? $item['program']?? $item['text']?? ''): $item;
- $declaredKind = is_array($item)? ($item['kind']?? null): null;
- $sanitized = $this->sanitizeTargetSuggestion((string) $value, $scenarioKind, is_string($declaredKind)? $declaredKind: null);
-
- if ($sanitized!== null) {
- $suggestions[] = $sanitized;
- }
- }
-
- return array_values(array_unique($suggestions));
- });
- }
-
- private function targetSuggestionAiPrompt(string $scenarioKind, string $query, int $limit): string
- {
- $scenarioLabel = $scenarioKind === 'school'? 'School Admission': 'Job Interview';
- $targetLabel = $scenarioKind === 'school'? 'school programs, courses, strands, or degrees': 'job positions, occupations, or service roles';
- $oppositeLabel = $scenarioKind === 'school'? 'job titles or work services': 'school programs, courses, strands, or degrees';
-
- return implode("\n", [
- 'Return JSON only with this shape: {"suggestions":[{"value":"string","kind":"job|school","confidence":0.0}]}',
- "The user is typing a target for {$scenarioLabel}.",
- 'Typed input: '.json_encode($query, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
- "Suggest up to {$limit} specific {$targetLabel} that complete or clarify the user's input, like browser URL autocomplete.",
- "Do not use a fixed catalog only. Infer likely real-world targets from the typed letters or vague phrase.",
- "Never include {$oppositeLabel}.",
- 'For vague input, return specific usable targets. Example: clean -> Cleaner, Janitor, Housekeeping Attendant, Janitorial Services for Job Interview only.',
- 'For school admissions, use program names such as BS Information Technology, BS Computer Science, BS Nursing, or other admission programs only.',
- 'Use concise target names only. No explanations, no markdown, no questions.',
- ]);
- }
-
- private function sanitizeTargetSuggestion(string $value, string $scenarioKind, ?string $declaredKind = null):?string
- {
- $value = trim(strip_tags($value));
- $value = trim(preg_replace('/\s+/', ' ', $value)?? '');
-
- if ($value === '' || preg_match('/[<>]/', $value)) {
- return null;
- }
-
- $value = mb_substr($value, 0, 80);
- $declaredKind = $this->normalizeScenarioTargetText((string) $declaredKind);
- if (in_array($declaredKind, ['job', 'school'], true) && $declaredKind!== $scenarioKind) {
- return null;
- }
-
- $targetKind = $this->targetScenarioKind($value);
-
- if ($scenarioKind === 'job' && $targetKind === 'school') {
- return null;
- }
-
- if ($scenarioKind === 'school' && $targetKind === 'job') {
- return null;
- }
-
- return $value;
- }
-
- private function mergeTargetSuggestions(array $aiSuggestions, array $fallbackSuggestions, string $scenarioKind, int $limit): array
- {
- $merged = [];
- $seen = [];
-
- foreach ([['ai', $aiSuggestions], ['fallback', $fallbackSuggestions]] as [$source, $suggestions]) {
- foreach ($suggestions as $suggestion) {
- $sanitized = $this->sanitizeTargetSuggestion((string) $suggestion, $scenarioKind);
- if ($sanitized === null) {
- continue;
- }
-
- $key = $this->normalizeScenarioTargetText($sanitized);
- if ($key === '' || isset($seen[$key])) {
- continue;
- }
-
- $seen[$key] = true;
- $merged[] = [
- 'value' => $sanitized,
- 'source' => $source,
- ];
-
- if (count($merged) >= $limit) {
- return $merged;
- }
- }
- }
-
- return $merged;
- }
-
- private function targetSuggestionScore(array $suggestion, string $query): float
- {
- $normalizedQuery = $this->normalizeScenarioTargetText($query);
- $compactQuery = $this->compactScenarioTargetText($query);
-
- if ($normalizedQuery === '') {
- return INF;
- }
-
- $bestScore = INF;
- foreach ($this->targetSuggestionSearchTerms($suggestion) as $term) {
- $compactTerm = $this->compactScenarioTargetText($term);
- $words = array_values(array_filter(explode(' ', $this->normalizeScenarioTargetText($term))));
-
- if ($term === $normalizedQuery || $compactTerm === $compactQuery) {
- $bestScore = min($bestScore, 0);
- } elseif (str_starts_with($term, $normalizedQuery) || str_starts_with($compactTerm, $compactQuery)) {
- $bestScore = min($bestScore, 1);
- } elseif (collect($words)->contains(fn (string $word): bool => str_starts_with($word, $normalizedQuery))) {
- $bestScore = min($bestScore, 2);
- } elseif (mb_strlen($normalizedQuery) >= 2 && (str_contains($term, $normalizedQuery) || str_contains($compactTerm, $compactQuery))) {
- $bestScore = min($bestScore, 3);
- } elseif (mb_strlen($normalizedQuery) >= 3 && (str_contains($normalizedQuery, $term) || str_contains($compactQuery, $compactTerm))) {
- $bestScore = min($bestScore, 4);
- }
- }
-
- return $bestScore;
- }
-
- private function targetSuggestionValueStartsQuery(string $value, string $query): bool
- {
- $normalizedQuery = $this->normalizeScenarioTargetText($query);
-
- if ($normalizedQuery === '') {
- return false;
- }
-
- $normalizedValue = $this->normalizeScenarioTargetText($value);
-
- return str_starts_with($normalizedValue, $normalizedQuery)
- || str_starts_with($this->compactScenarioTargetText($value), $this->compactScenarioTargetText($query));
- }
-
- private function targetSuggestionSearchTerms(array $suggestion): array
- {
- $terms = [];
-
- foreach (array_merge([$suggestion['value']?? ''], $suggestion['aliases']?? []) as $term) {
- $normalized = $this->normalizeScenarioTargetText((string) $term);
- if ($normalized === '') {
- continue;
- }
-
- $compact = $this->compactScenarioTargetText($normalized);
- $acronym = $this->targetSuggestionAcronym($normalized);
- $terms[] = $normalized;
- if (mb_strlen($compact) > 1) {
- $terms[] = $compact;
- }
- if (mb_strlen($acronym) > 1) {
- $terms[] = $acronym;
- }
- }
-
- return array_values(array_unique($terms));
- }
-
- private function targetSuggestionAcronym(string $value): string
- {
- $keepWholeTokens = ['abm', 'bs', 'gas', 'humss', 'ict', 'stem'];
-
- return collect(explode(' ', $this->normalizeScenarioTargetText($value)))
- ->filter()
- ->map(fn (string $word): string => in_array($word, $keepWholeTokens, true)? $word: mb_substr($word, 0, 1))
- ->implode('');
- }
-
- private function compactScenarioTargetText(string $value): string
- {
- return preg_replace('/\s+/', '', $this->normalizeScenarioTargetText($value))?? '';
  }
 
  private function scenarioTargetMismatchMessage(Category $category, string $position):?string

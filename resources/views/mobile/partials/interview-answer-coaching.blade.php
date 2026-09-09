@@ -217,17 +217,6 @@
  'value' => max(0, (int) round($cameraEvidence['pose_detected_count'])).' / '.$cameraSampleCount,
  ];
  }
- if (array_key_exists('hands_visible_percent', $cameraEvidence) && is_numeric($cameraEvidence['hands_visible_percent'])) {
- $cameraMetricItems[] = ['label' => 'Hands visible', 'value' => (int) round($cameraEvidence['hands_visible_percent']).'%'];
- } elseif (array_key_exists('hands_visible_count', $cameraEvidence) && is_numeric($cameraEvidence['hands_visible_count'])) {
- $cameraMetricItems[] = [
- 'label' => 'Hands seen checks',
- 'value' => max(0, (int) round($cameraEvidence['hands_visible_count'])).' / '.$cameraSampleCount,
- ];
- }
- if (array_key_exists('gesture_activity_percent', $cameraEvidence) && is_numeric($cameraEvidence['gesture_activity_percent'])) {
- $cameraMetricItems[] = ['label' => 'Hand movement', 'value' => (int) round($cameraEvidence['gesture_activity_percent']).'%'];
- }
  if (array_key_exists('shoulders_level_percent', $cameraEvidence) && is_numeric($cameraEvidence['shoulders_level_percent'])) {
  $cameraMetricItems[] = ['label' => 'Shoulders level', 'value' => (int) round($cameraEvidence['shoulders_level_percent']).'%'];
  }

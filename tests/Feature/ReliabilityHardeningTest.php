@@ -919,12 +919,9 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('Answer Match')
  ->assertSee($question->question_text)
- ->assertSee('Good start')
- ->assertSee('Improve')
- ->assertSee('Next try checklist')
- ->assertSee('Done when')
- ->assertSee('Question next steps')
- ->assertSee('Question results')
+ ->assertSee('Feedback Detailed Review')
+ ->assertSee('What To Improve')
+ ->assertSee('Next Practice')
  ->assertDontSee('â€œ', false);
 
  $session->update(['is_public' => true, 'share_token' => 'alignment-review-token']);
@@ -1318,8 +1315,8 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Answer Coaching Summary')
- ->assertSee('Question results')
+ ->assertSee('Feedback Detailed Review')
+ ->assertSee('Score Breakdown')
  ->assertSee($question->question_text);
  }
 
@@ -1396,9 +1393,9 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Answer Coaching Summary')
+ ->assertSee('Feedback Detailed Review')
  ->assertSee('Answer Match')
- ->assertSee('Question results')
+ ->assertSee('What To Improve')
  ->assertSee($question->question_text);
 
  $this->assertSame(
@@ -1459,9 +1456,9 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('Detailed Review')
  ->assertSee('Saved feedback remains visible.')
- ->assertSee('Practice plan')
- ->assertSeeInOrder(['Next Practice Plan', 'Practice plan', 'Fluency &amp; Clarity', '62%', 'Add a specific result.'], false)
- ->assertSee('Category Breakdown')
+ ->assertSee('Feedback Detailed Review')
+ ->assertSeeInOrder(['Next Practice', 'Fluency &amp; Clarity', 'Add a specific result.'], false)
+ ->assertSee('Score Breakdown')
  ->assertDontSee('>Clarity</strong>', false)
  ->assertDontSee('Score version', false)
  ->assertDontSee('Feedback checks', false);
@@ -1561,7 +1558,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee("typeof data.coaching_html === 'string'", false)
+ ->assertSee('const coachingHtml = retryCoachingHtml(data.coaching_feedback);', false)
  ->assertSee('${coachingHtml}', false);
  }
 
@@ -1747,32 +1744,196 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  Score::create([
  'interview_session_id' => $session->id,
+ 'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
  'clarity_score' => 75,
  'relevance_score' => 75,
  'grammar_score' => 75,
  'professionalism_score' => 75,
  'overall_readiness_score' => 75,
+ 'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
  ]);
  Feedback::create([
  'interview_session_id' => $session->id,
  'strengths' => 'Clear enough to understand.',
  'weaknesses' => 'Needs more measurable evidence.',
  'improvement_suggestions' => 'Add concrete results.',
+ 'coaching_summary' => [
+ 'version' => EvidenceBasedCoachingService::VERSION,
+ 'coverage' => ['answers' => 1, 'delivery_measured' => 0],
+ ],
  ]);
 
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('No earlier scored session yet.')
+ ->assertSee('Score Breakdown')
+ ->assertSee('>Fluency &amp; Clarity</span>', false)
+ ->assertSee('>Answer Match</span>', false)
+ ->assertSee('>Grammar</span>', false)
+ ->assertSee('>Professional Tone</span>', false)
+ ->assertDontSee('>Confidence</span>', false)
+ ->assertDontSee('>Pacing</span>', false)
+ ->assertDontSee('Camera Feedback')
  ->assertDontSee('Speaking Pace')
  ->assertDontSee('135 WPM')
  ->assertDontSee('STAR Framework Analysis');
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertSee('feedback-report-meta', false)
- ->assertSee('feedback-hero-panel', false)
- ->assertSee('feedback-hero-grid', false)
+ ->assertSee('review-quick-panel', false)
+ ->assertSee('review-answer-simple', false)
  ->assertSee('answer-review-body', false);
+ }
+
+ public function test_review_score_breakdown_only_shows_recorded_optional_metrics(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $question = $this->question($category);
+ $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'I coordinated the release checklist, verified the risk items, and reported the result.',
+ 'response_mode' => 'text',
+ 'score' => 80,
+ ]);
+ Score::create([
+ 'interview_session_id' => $session->id,
+ 'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+ 'clarity_score' => 120,
+ 'relevance_score' => 81,
+ 'grammar_score' => 77,
+ 'professionalism_score' => 79,
+ 'confidence_score' => 0,
+ 'delivery_stability_score' => 64,
+ 'overall_readiness_score' => 80,
+ 'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
+ ]);
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'Clear release ownership.',
+ 'weaknesses' => 'Needs a stronger measured outcome.',
+ 'improvement_suggestions' => 'Add the final release result.',
+ 'coaching_summary' => [
+ 'version' => EvidenceBasedCoachingService::VERSION,
+ 'coverage' => ['answers' => 1, 'delivery_measured' => 0],
+ ],
+ ]);
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('>Fluency &amp; Clarity</span>', false)
+ ->assertSee('>100%</strong>', false)
+ ->assertDontSee('>Confidence</span>', false)
+ ->assertDontSee('>Pacing</span>', false);
+
+ $answer->update([
+ 'response_mode' => 'voice',
+ 'voice_duration' => 45,
+ 'delivery_stability_score' => 64,
+ 'coaching_feedback' => [
+ 'delivery' => ['status' => 'measured'],
+ ],
+ ]);
+ $session->score->update(['confidence_score' => 58]);
+ $session->feedback->update([
+ 'coaching_summary' => [
+ 'version' => EvidenceBasedCoachingService::VERSION,
+ 'coverage' => ['answers' => 1, 'delivery_measured' => 1],
+ ],
+ ]);
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('>Confidence</span>', false)
+ ->assertSee('>58%</strong>', false)
+ ->assertSee('>Pacing</span>', false)
+ ->assertSee('>64%</strong>', false);
+ }
+
+ public function test_review_shows_camera_feedback_when_camera_was_measured_without_scoring_it(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $question = $this->question($category);
+ $session = $this->sessionFor($user, $category, [
+ 'status' => 'completed',
+ 'accommodation_profile' => ['camera_detection' => true],
+ ]);
+
+ InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'I coordinated the release checklist, verified the risks, and reported the final result.',
+ 'response_mode' => 'voice',
+ 'voice_duration' => 45,
+ 'score' => 82,
+ 'ai_feedback' => 'Strong answer with a clear action and result.',
+ 'better_sample_answer' => 'I coordinated the release checklist, verified the risk items, and shared the final release result with the team.',
+ 'coaching_feedback' => [
+ 'version' => EvidenceBasedCoachingService::VERSION,
+ 'content_alignment' => [
+ 'status' => 'directly_answered',
+ 'status_label' => 'Answered directly',
+ 'question' => $question->question_text,
+ 'relevance_score' => 82,
+ 'what_worked' => 'The answer directly described the action.',
+ 'improvement_focus' => 'Add one measurable result.',
+ 'missing_points' => ['A measurable result would make the answer stronger.'],
+ 'action' => 'Retry with one number or concrete outcome.',
+ ],
+ 'camera_feedback' => [
+ 'status' => 'measured',
+ 'observation' => 'A face was seen in 67% of optional camera samples. In face samples, the head looked camera-facing 50% of the time.',
+ 'tip' => 'Improve front lighting and keep notes near the camera.',
+ 'evidence' => [
+ 'sample_count' => 3,
+ 'face_visibility_percent' => 67,
+ 'camera_facing_percent' => 50,
+ 'upright_posture_percent' => 75,
+ 'average_movement_score' => 30,
+ ],
+ 'limitation' => 'Browser camera estimate only.',
+ ],
+ ],
+ ]);
+ Score::create([
+ 'interview_session_id' => $session->id,
+ 'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+ 'clarity_score' => 82,
+ 'relevance_score' => 82,
+ 'grammar_score' => 82,
+ 'professionalism_score' => 82,
+ 'overall_readiness_score' => 82,
+ 'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
+ ]);
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'Clear release ownership.',
+ 'weaknesses' => 'Needs one measured result.',
+ 'improvement_suggestions' => 'Add the final release result.',
+ 'coaching_summary' => [
+ 'version' => EvidenceBasedCoachingService::VERSION,
+ 'coverage' => ['answers' => 1, 'delivery_measured' => 0, 'camera_measured' => 1],
+ ],
+ ]);
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('Camera Feedback')
+ ->assertSee('Face in frame')
+ ->assertSee('>67%</span>', false)
+ ->assertSee('Eye contact')
+ ->assertSee('>50%</span>', false)
+ ->assertSee('Browser estimate only. Not part of readiness score.')
+ ->assertDontSee('Camera Score')
+ ->assertDontSee('Hands visible')
+ ->assertDontSee('Camera-facing');
  }
 
  public function test_unavailable_relevance_is_rendered_as_not_scored_instead_of_zero_performance(): void

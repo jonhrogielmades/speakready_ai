@@ -154,7 +154,6 @@ Route::middleware(['auth', 'user'])->group(function () {
     })->name('interview.session');
 
     Route::post('/interview/start', [InterviewController::class, 'start'])->name('interview.start');
-    Route::post('/interview/target-suggestions', [InterviewController::class, 'targetSuggestions'])->name('interview.targetSuggestions');
     Route::post('/interview/answer', [InterviewController::class, 'answer'])->name('interview.answer');
     Route::post('/interview/chat-reply', [InterviewController::class, 'chatReply'])->name('interview.chatReply');
     Route::post('/interview/speech', [InterviewController::class, 'speech'])->name('interview.speech');

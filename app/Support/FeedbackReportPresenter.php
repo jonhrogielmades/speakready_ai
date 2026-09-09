@@ -16,22 +16,93 @@ class FeedbackReportPresenter
  $score = $session->score;
  $overall = is_numeric($score?->overall_readiness_score?? null)? self::score($score->overall_readiness_score): null;
  $focus = self::primaryFocus($session);
+ $categoryBreakdown = self::categoryBreakdown($session);
+ $strengthItems = self::bulletItems($strengths, 'No strengths were generated for this session.');
+ $weaknessItems = self::bulletItems($weaknesses, 'No focus areas were generated for this session.');
+ $suggestionItems = self::bulletItems($suggestions, 'Practice one answer again with a clearer structure.', 3, 130);
 
  return [
  'strengths' => $strengths,
  'weaknesses' => $weaknesses,
  'suggestions' => $suggestions,
- 'strength_items' => self::bulletItems($strengths, 'No strengths were generated for this session.'),
- 'weakness_items' => self::bulletItems($weaknesses, 'No focus areas were generated for this session.'),
- 'suggestion_items' => self::bulletItems($suggestions, 'Practice one answer again with a clearer structure.', 3, 130),
+ 'category_breakdown' => $categoryBreakdown,
+ 'strength_items' => $strengthItems,
+ 'weakness_items' => $weaknessItems,
+ 'suggestion_items' => $suggestionItems,
  'overview' => [
- 'summary' => self::overallSummary($overall),
+ 'summary' => self::overallSummary($session, $overall, $categoryBreakdown, $strengths, $weaknesses, $suggestions, $focus),
  'focus_label' => $focus['label'],
  'focus_score' => $focus['score'],
  'focus_advice' => $focus['advice'],
  ],
  'conciseness' => self::concisenessStats(self::answerTexts($session)),
  ];
+ }
+
+ public static function categoryBreakdown(InterviewSession $session): array
+ {
+ $score = $session->score;
+ if (! $score) {
+ return [];
+ }
+
+ $metrics = [
+ [
+ 'name' => 'Fluency & Clarity',
+ 'score' => $score->clarity_score,
+ 'color' => '#3b82f6',
+ ],
+ [
+ 'name' => 'Answer Match',
+ 'score' => $score->relevance_score,
+ 'color' => '#10b981',
+ ],
+ [
+ 'name' => 'Grammar',
+ 'score' => $score->grammar_score,
+ 'color' => '#8b5cf6',
+ ],
+ [
+ 'name' => 'Professional Tone',
+ 'score' => $score->professionalism_score,
+ 'color' => '#f59e0b',
+ ],
+ ];
+
+ if (self::hasRecordedConfidence($score->confidence_score?? null)) {
+ $metrics[] = [
+ 'name' => 'Confidence',
+ 'score' => $score->confidence_score,
+ 'color' => '#0ea5e9',
+ ];
+ }
+
+ $jobEvidenceScore = $score->job_evidence_match_score?? null;
+ if (is_numeric($jobEvidenceScore) && ((int) $jobEvidenceScore > 0 || trim((string) ($session->job_description?? ''))!== '')) {
+ $metrics[] = [
+ 'name' => 'Role Evidence',
+ 'score' => $jobEvidenceScore,
+ 'color' => '#14b8a6',
+ ];
+ }
+
+ if (self::hasMeasuredDelivery($session) && is_numeric($score->delivery_stability_score?? null)) {
+ $metrics[] = [
+ 'name' => 'Pacing',
+ 'score' => $score->delivery_stability_score,
+ 'color' => '#f59e0b',
+ ];
+ }
+
+ return collect($metrics)
+ ->filter(fn (array $metric): bool => is_numeric($metric['score']?? null))
+ ->map(fn (array $metric): array => [
+ 'name' => $metric['name'],
+ 'score' => self::score($metric['score']),
+ 'color' => $metric['color'],
+ ])
+ ->values()
+ ->all();
  }
 
  private static function bulletItems(string $text, string $fallback, int $limit = 4, int $characterLimit = 150): array
@@ -66,15 +137,207 @@ class FeedbackReportPresenter
  return $items!== []? $items: [self::limitText($clean, $characterLimit)];
  }
 
- private static function overallSummary(?int $overall): string
+ private static function overallSummary(
+ InterviewSession $session,
+ ?int $overall,
+ array $categoryBreakdown,
+ string $strengths,
+ string $weaknesses,
+ string $suggestions,
+ array $focus
+ ): string {
+ $answers = self::answers($session);
+ $answerCount = $answers->count();
+ if ($answerCount <= 0) {
+ return 'No saved answer text was available for this session yet. The review cannot identify reliable strengths or gaps without submitted responses. Complete one answer, then practice again with one direct point and one true example.';
+ }
+
+ $answeredCount = $answers
+ ->filter(fn ($answer): bool => ! (bool) ($answer->is_skipped?? false) && self::answerContent($answer)!== '')
+ ->count();
+ $skippedCount = $answers->filter(fn ($answer): bool => (bool) ($answer->is_skipped?? false))->count();
+ $answerLabel = $answerCount === 1? 'the 1 saved answer': 'all '.$answerCount.' saved answers';
+ $answerScope = 'This feedback is based on '.$answerLabel.' in this session and does not assume details outside '.($answerCount === 1? 'it': 'them');
+ if ($skippedCount > 0 || $answeredCount !== $answerCount) {
+ $parts = [];
+ if ($answeredCount > 0) {
+ $parts[] = $answeredCount.' '.($answeredCount === 1? 'answered response': 'answered responses');
+ }
+ if ($skippedCount > 0) {
+ $parts[] = $skippedCount.' '.($skippedCount === 1? 'skipped question': 'skipped questions');
+ }
+ $unansweredCount = max(0, $answerCount - $answeredCount - $skippedCount);
+ if ($unansweredCount > 0) {
+ $parts[] = $unansweredCount.' '.($unansweredCount === 1? 'saved response without usable text': 'saved responses without usable text');
+ }
+ if ($parts!== []) {
+ $answerScope .= ', including '.self::humanList($parts);
+ }
+ }
+
+ $sentences = [self::sentence($answerScope)];
+ $summary = is_array($session->feedback?->coaching_summary?? null)? $session->feedback->coaching_summary: [];
+ $contentSentence = self::contentOverviewSentence((array) data_get($summary, 'content_overview', []));
+ if ($contentSentence!== '') {
+ $sentences[] = $contentSentence;
+ }
+
+ $scoreSentence = self::scoreContextSentence($overall, $categoryBreakdown);
+ if ($scoreSentence!== '') {
+ $sentences[] = $scoreSentence;
+ } elseif ($overall === null) {
+ $sentences[] = 'The readiness score is still pending, so the safest next step is to use the answer notes instead of guessing performance.';
+ }
+
+ $strength = self::firstEvidenceItem($strengths, 190);
+ if ($strength!== '') {
+ $sentences[] = self::sentence('What worked best: '.$strength);
+ }
+
+ $prioritySentence = self::priorityContextSentence((array) data_get($summary, 'priority_actions', []));
+ if ($prioritySentence!== '') {
+ $sentences[] = $prioritySentence;
+ } else {
+ $weakness = self::firstEvidenceItem($weaknesses, 190);
+ $suggestion = self::firstEvidenceItem($suggestions, 170);
+ if ($weakness!== '' && $suggestion!== '') {
+ $sentences[] = self::sentence('Main improvement: '.$weakness.'; next practice: '.$suggestion);
+ } elseif ($weakness!== '') {
+ $sentences[] = self::sentence('Main improvement: '.$weakness);
+ } elseif ($suggestion!== '') {
+ $sentences[] = self::sentence('Next practice: '.$suggestion);
+ } else {
+ $focusLabel = trim((string) ($focus['label']?? 'Answer Structure'))?: 'Answer Structure';
+ $focusAdvice = trim((string) ($focus['advice']?? 'Use one idea, one example, and one result.'))?: 'Use one idea, one example, and one result.';
+ $sentences[] = self::sentence('Next practice for '.$focusLabel.': '.$focusAdvice);
+ }
+ }
+
+ return implode(' ', array_slice(array_values(array_filter($sentences)), 0, 5));
+ }
+
+ private static function contentOverviewSentence(array $overview): string
  {
- return match (true) {
- $overall === null => 'Feedback is ready. Review the focus area and practice one answer again.',
- $overall >= 85 => 'Strong readiness. Keep the answers specific, direct, and easy to follow.',
- $overall >= 70 => 'Good foundation. Sharpen the weakest skill and add clearer proof.',
- $overall >= 50 => 'Promising start. Focus on direct answers, structure, and stronger examples.',
- default => 'Keep practicing. Answer each question directly and add one real example.',
- };
+ $items = [];
+ foreach ([
+ 'directly_answered' => 'directly answered',
+ 'partially_answered' => 'answered partly',
+ 'low_relevance' => 'had low match',
+ 'insufficient_evidence' => 'needed more detail',
+ 'skipped' => 'skipped',
+ 'not_evaluated' => 'not checked',
+ ] as $key => $label) {
+ $count = max(0, (int) ($overview[$key]?? 0));
+ if ($count > 0) {
+ $items[] = $count.' '.$label;
+ }
+ }
+
+ if ($items === []) {
+ return '';
+ }
+
+ return self::sentence('Answer-match checks show '.self::humanList($items));
+ }
+
+ private static function scoreContextSentence(?int $overall, array $categoryBreakdown): string
+ {
+ $metrics = collect($categoryBreakdown)
+ ->filter(fn ($metric): bool => is_array($metric) && is_numeric($metric['score']?? null) && trim((string) ($metric['name']?? ''))!== '')
+ ->map(fn (array $metric): array => [
+ 'name' => trim((string) $metric['name']),
+ 'score' => self::score($metric['score']),
+ ])
+ ->sortBy('score')
+ ->values();
+
+ if ($metrics->isEmpty()) {
+ return $overall === null? '': 'Overall readiness is '.$overall.'%.';
+ }
+
+ $lowest = $metrics->first();
+ $highest = $metrics->last();
+ if ($overall === null) {
+ if ($metrics->count() === 1) {
+ return self::sentence('The recorded '.$lowest['name'].' score is '.$lowest['score'].'%');
+ }
+
+ return self::sentence('The lowest recorded area is '.$lowest['name'].' at '.$lowest['score'].'%, while the highest is '.$highest['name'].' at '.$highest['score'].'%');
+ }
+
+ if ($metrics->count() === 1 || $lowest['name'] === $highest['name']) {
+ return self::sentence('Overall readiness is '.$overall.'%, with '.$lowest['name'].' recorded at '.$lowest['score'].'%');
+ }
+
+ return self::sentence('Overall readiness is '.$overall.'%, with '.$lowest['name'].' as the lowest recorded area at '.$lowest['score'].'% and '.$highest['name'].' as the highest at '.$highest['score'].'%');
+ }
+
+ private static function priorityContextSentence(array $priorities): string
+ {
+ foreach ($priorities as $priority) {
+ if (! is_array($priority)) {
+ continue;
+ }
+
+ $area = self::limitText((string) ($priority['area']?? 'Top focus'), 80);
+ $observation = rtrim(self::limitText((string) ($priority['observation']?? ''), 150), " \t\n\r\0\x0B.?!;");
+ $action = rtrim(self::limitText((string) ($priority['action']?? ''), 170), " \t\n\r\0\x0B.?!;");
+ $parts = [];
+ $parts[] = 'Top focus: '.($area!== ''? $area: 'answer practice');
+ if ($observation!== '') {
+ $parts[] = $observation;
+ }
+ if ($action!== '') {
+ $parts[] = 'next practice: '.$action;
+ }
+
+ if (count($parts) > 1 || $area!== '') {
+ return self::sentence(implode('; ', $parts));
+ }
+ }
+
+ return '';
+ }
+
+ private static function firstEvidenceItem(string $text, int $limit): string
+ {
+ $item = trim((string) (self::bulletItems($text, '', 1, $limit)[0]?? ''));
+
+ return self::limitText($item, $limit);
+ }
+
+ private static function sentence(string $text): string
+ {
+ $clean = self::cleanText($text);
+ if ($clean === '') {
+ return '';
+ }
+
+ $clean = rtrim($clean, " \t\n\r\0\x0B");
+
+ return preg_match('/[.!?][\'"]?$/u', $clean) === 1? $clean: $clean.'.';
+ }
+
+ private static function humanList(array $items): string
+ {
+ $items = array_values(array_filter(array_map(
+ fn ($item): string => trim((string) $item),
+ $items
+ )));
+ $count = count($items);
+ if ($count === 0) {
+ return '';
+ }
+ if ($count === 1) {
+ return $items[0];
+ }
+ if ($count === 2) {
+ return $items[0].' and '.$items[1];
+ }
+
+ $last = array_pop($items);
+
+ return implode(', ', $items).', and '.$last;
  }
 
  private static function primaryFocus(InterviewSession $session): array
@@ -112,9 +375,7 @@ class FeedbackReportPresenter
  ];
  }
 
- $deliveryMeasured = (int) data_get($session->feedback?->coaching_summary?? [], 'coverage.delivery_measured', 0) > 0
- || self::answers($session)->contains(fn ($answer) => data_get($answer->coaching_feedback?? [], 'delivery.status') === 'measured');
- if ($deliveryMeasured && is_numeric($score?->delivery_stability_score?? null)) {
+ if (self::hasMeasuredDelivery($session) && is_numeric($score?->delivery_stability_score?? null)) {
  $metrics[] = [
  'label' => 'Pacing',
  'score' => $score->delivery_stability_score,
@@ -236,6 +497,30 @@ class FeedbackReportPresenter
  $answers = $session->relationLoaded('answers')? $session->answers: $session->answers()->whereNull('retry_of_answer_id')->get();
 
  return $answers instanceof Collection? $answers: collect($answers);
+ }
+
+ private static function hasRecordedConfidence(mixed $score): bool
+ {
+ return is_numeric($score) && self::score($score) > 0;
+ }
+
+ private static function hasMeasuredDelivery(InterviewSession $session): bool
+ {
+ if ((int) data_get($session->feedback?->coaching_summary?? [], 'coverage.delivery_measured', 0) > 0) {
+ return true;
+ }
+
+ return self::answers($session)->contains(function ($answer): bool {
+ if (data_get($answer->coaching_feedback?? [], 'delivery.status') === 'measured') {
+ return true;
+ }
+
+ $responseMode = strtolower(trim((string) ($answer->response_mode?? '')));
+
+ return in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true)
+ && (int) ($answer->voice_duration?? 0) > 0
+ && $answer->delivery_stability_score!== null;
+ });
  }
 
  private static function wordCount(string $text): int

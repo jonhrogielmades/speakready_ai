@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=23') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=25') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -140,26 +140,6 @@
  <button type="button" class="btn btn-outline-danger flex-fill" onclick="requestAbortInterviewSession()" style="border-radius:12px;"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
  </div>
  
- <!-- Right: Primary Actions (Mic + Send) -->
- <div class="d-flex gap-2 w-100 flex-fill justify-content-md-end align-items-center">
- <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
- 
- <!-- Voice Recording Controls -->
- <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
- @if($sessionRecord->game_level_id)
- <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="border-radius:12px; font-weight:700; box-shadow: 0 4px 15px rgba(239,68,68,0.4); padding: 0.5rem 1rem; user-select:none; touch-action:manipulation;">
- <i class="fa-solid fa-microphone me-2"></i>HOLD
- </button>
- @else
- <div class="d-flex gap-2">
- <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i></button>
- <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
- </div>
- @endif
- </div>
- <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
-
- </div>
  </div>
  </div>
 
@@ -184,7 +164,7 @@
  </div>
  
  <form id="answerForm">
- <!-- Voice controls moved to interviewControls panel -->
+ <!-- Voice controls are anchored to the transcript textarea. -->
 
  <div id="chatTranscriptContainer" style="max-height: none; overflow: visible; padding: 0; margin-bottom: 12px; background: transparent; border: 0; display: none; flex-direction: column; gap: 10px;"></div>
  <label for="answerTextarea" class="visually-hidden">Your interview answer</label>
@@ -192,7 +172,25 @@
  <i class="fa-solid fa-lock" aria-hidden="true"></i>
  <span>Voice Mode is voice-only. Text transcription and typing are disabled; use Hybrid Mode for voice-to-text.</span>
  </div>
+ <div class="answer-transcript-stage">
  <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer using your own local school, work, internship, or project evidence..." aria-describedby="sessionNotice responseModeLockNotice"></textarea>
+ <div id="answerTranscriptControls" class="answer-transcript-controls" aria-label="Voice recording controls" hidden>
+ <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
+ <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
+ @if($sessionRecord->game_level_id)
+ <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="border-radius:12px; font-weight:700; box-shadow: 0 4px 15px rgba(239,68,68,0.4); padding: 0.5rem 1rem; user-select:none; touch-action:manipulation;">
+ <i class="fa-solid fa-microphone me-2"></i>HOLD
+ </button>
+ @else
+ <div class="d-flex gap-2">
+ <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i></button>
+ <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
+ </div>
+ @endif
+ </div>
+ <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
+ </div>
+ </div>
  
  <div class="response-count-bar">
  <div>
@@ -211,10 +209,6 @@
  </div>
  <div class="voice-session-controls">
  <audio id="voiceSessionPlayback" class="voice-session-playback audio-disabled" controls preload="metadata"></audio>
- <button type="button" id="voiceSessionTranscript" class="voice-session-transcript disabled" disabled title="Transcribe full voice recording" aria-label="Transcribe full voice recording" onclick="transcribeVoiceSessionRecording()">
- <i class="fa-solid fa-file-lines"></i>
- <span>Transcript</span>
- </button>
  </div>
  <div class="voice-session-footer">
  <span id="voiceSessionStatus">Ready</span>
@@ -260,10 +254,9 @@
  </div>
  <div class="stat-row"><span>Face in frame</span><span id="stEyeContact" class="text-secondary">Waiting</span></div>
  <div class="stat-row"><span>Head alignment estimate</span><span id="stPosture" class="text-secondary">Not scored</span></div>
- <div class="stat-row"><span>Hands / gesture movement</span><span id="stGesture" class="text-secondary">Waiting</span></div>
  <div class="stat-row"><span>Shoulders / posture pose</span><span id="stPose" class="text-secondary">Waiting</span></div>
  <div class="stat-row mb-0"><span>Movement steadiness</span><span id="stMovement" class="text-secondary">Waiting</span></div>
- <div class="small mt-2" style="color:var(--tx3)">This estimates visible framing, head alignment, hands, shoulders, posture pose, and movement steadiness only. Video is analyzed in your browser; no images, video, or raw landmarks are stored. It does not infer confidence, honesty, personality, or employability, and it is excluded from readiness.</div>
+ <div class="small mt-2" style="color:var(--tx3)">This estimates visible framing, head alignment, shoulders, posture pose, and movement steadiness only. Video is analyzed in your browser; no images, video, or raw landmarks are stored. It does not infer confidence, honesty, personality, or employability, and it is excluded from readiness.</div>
  </div>
 
  </div>
@@ -581,7 +574,7 @@
  let farFieldAudioContext = null;
  let farFieldAudioNodes = [];
  let cameraTrackingInFlight = false;
- window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null, handLandmarker: null };
+ window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
  const cameraMovementBaselines = {};
 
  const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -614,7 +607,7 @@
  })();
  const voiceSessionTimesliceMs = 1000;
  const voiceSessionStopTimeoutMs = 8000;
- const serverTranscriptionTimesliceMs = mobileSpeechSurface? {{ max(2500, min(8000, (int) config('services.ai_transcription.mobile_chunk_ms', 5000))) }}: {{ max(2500, min(8000, (int) config('services.ai_transcription.chunk_ms', 4000))) }};
+ const serverTranscriptionTimesliceMs = mobileSpeechSurface? {{ max(1000, min(1500, (int) config('services.ai_transcription.mobile_chunk_ms', 1500))) }}: {{ max(900, min(1200, (int) config('services.ai_transcription.chunk_ms', 1200))) }};
  const serverTranscriptionDrainTimeoutMs = {{ max(8000, min(60000, (int) config('services.ai_transcription.drain_timeout_ms', 20000))) }};
  const serverTranscriptionRequestTimeoutMs = {{ max(10000, min(60000, (int) config('services.ai_transcription.request_timeout_ms', 30000))) }};
  const voiceSessionTranscriptionMaxBytes = 25600 * 1024;
@@ -624,7 +617,8 @@
  const serverTranscriptionSupported = serverTranscriptionEnabled
  && Boolean(window.MediaRecorder)
  && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
- let activeTranscriptionEngine = isHybridTranscriptionMode()? (BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null)): null;
+ const displayRealtimeTranscriptInTextarea = false;
+ let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null)): null;
  const duplicateSafeWordSet = new Set([
  'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
  'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
@@ -963,7 +957,9 @@
  lastCommittedSpeech = '';
  lastCommittedAt = 0;
 
+ if (displayRealtimeTranscriptInTextarea) {
  answerState.speech_transcript = currentText;
+ }
  answersData[currentQIdx] = answerState;
  }
 
@@ -992,26 +988,29 @@
  const appendSpeech = existing => fillerOnly? cleanTranscriptText(`${existing || ''} ${cleanSegment}`): appendWithoutOverlap(existing || '', cleanSegment);
  const answerState = answersData[currentQIdx] || defaultAnswerState();
  const nextCommittedTranscript = collapseRepeatedSpeech(appendSpeech(committedSpeechTranscript));
+ const shouldWriteLiveTranscript = displayRealtimeTranscriptInTextarea;
  const currentAnswerTranscript = cleanTranscriptText(answerState.speech_transcript);
- const nextAnswerTranscript = collapseRepeatedSpeech(appendSpeech(currentAnswerTranscript));
+ const nextAnswerTranscript = shouldWriteLiveTranscript? collapseRepeatedSpeech(appendSpeech(currentAnswerTranscript)): currentAnswerTranscript;
 
  if (!fillerOnly
  && normalizeTranscriptForMatch(nextCommittedTranscript) === normalizeTranscriptForMatch(committedSpeechTranscript)
- && normalizeTranscriptForMatch(nextAnswerTranscript) === normalizeTranscriptForMatch(currentAnswerTranscript)
+ && (!shouldWriteLiveTranscript || normalizeTranscriptForMatch(nextAnswerTranscript) === normalizeTranscriptForMatch(currentAnswerTranscript))
  ) {
  return false;
  }
 
  committedSpeechTranscript = nextCommittedTranscript;
+ if (shouldWriteLiveTranscript) {
  answerState.speech_transcript = nextAnswerTranscript;
  answersData[currentQIdx] = answerState;
+ }
  lastCommittedSpeech = normalized;
  lastCommittedAt = now;
  return true;
  }
 
  function renderSpeechTranscript() {
- if (!isHybridTranscriptionMode()) return;
+ if (!isHybridTranscriptionMode() ||!displayRealtimeTranscriptInTextarea) return;
  const ta = document.getElementById('answerTextarea');
  if (!ta) return;
 
@@ -1220,7 +1219,6 @@
  const status = document.getElementById('voiceSessionStatus');
  const meta = document.getElementById('voiceSessionMeta');
  const player = document.getElementById('voiceSessionPlayback');
- const transcriptButton = document.getElementById('voiceSessionTranscript');
  const labels = {
  idle: 'Ready',
  recording: 'Recording',
@@ -1261,19 +1259,6 @@
  }
  player.classList.toggle('audio-disabled',!hasPlayback);
  player.setAttribute('aria-disabled', String(!hasPlayback));
- }
-
- if (transcriptButton) {
- const tooLarge = Boolean(recording?.size && recording.size > voiceSessionTranscriptionMaxBytes);
- const transcriptAvailable = isHybridTranscriptionMode();
- const transcriptDisabled =!transcriptAvailable ||!hasPlayback ||!recording?.blob || tooLarge || Boolean(transcribingForQuestion);
- transcriptButton.hidden =!transcriptAvailable;
- transcriptButton.disabled = transcriptDisabled;
- transcriptButton.classList.toggle('disabled', transcriptDisabled);
- transcriptButton.setAttribute('aria-disabled', String(transcriptDisabled));
- transcriptButton.title =!transcriptAvailable? 'Text transcription is available only in Hybrid Mode': (tooLarge? 'Recording is too large to transcribe': (recording?.transcript? 'Refresh transcript from full voice recording': 'Transcribe full voice recording'));
- transcriptButton.setAttribute('aria-label', transcriptButton.title);
- transcriptButton.innerHTML = transcribingForQuestion? '<i class="fa-solid fa-spinner fa-spin"></i><span>Transcribing</span>': '<i class="fa-solid fa-file-lines"></i><span>Transcript</span>';
  }
  }
 
@@ -1318,14 +1303,16 @@
  return mergeTranscriptParts(existing, transcript);
  }
 
- function applyVoiceSessionTranscript(index, transcript, data = {}, recording = null) {
+ function applyVoiceSessionTranscript(index, transcript, data = {}, recording = null, options = {}) {
  const cleanTranscript = cleanTranscriptText(transcript);
  if (!cleanTranscript ||!answersData[index]) return '';
 
  const answerState = answersData[index] || defaultAnswerState();
  const textarea = index === currentQIdx? document.getElementById('answerTextarea'): null;
  const existingText = textarea? String(textarea.value || ''): String(answerState.text || '');
- const mergedAnswerText = mergeFullVoiceTranscriptWithAnswer(existingText, answerState.speech_transcript || '', cleanTranscript);
+ const mergedAnswerText = options.replaceAnswerText === true
+ ? cleanTranscript
+ : mergeFullVoiceTranscriptWithAnswer(existingText, answerState.speech_transcript || '', cleanTranscript);
  const voiceDuration = Math.max(
  Number(answerState.voice_duration || 0),
  Number(recording?.durationSeconds || 0),
@@ -1422,11 +1409,12 @@
  }
 
  const silent = options.silent === true;
+ const skipStopRecording = options.skipStopRecording === true;
  const key = voiceSessionKeyFor(index);
  voiceSessionTranscriptQuestionKey = key;
 
  voiceSessionTranscriptPromise = (async () => {
- if (index === currentQIdx && (recordingStartPromise || recordingStopPromise || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise)) {
+ if (!skipStopRecording && index === currentQIdx && (recordingStartPromise || recordingStopPromise || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise)) {
  await stopRecording();
  }
 
@@ -1451,14 +1439,16 @@
  setVoiceSessionUiState('transcribing', 'Transcribing full voice recording', key);
  setTranscriptionStatus('Transcribing full voice recording', '#fbbf24');
 
- const previousTranscript = answersData[index]?.speech_transcript || '';
+ const previousTranscript = Object.prototype.hasOwnProperty.call(options, 'previousTranscript')? options.previousTranscript: (answersData[index]?.speech_transcript || '');
  const data = await requestFullVoiceSessionTranscript(recording, question, previousTranscript);
  const transcript = cleanTranscriptText(data.transcript || '');
  if (!transcript) {
  throw new Error('No speech was detected in the voice recording.');
  }
 
- const appliedTranscript = applyVoiceSessionTranscript(index, transcript, data, recording);
+ const appliedTranscript = applyVoiceSessionTranscript(index, transcript, data, recording, {
+ replaceAnswerText: options.replaceAnswerText === true
+ });
  setVoiceSessionUiState('transcribed', 'Transcript added to answer', key);
  setTranscriptionStatus('Full voice transcript added', '#16a34a');
  if (!silent) {
@@ -1921,6 +1911,22 @@
  return '';
  }
 
+ function fullVoiceTranscriptionUnavailableMessage() {
+ if (!serverTranscriptionEnabled) {
+ return 'Full transcription needs an OpenAI/Gemini transcription key or local speech transcription.';
+ }
+ if (!window.MediaRecorder) {
+ return 'Full transcription needs browser audio recording support.';
+ }
+ if (!navigator.mediaDevices ||!navigator.mediaDevices.getUserMedia) {
+ return 'Microphone access is not available in this browser.';
+ }
+ if (microphoneRequiresSecureOrigin()) {
+ return 'Microphone access requires HTTPS online, or http://localhost for local testing.';
+ }
+ return '';
+ }
+
  function canUseServerTranscription() {
  return isHybridTranscriptionMode() && serverTranscriptionSupported &&!serverTranscriptionUnavailable &&!microphoneRequiresSecureOrigin();
  }
@@ -2069,7 +2075,7 @@
  blob,
  questionIndex: currentQIdx,
  questionId: questions[currentQIdx].id,
- previousTranscript: cleanTranscriptText(answersData[currentQIdx]?.speech_transcript || '').slice(-3000),
+ previousTranscript: cleanTranscriptText(displayRealtimeTranscriptInTextarea? (answersData[currentQIdx]?.speech_transcript || ''): committedSpeechTranscript).slice(-3000),
  sequence: serverTranscriptionNextSequence++,
  token: serverTranscriptionSessionToken
  });
@@ -2195,7 +2201,7 @@
  }
 
  if (isRecording && activeTranscriptionEngine === 'server') {
- setTranscriptionStatus('Listening - AI transcription (updates every few seconds)');
+ setTranscriptionStatus('Recording - transcript appears after Stop');
  }
  }
 
@@ -2344,7 +2350,7 @@
  setTranscriptionStatus('Microphone recording failed. Try again.', '#f87171');
  };
  serverTranscriptionRecorder.start(serverTranscriptionTimesliceMs);
- setTranscriptionStatus('Listening - AI transcription (updates every few seconds)');
+ setTranscriptionStatus('Recording - transcript appears after Stop');
  return true;
  } catch (error) {
  console.error('Server transcription recorder failed:', error);
@@ -2421,7 +2427,7 @@
 
  recognition.onstart = function() {
  recognitionActive = true;
- setTranscriptionStatus('Listening - live captions');
+ setTranscriptionStatus('Recording - transcript appears after Stop');
  };
  
  recognition.onsoundstart = function() {
@@ -2496,7 +2502,6 @@
  }
  const faceStatus = document.getElementById('stEyeContact');
  const alignmentStatus = document.getElementById('stPosture');
- const gestureStatus = document.getElementById('stGesture');
  const poseStatus = document.getElementById('stPose');
  const movementStatus = document.getElementById('stMovement');
  const detectionStatus = document.getElementById('cameraDetectionStatus');
@@ -2507,10 +2512,6 @@
  if (alignmentStatus) {
  alignmentStatus.textContent = 'Not measured';
  alignmentStatus.className = 'text-secondary';
- }
- if (gestureStatus) {
- gestureStatus.textContent = 'Not measured';
- gestureStatus.className = 'text-secondary';
  }
  if (poseStatus) {
  poseStatus.textContent = 'Not measured';
@@ -2598,7 +2599,7 @@
 
  async function trackBodyLanguageDetection() {
  const bodyLanguageState = window.bodyLanguageModelState || {};
- const canUseBodyModels = Boolean(bodyLanguageState.ready && bodyLanguageState.poseLandmarker && bodyLanguageState.handLandmarker);
+ const canUseBodyModels = Boolean(bodyLanguageState.ready && bodyLanguageState.poseLandmarker);
  const canUseFaceModel = typeof faceapi!== 'undefined';
  if (!cameraDetectionEnabled || cameraTrackingInFlight || (!canUseBodyModels &&!canUseFaceModel)) return;
  const video = document.getElementById('userCamera') || document.getElementById('userCameraMobile');
@@ -2617,14 +2618,11 @@
  }
 
  let poseLandmarks = null;
- let handLandmarks = [];
  if (canUseBodyModels) {
  try {
  const timestamp = performance.now();
  const poseResult = detectVideoFrame(bodyLanguageState.poseLandmarker, video, timestamp);
- const handResult = detectVideoFrame(bodyLanguageState.handLandmarker, video, timestamp);
  poseLandmarks = Array.isArray(poseResult?.landmarks) && poseResult.landmarks.length > 0? poseResult.landmarks[0]: null;
- handLandmarks = Array.isArray(handResult?.landmarks)? handResult.landmarks.slice(0, 2): [];
  } catch (bodyError) {
  console.error("Body-language tracking error", bodyError);
  }
@@ -2640,8 +2638,6 @@
  let shouldersVisible = false;
  let shouldersLevel = null;
  let uprightPosture = null;
- let handCount = Math.min(2, handLandmarks.length);
- let gestureActive = false;
  let movementScore = null;
  let highMovement = null;
  const movementPoints = {};
@@ -2705,11 +2701,6 @@
  }
  }
 
- const handCenters = handLandmarks.map(hand => centerOfNormalized(Array.isArray(hand)? hand: [])).filter(Boolean);
- handCenters.forEach((center, index) => {
- movementPoints['hand' + index] = center;
- });
-
  const previousPoints = cameraMovementBaselines[trackedQuestionIndex] || null;
  if (previousPoints && Object.keys(movementPoints).length > 0) {
  const distances = Object.entries(movementPoints).map(([key, point]) => pointDistance(point, previousPoints[key])).filter(distance => Number.isFinite(distance));
@@ -2718,8 +2709,6 @@
  movementScore = Math.min(100, Math.round(averageDistance * 650));
  highMovement = movementScore >= 45;
  }
- const handDistances = handCenters.map((center, index) => pointDistance(center, previousPoints['hand' + index])).filter(distance => Number.isFinite(distance));
- gestureActive = handCount > 0 && handDistances.some(distance => distance >= 0.045);
  }
  cameraMovementBaselines[trackedQuestionIndex] = movementPoints;
 
@@ -2745,11 +2734,6 @@
  }
 
  setCameraStat(
- 'stGesture',
- handCount > 0? (gestureActive? handCount + ' hand(s), gesture movement': handCount + ' hand(s) visible'): 'Hands not visible',
- handCount > 0? 'text-success': 'text-secondary'
- );
- setCameraStat(
  'stPose',
  shouldersVisible? (shouldersLevel && uprightPosture!== false? 'Balanced upper body': 'Posture cue available'): (poseDetected? 'Partial pose estimate': 'Pose not detected'),
  shouldersVisible? (shouldersLevel && uprightPosture!== false? 'text-success': 'text-warning'): 'text-secondary'
@@ -2762,7 +2746,7 @@
 
  const detectionStatus = document.getElementById('cameraDetectionStatus');
  if (detectionStatus) {
- detectionStatus.innerHTML = canUseBodyModels? '<i class="fa-solid fa-person-rays me-1"></i>Pose + hand estimate': '<i class="fa-solid fa-laptop me-1"></i>Framing estimate';
+ detectionStatus.innerHTML = canUseBodyModels? '<i class="fa-solid fa-person-rays me-1"></i>Pose estimate': '<i class="fa-solid fa-laptop me-1"></i>Framing estimate';
  detectionStatus.style.color = canUseBodyModels? '#34d399': '#cbd5e1';
  }
 
@@ -2772,9 +2756,6 @@
  camera_facing: Boolean(faceDetected && cameraFacing),
  centered: Boolean(faceDetected && centered),
  pose_detected: poseDetected,
- hand_count: handCount,
- hands_visible: handCount > 0,
- gesture_active: Boolean(gestureActive),
  shoulders_visible: shouldersVisible,
  shoulders_level: shouldersLevel,
  upright_posture: uprightPosture,
@@ -2848,6 +2829,7 @@
  function applyResponseModeUi() {
  const voiceControls = document.getElementById('voiceControls');
  const recordingTimer = document.getElementById('recordingTimer');
+ const transcriptControls = document.getElementById('answerTranscriptControls');
  const textarea = document.getElementById('answerTextarea');
 
  if (textarea) {
@@ -2856,6 +2838,7 @@
  applyVoiceOnlyAnswerLock();
 
  if (!isVoiceTranscriptionMode()) {
+ if (transcriptControls) transcriptControls.hidden = true;
  if (voiceControls) voiceControls.style.display = 'none';
  if (recordingTimer) {
  recordingTimer.style.display = 'none';
@@ -2868,6 +2851,7 @@
  return;
  }
 
+ if (transcriptControls) transcriptControls.hidden =!interviewStarted;
  if (voiceControls && interviewStarted) voiceControls.style.display = 'flex';
  if (recordingTimer) recordingTimer.style.display = 'block';
  setRecordingControlButtons(isRecording? 'recording': (isRecordingPaused? 'paused': 'idle'));
@@ -3936,15 +3920,20 @@
  if(isVoiceTranscriptionMode()) {
  applyResponseModeUi();
  const recorderUnavailableMessage = voiceRecordingUnavailableMessage();
- const transcriptionEngine = isVoiceOnlyMode() || recorderUnavailableMessage? null: preferredTranscriptionEngine();
- if (recorderUnavailableMessage || (!isVoiceOnlyMode() &&!transcriptionEngine)) {
- const message = recorderUnavailableMessage || transcriptionUnavailableMessage();
+ const stopBasedHybrid = isHybridTranscriptionMode() &&!displayRealtimeTranscriptInTextarea;
+ const fullTranscriptUnavailableMessage = stopBasedHybrid &&!recorderUnavailableMessage? fullVoiceTranscriptionUnavailableMessage(): '';
+ const transcriptionEngine = isVoiceOnlyMode() || stopBasedHybrid || recorderUnavailableMessage? null: preferredTranscriptionEngine();
+ if (recorderUnavailableMessage || fullTranscriptUnavailableMessage || (!isVoiceOnlyMode() &&!stopBasedHybrid &&!transcriptionEngine)) {
+ const message = recorderUnavailableMessage || fullTranscriptUnavailableMessage || transcriptionUnavailableMessage();
  setTranscriptionStatus(message, '#f87171');
  setVoiceControlsEnabled(false, message);
  showSessionNotice(isVoiceOnlyMode()? `${message} Voice Mode needs microphone recording.`: `${message} You can type your answer instead.`, 'warning');
+ } else if (stopBasedHybrid) {
+ setVoiceControlsEnabled(true);
+ setTranscriptionStatus('Recording ready - transcript appears after Stop');
  } else if (transcriptionEngine === 'server') {
  setVoiceControlsEnabled(true);
- setTranscriptionStatus('AI transcription ready (updates every few seconds)');
+ setTranscriptionStatus('Recording ready - transcript appears after Stop');
  } else if (isVoiceOnlyMode()) {
  setVoiceControlsEnabled(true);
  setTranscriptionStatus('Voice-only mode. Text transcription is off.');
@@ -4450,9 +4439,11 @@
 
  const recorderUnavailableMessage = voiceRecordingUnavailableMessage();
  const voiceOnly = isVoiceOnlyMode();
- let engine = recorderUnavailableMessage? null: (voiceOnly? null: preferredTranscriptionEngine());
- if (recorderUnavailableMessage || (!voiceOnly &&!engine)) {
- const message = recorderUnavailableMessage || transcriptionUnavailableMessage();
+ const stopBasedHybrid = isHybridTranscriptionMode() &&!displayRealtimeTranscriptInTextarea;
+ const fullTranscriptUnavailableMessage = stopBasedHybrid &&!recorderUnavailableMessage? fullVoiceTranscriptionUnavailableMessage(): '';
+ let engine = recorderUnavailableMessage || voiceOnly || stopBasedHybrid? null: preferredTranscriptionEngine();
+ if (recorderUnavailableMessage || fullTranscriptUnavailableMessage || (!voiceOnly &&!stopBasedHybrid &&!engine)) {
+ const message = recorderUnavailableMessage || fullTranscriptUnavailableMessage || transcriptionUnavailableMessage();
  setTranscriptionStatus(message, '#f87171');
  setVoiceControlsEnabled(false, message);
  if(!silent) showSessionNotice(voiceOnly? `${message} Voice Mode needs microphone recording.`: `${message} You can type your answer instead.`);
@@ -4463,7 +4454,7 @@
  resetSpeechRecognitionBufferFromTextarea();
  }
 
- if (!voiceOnly &&!await ensureMicrophoneReady(engine)) {
+ if (!voiceOnly &&!stopBasedHybrid &&!await ensureMicrophoneReady(engine)) {
  if(!silent) {
  const message = document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage();
  showSessionNotice(`${message} You can type your answer instead.`);
@@ -4483,14 +4474,14 @@
  }
 
  lastSpeechEnd = 0;
- shouldAutoRestartRecognition =!voiceOnly;
+ shouldAutoRestartRecognition =!voiceOnly &&!stopBasedHybrid;
  isRecording = true;
  isRecordingPaused = false;
- activeTranscriptionEngine = voiceOnly? null: engine;
+ activeTranscriptionEngine = voiceOnly || stopBasedHybrid? null: engine;
 
- let started = voiceOnly? true: (engine === 'server'? startServerTranscriptionEngine(): startSpeechRecognitionEngine());
+ let started = voiceOnly || stopBasedHybrid? true: (engine === 'server'? startServerTranscriptionEngine(): startSpeechRecognitionEngine());
 
- if (!started &&!voiceOnly && engine === 'browser' && canUseServerTranscription()) {
+ if (!started &&!voiceOnly &&!stopBasedHybrid && engine === 'browser' && canUseServerTranscription()) {
  activeTranscriptionEngine = 'server';
  engine = 'server';
  started = await ensureMicrophoneReady('server') && startServerTranscriptionEngine();
@@ -4509,6 +4500,8 @@
 
  if (voiceOnly) {
  setTranscriptionStatus('Voice-only recording. Text transcription is off.');
+ } else if (stopBasedHybrid) {
+ setTranscriptionStatus('Recording - transcript appears after Stop');
  }
 
  clearSessionNotice();
@@ -4599,7 +4592,6 @@
  if (scannerBox) scannerBox.style.display = 'none';
 
  if (usedServerTranscription) {
- setTranscriptionStatus('Finalizing transcription', '#fbbf24');
  await stopServerTranscriptionEngine();
  }
 
@@ -4624,7 +4616,10 @@
 
  async function stopRecordingInternal() {
  await pauseRecording();
- await stopVoiceSessionRecorder();
+ const recording = await stopVoiceSessionRecorder();
+ if (isHybridTranscriptionMode() && answersData[currentQIdx]) {
+ answersData[currentQIdx].speech_transcript = '';
+ }
  clearTimeout(autoStartAfterQuestionTimer);
  isRecordingPaused = false;
  recTimerSeconds = 0;
@@ -4632,7 +4627,17 @@
  if (timer) timer.innerText = '00:00';
  setRecordingControlButtons('idle');
  resetSpeechRecognitionBufferFromTextarea();
+ if (isHybridTranscriptionMode() && recording?.blob) {
+ await transcribeVoiceSessionRecording(currentQIdx, {
+ silent: true,
+ skipStopRecording: true,
+ previousTranscript: '',
+ replaceAnswerText: true
+ });
+ } else {
  setTranscriptionStatus('');
+ }
+ resetSpeechRecognitionBufferFromTextarea();
  renderVoiceSessionPanel();
  return true;
  }
@@ -4653,7 +4658,6 @@
  || serverTranscriptionResults.size > 0
  )
  ) {
- setTranscriptionStatus('Finalizing transcription', '#fbbf24');
  await waitForServerTranscriptionDrain(serverTranscriptionDrainTimeoutMs);
  commitReadyServerTranscriptionResults();
  }
@@ -4809,16 +4813,7 @@
  const hasLocalVoiceRecording = isVoiceTranscriptionMode()
  && Boolean(localVoiceRecording || answersData[currentQIdx]?.voice_recording?.available);
 
- if (
- isHybridTranscriptionMode()
- && localVoiceRecording?.blob
- &&!localVoiceRecording.transcript
- &&!timedOut
- && options.skipped!== true
- ) {
- await transcribeVoiceSessionRecording(currentQIdx, { silent: Boolean(answerText) });
- answerText = document.getElementById('answerTextarea').value.trim();
- } else if (isHybridTranscriptionMode() &&!answerText && hasLocalVoiceRecording &&!timedOut && options.skipped!== true) {
+ if (isHybridTranscriptionMode() &&!answerText && hasLocalVoiceRecording &&!timedOut && options.skipped!== true) {
  await transcribeVoiceSessionRecording(currentQIdx, { silent: true });
  answerText = document.getElementById('answerTextarea').value.trim();
  }
@@ -5452,16 +5447,14 @@
  const modelState = window.bodyLanguageModelState = window.bodyLanguageModelState || {
  ready: false,
  failed: false,
- poseLandmarker: null,
- handLandmarker: null
+ poseLandmarker: null
  };
 
- import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/vision_bundle.mjs').then(async ({ FilesetResolver, PoseLandmarker, HandLandmarker }) => {
+ import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/vision_bundle.mjs').then(async ({ FilesetResolver, PoseLandmarker }) => {
  const vision = await FilesetResolver.forVisionTasks(
  'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm'
  );
- const [poseLandmarker, handLandmarker] = await Promise.all([
- PoseLandmarker.createFromOptions(vision, {
+ const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
  baseOptions: {
  modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task'
  },
@@ -5471,28 +5464,16 @@
  minPosePresenceConfidence: 0.5,
  minTrackingConfidence: 0.5,
  outputSegmentationMasks: false
- }),
- HandLandmarker.createFromOptions(vision, {
- baseOptions: {
- modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task'
- },
- runningMode: 'VIDEO',
- numHands: 2,
- minHandDetectionConfidence: 0.5,
- minHandPresenceConfidence: 0.5,
- minTrackingConfidence: 0.5
- })
- ]);
+ });
 
  Object.assign(modelState, {
  ready: true,
  failed: false,
- poseLandmarker,
- handLandmarker
+ poseLandmarker
  });
  const detectionStatus = document.getElementById('cameraDetectionStatus');
  if (detectionStatus) {
- detectionStatus.innerHTML = '<i class="fa-solid fa-person-rays me-1"></i>Pose + hand model ready';
+ detectionStatus.innerHTML = '<i class="fa-solid fa-person-rays me-1"></i>Pose model ready';
  detectionStatus.style.color = '#34d399';
  }
  console.log("Optional body-language models loaded");
@@ -5521,13 +5502,13 @@
  const stepsMobile = [
  { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'bottom', align: 'start' }},
  { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
- { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, hands, and movement. Camera observations never affect readiness scoring.', side: 'top', align: 'start' }}
+ { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness scoring.', side: 'top', align: 'start' }}
  ];
 
  const stepsDesktop = [
  { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'right', align: 'start' }},
  { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
- { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, hands, and movement. Camera observations never affect readiness scoring.', side: 'left', align: 'start' }}
+ { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness scoring.', side: 'left', align: 'start' }}
  ];
 
  const onboardingTour = window.createSpeakReadyTour({

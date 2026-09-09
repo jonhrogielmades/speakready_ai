@@ -2,7 +2,7 @@
 @section('title', 'Detailed Review')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=4') }}" data-page-style="user-review">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=5') }}" data-page-style="user-review">
 @endpush
 
 @section('content')
@@ -113,155 +113,13 @@
  </div>
  @endif
 
- @include('shared.partials.report-overview', ['report' => $report, 'panelClass' => 'premium-panel', 'animationDelay' => '0.1s'])
-
- @include('mobile.partials.interview-coaching-summary', ['feedback' => $feedback, 'sessionRecord' => $sessionRecord])
-
- @if(!empty($actionPlan))
- <div class="row mb-4">
- <div class="col-12 animate-fade-up" style="animation-delay: 0.15s;">
- <div class="premium-panel" style="padding:24px;border:1px solid rgba(16,185,129,.22)!important;background:rgba(16,185,129,.04)!important;">
- <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
- <div>
- <h5 style="color:var(--tx);font-weight:800;margin-bottom:6px;"><i class="fa-solid fa-route me-2" style="color:#10b981"></i>Next Practice Plan</h5>
- <p style="color:var(--tx3);margin:0;font-size:.92rem;">{{ $actionPlanHeadline!== ''? $actionPlanHeadline: 'Practice plan' }}</p>
- </div>
- <div class="text-md-end action-plan-target">
- <div style="font-size:.8rem;color:var(--tx3);font-weight:700;text-transform:uppercase;">Next Goal</div>
- <div style="font-size:1.8rem;font-weight:800;color:#10b981;line-height:1;">{{ $actionPlanTargetScore }}%</div>
- </div>
- </div>
-
- @if(!empty($actionPriorities))
- <div class="action-plan-grid mb-3">
- @foreach($actionPriorities as $priority)
- <div class="action-plan-item">
- <div class="d-flex justify-content-between align-items-center mb-2">
- <strong style="color:var(--tx);">{{ $feedbackReportSkillLabel($priority['skill']?? null) }}</strong>
- <span style="color:#f59e0b;font-weight:800;">{{ is_numeric($priority['score']?? null)? max(0, min(100, (int) round($priority['score']))): 0 }}%</span>
- </div>
- <p style="color:var(--tx2);font-size:.9rem;line-height:1.55;margin:0;">{{ is_scalar($priority['task']?? null)? $priority['task']: 'Practice this area with a more specific answer.' }}</p>
- </div>
- @endforeach
- </div>
- @endif
-
- <div class="action-plan-links">
- @foreach($recommendedPaths as $path)
- @php
- $pathLabel = preg_replace('/^Interview\s+/i', '', is_scalar($path['label']?? null)? (string) $path['label']: 'Practice');
- $pathUrl = is_scalar($path['url']?? null) && trim((string) $path['url'])!== ''? (string) $path['url']: route('interview.setup');
- @endphp
- <a class="btn btn-sm btn-outline-primary" style="border-radius:999px;font-weight:700;" href="{{ $pathUrl }}">
- <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>{{ $pathLabel }}
- </a>
- @endforeach
- @if(!empty($actionPlanNextSession))
- <span class="retry-chip"><i class="fa-solid fa-sliders"></i>{{ ucfirst(is_scalar($actionPlanNextSession['difficulty']?? null)? (string) $actionPlanNextSession['difficulty']: 'medium') }} next</span>
- @endif
- </div>
- </div>
- </div>
- </div>
- @endif
-
- <!-- Feature 5 & 6: Strengths and Areas for Improvement -->
- <div class="row g-4 mb-4">
- <div class="col-md-6 animate-fade-up" style="animation-delay: 0.2s;">
- <div class="premium-panel" style="background:rgba(16, 185, 129, 0.05)!important;border:1px solid rgba(16, 185, 129, 0.2)!important;padding:24px;height:100%">
- <h5 style="color:#10b981;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-thumbs-up me-2"></i>What You Did Well</h5>
- @include('shared.partials.report-bullet-list', ['items' => $strengthItems, 'icon' => 'fa-circle-check', 'color' => '#10b981'])
- </div>
- </div>
- <div class="col-md-6 animate-fade-up" style="animation-delay: 0.3s;">
- <div class="premium-panel" style="background:rgba(245, 158, 11, 0.06)!important;border:1px solid rgba(245, 158, 11, 0.22)!important;padding:24px;height:100%">
- <h5 style="color:#b45309;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-bullseye me-2"></i>Focus Areas</h5>
- @include('shared.partials.report-bullet-list', ['items' => $weaknessItems, 'icon' => 'fa-arrow-trend-up', 'color' => '#f59e0b'])
- </div>
- </div>
- </div>
-
- @include('shared.partials.report-conciseness-check', ['report' => $report, 'panelClass' => 'premium-panel', 'animationDelay' => '0.35s'])
-
- <!-- Feature 4, 12, 13: Skills, Breakdown, and Comparison -->
- <div class="row g-4 mb-4">
- <div class="col-lg-8 animate-fade-up" style="animation-delay: 0.4s;">
- <div class="premium-panel" style="padding:24px;height:100%;">
- <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Category Breakdown</h5>
- @php
- $skills = [
- ['name' => 'Fluency & Clarity', 'score' => $sessionRecord->score->clarity_score?? 0, 'color' => '#3b82f6'],
- ['name' => 'Answer Match', 'score' => $sessionRecord->score->relevance_score?? 0, 'color' => '#10b981'],
- ['name' => 'Grammar', 'score' => $sessionRecord->score->grammar_score?? 0, 'color' => '#8b5cf6'],
- ['name' => 'Confidence', 'score' => $sessionRecord->score->confidence_score?? 0, 'color' => '#0ea5e9'],
- ['name' => 'Professional Tone', 'score' => $sessionRecord->score->professionalism_score?? 0, 'color' => '#f59e0b'],
- ];
- $jobEvidenceScore = $sessionRecord->score->job_evidence_match_score?? null;
- if (is_numeric($jobEvidenceScore) && ((int) $jobEvidenceScore > 0 || trim((string) ($sessionRecord->job_description?? ''))!== '')) {
- $skills[] = ['name' => 'Role Evidence', 'score' => $jobEvidenceScore, 'color' => '#14b8a6'];
- }
- $deliveryMeasured = (int) data_get($feedback->coaching_summary?? [], 'coverage.delivery_measured', 0) > 0
- || $sessionRecord->answers->contains(fn ($item) => data_get($item->coaching_feedback?? [], 'delivery.status') === 'measured');
- if ($deliveryMeasured && is_numeric($sessionRecord->score->delivery_stability_score?? null)) {
- $skills[] = ['name' => 'Pacing', 'score' => $sessionRecord->score->delivery_stability_score, 'color' => '#f59e0b'];
- }
- @endphp
- <div class="row g-4">
- @foreach($skills as $skill)
- <div class="col-md-6">
- <div class="d-flex justify-content-between mb-2">
- <span style="color:var(--tx);font-weight:600;">{{ $skill['name'] }}</span>
- <span style="color:var(--tx)">{{ $skill['score'] }}%</span>
- </div>
- <div class="progress" style="height: 10px; background:var(--bd); border-radius:5px;">
- <div class="progress-bar" role="progressbar" style="width: {{ $skill['score'] }}%; background: {{ $skill['color'] }}; border-radius:5px;"></div>
- </div>
- </div>
- @endforeach
- </div>
- </div>
- </div>
- <div class="col-lg-4 animate-fade-up" style="animation-delay: 0.5s;">
- <div class="premium-panel" style="padding:24px;height:100%;">
- <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Progress Since Last Score</h5>
- @if(count($comparisonRows) > 0)
- <p style="color:var(--tx3);font-size:0.85rem;margin-bottom:16px;">Compared with your last completed scored session.</p>
- <div class="feedback-comparison-table-wrap">
- <table class="table table-borderless table-sm mb-0 feedback-comparison-table" style="color:var(--tx);font-size:0.95rem;">
- <thead>
- <tr style="border-bottom: 1px solid var(--bd);color:var(--tx3);">
- <th>Skill</th>
- <th class="text-center">Last</th>
- <th class="text-center">Now</th>
- <th class="text-end">Change</th>
- </tr>
- </thead>
- <tbody>
- @foreach($comparisonRows as $row)
- <tr>
- <td>{{ $row['label'] }}</td>
- <td class="text-center">{{ $row['previous'] }}%</td>
- <td class="text-center fw-bold">{{ $row['current'] }}%</td>
- <td class="text-end {{ $row['delta'] > 0? 'text-success': ($row['delta'] < 0? 'text-danger': 'text-muted') }}">
- @if($row['delta'] > 0)
- <i class="fa-solid fa-arrow-up"></i>
- @elseif($row['delta'] < 0)
- <i class="fa-solid fa-arrow-down"></i>
- @else
- <i class="fa-solid fa-minus"></i>
- @endif
- </td>
- </tr>
- @endforeach
- </tbody>
- </table>
- </div>
- @else
- <p style="color:var(--tx3);font-size:0.9rem;line-height:1.6;margin:0;">No earlier scored session yet.</p>
- @endif
- </div>
- </div>
- </div>
+ @include('shared.partials.review-quick-summary', [
+ 'report' => $report,
+ 'sessionRecord' => $sessionRecord,
+ 'actionPriorities' => $actionPriorities,
+ 'recommendedPaths' => $recommendedPaths,
+ 'feedbackReportSkillLabel' => $feedbackReportSkillLabel,
+ ])
 
  @endif
 
@@ -344,94 +202,8 @@
  <div class="alert alert-warning border-0" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b;">
  <i class="fa-solid fa-forward-step me-2"></i> {{ $answer->ai_feedback?: 'You skipped this question. No feedback available.' }}
  </div>
- @include('mobile.partials.interview-answer-coaching', ['answer' => $answer])
  @else
- @include('mobile.partials.interview-answer-coaching', ['answer' => $answer])
-
- <div class="mb-4 p-4" style="background:rgba(59, 130, 246, 0.05);border:1px solid rgba(59, 130, 246, 0.2);border-radius:12px;">
- <h6 style="color:#3b82f6;font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-comment-medical me-2"></i>Feedback</h6>
- <p style="color:var(--tx);font-size:0.95rem;line-height:1.7;margin:0;">{{ $answer->ai_feedback?: 'No feedback was generated for this answer.' }}</p>
- </div>
-
- @php $evidenceMap = is_array($answer->evidence_map)? $answer->evidence_map: []; @endphp
- @if(!empty($evidenceMap) || $answer->rubric_level)
- <div class="mb-4 p-4" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:12px;">
- <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
- <h6 style="color:#10b981;font-weight:800;margin:0;"><i class="fa-solid fa-scale-balanced me-2"></i>Why this score</h6>
- @if($answer->rubric_level)<span class="retry-chip">{{ $answer->rubric_level }}</span>@endif
- </div>
- @if(!empty($evidenceMap['supporting_excerpts']))
- <div style="color:var(--tx3);font-size:.8rem;font-weight:800;text-transform:uppercase;">Proof found</div>
- <ul style="color:var(--tx);line-height:1.6;margin-top:8px;">
- @foreach($evidenceMap['supporting_excerpts'] as $excerpt)<li>{{ $excerpt }}</li>@endforeach
- </ul>
- @endif
- @if(!empty($evidenceMap['missing_evidence']))
- <div style="color:var(--tx3);font-size:.8rem;font-weight:800;text-transform:uppercase;">Details to add</div>
- <ul style="color:var(--tx);line-height:1.6;margin:8px 0 0;">
- @foreach($evidenceMap['missing_evidence'] as $missing)<li>{{ $missing }}</li>@endforeach
- </ul>
- @endif
- </div>
- @endif
-
- @php
- $starAnalysis = is_array($answer->star_analysis)? $answer->star_analysis: [];
- $starLabels = [
- 'situation' => 'Situation',
- 'task' => 'Task',
- 'action' => 'Action',
- 'result' => 'Result',
- ];
- @endphp
- @if(!empty($starAnalysis))
- <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">
- <h6 style="color:var(--tx);font-weight:bold;margin-bottom:16px;">STAR Check</h6>
- <div class="d-flex flex-wrap gap-4 align-items-center">
- @foreach($starLabels as $key => $label)
- @php $present = (bool) ($starAnalysis[$key]?? false); @endphp
- <div class="d-flex align-items-center gap-2">
- <span class="badge rounded-pill {{ $present? 'bg-success': 'bg-warning text-dark' }}" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">
- <i class="fa-solid {{ $present? 'fa-check': 'fa-minus' }}"></i>
- </span>
- <span style="color:var(--tx);font-weight:600;">{{ $label }}</span>
- </div>
- @endforeach
- </div>
- @if(!empty($starAnalysis['suggestion']))
- <p style="color:var(--tx3);font-size:0.9rem;margin-top:12px;margin-bottom:0;">
- <strong style="color:#b45309;">Next practice:</strong> {{ $starAnalysis['suggestion'] }}
- </p>
- @endif
- </div>
- @elseif(($sessionRecord->score->star_method_score?? 0) > 0)
- <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">
- <h6 style="color:var(--tx);font-weight:bold;margin-bottom:12px;">STAR Score</h6>
- <p style="color:var(--tx3);font-size:0.9rem;margin:0;">Session STAR score: {{ $sessionRecord->score->star_method_score }}%.</p>
- </div>
- @endif
-
- <!-- Feature 8: Suggested Answer Improvement -->
- <div class="row g-4 mb-4">
- <div class="col-md-6">
- @php
- $originalAnswerText = trim((string) ($answer->answer_text?? ''));
- $hasOriginalVoiceRecording = trim((string) ($answer->voice_recording_path?? ''))!== '';
- $hasOriginalVoiceEvidence = trim((string) ($answer->delivery_transcript?? ''))!== '';
- $isOriginalVoiceOnlyAnswer = strtolower((string) ($answer->response_mode?? '')) === 'voice' && $hasOriginalVoiceRecording;
- @endphp
- <label style="font-size:0.85rem;color:var(--tx3);font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-user me-2"></i>Your Answer</label>
- <div style="color:var(--tx);background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid var(--bd);height:100%;font-size:0.95rem;line-height:1.6;">
- {{ $originalAnswerText!== ''? $originalAnswerText: ($isOriginalVoiceOnlyAnswer && $hasOriginalVoiceEvidence? 'Voice answer saved. Feedback is based on the saved voice session.': 'Transcript unavailable. Listen to the saved voice answer above.') }}
- </div>
- </div>
- <div class="col-md-6">
- <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved me-2"></i>Better Answer Draft</label>
- <div style="color:var(--tx);background:rgba(16, 185, 129, 0.05);padding:16px;border-radius:12px;border:1px solid rgba(16, 185, 129, 0.2);height:100%;font-size:0.95rem;line-height:1.6;">
- {{ $answer->better_sample_answer?: 'No better draft was made for this response.' }}
- </div>
- </div>
- </div>
+ @include('shared.partials.review-answer-detail', ['answer' => $answer, 'sessionRecord' => $sessionRecord])
 
  @endif
 
@@ -458,7 +230,6 @@
  @if($retry->ai_feedback)
  <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">{{ $retry->ai_feedback }}</p>
  @endif
- @include('mobile.partials.interview-answer-coaching', ['answer' => $retry])
  @endforeach
  </div>
  </div>
@@ -611,30 +382,29 @@ function retryEscape(value) {
 function retryCoachingHtml(coaching) {
  if (!coaching || typeof coaching!== 'object') return '';
 
- const delivery = coaching.delivery && typeof coaching.delivery === 'object'? coaching.delivery: {};
- const question = coaching.question && typeof coaching.question === 'object'? coaching.question: {};
- const actions = Array.isArray(coaching.priority_actions)? coaching.priority_actions.slice(0, 3): [];
+ const alignment = coaching.content_alignment && typeof coaching.content_alignment === 'object'? coaching.content_alignment: {};
+ const actions = Array.isArray(coaching.priority_actions)? coaching.priority_actions.slice(0, 2): [];
  const rows = [];
 
- if (delivery.observation) {
- rows.push(`<p style="margin:0 0 8px;color:var(--tx2);line-height:1.55;"><strong style="color:var(--tx);">Pacing (${retryEscape(String(delivery.status || 'not measured').replace(/_/g, ' '))}):</strong> ${retryEscape(delivery.observation)}</p>`);
+ const improvement = alignment.improvement_focus || (Array.isArray(alignment.missing_points)? alignment.missing_points[0]: '');
+ const nextPractice = alignment.action || (Array.isArray(alignment.next_attempt_steps)? alignment.next_attempt_steps[0]: '');
+
+ if (improvement) {
+ rows.push(`<div class="review-retry-row"><strong>What To Improve</strong><span>${retryEscape(improvement)}</span></div>`);
  }
- if (question.tip) {
- rows.push(`<p style="margin:0 0 8px;color:var(--tx2);line-height:1.55;"><strong style="color:#3b82f6;">${retryEscape(question.title || 'Question strategy')}:</strong> ${retryEscape(question.tip)}</p>`);
+ if (nextPractice) {
+ rows.push(`<div class="review-retry-row"><strong>Next Practice</strong><span>${retryEscape(nextPractice)}</span></div>`);
  }
  if (actions.length) {
- const actionItems = actions.map(item => {
+ actions.forEach(item => {
  if (!item || typeof item!== 'object' ||!item.action) return '';
- return `<li><strong>${retryEscape(item.area || 'Practice action')}:</strong> ${retryEscape(item.action)}</li>`;
- }).filter(Boolean).join('');
- if (actionItems) {
- rows.push(`<ol style="margin:8px 0 0;padding-left:20px;color:var(--tx2);line-height:1.55;">${actionItems}</ol>`);
- }
+ rows.push(`<div class="review-retry-row"><strong>${retryEscape(item.area || 'Practice action')}</strong><span>${retryEscape(item.action)}</span></div>`);
+ });
  }
 
  if (!rows.length) return '';
 
- return `<div class="mt-3 p-3" style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:10px;"><strong style="display:block;color:#3b82f6;margin-bottom:8px;">Practice feedback</strong>${rows.join('')}</div>`;
+ return `<div class="review-retry-feedback"><strong>Practice feedback</strong>${rows.join('')}</div>`;
 }
 
 function formatRetrySeconds(total) {
@@ -729,7 +499,7 @@ function submitRetry(answerId) {
  }).then(res => res.json()).then(data => {
  if (!data.success) throw new Error(data.error || 'Practice attempt failed');
  const deliveryChip = data.delivery_stability_score === null || data.delivery_stability_score === undefined? '': `<span class="retry-chip">Pacing ${retryEscape(data.delivery_stability_score)}%</span>`;
- const coachingHtml = typeof data.coaching_html === 'string'? data.coaching_html: retryCoachingHtml(data.coaching_feedback);
+ const coachingHtml = retryCoachingHtml(data.coaching_feedback);
  result.innerHTML = `
  <div class="p-3" style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:12px;color:var(--tx);">
  <div class="d-flex flex-wrap gap-2 mb-2">

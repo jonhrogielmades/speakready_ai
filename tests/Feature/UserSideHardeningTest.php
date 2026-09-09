@@ -17,7 +17,6 @@ use App\Models\User;
 use App\Services\AIService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
@@ -676,132 +675,6 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('School Admission', $session->interview_focus);
  }
 
- public function test_interview_target_suggestions_follow_user_input_and_selected_scenario_with_fallback(): void
- {
- Http::fake();
-
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $jobCategory = $this->category(['title' => 'Job Interview']);
- $schoolCategory = $this->category(['title' => 'College Admission']);
-
- $this->actingAs($user)
- ->postJson(route('interview.targetSuggestions'), [
- 'category_id' => $jobCategory->id,
- 'query' => 'Clean',
- ])
- ->assertOk()
- ->assertJsonPath('scenario_kind', 'job')
- ->assertJsonFragment(['value' => 'Cleaner'])
- ->assertJsonFragment(['value' => 'Janitor'])
- ->assertJsonMissing(['value' => 'BS Information Technology']);
-
- foreach (['c', 'cl', 'cle', 'clean'] as $query) {
- $this->actingAs($user)
- ->postJson(route('interview.targetSuggestions'), [
- 'category_id' => $jobCategory->id,
- 'query' => $query,
- ])
- ->assertOk()
- ->assertJsonPath('scenario_kind', 'job')
- ->assertJsonFragment(['value' => 'Cleaner']);
- }
-
- foreach (['n', 'ne', 'net', 'network', 'network admin', 'network administrator'] as $query) {
- $this->actingAs($user)
- ->postJson(route('interview.targetSuggestions'), [
- 'category_id' => $jobCategory->id,
- 'query' => $query,
- ])
- ->assertOk()
- ->assertJsonPath('scenario_kind', 'job')
- ->assertJsonFragment(['value' => 'Network Administrator'])
- ->assertJsonMissing(['value' => 'BS Information Technology']);
- }
-
- $this->actingAs($user)
- ->postJson(route('interview.targetSuggestions'), [
- 'category_id' => $schoolCategory->id,
- 'query' => 'bsit',
- ])
- ->assertOk()
- ->assertJsonPath('scenario_kind', 'school')
- ->assertJsonFragment(['value' => 'BS Information Technology'])
- ->assertJsonMissing(['value' => 'Cleaner']);
-
- foreach (['b', 'bs', 'bsi', 'bsit'] as $query) {
- $this->actingAs($user)
- ->postJson(route('interview.targetSuggestions'), [
- 'category_id' => $schoolCategory->id,
- 'query' => $query,
- ])
- ->assertOk()
- ->assertJsonPath('scenario_kind', 'school')
- ->assertJsonFragment(['value' => 'BS Information Technology']);
- }
-
- foreach (['d', 'da', 'data', 'bs data'] as $query) {
- $this->actingAs($user)
- ->postJson(route('interview.targetSuggestions'), [
- 'category_id' => $schoolCategory->id,
- 'query' => $query,
- ])
- ->assertOk()
- ->assertJsonPath('scenario_kind', 'school')
- ->assertJsonFragment(['value' => 'BS Data Science'])
- ->assertJsonMissing(['value' => 'Network Administrator']);
- }
- }
-
- public function test_interview_target_suggestions_use_ai_provider_results_and_filter_wrong_scenario(): void
- {
- Cache::flush();
-
- AiProvider::create([
- 'name' => 'OpenAI',
- 'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
- 'api_key' => Crypt::encryptString('test-openai-key'),
- 'status' => 'active',
- ]);
-
- $capturedPrompt = '';
- Http::fake([
- 'api.openai.com/*' => function ($request) use (&$capturedPrompt) {
- $capturedPrompt = (string) data_get($request->data(), 'messages.1.content');
-
- return Http::response([
- 'choices' => [[
- 'finish_reason' => 'stop',
- 'message' => [
- 'content' => json_encode([
- 'suggestions' => [
- ['value' => 'Facilities Cleaner', 'kind' => 'job', 'confidence' => 0.94],
- ['value' => 'BS Information Technology', 'kind' => 'school', 'confidence' => 0.92],
- ],
- ]),
- ],
- ]],
- ], 200);
- },
- ]);
-
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category(['title' => 'Job Interview']);
-
- $this->actingAs($user)
- ->postJson(route('interview.targetSuggestions'), [
- 'category_id' => $category->id,
- 'query' => 'clean',
- ])
- ->assertOk()
- ->assertJsonPath('source', 'ai')
- ->assertJsonPath('provider', 'openai')
- ->assertJsonFragment(['value' => 'Facilities Cleaner'])
- ->assertJsonMissing(['value' => 'BS Information Technology']);
-
- $this->assertStringContainsString('Typed input: "clean"', $capturedPrompt);
- $this->assertStringContainsString('Job Interview', $capturedPrompt);
- }
-
  public function test_interview_setup_only_uses_job_and_school_admission_categories(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -893,7 +766,7 @@ class UserSideHardeningTest extends TestCase
  }
  }
 
- public function test_interview_setup_includes_target_autocomplete_suggestions_on_desktop_and_mobile(): void
+ public function test_interview_setup_uses_plain_target_field_on_desktop_and_mobile(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
@@ -910,29 +783,21 @@ class UserSideHardeningTest extends TestCase
 
  foreach ([$desktopResponse, $mobileResponse] as $response) {
  $response
- ->assertSee('aria-autocomplete="list"', false)
- ->assertSee('aria-controls="targetSuggestionList"', false)
- ->assertSee('id="targetSuggestionList"', false)
- ->assertSee('data-target-autocomplete-input', false)
- ->assertSee('setupTargetSuggestionEndpoint', false)
- ->assertSee('target-suggestions')
- ->assertSee('requestAiTargetSuggestions', false)
- ->assertSee('fetch(setupTargetSuggestionEndpoint', false)
- ->assertSee('setupTargetSuggestions', false)
- ->assertSee('renderSetupTargetSuggestionLabel', false)
- ->assertSee('targetPositionInput.addEventListener(\'input\'', false)
- ->assertSee('setupTargetSuggestionScore', false)
- ->assertSee('setupTargetSuggestionAcronym', false)
- ->assertSee('Network Administrator')
- ->assertSee('network admin')
- ->assertSee('Data Analyst')
- ->assertSee('BS Data Science')
- ->assertSee('bsit')
- ->assertSee('Cleaner')
- ->assertSee('Janitor')
- ->assertSee('Housekeeping Attendant')
- ->assertSee('BS Information Technology')
- ->assertSee('BS Computer Science');
+ ->assertSee('name="target_position"', false)
+ ->assertSee('autocomplete="off"', false)
+ ->assertDontSee('aria-autocomplete="list"', false)
+ ->assertDontSee('aria-controls="targetSuggestionList"', false)
+ ->assertDontSee('id="targetSuggestionList"', false)
+ ->assertDontSee('data-target-autocomplete-input', false)
+ ->assertDontSee('setupTargetSuggestionEndpoint', false)
+ ->assertDontSee('target-suggestions')
+ ->assertDontSee('requestAiTargetSuggestions', false)
+ ->assertDontSee('fetch(setupTargetSuggestionEndpoint', false)
+ ->assertDontSee('setupTargetSuggestions', false)
+ ->assertDontSee('renderSetupTargetSuggestionLabel', false)
+ ->assertDontSee('targetPositionInput.addEventListener(\'input\'', false)
+ ->assertDontSee('setupTargetSuggestionScore', false)
+ ->assertDontSee('setupTargetSuggestionAcronym', false);
  }
  }
 
@@ -1484,7 +1349,7 @@ class UserSideHardeningTest extends TestCase
  ]);
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
  $expectedMarkup = [
- 'css/desktop/interview/session.css?v=23',
+ 'css/desktop/interview/session.css?v=25',
  'id="coachingTip"',
  'session-live-coaching coaching-only',
  'interview-confidence-control coaching-only',
@@ -1521,8 +1386,8 @@ class UserSideHardeningTest extends TestCase
  ->get(route('interview.session'))
  ->assertOk();
 
- foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=23']), [
- 'css/mobile/interview/session.css?v=9',
+ foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=25']), [
+ 'css/mobile/interview/session.css?v=11',
  ]) as $markup) {
  $mobileResponse->assertSee($markup, false);
  }

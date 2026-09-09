@@ -150,3 +150,67 @@ input::placeholder, textarea::placeholder, .form-control::placeholder { font-wei
         gap: 5px !important;
     }
 }
+
+.answer-review-card {
+    border-radius: 16px !important;
+}
+
+.answer-review-toggle {
+    align-items: flex-start;
+    column-gap: 10px;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-width: 0;
+    padding: 14px !important;
+}
+
+.answer-review-toggle::after {
+    align-self: flex-start;
+    flex: 0 0 auto;
+    grid-column: 2;
+    margin-left: 0;
+    margin-top: 5px;
+}
+
+.answer-review-header {
+    align-items: flex-start !important;
+    display: grid !important;
+    gap: 10px !important;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    padding-right: 0 !important;
+    width: 100%;
+}
+
+.answer-review-title {
+    display: block;
+    flex: none;
+    font-size: .95rem !important;
+    line-height: 1.42;
+    min-width: 0;
+    overflow-wrap: break-word;
+}
+
+.answer-review-score {
+    display: flex !important;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 8px !important;
+    justify-content: flex-start;
+    min-width: 0;
+    width: 100%;
+}
+
+.answer-review-score .badge {
+    align-items: center;
+    border-radius: 8px;
+    display: inline-flex;
+    flex: 0 1 auto;
+    font-size: .76rem !important;
+    justify-content: center;
+    line-height: 1.15;
+    min-height: 32px;
+    padding: 6px 9px !important;
+    text-align: center;
+    white-space: normal;
+}

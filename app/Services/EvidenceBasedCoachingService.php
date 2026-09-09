@@ -186,8 +186,6 @@ final class EvidenceBasedCoachingService
  $cameraSamples = 0;
  $cameraDetections = 0;
  $cameraFacing = 0;
- $cameraHandsVisible = 0;
- $cameraGestureActive = 0;
  $cameraPoseDetected = 0;
  $cameraShouldersMeasured = 0;
  $cameraShouldersLevel = 0;
@@ -329,8 +327,6 @@ final class EvidenceBasedCoachingService
  $cameraSamples += (int) ($camera['sample_count']?? 0);
  $cameraDetections += (int) ($camera['detection_count']?? 0);
  $cameraFacing += (int) ($camera['camera_facing_count']?? 0);
- $cameraHandsVisible += (int) ($camera['hands_visible_count']?? 0);
- $cameraGestureActive += (int) ($camera['gesture_active_count']?? 0);
  $cameraPoseDetected += (int) ($camera['pose_detected_count']?? 0);
  $cameraShouldersMeasured += (int) ($camera['shoulders_level_measured_count']?? 0);
  $cameraShouldersLevel += (int) ($camera['shoulders_level_count']?? 0);
@@ -379,14 +375,12 @@ final class EvidenceBasedCoachingService
  if ($coverage['camera_measured'] > 0) {
  $visibility = (int) round(($cameraDetections / max(1, $cameraSamples)) * 100);
  $facing = (int) round(($cameraFacing / max(1, $cameraDetections)) * 100);
- $hands = (int) round(($cameraHandsVisible / max(1, $cameraSamples)) * 100);
- $gesture = (int) round(($cameraGestureActive / max(1, $cameraHandsVisible)) * 100);
  $shoulders = (int) round(($cameraShouldersLevel / max(1, $cameraShouldersMeasured)) * 100);
  $upright = (int) round(($cameraUpright / max(1, $cameraUprightMeasured)) * 100);
  $highMovement = (int) round(($cameraHighMovement / max(1, $cameraMovementMeasured)) * 100);
- $observations[] = "Optional camera detection had enough checks for {$coverage['camera_measured']} answers: a face was seen in {$visibility}% of checks, the head looked camera-facing in {$facing}% of face checks, hands were visible in {$hands}% of checks, and body position was seen in ".((int) round(($cameraPoseDetected / max(1, $cameraSamples)) * 100)).'% of checks.';
+ $observations[] = "Optional camera detection had enough checks for {$coverage['camera_measured']} answers: a face was seen in {$visibility}% of checks, the head looked camera-facing in {$facing}% of face checks, and body position was seen in ".((int) round(($cameraPoseDetected / max(1, $cameraSamples)) * 100)).'% of checks.';
  if ($cameraShouldersMeasured > 0 || $cameraUprightMeasured > 0 || $cameraMovementMeasured > 0) {
- $observations[] = "Camera notes across checked parts: shoulders looked level in {$shoulders}% of body checks, upper body looked upright in {$upright}% of body checks, hand movement appeared in {$gesture}% of checks where hands were seen, and higher movement appeared in {$highMovement}% of movement checks.";
+ $observations[] = "Camera notes across checked parts: shoulders looked level in {$shoulders}% of body checks, upper body looked upright in {$upright}% of body checks, and higher movement appeared in {$highMovement}% of movement checks.";
  }
  } elseif ($coverage['camera_insufficient'] > 0) {
  $observations[] = 'Optional camera sampling was tried, but there were not enough samples for a good note.';
@@ -686,19 +680,11 @@ final class EvidenceBasedCoachingService
  if ($status === 'measured') {
  $visibility = (int) ($camera['face_visibility_percent']?? 0);
  $facing = (int) ($camera['camera_facing_percent']?? 0);
- $handsVisible = is_numeric($camera['hands_visible_percent']?? null)? (int) round((float) $camera['hands_visible_percent']): null;
- $gestureActivity = is_numeric($camera['gesture_activity_percent']?? null)? (int) round((float) $camera['gesture_activity_percent']): null;
  $shouldersLevel = is_numeric($camera['shoulders_level_percent']?? null)? (int) round((float) $camera['shoulders_level_percent']): null;
  $uprightPosture = is_numeric($camera['upright_posture_percent']?? null)? (int) round((float) $camera['upright_posture_percent']): null;
  $averageMovement = is_numeric($camera['average_movement_score']?? null)? (int) round((float) $camera['average_movement_score']): null;
  $highMovement = is_numeric($camera['high_movement_percent']?? null)? (int) round((float) $camera['high_movement_percent']): null;
  $bodyObservations = [];
- if ($handsVisible!== null) {
- $bodyObservations[] = "Hands were visible in {$handsVisible}% of samples.";
- }
- if ($gestureActivity!== null) {
- $bodyObservations[] = "Hand movement appeared in {$gestureActivity}% of hand-visible samples.";
- }
  if ($shouldersLevel!== null) {
  $bodyObservations[] = "Shoulders looked level in {$shouldersLevel}% of pose samples.";
  }
@@ -723,9 +709,7 @@ final class EvidenceBasedCoachingService
  $tips[] = 'Sit or stand tall, then lean forward only briefly for emphasis.';
  }
  if (($highMovement!== null && $highMovement > 30) || ($averageMovement!== null && $averageMovement >= 55)) {
- $tips[] = 'Use one planned gesture per main point and let your hands return to a resting position between points.';
- } elseif ($gestureActivity!== null && $gestureActivity > 80) {
- $tips[] = 'Keep gestures purposeful by matching each visible hand movement to a specific idea in the answer.';
+ $tips[] = 'Keep movement steady and return to a neutral position between main points.';
  }
  if ($tips === []) {
  $tips[] = 'Keep the current camera frame, posture, and camera place in the next practice try.';
@@ -745,10 +729,6 @@ final class EvidenceBasedCoachingService
  'camera_facing_percent' => $facing,
  'centered_count' => (int) ($camera['centered_count']?? 0),
  'pose_detected_count' => (int) ($camera['pose_detected_count']?? 0),
- 'hands_visible_count' => (int) ($camera['hands_visible_count']?? 0),
- 'hands_visible_percent' => $handsVisible,
- 'gesture_active_count' => (int) ($camera['gesture_active_count']?? 0),
- 'gesture_activity_percent' => $gestureActivity,
  'shoulders_visible_count' => (int) ($camera['shoulders_visible_count']?? 0),
  'shoulders_level_count' => (int) ($camera['shoulders_level_count']?? 0),
  'shoulders_level_measured_count' => (int) ($camera['shoulders_level_measured_count']?? 0),
@@ -780,14 +760,13 @@ final class EvidenceBasedCoachingService
  return [
  'status' => $status === 'insufficient_data'? 'insufficient_data': 'not_measured',
  'observation' => $observation,
- 'tip' => 'For camera detection, use steady front light and keep your face, shoulders, and hands in the preview when possible.',
- 'tips' => ['For camera detection, use steady front light and keep your face, shoulders, and hands in the preview when possible.'],
+ 'tip' => 'For camera detection, use steady front light and keep your face and shoulders in the preview when possible.',
+ 'tips' => ['For camera detection, use steady front light and keep your face and shoulders in the preview when possible.'],
  'evidence' => $status === 'insufficient_data'? [
  'source' => $camera['source']?? 'browser_reported_landmark_estimate',
  'sample_count' => (int) ($camera['sample_count']?? 0),
  'face_detected_count' => (int) ($camera['detection_count']?? 0),
  'pose_detected_count' => (int) ($camera['pose_detected_count']?? 0),
- 'hands_visible_count' => (int) ($camera['hands_visible_count']?? 0),
  'sampling_span_seconds' => (int) ($camera['sampling_span_seconds']?? 0),
  ]: [],
  'limitation' => (string) ($camera['caveat']?? 'No usable optional camera samples were available.'),
@@ -1319,9 +1298,7 @@ final class EvidenceBasedCoachingService
  || (is_numeric($cameraEvidence['high_movement_percent']?? null)
  && (int) $cameraEvidence['high_movement_percent'] > 30)
  || (is_numeric($cameraEvidence['average_movement_score']?? null)
- && (int) $cameraEvidence['average_movement_score'] >= 55)
- || (is_numeric($cameraEvidence['gesture_activity_percent']?? null)
- && (int) $cameraEvidence['gesture_activity_percent'] > 85);
+ && (int) $cameraEvidence['average_movement_score'] >= 55);
 
  if (($camera['status']?? null) === 'measured'
  && ((int) ($cameraEvidence['face_visibility_percent']?? 100) < 80
@@ -1507,7 +1484,7 @@ final class EvidenceBasedCoachingService
 
  private function normalizeCameraObservation(array $clientData, bool $enabled, int $duration): array
  {
- $caveat = 'This browser estimate only describes what was seen in frame: face, head, hands, shoulders, body position, and movement. Lighting, camera angle, clothes, glasses, and device speed can change the result. No image or video is stored. It does not guess confidence, honesty, personality, job fit, or intent, and it is not used in the readiness score.';
+ $caveat = 'This browser estimate only describes what was seen in frame: face, head, shoulders, body position, and movement. Lighting, camera angle, clothes, glasses, and device speed can change the result. No image or video is stored. It does not guess confidence, honesty, personality, job fit, or intent, and it is not used in the readiness score.';
  if (! $enabled) {
  return [
  'status' => 'not_measured',
@@ -1516,8 +1493,6 @@ final class EvidenceBasedCoachingService
  'camera_facing_count' => 0,
  'centered_count' => 0,
  'pose_detected_count' => 0,
- 'hands_visible_count' => 0,
- 'gesture_active_count' => 0,
  'shoulders_visible_count' => 0,
  'shoulders_level_count' => 0,
  'shoulders_level_measured_count' => 0,
@@ -1527,8 +1502,6 @@ final class EvidenceBasedCoachingService
  'high_movement_count' => 0,
  'face_visibility_percent' => null,
  'camera_facing_percent' => null,
- 'hands_visible_percent' => null,
- 'gesture_activity_percent' => null,
  'shoulders_level_percent' => null,
  'upright_posture_percent' => null,
  'average_movement_score' => null,
@@ -1555,11 +1528,6 @@ final class EvidenceBasedCoachingService
  $centered = $faceDetected
  && filter_var($sample['centered']?? false, FILTER_VALIDATE_BOOLEAN);
  $poseDetected = filter_var($sample['pose_detected']?? false, FILTER_VALIDATE_BOOLEAN);
- $handCount = $this->boundedInt($sample['hand_count']?? 0, 0, 2);
- $handsVisible = $handCount > 0
- || filter_var($sample['hands_visible']?? false, FILTER_VALIDATE_BOOLEAN);
- $gestureActive = $handsVisible
- && filter_var($sample['gesture_active']?? false, FILTER_VALIDATE_BOOLEAN);
  $shouldersVisible = $poseDetected
  && filter_var($sample['shoulders_visible']?? false, FILTER_VALIDATE_BOOLEAN);
  $shouldersLevel = $shouldersVisible? $this->nullableBoolean($sample['shoulders_level']?? null): null;
@@ -1573,9 +1541,6 @@ final class EvidenceBasedCoachingService
  'camera_facing' => $cameraFacing,
  'centered' => $centered,
  'pose_detected' => $poseDetected,
- 'hand_count' => $handCount,
- 'hands_visible' => $handsVisible,
- 'gesture_active' => $gestureActive,
  'shoulders_visible' => $shouldersVisible,
  'shoulders_level' => $shouldersLevel,
  'upright_posture' => $uprightPosture,
@@ -1592,8 +1557,6 @@ final class EvidenceBasedCoachingService
  $facingCount = count(array_filter($normalized, fn (array $sample): bool => $sample['camera_facing']));
  $centeredCount = count(array_filter($normalized, fn (array $sample): bool => $sample['centered']));
  $poseDetectedCount = count(array_filter($normalized, fn (array $sample): bool => $sample['pose_detected']));
- $handsVisibleCount = count(array_filter($normalized, fn (array $sample): bool => $sample['hands_visible']));
- $gestureActiveCount = count(array_filter($normalized, fn (array $sample): bool => $sample['gesture_active']));
  $shouldersVisibleCount = count(array_filter($normalized, fn (array $sample): bool => $sample['shoulders_visible']));
  $shouldersLevelMeasuredCount = count(array_filter(
  $normalized,
@@ -1615,14 +1578,13 @@ final class EvidenceBasedCoachingService
  $lastTimestamp = $sampleCount > 0? (int) $normalized[$sampleCount - 1]['at_seconds']: 0;
  $samplingSpan = max(0, $lastTimestamp - $firstTimestamp);
  $requiredSpan = $duration > 0? max(2, (int) ceil($duration *.2)): 0;
- $observableSignalCount = max($detectionCount, $poseDetectedCount, $handsVisibleCount);
+ $observableSignalCount = max($detectionCount, $poseDetectedCount);
  $status = match (true) {
  $sampleCount === 0 || $duration <= 0 => 'not_measured',
  $sampleCount >= 3 && $observableSignalCount >= 2 && $samplingSpan >= $requiredSpan => 'measured',
  default => 'insufficient_data',
  };
  $hasBodySignals = $poseDetectedCount > 0
- || $handsVisibleCount > 0
  || $shouldersLevelMeasuredCount > 0
  || $uprightPostureMeasuredCount > 0
  || $movementMeasuredCount > 0;
@@ -1634,8 +1596,6 @@ final class EvidenceBasedCoachingService
  'camera_facing_count' => $facingCount,
  'centered_count' => $centeredCount,
  'pose_detected_count' => $poseDetectedCount,
- 'hands_visible_count' => $handsVisibleCount,
- 'gesture_active_count' => $gestureActiveCount,
  'shoulders_visible_count' => $shouldersVisibleCount,
  'shoulders_level_count' => $shouldersLevelCount,
  'shoulders_level_measured_count' => $shouldersLevelMeasuredCount,
@@ -1645,8 +1605,6 @@ final class EvidenceBasedCoachingService
  'high_movement_count' => $highMovementCount,
  'face_visibility_percent' => $sampleCount > 0? (int) round(($detectionCount / $sampleCount) * 100): null,
  'camera_facing_percent' => $detectionCount > 0? (int) round(($facingCount / $detectionCount) * 100): null,
- 'hands_visible_percent' => $sampleCount > 0? (int) round(($handsVisibleCount / $sampleCount) * 100): null,
- 'gesture_activity_percent' => $handsVisibleCount > 0? (int) round(($gestureActiveCount / $handsVisibleCount) * 100): null,
  'shoulders_level_percent' => $shouldersLevelMeasuredCount > 0? (int) round(($shouldersLevelCount / $shouldersLevelMeasuredCount) * 100): null,
  'upright_posture_percent' => $uprightPostureMeasuredCount > 0? (int) round(($uprightPostureCount / $uprightPostureMeasuredCount) * 100): null,
  'average_movement_score' => $movementMeasuredCount > 0? (int) round(array_sum($movementScores) / $movementMeasuredCount): null,
@@ -1654,7 +1612,7 @@ final class EvidenceBasedCoachingService
  'sampling_span_seconds' => $samplingSpan,
  'sampling_coverage_percent' => $duration > 0? min(100, (int) round(($samplingSpan / $duration) * 100)): null,
  'samples' => $normalized,
- 'source' => $hasBodySignals? 'browser_reported_pose_hand_landmark_estimate': 'browser_reported_landmark_estimate',
+ 'source' => $hasBodySignals? 'browser_reported_pose_landmark_estimate': 'browser_reported_landmark_estimate',
  'unavailable_reason' => $unavailableReason,
  'caveat' => $caveat,
  ];

@@ -194,13 +194,12 @@
  <div class="face-scanner-box" id="faceScannerBox" style="display:none;position:absolute;width:120px;height:120px;border:2px solid #34d399;border-radius:12px;box-shadow:0 0 15px rgba(52,211,153,0.3);transition:all 0.3s ease;">
  <div class="scan-line" style="width:100%;height:2px;background:#34d399;position:absolute;top:0;animation: scanAnim 2s infinite linear;box-shadow:0 0 8px #34d399;"></div>
  </div>
- <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:4px;font-size:.7rem;color:#34d399"><i class="fa-solid fa-circle text-success pulse-anim" style="font-size:.5rem;margin-right:4px"></i> Private Preview</div>
- </div>
- <div class="stat-row"><span>Face in frame</span><span id="stEyeContact">Waiting</span></div>
- <div class="stat-row"><span>Hands / gestures</span><span id="stGesture">Waiting</span></div>
- <div class="stat-row"><span>Shoulders / posture</span><span id="stPose">Waiting</span></div>
- <div class="stat-row"><span>Movement steadiness</span><span id="stMovement">Waiting</span></div>
- <div class="stat-row"><span>Head alignment</span><span id="stPosture">Optional - not scored</span></div>
+<div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:4px;font-size:.7rem;color:#34d399"><i class="fa-solid fa-circle text-success pulse-anim" style="font-size:.5rem;margin-right:4px"></i> Private Preview</div>
+</div>
+<div class="stat-row"><span>Face in frame</span><span id="stEyeContact">Waiting</span></div>
+<div class="stat-row"><span>Shoulders / posture</span><span id="stPose">Waiting</span></div>
+<div class="stat-row"><span>Movement steadiness</span><span id="stMovement">Waiting</span></div>
+<div class="stat-row"><span>Head alignment</span><span id="stPosture">Optional - not scored</span></div>
  </div>
  </div>
  @endif
@@ -277,13 +276,13 @@
  let recTimerInterval;
  let mediaRecorder = null;
  let mediaRecorderStream = null;
- let mediaRecorderChunks = [];
- let mediaRecorderStartedAt = 0;
- let voiceRecordingStopPromise = null;
- window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null, handLandmarker: null };
- let gameCameraMovementBaseline = null;
- let preRecordingText = '';
- let committedSpeechTranscript = '';
+let mediaRecorderChunks = [];
+let mediaRecorderStartedAt = 0;
+let voiceRecordingStopPromise = null;
+window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
+let gameCameraMovementBaseline = null;
+let preRecordingText = '';
+let committedSpeechTranscript = '';
  let liveSpeechInterim = '';
  let lastCommittedSpeech = '';
  let lastCommittedAt = 0;
@@ -654,12 +653,12 @@
  }
  }
 
- async function trackBodyLanguage() {
- const bodyLanguageState = window.bodyLanguageModelState || {};
- const canUseBodyModels = Boolean(bodyLanguageState.ready && bodyLanguageState.poseLandmarker && bodyLanguageState.handLandmarker);
- const canUseFaceModel = typeof faceapi!== 'undefined';
- if (!cameraCoachingEnabled || (!canUseBodyModels &&!canUseFaceModel)) return;
- const video = document.getElementById('userCamera');
+async function trackBodyLanguage() {
+const bodyLanguageState = window.bodyLanguageModelState || {};
+const canUseBodyModels = Boolean(bodyLanguageState.ready && bodyLanguageState.poseLandmarker);
+const canUseFaceModel = typeof faceapi!== 'undefined';
+if (!cameraCoachingEnabled || (!canUseBodyModels &&!canUseFaceModel)) return;
+const video = document.getElementById('userCamera');
  if (!video ||!video.srcObject) return;
 
  try {
@@ -670,19 +669,16 @@
  } catch (faceError) {
  console.error("Face framing tracking error", faceError);
  }
- }
+}
 
- let poseLandmarks = null;
- let handLandmarks = [];
- if (canUseBodyModels) {
- const timestamp = performance.now();
- const poseResult = gameDetectVideoFrame(bodyLanguageState.poseLandmarker, video, timestamp);
- const handResult = gameDetectVideoFrame(bodyLanguageState.handLandmarker, video, timestamp);
- poseLandmarks = Array.isArray(poseResult?.landmarks) && poseResult.landmarks.length > 0? poseResult.landmarks[0]: null;
- handLandmarks = Array.isArray(handResult?.landmarks)? handResult.landmarks.slice(0, 2): [];
- }
+let poseLandmarks = null;
+if (canUseBodyModels) {
+const timestamp = performance.now();
+const poseResult = gameDetectVideoFrame(bodyLanguageState.poseLandmarker, video, timestamp);
+poseLandmarks = Array.isArray(poseResult?.landmarks) && poseResult.landmarks.length > 0? poseResult.landmarks[0]: null;
+}
 
- const poseDetected = Array.isArray(poseLandmarks) && poseLandmarks.length > 0;
+const poseDetected = Array.isArray(poseLandmarks) && poseLandmarks.length > 0;
  const faceVisible = Boolean(detection || (poseDetected && gameVisibleLandmark(poseLandmarks[0])));
  let shouldersVisible = false;
  let shouldersLevel = null;
@@ -714,34 +710,23 @@
  if (shoulderMidpoint && hipMidpoint) {
  const torsoHeight = Math.max(0.01, Math.abs(hipMidpoint.y - shoulderMidpoint.y));
  uprightPosture = Math.abs((shoulderMidpoint.x - hipMidpoint.x) / torsoHeight) <= 0.28;
- }
- }
+}
+}
 
- const handCenters = handLandmarks.map(hand => gameCenterOf(Array.isArray(hand)? hand: [])).filter(Boolean);
- handCenters.forEach((center, index) => {
- movementPoints['hand' + index] = center;
- });
+let movementScore = null;
+if (gameCameraMovementBaseline && Object.keys(movementPoints).length > 0) {
+const distances = Object.entries(movementPoints).map(([key, point]) => gamePointDistance(point, gameCameraMovementBaseline[key])).filter(distance => Number.isFinite(distance));
+if (distances.length > 0) {
+movementScore = Math.min(100, Math.round((distances.reduce((total, distance) => total + distance, 0) / distances.length) * 650));
+}
+}
+gameCameraMovementBaseline = movementPoints;
 
- let movementScore = null;
- let gestureActive = false;
- if (gameCameraMovementBaseline && Object.keys(movementPoints).length > 0) {
- const distances = Object.entries(movementPoints).map(([key, point]) => gamePointDistance(point, gameCameraMovementBaseline[key])).filter(distance => Number.isFinite(distance));
- if (distances.length > 0) {
- movementScore = Math.min(100, Math.round((distances.reduce((total, distance) => total + distance, 0) / distances.length) * 650));
- }
- gestureActive = handCenters.some((center, index) => {
- const distance = gamePointDistance(center, gameCameraMovementBaseline['hand' + index]);
- return Number.isFinite(distance) && distance >= 0.045;
- });
- }
- gameCameraMovementBaseline = movementPoints;
-
- setGameCameraStat('stEyeContact', faceVisible? '<i class="fa-solid fa-check me-1"></i>Visible': '<i class="fa-solid fa-circle-info me-1"></i>Move into frame', faceVisible? 'text-success': 'text-warning', true);
- setGameCameraStat('stPosture', faceVisible? (poseCameraFacing === false? 'Head turned estimate': 'Camera-facing estimate'): 'Optional - not scored', faceVisible? (poseCameraFacing === false? 'text-warning': 'text-success'): 'text-secondary');
- setGameCameraStat('stGesture', handLandmarks.length > 0? (gestureActive? 'Gesture movement': handLandmarks.length + ' hand(s) visible'): 'Hands not visible', handLandmarks.length > 0? 'text-success': 'text-secondary');
- setGameCameraStat('stPose', shouldersVisible? (shouldersLevel && uprightPosture!== false? 'Balanced upper body': 'Posture cue available'): (poseDetected? 'Partial pose estimate': 'Pose not detected'), shouldersVisible? (shouldersLevel && uprightPosture!== false? 'text-success': 'text-warning'): 'text-secondary');
- setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movementScore >= 45? 'Higher movement': 'Steady'), movementScore === null? 'text-secondary': (movementScore >= 45? 'text-warning': 'text-success'));
- } catch(e) {
+setGameCameraStat('stEyeContact', faceVisible? '<i class="fa-solid fa-check me-1"></i>Visible': '<i class="fa-solid fa-circle-info me-1"></i>Move into frame', faceVisible? 'text-success': 'text-warning', true);
+setGameCameraStat('stPosture', faceVisible? (poseCameraFacing === false? 'Head turned estimate': 'Camera-facing estimate'): 'Optional - not scored', faceVisible? (poseCameraFacing === false? 'text-warning': 'text-success'): 'text-secondary');
+setGameCameraStat('stPose', shouldersVisible? (shouldersLevel && uprightPosture!== false? 'Balanced upper body': 'Posture cue available'): (poseDetected? 'Partial pose estimate': 'Pose not detected'), shouldersVisible? (shouldersLevel && uprightPosture!== false? 'text-success': 'text-warning'): 'text-secondary');
+setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movementScore >= 45? 'Higher movement': 'Steady'), movementScore === null? 'text-secondary': (movementScore >= 45? 'text-warning': 'text-success'));
+} catch(e) {
  console.error("Tracking error", e);
  }
  }
@@ -1484,51 +1469,37 @@
  });
 </script>
 <script type="module">
- const modelState = window.bodyLanguageModelState = window.bodyLanguageModelState || {
- ready: false,
- failed: false,
- poseLandmarker: null,
- handLandmarker: null
- };
+const modelState = window.bodyLanguageModelState = window.bodyLanguageModelState || {
+ready: false,
+failed: false,
+poseLandmarker: null
+};
 
- import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/vision_bundle.mjs').then(async ({ FilesetResolver, PoseLandmarker, HandLandmarker }) => {
- const vision = await FilesetResolver.forVisionTasks(
- 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm'
- );
- const [poseLandmarker, handLandmarker] = await Promise.all([
- PoseLandmarker.createFromOptions(vision, {
- baseOptions: {
- modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task'
- },
+import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/vision_bundle.mjs').then(async ({ FilesetResolver, PoseLandmarker }) => {
+const vision = await FilesetResolver.forVisionTasks(
+'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm'
+);
+const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+baseOptions: {
+modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task'
+},
  runningMode: 'VIDEO',
  numPoses: 1,
  minPoseDetectionConfidence: 0.5,
- minPosePresenceConfidence: 0.5,
- minTrackingConfidence: 0.5,
- outputSegmentationMasks: false
- }),
- HandLandmarker.createFromOptions(vision, {
- baseOptions: {
- modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task'
- },
- runningMode: 'VIDEO',
- numHands: 2,
- minHandDetectionConfidence: 0.5,
- minHandPresenceConfidence: 0.5,
- minTrackingConfidence: 0.5
- })
- ]);
+minPosePresenceConfidence: 0.5,
+minTrackingConfidence: 0.5,
+outputSegmentationMasks: false
+});
 
- Object.assign(modelState, {
- ready: true,
- failed: false,
- poseLandmarker,
- handLandmarker
- });
- console.log("Optional body-language models loaded");
- }).catch(err => {
- modelState.ready = false;
- modelState.failed = true;
+Object.assign(modelState, {
+ready: true,
+failed: false,
+poseLandmarker
+});
+console.log("Optional pose model loaded");
+}).catch(err => {
+modelState.ready = false;
+modelState.failed = true;
  console.error("Error loading optional body-language models", err);
  });
 </script>
@@ -1539,17 +1510,17 @@
  document.addEventListener("DOMContentLoaded", function() {
  let onboardingTour = null;
  if (typeof window.createSpeakReadyTour === 'function') {
- const stepsMobile = [
- { element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each challenge question and guides the Learning Game flow.', side: 'bottom', align: 'start' }},
- { element: '#answerForm', popover: { title: 'Your Response', description: 'Use the response box and voice controls to answer each challenge question.', side: 'top', align: 'start' }},
- { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, hands, and movement. Camera observations never affect readiness or challenge scoring.', side: 'top', align: 'start' }}
- ];
+const stepsMobile = [
+{ element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each challenge question and guides the Learning Game flow.', side: 'bottom', align: 'start' }},
+{ element: '#answerForm', popover: { title: 'Your Response', description: 'Use the response box and voice controls to answer each challenge question.', side: 'top', align: 'start' }},
+{ element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness or challenge scoring.', side: 'top', align: 'start' }}
+];
 
- const stepsDesktop = [
- { element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each challenge question and guides the Learning Game flow.', side: 'right', align: 'start' }},
- { element: '#answerForm', popover: { title: 'Your Response', description: 'Use the response box and voice controls to answer each challenge question.', side: 'right', align: 'start' }},
- { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, hands, and movement. Camera observations never affect readiness or challenge scoring.', side: 'left', align: 'start' }}
- ];
+const stepsDesktop = [
+{ element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each challenge question and guides the Learning Game flow.', side: 'right', align: 'start' }},
+{ element: '#answerForm', popover: { title: 'Your Response', description: 'Use the response box and voice controls to answer each challenge question.', side: 'right', align: 'start' }},
+{ element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness or challenge scoring.', side: 'left', align: 'start' }}
+];
  const visibleTourSteps = steps => steps.filter(step => document.querySelector(step.element));
 
  onboardingTour = window.createSpeakReadyTour({

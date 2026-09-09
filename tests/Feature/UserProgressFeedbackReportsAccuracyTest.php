@@ -471,6 +471,21 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  'coaching_summary' => [
  'version' => \App\Services\EvidenceBasedCoachingService::VERSION,
  'coverage' => ['answers' => 'complete'],
+ 'content_overview' => [
+ 'directly_answered' => 0,
+ 'partially_answered' => 1,
+ 'low_relevance' => 0,
+ 'insufficient_evidence' => 0,
+ 'skipped' => 0,
+ 'not_evaluated' => 0,
+ ],
+ 'priority_actions' => [
+ [
+ 'area' => 'Answer structure',
+ 'observation' => '1 of 1 questions need a clearer opening and result.',
+ 'action' => 'Use STAR structure and add one measurable result.',
+ ],
+ ],
  ],
  ]);
 
@@ -494,16 +509,23 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Overall Summary')
- ->assertSee('Focus Area')
+ ->assertSee('Feedback Detailed Review')
+ ->assertSee('Overall Feedback')
+ ->assertSee('This feedback is based on the 1 saved answer in this session')
+ ->assertSee('Answer-match checks show 1 answered partly')
+ ->assertSee('Overall readiness is 74%, with Fluency &amp; Clarity as the lowest recorded area at 45% and Grammar as the highest at 88%', false)
+ ->assertSee('Top focus: Answer structure; 1 of 1 questions need a clearer opening and result; next practice: Use STAR structure and add one measurable result')
+ ->assertDontSee('Keep practicing. Answer each question directly and add one real example.')
+ ->assertSee('Score Breakdown')
  ->assertSee('What You Did Well')
- ->assertSee('Focus Areas')
- ->assertSee('Category Breakdown')
- ->assertSee('Conciseness Check')
- ->assertSee('Repeated Words')
- ->assertSee('improved x3')
+ ->assertSee('What To Improve')
+ ->assertSee('Better Example')
+ ->assertSee('Next Practice')
  ->assertSee('Strong empathy with customers')
  ->assertSee('Use STAR structure')
+ ->assertDontSee('Category Breakdown')
+ ->assertDontSee('Conciseness Check')
+ ->assertDontSee('Repeated Words')
  ->assertDontSee('Strengths: Strong empathy with customers and polite tone.', false)
  ->assertDontSee('Needs work: Answers need clearer structure and more direct opening lines.', false)
  ->assertDontSee('Score version', false)

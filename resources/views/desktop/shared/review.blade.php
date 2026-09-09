@@ -75,22 +75,7 @@
  <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
  <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Category Breakdown</h5>
  @php
- $skills = [
- ['name' => 'Fluency & Clarity', 'score' => $sessionRecord->score->clarity_score?? 0, 'color' => '#3b82f6'],
- ['name' => 'Answer Match', 'score' => $sessionRecord->score->relevance_score?? 0, 'color' => '#10b981'],
- ['name' => 'Grammar', 'score' => $sessionRecord->score->grammar_score?? 0, 'color' => '#8b5cf6'],
- ['name' => 'Confidence', 'score' => $sessionRecord->score->confidence_score?? 0, 'color' => '#0ea5e9'],
- ['name' => 'Professional Tone', 'score' => $sessionRecord->score->professionalism_score?? 0, 'color' => '#f59e0b'],
- ];
- $jobEvidenceScore = $sessionRecord->score->job_evidence_match_score?? null;
- if (is_numeric($jobEvidenceScore) && ((int) $jobEvidenceScore > 0 || trim((string) ($sessionRecord->job_description?? ''))!== '')) {
- $skills[] = ['name' => 'Role Evidence', 'score' => $jobEvidenceScore, 'color' => '#14b8a6'];
- }
- $deliveryMeasured = (int) data_get($feedback->coaching_summary?? [], 'coverage.delivery_measured', 0) > 0
- || $sessionRecord->answers->contains(fn ($item) => data_get($item->coaching_feedback?? [], 'delivery.status') === 'measured');
- if ($deliveryMeasured && is_numeric($sessionRecord->score->delivery_stability_score?? null)) {
- $skills[] = ['name' => 'Pacing', 'score' => $sessionRecord->score->delivery_stability_score, 'color' => '#f59e0b'];
- }
+ $skills = $report['category_breakdown']?? [];
  @endphp
  <div class="row g-4">
  @foreach($skills as $skill)

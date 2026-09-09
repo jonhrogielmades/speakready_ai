@@ -344,7 +344,7 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'));
 
         $response->assertOk()
-            ->assertSee('css/desktop/interview/session.css?v=23', false)
+            ->assertSee('css/desktop/interview/session.css?v=25', false)
             ->assertSee('const cameraDetectionEnabled = true;', false)
             ->assertSee('interview-session-browser-fullscreen', false)
             ->assertSee('interview-ready-fullscreen', false)
@@ -362,7 +362,7 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('id="cameraDetectionStatus"', false);
     }
 
-    public function test_voice_and_hybrid_interview_sessions_use_full_recording_transcript_action(): void
+    public function test_voice_and_hybrid_interview_sessions_use_inline_transcript_field_without_manual_transcript_button(): void
     {
         $user = User::factory()->create([
             'is_admin' => false,
@@ -402,8 +402,32 @@ class MobileLayoutTest extends TestCase
                     ->withHeader('User-Agent', $userAgent)
                     ->get(route('interview.session'))
                     ->assertOk()
-                    ->assertSee('id="voiceSessionTranscript"', false)
-                    ->assertSee('<span>Transcript</span>', false)
+                    ->assertSee('id="answerTextarea"', false)
+                    ->assertSee('class="answer-transcript-stage"', false)
+                    ->assertSee('id="answerTranscriptControls"', false)
+                    ->assertSeeInOrder(['id="answerTextarea"', 'id="answerTranscriptControls"', 'id="recordingTimer"', 'id="voiceControls"'], false)
+                    ->assertSee('Speak your answer, then edit the transcript here if needed...', false)
+                    ->assertSee('const displayRealtimeTranscriptInTextarea = false;', false)
+                    ->assertSee('function fullVoiceTranscriptionUnavailableMessage()', false)
+                    ->assertSee('const stopBasedHybrid = isHybridTranscriptionMode() &&!displayRealtimeTranscriptInTextarea;', false)
+                    ->assertSee('shouldAutoRestartRecognition =!voiceOnly &&!stopBasedHybrid;', false)
+                    ->assertSee('activeTranscriptionEngine = voiceOnly || stopBasedHybrid? null: engine;', false)
+                    ->assertSee('let started = voiceOnly || stopBasedHybrid? true:', false)
+                    ->assertSee('Recording ready - transcript appears after Stop', false)
+                    ->assertSee('Recording - transcript appears after Stop', false)
+                    ->assertSee('Full voice transcript added', false)
+                    ->assertSee('const recording = await stopVoiceSessionRecorder();', false)
+                    ->assertSee('await transcribeVoiceSessionRecording(currentQIdx, {', false)
+                    ->assertSee('skipStopRecording: true', false)
+                    ->assertSee("previousTranscript: ''", false)
+                    ->assertSee('replaceAnswerText: true', false)
+                    ->assertDontSee('async function flushCurrentRealtimeTranscriptForStop', false)
+                    ->assertDontSee("const finalizedTranscript = await flushCurrentRealtimeTranscriptForStop('stop');", false)
+                    ->assertDontSee("setTranscriptionStatus(finalizedTranscript? 'Transcript ready': '')", false)
+                    ->assertDontSee('id="voiceSessionTranscript"', false)
+                    ->assertDontSee('<span>Transcript</span>', false)
+                    ->assertDontSee('updates every few seconds', false)
+                    ->assertDontSee('Finalizing transcription', false)
                     ->assertSee('async function transcribeVoiceSessionRecording', false)
                     ->assertSee('function autoCorrectTranscriptText', false)
                     ->assertSee('function appendVoiceSessionRecordingUpload', false)
@@ -458,7 +482,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=9', false)
+            ->assertSee('css/mobile/interview/session.css?v=11', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)

@@ -8,6 +8,7 @@ use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\LocalSpeechAssessmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -492,6 +493,77 @@ class InterviewSecurityTest extends TestCase
                 && str_contains((string) data_get($fields, 'prompt.0'), 'Recent earlier transcript')
                 && ($filePart['filename'] ?? null) === 'speech.webm';
         });
+    }
+
+    public function test_full_recording_transcription_prefers_ai_transcript_over_local_asr(): void
+    {
+        config(['services.openai.transcription_model' => 'gpt-transcribe']);
+
+        $this->app->instance(LocalSpeechAssessmentService::class, new class extends LocalSpeechAssessmentService {
+            public function assessUploadedAudio(UploadedFile $audioFile, ?string $referenceText = null, array|string|null $targetLanguage = null): array
+            {
+                return [
+                    'version' => self::VERSION,
+                    'status' => 'measured',
+                    'asr' => [
+                        'name' => 'asr',
+                        'status' => 'measured',
+                        'transcript' => 'local partial duplicate transcript',
+                    ],
+                    'pronunciation' => [
+                        'name' => 'pronunciation',
+                        'status' => 'measured',
+                        'score' => 82,
+                    ],
+                    'forced_alignment' => ['name' => 'forced_alignment', 'status' => 'not_measured'],
+                    'phoneme_alignment' => ['name' => 'phoneme_alignment', 'status' => 'not_measured'],
+                    'gop' => ['name' => 'gop', 'status' => 'not_measured'],
+                    'reliability' => [
+                        'score' => 88,
+                        'band' => 'High',
+                        'measured_components' => ['asr', 'pronunciation'],
+                    ],
+                    'limitations' => [],
+                    'recommendations' => [],
+                ];
+            }
+        });
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/transcriptions' => Http::response([
+                'text' => 'AI final full recording transcript.',
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['response_mode' => 'hybrid']);
+        $question = $this->sessionQuestion($session, $category);
+
+        $response = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.transcribe'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'audio' => UploadedFile::fake()->create('speech.webm', 32, 'audio/webm'),
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'transcript' => 'AI final full recording transcript.',
+                'transcription_source' => 'openai',
+                'transcription_status' => 'transcribed',
+            ]);
+
+        $this->assertSame('local partial duplicate transcript', $response->json('pronunciation_analysis.asr.transcript'));
     }
 
     public function test_transcription_response_auto_corrects_common_word_errors(): void

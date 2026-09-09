@@ -99,9 +99,6 @@ class EvidenceBasedCoachingServiceTest extends TestCase
                     'camera_facing' => true,
                     'centered' => true,
                     'pose_detected' => true,
-                    'hand_count' => 1,
-                    'hands_visible' => true,
-                    'gesture_active' => false,
                     'shoulders_visible' => true,
                     'shoulders_level' => true,
                     'upright_posture' => true,
@@ -114,9 +111,6 @@ class EvidenceBasedCoachingServiceTest extends TestCase
                     'camera_facing' => true,
                     'centered' => true,
                     'pose_detected' => true,
-                    'hand_count' => 2,
-                    'hands_visible' => true,
-                    'gesture_active' => true,
                     'shoulders_visible' => true,
                     'shoulders_level' => true,
                     'upright_posture' => true,
@@ -129,9 +123,6 @@ class EvidenceBasedCoachingServiceTest extends TestCase
                     'camera_facing' => false,
                     'centered' => true,
                     'pose_detected' => true,
-                    'hand_count' => 1,
-                    'hands_visible' => true,
-                    'gesture_active' => true,
                     'shoulders_visible' => true,
                     'shoulders_level' => false,
                     'upright_posture' => false,
@@ -144,9 +135,6 @@ class EvidenceBasedCoachingServiceTest extends TestCase
                     'camera_facing' => true,
                     'centered' => false,
                     'pose_detected' => true,
-                    'hand_count' => 0,
-                    'hands_visible' => false,
-                    'gesture_active' => false,
                     'shoulders_visible' => true,
                     'shoulders_level' => true,
                     'upright_posture' => true,
@@ -161,9 +149,9 @@ class EvidenceBasedCoachingServiceTest extends TestCase
 
         $camera = $observations['camera'];
         $this->assertSame('measured', $camera['status']);
-        $this->assertSame('browser_reported_pose_hand_landmark_estimate', $camera['source']);
-        $this->assertSame(3, $camera['hands_visible_count']);
-        $this->assertSame(67, $camera['gesture_activity_percent']);
+        $this->assertSame('browser_reported_pose_landmark_estimate', $camera['source']);
+        $this->assertArrayNotHasKey('hands_visible_count', $camera);
+        $this->assertArrayNotHasKey('gesture_activity_percent', $camera);
         $this->assertSame(75, $camera['shoulders_level_percent']);
         $this->assertSame(75, $camera['upright_posture_percent']);
         $this->assertSame(30, $camera['average_movement_score']);
@@ -177,8 +165,8 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         );
 
         $cameraFeedback = strtolower(json_encode($coaching['camera_feedback'], JSON_THROW_ON_ERROR));
-        $this->assertStringContainsString('hands were visible', $cameraFeedback);
-        $this->assertStringContainsString('hand movement', $cameraFeedback);
+        $this->assertStringNotContainsString('hands', $cameraFeedback);
+        $this->assertStringNotContainsString('gesture', $cameraFeedback);
         $this->assertStringContainsString('movement score', $cameraFeedback);
         $this->assertStringContainsString('guess confidence', strtolower($coaching['transparency_note']));
         $this->assertSame('verified', $coaching['feedback_quality']['status']);
@@ -665,9 +653,9 @@ class EvidenceBasedCoachingServiceTest extends TestCase
 
         $observations = $service->normalizeObservationData([
             'camera_samples' => [
-                ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'hands_visible' => true, 'at_seconds' => 0],
-                ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'hands_visible' => true, 'at_seconds' => 4],
-                ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'hands_visible' => true, 'at_seconds' => 8],
+                ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'at_seconds' => 0],
+                ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'at_seconds' => 4],
+                ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'at_seconds' => 8],
             ],
         ], 'I explained my approach and verified the result.', [
             'response_mode' => 'voice',
@@ -694,9 +682,9 @@ class EvidenceBasedCoachingServiceTest extends TestCase
             ],
             [
                 'camera_samples' => [
-                    ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'hands_visible' => true, 'at_seconds' => 0],
-                    ['face_detected' => true, 'camera_facing' => false, 'pose_detected' => true, 'hands_visible' => true, 'at_seconds' => 4],
-                    ['face_detected' => false, 'camera_facing' => false, 'pose_detected' => true, 'hands_visible' => false, 'at_seconds' => 8],
+                    ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'at_seconds' => 0],
+                    ['face_detected' => true, 'camera_facing' => false, 'pose_detected' => true, 'at_seconds' => 4],
+                    ['face_detected' => false, 'camera_facing' => false, 'pose_detected' => true, 'at_seconds' => 8],
                 ],
             ]
         );
