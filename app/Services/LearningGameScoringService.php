@@ -326,7 +326,7 @@ class LearningGameScoringService
         $weakest = Str::lower($this->metricLabel($weakestKey));
 
         if ($passed) {
-            return "Passed with {$score}%. Your strongest signal is {$strongest}; keep improving {$weakest} for harder Philippine interview follow-ups.";
+            return "Passed with {$score}%. Your strongest signal is {$strongest}; keep improving {$weakest} for harder interview follow-ups.";
         }
 
         return "Scored {$score}%. Focus first on {$weakest}, then retry with a more complete example and clearer result.";
@@ -343,7 +343,7 @@ class LearningGameScoringService
             'relevance' => 'Tie the response more closely to the exact question and challenge checklist.',
             'confidence' => 'State your ownership, decision, and result more decisively using evidence you can verify.',
             'grammar' => 'Use complete sentences and remove repeated filler words or broken phrasing.',
-            'professionalism' => 'Keep the tone accountable, respectful, and ready for a Philippine hiring conversation.',
+            'professionalism' => 'Keep the tone accountable, respectful, and ready for a hiring conversation.',
             'goal_coverage' => 'Cover more of the level goals before ending the answer.',
             'star_method' => 'Complete the Situation, Task, Action, and Result parts of the story.',
             default => $metricScore >= 80 ? 'Keep this level of evidence.' : 'Add more specific evidence before retrying.',

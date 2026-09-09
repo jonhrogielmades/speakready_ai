@@ -213,3 +213,222 @@
         .feedback-report-score-actions .btn { font-size:.78rem;padding-left:.65rem;padding-right:.65rem; }
         .answer-review-body { padding:12px !important; }
     }
+
+    /* Layout stabilization for detailed review content. */
+    .feedback-report-meta span {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    .feedback-report-score-actions {
+        justify-content: flex-end;
+    }
+    .feedback-report-actions {
+        flex-wrap: wrap;
+        gap: 10px;
+        min-width: 0;
+        width: auto !important;
+    }
+    .feedback-report-actions > .btn {
+        min-height: 42px;
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
+    .feedback-report-actions .dropdown-menu {
+        min-width: 100%;
+    }
+    .feedback-hero-panel {
+        overflow: hidden;
+    }
+    .feedback-hero-panel p {
+        text-align: left;
+    }
+    .feedback-hero-grid {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .feedback-hero-grid > [class*="col-"],
+    .feedback-hero-actions,
+    .action-plan-item,
+    .answer-review-card,
+    .answer-review-header {
+        min-width: 0;
+    }
+    .action-plan-item,
+    .answer-review-body {
+        overflow-wrap: anywhere;
+    }
+    .action-plan-item .d-flex {
+        gap: 8px;
+        min-width: 0;
+    }
+    .action-plan-item strong {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    .action-plan-links .btn,
+    .retry-chip {
+        max-width: 100%;
+        line-height: 1.25;
+        text-align: center;
+        white-space: normal;
+    }
+    .answer-review-toggle {
+        gap: 12px;
+        min-width: 0;
+    }
+    .answer-review-toggle::after {
+        flex: 0 0 auto;
+        margin-left: 0;
+        margin-top: 7px;
+    }
+    .answer-review-title {
+        flex: 1 1 320px;
+        line-height: 1.45;
+    }
+    .answer-review-score {
+        flex: 0 1 auto;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        min-width: 0;
+    }
+    .answer-review-score .badge {
+        line-height: 1.25;
+        text-align: left;
+        white-space: normal;
+    }
+    .feedback-comparison-table th,
+    .feedback-comparison-table td {
+        white-space: nowrap;
+    }
+    .feedback-comparison-table th:first-child,
+    .feedback-comparison-table td:first-child {
+        min-width: 130px;
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
+    .retry-panel {
+        max-width: 100%;
+    }
+    .retry-panel .oinp,
+    .retry-textarea {
+        display: block;
+        max-width: 100%;
+        resize: vertical;
+        width: 100%;
+    }
+    .retry-meta {
+        justify-content: flex-end;
+        min-width: 0;
+    }
+    .retry-chip {
+        flex: 0 1 auto;
+    }
+    .secure-share-content {
+        overflow: hidden;
+    }
+    .secure-share-content .modal-header,
+    .secure-share-content .modal-footer {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    @media (max-width: 991.98px) {
+        .action-plan-grid {
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .feedback-report-score-actions {
+            justify-content: flex-start;
+        }
+        .feedback-report-score {
+            flex: 1 1 120px;
+            width: auto;
+        }
+        .feedback-report-actions {
+            width: 100% !important;
+        }
+        .feedback-report-actions > .btn {
+            flex: 1 1 150px;
+        }
+        .feedback-hero-panel {
+            padding: 18px !important;
+        }
+        .feedback-hero-actions {
+            border-left: 0 !important;
+            border-top: 1px solid rgba(59, 130, 246, .20);
+            margin-top: 12px;
+            padding-top: 14px;
+        }
+        .action-plan-target {
+            text-align: left !important;
+        }
+        .action-plan-links {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        }
+        .action-plan-links .btn {
+            min-height: 40px;
+        }
+        .answer-review-toggle {
+            align-items: flex-start;
+            padding: 14px !important;
+        }
+        .answer-review-toggle::after {
+            margin-left: 4px;
+            margin-top: 4px;
+        }
+        .answer-review-header {
+            padding-right: 4px !important;
+        }
+        .answer-review-title {
+            flex-basis: 100%;
+            font-size: .95rem !important;
+        }
+        .answer-review-score {
+            justify-content: flex-start;
+            width: 100%;
+        }
+        .answer-review-body {
+            padding: 16px !important;
+        }
+        .answer-review-body .row {
+            margin-left: -.5rem;
+            margin-right: -.5rem;
+        }
+        .answer-review-body .row > [class*="col-"] {
+            padding-left: .5rem;
+            padding-right: .5rem;
+        }
+        .retry-meta {
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+        .retry-chip {
+            justify-content: center;
+        }
+        .secure-share-dialog {
+            max-width: calc(100% - 24px);
+        }
+    }
+
+    @media (max-width: 420px) {
+        .feedback-report-actions > .btn {
+            flex-basis: 100%;
+        }
+        .action-plan-links {
+            grid-template-columns: 1fr;
+        }
+        .feedback-comparison-table {
+            min-width: 380px;
+        }
+        .secure-share-content .modal-footer .btn {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            width: 100%;
+        }
+    }

@@ -148,6 +148,7 @@
         var overlayId = 'pageTransitionOverlay';
         var activeClass = 'sr-page-transition-active';
         var showTimer = null;
+        var defaultDelayMs = 650;
 
         function getOverlay() {
             return document.getElementById(overlayId);
@@ -173,7 +174,7 @@
                 overlay.classList.add('active');
                 overlay.setAttribute('aria-hidden', 'false');
                 document.body.classList.add(activeClass);
-            }, 50);
+            }, Math.max(0, Number(options && options.delayMs) || defaultDelayMs));
         }
 
         function hidePageTransition() {
@@ -268,7 +269,8 @@
             showPageTransition({
                 title: 'Opening page...',
                 copy: 'Please wait while SpeakReady AI loads.',
-                event: event
+                event: event,
+                delayMs: defaultDelayMs
             });
         });
 
@@ -279,7 +281,8 @@
 
                 showPageTransition({
                     title: 'Processing...',
-                    copy: 'Please wait while SpeakReady AI saves your request.'
+                    copy: 'Please wait while SpeakReady AI saves your request.',
+                    delayMs: 450
                 });
             }, 0);
         });

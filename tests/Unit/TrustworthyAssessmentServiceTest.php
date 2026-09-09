@@ -97,7 +97,7 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $service = new TrustworthyAssessmentService;
         $question = new Question([
             'type' => 'Behavioral',
-            'question_text' => 'Why should a Philippine employer hire you for this role?',
+            'question_text' => 'Why should a employer hire you for this role?',
             'expected_guide' => 'Connect role requirements to experience, strengths, results, and motivation.',
         ]);
         $answer = 'My support experience and careful documentation match the role and the work your team needs.';

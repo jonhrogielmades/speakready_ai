@@ -7,10 +7,10 @@
 <div class="db-section active" id="sec-admin-categories">
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Manage Philippines Interview Categories</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage categories for Philippine job and school admission interviews.</p>
+            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Manage Interview Categories</h4>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage categories for local job and school admission interviews.</p>
         </div>
-        <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addCategoryModal"><i class="fa-solid fa-plus me-1"></i> Add PH Category</button>
+        <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addCategoryModal"><i class="fa-solid fa-plus me-1"></i> Add Interview Category</button>
     </div>
     
     @if(session('success'))
@@ -84,7 +84,7 @@
             <form action="{{ route('admin.categories.update', $c->id) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Edit Philippines Interview Category</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Edit Interview Category</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
@@ -112,7 +112,7 @@
 
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="feat{{ $c->id }}" {{ $c->is_featured ? 'checked' : '' }}>
-                        <label class="form-check-label olbl" for="feat{{ $c->id }}">Featured PH Category</label>
+                        <label class="form-check-label olbl" for="feat{{ $c->id }}">Featured Interview Category</label>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
@@ -159,14 +159,14 @@
             <form action="{{ route('admin.categories.store') }}" method="POST">
                 @csrf
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Add Philippines Interview Category</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Add Interview Category</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
-                    <label class="olbl">PH Category Title</label>
+                    <label class="olbl">Interview Category Title</label>
                     <input class="oinp mb-3" type="text" name="title" required>
                     
-                    <label class="olbl">Philippines Interview Description</label>
+                    <label class="olbl">Interview Description</label>
                     <textarea class="oinp mb-3" name="description" rows="3"></textarea>
                     
                     <label class="olbl">Type</label>
@@ -187,12 +187,12 @@
                     
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="featAdd">
-                        <label class="form-check-label olbl" for="featAdd">Featured PH Category</label>
+                        <label class="form-check-label olbl" for="featAdd">Featured Interview Category</label>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Save PH Category</button>
+                    <button type="submit" class="bgrd btn px-4">Save Interview Category</button>
                 </div>
             </form>
         </div>

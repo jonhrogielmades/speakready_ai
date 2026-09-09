@@ -6,6 +6,8 @@
 /storage/*.key
 /storage/framework/testing-sessions/
 /vendor
+/output/
+/tmp/
 .env
 .env.backup
 .env.production
@@ -27,3 +29,5 @@ _static_backup/
 .codex_tmp_git_push_*/
 .codex_tmp_chrome_*/
 .codex_tmp_ui_audit/
+codex_*_preview.cjs
+/public/__codex_*_preview.html

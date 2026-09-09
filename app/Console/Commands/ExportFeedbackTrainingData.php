@@ -122,7 +122,6 @@ class ExportFeedbackTrainingData extends Command
                 'target_position' => trim((string) ($session?->target_position ?? '')),
                 'difficulty' => trim((string) ($session?->difficulty ?? $question?->difficulty ?? '')),
                 'interview_focus' => trim((string) ($session?->interview_focus ?? '')),
-                'company_persona' => trim((string) ($session?->company_persona ?? '')),
                 'answer' => $answerText,
                 'response_mode' => trim((string) ($answer->response_mode ?? 'text')),
                 'voice_duration' => (int) ($answer->voice_duration ?? 0),

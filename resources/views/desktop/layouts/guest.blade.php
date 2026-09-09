@@ -68,7 +68,7 @@
 
             sessionStorage.setItem(seenKey, '1');
             const startedAt = window.performance ? performance.now() : Date.now();
-            const minimumDuration = reduceMotion ? 240 : 1650;
+            const minimumDuration = reduceMotion ? 120 : 450;
 
             function finishWhenReady() {
                const now = window.performance ? performance.now() : Date.now();
@@ -82,7 +82,7 @@
                finishWhenReady();
             }
 
-            window.setTimeout(clearSplash, 3600);
+            window.setTimeout(clearSplash, 1200);
          })();
       </script>
       @endif
@@ -202,7 +202,7 @@
                                  'image' => 'img/desktop-preview/desktop-preview-setup.png',
                                  'alt' => 'SpeakReady AI desktop interview setup preview',
                                  'kicker' => 'Interview Setup',
-                                 'title' => 'Configure a focused Philippine interview.',
+                                 'title' => 'Configure a focused interview.',
                                  'text' => 'Set details, structure, access, scenario, and response settings before starting a tailored session.',
                               ],
                               [
@@ -436,7 +436,7 @@
                                         <span class="ui-mobile-wire-icon"><i class="fa-solid fa-chart-line"></i></span>
                                         <h3 class="ui-mobile-wire-trend-title">Readiness Trend</h3>
                                      </div>
-                                     <p class="ui-mobile-wire-trend-copy">Recent completed Philippine interview sessions, scored from 0 to 100.</p>
+                                     <p class="ui-mobile-wire-trend-copy">Recent completed interview sessions, scored from 0 to 100.</p>
                                      <div class="ui-mobile-wire-trend-actions">
                                         <span class="ui-mobile-wire-button">View Details <i class="fa-solid fa-chevron-right"></i></span>
                                         <span class="ui-mobile-wire-button">Recent 5 Sessions</span>
@@ -605,7 +605,7 @@
                                        <section class="ui-desktop-wire-panel ui-desktop-wire-score-panel">
                                           <div class="ui-desktop-wire-score-top">
                                              <span class="ui-desktop-wire-status"><i class="fa-solid fa-circle-check"></i> Interview Ready</span>
-                                             <span class="ui-desktop-wire-pill"><i class="fa-solid fa-location-dot"></i> PH Focus</span>
+                                             <span class="ui-desktop-wire-pill"><i class="fa-solid fa-location-dot"></i> Interview Focus</span>
                                           </div>
                                           <div class="ui-desktop-wire-score-layout">
                                              <div class="ui-desktop-wire-ring">
@@ -632,7 +632,7 @@
                                                       <span class="ui-desktop-wire-icon"><i class="fa-solid fa-chart-line"></i></span>
                                                       <h3 class="ui-desktop-wire-card-title">Readiness Trend</h3>
                                                    </div>
-                                                   <p class="ui-desktop-wire-card-subtitle">Recent completed Philippine interview sessions, scored from 0 to 100.</p>
+                                                   <p class="ui-desktop-wire-card-subtitle">Recent completed interview sessions, scored from 0 to 100.</p>
                                                 </div>
                                                 <span class="ui-desktop-wire-pill">Recent 10 Sessions</span>
                                              </div>
@@ -772,7 +772,7 @@
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for Philippine job and school admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
+                     <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for local job and school admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
 
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
                      <div class="target-users-grid d-flex flex-wrap gap-2 mb-4">
@@ -842,7 +842,7 @@
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.05s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#10b981;--feature-icon-bg:rgba(16,185,129,.14);--feature-icon-border:rgba(16,185,129,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Philippine AI Mock Interviews</h3>
+                        <h3 class="fs-6 fw-bold mb-2">AI Mock Interviews</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Practice with a realistic AI interviewer using role, category, difficulty, focus, and timed question settings.</p>
                      </div>
                   </div>
@@ -911,7 +911,7 @@
             <div class="container">
                <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">How It Works</span>
-                  <h2 class="stitle">Your journey to <span class="gt">Philippine interview mastery</span></h2>
+                  <h2 class="stitle">Your journey to <span class="gt">interview mastery</span></h2>
                </div>
 
                <div class="row g-4 justify-content-center">
@@ -933,7 +933,7 @@
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">3</div>
                         <h3 class="fs-5 fw-semibold mb-2">Practice With AI</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Answer realistic Philippine interview questions through typed, voice, or guided practice modes.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Answer realistic interview questions through typed, voice, or guided practice modes.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.3s">
@@ -1041,7 +1041,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1" aria-expanded="true" aria-controls="f1">What is SpeakReady AI?</button></h2>
                            <div id="f1" class="accordion-collapse collapse show" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">SpeakReady AI is a Philippine-focused interview practice system with AI mock interviews, role-based setup, learning modules, games, rubric feedback, progress tracking, reports, and private review sharing.</div>
+                              <div class="accordion-body">SpeakReady AI is a role-focused interview practice system with AI mock interviews, role-based setup, learning modules, games, rubric feedback, progress tracking, reports, and private review sharing.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
@@ -1104,7 +1104,7 @@
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-location-dot" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Location</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">Pinut-an, San Ricardo, Southern Leyte, Philippines</p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">Pinut-an, San Ricardo, Southern Leyte</p>
                              </div>
                          </div>
                      </div>
@@ -1170,7 +1170,7 @@
                         <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i footer-logo">
                         <span>SpeakReady AI</span>
                      </a>
-                     <p class="footer-copy">Your Philippine interview practice system for AI mock interviews, learning modules, progress reports, and private feedback sharing.</p>
+                     <p class="footer-copy">Your interview practice system for AI mock interviews, learning modules, progress reports, and private feedback sharing.</p>
                   </div>
                   <nav class="footer-nav-grid" aria-label="Footer navigation">
                      <div>
@@ -1218,7 +1218,7 @@
                      <div class="footer-socials" aria-label="Contact links">
                          <a href="mailto:admin@speakready.ai" class="footer-social-link" title="Email SpeakReady AI" aria-label="Email SpeakReady AI"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
                          <a href="tel:09066544727" class="footer-social-link" title="Call SpeakReady AI" aria-label="Call SpeakReady AI"><i class="fa-solid fa-phone" aria-hidden="true"></i></a>
-                         <a href="https://www.google.com/maps/search/?api=1&query=Pinut-an%2C%20San%20Ricardo%2C%20Southern%20Leyte%2C%20Philippines" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="View location" aria-label="View location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></a>
+                         <a href="https://www.google.com/maps/search/?api=1&query=Pinut-an%2C%20San%20Ricardo%2C%20Southern%20Leyte" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="View location" aria-label="View location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></a>
                      </div>
                   </div>
                </div>

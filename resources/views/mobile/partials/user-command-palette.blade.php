@@ -90,7 +90,7 @@
 
                 <a id="ucp-destination-interview" class="ucp-result" href="{{ route('interview.setup') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-microphone-lines" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Mock Interview</strong><small>Start guided Philippine interview practice</small></span>
+                    <span class="ucp-result-copy"><strong>Mock Interview</strong><small>Start guided interview practice</small></span>
                     <span class="ucp-result-group">Practice</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
@@ -111,14 +111,14 @@
 
                 <a id="ucp-destination-coach" class="ucp-result" href="{{ route('user.coach') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-robot" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>AI Coach</strong><small>Get Philippine interview guidance</small></span>
+                    <span class="ucp-result-copy"><strong>AI Coach</strong><small>Get interview guidance</small></span>
                     <span class="ucp-result-group">Training</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
                 <a id="ucp-destination-progress" class="ucp-result" href="{{ route('user.progress') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Progress</strong><small>See Philippines interview trends and growth</small></span>
+                    <span class="ucp-result-copy"><strong>Progress</strong><small>See interview trends and growth</small></span>
                     <span class="ucp-result-group">Insights</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>

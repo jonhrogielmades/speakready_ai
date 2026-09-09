@@ -20,7 +20,7 @@ class LearningModuleSchemaRepairTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.modules.index'))
             ->assertOk()
-            ->assertSee('Philippines Interview Modules');
+            ->assertSee('Interview Modules');
 
         foreach ($this->requiredLearningTables() as $table) {
             $this->assertTrue(Schema::hasTable($table), "Expected {$table} to be repaired.");

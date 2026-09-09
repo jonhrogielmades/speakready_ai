@@ -297,6 +297,7 @@ html body .feedback-shell #feedback-filters .feedback-search-wrap .form-control:
         --feedback-feature-empty-bg: rgba(239, 246, 255, 0.58);
         --feedback-feature-shadow: 0 14px 34px rgba(37, 99, 235, 0.08);
     }
+    html[data-theme="dark"].feedback-shell,
     html[data-theme="dark"] .feedback-shell,
     :root:not(.lm) .feedback-shell,
     body.dm .feedback-shell,
@@ -583,6 +584,34 @@ html body .feedback-shell #feedback-filters .feedback-search-wrap .form-control:
         font-weight: 950;
         text-transform: uppercase;
         margin-bottom: 5px;
+    }
+    .feedback-answer-voice {
+        display: grid;
+        gap: 6px;
+        margin-top: 8px;
+        padding: 8px;
+        border: 1px solid rgba(37, 99, 235, 0.18);
+        border-radius: 8px;
+        background: rgba(37, 99, 235, 0.06);
+    }
+    .feedback-answer-voice span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #2563eb;
+        font-size: 0.68rem;
+        font-weight: 900;
+    }
+    .feedback-answer-voice audio {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        height: 34px;
+    }
+    .feedback-answer-voice small {
+        color: var(--feedback-feature-text);
+        font-size: 0.68rem;
+        line-height: 1.35;
     }
     .feedback-answer-focus {
         border-left: 3px solid #10b981;
@@ -3340,4 +3369,71 @@ body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badg
     color: #fecaca !important;
     -webkit-text-fill-color: #fecaca !important;
     background: rgba(127, 29, 29, 0.62) !important;
+}
+
+/* User-facing feedback simplification */
+#mob-content .feedback-shell .feedback-section-label,
+html body .feedback-shell .feedback-section-label {
+    color: var(--feedback-feature-muted);
+    font-size: 0.68rem;
+    font-weight: 950;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+#mob-content .feedback-shell .feedback-summary-actions,
+html body .feedback-shell .feedback-summary-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+#mob-content .feedback-shell .feedback-summary-action,
+html body .feedback-shell .feedback-summary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    border: 1px solid var(--feedback-feature-border-soft);
+    border-radius: 8px;
+    background: var(--feedback-feature-panel-inner);
+    color: var(--feedback-feature-link);
+    font-size: 0.76rem;
+    font-weight: 950;
+    line-height: 1;
+    padding: 0 12px;
+    text-decoration: none;
+}
+
+#mob-content .feedback-shell .feedback-summary-action-primary,
+html body .feedback-shell .feedback-summary-action-primary {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+#mob-content .feedback-shell .feedback-answer-feedback strong,
+html body .feedback-shell .feedback-answer-feedback strong {
+    color: var(--feedback-feature-title);
+}
+
+#mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+html body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work {
+    color: #b45309 !important;
+    -webkit-text-fill-color: #b45309 !important;
+    background: rgba(245, 158, 11, 0.18) !important;
+}
+
+html[data-theme="dark"] body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+:root:not(.lm) body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+body.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+html[data-theme="dark"] body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+:root:not(.lm) body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work {
+    color: #fde68a !important;
+    -webkit-text-fill-color: #fde68a !important;
+    background: rgba(146, 64, 14, 0.54) !important;
 }

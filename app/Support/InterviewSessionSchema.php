@@ -10,10 +10,11 @@ use Illuminate\Support\Facades\Schema;
 class InterviewSessionSchema
 {
     private static bool $checked = false;
+    private static bool $ready = false;
 
     public static function ensure(bool $force = false, bool $createIfMissing = true): void
     {
-        if (! $force && self::$checked && self::hasRequiredColumns()) {
+        if (! $force && self::$checked && self::$ready && ! app()->runningUnitTests()) {
             return;
         }
 
@@ -23,6 +24,7 @@ class InterviewSessionSchema
             }
 
             self::$checked = true;
+            self::$ready = $createIfMissing;
             self::flushModelColumnCache();
 
             return;
@@ -38,6 +40,7 @@ class InterviewSessionSchema
         self::normalizeDefaults();
 
         self::$checked = true;
+        self::$ready = true;
         self::flushModelColumnCache();
     }
 
@@ -62,15 +65,12 @@ class InterviewSessionSchema
             $table->string('coach_focus_mode')->default('balanced');
             $table->string('response_mode')->default('text');
             $table->string('interview_focus')->nullable();
-            $table->string('company_persona')->nullable();
-            $table->string('interviewer_strictness')->default('neutral');
             $table->integer('time_limit')->default(0);
             $table->string('question_types')->nullable();
             $table->string('ai_assistance_level')->default('standard');
             $table->string('live_feedback_mode')->default('coaching');
             $table->boolean('pressure_mode')->default(false);
             $table->string('assessment_mode')->default('legacy');
-            $table->string('interview_format')->default('standard');
             $table->json('accommodation_profile')->nullable();
             $table->boolean('score_eligible')->default(false);
             $table->string('status')->default('pending');
@@ -129,12 +129,6 @@ class InterviewSessionSchema
         if (self::isMissing($missing, 'interview_focus')) {
             $table->string('interview_focus')->nullable();
         }
-        if (self::isMissing($missing, 'company_persona')) {
-            $table->string('company_persona')->nullable();
-        }
-        if (self::isMissing($missing, 'interviewer_strictness')) {
-            $table->string('interviewer_strictness')->default('neutral');
-        }
         if (self::isMissing($missing, 'time_limit')) {
             $table->integer('time_limit')->default(0);
         }
@@ -152,9 +146,6 @@ class InterviewSessionSchema
         }
         if (self::isMissing($missing, 'assessment_mode')) {
             $table->string('assessment_mode')->default('legacy');
-        }
-        if (self::isMissing($missing, 'interview_format')) {
-            $table->string('interview_format')->default('standard');
         }
         if (self::isMissing($missing, 'accommodation_profile')) {
             $table->json('accommodation_profile')->nullable();
@@ -260,15 +251,12 @@ class InterviewSessionSchema
             'coach_focus_mode',
             'response_mode',
             'interview_focus',
-            'company_persona',
-            'interviewer_strictness',
             'time_limit',
             'question_types',
             'ai_assistance_level',
             'live_feedback_mode',
             'pressure_mode',
             'assessment_mode',
-            'interview_format',
             'accommodation_profile',
             'score_eligible',
             'status',
@@ -300,13 +288,11 @@ class InterviewSessionSchema
             'num_questions' => 5,
             'coach_focus_mode' => 'balanced',
             'response_mode' => 'text',
-            'interviewer_strictness' => 'neutral',
             'time_limit' => 0,
             'ai_assistance_level' => 'standard',
             'live_feedback_mode' => 'coaching',
             'pressure_mode' => false,
             'assessment_mode' => 'legacy',
-            'interview_format' => 'standard',
             'score_eligible' => false,
             'status' => 'pending',
             'duration_seconds' => 0,

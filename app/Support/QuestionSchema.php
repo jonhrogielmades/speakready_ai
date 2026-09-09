@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Schema;
 class QuestionSchema
 {
     private static bool $checked = false;
+    private static bool $ready = false;
 
     public static function ensure(bool $force = false, bool $createIfMissing = true): void
     {
-        if (! $force && self::$checked && self::hasRequiredColumns()) {
+        if (! $force && self::$checked && self::$ready && ! app()->runningUnitTests()) {
             return;
         }
 
@@ -21,6 +22,7 @@ class QuestionSchema
             }
 
             self::$checked = true;
+            self::$ready = $createIfMissing && Schema::hasTable('questions');
 
             return;
         }
@@ -90,6 +92,7 @@ class QuestionSchema
         }
 
         self::$checked = true;
+        self::$ready = true;
     }
 
     public static function hasRequiredColumns(): bool

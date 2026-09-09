@@ -8692,3 +8692,106 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-
 html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid #voice-progress .voice-empty {
     flex: 1 1 auto !important;
 }
+/* Readiness-first progress updates. */
+#sec-progress-tracking .progress-stat-card.readiness-primary {
+    border-color: color-mix(in srgb, var(--stat-accent, #64748b) 34%, var(--bd));
+}
+
+#sec-progress-tracking .history-footer-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-stat-card.readiness-primary {
+    align-content: center !important;
+    overflow: hidden !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-stat-card.readiness-primary :is(.progress-stat-value, .progress-stat-label) {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Desktop Progress: Learning and Recommended panels fill the row as a two-card pair. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid {
+        --bs-gutter-x: 16px !important;
+        --bs-gutter-y: 16px !important;
+        width: 100% !important;
+        max-width: var(--desktop-content-max, 1480px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        align-items: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #recommended-next) {
+        display: flex !important;
+        width: 50% !important;
+        max-width: 50% !important;
+        flex: 0 0 50% !important;
+        align-self: stretch !important;
+        padding-left: calc(var(--bs-gutter-x) * 0.5) !important;
+        padding-right: calc(var(--bs-gutter-x) * 0.5) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > #voice-progress {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid :is(.learning-panel, .recommend-panel) {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 16px !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid :is(.learning-heading, .recommend-heading) {
+        flex: 0 0 auto !important;
+        margin-bottom: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid :is(.learning-list, .recommend-list) {
+        display: grid !important;
+        align-content: start !important;
+        flex: 0 0 auto !important;
+        gap: 10px !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding-right: 0 !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid .learning-module {
+        min-height: 68px !important;
+        align-items: center !important;
+        padding: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid .learning-summary {
+        flex: 0 0 auto !important;
+        margin-top: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid .recommend-item {
+        min-height: 96px !important;
+        align-items: center !important;
+        padding: 14px !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1180px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #recommended-next) {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex-basis: 100% !important;
+    }
+}

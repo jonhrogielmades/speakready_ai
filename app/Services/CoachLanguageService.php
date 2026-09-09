@@ -237,7 +237,7 @@ final class CoachLanguageService
         $instruction = match ($language) {
             self::FILIPINO => 'Write the entire response in natural Filipino (Tagalog). Common English technical terms may remain only when that is natural, but keep all explanations in Filipino. Do not drift into English, Taglish, or Cebuano/Binisaya.',
             self::CEBUANO => 'Write the entire response in natural Cebuano (Binisaya). Common English technical terms may remain only when that is natural, but keep all explanations in Cebuano. Do not drift into Filipino/Tagalog, Taglish, or English.',
-            self::TAGLISH => 'Write the response in natural Philippine Taglish, using a clear Filipino-English mix that mirrors the approximate balance and tone of the user\'s latest message. Do not make the response purely English, purely Filipino, or Cebuano/Binisaya.',
+            self::TAGLISH => 'Write the response in natural Taglish, using a clear Filipino-English mix that mirrors the approximate balance and tone of the user\'s latest message. Do not make the response purely English, purely Filipino, or Cebuano/Binisaya.',
             default => 'Write the entire response in natural English. Do not switch to Filipino/Tagalog, Taglish, or Cebuano/Binisaya.',
         };
 

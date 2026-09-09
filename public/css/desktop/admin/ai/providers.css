@@ -101,6 +101,67 @@
         margin: 20px 0;
         background: var(--bd);
     }
+    #sec-admin-ai-providers .ai-process-panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+    #sec-admin-ai-providers .ai-process-panel-title > div {
+        min-width: 0;
+    }
+    #sec-admin-ai-providers .ai-process-panel-title p {
+        color: var(--tx2);
+        font-size: .9rem;
+        line-height: 1.45;
+    }
+    #sec-admin-ai-providers .ai-process-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+    #sec-admin-ai-providers .ai-process-summary > div {
+        min-width: 0;
+        padding: 12px;
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        background: var(--bg3, rgba(255,255,255,.03));
+    }
+    #sec-admin-ai-providers .ai-process-summary strong {
+        display: block;
+        font-size: 1.25rem;
+        line-height: 1.1;
+    }
+    #sec-admin-ai-providers .ai-process-summary span {
+        display: block;
+        color: var(--tx2);
+        font-size: .78rem;
+        line-height: 1.25;
+        margin-top: 4px;
+    }
+    #sec-admin-ai-providers .ai-process-name {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        font-weight: 700;
+    }
+    #sec-admin-ai-providers .ai-process-name i {
+        flex: 0 0 auto;
+        color: #34d399;
+    }
+    #sec-admin-ai-providers .ai-process-name span {
+        overflow-wrap: anywhere;
+    }
+    #sec-admin-ai-providers #openAiProcessTable small {
+        display: block;
+        color: var(--tx3);
+        font-size: .78rem;
+        line-height: 1.35;
+        margin-top: 5px;
+    }
     #sec-admin-ai-providers .ai-provider-stats-grid .position-absolute.badge {
         top: 12px !important;
         right: 12px !important;
@@ -126,11 +187,13 @@
         text-align: left;
     }
     #moduleUsageTableWrapper,
+    #openAiProcessTableWrapper,
     #mainProvidersTableWrapper {
         width: 100%;
         max-width: 100%;
     }
     #moduleUsageTable,
+    #openAiProcessTable,
     #mainProvidersTable {
         width: 100%;
         min-width: 0;
@@ -138,12 +201,24 @@
     }
     #moduleUsageTable th,
     #moduleUsageTable td,
+    #openAiProcessTable th,
+    #openAiProcessTable td,
     #mainProvidersTable th,
     #mainProvidersTable td {
         min-width: 0;
         vertical-align: middle;
         overflow-wrap: anywhere;
     }
+    #openAiProcessTable th:nth-child(1),
+    #openAiProcessTable td:nth-child(1) { width: 34%; }
+    #openAiProcessTable th:nth-child(2),
+    #openAiProcessTable td:nth-child(2) { width: 14%; }
+    #openAiProcessTable th:nth-child(3),
+    #openAiProcessTable td:nth-child(3) { width: 25%; }
+    #openAiProcessTable th:nth-child(4),
+    #openAiProcessTable td:nth-child(4) { width: 15%; }
+    #openAiProcessTable th:nth-child(5),
+    #openAiProcessTable td:nth-child(5) { width: 12%; }
     #mainProvidersTable th:nth-child(1),
     #mainProvidersTable td:nth-child(1) { width: 24%; }
     #mainProvidersTable th:nth-child(2),
@@ -170,6 +245,64 @@
     }
 /* Mobile Card-based Table Layout for Module Usage Table */
     @media (max-width: 767px) {
+        #sec-admin-ai-providers .ai-process-panel-title {
+            flex-direction: column;
+            gap: 10px;
+        }
+        #sec-admin-ai-providers .ai-process-summary {
+            grid-template-columns: 1fr;
+        }
+        #openAiProcessTableWrapper {
+            overflow-x: visible !important;
+            -webkit-overflow-scrolling: auto !important;
+        }
+        #openAiProcessTable thead {
+            display: none;
+        }
+        #openAiProcessTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg3, rgba(255,255,255,0.02));
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd, rgba(255,255,255,0.1));
+            padding: 12px;
+        }
+        #openAiProcessTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-top: none !important;
+            text-align: right;
+        }
+        #openAiProcessTable tbody td:last-child {
+            border-bottom: none !important;
+        }
+        #openAiProcessTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3, #888);
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        #openAiProcessTable tbody td:nth-child(1)::before { content: none; }
+        #openAiProcessTable tbody td:nth-child(2)::before { content: "Area"; }
+        #openAiProcessTable tbody td:nth-child(3)::before { content: "Connection"; }
+        #openAiProcessTable tbody td:nth-child(4)::before { content: "Status"; }
+        #openAiProcessTable tbody td:nth-child(5)::before { content: "Logs"; }
+        #openAiProcessTable tbody td:nth-child(1) {
+            order: -1;
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+            text-align: left;
+            flex-direction: column;
+            align-items: flex-start;
+        }
         #moduleUsageTableWrapper {
             overflow-x: visible !important;
             -webkit-overflow-scrolling: auto !important;
@@ -295,6 +428,7 @@
     .stat-badge.warning { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
     .stat-badge.danger { background: rgba(248, 113, 113, 0.15); color: #f87171; }
     .stat-badge.primary { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+    .stat-badge.secondary { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
     .input-dark {
         background: var(--bg3, #2b2b40);
         border: 1px solid var(--bd, rgba(255,255,255,0.1));

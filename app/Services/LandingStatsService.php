@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Score;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
@@ -10,6 +11,15 @@ use Throwable;
 class LandingStatsService
 {
     public function summary(): array
+    {
+        try {
+            return Cache::remember('landing_stats.summary', 60, fn (): array => $this->freshSummary());
+        } catch (Throwable) {
+            return $this->freshSummary();
+        }
+    }
+
+    private function freshSummary(): array
     {
         try {
             $registeredUsers = $this->registeredUsers();

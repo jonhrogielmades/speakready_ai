@@ -2,16 +2,18 @@
 
 namespace App\Support;
 
+use App\Models\Feedback;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 class FeedbackSchema
 {
     private static bool $checked = false;
+    private static bool $ready = false;
 
     public static function ensure(bool $force = false, bool $createIfMissing = true): void
     {
-        if (! $force && self::$checked && self::hasRequiredColumns()) {
+        if (! $force && self::$checked && self::$ready && ! app()->runningUnitTests()) {
             return;
         }
 
@@ -21,6 +23,8 @@ class FeedbackSchema
             }
 
             self::$checked = true;
+            self::$ready = $createIfMissing && Schema::hasTable('feedback');
+            self::flushModelColumnCache();
 
             return;
         }
@@ -53,6 +57,8 @@ class FeedbackSchema
         }
 
         self::$checked = true;
+        self::$ready = true;
+        self::flushModelColumnCache();
     }
 
     public static function hasRequiredColumns(): bool
@@ -120,5 +126,12 @@ class FeedbackSchema
     private static function isMissing(array $missing, string $column): bool
     {
         return in_array($column, $missing, true);
+    }
+
+    private static function flushModelColumnCache(): void
+    {
+        if (method_exists(Feedback::class, 'flushColumnCache')) {
+            Feedback::flushColumnCache();
+        }
     }
 }

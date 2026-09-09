@@ -570,7 +570,7 @@ class WeightedReadinessScoringTest extends TestCase
         $answer = [
             'id' => 101,
             'question_type' => 'Behavioral',
-            'question' => 'Why should a Philippine employer hire you for this role?',
+            'question' => 'Why should a employer hire you for this role?',
             'expected_guide' => 'Connect role requirements to specific experience, strengths, measurable results, and motivation.',
             'answer' => 'My support experience and careful documentation match the role, and I can contribute a consistent approach to resolving customer requests.',
         ];

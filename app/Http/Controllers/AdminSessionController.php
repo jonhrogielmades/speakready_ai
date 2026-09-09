@@ -16,12 +16,17 @@ class AdminSessionController extends Controller
     public function index(Request $request)
     {
         // Feature 1: Session Dashboard Stats
-        $totalSessions = InterviewSession::count();
-        $activeSessionsToday = InterviewSession::whereDate('created_at', today())->count();
-        $completedSessions = InterviewSession::where('status', 'completed')->count();
+        $todayStart = today()->startOfDay();
+        $tomorrowStart = today()->addDay()->startOfDay();
+        $sessionStats = InterviewSession::query()
+            ->selectRaw('COUNT(*) as total_sessions, SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) as active_sessions_today, SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed_sessions, AVG(duration_seconds) as avg_duration', [$todayStart, $tomorrowStart, 'completed'])
+            ->first();
+        $totalSessions = (int) ($sessionStats->total_sessions ?? 0);
+        $activeSessionsToday = (int) ($sessionStats->active_sessions_today ?? 0);
+        $completedSessions = (int) ($sessionStats->completed_sessions ?? 0);
 
         $avgScore = DB::table('scores')->avg('overall_readiness_score') ?? 0;
-        $avgDuration = DB::table('interview_sessions')->avg('duration_seconds') ?? 0;
+        $avgDuration = $sessionStats->avg_duration ?? 0;
 
         // Feature 7: Session Analytics
         $mostUsedCategory = DB::table('interview_sessions')
@@ -34,17 +39,21 @@ class AdminSessionController extends Controller
         $sessionCompletionRate = $totalSessions > 0 ? ($completedSessions / $totalSessions) * 100 : 0;
 
         $dailySessionCount = InterviewSession::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as total'))
+            ->where('created_at', '>=', now()->subDays(6)->startOfDay())
             ->groupBy('date')
             ->orderBy('date', 'desc')
             ->take(7)
             ->get();
 
         // Feature 9: Readiness Score Distribution
+        $scoreDistribution = DB::table('scores')
+            ->selectRaw('SUM(CASE WHEN overall_readiness_score >= 90 THEN 1 ELSE 0 END) as excellent, SUM(CASE WHEN overall_readiness_score BETWEEN 80 AND 89 THEN 1 ELSE 0 END) as good, SUM(CASE WHEN overall_readiness_score BETWEEN 70 AND 79 THEN 1 ELSE 0 END) as fair, SUM(CASE WHEN overall_readiness_score < 70 THEN 1 ELSE 0 END) as needs_improvement')
+            ->first();
         $readinessDistribution = [
-            'Excellent' => DB::table('scores')->where('overall_readiness_score', '>=', 90)->count(),
-            'Good' => DB::table('scores')->whereBetween('overall_readiness_score', [80, 89])->count(),
-            'Fair' => DB::table('scores')->whereBetween('overall_readiness_score', [70, 79])->count(),
-            'Needs Improvement' => DB::table('scores')->where('overall_readiness_score', '<', 70)->count(),
+            'Excellent' => (int) ($scoreDistribution->excellent ?? 0),
+            'Good' => (int) ($scoreDistribution->good ?? 0),
+            'Fair' => (int) ($scoreDistribution->fair ?? 0),
+            'Needs Improvement' => (int) ($scoreDistribution->needs_improvement ?? 0),
         ];
 
         // Feature 2: Session List & Search/Filter/Sort

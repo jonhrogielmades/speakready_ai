@@ -487,7 +487,7 @@ class InterviewSecurityTest extends TestCase
                 && in_array('Cebuano', (array) data_get($fields, 'keywords[]', []), true)
                 && in_array('Bisaya', (array) data_get($fields, 'keywords[]', []), true)
                 && in_array('tabang', (array) data_get($fields, 'keywords[]', []), true)
-                && str_contains((string) data_get($fields, 'prompt.0'), 'Philippine job interview practice answer')
+                && str_contains((string) data_get($fields, 'prompt.0'), 'job interview practice answer')
                 && str_contains((string) data_get($fields, 'prompt.0'), 'Cebuano')
                 && str_contains((string) data_get($fields, 'prompt.0'), 'Recent earlier transcript')
                 && ($filePart['filename'] ?? null) === 'speech.webm';

@@ -419,7 +419,6 @@ class AiProviderEvaluationService
             $question->question_text,
             'General interview readiness'
         );
-        $companyPersona = $this->firstFilled($session->company_persona, 'Panel interview evaluator');
         $questionTypes = $this->parseQuestionTypes($session->question_types ?: $question->type);
         $questionTypes = $questionTypes !== [] ? $questionTypes : ['behavioral', 'situational'];
         $answersData = $this->userRequestAnswersData($session);
@@ -440,13 +439,10 @@ class AiProviderEvaluationService
                 'target_position' => $targetPosition,
                 'difficulty' => $difficulty,
                 'focus' => $focus,
-                'company_persona' => $companyPersona,
                 'question_types' => $questionTypes,
                 'resume_text' => $session->getAttribute('resume_text'),
                 'job_description' => $session->getAttribute('job_description'),
                 'ai_assistance_level' => $this->firstFilled($session->ai_assistance_level, 'standard'),
-                'interviewer_strictness' => $this->firstFilled($session->interviewer_strictness, 'neutral'),
-                'interview_format' => $this->firstFilled($session->interview_format, 'standard'),
                 'dataset_context' => 'Real user request context: session #'.$session->id
                     .'; latest answer #'.$answer->id
                     .'; latest question: '.$question->question_text
@@ -462,10 +458,7 @@ class AiProviderEvaluationService
                     'target_position' => $targetPosition,
                     'difficulty' => $difficulty,
                     'interview_focus' => $focus,
-                    'company_persona' => $companyPersona,
-                    'interview_format' => $this->firstFilled($session->interview_format, 'standard'),
                     'ai_assistance_level' => $this->firstFilled($session->ai_assistance_level, 'standard'),
-                    'interviewer_strictness' => $this->firstFilled($session->interviewer_strictness, 'neutral'),
                     'source' => 'real_user_request',
                     'session_id' => $session->id,
                 ],
@@ -573,7 +566,6 @@ class AiProviderEvaluationService
             $session->target_position,
             $session->difficulty,
             $session->interview_focus,
-            $session->company_persona,
             $categoryTitle,
             $latestAnswer->question?->question_text,
             $latestAnswer->answer_text,
@@ -649,13 +641,10 @@ class AiProviderEvaluationService
                     $provider['provider_key'],
                     $case['resume_text'] ?? null,
                     $case['job_description'] ?? null,
-                    $case['company_persona'] ?? null,
                     $case['question_types'] ?? [],
                     $case['ai_assistance_level'] ?? 'standard',
-                    $case['interviewer_strictness'] ?? 'neutral',
                     $case['dataset_context'] ?? null,
                     $case['target_language'] ?? null,
-                    $case['interview_format'] ?? 'standard',
                     (bool) ($case['simplified_questions'] ?? false),
                     [
                         'timeout_seconds' => max(5, min(20, (int) env('AI_PROVIDER_EVALUATION_TIMEOUT', 10))),
@@ -1679,13 +1668,12 @@ class AiProviderEvaluationService
             [
                 'case_key' => 'questions_customer_service_ph',
                 'task_type' => 'question_generation',
-                'title' => 'Question generation for Philippine customer service',
+                'title' => 'Question generation for local customer service',
                 'evidence_focus' => 'Provider must return role-specific interview questions in valid JSON.',
                 'num_questions' => 3,
                 'target_position' => 'Customer Service Representative',
                 'difficulty' => 'Medium',
-                'focus' => 'Philippine HR screening, customer complaints, call handling, and BPO readiness',
-                'company_persona' => 'Philippine BPO hiring manager',
+                'focus' => 'HR screening, customer complaints, call handling, and BPO readiness',
                 'question_types' => ['behavioral', 'situational'],
                 'expected_terms' => [
                     'customer',
@@ -1695,7 +1683,7 @@ class AiProviderEvaluationService
                     'client',
                     'bpo',
                     'representative',
-                    'philippine',
+                    'local',
                 ],
             ],
             [
@@ -1706,8 +1694,8 @@ class AiProviderEvaluationService
                 'session_data' => [
                     'target_position' => 'Customer Service Representative',
                     'difficulty' => 'Medium',
-                    'interview_focus' => 'Philippine customer support interview',
-                    'country' => 'Philippines',
+                    'interview_focus' => 'local customer support interview',
+                    'country' => 'local',
                     'target_language' => 'en',
                 ],
                 'answers_data' => [

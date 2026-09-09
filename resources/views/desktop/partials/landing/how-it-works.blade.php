@@ -3,7 +3,7 @@
             <div class="container">
                <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">How It Works</span>
-                  <h2 class="stitle">Your journey to <span class="gt">Philippine interview mastery</span></h2>
+                  <h2 class="stitle">Your journey to <span class="gt">interview mastery</span></h2>
                </div>
                
                <div class="row g-4 justify-content-center">
@@ -25,7 +25,7 @@
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">3</div>
                         <h3 class="fs-5 fw-semibold mb-2">Practice With AI</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Answer realistic Philippine interview questions through typed, voice, or guided practice modes.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Answer realistic interview questions through typed, voice, or guided practice modes.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.3s">

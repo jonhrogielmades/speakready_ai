@@ -64,7 +64,7 @@
             : ($goalPercent >= 40
                 ? 'You are building momentum toward this goal.'
                 : 'Start with one scored session to build momentum.'));
-    $challengeTitle = $scoreVal >= 75 ? 'Sharpen 3 advanced PH answers' : 'Answer 3 Philippine HR questions';
+    $challengeTitle = $scoreVal >= 75 ? 'Sharpen 3 advanced advanced answers' : 'Answer 3 HR questions';
     $challengeCopy = $scoreVal >= 75
         ? 'Polish role-fit stories, metrics, and confident closing answers.'
         : 'Practice structure, confidence, and local role-fit responses.';
@@ -282,7 +282,7 @@
             <section class="sr-card sr-score-panel {{ $scoreVal >= 80 ? 'score-high-panel' : ($scoreVal >= 60 ? 'score-med-panel' : 'score-low-panel') }}" aria-label="Readiness score">
                 <div class="sr-score-top">
                     <span class="sr-status-pill {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
-                    <span class="sr-chip ph-focus-chip"><i class="fa-solid fa-location-dot"></i> PH Focus</span>
+                    <span class="sr-chip ph-focus-chip"><i class="fa-solid fa-location-dot"></i> Interview Focus</span>
                 </div>
                 <div class="sr-score-layout">
                     <div class="sr-readiness-ring" style="--ring-value: {{ $scoreVal }}%;" aria-label="Overall readiness {{ $scoreVal }} percent">
@@ -398,7 +398,7 @@
                             <div class="sr-trend-icon"><i class="fa-solid fa-chart-line"></i></div>
                             <h5 class="sr-trend-title">Readiness Trend</h5>
                         </div>
-                        <p class="sr-trend-subtitle">Recent completed Philippine interview sessions, scored from 0 to 100.</p>
+                        <p class="sr-trend-subtitle">Recent completed interview sessions, scored from 0 to 100.</p>
                     </div>
                     <span class="sr-trend-state {{ $trendDirectionClass }}"><i class="fa-solid {{ $trendDirectionIcon }}"></i> {{ $trendDirectionText }}</span>
                 </div>
@@ -462,7 +462,7 @@
                         <div class="sr-polished-empty">
                             <div class="sr-polished-empty-inner">
                                 <div class="sr-empty-visual"><i class="fa-solid fa-folder-open"></i></div>
-                                <p class="sr-polished-empty-text">Complete a Philippine interview session to unlock category performance.</p>
+                                <p class="sr-polished-empty-text">Complete a interview session to unlock category performance.</p>
                             </div>
                         </div>
                     @endif
@@ -502,7 +502,7 @@
                         <div class="sr-polished-empty">
                             <div class="sr-polished-empty-inner">
                                 <div class="sr-empty-visual"><i class="fa-solid fa-lightbulb"></i></div>
-                                <p class="sr-polished-empty-text">Complete a Philippine interview to get tailored recommendations.</p>
+                                <p class="sr-polished-empty-text">Complete a interview to get tailored recommendations.</p>
                             </div>
                         </div>
                     @endif
@@ -517,7 +517,7 @@
                             <h5 class="sr-polished-title">Recent Sessions</h5>
                             <a href="{{ route('user.reports') }}" class="sr-plan-cta" style="margin-top:0;color:#2563eb">View All <i class="fa-solid fa-chevron-right"></i></a>
                         </div>
-                        <p class="sr-polished-subtitle">Review the latest completed Philippine mock interviews.</p>
+                        <p class="sr-polished-subtitle">Review the latest completed local mock interviews.</p>
                     </div>
                 </div>
                 <div class="sr-section-actions">
@@ -551,7 +551,7 @@
                                 @endphp
                                 <tr>
                                     <td>{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</td>
-                                    <td><span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">{{ $session->category ? $session->category->title : 'Philippines Interview' }}</span></td>
+                                    <td><span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">{{ $session->category ? $session->category->title : 'Interview' }}</span></td>
                                     <td><span style="color:{{ $sessionColor }};font-weight:900">{{ $sessionScore }}%</span></td>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-2">
@@ -568,7 +568,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-4" style="color:var(--tx3)">No recent sessions found. Start Philippine interview practice when you are ready.</td>
+                                    <td colspan="4" class="text-center py-4" style="color:var(--tx3)">No recent sessions found. Start interview practice when you are ready.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -584,7 +584,7 @@
                         <div class="sr-session-card-polished">
                             <div class="sr-session-icon"><i class="fa-solid fa-briefcase"></i></div>
                             <div class="sr-session-meta">
-                                <div class="sr-session-title">{{ $session->category ? $session->category->title : 'Philippines Interview' }}</div>
+                                <div class="sr-session-title">{{ $session->category ? $session->category->title : 'Interview' }}</div>
                                 <div class="sr-session-date">{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</div>
                             </div>
                             <div class="sr-session-score-stack" style="--score-color: {{ $sessionColor }}">
@@ -604,7 +604,7 @@
                         <div class="sr-polished-empty">
                             <div class="sr-polished-empty-inner">
                                 <div class="sr-empty-visual"><i class="fa-solid fa-calendar-plus"></i></div>
-                                <p class="sr-polished-empty-text">No recent sessions found. Start Philippine interview practice when you are ready.</p>
+                                <p class="sr-polished-empty-text">No recent sessions found. Start interview practice when you are ready.</p>
                             </div>
                         </div>
                     @endforelse
@@ -652,7 +652,7 @@
                     <span class="sr-reward-pill xp"><i class="fa-regular fa-star"></i> +{{ $challengeXp }} XP</span>
                     <span class="sr-reward-pill streak"><i class="fa-solid fa-fire"></i> Streak eligible</span>
                 </div>
-                <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100 sr-challenge-cta"><i class="fa-solid fa-play"></i> Start PH Challenge</a>
+                <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100 sr-challenge-cta"><i class="fa-solid fa-play"></i> Start Interview Challenge</a>
             </section>
 
             <section class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#ef4444">
@@ -734,19 +734,16 @@
         <div class="modal-content">
             <form id="dashboardMockForm" action="{{ route('interview.start') }}" method="POST">
                 @csrf
-                <input type="hidden" name="interview_focus" id="dashboardMockFocus" value="{{ $dashboardMockSelectedScenario['interview_focus'] ?? 'Philippines Job Interview' }}">
+                <input type="hidden" name="interview_focus" id="dashboardMockFocus" value="{{ $dashboardMockSelectedScenario['interview_focus'] ?? 'Job Interview' }}">
                 <input type="hidden" name="coach_focus_mode" value="balanced">
-                <input type="hidden" name="company_persona" value="Philippines hiring context">
-                <input type="hidden" name="interviewer_strictness" value="neutral">
                 <input type="hidden" name="time_limit" value="0">
                 <input type="hidden" name="ai_assistance_level" value="standard">
-                <input type="hidden" name="interview_format" value="standard">
                 <div class="modal-header">
                     <div class="sr-dashboard-coach-heading">
                         <span class="sr-dashboard-coach-icon"><i class="fa-solid fa-play"></i></span>
                         <div>
                             <h5 class="modal-title" id="dashboardMockModalTitle">Start Mock Interview</h5>
-                            <p>Set up a focused Philippines practice session.</p>
+                            <p>Set up a focused practice session.</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1292,7 +1289,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (!selectedOption) return;
 
                 if (focusInput) {
-                    focusInput.value = selectedOption.dataset.focus || 'Philippines Job Interview';
+                    focusInput.value = selectedOption.dataset.focus || 'Job Interview';
                 }
             }
 
@@ -1575,7 +1572,7 @@ document.addEventListener("DOMContentLoaded", function() {
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
             { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to choose the module, challenge, or interview that fits your latest gaps.', side: 'bottom', align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
-            { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused Philippines interview task for XP, streak progress, and sharper answer structure.', side: 'left', align: 'start' }},
+            { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused interview task for XP, streak progress, and sharper answer structure.', side: 'left', align: 'start' }},
             { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: 'bottom', align: 'center' }},
             { element: '#profileWrap', popover: { title: 'Account And Language', description: 'Manage profile settings, language translation, notifications, and sign-out options.', side: 'bottom', align: 'end' }}
         ];

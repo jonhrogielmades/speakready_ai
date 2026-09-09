@@ -91,7 +91,7 @@ return new class extends Migration
         }
 
         if (str_contains($context, 'final') || str_contains($context, 'mock') || str_contains($context, 'readiness')) {
-            return 'Philippine Interview Readiness';
+            return 'local Interview Readiness';
         }
 
         if (str_contains($context, 'about yourself') || str_contains($context, 'introduction')) {
@@ -111,7 +111,7 @@ return new class extends Migration
             return 'Answer difficult interview questions honestly while protecting credibility and role readiness.';
         }
 
-        if ($skillFocus === 'Philippine Interview Readiness') {
+        if ($skillFocus === 'local Interview Readiness') {
             return 'Combine clarity, relevance, structured evidence, and professional delivery across the challenge path.';
         }
 
@@ -119,7 +119,7 @@ return new class extends Migration
             return 'Build a concise interview answer that connects background, strengths, and the target opportunity.';
         }
 
-        return 'Practice a realistic Philippine interview answer with clear structure, specific evidence, and professional tone.';
+        return 'Practice a realistic interview answer with clear structure, specific evidence, and professional tone.';
     }
 
     private function successCriteriaFor(string $context): string
@@ -140,7 +140,7 @@ return new class extends Migration
             return "1. Answer each question directly.\n2. Use specific evidence from school, work, internship, freelance, or project experience.\n3. Include a result, lesson, or next step when relevant.\n4. Keep pacing steady and stay professional from start to finish.";
         }
 
-        return "1. Answer the interview question directly.\n2. Use one concrete example or proof point.\n3. Explain your action or decision clearly.\n4. Include a result, lesson, or next step.\n5. Keep the tone professional and appropriate for Philippine interviews.";
+        return "1. Answer the interview question directly.\n2. Use one concrete example or proof point.\n3. Explain your action or decision clearly.\n4. Include a result, lesson, or next step.\n5. Keep the tone professional and appropriate for interviews.";
     }
 
     private function retryHintFor(string $context): string

@@ -27,7 +27,7 @@
                         </svg>
                         Skill Trees
                     </h4>
-                    <p class="sr-page-hero-subtitle">Unlock perks by earning Skill XP in PH Challenges.</p>
+                    <p class="sr-page-hero-subtitle">Unlock perks by earning Skill XP in Interview Challenges.</p>
                 </div>
             </div>
         </div>
@@ -56,7 +56,7 @@
     <div class="sr-page-actions skill-tree-actions">
         <span class="badge bg-primary skill-level-pill d-inline-flex align-items-center justify-content-center" style="font-size:14px;padding:10px 15px;border-radius:12px;">Level {{ $profile->player_level ?? 1 }}</span>
         <a href="{{ route('user.learning') }}" class="btn btn-sm skill-back-link d-inline-flex align-items-center justify-content-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600; white-space:nowrap;">
-            <i class="fa-solid fa-arrow-left me-1"></i> <span>PH Challenges</span>
+            <i class="fa-solid fa-arrow-left me-1"></i> <span>Interview Challenges</span>
         </a>
     </div>
 

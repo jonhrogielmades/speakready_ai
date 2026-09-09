@@ -140,7 +140,7 @@ class CoachLanguageServiceTest extends TestCase
             [CoachLanguageService::ENGLISH, 'natural English'],
             [CoachLanguageService::FILIPINO, 'natural Filipino (Tagalog)'],
             [CoachLanguageService::CEBUANO, 'natural Cebuano (Binisaya)'],
-            [CoachLanguageService::TAGLISH, 'natural Philippine Taglish'],
+            [CoachLanguageService::TAGLISH, 'natural Taglish'],
         ];
     }
 }

@@ -22,15 +22,12 @@ class InterviewSession extends Model
         'coach_focus_mode',
         'response_mode',
         'interview_focus',
-        'company_persona',
-        'interviewer_strictness',
         'time_limit',
         'question_types',
         'ai_assistance_level',
         'live_feedback_mode',
         'pressure_mode',
         'assessment_mode',
-        'interview_format',
         'accommodation_profile',
         'score_eligible',
         'status',
@@ -86,8 +83,8 @@ class InterviewSession extends Model
 
     public static function applyReadinessEligibility($query, string $table = 'interview_sessions')
     {
-        $hasScoreEligible = Schema::hasColumn('interview_sessions', 'score_eligible');
-        $hasAssessmentMode = Schema::hasColumn('interview_sessions', 'assessment_mode');
+        $hasScoreEligible = self::hasColumn('score_eligible');
+        $hasAssessmentMode = self::hasColumn('assessment_mode');
 
         if (! $hasAssessmentMode) {
             return $query;

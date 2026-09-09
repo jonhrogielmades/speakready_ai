@@ -11,6 +11,9 @@ use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\MentorReviewController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserMasteryController;
+use App\Http\Controllers\UserMissionController;
+use App\Http\Controllers\UserVoiceDrillController;
 use App\Services\LandingStatsService;
 use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
@@ -151,6 +154,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     })->name('interview.session');
 
     Route::post('/interview/start', [InterviewController::class, 'start'])->name('interview.start');
+    Route::post('/interview/target-suggestions', [InterviewController::class, 'targetSuggestions'])->name('interview.targetSuggestions');
     Route::post('/interview/answer', [InterviewController::class, 'answer'])->name('interview.answer');
     Route::post('/interview/chat-reply', [InterviewController::class, 'chatReply'])->name('interview.chatReply');
     Route::post('/interview/speech', [InterviewController::class, 'speech'])->name('interview.speech');
@@ -186,11 +190,33 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::delete('/coach/conversation/{id}', [UserController::class, 'deleteCoachConversation'])->name('user.coach.delete');
     Route::delete('/coach/conversations', [UserController::class, 'clearCoachConversations'])->name('user.coach.clear');
     Route::get('/learning', [UserController::class, 'learning'])->name('user.learning');
+    Route::post('/learning/position', [UserController::class, 'updateLearningChallengePosition'])->name('user.learning.position');
     Route::get('/skills', [UserController::class, 'skills'])->name('user.skills');
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');
 
+    Route::get('/missions', [UserMissionController::class, 'index'])->name('user.missions');
+    Route::post('/missions/generate', [UserMissionController::class, 'generate'])->name('user.missions.generate');
+
+    Route::get('/drills/voice', [UserVoiceDrillController::class, 'index'])->name('user.drills.voice');
+    Route::post('/drills/voice/prompt', [UserVoiceDrillController::class, 'prompt'])->name('user.drills.voice.prompt');
+    Route::post('/drills/voice/analyze', [UserVoiceDrillController::class, 'analyze'])->name('user.drills.voice.analyze');
+    Route::post('/drills/voice/save', [UserVoiceDrillController::class, 'save'])->name('user.drills.voice.save');
+    Route::post('/drills/voice/clear', [UserVoiceDrillController::class, 'clear'])->name('user.drills.voice.clear');
+
+    Route::get('/personal-mastery', [UserMasteryController::class, 'index'])->name('user.mastery');
+    Route::post('/personal-mastery/stories', [UserMasteryController::class, 'storeStory'])->name('user.mastery.stories.store');
+    Route::delete('/personal-mastery/stories/{story}', [UserMasteryController::class, 'destroyStory'])->name('user.mastery.stories.destroy');
+    Route::post('/personal-mastery/checklist/{item}/toggle', [UserMasteryController::class, 'toggleChecklist'])->name('user.mastery.checklist.toggle');
+
+    Route::post('/offline-applications', fn () => abort(404))->name('user.applications.store');
+    Route::put('/offline-applications/{application}', fn () => abort(404))->name('user.applications.update');
+    Route::delete('/offline-applications/{application}', fn () => abort(404))->name('user.applications.destroy');
+    Route::get('/offline-applications/{application}/practice', fn () => abort(404))->name('user.applications.practice');
+    Route::get('/offline-packs/{pack}/practice', fn () => abort(404))->name('user.packs.practice');
+
     // User Learning Modules
     Route::get('/modules', [UserController::class, 'modules'])->name('user.modules.index');
+    Route::post('/modules/position', [UserController::class, 'updateLearningModulePosition'])->name('user.modules.position');
     Route::post('/modules/{id}/progress', [UserController::class, 'updateModuleProgress'])->name('user.modules.progress');
     Route::get('/modules/{id}', [UserController::class, 'moduleShow'])->name('user.modules.show');
 
@@ -200,6 +226,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/game/answer', [\App\Http\Controllers\GameController::class, 'answer'])->name('user.game.answer');
     Route::post('/game/save-state', [\App\Http\Controllers\GameController::class, 'saveState'])->name('user.game.saveState');
     Route::post('/game/finish', [\App\Http\Controllers\GameController::class, 'finish'])->name('user.game.finish');
+    Route::get('/game/answers/{answer}/voice-recording', [\App\Http\Controllers\GameController::class, 'voiceRecording'])->name('user.game.answer.voiceRecording');
     Route::get('/game/certificates/{category}/download', [\App\Http\Controllers\GameController::class, 'downloadCertificate'])->name('user.game.certificate.download');
 
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');

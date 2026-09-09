@@ -194,7 +194,7 @@
                </button>
                <form class="db-top-search db-top-admin-search" role="search" data-admin-page-search-form>
                   <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                  <input id="adminPageSearch" type="search" autocomplete="off" aria-label="Search and highlight text on this admin page" placeholder="Search PH interview admin" data-admin-page-search-input>
+                  <input id="adminPageSearch" type="search" autocomplete="off" aria-label="Search and highlight text on this admin page" placeholder="Search interview admin" data-admin-page-search-input>
                   <span class="db-search-count" aria-live="polite" data-admin-page-search-count></span>
                   <button class="db-search-clear" type="button" aria-label="Clear search" title="Clear search" data-admin-page-search-clear hidden>
                      <i class="fa-solid fa-xmark" aria-hidden="true"></i>

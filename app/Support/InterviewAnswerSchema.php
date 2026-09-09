@@ -9,10 +9,11 @@ use Illuminate\Support\Facades\Schema;
 class InterviewAnswerSchema
 {
     private static bool $checked = false;
+    private static bool $ready = false;
 
     public static function ensure(bool $force = false, bool $createIfMissing = true): void
     {
-        if (! $force && self::$checked && self::hasRequiredColumns()) {
+        if (! $force && self::$checked && self::$ready && ! app()->runningUnitTests()) {
             return;
         }
 
@@ -22,6 +23,7 @@ class InterviewAnswerSchema
             }
 
             self::$checked = true;
+            self::$ready = $createIfMissing && Schema::hasTable('interview_answers');
             self::flushModelColumnCache();
 
             return;
@@ -193,6 +195,7 @@ class InterviewAnswerSchema
         }
 
         self::$checked = true;
+        self::$ready = true;
         self::flushModelColumnCache();
     }
 

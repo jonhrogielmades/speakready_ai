@@ -3113,3 +3113,178 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 .dm #interview-modules-page .module-search-input::placeholder {
     color: #94a3b8;
 }
+
+#interview-modules-page .module-position-strip {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin: 0 0 14px;
+    padding: 12px;
+    border: 1px solid rgba(37, 99, 235, 0.18);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.92), rgba(255, 255, 255, 0.94));
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+#interview-modules-page .module-position-summary {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#interview-modules-page .module-position-icon {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: rgba(37, 99, 235, 0.12);
+    color: #1d4ed8;
+}
+
+#interview-modules-page .module-position-label,
+.module-position-modal .module-position-kicker {
+    color: var(--tx3);
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0;
+}
+
+#interview-modules-page .module-position-summary strong {
+    display: block;
+    color: var(--tx);
+    font-size: 0.96rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+#interview-modules-page .module-position-change-btn {
+    width: 100%;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 13px;
+    border: 1px solid rgba(37, 99, 235, 0.26);
+    border-radius: 10px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 850;
+}
+
+#interview-modules-page .module-position-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: -2px 0 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(245, 158, 11, 0.28);
+    border-radius: 12px;
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--tx2);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.module-position-modal .modal-dialog {
+    margin: 12px;
+}
+
+.module-position-modal .modal-content {
+    background: var(--sf);
+    color: var(--tx);
+    border: 1px solid var(--bd);
+    border-radius: 16px;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    overflow: hidden;
+}
+
+.module-position-modal .modal-header,
+.module-position-modal .modal-body,
+.module-position-modal .modal-footer {
+    padding: 16px;
+}
+
+.module-position-modal .modal-header,
+.module-position-modal .modal-footer {
+    border-color: var(--bd);
+}
+
+.module-position-modal .modal-title {
+    color: var(--tx);
+    font-size: 1.1rem;
+    font-weight: 950;
+    line-height: 1.2;
+}
+
+.module-position-modal .form-label {
+    color: var(--tx2);
+    font-size: 0.82rem;
+    font-weight: 850;
+}
+
+.module-position-modal .module-position-input {
+    min-height: 46px;
+    border-color: var(--bd);
+    border-radius: 11px;
+    background: var(--bg3);
+    color: var(--tx);
+    font-weight: 700;
+}
+
+.module-position-modal .module-position-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+}
+
+.module-position-modal .module-position-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.module-position-modal .module-position-suggestion {
+    border: 1px solid var(--bd);
+    border-radius: 999px;
+    background: var(--bg3);
+    color: var(--tx2);
+    padding: 7px 10px;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.module-position-modal .module-position-suggestion:hover {
+    border-color: rgba(37, 99, 235, 0.45);
+    color: #2563eb;
+}
+
+.module-position-modal .modal-footer .btn {
+    width: 100%;
+    min-height: 42px;
+}
+
+:root:not(.lm) #interview-modules-page .module-position-strip,
+.dm #interview-modules-page .module-position-strip {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.94), rgba(15, 23, 42, 0.96));
+    border-color: rgba(147, 197, 253, 0.24);
+}
+
+:root:not(.lm) #interview-modules-page .module-position-icon,
+.dm #interview-modules-page .module-position-icon {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+}
+
+:root:not(.lm) #interview-modules-page .module-position-change-btn,
+.dm #interview-modules-page .module-position-change-btn {
+    background: #3b82f6;
+    border-color: rgba(147, 197, 253, 0.32);
+}

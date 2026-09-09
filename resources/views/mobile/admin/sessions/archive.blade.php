@@ -9,8 +9,8 @@
 <div class="db-section active" id="sec-admin-archive">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="archive-page-title fw-bold mb-1 mt-2"><i class="fa-solid fa-box-archive text-warning me-2"></i>Archived Philippines Interview Sessions</h4>
-            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Historical records of Philippine interview practice sessions.</p>
+            <h4 class="archive-page-title fw-bold mb-1 mt-2"><i class="fa-solid fa-box-archive text-warning me-2"></i>Archived Interview Sessions</h4>
+            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Historical records of interview practice sessions.</p>
         </div>
     </div>
 
@@ -24,10 +24,10 @@
     <div class="premium-card mb-4">
         <form method="GET" action="{{ route('admin.sessions.archive') }}" class="row g-2 mb-4">
             <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="Search user or PH session ID..." value="{{ request('search') }}" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);">
+                <input type="text" name="search" class="form-control" placeholder="Search user or interview session ID..." value="{{ request('search') }}" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);">
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-warning w-100" style="border-radius:8px;">Search PH Archive</button>
+                <button type="submit" class="btn btn-warning w-100" style="border-radius:8px;">Search Session Archive</button>
             </div>
         </form>
 
@@ -52,7 +52,7 @@
                         <td class="text-end">
                             <form action="{{ route('admin.sessions.restore', $session->id) }}" method="POST" class="d-inline" id="restoreArchiveForm{{ $session->id }}">
                                 @csrf
-                                <button type="button" class="btn btn-sm btn-outline-success" style="border-radius:8px;" title="Restore" data-archive-restore-trigger data-archive-restore-form="restoreArchiveForm{{ $session->id }}" data-archive-restore-title="Restore archived Philippines interview session #{{ $session->id }}?" data-archive-restore-message="This Philippines interview session will return to PH Session Monitoring.">
+                                <button type="button" class="btn btn-sm btn-outline-success" style="border-radius:8px;" title="Restore" data-archive-restore-trigger data-archive-restore-form="restoreArchiveForm{{ $session->id }}" data-archive-restore-title="Restore archived interview session #{{ $session->id }}?" data-archive-restore-message="This interview session will return to Interview Session Monitoring.">
                                     <i class="fa-solid fa-clock-rotate-left me-1"></i> Restore
                                 </button>
                             </form>
@@ -93,7 +93,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter:invert(1);"></button>
             </div>
             <div class="modal-body">
-                <p id="archiveRestoreConfirmMessage" style="margin:0;color:var(--tx2);line-height:1.5;">This Philippines interview session will return to PH Session Monitoring.</p>
+                <p id="archiveRestoreConfirmMessage" style="margin:0;color:var(--tx2);line-height:1.5;">This interview session will return to Interview Session Monitoring.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
         titleDataset: 'archiveRestoreTitle',
         messageDataset: 'archiveRestoreMessage',
         defaultTitle: 'Restore session?',
-        defaultMessage: 'This Philippines interview session will return to PH Session Monitoring.'
+        defaultMessage: 'This interview session will return to Interview Session Monitoring.'
     });
 
     wireArchiveModal({

@@ -1,0 +1,823 @@
+{
+ "dataset": "speakready_reliable_questions",
+ "retrieved_at_utc": "2026-09-08T01:09:32+00:00",
+ "raw_root": "raw/question_sources/2026-09-08",
+ "sources": [
+ {
+ "key": "uploaded_hr_interview_questions_archive",
+ "name": "Uploaded HR interview questions archive",
+ "url": null,
+ "file": "hr_interview_questions_dataset.json",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_dataset_archive",
+ "reliability": "user_supplied_private_dataset",
+ "bytes": 1204105249,
+ "sha256": "02eaf6a84ba6290b401731fbf783c3f178f6019beee2846b83ed435a2e1d10ed",
+ "json_entry": "hr_interview_questions_dataset.json",
+ "json_entry_bytes": 1204105249,
+ "json_entry_sha256": "02eaf6a84ba6290b401731fbf783c3f178f6019beee2846b83ed435a2e1d10ed"
+ },
+ {
+ "key": "career_qa_dataset_csv",
+ "name": "Career QA Dataset",
+ "url": null,
+ "file": "exports/career_qa_dataset.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 1620,
+ "unique_questions": 1620,
+ "unique_roles": 54,
+ "bytes": 479187,
+ "sha256": "2363bfda6baa87ae7fed08a478ea703dfa17d012436913f61e27bfd7111015b3"
+ },
+ {
+ "key": "full_interview_questions_dataset_csv",
+ "name": "Full Interview Questions Dataset",
+ "url": null,
+ "file": "exports/full_interview_questions_dataset.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 660,
+ "unique_questions": 660,
+ "unique_roles": 2,
+ "unique_categories": 2,
+ "unique_difficulties": 3,
+ "role_counts": [
+ {
+ "name": "Software Engineer",
+ "count": 600
+ },
+ {
+ "name": "HR",
+ "count": 60
+ }
+ ],
+ "category_counts": [
+ {
+ "name": "Technical",
+ "count": 600
+ },
+ {
+ "name": "Behavioral",
+ "count": 60
+ }
+ ],
+ "difficulty_counts": [
+ {
+ "name": "medium",
+ "count": 234
+ },
+ {
+ "name": "hard",
+ "count": 219
+ },
+ {
+ "name": "easy",
+ "count": 207
+ }
+ ],
+ "bytes": 56185,
+ "sha256": "5a5b91d9d3b0b46b77f5136cca2748c2ef25fec975d39abd9708112a534dad38"
+ },
+ {
+ "key": "quality_assurance_interview_questions_csv",
+ "name": "Quality Assurance Interview Questions Dataset",
+ "url": null,
+ "file": "exports/quality_assurance_interview_questions_dataset.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 88,
+ "unique_questions": 88,
+ "answered_rows": 88,
+ "category": "Technical",
+ "archive_category": "Quality Assurance",
+ "bytes": 43561,
+ "sha256": "23fadc2b903e0d7b091abdfdd408a65185502206f00c31b2629475b72cf85086"
+ },
+ {
+ "key": "combined_dataset_xlsx",
+ "name": "Combined Dataset",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/combined_dataset.xlsx",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_xlsx_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 2052,
+ "question_rows": 2052,
+ "unique_questions": 1063,
+ "bytes": 358327,
+ "sha256": "06d839be2c413dbd1d5a1740adbf6d7a676257d74e3072f366ca15d2ef190959",
+ "metadata": {
+ "sheets": [
+ {
+ "name": "combined",
+ "rows": 2052,
+ "headers": [
+ "position_role",
+ "question",
+ "answer",
+ "interview_phase",
+ "answer_quality"
+ ]
+ }
+ ]
+ },
+ "role_counts": [
+ {
+ "name": "Nurse",
+ "count": 653
+ },
+ {
+ "name": "Medical Assistant",
+ "count": 454
+ },
+ {
+ "name": "Customer Service Representative",
+ "count": 222
+ },
+ {
+ "name": "Sales Manager",
+ "count": 208
+ },
+ {
+ "name": "customer service representative",
+ "count": 202
+ },
+ {
+ "name": "Home Health Aide",
+ "count": 144
+ },
+ {
+ "name": "Marketing Manager",
+ "count": 123
+ },
+ {
+ "name": "Customer Service Manager",
+ "count": 18
+ },
+ {
+ "name": "Medical assistant",
+ "count": 11
+ },
+ {
+ "name": "Customer Service Agent",
+ "count": 8
+ },
+ {
+ "name": "Call center agent",
+ "count": 8
+ },
+ {
+ "name": "Customer Service",
+ "count": 1
+ }
+ ],
+ "category_counts": [
+ {
+ "name": "Introduction",
+ "count": 442
+ },
+ {
+ "name": "Communication",
+ "count": 361
+ },
+ {
+ "name": "Conclusion",
+ "count": 308
+ },
+ {
+ "name": "Behavioral",
+ "count": 300
+ },
+ {
+ "name": "Technical",
+ "count": 228
+ },
+ {
+ "name": "Role Specific",
+ "count": 210
+ },
+ {
+ "name": "Situational",
+ "count": 108
+ },
+ {
+ "name": "General",
+ "count": 94
+ },
+ {
+ "name": "Core",
+ "count": 1
+ }
+ ]
+ },
+ {
+ "key": "data_1_csv",
+ "name": "Data 1",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/data_1.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 2323,
+ "question_rows": 2323,
+ "unique_questions": 1283,
+ "bytes": 1097041,
+ "sha256": "7de539c6ee9eb5950af85acffbeb663d029347ecf0aa1e2589d4f71246e89f6f",
+ "metadata": {
+ "encoding": "utf-8-sig",
+ "delimiter": ",",
+ "headers": [
+ "",
+ "job_position",
+ "question",
+ "answer",
+ "interview_phase",
+ "answer_quality"
+ ]
+ },
+ "role_counts": [
+ {
+ "name": "Nurse",
+ "count": 653
+ },
+ {
+ "name": "Medical Assistant",
+ "count": 454
+ },
+ {
+ "name": "Customer Service Representative",
+ "count": 222
+ },
+ {
+ "name": "Sales Manager",
+ "count": 208
+ },
+ {
+ "name": "customer service representative",
+ "count": 202
+ },
+ {
+ "name": "Home Health Aide",
+ "count": 144
+ },
+ {
+ "name": "Data Scientist",
+ "count": 125
+ },
+ {
+ "name": "Marketing Manager",
+ "count": 123
+ },
+ {
+ "name": "Software Development Engineer",
+ "count": 75
+ },
+ {
+ "name": "Product Management",
+ "count": 36
+ },
+ {
+ "name": "Consultancy",
+ "count": 35
+ },
+ {
+ "name": "Customer Service Manager",
+ "count": 18
+ },
+ {
+ "name": "Medical assistant",
+ "count": 11
+ },
+ {
+ "name": "Customer Service Agent",
+ "count": 8
+ },
+ {
+ "name": "Call center agent",
+ "count": 8
+ },
+ {
+ "name": "Customer Service",
+ "count": 1
+ }
+ ],
+ "category_counts": [
+ {
+ "name": "Introduction",
+ "count": 442
+ },
+ {
+ "name": "Technical",
+ "count": 436
+ },
+ {
+ "name": "Behavioral",
+ "count": 363
+ },
+ {
+ "name": "Communication",
+ "count": 361
+ },
+ {
+ "name": "Conclusion",
+ "count": 308
+ },
+ {
+ "name": "Role Specific",
+ "count": 210
+ },
+ {
+ "name": "Situational",
+ "count": 108
+ },
+ {
+ "name": "General",
+ "count": 94
+ },
+ {
+ "name": "Core",
+ "count": 1
+ }
+ ]
+ },
+ {
+ "key": "interview_forge_v3_complete_csv",
+ "name": "Interview Forge V3 Complete",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/interview_forge_v3_complete.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 20444,
+ "question_rows": 20444,
+ "unique_questions": 20444,
+ "bytes": 27776542,
+ "sha256": "fed39b9bca11b88eaf4697a15e2e64a0f8bf162ee3d49244904f10671396d3fc",
+ "metadata": {
+ "encoding": "utf-8-sig",
+ "delimiter": ",",
+ "headers": [
+ "question",
+ "keywords",
+ "role",
+ "sector",
+ "interview_stage",
+ "interviewer",
+ "question_category",
+ "question_level"
+ ]
+ },
+ "role_counts": [
+ {
+ "name": "Test Automation Engineer",
+ "count": 576
+ },
+ {
+ "name": "Cloud Infrastructure Engineer",
+ "count": 576
+ },
+ {
+ "name": "Fraud Analyst",
+ "count": 576
+ },
+ {
+ "name": "Site Reliability Engineer (SRE)",
+ "count": 576
+ },
+ {
+ "name": "DevOps Engineer",
+ "count": 576
+ },
+ {
+ "name": "Mobile App Developer (iOS/Android)",
+ "count": 576
+ },
+ {
+ "name": "QA Engineer",
+ "count": 576
+ },
+ {
+ "name": "Robotics Engineer",
+ "count": 576
+ },
+ {
+ "name": "Frontend Developer",
+ "count": 576
+ },
+ {
+ "name": "Full Stack Developer",
+ "count": 576
+ },
+ {
+ "name": "AI/ML Engineer",
+ "count": 576
+ },
+ {
+ "name": "Backend Developer",
+ "count": 576
+ },
+ {
+ "name": "IoT Solutions Engineer",
+ "count": 576
+ },
+ {
+ "name": "Application Security (AppSec) Engineer",
+ "count": 576
+ },
+ {
+ "name": "Data Analyst",
+ "count": 576
+ },
+ {
+ "name": "Embedded Systems Developer",
+ "count": 576
+ },
+ {
+ "name": "Systems Analyst",
+ "count": 576
+ },
+ {
+ "name": "QA Automation Engineer",
+ "count": 576
+ },
+ {
+ "name": "SDET (Software Development Engineer in Test)",
+ "count": 576
+ },
+ {
+ "name": "Scrum Master / Agile Coach",
+ "count": 521
+ }
+ ],
+ "category_counts": [
+ {
+ "name": "Collaboration & Cross-Team Work",
+ "count": 1296
+ },
+ {
+ "name": "Tools & Frameworks",
+ "count": 1289
+ },
+ {
+ "name": "Prioritization Under Pressure",
+ "count": 1289
+ },
+ {
+ "name": "Technical Roadmap & Strategy",
+ "count": 1285
+ },
+ {
+ "name": "Scalability & Growth Planning",
+ "count": 1285
+ },
+ {
+ "name": "Salary & Expectations",
+ "count": 1284
+ },
+ {
+ "name": "Coding & Problem Solving",
+ "count": 1282
+ },
+ {
+ "name": "Business Impact & Metrics",
+ "count": 1280
+ },
+ {
+ "name": "Motivation & Career Goals",
+ "count": 1279
+ },
+ {
+ "name": "System Design & Architecture",
+ "count": 1273
+ },
+ {
+ "name": "Conflict Resolution",
+ "count": 1271
+ },
+ {
+ "name": "Innovation & Emerging Tech",
+ "count": 1269
+ },
+ {
+ "name": "Culture Fit & Values",
+ "count": 1267
+ },
+ {
+ "name": "Communication & Soft Skills",
+ "count": 1265
+ },
+ {
+ "name": "Debugging & Troubleshooting",
+ "count": 1265
+ },
+ {
+ "name": "Incident Response & Ownership",
+ "count": 1265
+ }
+ ]
+ },
+ {
+ "key": "interview_questions_csv",
+ "name": "Interview Questions",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/interview_questions.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 602,
+ "question_rows": 602,
+ "unique_questions": 432,
+ "bytes": 256985,
+ "sha256": "fae7ff9f79b8fe6966e106163fa9be10a58de5f71da1f78c40d2f0616e1b4716",
+ "metadata": {
+ "encoding": "utf-8-sig",
+ "delimiter": ",",
+ "headers": [
+ "qid",
+ "language",
+ "level",
+ "question",
+ "answer"
+ ]
+ },
+ "role_counts": [
+ {
+ "name": "Java",
+ "count": 496
+ },
+ {
+ "name": "Magento",
+ "count": 54
+ },
+ {
+ "name": "PHP",
+ "count": 52
+ }
+ ],
+ "category_counts": [
+ {
+ "name": "Job Interview",
+ "count": 602
+ }
+ ]
+ },
+ {
+ "key": "huy_interview_dataset_csv",
+ "name": "Huy Interview Dataset",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/huy_interview_dataset.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 5100,
+ "question_rows": 5100,
+ "unique_questions": 583,
+ "bytes": 978368,
+ "sha256": "9f1f44a4564b3862322c1733b1300fd23a507acbb6c577c638d73022e191e037",
+ "metadata": {
+ "encoding": "utf-8-sig",
+ "delimiter": ",",
+ "headers": [
+ "instruction",
+ "answer"
+ ]
+ },
+ "category_counts": [
+ {
+ "name": "Job Interview",
+ "count": 5100
+ }
+ ]
+ },
+ {
+ "key": "healthcare_qa_dataset_jsonl",
+ "name": "Healthcare QA Dataset",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/healthcare_qa_dataset.jsonl",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_jsonl_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 51,
+ "question_rows": 51,
+ "unique_questions": 51,
+ "bytes": 18286,
+ "sha256": "0c15a1b2b337519c0052b9ca1e574daddd839f19e4f4541ecc0e815fea0915e3",
+ "metadata": {
+ "encoding": "utf-8-sig"
+ },
+ "category_counts": [
+ {
+ "name": "Healthcare",
+ "count": 51
+ }
+ ]
+ },
+ {
+ "key": "interview_table_1_csv",
+ "name": "Interview Table 1",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/interview_table_1.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 1882,
+ "question_rows": 0,
+ "unique_questions": 0,
+ "bytes": 233406,
+ "sha256": "fd79c9c48341fe24374d5d3a6c40a85239c0ca4e351de3dc8ba56cd036a45aae",
+ "metadata": {
+ "encoding": "utf-8-sig",
+ "delimiter": ",",
+ "headers": [
+ "account_id",
+ "person_id",
+ "block_id",
+ "trip_id"
+ ]
+ }
+ },
+ {
+ "key": "general_administration_and_operational_roles_workable_interview_questions_csv",
+ "name": "General Administration And Operational Roles Workable Interview Questions",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/general_administration_and_operational_roles_workable_interview_questions.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 64,
+ "question_rows": 64,
+ "unique_questions": 63,
+ "bytes": 5000,
+ "sha256": "c35787c0ee52c9f5689f49430e1ad3de382fe1843cdc7fa65a7fce3d2d0488e9",
+ "metadata": {
+ "encoding": "utf-8-sig",
+ "delimiter": ",",
+ "headers": [
+ "role_category",
+ "interview_question"
+ ]
+ },
+ "role_counts": [
+ {
+ "name": "Executive Assistant",
+ "count": 14
+ },
+ {
+ "name": "Business Analyst",
+ "count": 12
+ },
+ {
+ "name": "Administrative Assistant",
+ "count": 9
+ },
+ {
+ "name": "Chief Operating Officer",
+ "count": 9
+ },
+ {
+ "name": "Project Coordinator",
+ "count": 6
+ },
+ {
+ "name": "Project Manager",
+ "count": 6
+ },
+ {
+ "name": "Office Manager",
+ "count": 3
+ },
+ {
+ "name": "Operations Manager",
+ "count": 3
+ },
+ {
+ "name": "Receptionist",
+ "count": 2
+ }
+ ],
+ "category_counts": [
+ {
+ "name": "Job Interview",
+ "count": 64
+ }
+ ]
+ },
+ {
+ "key": "team_leader_operations_interview_questions_cvowl_csv",
+ "name": "Team Leader Operations Interview Questions CVOWL",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/team_leader_operations_interview_questions_cvowl.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 25,
+ "question_rows": 25,
+ "unique_questions": 25,
+ "bytes": 2301,
+ "sha256": "a6b3e17c2f222d3880fad62a6eae4b63772858598d94f5b0af0b8d165acc4463",
+ "metadata": {
+ "encoding": "utf-8-sig",
+ "delimiter": ",",
+ "headers": [
+ "category",
+ "interview_question"
+ ]
+ },
+ "category_counts": [
+ {
+ "name": "General Questions",
+ "count": 5
+ },
+ {
+ "name": "Behavioral Questions",
+ "count": 5
+ },
+ {
+ "name": "Situational Questions",
+ "count": 5
+ },
+ {
+ "name": "Technical Questions",
+ "count": 5
+ },
+ {
+ "name": "Cultural Fit Questions",
+ "count": 5
+ }
+ ]
+ },
+ {
+ "key": "operations_manager_interview_questions_indeed_csv",
+ "name": "Operations Manager Interview Questions Indeed",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/operations_manager_interview_questions_indeed.csv",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_csv_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 43,
+ "question_rows": 43,
+ "unique_questions": 43,
+ "bytes": 4310,
+ "sha256": "cac8ba6e060dbbe898cc77b2905b7318ecb0cdc84f9037ddc59c105932bcac20",
+ "metadata": {
+ "encoding": "utf-8-sig",
+ "delimiter": ",",
+ "headers": [
+ "category",
+ "interview_question"
+ ]
+ },
+ "category_counts": [
+ {
+ "name": "Experience and Background",
+ "count": 14
+ },
+ {
+ "name": "In-depth Questions",
+ "count": 14
+ },
+ {
+ "name": "General Questions",
+ "count": 13
+ },
+ {
+ "name": "Sample Answer Questions",
+ "count": 2
+ }
+ ]
+ },
+ {
+ "key": "data_science_interview_questions_answers_ipynb",
+ "name": "Data Science Interview Questions Answers",
+ "url": null,
+ "file": "raw/question_sources/2026-09-08/uploads/data_science_interview_questions_answers.ipynb",
+ "publisher": "User-supplied dataset",
+ "source_type": "uploaded_ipynb_dataset",
+ "reliability": "user_supplied_private_dataset",
+ "rows": 93,
+ "question_rows": 93,
+ "unique_questions": 93,
+ "bytes": 153356,
+ "sha256": "892c3628b972a3836fb403d8ef5ac077f01092f8d6d417f077691a9e7bb31c44",
+ "metadata": {
+ "cells": 107
+ },
+ "role_counts": [
+ {
+ "name": "Data Scientist",
+ "count": 93
+ }
+ ],
+ "category_counts": [
+ {
+ "name": "Data Science",
+ "count": 93
+ }
+ ]
+ }
+ ]
+}

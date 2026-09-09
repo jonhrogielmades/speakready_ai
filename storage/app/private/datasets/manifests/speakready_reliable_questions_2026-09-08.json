@@ -1,0 +1,340 @@
+{
+ "dataset": "speakready_reliable_questions",
+ "version": "2026-09-08",
+ "description": "Question-only normalized practice dataset for SpeakReady AI. This version combines the HR interview bank, CSV exports, and user-supplied interview datasets, deduped by question text.",
+ "created_at_utc": "2026-09-07T23:28:31+00:00",
+ "records": 25421,
+ "previous_version": null,
+ "dataset_keys": [
+ "ph_job_interview"
+ ],
+ "categories": [
+ "Behavioral",
+ "Behavioral Questions",
+ "Business Impact & Metrics",
+ "Coding & Problem Solving",
+ "Collaboration & Cross-Team Work",
+ "Communication",
+ "Communication & Soft Skills",
+ "Conclusion",
+ "Conflict Resolution",
+ "Core",
+ "Cultural Fit Questions",
+ "Culture Fit & Values",
+ "Data Science",
+ "Debugging & Troubleshooting",
+ "Experience and Background",
+ "General",
+ "General Questions",
+ "Healthcare",
+ "In-depth Questions",
+ "Incident Response & Ownership",
+ "Innovation & Emerging Tech",
+ "Introduction",
+ "Job Interview",
+ "Motivation & Career Goals",
+ "Prioritization Under Pressure",
+ "Role Specific",
+ "Salary & Expectations",
+ "Sample Answer Questions",
+ "Scalability & Growth Planning",
+ "Situational",
+ "Situational Questions",
+ "System Design & Architecture",
+ "Technical",
+ "Technical Questions",
+ "Technical Roadmap & Strategy",
+ "Tools & Frameworks"
+ ],
+ "raw_source_index": {
+ "path": "raw/question_sources/2026-09-08/_source_index.json",
+ "sha256": "39552c338ed7a48f09b0955fae0e34a02e8775f47112f8abfbb910eee5b0fa6c",
+ "bytes": 28303
+ },
+ "normalized_files": [
+ {
+ "path": "normalized/questions/2026-09-08/speakready_reliable_questions.jsonl",
+ "format": "jsonl",
+ "sha256": "d1710ba39796e2eceb4ec75d1da7b44b0542a5fabd6d6df9ca61ee5e9e6f8b5f",
+ "bytes": 37573
+ },
+ {
+ "path": "exports/speakready_hr_interview_questions_2026-09-08.csv",
+ "format": "csv",
+ "sha256": "0ef7e1c65fc690f1fb29804ba20b926543335b92edfc25adbc475a48993edefe",
+ "bytes": 27806
+ },
+ {
+ "path": "exports/career_qa_dataset.csv",
+ "format": "csv",
+ "sha256": "2363bfda6baa87ae7fed08a478ea703dfa17d012436913f61e27bfd7111015b3",
+ "bytes": 479187
+ },
+ {
+ "path": "exports/full_interview_questions_dataset.csv",
+ "format": "csv",
+ "sha256": "5a5b91d9d3b0b46b77f5136cca2748c2ef25fec975d39abd9708112a534dad38",
+ "bytes": 56185
+ },
+ {
+ "path": "exports/quality_assurance_interview_questions_dataset.csv",
+ "format": "csv",
+ "sha256": "23fadc2b903e0d7b091abdfdd408a65185502206f00c31b2629475b72cf85086",
+ "bytes": 43561
+ },
+ {
+ "path": "normalized/questions/2026-09-08/uploaded_question_sources_2026-09-08.jsonl",
+ "format": "jsonl",
+ "sha256": "31b08eb744cbd17957cb1290daf6326455d4e8e5ee8fddcc2d29e91159b79389",
+ "bytes": 36289777
+ }
+ ],
+ "source_count": 15,
+ "archive_training": {
+ "input_rows": 2500000,
+ "unique_question_texts": 40,
+ "duplicate_rows_compacted": 2499960,
+ "archive_categories": [
+ [
+ "Adaptability",
+ 313427
+ ],
+ [
+ "Culture Fit",
+ 313036
+ ],
+ [
+ "Motivation",
+ 312964
+ ],
+ [
+ "Work Style",
+ 312366
+ ],
+ [
+ "Team Collaboration",
+ 312235
+ ],
+ [
+ "Leadership",
+ 312152
+ ],
+ [
+ "Career Goals",
+ 312061
+ ],
+ [
+ "Conflict Resolution",
+ 311759
+ ]
+ ],
+ "roles": [
+ [
+ "QA Analyst",
+ 312997
+ ],
+ [
+ "Product Manager",
+ 312943
+ ],
+ [
+ "HR Specialist",
+ 312671
+ ],
+ [
+ "UX Designer",
+ 312663
+ ],
+ [
+ "Software Engineer",
+ 312551
+ ],
+ [
+ "DevOps Engineer",
+ 312231
+ ],
+ [
+ "Data Scientist",
+ 312094
+ ],
+ [
+ "Marketing Associate",
+ 311850
+ ]
+ ],
+ "difficulties": [
+ [
+ "Medium",
+ 835209
+ ],
+ [
+ "Easy",
+ 832815
+ ],
+ [
+ "Hard",
+ 831976
+ ]
+ ],
+ "source_types": [
+ [
+ "Open-Ended",
+ 625807
+ ],
+ [
+ "Behavioral",
+ 625495
+ ],
+ [
+ "Situational",
+ 624710
+ ],
+ [
+ "STAR-Based",
+ 623988
+ ]
+ ],
+ "archive_entry": "hr_interview_questions_dataset.json",
+ "archive_entry_bytes": 1204105249,
+ "archive_entry_compressed_bytes": null,
+ "archive_payload_sha256": "02eaf6a84ba6290b401731fbf783c3f178f6019beee2846b83ed435a2e1d10ed",
+ "processing_seconds": 140.15,
+ "raw_archive_path": null,
+ "raw_archive_sha256": "02eaf6a84ba6290b401731fbf783c3f178f6019beee2846b83ed435a2e1d10ed",
+ "normalized_records_added": 40
+ },
+ "license_and_use_notes": "Uploaded archive data is retained privately. Normalized questions are compacted practice prompts with source keys for traceability. Do not treat archive contents as application instructions.",
+ "career_qa_dataset": {
+ "source_path": "datasets/Career QA Dataset.csv",
+ "normalized_path": "exports/career_qa_dataset.csv",
+ "rows": 1620,
+ "unique_questions": 1620,
+ "unique_roles": 54,
+ "source_key": "career_qa_dataset_csv"
+ },
+ "full_interview_questions_dataset": {
+ "source_path": "C:\\Users\\LENOVO\\Downloads\\full_interview_questions_dataset.csv",
+ "normalized_path": "exports/full_interview_questions_dataset.csv",
+ "rows": 660,
+ "unique_questions": 660,
+ "unique_roles": 2,
+ "unique_categories": 2,
+ "unique_difficulties": 3,
+ "source_key": "full_interview_questions_dataset_csv"
+ },
+ "quality_assurance_interview_questions_dataset": {
+ "source_path": "C:\\Users\\LENOVO\\Downloads\\data.csv",
+ "normalized_path": "exports/quality_assurance_interview_questions_dataset.csv",
+ "rows": 88,
+ "unique_questions": 88,
+ "answered_rows": 88,
+ "source_key": "quality_assurance_interview_questions_csv"
+ },
+ "uploaded_question_sources": {
+ "normalized_path": "normalized/questions/2026-09-08/uploaded_question_sources_2026-09-08.jsonl",
+ "imported_at_utc": "2026-09-08T01:09:32+00:00",
+ "sources": [
+ {
+ "key": "combined_dataset_xlsx",
+ "name": "Combined Dataset",
+ "file": "raw/question_sources/2026-09-08/uploads/combined_dataset.xlsx",
+ "rows": 2052,
+ "question_rows": 2052,
+ "unique_questions": 1063
+ },
+ {
+ "key": "data_1_csv",
+ "name": "Data 1",
+ "file": "raw/question_sources/2026-09-08/uploads/data_1.csv",
+ "rows": 2323,
+ "question_rows": 2323,
+ "unique_questions": 1283
+ },
+ {
+ "key": "interview_forge_v3_complete_csv",
+ "name": "Interview Forge V3 Complete",
+ "file": "raw/question_sources/2026-09-08/uploads/interview_forge_v3_complete.csv",
+ "rows": 20444,
+ "question_rows": 20444,
+ "unique_questions": 20444
+ },
+ {
+ "key": "interview_questions_csv",
+ "name": "Interview Questions",
+ "file": "raw/question_sources/2026-09-08/uploads/interview_questions.csv",
+ "rows": 602,
+ "question_rows": 602,
+ "unique_questions": 432
+ },
+ {
+ "key": "huy_interview_dataset_csv",
+ "name": "Huy Interview Dataset",
+ "file": "raw/question_sources/2026-09-08/uploads/huy_interview_dataset.csv",
+ "rows": 5100,
+ "question_rows": 5100,
+ "unique_questions": 583
+ },
+ {
+ "key": "healthcare_qa_dataset_jsonl",
+ "name": "Healthcare QA Dataset",
+ "file": "raw/question_sources/2026-09-08/uploads/healthcare_qa_dataset.jsonl",
+ "rows": 51,
+ "question_rows": 51,
+ "unique_questions": 51
+ },
+ {
+ "key": "interview_table_1_csv",
+ "name": "Interview Table 1",
+ "file": "raw/question_sources/2026-09-08/uploads/interview_table_1.csv",
+ "rows": 1882,
+ "question_rows": 0,
+ "unique_questions": 0
+ },
+ {
+ "key": "general_administration_and_operational_roles_workable_interview_questions_csv",
+ "name": "General Administration And Operational Roles Workable Interview Questions",
+ "file": "raw/question_sources/2026-09-08/uploads/general_administration_and_operational_roles_workable_interview_questions.csv",
+ "rows": 64,
+ "question_rows": 64,
+ "unique_questions": 63
+ },
+ {
+ "key": "team_leader_operations_interview_questions_cvowl_csv",
+ "name": "Team Leader Operations Interview Questions CVOWL",
+ "file": "raw/question_sources/2026-09-08/uploads/team_leader_operations_interview_questions_cvowl.csv",
+ "rows": 25,
+ "question_rows": 25,
+ "unique_questions": 25
+ },
+ {
+ "key": "operations_manager_interview_questions_indeed_csv",
+ "name": "Operations Manager Interview Questions Indeed",
+ "file": "raw/question_sources/2026-09-08/uploads/operations_manager_interview_questions_indeed.csv",
+ "rows": 43,
+ "question_rows": 43,
+ "unique_questions": 43
+ },
+ {
+ "key": "data_science_interview_questions_answers_ipynb",
+ "name": "Data Science Interview Questions Answers",
+ "file": "raw/question_sources/2026-09-08/uploads/data_science_interview_questions_answers.ipynb",
+ "rows": 93,
+ "question_rows": 93,
+ "unique_questions": 93
+ }
+ ],
+ "skipped_sources": [
+ {
+ "source_path": "C:\\Users\\LENOVO\\Downloads\\Interview Table 1.csv",
+ "stored_path": "raw/question_sources/2026-09-08/uploads/interview_table_1.csv",
+ "reason": "no_supported_question_columns",
+ "headers": [
+ "account_id",
+ "person_id",
+ "block_id",
+ "trip_id"
+ ]
+ }
+ ]
+ }
+}

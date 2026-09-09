@@ -56,15 +56,15 @@ class Score extends Model
 
     public function scopeReadinessEligible($query)
     {
-        if (Schema::hasColumn('interview_sessions', 'assessment_mode')) {
+        if (InterviewSession::hasColumn('assessment_mode')) {
             return $query->whereHas('session', fn ($session) => $session->readinessEligible());
         }
 
-        if (Schema::hasColumn('scores', 'assessment_mode')) {
+        if (self::hasColumn('assessment_mode')) {
             return $query->where(function ($inner) {
                 $inner->where('assessment_mode', 'legacy');
 
-                if (Schema::hasColumn('interview_sessions', 'score_eligible')) {
+                if (InterviewSession::hasColumn('score_eligible')) {
                     $inner->orWhereHas('session', fn ($session) => $session->where('score_eligible', true));
                 }
             });

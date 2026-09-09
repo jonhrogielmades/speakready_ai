@@ -150,7 +150,7 @@ class GameLevel extends Model
             'Use one concrete example or proof point.',
             'Explain your action or decision clearly.',
             'Include a result, lesson, or next step.',
-            'Keep the tone professional and appropriate for Philippine interviews.',
+            'Keep the tone professional and appropriate for interviews.',
         ];
     }
 

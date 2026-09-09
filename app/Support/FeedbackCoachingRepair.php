@@ -12,163 +12,167 @@ use Illuminate\Support\Facades\Schema;
 
 class FeedbackCoachingRepair
 {
-    public function __construct(private readonly EvidenceBasedCoachingService $coaching)
-    {
-    }
+ public function __construct(private readonly EvidenceBasedCoachingService $coaching)
+ {
+ }
 
-    public function canPersistSummary(): bool
-    {
-        return Schema::hasTable('feedback') && Schema::hasColumn('feedback', 'coaching_summary');
-    }
+ public function canPersistSummary(): bool
+ {
+ return Schema::hasTable('feedback') && Schema::hasColumn('feedback', 'coaching_summary');
+ }
 
-    public function canPersistAnswerCoaching(): bool
-    {
-        return Schema::hasTable('interview_answers') && Schema::hasColumn('interview_answers', 'coaching_feedback');
-    }
+ public function canPersistAnswerCoaching(): bool
+ {
+ return Schema::hasTable('interview_answers') && Schema::hasColumn('interview_answers', 'coaching_feedback');
+ }
 
-    public function summaryNeedsRepair(mixed $summary): bool
-    {
-        if (! is_array($summary) || $summary === []) {
-            return true;
-        }
+ public function summaryNeedsRepair(mixed $summary): bool
+ {
+ if (! is_array($summary) || $summary === []) {
+ return true;
+ }
 
-        if ((int) ($summary['version'] ?? 0) < EvidenceBasedCoachingService::VERSION) {
-            return true;
-        }
+ if ((int) ($summary['version']?? 0) < EvidenceBasedCoachingService::VERSION) {
+ return true;
+ }
 
-        return empty($summary['observations'] ?? [])
-            && empty($summary['priority_actions'] ?? [])
-            && empty($summary['content_overview'] ?? [])
-            && empty($summary['question_improvements'] ?? [])
-            && empty($summary['coverage'] ?? []);
-    }
+ return empty($summary['observations']?? [])
+ && empty($summary['priority_actions']?? [])
+ && empty($summary['content_overview']?? [])
+ && empty($summary['question_improvements']?? [])
+ && empty($summary['coverage']?? []);
+ }
 
-    public function answerCoachingNeedsRepair(mixed $coachingFeedback): bool
-    {
-        if (! is_array($coachingFeedback) || $coachingFeedback === []) {
-            return true;
-        }
+ public function answerCoachingNeedsRepair(mixed $coachingFeedback): bool
+ {
+ if (! is_array($coachingFeedback) || $coachingFeedback === []) {
+ return true;
+ }
 
-        $version = (int) ($coachingFeedback['version'] ?? 0);
-        if ($version > 0 && $version < EvidenceBasedCoachingService::VERSION) {
-            return true;
-        }
+ $version = (int) ($coachingFeedback['version']?? 0);
+ if ($version > 0 && $version < EvidenceBasedCoachingService::VERSION) {
+ return true;
+ }
 
-        return empty($coachingFeedback['content_alignment'] ?? [])
-            && empty($coachingFeedback['delivery'] ?? [])
-            && empty($coachingFeedback['delivery_feedback'] ?? [])
-            && empty($coachingFeedback['question'] ?? [])
-            && empty($coachingFeedback['question_tip'] ?? []);
-    }
+ return empty($coachingFeedback['content_alignment']?? [])
+ && empty($coachingFeedback['delivery']?? [])
+ && empty($coachingFeedback['delivery_feedback']?? [])
+ && empty($coachingFeedback['question']?? [])
+ && empty($coachingFeedback['question_tip']?? []);
+ }
 
-    public function buildSummaryFromAnswers(Collection $answers): array
-    {
-        return $this->coaching->sessionSummary($answers->values());
-    }
+ public function buildSummaryFromAnswers(Collection $answers): array
+ {
+ return $this->coaching->sessionSummary($answers->values());
+ }
 
-    public function buildAnswerCoaching(InterviewAnswer $answer, ?InterviewSession $session = null): array
-    {
-        $observationData = is_array($answer->observation_data ?? null)
-            ? $answer->observation_data
-            : [];
-        $answerText = (string) ($answer->answer_text ?? '');
-        $evidenceMap = is_array($answer->evidence_map ?? null) ? $answer->evidence_map : [];
-        $isSkipped = (bool) ($answer->is_skipped ?? false) || trim($answerText) === '';
-        $isTooShort = ! $isSkipped && TranscriptService::wordCount($answerText) < 10;
-        $scoringConfidence = max(0, min(100, (int) ($answer->scoring_confidence ?? 0)));
-        $relevanceScore = max(0, min(100, (int) ($answer->relevance_score ?? 0)));
-        $answerAlignment = match (true) {
-            $isSkipped => 'skipped',
-            $isTooShort => 'insufficient_evidence',
-            $scoringConfidence <= 0 => null,
-            $relevanceScore >= 75 => 'directly_addressed',
-            $relevanceScore >= 50 => 'partially_addressed',
-            default => 'not_addressed',
-        };
+ public function buildAnswerCoaching(InterviewAnswer $answer,?InterviewSession $session = null): array
+ {
+ $observationData = is_array($answer->observation_data?? null)? $answer->observation_data: [];
+ $answerText = $this->answerContent($answer);
+ $evidenceMap = is_array($answer->evidence_map?? null)? $answer->evidence_map: [];
+ $isSkipped = (bool) ($answer->is_skipped?? false) || trim($answerText) === '';
+ $isTooShort =! $isSkipped && TranscriptService::wordCount($answerText) < 10;
+ $scoringConfidence = max(0, min(100, (int) ($answer->scoring_confidence?? 0)));
+ $relevanceScore = max(0, min(100, (int) ($answer->relevance_score?? 0)));
+ $answerAlignment = match (true) {
+ $isSkipped => 'skipped',
+ $isTooShort => 'insufficient_evidence',
+ $scoringConfidence <= 0 => null,
+ $relevanceScore >= 75 => 'directly_addressed',
+ $relevanceScore >= 50 => 'partially_addressed',
+ default => 'not_addressed',
+ };
 
-        return $this->coaching->forAnswer(
-            $answerText,
-            $answer->question,
-            [
-                'answer_id' => $answer->id,
-                'response_mode' => $answer->response_mode ?? 'text',
-                'voice_duration' => $answer->voice_duration ?? 0,
-                'wpm' => $answer->wpm ?? 0,
-                'filler_words_count' => $answer->filler_words_count ?? 0,
-                'pause_count' => $answer->pause_count ?? 0,
-                'delivery_transcript' => $answer->delivery_transcript ?? null,
-                'scoring_confidence' => $scoringConfidence,
-                'relevance_score' => $relevanceScore,
-                'evidence_quotes' => is_array($evidenceMap['supporting_excerpts'] ?? null)
-                    ? $evidenceMap['supporting_excerpts']
-                    : [],
-                'missing_evidence' => is_array($evidenceMap['missing_evidence'] ?? null)
-                    ? $evidenceMap['missing_evidence']
-                    : [],
-                'evaluation_source' => $scoringConfidence > 0 ? 'stored_evidence_assessment' : null,
-                'answer_alignment' => $answerAlignment,
-                'question_focus' => $answer->question?->question_text,
-                'is_skipped' => $isSkipped,
-                'is_too_short' => $isTooShort,
-                'camera_detection_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_detection', data_get($session?->accommodation_profile, 'camera_coaching', false)),
-                'camera_coaching_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_detection', data_get($session?->accommodation_profile, 'camera_coaching', false)),
-            ],
-            $observationData
-        );
-    }
+ return $this->coaching->forAnswer(
+ $answerText,
+ $answer->question,
+ [
+ 'answer_id' => $answer->id,
+ 'response_mode' => $answer->response_mode?? 'text',
+ 'voice_duration' => $answer->voice_duration?? 0,
+ 'wpm' => $answer->wpm?? 0,
+ 'filler_words_count' => $answer->filler_words_count?? 0,
+ 'pause_count' => $answer->pause_count?? 0,
+ 'delivery_transcript' => $answer->delivery_transcript?? null,
+ 'scoring_confidence' => $scoringConfidence,
+ 'relevance_score' => $relevanceScore,
+ 'evidence_quotes' => is_array($evidenceMap['supporting_excerpts']?? null)? $evidenceMap['supporting_excerpts']: [],
+ 'missing_evidence' => is_array($evidenceMap['missing_evidence']?? null)? $evidenceMap['missing_evidence']: [],
+ 'evaluation_source' => $scoringConfidence > 0? 'stored_evidence_assessment': null,
+ 'answer_alignment' => $answerAlignment,
+ 'question_focus' => $answer->question?->question_text,
+ 'is_skipped' => $isSkipped,
+ 'is_too_short' => $isTooShort,
+ 'camera_detection_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_detection', data_get($session?->accommodation_profile, 'camera_coaching', false)),
+ 'camera_coaching_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_detection', data_get($session?->accommodation_profile, 'camera_coaching', false)),
+ ],
+ $observationData
+ );
+ }
 
-    public function repairSession(InterviewSession $session): bool
-    {
-        $session->loadMissing('feedback');
-        $answers = $this->originalAnswersFor($session);
-        if ($answers->isEmpty()) {
-            return false;
-        }
+ public function repairSession(InterviewSession $session): bool
+ {
+ $session->loadMissing('feedback');
+ $answers = $this->originalAnswersFor($session);
+ if ($answers->isEmpty()) {
+ return false;
+ }
 
-        $changed = false;
-        if ($this->canPersistAnswerCoaching()) {
-            $answersChanged = false;
-            foreach ($answers as $answer) {
-                if (! $answer instanceof InterviewAnswer || ! $this->answerCoachingNeedsRepair($answer->coaching_feedback ?? null)) {
-                    continue;
-                }
+ $changed = false;
+ if ($this->canPersistAnswerCoaching()) {
+ $answersChanged = false;
+ foreach ($answers as $answer) {
+ if (! $answer instanceof InterviewAnswer ||! $this->answerCoachingNeedsRepair($answer->coaching_feedback?? null)) {
+ continue;
+ }
 
-                $answer->forceFill([
-                    'coaching_feedback' => $this->buildAnswerCoaching($answer, $session),
-                ])->save();
-                $changed = true;
-                $answersChanged = true;
-            }
+ $answer->forceFill([
+ 'coaching_feedback' => $this->buildAnswerCoaching($answer, $session),
+ ])->save();
+ $changed = true;
+ $answersChanged = true;
+ }
 
-            if ($answersChanged) {
-                $session->unsetRelation('answers');
-                $answers = $this->originalAnswersFor($session);
-            }
-        }
+ if ($answersChanged) {
+ $session->unsetRelation('answers');
+ $answers = $this->originalAnswersFor($session);
+ }
+ }
 
-        if ($session->feedback instanceof Feedback
-            && $this->canPersistSummary()
-            && $this->summaryNeedsRepair($session->feedback->coaching_summary ?? null)) {
-            $session->feedback->forceFill([
-                'coaching_summary' => $this->buildSummaryFromAnswers($answers),
-            ])->save();
-            $changed = true;
-        }
+ if ($session->feedback instanceof Feedback
+ && $this->canPersistSummary()
+ && $this->summaryNeedsRepair($session->feedback->coaching_summary?? null)) {
+ $session->feedback->forceFill([
+ 'coaching_summary' => $this->buildSummaryFromAnswers($answers),
+ ])->save();
+ $changed = true;
+ }
 
-        return $changed;
-    }
+ return $changed;
+ }
 
-    private function originalAnswersFor(InterviewSession $session): Collection
-    {
-        if ($session->relationLoaded('answers')) {
-            return $session->answers
-                ->filter(fn ($answer) => ($answer->retry_of_answer_id ?? null) === null)
-                ->values();
-        }
+ private function originalAnswersFor(InterviewSession $session): Collection
+ {
+ if ($session->relationLoaded('answers')) {
+ return $session->answers
+ ->filter(fn ($answer) => ($answer->retry_of_answer_id?? null) === null)
+ ->values();
+ }
 
-        return InterviewAnswer::with('question')
-            ->where('interview_session_id', $session->id)
-            ->whereNull('retry_of_answer_id')
-            ->get();
-    }
+ return InterviewAnswer::with('question')
+ ->where('interview_session_id', $session->id)
+ ->whereNull('retry_of_answer_id')
+ ->get();
+ }
+
+ private function answerContent(InterviewAnswer $answer): string
+ {
+ $answerText = trim((string) ($answer->answer_text?? ''));
+ if ($answerText!== '') {
+ return $answerText;
+ }
+
+ return trim((string) ($answer->delivery_transcript?? ''));
+ }
 }

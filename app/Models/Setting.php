@@ -4,10 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Setting extends Model
 {
     use HasFactory;
+
+    private const REQUEST_SETTING_CACHE_KEY = 'speakready.settings.by_key';
+    private const REQUEST_USERS_LANGUAGE_COLUMN_CACHE_KEY = 'speakready.settings.users_preferred_language';
 
     public const SUPPORTED_LANGUAGES = [
         'en' => [
@@ -56,7 +60,7 @@ class Setting extends Model
      */
     public static function getVal($key, $default = null)
     {
-        $setting = self::where('key', $key)->first();
+        $setting = self::settingFromRequestCache((string) $key);
         
         if (!$setting) {
             return $default;
@@ -95,12 +99,23 @@ class Setting extends Model
 
     public static function usersTableHasPreferredLanguage(): bool
     {
-        try {
-            return \Illuminate\Support\Facades\Schema::hasTable('users')
-                && \Illuminate\Support\Facades\Schema::hasColumn('users', 'preferred_language');
-        } catch (\Throwable $e) {
-            return false;
+        $request = self::currentRequest();
+        if ($request && $request->attributes->has(self::REQUEST_USERS_LANGUAGE_COLUMN_CACHE_KEY)) {
+            return (bool) $request->attributes->get(self::REQUEST_USERS_LANGUAGE_COLUMN_CACHE_KEY);
         }
+
+        try {
+            $hasColumn = Schema::hasTable('users')
+                && Schema::hasColumn('users', 'preferred_language');
+        } catch (\Throwable $e) {
+            $hasColumn = false;
+        }
+
+        if ($request) {
+            $request->attributes->set(self::REQUEST_USERS_LANGUAGE_COLUMN_CACHE_KEY, $hasColumn);
+        }
+
+        return $hasColumn;
     }
 
     public static function preferredLanguageFor($user = null): ?string
@@ -137,7 +152,7 @@ class Setting extends Model
             $value = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
         }
 
-        return self::updateOrCreate(
+        $setting = self::updateOrCreate(
             ['key' => $key],
             [
                 'value' => is_null($value) ? null : (string) $value,
@@ -145,5 +160,52 @@ class Setting extends Model
                 'type' => $type
             ]
         );
+
+        self::rememberSettingInRequest((string) $key, $setting);
+
+        return $setting;
+    }
+
+    private static function settingFromRequestCache(string $key): ?self
+    {
+        $request = self::currentRequest();
+        $cache = $request?->attributes->get(self::REQUEST_SETTING_CACHE_KEY, []);
+
+        if (is_array($cache) && array_key_exists($key, $cache) && $cache[$key] instanceof self) {
+            return $cache[$key];
+        }
+
+        $setting = self::where('key', $key)->first();
+
+        if ($setting) {
+            self::rememberSettingInRequest($key, $setting);
+        }
+
+        return $setting;
+    }
+
+    private static function rememberSettingInRequest(string $key, self $setting): void
+    {
+        $request = self::currentRequest();
+        if (!$request) {
+            return;
+        }
+
+        $cache = $request->attributes->get(self::REQUEST_SETTING_CACHE_KEY, []);
+        if (!is_array($cache)) {
+            $cache = [];
+        }
+
+        $cache[$key] = $setting;
+        $request->attributes->set(self::REQUEST_SETTING_CACHE_KEY, $cache);
+    }
+
+    private static function currentRequest()
+    {
+        try {
+            return app()->bound('request') ? request() : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }

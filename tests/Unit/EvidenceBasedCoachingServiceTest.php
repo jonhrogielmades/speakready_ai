@@ -587,7 +587,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
             'My support experience matches the role, and I can contribute careful documentation and consistent follow-through.',
             new Question([
                 'type' => 'Behavioral',
-                'question_text' => 'Why should a Philippine employer hire you for this role?',
+                'question_text' => 'Why should a employer hire you for this role?',
                 'expected_guide' => 'Connect role requirements to specific experience, strengths, measurable results, and motivation.',
             ]),
             ['response_mode' => 'text']

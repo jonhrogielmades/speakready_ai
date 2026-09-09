@@ -176,6 +176,52 @@
         border-radius: 10px;
         resize: vertical;
     }
+    .response-mode-lock-notice {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin: 0 0 8px;
+        padding: 9px 10px;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: 10px;
+        background: rgba(245, 158, 11, 0.08);
+        color: #92400e;
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1.35;
+    }
+    .response-mode-lock-notice[hidden] {
+        display: none !important;
+    }
+    .response-mode-lock-notice i {
+        margin-top: 2px;
+        color: #b45309;
+    }
+    :root:not(.lm) .response-mode-lock-notice {
+        border-color: rgba(251, 191, 36, 0.28);
+        background: rgba(251, 191, 36, 0.1);
+        color: #fde68a;
+    }
+    :root:not(.lm) .response-mode-lock-notice i {
+        color: #fbbf24;
+    }
+    .response-panel #answerTextarea.voice-only-answer-lock,
+    html body #sec-interview-session #answerTextarea.voice-only-answer-lock {
+        border-style: dashed !important;
+        border-color: rgba(148, 163, 184, 0.72) !important;
+        background: rgba(148, 163, 184, 0.1) !important;
+        color: var(--tx3) !important;
+        -webkit-text-fill-color: var(--tx3) !important;
+        caret-color: transparent !important;
+        cursor: not-allowed;
+        resize: none !important;
+    }
+    .response-panel #answerTextarea.voice-only-answer-lock::placeholder,
+    html body #sec-interview-session #answerTextarea.voice-only-answer-lock::placeholder {
+        color: var(--tx3) !important;
+        -webkit-text-fill-color: var(--tx3) !important;
+        opacity: 0.9 !important;
+    }
     .response-count-bar {
         width: 100%;
         box-sizing: border-box;
@@ -188,6 +234,42 @@
         font-size: 0.72rem;
         font-weight: 700;
         line-height: 1.2;
+    }
+    .session-live-coaching {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        margin: 8px 0 12px;
+        padding: 9px 11px;
+        border: 1px solid rgba(14, 165, 233, 0.22);
+        border-radius: 10px;
+        background: rgba(14, 165, 233, 0.08);
+        color: var(--tx2);
+        font-size: 0.72rem;
+        font-weight: 750;
+        line-height: 1.35;
+    }
+    .session-live-coaching i {
+        margin-top: 2px;
+        color: #0284c7;
+    }
+    .session-live-coaching strong {
+        color: var(--tx);
+        font-weight: 900;
+    }
+    :root:not(.lm) .session-live-coaching,
+    html[data-theme="dark"] .session-live-coaching,
+    body.dm .session-live-coaching,
+    .dm .session-live-coaching {
+        border-color: rgba(56, 189, 248, 0.24);
+        background: rgba(14, 165, 233, 0.12);
+        color: #cbd5e1;
+    }
+    :root:not(.lm) .session-live-coaching strong,
+    html[data-theme="dark"] .session-live-coaching strong,
+    body.dm .session-live-coaching strong,
+    .dm .session-live-coaching strong {
+        color: #f8fafc;
     }
     #voiceSessionPanel[hidden] {
         display: none !important;

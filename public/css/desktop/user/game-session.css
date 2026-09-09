@@ -1091,3 +1091,637 @@
             min-height: 132px !important;
         }
     }
+
+    /* Match the Interview Session workspace layout for /game/match. */
+    html body #sec-learning-game-session {
+        --session-desktop-radius: 12px;
+        --session-desktop-gap: 12px;
+        --session-desktop-border: rgba(148, 163, 184, 0.2);
+        --session-desktop-card-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+        --question-caption-bg: transparent;
+        --question-caption-border: transparent;
+        --question-caption-color: #ffffff;
+        --question-caption-shadow: none;
+        --question-caption-text-shadow: 0 2px 6px rgba(0, 0, 0, 0.92);
+        width: 100% !important;
+        max-width: 1480px !important;
+        margin: 0 auto !important;
+        padding: 0 0 24px !important;
+    }
+
+    html[data-theme="dark"] body #sec-learning-game-session,
+    :root:not(.lm) body #sec-learning-game-session,
+    .dm #sec-learning-game-session {
+        --session-desktop-border: rgba(148, 163, 184, 0.2);
+        --session-desktop-card-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+    }
+
+    html body #sec-learning-game-session #workspaceWrapper.learning-game-interview-layout {
+        width: 100% !important;
+    }
+
+    html body #sec-learning-game-session .hud-banner {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin: 0 0 var(--session-desktop-gap) !important;
+        padding: 14px !important;
+        border: 1px solid var(--session-desktop-border) !important;
+        border-radius: var(--session-desktop-radius) !important;
+        background: var(--game-pro-card, var(--sf)) !important;
+        box-shadow: var(--session-desktop-card-shadow) !important;
+    }
+
+    html body #sec-learning-game-session .hud-title-wrap {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    html body #sec-learning-game-session .hud-title-row {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin-bottom: 4px !important;
+    }
+
+    html body #sec-learning-game-session .hud-title-row > .hud-mode-badge {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: max-content !important;
+        max-width: max-content !important;
+        min-height: 30px !important;
+        padding: 7px 11px !important;
+        border: 1px solid rgba(139, 92, 246, 0.62) !important;
+        border-radius: 999px !important;
+        background: var(--pur, #8b5cf6) !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        font-size: 0.72rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }
+
+    html body #sec-learning-game-session .hud-title {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        font-size: clamp(1rem, 1.08vw, 1.35rem) !important;
+        line-height: 1.14 !important;
+        text-transform: none !important;
+    }
+
+    html body #sec-learning-game-session .hud-objective {
+        width: 100% !important;
+        max-width: min(100%, 920px) !important;
+        color: var(--tx2) !important;
+        -webkit-text-fill-color: var(--tx2) !important;
+    }
+
+    html body #sec-learning-game-session .hud-badges {
+        display: flex !important;
+        flex: 0 0 auto !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        width: auto !important;
+        min-width: max-content !important;
+    }
+
+    html body #sec-learning-game-session .hud-badges .badge {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: max-content !important;
+        max-width: max-content !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }
+
+    html body #sec-learning-game-session .desktop-session-two-column,
+    html body #sec-learning-game-session .desktop-interview-panel,
+    html body #sec-learning-game-session .desktop-response-column {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    html body #sec-learning-game-session .desktop-session-two-column {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--session-desktop-gap) !important;
+    }
+
+    html body #sec-learning-game-session .desktop-interview-panel,
+    html body #sec-learning-game-session .desktop-response-column {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    html body #sec-learning-game-session :is(.panel, .ai-avatar-panel, #gameSessionControls, .ai-question-card, .response-panel) {
+        border-radius: var(--session-desktop-radius) !important;
+        border-color: var(--session-desktop-border) !important;
+        box-shadow: var(--session-desktop-card-shadow) !important;
+    }
+
+    html body #sec-learning-game-session .ai-avatar-panel {
+        margin: 0 !important;
+        border-radius: var(--session-desktop-radius) !important;
+    }
+
+    html body #sec-learning-game-session #aiAvatarContainer {
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
+    }
+
+    html body #sec-learning-game-session #aiAvatarHead.avatar-wrapper {
+        --avatar-ring-color: #8b5cf6;
+        isolation: isolate;
+        transition: transform 0.24s ease, border-color 0.24s ease;
+    }
+
+    html body #sec-learning-game-session .avatar-frame {
+        width: 100% !important;
+        height: 100% !important;
+        border: 4px solid var(--avatar-ring-color, #8b5cf6) !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        overflow: hidden !important;
+        position: relative !important;
+        z-index: 10 !important;
+        box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.18),
+            0 18px 42px rgba(15, 23, 42, 0.45),
+            0 0 28px color-mix(in srgb, var(--avatar-ring-color, #8b5cf6) 58%, transparent) !important;
+    }
+
+    html body #sec-learning-game-session .circular-spectrum {
+        --spectrum-radius: 60px;
+        transform: none !important;
+        filter: drop-shadow(0 0 18px rgba(52, 211, 153, 0.58));
+        pointer-events: none;
+    }
+
+    html body #sec-learning-game-session .circular-spectrum .spectrum-bar {
+        left: -3px !important;
+        width: 6px !important;
+        height: 8px;
+        max-height: 32px;
+        border-radius: 999px !important;
+        background: linear-gradient(to top, #60a5fa 0%, #34d399 70%, #f8fafc 100%) !important;
+        transform: rotate(var(--bar-rotation)) translateY(calc((var(--spectrum-radius) + var(--bar-pop, 0px)) * -1)) !important;
+        transform-origin: bottom center !important;
+        transition: height 0.055s ease-out, opacity 0.08s ease, transform 0.065s ease-out !important;
+        box-shadow: 0 0 16px rgba(52, 211, 153, 0.62) !important;
+        opacity: 0.92;
+    }
+
+    html body #sec-learning-game-session .question-caption-overlay {
+        position: absolute !important;
+        left: 18px !important;
+        right: 18px !important;
+        bottom: 18px !important;
+        z-index: 60 !important;
+        display: flex !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        background: transparent !important;
+        pointer-events: none !important;
+    }
+
+    html body #sec-learning-game-session .question-caption-line {
+        max-width: min(88%, 640px) !important;
+        max-height: 76px !important;
+        padding: 0 2px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: var(--question-caption-bg) !important;
+        color: var(--question-caption-color) !important;
+        -webkit-text-fill-color: var(--question-caption-color) !important;
+        font-size: clamp(0.72rem, 1.2vw, 0.88rem) !important;
+        font-weight: 800 !important;
+        line-height: 1.35 !important;
+        text-align: center !important;
+        text-shadow: var(--question-caption-text-shadow) !important;
+        box-shadow: var(--question-caption-shadow) !important;
+        overflow-y: auto !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+    }
+
+    html body #sec-learning-game-session .ai-question-card {
+        display: block !important;
+        margin: 0 !important;
+        padding: 12px 14px !important;
+        border: 1px solid var(--session-desktop-border) !important;
+        border-radius: var(--session-desktop-radius) !important;
+        background: var(--game-pro-card, var(--sf)) !important;
+        box-shadow: var(--session-desktop-card-shadow) !important;
+    }
+
+    html body #sec-learning-game-session .ai-question-card #aiQuestionText {
+        min-height: 34px !important;
+        max-height: clamp(92px, 18vh, 190px) !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        color: var(--tx) !important;
+        -webkit-text-fill-color: var(--tx) !important;
+        font-size: clamp(1rem, 1.12vw, 1.28rem) !important;
+        font-weight: 850 !important;
+        line-height: 1.3 !important;
+        text-align: center !important;
+        box-shadow: none !important;
+        overflow-y: auto !important;
+    }
+
+    html body #sec-learning-game-session #gameSessionControls {
+        position: static !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        padding: 8px !important;
+        border: 1px solid var(--session-desktop-border) !important;
+        border-radius: var(--session-desktop-radius) !important;
+        background: var(--game-pro-card, var(--sf)) !important;
+        box-shadow: var(--session-desktop-card-shadow) !important;
+    }
+
+    html body #sec-learning-game-session #gameSessionControls .btn {
+        min-height: 32px !important;
+        padding: 6px 10px !important;
+        border-radius: 8px !important;
+        font-size: 0.68rem !important;
+        font-weight: 850 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        box-shadow: none !important;
+    }
+
+    html body #sec-learning-game-session #gameSessionControls .session-nav-icon {
+        flex: 0 0 42px !important;
+    }
+
+    html body #sec-learning-game-session #gameSessionControls .session-nav-skip {
+        flex: 0 0 94px !important;
+    }
+
+    html body #sec-learning-game-session #gameSessionControls .session-nav-next {
+        flex: 1 1 auto !important;
+    }
+
+    html body #sec-learning-game-session .response-panel {
+        margin: 0 !important;
+        padding: 14px !important;
+        border-radius: var(--session-desktop-radius) !important;
+    }
+
+    html body #sec-learning-game-session .response-panel .panel-title,
+    html body #sec-learning-game-session .panel .panel-title {
+        display: grid !important;
+        grid-template-columns: 30px minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 0 10px !important;
+        color: var(--tx) !important;
+        -webkit-text-fill-color: var(--tx) !important;
+        font-size: 0.9rem !important;
+        line-height: 1.15 !important;
+        font-weight: 900 !important;
+    }
+
+    html body #sec-learning-game-session .panel-title > i {
+        width: 30px !important;
+        height: 30px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        border-radius: 9px !important;
+        font-size: 0.78rem !important;
+    }
+
+    html body #sec-learning-game-session .response-title-actions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        justify-self: end !important;
+        gap: 6px !important;
+        margin-left: auto !important;
+    }
+
+    html body #sec-learning-game-session #answerTextarea {
+        min-height: 160px !important;
+        max-height: none !important;
+        margin-bottom: 8px !important;
+        padding: 10px !important;
+        border-radius: 10px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.42 !important;
+    }
+
+    html body #sec-learning-game-session .response-count-bar {
+        min-height: 30px !important;
+        padding: 7px 9px !important;
+        border-radius: 9px !important;
+        font-size: 0.66rem !important;
+    }
+
+    @media (min-width: 992px) {
+        html body #sec-learning-game-session #workspaceRow {
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: 0 !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) clamp(330px, 34%, 470px) !important;
+            gap: var(--session-desktop-gap) !important;
+            align-items: start !important;
+            margin: 0 !important;
+        }
+
+        html body #sec-learning-game-session #workspaceRow > [class*="col-"] {
+            width: auto !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            padding: 0 !important;
+        }
+
+        html body #sec-learning-game-session #workspaceRow > .col-lg-8 {
+            grid-column: 1 / 2 !important;
+        }
+
+        html body #sec-learning-game-session #workspaceRow.session-main-only {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        html body #sec-learning-game-session #workspaceRow > .col-lg-12 {
+            grid-column: 1 / -1 !important;
+        }
+
+        html body #sec-learning-game-session #workspaceRow > .col-lg-4 {
+            grid-column: 2 / 3 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: var(--session-desktop-gap) !important;
+        }
+
+        html body #sec-learning-game-session .desktop-session-two-column {
+            display: grid !important;
+            grid-template-columns: minmax(360px, 0.94fr) minmax(420px, 1.06fr) !important;
+            gap: var(--session-desktop-gap) !important;
+            align-items: stretch !important;
+        }
+
+        html body #sec-learning-game-session .desktop-interview-panel,
+        html body #sec-learning-game-session .desktop-response-column {
+            height: 100% !important;
+        }
+
+        html body #sec-learning-game-session .desktop-interview-panel .ai-avatar-panel {
+            flex: 1 1 auto !important;
+            height: auto !important;
+            min-height: clamp(430px, 46vh, 560px) !important;
+        }
+
+        html body #sec-learning-game-session .desktop-interview-panel #aiAvatarHead.avatar-wrapper {
+            width: clamp(184px, 13vw, 260px) !important;
+            height: clamp(184px, 13vw, 260px) !important;
+        }
+
+        html body #sec-learning-game-session .desktop-interview-panel .circular-spectrum {
+            --spectrum-radius: clamp(106px, 7.1vw, 136px);
+        }
+
+        html body #sec-learning-game-session .desktop-interview-panel .circular-spectrum .spectrum-bar {
+            left: -6px !important;
+            width: 12px !important;
+            height: 22px;
+            max-height: 78px;
+        }
+
+        html body #sec-learning-game-session .desktop-response-column .response-panel {
+            min-height: 100% !important;
+        }
+
+        html body #sec-learning-game-session .desktop-response-column #answerTextarea {
+            min-height: clamp(250px, 32vh, 420px) !important;
+        }
+
+        html body #sec-learning-game-session #workspaceRow > .col-lg-4 .panel {
+            margin: 0 !important;
+            padding: 14px !important;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1320px) {
+        html body #sec-learning-game-session #workspaceRow {
+            grid-template-columns: minmax(0, 1fr) clamp(300px, 31%, 380px) !important;
+        }
+
+        html body #sec-learning-game-session .desktop-session-two-column {
+            grid-template-columns: minmax(300px, 0.95fr) minmax(340px, 1.05fr) !important;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+        html body #sec-learning-game-session .desktop-session-two-column {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        html body #sec-learning-game-session .desktop-interview-panel .ai-avatar-panel {
+            min-height: 260px !important;
+        }
+
+        html body #sec-learning-game-session .desktop-response-column #answerTextarea {
+            min-height: 180px !important;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        html body #sec-learning-game-session,
+        body.user-mobile-shell #mob-content #sec-learning-game-session {
+            max-width: none !important;
+            padding: 0 0 18px !important;
+        }
+
+        html body #sec-learning-game-session .hud-banner,
+        body.user-mobile-shell #mob-content #sec-learning-game-session .hud-banner {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 10px !important;
+            align-items: start !important;
+        }
+
+        html body #sec-learning-game-session .hud-title-row,
+        body.user-mobile-shell #mob-content #sec-learning-game-session .hud-title-row {
+            flex-wrap: wrap !important;
+            align-items: flex-start !important;
+        }
+
+        html body #sec-learning-game-session .hud-title,
+        body.user-mobile-shell #mob-content #sec-learning-game-session .hud-title {
+            flex: 1 1 100% !important;
+            width: 100% !important;
+        }
+
+        html body #sec-learning-game-session .hud-badges,
+        body.user-mobile-shell #mob-content #sec-learning-game-session .hud-badges {
+            width: 100% !important;
+            min-width: 0 !important;
+            justify-content: flex-start !important;
+        }
+
+        html body #sec-learning-game-session .hud-badges .badge,
+        body.user-mobile-shell #mob-content #sec-learning-game-session .hud-badges .badge {
+            flex: 1 1 126px !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #sec-learning-game-session #workspaceRow,
+        body.user-mobile-shell #mob-content #sec-learning-game-session #workspaceRow {
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: var(--session-desktop-gap) !important;
+            display: block !important;
+            margin: 0 !important;
+        }
+
+        html body #sec-learning-game-session #workspaceRow > [class*="col-"],
+        body.user-mobile-shell #mob-content #sec-learning-game-session #workspaceRow > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+        }
+
+        html body #sec-learning-game-session .desktop-session-two-column,
+        body.user-mobile-shell #mob-content #sec-learning-game-session .desktop-session-two-column {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: var(--session-desktop-gap) !important;
+        }
+
+        html body #sec-learning-game-session .ai-avatar-panel,
+        body.user-mobile-shell #mob-content #sec-learning-game-session .ai-avatar-panel {
+            height: clamp(220px, 54vw, 300px) !important;
+            min-height: 220px !important;
+            margin: 0 !important;
+        }
+
+        html body #sec-learning-game-session #aiAvatarHead.avatar-wrapper,
+        body.user-mobile-shell #mob-content #sec-learning-game-session #aiAvatarHead.avatar-wrapper {
+            width: 108px !important;
+            height: 108px !important;
+        }
+
+        html body #sec-learning-game-session .ai-question-card,
+        body.user-mobile-shell #mob-content #sec-learning-game-session .ai-question-card {
+            padding: 10px !important;
+        }
+
+        html body #sec-learning-game-session .ai-question-card #aiQuestionText,
+        body.user-mobile-shell #mob-content #sec-learning-game-session .ai-question-card #aiQuestionText {
+            min-height: 30px !important;
+            max-height: 120px !important;
+            font-size: 0.86rem !important;
+            line-height: 1.32 !important;
+        }
+
+        html body #sec-learning-game-session #gameSessionControls,
+        body.user-mobile-shell #mob-content #sec-learning-game-session #gameSessionControls {
+            position: sticky !important;
+            top: calc(var(--mob-top-h, 56px) + var(--mob-safe-top, 0px) + 8px) !important;
+            z-index: 14 !important;
+            display: grid !important;
+            grid-template-columns: 38px 38px minmax(70px, 0.82fr) minmax(108px, 1.18fr) !important;
+            gap: 8px !important;
+        }
+
+        html body #sec-learning-game-session #answerTextarea,
+        body.user-mobile-shell #mob-content #sec-learning-game-session #answerTextarea {
+            min-height: 150px !important;
+            max-height: none !important;
+        }
+    }
+
+    body.game-match-auto-fullscreen {
+        overflow: hidden !important;
+        overscroll-behavior: none;
+    }
+
+    body.user-desktop-shell.game-match-auto-fullscreen #dashboard {
+        min-height: 100dvh !important;
+        background: var(--bg) !important;
+    }
+
+    body.user-desktop-shell.game-match-auto-fullscreen #dashboard .db-sidebar,
+    body.user-desktop-shell.game-match-auto-fullscreen #dashboard .db-sidebar-backdrop,
+    body.user-desktop-shell.game-match-auto-fullscreen #dashboard .db-top {
+        display: none !important;
+    }
+
+    body.user-desktop-shell.game-match-auto-fullscreen #dashboard .db-main {
+        margin-left: 0 !important;
+        padding-top: 0 !important;
+        min-height: 100dvh !important;
+    }
+
+    body.user-desktop-shell.game-match-auto-fullscreen #dashboard .db-content {
+        width: 100% !important;
+        max-width: none !important;
+        height: 100dvh !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: clamp(10px, 1.4vw, 22px) !important;
+        box-sizing: border-box !important;
+        overflow-y: auto !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    body.user-desktop-shell.game-match-auto-fullscreen #sec-learning-game-session {
+        width: 100% !important;
+        max-width: none !important;
+        min-height: calc(100dvh - clamp(20px, 2.8vw, 44px)) !important;
+        padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+    }
+
+    body.user-desktop-shell.game-match-auto-fullscreen #sec-learning-game-session .hud-banner,
+    body.user-desktop-shell.game-match-auto-fullscreen #workspaceWrapper {
+        width: min(100%, 1820px) !important;
+    }
+
+    body.user-desktop-shell.game-match-auto-fullscreen #sec-learning-game-session .hud-banner {
+        flex: 0 0 auto !important;
+        margin-bottom: 10px !important;
+        padding: 12px !important;
+    }
+
+    body.user-desktop-shell.game-match-auto-fullscreen #workspaceWrapper {
+        flex: 0 1 auto !important;
+        margin: 0 auto !important;
+    }
+
+    @media (min-width: 992px) {
+        body.user-desktop-shell.game-match-auto-fullscreen #sec-learning-game-session .desktop-interview-panel .ai-avatar-panel {
+            min-height: clamp(320px, 54dvh, 640px) !important;
+        }
+
+        body.user-desktop-shell.game-match-auto-fullscreen #sec-learning-game-session .desktop-response-column #answerTextarea {
+            min-height: clamp(240px, 42dvh, 540px) !important;
+        }
+    }

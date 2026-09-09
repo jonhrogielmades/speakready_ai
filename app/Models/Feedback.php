@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Schema;
 
 class Feedback extends Model
 {
+    private static ?array $columnCache = null;
+
     protected $fillable = [
         'interview_session_id',
         'strengths',
@@ -21,11 +23,16 @@ class Feedback extends Model
 
     public static function hasColumn(string $column): bool
     {
-        $columns = Schema::hasTable('feedback')
+        self::$columnCache ??= Schema::hasTable('feedback')
             ? array_flip(Schema::getColumnListing('feedback'))
             : [];
 
-        return isset($columns[$column]);
+        return isset(self::$columnCache[$column]);
+    }
+
+    public static function flushColumnCache(): void
+    {
+        self::$columnCache = null;
     }
 
     public function setAttribute($key, $value)

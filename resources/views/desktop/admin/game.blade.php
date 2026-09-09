@@ -7,15 +7,15 @@
 <div class="db-section active" id="sec-admin-game">
     <div class="mb-4 d-flex justify-content-between align-items-center admin-game-header">
         <div>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Philippines Interview Learning Games</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage gamified Philippine interview drills, local practice prompts, and coaching modifiers.</p>
+            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Interview Learning Games</h4>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage gamified interview drills, local practice prompts, and coaching modifiers.</p>
         </div>
         <div class="d-flex gap-2 admin-game-actions">
             <button class="btn btn-outline-info px-3 py-2" style="font-size:.85rem;font-weight:600" data-bs-toggle="modal" data-bs-target="#generateGameModal">
-                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate PH Games
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Games
             </button>
             <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addGameModal">
-                <i class="fa-solid fa-plus me-1"></i> Add PH Game
+                <i class="fa-solid fa-plus me-1"></i> Add Interview Game
             </button>
         </div>
     </div>
@@ -110,7 +110,7 @@
                             <td style="padding:16px;vertical-align:middle;">
                                 <div style="font-weight:700;color:var(--tx)">{{ $level->title }}</div>
                                 <div class="d-flex flex-wrap align-items-center gap-2 mt-2" style="font-size:0.75rem;color:var(--tx2);">
-                                    <span class="badge bg-secondary" style="font-size:0.65rem;">{{ $level->category ? $level->category->title : 'No PH Interview Category' }}</span> 
+                                    <span class="badge bg-secondary" style="font-size:0.65rem;">{{ $level->category ? $level->category->title : 'No Interview Category' }}</span> 
                                     <span>{{ $level->target_position }} &bull; {{ ucfirst($level->difficulty) }}</span>
                                 </div>
                                 @if($level->skill_focus || $level->learning_objective)
@@ -170,8 +170,8 @@
                         <tr>
                             <td colspan="6" class="text-center py-5" style="color:var(--tx3);">
                                 <i class="fa-solid fa-gamepad fa-3x mb-3" style="color:var(--bd);"></i>
-                                <h5>No Philippines Interview Games Found</h5>
-                                <p>Click "Add PH Game" or "Generate PH Games" to create your first level.</p>
+                                <h5>No Interview Games Found</h5>
+                                <p>Click "Add Interview Game" or "Generate Interview Games" to create your first level.</p>
                             </td>
                         </tr>
                     @endforelse
@@ -192,7 +192,7 @@
             <form action="{{ route('admin.game.update', $level->id) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Edit Philippines Interview Game: Lvl {{ $level->level_number }}</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Edit Interview Game: Lvl {{ $level->level_number }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
@@ -203,7 +203,7 @@
                             <input class="oinp w-100" type="number" name="level_number" value="{{ $level->level_number }}" min="1" max="100" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="olbl">PH Interview Category</label>
+                            <label class="olbl">Interview Category</label>
                             <select class="oinp w-100" name="category_id" required>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}" {{ $level->category_id == $cat->id ? 'selected' : '' }}>{{ $cat->title }}</option>
@@ -215,7 +215,7 @@
                             <input class="oinp w-100" type="text" name="title" value="{{ $level->title }}" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="olbl">PH Interview Goal</label>
+                            <label class="olbl">Interview Goal</label>
                             <input class="oinp w-100" type="text" name="target_position" value="{{ $level->target_position }}" required>
                         </div>
                     </div>
@@ -259,7 +259,7 @@
                         <textarea class="oinp w-100" name="description" rows="2">{{ $level->description }}</textarea>
                     </div>
                     <div class="mb-4">
-                        <label class="olbl">Philippines Interview Questions (For the user to answer)</label>
+                        <label class="olbl">Interview Questions (For the user to answer)</label>
                         <textarea class="oinp w-100" name="mission_text" rows="2">{{ $level->mission_text }}</textarea>
                     </div>
 
@@ -288,7 +288,7 @@
                     <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">AI Settings & Modifiers</h6>
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="olbl">AI Persona (e.g. Philippine HR Coach)</label>
+                            <label class="olbl">AI Persona (e.g. HR Coach)</label>
                             <input class="oinp w-100" type="text" name="ai_persona" value="{{ $level->ai_persona }}">
                         </div>
                         <div class="col-md-4">
@@ -356,11 +356,11 @@
             <form action="{{ route('admin.game.generate') }}" method="POST" id="generateGameForm">
                 @csrf
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-wand-magic-sparkles text-info me-2"></i> Auto-Generate Philippines Interview Game</h5>
+                    <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-wand-magic-sparkles text-info me-2"></i> Auto-Generate Interview Game</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
-                    <p style="color:var(--tx3); font-size:0.85rem;">Let the AI craft a Philippines interview practice level complete with local prompts, a coaching persona, modifiers, and rewards.</p>
+                    <p style="color:var(--tx3); font-size:0.85rem;">Let the AI craft a interview practice level complete with local prompts, a coaching persona, modifiers, and rewards.</p>
                     
                     <div class="row g-3 mb-3">
                         <div class="col-md-3">
@@ -372,7 +372,7 @@
                             <input class="oinp w-100" type="number" name="num_levels" value="1" min="1" max="100" required>
                         </div>
                         <div class="col-md-5">
-                            <label class="olbl">PH Interview Category</label>
+                            <label class="olbl">Interview Category</label>
                             <select class="oinp w-100" name="category_id" required>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}">{{ $cat->title }}</option>
@@ -382,13 +382,13 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="olbl">Philippines Interview Challenge Focus</label>
+                        <label class="olbl">Interview Challenge Focus</label>
                         <input class="oinp w-100" type="text" name="topic" required placeholder="e.g. job interview salary expectations or school admission program fit">
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-info px-4 text-white" onclick="this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Generating...';">Generate PH Games</button>
+                    <button type="submit" class="btn btn-info px-4 text-white" onclick="this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Generating...';">Generate Interview Games</button>
                 </div>
             </form>
         </div>
@@ -402,7 +402,7 @@
             <form action="{{ route('admin.game.store') }}" method="POST">
                 @csrf
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Add Philippines Interview Game</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Add Interview Game</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
@@ -413,7 +413,7 @@
                             <input class="oinp w-100" type="number" name="level_number" min="1" max="100" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="olbl">PH Interview Category</label>
+                            <label class="olbl">Interview Category</label>
                             <select class="oinp w-100" name="category_id" required>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}">{{ $cat->title }}</option>
@@ -425,7 +425,7 @@
                             <input class="oinp w-100" type="text" name="title" required placeholder="e.g. Job Interview Confidence Drill">
                         </div>
                         <div class="col-md-3">
-                            <label class="olbl">PH Interview Goal</label>
+                            <label class="olbl">Interview Goal</label>
                             <input class="oinp w-100" type="text" name="target_position" required placeholder="e.g. School Admission Interview">
                         </div>
                     </div>
@@ -464,10 +464,10 @@
 
                     <div class="mb-3">
                         <label class="olbl">Description</label>
-                        <textarea class="oinp w-100" name="description" rows="2" placeholder="Brief description of the Philippines interview game/level"></textarea>
+                        <textarea class="oinp w-100" name="description" rows="2" placeholder="Brief description of the interview game/level"></textarea>
                     </div>
                     <div class="mb-4">
-                        <label class="olbl">Philippines Interview Questions (For the user to answer)</label>
+                        <label class="olbl">Interview Questions (For the user to answer)</label>
                         <textarea class="oinp w-100" name="mission_text" rows="2" placeholder="List local interview questions for the user..."></textarea>
                     </div>
 
@@ -479,7 +479,7 @@
                         </div>
                         <div class="col-md-8">
                             <label class="olbl">Learning Objective</label>
-                            <textarea class="oinp w-100" name="learning_objective" rows="2" placeholder="What Philippine interview skill should the learner improve?"></textarea>
+                            <textarea class="oinp w-100" name="learning_objective" rows="2" placeholder="What interview skill should the learner improve?"></textarea>
                         </div>
                     </div>
                     <div class="row g-3 mb-4">
@@ -497,7 +497,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="olbl">AI Persona</label>
-                            <input class="oinp w-100" type="text" name="ai_persona" placeholder="e.g. Philippine HR Coach">
+                            <input class="oinp w-100" type="text" name="ai_persona" placeholder="e.g. HR Coach">
                         </div>
                         <div class="col-md-4">
                             <label class="olbl">Time Limit (Seconds)</label>
@@ -514,7 +514,7 @@
                     </div>
                     <div class="mb-4">
                         <label class="olbl">Custom AI Prompt (Hidden)</label>
-                        <textarea class="oinp w-100" name="ai_custom_prompt" rows="2" placeholder="Hidden PH interview coaching instructions..."></textarea>
+                        <textarea class="oinp w-100" name="ai_custom_prompt" rows="2" placeholder="Hidden interview coaching instructions..."></textarea>
                     </div>
 
                     <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">Rewards & Economy</h6>
@@ -549,7 +549,7 @@
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Create PH Game</button>
+                    <button type="submit" class="bgrd btn px-4">Create Interview Game</button>
                 </div>
             </form>
         </div>

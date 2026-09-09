@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/ai/providers.css?v=3') }}" data-page-style="admin-ai-providers">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/ai/providers.css?v=4') }}" data-page-style="admin-ai-providers">
 @endpush
 
 @section('content')
@@ -73,6 +73,8 @@
             </div>
         </div>
     </div>
+
+    @include('admin.ai.partials.provider-process-connections')
 
     <div class="row g-4 mb-4 ai-main-grid">
         <!-- Main Column -->

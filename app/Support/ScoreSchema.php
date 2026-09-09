@@ -10,10 +10,11 @@ use Illuminate\Support\Facades\Schema;
 class ScoreSchema
 {
     private static bool $checked = false;
+    private static bool $ready = false;
 
     public static function ensure(bool $force = false, bool $createIfMissing = true): void
     {
-        if (! $force && self::$checked && self::hasRequiredColumns()) {
+        if (! $force && self::$checked && self::$ready && ! app()->runningUnitTests()) {
             return;
         }
 
@@ -23,6 +24,7 @@ class ScoreSchema
             }
 
             self::$checked = true;
+            self::$ready = $createIfMissing && Schema::hasTable('scores');
             self::flushModelColumnCache();
 
             return;
@@ -108,6 +110,7 @@ class ScoreSchema
         }
 
         self::$checked = true;
+        self::$ready = true;
         self::flushModelColumnCache();
     }
 

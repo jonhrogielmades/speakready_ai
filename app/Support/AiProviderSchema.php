@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Schema;
 class AiProviderSchema
 {
     private static bool $checked = false;
+    private static bool $ready = false;
 
     public static function ensure(bool $force = false, bool $createIfMissing = true): void
     {
-        if (! $force && self::$checked && self::hasRequiredTables()) {
+        if (! $force && self::$checked && self::$ready && ! app()->runningUnitTests()) {
             return;
         }
 
@@ -28,6 +29,7 @@ class AiProviderSchema
         }
 
         self::$checked = true;
+        self::$ready = $createIfMissing || self::hasRequiredTables();
     }
 
     public static function hasRequiredTables(): bool

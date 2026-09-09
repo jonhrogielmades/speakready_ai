@@ -818,7 +818,7 @@ function updateChartColors() {
     });
 }
 
-/*  AI CHAT (Anthropic API)  */
+/*  AI CHAT (local demo response)  */
 async function sendChat() {
     const inp = document.getElementById('chatInp');
     const msg = inp.value.trim();
@@ -833,22 +833,10 @@ async function sendChat() {
     document.getElementById('chatSendBtn').disabled = true;
     const typingId = appendTyping();
     try {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
-                max_tokens: 1000,
-                system: `You are SpeakReady AI, an intelligent AI assistant built into the SpeakReady AI business automation platform. The user is ${currentUser?.name || 'a user'} on the ${currentUser?.plan || 'Pro'} plan. You help with: AI agent performance, support ticket analytics, workflow automation suggestions, business metrics insights, and platform usage. Current platform stats: 24.8K conversations today, 98.2% resolution rate, 1.4s avg response, $18.2K monthly savings, 4 active agents. Be concise, professional, and data-driven. Use emojis sparingly.`,
-                messages: chatHistory
-            })
-        });
+        await new Promise(resolve => setTimeout(resolve, 350));
+        const reply = 'The live coach uses the server AI provider pool. Configure OpenAI, Gemini, Groq, or Cohere in the admin AI settings to enable generated replies.';
         removeTyping(typingId);
-        if (res.ok) {
-            const data = await res.json();
-            const reply = data.content?.find(b => b.type === 'text')?.text || 'I could not generate a response.';
+        if (reply) {
             chatHistory.push({
                 role: 'assistant',
                 content: reply

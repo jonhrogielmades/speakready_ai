@@ -7467,3 +7467,41 @@ html body #sec-progress-tracking .progress-ai-popover {
         padding-right: 0 !important;
     }
 }
+/* Readiness-first progress updates. */
+#sec-progress-tracking .progress-stat-card.readiness-primary {
+    border-color: color-mix(in srgb, var(--stat-accent, #64748b) 34%, var(--bd));
+}
+
+#sec-progress-tracking .history-footer-action {
+    display: flex;
+    justify-content: stretch;
+    margin-top: 14px;
+}
+
+#sec-progress-tracking .history-footer-action .btn {
+    width: 100%;
+}
+
+html body #mob-content #sec-progress-tracking .progress-hero-art,
+body.user-mobile-shell #sec-progress-tracking .progress-hero-art {
+    display: none !important;
+}
+
+html body #mob-content #sec-progress-tracking .progress-hero-inner,
+body.user-mobile-shell #sec-progress-tracking .progress-hero-inner {
+    padding-right: 16px !important;
+}
+
+html body #mob-content #sec-progress-tracking .progress-summary-strip .progress-stat-card.readiness-primary,
+body.user-mobile-shell #sec-progress-tracking .progress-summary-strip .progress-stat-card.readiness-primary {
+    align-content: center !important;
+    overflow: hidden !important;
+}
+
+html body #mob-content #sec-progress-tracking .progress-summary-strip .progress-stat-card.readiness-primary :is(.progress-stat-value, .progress-stat-label),
+body.user-mobile-shell #sec-progress-tracking .progress-summary-strip .progress-stat-card.readiness-primary :is(.progress-stat-value, .progress-stat-label) {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}

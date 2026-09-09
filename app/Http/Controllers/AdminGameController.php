@@ -12,370 +12,430 @@ use Illuminate\Validation\Rule;
 
 class AdminGameController extends Controller
 {
-    private const MAX_LEVEL_NUMBER = 100;
-    private const MAX_LEVELS_PER_GENERATION = 100;
-    private const DEFAULT_GAME_GENERATION_BATCH_SIZE = 5;
-
-    private ?array $gameLevelColumns = null;
-
-    public function index()
-    {
-        $levels = GameLevel::with(['progress', 'category'])->orderBy('level_number', 'asc')->get();
-        
-        // Calculate analytics
-        foreach ($levels as $level) {
-            $totalAttempts = $level->progress->count();
-            $passedAttempts = $level->progress->where('best_score', '>=', $level->required_score)->count();
-            $level->pass_rate = $totalAttempts > 0 ? round(($passedAttempts / $totalAttempts) * 100) : 0;
-            $level->avg_score = $totalAttempts > 0 ? round($level->progress->avg('best_score')) : 0;
-        }
-
-        $allLevels = GameLevel::orderBy('level_number', 'asc')->get(); // For prerequisite dropdown
-        $categories = $this->gameAdminCategories();
-
-        return $this->mobileView('admin.game', compact('levels', 'allLevels', 'categories'));
-    }
-
-    public function store(Request $request)
-    {
-        $data = $request->validate($this->validationRules(null, $request->category_id));
-        $data['is_hidden'] = $request->has('is_hidden');
-
-        GameLevel::create($this->gameLevelDataForCurrentSchema($data));
-
-        return redirect()->route('admin.game')->with('success', 'Philippines interview learning game created successfully.');
-    }
-
-    public function update(Request $request, GameLevel $arena_level)
-    {
-        $data = $request->validate($this->validationRules($arena_level->id, $request->category_id));
-        $data['is_hidden'] = $request->has('is_hidden');
-
-        $arena_level->update($this->gameLevelDataForCurrentSchema($data));
-
-        return redirect()->route('admin.game')->with('success', 'Philippines interview learning game updated successfully.');
-    }
-
-    public function destroy(GameLevel $arena_level)
-    {
-        $arena_level->delete();
-        return redirect()->route('admin.game')->with('success', 'Philippines interview learning game deleted successfully.');
-    }
-
-    public function generate(Request $request)
-    {
-        // Extend max execution time since generating up to 100 AI-backed levels can be slow.
-        set_time_limit(3600);
-
-        $validated = $request->validate([
-            'topic' => 'required|string|max:255',
-            'level_number' => 'required|integer|min:1|max:'.self::MAX_LEVEL_NUMBER,
-            'num_levels' => 'required|integer|min:1|max:'.self::MAX_LEVELS_PER_GENERATION,
-            'category_id' => ['required', $this->activeGameCategoryRule()],
-        ]);
-
-        $startLevel = (int) $validated['level_number'];
-        $numLevels = (int) $validated['num_levels'];
-        $topic = $validated['topic'];
-        $categoryId = (int) $validated['category_id'];
-
-        $levelSlots = $this->openLevelSlots($categoryId, $startLevel, $numLevels);
-        $generatedCount = 0;
-
-        foreach (array_chunk($levelSlots, $this->gameGenerationBatchSize()) as $slotBatch) {
-            $aiDrafts = [];
-
-            try {
-                $aiDrafts = AIService::generateGames($topic, $slotBatch);
-            } catch (\Throwable $e) {
-                Log::warning('Philippines interview learning game batch generation failed; using fallback content.', [
-                    'topic' => $topic,
-                    'levels' => array_column($slotBatch, 'level_number'),
-                    'error' => $e->getMessage(),
-                ]);
-            }
-
-            $aiDraftsByGenerationNumber = $this->keyGeneratedGamesByGenerationNumber($aiDrafts);
-
-            foreach ($slotBatch as $slot) {
-                $generationNumber = (int) $slot['generation_number'];
-                $difficulty = (string) $slot['difficulty'];
-                $gameData = $aiDraftsByGenerationNumber[$generationNumber] ?? null;
-
-                $gameData = $this->normalizeGeneratedGameData($gameData, $topic, $difficulty, $generationNumber, $numLevels);
-
-                $gameData['level_number'] = $slot['level_number'];
-                $gameData['category_id'] = $categoryId;
-                $gameData['difficulty'] = $difficulty; // Force the difficulty
-                
-                // Adjust score based on difficulty
-                if ($difficulty == 'beginner') $gameData['required_score'] = max(50, min(70, $gameData['required_score']));
-                if ($difficulty == 'intermediate') $gameData['required_score'] = max(70, min(85, $gameData['required_score']));
-                if ($difficulty == 'advanced') $gameData['required_score'] = max(85, min(100, $gameData['required_score']));
-
-                GameLevel::create($this->gameLevelDataForCurrentSchema($gameData));
-                $generatedCount++;
-            }
-        }
-
-        if ($generatedCount === 0) {
-            return redirect()->route('admin.game')->with('error', 'No open level slots are available between levels 1 and 100 for this category.');
-        }
-
-        if ($generatedCount < $numLevels) {
-            return redirect()->route('admin.game')->with('success', "Generated {$generatedCount} of {$numLevels} requested Learning Game(s). Only {$generatedCount} open slot(s) were available between levels 1 and 100.");
-        }
-
-        return redirect()->route('admin.game')->with('success', "Successfully generated {$generatedCount} Learning Game(s)!");
-    }
-
-    private function openLevelSlots(int $categoryId, int $startLevel, int $requestedLevels): array
-    {
-        $existingLevelNumbers = GameLevel::where('category_id', $categoryId)
-            ->whereBetween('level_number', [1, self::MAX_LEVEL_NUMBER])
-            ->pluck('level_number')
-            ->mapWithKeys(fn ($levelNumber) => [(int) $levelNumber => true]);
-
-        $slots = [];
-        $currentLevelNumber = $startLevel;
-
-        for ($checkedLevels = 0; count($slots) < $requestedLevels && $checkedLevels < self::MAX_LEVEL_NUMBER; $checkedLevels++) {
-            if (! $existingLevelNumbers->has($currentLevelNumber)) {
-                $generationNumber = count($slots) + 1;
-
-                $slots[] = [
-                    'level_number' => $currentLevelNumber,
-                    'difficulty' => $this->difficultyForGeneration($generationNumber),
-                    'generation_number' => $generationNumber,
-                    'total_levels' => $requestedLevels,
-                ];
-            }
-
-            $currentLevelNumber = $this->nextLevelNumber($currentLevelNumber);
-        }
-
-        return $slots;
-    }
-
-    private function difficultyForGeneration(int $generationNumber): string
-    {
-        $difficulties = ['beginner', 'intermediate', 'advanced'];
-
-        return $difficulties[($generationNumber - 1) % count($difficulties)];
-    }
-
-    private function gameGenerationBatchSize(): int
-    {
-        return max(1, min(10, (int) env('AI_GAME_BATCH_SIZE', self::DEFAULT_GAME_GENERATION_BATCH_SIZE)));
-    }
-
-    private function keyGeneratedGamesByGenerationNumber(array $aiDrafts): array
-    {
-        $levels = $aiDrafts['levels'] ?? $aiDrafts;
-
-        if (! is_array($levels)) {
-            return [];
-        }
-
-        $keyedDrafts = [];
-
-        foreach ($levels as $index => $draft) {
-            if (! is_array($draft)) {
-                continue;
-            }
-
-            $generationNumber = (int) ($draft['generation_number'] ?? ($index + 1));
-
-            if ($generationNumber > 0) {
-                $keyedDrafts[$generationNumber] = $draft;
-            }
-        }
-
-        return $keyedDrafts;
-    }
-
-    private function validationRules($id = null, $categoryId = null)
-    {
-        $uniqueRule = \Illuminate\Validation\Rule::unique('game_levels', 'level_number');
-        if ($categoryId) {
-            $uniqueRule->where('category_id', $categoryId);
-        }
-        if ($id) {
-            $uniqueRule->ignore($id);
-        }
-
-        return [
-            'level_number' => ['required', 'integer', 'min:1', 'max:'.self::MAX_LEVEL_NUMBER, $uniqueRule],
-            'category_id' => ['required', $this->activeGameCategoryRule()],
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'mission_text' => 'nullable|string',
-            'target_position' => 'required|string|max:255',
-            'skill_focus' => 'nullable|string|max:255',
-            'learning_objective' => 'nullable|string|max:1000',
-            'success_criteria' => 'nullable|string|max:2000',
-            'retry_hint' => 'nullable|string|max:1000',
-            'difficulty' => 'required|string|max:255',
-            'required_score' => 'required|integer|min:0|max:100',
-            'xp_reward' => 'required|integer|min:0',
-            'energy_cost' => 'required|integer|min:0',
-            'ai_persona' => 'nullable|string|max:255',
-            'ai_custom_prompt' => 'nullable|string',
-            'time_limit_seconds' => 'nullable|integer|min:0',
-            'banned_words' => 'nullable|string',
-            'target_tone' => 'nullable|string|max:255',
-            'custom_badge_name' => 'nullable|string|max:255',
-            'skill_xp_type' => 'nullable|string|max:255',
-            'skill_xp_amount' => 'nullable|integer|min:0',
-            'prerequisite_level_id' => 'nullable|exists:game_levels,id',
-        ];
-    }
-
-    private function normalizeGeneratedGameData(?array $gameData, string $topic, string $difficulty, ?int $generationNumber = null, ?int $totalLevels = null): array
-    {
-        $fallback = $this->fallbackGameData($topic, $difficulty, $generationNumber, $totalLevels);
-        $gameData = is_array($gameData) ? array_merge($fallback, $gameData) : $fallback;
-
-        $gameData['title'] = $this->cleanText($gameData['title'] ?? $fallback['title'], $fallback['title'], 255);
-        $gameData['description'] = $this->cleanText($gameData['description'] ?? $fallback['description'], $fallback['description'], 1000);
-        $gameData['mission_text'] = $this->cleanText($gameData['mission_text'] ?? $fallback['mission_text'], $fallback['mission_text'], 3000);
-        $gameData['target_position'] = $this->cleanText($gameData['target_position'] ?? $fallback['target_position'], $fallback['target_position'], 255);
-        $gameData['skill_focus'] = $this->cleanText($gameData['skill_focus'] ?? $fallback['skill_focus'], $fallback['skill_focus'], 255);
-        $gameData['learning_objective'] = $this->cleanText($gameData['learning_objective'] ?? $fallback['learning_objective'], $fallback['learning_objective'], 1000);
-        $gameData['success_criteria'] = $this->cleanText($gameData['success_criteria'] ?? $fallback['success_criteria'], $fallback['success_criteria'], 2000);
-        $gameData['retry_hint'] = $this->cleanText($gameData['retry_hint'] ?? $fallback['retry_hint'], $fallback['retry_hint'], 1000);
-        $gameData['ai_persona'] = $this->cleanText($gameData['ai_persona'] ?? $fallback['ai_persona'], $fallback['ai_persona'], 255);
-        $gameData['ai_custom_prompt'] = $this->cleanText($gameData['ai_custom_prompt'] ?? $fallback['ai_custom_prompt'], $fallback['ai_custom_prompt'], 3000);
-        $gameData['banned_words'] = $this->cleanText($gameData['banned_words'] ?? $fallback['banned_words'], $fallback['banned_words'], 255);
-        $gameData['target_tone'] = $this->cleanText($gameData['target_tone'] ?? $fallback['target_tone'], $fallback['target_tone'], 255);
-        $gameData['custom_badge_name'] = $this->cleanText($gameData['custom_badge_name'] ?? $fallback['custom_badge_name'], $fallback['custom_badge_name'], 255);
-        $gameData['skill_xp_type'] = $this->cleanText($gameData['skill_xp_type'] ?? $fallback['skill_xp_type'], $fallback['skill_xp_type'], 255);
-
-        $gameData['required_score'] = max(0, min(100, (int) ($gameData['required_score'] ?? $fallback['required_score'])));
-        $gameData['xp_reward'] = max(0, (int) ($gameData['xp_reward'] ?? $fallback['xp_reward']));
-        $gameData['energy_cost'] = max(0, (int) ($gameData['energy_cost'] ?? $fallback['energy_cost']));
-        $gameData['time_limit_seconds'] = isset($gameData['time_limit_seconds']) ? max(0, (int) $gameData['time_limit_seconds']) : null;
-        $gameData['skill_xp_amount'] = max(0, (int) ($gameData['skill_xp_amount'] ?? $fallback['skill_xp_amount']));
-
-        return $gameData;
-    }
-
-    private function gameAdminCategories()
-    {
-        return Category::where('status', 'active')
-            ->where('type', 'game')
-            ->orderBy('sort_order')
-            ->orderBy('title')
-            ->get();
-    }
-
-    private function activeGameCategoryRule()
-    {
-        return Rule::exists('categories', 'id')
-            ->where('status', 'active')
-            ->where('type', 'game');
-    }
-
-    private function nextLevelNumber(int $currentLevelNumber): int
-    {
-        return $currentLevelNumber >= self::MAX_LEVEL_NUMBER ? 1 : $currentLevelNumber + 1;
-    }
-
-    private function gameLevelDataForCurrentSchema(array $data): array
-    {
-        $columns = $this->currentGameLevelColumns();
-
-        if ($columns === []) {
-            return $data;
-        }
-
-        $allowedColumns = array_flip($columns);
-        $filtered = array_intersect_key($data, $allowedColumns);
-        $omittedFillableColumns = array_values(array_intersect(
-            array_diff(array_keys($data), array_keys($filtered)),
-            (new GameLevel())->getFillable()
-        ));
-
-        if ($omittedFillableColumns !== []) {
-            Log::warning('Skipped unavailable game level columns while saving admin game data.', [
-                'columns' => $omittedFillableColumns,
-            ]);
-        }
-
-        return $filtered;
-    }
-
-    private function currentGameLevelColumns(): array
-    {
-        if ($this->gameLevelColumns !== null) {
-            return $this->gameLevelColumns;
-        }
-
-        try {
-            return $this->gameLevelColumns = Schema::getColumnListing((new GameLevel())->getTable());
-        } catch (\Throwable $e) {
-            Log::warning('Unable to inspect game level columns before saving admin game data.', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return $this->gameLevelColumns = [];
-        }
-    }
-
-    private function fallbackGameData(string $topic, string $difficulty, ?int $generationNumber = null, ?int $totalLevels = null): array
-    {
-        $topic = $this->cleanText($topic, 'Philippines Interview Communication Practice', 120);
-        $titleDifficulty = ucfirst($difficulty);
-        $titleSuffix = $generationNumber && $totalLevels && $totalLevels > 1 ? " {$generationNumber}" : '';
-        $partContext = $generationNumber && $totalLevels && $totalLevels > 1
-            ? " This is part {$generationNumber} of {$totalLevels} in the generated set."
-            : '';
-
-        return [
-            'title' => "{$titleDifficulty} {$topic} Challenge{$titleSuffix}",
-            'description' => "A structured practice level for improving {$topic} through Philippines-focused interview prompts.{$partContext}",
-            'mission_text' => "1. In a Philippine interview, how would you describe your current challenge with {$topic}?\n2. Share one school, internship, BPO, freelance, or workplace example where this skill mattered.\n3. Explain the action you personally took.\n4. Name the result, lesson learned, or impact.\n5. Describe how you will improve for your next local interview.",
-            'target_position' => 'Philippines Interview Readiness',
-            'skill_focus' => $this->skillFocusForTopic($topic),
-            'learning_objective' => "Practice {$topic} in a realistic Philippine interview answer while keeping the response clear, specific, and professionally structured.",
-            'success_criteria' => "1. Answer the local interview question directly.\n2. Use a concrete example instead of general statements.\n3. Explain your action or decision clearly.\n4. Include a result, lesson, or next step.\n5. Keep the tone professional, confident, and appropriate for Philippine hiring or school panels.",
-            'retry_hint' => 'On the next attempt, choose one real school, internship, BPO, freelance, or workplace example first, then answer in this order: context, responsibility, action, result.',
-            'difficulty' => $difficulty,
-            'required_score' => $difficulty === 'advanced' ? 90 : ($difficulty === 'intermediate' ? 78 : 60),
-            'xp_reward' => $difficulty === 'advanced' ? 750 : ($difficulty === 'intermediate' ? 600 : 450),
-            'energy_cost' => $difficulty === 'advanced' ? 2 : 1,
-            'ai_persona' => 'Supportive Philippine Interview Coach',
-            'ai_custom_prompt' => 'Ask clear follow-up questions and evaluate structure, specificity, confidence, professionalism, and fit for Philippine interview expectations.',
-            'time_limit_seconds' => 120,
-            'banned_words' => 'um, like, basically',
-            'target_tone' => 'Confident',
-            'custom_badge_name' => "{$titleDifficulty} PH Interview Communicator",
-            'skill_xp_type' => 'Communication',
-            'skill_xp_amount' => $difficulty === 'advanced' ? 75 : 50,
-        ];
-    }
-
-    private function skillFocusForTopic(string $topic): string
-    {
-        $topic = strtolower($topic);
-
-        return match (true) {
-            str_contains($topic, 'star'), str_contains($topic, 'behavior') => 'STAR Method',
-            str_contains($topic, 'technical'), str_contains($topic, 'problem') => 'Problem Solving',
-            str_contains($topic, 'lead'), str_contains($topic, 'team') => 'Leadership',
-            str_contains($topic, 'grammar'), str_contains($topic, 'sentence') => 'Grammar',
-            str_contains($topic, 'confidence'), str_contains($topic, 'shy'), str_contains($topic, 'speaking') => 'Confidence',
-            default => 'Communication',
-        };
-    }
-
-    private function cleanText(?string $value, string $fallback, int $limit = 255): string
-    {
-        $cleaned = trim(preg_replace('/\s+/', ' ', (string) $value));
-        if ($cleaned === '') {
-            $cleaned = $fallback;
-        }
-
-        return mb_substr($cleaned, 0, $limit);
-    }
+ private const MAX_LEVEL_NUMBER = 100;
+ private const MAX_LEVELS_PER_GENERATION = 100;
+ private const DEFAULT_GAME_GENERATION_BATCH_SIZE = 5;
+
+ private?array $gameLevelColumns = null;
+
+ public function index()
+ {
+ $levels = GameLevel::with(['progress', 'category'])->orderBy('level_number', 'asc')->get();
+ 
+ // Calculate analytics
+ foreach ($levels as $level) {
+ $totalAttempts = $level->progress->count();
+ $passedAttempts = $level->progress->where('best_score', '>=', $level->required_score)->count();
+ $level->pass_rate = $totalAttempts > 0? round(($passedAttempts / $totalAttempts) * 100): 0;
+ $level->avg_score = $totalAttempts > 0? round($level->progress->avg('best_score')): 0;
+ }
+
+ $allLevels = GameLevel::orderBy('level_number', 'asc')->get(); // For prerequisite dropdown
+ $categories = $this->gameAdminCategories();
+
+ return $this->mobileView('admin.game', compact('levels', 'allLevels', 'categories'));
+ }
+
+ public function store(Request $request)
+ {
+ $data = $request->validate($this->validationRules(null, $request->category_id));
+ $data['is_hidden'] = $request->has('is_hidden');
+
+ GameLevel::create($this->gameLevelDataForCurrentSchema($data));
+
+ return redirect()->route('admin.game')->with('success', 'interview learning game created successfully.');
+ }
+
+ public function update(Request $request, GameLevel $arena_level)
+ {
+ $data = $request->validate($this->validationRules($arena_level->id, $request->category_id));
+ $data['is_hidden'] = $request->has('is_hidden');
+
+ $arena_level->update($this->gameLevelDataForCurrentSchema($data));
+
+ return redirect()->route('admin.game')->with('success', 'interview learning game updated successfully.');
+ }
+
+ public function destroy(GameLevel $arena_level)
+ {
+ $arena_level->delete();
+ return redirect()->route('admin.game')->with('success', 'interview learning game deleted successfully.');
+ }
+
+ public function generate(Request $request)
+ {
+ // Extend max execution time since generating up to 100 AI-backed levels can be slow.
+ set_time_limit(3600);
+
+ $validated = $request->validate([
+ 'topic' => 'required|string|max:255',
+ 'level_number' => 'required|integer|min:1|max:'.self::MAX_LEVEL_NUMBER,
+ 'num_levels' => 'required|integer|min:1|max:'.self::MAX_LEVELS_PER_GENERATION,
+ 'category_id' => ['required', $this->activeGameCategoryRule()],
+ ]);
+
+ $startLevel = (int) $validated['level_number'];
+ $numLevels = (int) $validated['num_levels'];
+ $topic = $validated['topic'];
+ $categoryId = (int) $validated['category_id'];
+
+ $levelSlots = $this->openLevelSlots($categoryId, $startLevel, $numLevels);
+ $generatedCount = 0;
+
+ foreach (array_chunk($levelSlots, $this->gameGenerationBatchSize()) as $slotBatch) {
+ $aiDrafts = [];
+
+ try {
+ $aiDrafts = AIService::generateGames($topic, $slotBatch);
+ } catch (\Throwable $e) {
+ Log::warning('interview learning game batch generation failed; using fallback content.', [
+ 'topic' => $topic,
+ 'levels' => array_column($slotBatch, 'level_number'),
+ 'error' => $e->getMessage(),
+ ]);
+ }
+
+ $aiDraftsByGenerationNumber = $this->keyGeneratedGamesByGenerationNumber($aiDrafts);
+
+ foreach ($slotBatch as $slot) {
+ $generationNumber = (int) $slot['generation_number'];
+ $difficulty = (string) $slot['difficulty'];
+ $gameData = $aiDraftsByGenerationNumber[$generationNumber]?? null;
+
+ $gameData = $this->normalizeGeneratedGameData($gameData, $topic, $difficulty, $generationNumber, $numLevels);
+
+ $gameData['level_number'] = $slot['level_number'];
+ $gameData['category_id'] = $categoryId;
+ $gameData['difficulty'] = $difficulty; // Force the difficulty
+ 
+ // Adjust score based on difficulty
+ if ($difficulty == 'beginner') $gameData['required_score'] = max(50, min(70, $gameData['required_score']));
+ if ($difficulty == 'intermediate') $gameData['required_score'] = max(70, min(85, $gameData['required_score']));
+ if ($difficulty == 'advanced') $gameData['required_score'] = max(85, min(100, $gameData['required_score']));
+
+ GameLevel::create($this->gameLevelDataForCurrentSchema($gameData));
+ $generatedCount++;
+ }
+ }
+
+ if ($generatedCount === 0) {
+ return redirect()->route('admin.game')->with('error', 'No open level slots are available between levels 1 and 100 for this category.');
+ }
+
+ if ($generatedCount < $numLevels) {
+ return redirect()->route('admin.game')->with('success', "Generated {$generatedCount} of {$numLevels} requested Learning Game(s). Only {$generatedCount} open slot(s) were available between levels 1 and 100.");
+ }
+
+ return redirect()->route('admin.game')->with('success', "Successfully generated {$generatedCount} Learning Game(s)!");
+ }
+
+ private function openLevelSlots(int $categoryId, int $startLevel, int $requestedLevels): array
+ {
+ $existingLevelNumbers = GameLevel::where('category_id', $categoryId)
+ ->whereBetween('level_number', [1, self::MAX_LEVEL_NUMBER])
+ ->pluck('level_number')
+ ->mapWithKeys(fn ($levelNumber) => [(int) $levelNumber => true]);
+
+ $slots = [];
+ $currentLevelNumber = $startLevel;
+
+ for ($checkedLevels = 0; count($slots) < $requestedLevels && $checkedLevels < self::MAX_LEVEL_NUMBER; $checkedLevels++) {
+ if (! $existingLevelNumbers->has($currentLevelNumber)) {
+ $generationNumber = count($slots) + 1;
+
+ $slots[] = [
+ 'level_number' => $currentLevelNumber,
+ 'difficulty' => $this->difficultyForGeneration($generationNumber),
+ 'generation_number' => $generationNumber,
+ 'total_levels' => $requestedLevels,
+ ];
+ }
+
+ $currentLevelNumber = $this->nextLevelNumber($currentLevelNumber);
+ }
+
+ return $slots;
+ }
+
+ private function difficultyForGeneration(int $generationNumber): string
+ {
+ $difficulties = ['beginner', 'intermediate', 'advanced'];
+
+ return $difficulties[($generationNumber - 1) % count($difficulties)];
+ }
+
+ private function gameGenerationBatchSize(): int
+ {
+ return max(1, min(10, (int) env('AI_GAME_BATCH_SIZE', self::DEFAULT_GAME_GENERATION_BATCH_SIZE)));
+ }
+
+ private function keyGeneratedGamesByGenerationNumber(array $aiDrafts): array
+ {
+ $levels = $aiDrafts['levels']?? $aiDrafts;
+
+ if (! is_array($levels)) {
+ return [];
+ }
+
+ $keyedDrafts = [];
+
+ foreach ($levels as $index => $draft) {
+ if (! is_array($draft)) {
+ continue;
+ }
+
+ $generationNumber = (int) ($draft['generation_number']?? ($index + 1));
+
+ if ($generationNumber > 0) {
+ $keyedDrafts[$generationNumber] = $draft;
+ }
+ }
+
+ return $keyedDrafts;
+ }
+
+ private function validationRules($id = null, $categoryId = null)
+ {
+ $uniqueRule = \Illuminate\Validation\Rule::unique('game_levels', 'level_number');
+ if ($categoryId) {
+ $uniqueRule->where('category_id', $categoryId);
+ }
+ if ($id) {
+ $uniqueRule->ignore($id);
+ }
+
+ return [
+ 'level_number' => ['required', 'integer', 'min:1', 'max:'.self::MAX_LEVEL_NUMBER, $uniqueRule],
+ 'category_id' => ['required', $this->activeGameCategoryRule()],
+ 'title' => 'required|string|max:255',
+ 'description' => 'nullable|string',
+ 'mission_text' => 'nullable|string',
+ 'target_position' => 'required|string|max:255',
+ 'skill_focus' => 'nullable|string|max:255',
+ 'learning_objective' => 'nullable|string|max:1000',
+ 'success_criteria' => 'nullable|string|max:2000',
+ 'retry_hint' => 'nullable|string|max:1000',
+ 'difficulty' => 'required|string|max:255',
+ 'required_score' => 'required|integer|min:0|max:100',
+ 'xp_reward' => 'required|integer|min:0',
+ 'energy_cost' => 'required|integer|min:0',
+ 'ai_persona' => 'nullable|string|max:255',
+ 'ai_custom_prompt' => 'nullable|string',
+ 'time_limit_seconds' => 'nullable|integer|min:0',
+ 'banned_words' => 'nullable|string',
+ 'target_tone' => 'nullable|string|max:255',
+ 'custom_badge_name' => 'nullable|string|max:255',
+ 'skill_xp_type' => 'nullable|string|max:255',
+ 'skill_xp_amount' => 'nullable|integer|min:0',
+ 'prerequisite_level_id' => 'nullable|exists:game_levels,id',
+ ];
+ }
+
+ private function normalizeGeneratedGameData(?array $gameData, string $topic, string $difficulty,?int $generationNumber = null,?int $totalLevels = null): array
+ {
+ $fallback = $this->fallbackGameData($topic, $difficulty, $generationNumber, $totalLevels);
+ $gameData = is_array($gameData)? array_merge($fallback, $gameData): $fallback;
+
+ $gameData['title'] = $this->cleanText($gameData['title']?? $fallback['title'], $fallback['title'], 255);
+ $gameData['description'] = $this->cleanText($gameData['description']?? $fallback['description'], $fallback['description'], 1000);
+ $gameData['mission_text'] = $this->cleanText($gameData['mission_text']?? $fallback['mission_text'], $fallback['mission_text'], 3000);
+ $gameData['target_position'] = $this->cleanText($gameData['target_position']?? $fallback['target_position'], $fallback['target_position'], 255);
+ $gameData['skill_focus'] = $this->cleanText($gameData['skill_focus']?? $fallback['skill_focus'], $fallback['skill_focus'], 255);
+ $gameData['learning_objective'] = $this->cleanText($gameData['learning_objective']?? $fallback['learning_objective'], $fallback['learning_objective'], 1000);
+ $gameData['success_criteria'] = $this->cleanText($gameData['success_criteria']?? $fallback['success_criteria'], $fallback['success_criteria'], 2000);
+ $gameData['retry_hint'] = $this->cleanText($gameData['retry_hint']?? $fallback['retry_hint'], $fallback['retry_hint'], 1000);
+ $gameData['ai_persona'] = $this->cleanText($gameData['ai_persona']?? $fallback['ai_persona'], $fallback['ai_persona'], 255);
+ $gameData['ai_custom_prompt'] = $this->cleanText($gameData['ai_custom_prompt']?? $fallback['ai_custom_prompt'], $fallback['ai_custom_prompt'], 3000);
+ $gameData['banned_words'] = $this->cleanText($gameData['banned_words']?? $fallback['banned_words'], $fallback['banned_words'], 255);
+ $gameData['target_tone'] = $this->cleanText($gameData['target_tone']?? $fallback['target_tone'], $fallback['target_tone'], 255);
+ $gameData['custom_badge_name'] = $this->cleanText($gameData['custom_badge_name']?? $fallback['custom_badge_name'], $fallback['custom_badge_name'], 255);
+ $gameData['skill_xp_type'] = $this->cleanText($gameData['skill_xp_type']?? $fallback['skill_xp_type'], $fallback['skill_xp_type'], 255);
+
+ $gameData['required_score'] = max(0, min(100, (int) ($gameData['required_score']?? $fallback['required_score'])));
+ $gameData['xp_reward'] = max(0, (int) ($gameData['xp_reward']?? $fallback['xp_reward']));
+ $gameData['energy_cost'] = max(0, (int) ($gameData['energy_cost']?? $fallback['energy_cost']));
+ $gameData['time_limit_seconds'] = isset($gameData['time_limit_seconds'])? max(0, (int) $gameData['time_limit_seconds']): null;
+ $gameData['skill_xp_amount'] = max(0, (int) ($gameData['skill_xp_amount']?? $fallback['skill_xp_amount']));
+
+ return $gameData;
+ }
+
+ private function gameAdminCategories()
+ {
+ return Category::where('status', 'active')
+ ->where('type', 'game')
+ ->orderBy('sort_order')
+ ->orderBy('title')
+ ->get();
+ }
+
+ private function activeGameCategoryRule()
+ {
+ return Rule::exists('categories', 'id')
+ ->where('status', 'active')
+ ->where('type', 'game');
+ }
+
+ private function nextLevelNumber(int $currentLevelNumber): int
+ {
+ return $currentLevelNumber >= self::MAX_LEVEL_NUMBER? 1: $currentLevelNumber + 1;
+ }
+
+ private function gameLevelDataForCurrentSchema(array $data): array
+ {
+ $columns = $this->currentGameLevelColumns();
+
+ if ($columns === []) {
+ return $data;
+ }
+
+ $allowedColumns = array_flip($columns);
+ $filtered = array_intersect_key($data, $allowedColumns);
+ $omittedFillableColumns = array_values(array_intersect(
+ array_diff(array_keys($data), array_keys($filtered)),
+ (new GameLevel())->getFillable()
+ ));
+
+ if ($omittedFillableColumns!== []) {
+ Log::warning('Skipped unavailable game level columns while saving admin game data.', [
+ 'columns' => $omittedFillableColumns,
+ ]);
+ }
+
+ return $filtered;
+ }
+
+ private function currentGameLevelColumns(): array
+ {
+ if ($this->gameLevelColumns!== null) {
+ return $this->gameLevelColumns;
+ }
+
+ try {
+ return $this->gameLevelColumns = Schema::getColumnListing((new GameLevel())->getTable());
+ } catch (\Throwable $e) {
+ Log::warning('Unable to inspect game level columns before saving admin game data.', [
+ 'error' => $e->getMessage(),
+ ]);
+
+ return $this->gameLevelColumns = [];
+ }
+ }
+
+ private function fallbackGameData(string $topic, string $difficulty,?int $generationNumber = null,?int $totalLevels = null): array
+ {
+ $topic = $this->cleanText($topic, 'Interview Communication Practice', 120);
+ $titleDifficulty = ucfirst($difficulty);
+ $titleSuffix = $generationNumber && $totalLevels && $totalLevels > 1? " {$generationNumber}": '';
+ $partContext = $generationNumber && $totalLevels && $totalLevels > 1? " This is part {$generationNumber} of {$totalLevels} in the generated set.": '';
+
+ return [
+ 'title' => "{$titleDifficulty} {$topic} Challenge{$titleSuffix}",
+ 'description' => "A structured practice level for improving {$topic} through role-focused interview prompts.{$partContext}",
+ 'mission_text' => "1. In a interview, how would you describe your current challenge with {$topic}?\n2. Share one school, internship, BPO, freelance, or workplace example where this skill mattered.\n3. Explain the action you personally took.\n4. Name the result, lesson learned, or impact.\n5. Describe how you will improve for your next local interview.",
+ 'target_position' => 'Interview Readiness',
+ 'skill_focus' => $this->skillFocusForTopic($topic),
+ 'learning_objective' => "Practice {$topic} in a realistic interview answer while keeping the response clear, specific, and professionally structured.",
+ 'success_criteria' => "1. Answer the local interview question directly.\n2. Use a concrete example instead of general statements.\n3. Explain your action or decision clearly.\n4. Include a result, lesson, or next step.\n5. Keep the tone professional, confident, and appropriate for hiring or school panels.",
+ 'retry_hint' => 'On the next attempt, choose one real school, internship, BPO, freelance, or workplace example first, then answer in this order: context, responsibility, action, result.',
+ 'difficulty' => $difficulty,
+ 'required_score' => $difficulty === 'advanced'? 90: ($difficulty === 'intermediate'? 78: 60),
+ 'xp_reward' => $difficulty === 'advanced'? 750: ($difficulty === 'intermediate'? 600: 450),
+ 'energy_cost' => $difficulty === 'advanced'? 2: 1,
+ 'ai_persona' => 'Supportive local Interview Coach',
+ 'ai_custom_prompt' => 'Ask clear follow-up questions and evaluate structure, specificity, confidence, professionalism, and fit for interview expectations.',
+ 'time_limit_seconds' => 120,
+ 'banned_words' => 'um, like, basically',
+ 'target_tone' => 'Confident',
+ 'custom_badge_name' => "{$titleDifficulty} Interview Communicator",
+ 'skill_xp_type' => 'Communication',
+ 'skill_xp_amount' => $difficulty === 'advanced'? 75: 50,
+ ];
+ }
+
+ private function skillFocusForTopic(string $topic): string
+ {
+ $topic = strtolower($topic);
+
+ return match (true) {
+ str_contains($topic, 'star'), str_contains($topic, 'behavior') => 'STAR Method',
+ str_contains($topic, 'technical'), str_contains($topic, 'problem') => 'Problem Solving',
+ str_contains($topic, 'lead'), str_contains($topic, 'team') => 'Leadership',
+ str_contains($topic, 'grammar'), str_contains($topic, 'sentence') => 'Grammar',
+ str_contains($topic, 'confidence'), str_contains($topic, 'shy'), str_contains($topic, 'speaking') => 'Confidence',
+ default => 'Communication',
+ };
+ }
+
+ private function cleanText(mixed $value, string $fallback, int $limit = 255): string
+ {
+ $text = str_replace(["\r\n", "\r"], "\n", $this->textValue($value));
+ $lines = array_map(
+ fn (string $line): string => trim(preg_replace('/[ \t]+/', ' ', $line)?? ''),
+ explode("\n", $text)
+ );
+ $cleaned = trim(implode("\n", array_filter($lines, fn (string $line): bool => $line!== '')));
+
+ if ($cleaned === '') {
+ $cleaned = $fallback;
+ }
+
+ return mb_substr($cleaned, 0, $limit);
+ }
+
+ private function textValue(mixed $value): string
+ {
+ if ($value === null) {
+ return '';
+ }
+
+ if (is_array($value)) {
+ return $this->arrayTextValue($value);
+ }
+
+ if (is_object($value)) {
+ return method_exists($value, '__toString')? (string) $value: $this->arrayTextValue((array) $value);
+ }
+
+ if (is_bool($value)) {
+ return $value? 'true': 'false';
+ }
+
+ return (string) $value;
+ }
+
+ private function arrayTextValue(array $value): string
+ {
+ if ($value === []) {
+ return '';
+ }
+
+ foreach (['text', 'question', 'criterion', 'criteria', 'item', 'items', 'value', 'name', 'title', 'description'] as $key) {
+ if (array_key_exists($key, $value)) {
+ return $this->textValue($value[$key]);
+ }
+ }
+
+ $items = [];
+ foreach ($value as $item) {
+ $text = trim($this->textValue($item));
+ if ($text!== '') {
+ $items[] = $text;
+ }
+ }
+
+ if ($items === []) {
+ return '';
+ }
+
+ if (array_is_list($value) && count($items) > 1) {
+ return implode("\n", array_map(
+ fn (string $item, int $index): string => preg_match('/^\d+[\.)]\s+/', $item)? $item: ($index + 1).'. '.$item,
+ $items,
+ array_keys($items)
+ ));
+ }
+
+ return implode("\n", $items);
+ }
 }

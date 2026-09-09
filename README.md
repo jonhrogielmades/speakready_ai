@@ -80,6 +80,20 @@ Interview sessions support:
 - Admin-side KNN readiness matching support, comparing a scored interview with similar historical scored sessions as a secondary readiness signal.
 - Shareable review links and mentor comments for external review.
 
+### Question Generation Algorithm Evaluation
+
+Question generation uses a hybrid pipeline instead of relying on one algorithm. The current default path is source-backed retrieval plus AI generation, with deterministic dataset fallback when an external model is unavailable.
+
+| Process | Algorithms Or Approaches Evaluated | Current Choice | Evaluation Notes |
+| --- | --- | --- | --- |
+| Source intake and cleaning | Rule-based CSV/JSONL normalization; schema-validated dataset manifests; duplicate removal by normalized text; manual admin question-bank CRUD | Rule-based normalization with manifest-backed storage and normalized-text deduplication | Keeps private datasets reproducible, accepts CSV/JSONL inputs, and avoids duplicate question wording before retrieval or generation. |
+| Dataset/category routing | Keyword category matching; explicit admin/user dataset selection; source alias mapping; fallback to core job-interview dataset | Category keyword routing plus dataset aliases | Works reliably for supported practice categories such as job interview, BPO/customer support, and college admission while still providing a safe default. |
+| Question type and intent detection | Regex/rule-based intent classification; stored question type labels; expected-guide/skill-context signals; STAR applicability checks | Rule-based intent classification enriched by stored type and guide context | This is explainable, testable, and suitable for deciding whether a question needs STAR evidence, personal action, or measurable results. |
+| Candidate retrieval | Sentence-BERT semantic similarity; lexical hash vector similarity; difficulty/type/category metadata bonus; role and job-description overlap scoring | Sentence-BERT in production, lexical hash in tests/fallback, with metadata bonuses | Semantic retrieval finds role-relevant examples, while metadata bonuses keep matches aligned to requested difficulty, question type, category, target role, and job description. |
+| Question generation | Retrieval-augmented LLM prompting; template/adaptation from source-backed examples; direct provider JSON generation; localized/simplified wording constraints | Retrieval-augmented provider generation through `AIService::generateQuestions` | The generated question must be role-specific, concise, difficulty-calibrated, source-aware, JSON-formatted, and adaptable to language or accessibility preferences. |
+| Fallback selection | Embedding recommender; ordered reliable dataset records by difficulty/type; database question-bank random selection; generated role-alignment rewrite | Embedding recommender first, then reliable dataset/database fallback | This keeps the interview usable even without AI credentials and prevents a blank session when the provider fails. |
+| Provider scoring and routing | Schema completeness score; expected-term/role accuracy score; uniqueness and question-like format score; safety score; recent operational reliability and latency weighting | Weighted provider ranking for `question_generation` | The best provider is selected from recent evidence, not hard-coded preference, using quality, accuracy, reliability, schema, safety, and response-time signals. |
+
 ### KNN Readiness Matching
 
 The system includes a K-Nearest Neighbors readiness match through `App\Services\KnnReadinessClassifier`.
@@ -394,17 +408,15 @@ For production, change `GOOGLE_REDIRECT_URI` to your HTTPS domain callback URL.
 The app can use multiple AI providers and fall back by priority:
 
 ```env
-AI_PROVIDER=huggingface
-INTERVIEW_CHATBOT_DEFAULT_PROVIDER=huggingface
-AI_DEFAULT_PROVIDER_PRIORITY=huggingface,gemini,groq,openrouter,cohere
-INTERVIEW_CHATBOT_PROVIDER_PRIORITY=huggingface,gemini,groq,openrouter,cohere
-AI_FEEDBACK_PROVIDER_PRIORITY=huggingface,gemini,groq,openrouter,cohere
-AI_ATTACHMENT_EXTRACTION_PROVIDER_PRIORITY=gemini
+AI_PROVIDER=openai
+INTERVIEW_CHATBOT_DEFAULT_PROVIDER=openai
+AI_DEFAULT_PROVIDER_PRIORITY=openai,gemini,groq,cohere
+INTERVIEW_CHATBOT_PROVIDER_PRIORITY=openai,gemini,groq,cohere
+AI_FEEDBACK_PROVIDER_PRIORITY=openai,gemini,groq,cohere
+AI_ATTACHMENT_EXTRACTION_PROVIDER_PRIORITY=openai,gemini
 
-HUGGINGFACE_API_KEY=
 GEMINI_API_KEY=
 GROQ_API_KEY=
-OPENROUTER_API_KEY=
 COHERE_API_KEY=
 OPENAI_API_KEY=
 ```
@@ -433,6 +445,45 @@ AI_CHAT_MAX_TOKENS=1000
 
 The `AI_VOICE_ANALYSIS_*` values are reserved for hosted voice-analysis tuning. Current voice recording, transcription, and delivery coaching behavior is controlled by the transcription, TTS, and feedback settings below.
 
+### HR Question Recommendation Pipeline
+
+SpeakReady can recommend mock interview questions from the private HR question
+dataset with this flow:
+
+```text
+HR Interview Dataset
+Data Cleaning
+Role + Category + Difficulty Processing
+Sentence-BERT Encoding
+Question Embedding Database
+Similarity Matching
+Recommended Interview Question
+SpeakReady AI Mock Interview
+```
+
+First normalize the uploaded HR archive into the private question bank:
+
+```bash
+python scripts/prepare_question_bank_from_archive.py --archive="C:\path\to\archive.zip"
+```
+
+Install the Sentence-BERT runtime, then build the private embedding database:
+
+```bash
+python -m pip install -r requirements-question-recommender.txt
+php artisan ai:build-question-embedding-index
+```
+
+The default embedding index is stored at:
+
+```text
+storage/app/private/datasets/embeddings/questions/latest/question_embeddings.json
+```
+
+When that index exists, mock interviews use it for source-backed similarity
+matching before falling back to the ordered question bank. For CI or machines
+without ML packages, use `--backend=lexical_hash` only as a smoke-test backend.
+
 ### Local Feedback Model Training
 
 SpeakReady can train a private local feedback scoring model from reviewed interview answers. This is meant for answer scoring and coaching support, not question generation or general chat.
@@ -455,11 +506,16 @@ The default model artifact is stored privately at:
 storage/app/private/models/feedback/latest/model.json
 ```
 
+The trainer writes a schema v2 artifact with richer text/context features,
+sparse feature scaling, small-data confidence shrinkage, validation metrics
+when enough examples exist, and a lightweight ensemble for larger datasets.
+The predictor remains compatible with older schema v1 artifacts.
+
 After training, enable it for final interview feedback:
 
 ```env
 LOCAL_FEEDBACK_MODEL_ENABLED=true
-AI_FEEDBACK_PROVIDER_PRIORITY=localmodel,huggingface,gemini,groq,openrouter,cohere
+AI_FEEDBACK_PROVIDER_PRIORITY=openai,gemini,groq,cohere
 ```
 
 Automatic retraining can run through Laravel's scheduler. It exports reviewed labels first, compares the dataset checksum with the current model, and trains only when the labels changed:

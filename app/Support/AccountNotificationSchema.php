@@ -9,10 +9,11 @@ use Illuminate\Support\Facades\Schema;
 class AccountNotificationSchema
 {
     private static bool $checked = false;
+    private static bool $ready = false;
 
     public static function ensure(bool $force = false): void
     {
-        if (! $force && self::$checked && self::hasRequiredTables()) {
+        if (! $force && self::$checked && self::$ready && ! app()->runningUnitTests()) {
             return;
         }
 
@@ -21,6 +22,7 @@ class AccountNotificationSchema
         self::ensureActivityLogsTable();
 
         self::$checked = true;
+        self::$ready = true;
     }
 
     public static function ensureUserColumns(): void

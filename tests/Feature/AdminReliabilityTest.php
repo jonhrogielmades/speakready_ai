@@ -291,7 +291,7 @@ class AdminReliabilityTest extends TestCase
         $this->assertStringContainsString('rehearse', $moduleText);
         $this->assertStringContainsString('revise', $moduleText);
         $this->assertStringContainsString('check', $moduleText);
-        $this->assertStringContainsString('philippine interview', $moduleText);
+        $this->assertStringContainsString('local interview', $moduleText);
 
         $this->assertDatabaseHas('categories', [
             'title' => 'General',

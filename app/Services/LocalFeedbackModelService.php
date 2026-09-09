@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\PythonRuntime;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 
@@ -24,7 +25,7 @@ class LocalFeedbackModelService
 
     public function pythonBinary(): string
     {
-        return trim((string) config('services.local_feedback_model.python', 'python')) ?: 'python';
+        return PythonRuntime::resolve((string) config('services.local_feedback_model.python', 'python'));
     }
 
     public function trainingScriptPath(): string

@@ -602,7 +602,7 @@
             if (routeMatches(routeName, ['interview.setup'])) {
                 return withDefaults({
                     heroTitle: 'Mock interview setup',
-                    heroDescription: 'Build a Philippines-focused job or school interview with role, structure, accessibility, assistance, and response-mode choices.',
+                    heroDescription: 'Build a role-focused job or school interview with role, structure, accessibility, assistance, and response-mode choices.',
                     workspaceTitle: 'Setup panels',
                     workspaceDescription: 'Work through each setup panel to choose the scenario, difficulty, timing, camera option, AI assistance, and answer mode.',
                     metricsTitle: 'Live setup summary',
@@ -687,7 +687,7 @@
             if (routeMatches(routeName, ['user.coach'])) {
                 return withDefaults({
                     heroTitle: 'AI Chatbot Coach',
-                    heroDescription: 'Chat with the interview coach for Philippines preparation, resumes, job descriptions, answer evidence, and career planning.',
+                    heroDescription: 'Chat with the interview coach for local preparation, resumes, job descriptions, answer evidence, and career planning.',
                     workspaceTitle: 'Coach conversation',
                     workspaceDescription: 'Messages appear in the chat area, while the input supports prompts, documents, resumes, and job descriptions.',
                     metricsTitle: 'Conversation history',
@@ -703,7 +703,7 @@
 
             if (routeMatches(routeName, ['user.learning'])) {
                 return withDefaults({
-                    heroTitle: 'Philippines interview challenges',
+                    heroTitle: 'interview challenges',
                     heroDescription: 'Challenge paths use Learning Games to build XP, energy management, combo streaks, and role-specific practice.',
                     workspaceTitle: 'Challenge journey',
                     workspaceDescription: 'Search or switch paths, choose a level, review its goals and energy cost, then start the challenge.',
@@ -721,7 +721,7 @@
             if (routeMatches(routeName, ['user.modules'])) {
                 return withDefaults({
                     heroTitle: 'Interview modules',
-                    heroDescription: 'Modules organize lessons, resources, quizzes, and practice activities around Philippines interview skills.',
+                    heroDescription: 'Modules organize lessons, resources, quizzes, and practice activities around interview skills.',
                     workspaceTitle: 'Module library',
                     workspaceDescription: 'Search modules, open a learning path, and use chapter tabs to move between content, resources, quizzes, and activities.',
                     metricsTitle: 'Learning progress',
@@ -738,13 +738,13 @@
             if (routeMatches(routeName, ['user.skills'])) {
                 return withDefaults({
                     heroTitle: 'Skill Trees',
-                    heroDescription: 'Spend Skill XP earned from PH Challenges on perks that strengthen your learning and practice loop.',
+                    heroDescription: 'Spend Skill XP earned from Interview Challenges on perks that strengthen your learning and practice loop.',
                     workspaceTitle: 'Available perks',
                     workspaceDescription: 'Review each perk, its XP type, cost, unlocked state, and the benefit it adds to your training.',
                     metricsTitle: 'Skill XP overview',
                     metricsDescription: 'XP totals show leadership, communication, technical, and problem-solving growth.',
                     actionsTitle: 'Unlock or return',
-                    actionsDescription: 'Unlock affordable perks or return to PH Challenges to earn more XP.',
+                    actionsDescription: 'Unlock affordable perks or return to Interview Challenges to earn more XP.',
                     heroSelectors: ['#skill-trees-page .skill-tree-hero', '#skill-trees-page .sr-page-hero'],
                     workspaceSelectors: ['.perks-panel', '.perk-card'],
                     metricsSelectors: ['.skill-xp-overview', '.stat-card'],
