@@ -14,6 +14,7 @@ use App\Services\AIService;
 use App\Services\ChallengePositionService;
 use App\Services\LearningGameScoringService;
 use App\Services\LearningGameCertificateService;
+use App\Services\LocalSpeechAssessmentService;
 use App\Services\TranscriptService;
 use App\Support\GameSchema;
 use Illuminate\Http\Request;
@@ -326,6 +327,22 @@ class GameController extends Controller
  }
 
  $answerText = TranscriptService::clean($validated['answer_text']?? '');
+ $voiceUpload = $this->submittedVoiceRecording($validated);
+ if (! $isSkipped && $answerText === '' && $this->hasSubmittedVoiceRecording($validated) && $voiceUpload) {
+ $transcription = $this->transcribeUploadedGameSpeechAnswer(
+ $voiceUpload,
+ $gameSession,
+ (string) $questions[$questionIndex]
+ );
+ $transcribedAnswer = TranscriptService::clean($transcription['transcript']?? '');
+ if ($transcribedAnswer!== '') {
+ $answerText = $transcribedAnswer;
+ $validated['voice_recording_transcription_status'] = 'transcribed';
+ } else {
+ $validated['voice_recording_transcription_status'] = $transcription['transcription_status']?? ($validated['voice_recording_transcription_status']?? null);
+ }
+ }
+
  if ($isSkipped && $answerText === '') {
  $answerText = '[Skipped]';
  }
@@ -364,6 +381,75 @@ class GameController extends Controller
  ]);
 
  return response()->json(['success' => true]);
+ }
+
+ public function transcribe(Request $request)
+ {
+ GameSchema::ensure();
+
+ $validated = $request->validate([
+ 'game_session_id' => 'required|exists:game_sessions,id',
+ 'question_index' => 'required|integer|min:0',
+ 'previous_transcript' => 'nullable|string|max:3000',
+ 'audio' => [
+ 'required',
+ 'file',
+ 'max:'.self::VOICE_RECORDING_MAX_KILOBYTES,
+ 'mimetypes:'.self::VOICE_RECORDING_MIME_TYPES,
+ ],
+ ]);
+
+ $gameSession = $this->activeGameSession((int) $validated['game_session_id']);
+ if (! $gameSession) {
+ return response()->json(['error' => 'No active Learning Game session'], 403);
+ }
+
+ $questions = array_values($gameSession->questions?? []);
+ $questionIndex = (int) $validated['question_index'];
+ if (! array_key_exists($questionIndex, $questions)) {
+ return response()->json(['error' => 'Question does not belong to this Learning Game.'], 403);
+ }
+
+ $transcription = $this->transcribeUploadedGameSpeechAnswer(
+ $validated['audio'],
+ $gameSession,
+ (string) $questions[$questionIndex],
+ (string) ($validated['previous_transcript']?? '')
+ );
+ $transcript = $transcription['transcript'];
+ $transcriptionSource = $transcription['transcription_source'];
+ $transcriptionStatus = $transcription['transcription_status'];
+ $transcriptionErrorCode = $transcription['error_code'];
+ $transcriptionRetryAfterSeconds = $transcription['retry_after_seconds'];
+ $speechAssessment = $transcription['pronunciation_analysis'];
+
+ if ($transcript === null || ($transcriptionStatus === 'failed' && trim((string) $transcript) === '')) {
+ $rateLimited = $transcriptionErrorCode === 'rate_limited';
+ $payload = [
+ 'error' => 'Challenge voice transcription is not available.',
+ 'error_code' => AIService::speechTranscriptionAvailable()? ($rateLimited? 'speech_transcription_rate_limited': 'speech_transcription_failed'): 'speech_transcription_unavailable',
+ 'transcription_status' => $transcriptionStatus?: 'unavailable',
+ 'pronunciation_analysis' => $speechAssessment,
+ ];
+
+ if ($rateLimited && is_numeric($transcriptionRetryAfterSeconds)) {
+ $payload['retry_after_seconds'] = max(1, (int) $transcriptionRetryAfterSeconds);
+ }
+
+ $response = response()->json($payload, $rateLimited? 429: 503);
+ if (isset($payload['retry_after_seconds'])) {
+ $response->header('Retry-After', (string) $payload['retry_after_seconds']);
+ }
+
+ return $response;
+ }
+
+ return response()->json([
+ 'transcript' => TranscriptService::clean($transcript),
+ 'transcription_source' => $transcriptionSource,
+ 'transcription_status' => $transcriptionStatus?: 'transcribed',
+ 'pronunciation_analysis' => $speechAssessment,
+ ]);
  }
 
  public function saveState(Request $request)
@@ -790,6 +876,78 @@ class GameController extends Controller
  fclose($handle);
  }
  };
+ }
+
+ private function transcribeUploadedGameSpeechAnswer(
+ UploadedFile $audioFile,
+ GameSession $session,
+ string $questionText,
+ string $previousTranscript = ''
+ ): array {
+ $localSpeechService = app(LocalSpeechAssessmentService::class);
+ $speechAssessment = $localSpeechService->assessUploadedAudio($audioFile, null, $this->currentLanguageConfig());
+ $localTranscript = $localSpeechService->transcriptFrom($speechAssessment);
+ $transcript = null;
+ $transcriptionSource = 'ai';
+ $transcriptionStatus = null;
+ $transcriptionErrorCode = null;
+ $transcriptionRetryAfterSeconds = null;
+
+ $aiTranscription = AIService::transcribeSpeechResult(
+ $audioFile,
+ $this->currentLanguageConfig(),
+ $this->gameTranscriptionContext($session, $questionText, $previousTranscript)
+ );
+ if (is_array($aiTranscription)) {
+ $transcript = array_key_exists('transcript', $aiTranscription)? (string) $aiTranscription['transcript']: null;
+ $transcriptionSource = trim((string) ($aiTranscription['provider']?? 'ai'))?: 'ai';
+ $transcriptionStatus = trim((string) ($aiTranscription['status']?? ''));
+ if ($transcriptionStatus === '' && $transcript!== null) {
+ $transcriptionStatus = $transcript!== ''? 'transcribed': 'empty';
+ }
+ $transcriptionErrorCode = (string) ($aiTranscription['error_code']?? '');
+ $transcriptionRetryAfterSeconds = $aiTranscription['retry_after_seconds']?? null;
+ }
+
+ if (
+ $localTranscript!== null
+ && (
+ $transcript === null
+ || ($transcriptionStatus === 'failed' && trim((string) $transcript) === '')
+ )
+ ) {
+ $transcript = $localTranscript;
+ $transcriptionSource = 'local_speech';
+ $transcriptionStatus = 'transcribed';
+ $transcriptionErrorCode = null;
+ $transcriptionRetryAfterSeconds = null;
+ }
+
+ return [
+ 'transcript' => $transcript!== null? TranscriptService::clean($transcript): null,
+ 'transcription_source' => $transcriptionSource,
+ 'transcription_status' => $transcriptionStatus,
+ 'error_code' => $transcriptionErrorCode,
+ 'retry_after_seconds' => $transcriptionRetryAfterSeconds,
+ 'pronunciation_analysis' => $speechAssessment,
+ ];
+ }
+
+ private function gameTranscriptionContext(GameSession $session, string $questionText, string $previousTranscript = ''): array
+ {
+ return [
+ 'previous_transcript' => $previousTranscript,
+ 'question_text' => $questionText,
+ 'target_position' => $session->target_position,
+ 'interview_focus' => $session->interview_focus,
+ 'challenge_title' => $session->level?->title,
+ 'difficulty' => $session->difficulty,
+ ];
+ }
+
+ private function currentLanguageConfig(): array
+ {
+ return Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
  }
 
  private function activeGameSession(int $sessionId):?GameSession

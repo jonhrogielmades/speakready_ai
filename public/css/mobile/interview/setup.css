@@ -5541,3 +5541,217 @@ html body #mob-content #sec-interview-setup .setup-search-wrap {
     position: relative !important;
     z-index: 30 !important;
 }
+
+html body #sec-interview-setup .setup-target-hidden-input,
+html body #mob-content #sec-interview-setup .setup-target-hidden-input {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+}
+
+html body #sec-interview-setup .setup-target-dropdown,
+html body #mob-content #sec-interview-setup .setup-target-dropdown {
+    position: relative !important;
+    width: 100% !important;
+    z-index: 40 !important;
+}
+
+html body #sec-interview-setup .setup-target-dropdown-open,
+html body #mob-content #sec-interview-setup .setup-target-dropdown-open {
+    z-index: 5000 !important;
+}
+
+html body #sec-interview-setup .setup-target-trigger,
+html body #mob-content #sec-interview-setup .setup-target-trigger {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 16px !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 48px !important;
+    text-align: left !important;
+    cursor: pointer !important;
+}
+
+html body #sec-interview-setup .setup-target-trigger:focus,
+html body #mob-content #sec-interview-setup .setup-target-trigger:focus {
+    outline: none !important;
+}
+
+html body #sec-interview-setup .setup-target-trigger-text,
+html body #mob-content #sec-interview-setup .setup-target-trigger-text {
+    min-width: 0 !important;
+    color: #0f172a !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    overflow-wrap: anywhere !important;
+}
+
+html body #sec-interview-setup .setup-target-placeholder,
+html body #mob-content #sec-interview-setup .setup-target-placeholder {
+    color: #64748b !important;
+    font-weight: 500 !important;
+}
+
+html body #sec-interview-setup .setup-target-trigger-icon,
+html body #mob-content #sec-interview-setup .setup-target-trigger-icon {
+    justify-self: end !important;
+    color: #64748b !important;
+    transition: transform 0.18s ease !important;
+}
+
+html body #sec-interview-setup .setup-target-dropdown-open .setup-target-trigger-icon,
+html body #mob-content #sec-interview-setup .setup-target-dropdown-open .setup-target-trigger-icon {
+    transform: rotate(180deg) !important;
+}
+
+html body #sec-interview-setup .setup-target-trigger.setup-field-invalid,
+html body #mob-content #sec-interview-setup .setup-target-trigger.setup-field-invalid {
+    border-color: rgba(239, 68, 68, 0.75) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+html body #sec-interview-setup .setup-target-menu,
+html body #mob-content #sec-interview-setup .setup-target-menu {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 5200 !important;
+    display: grid !important;
+    gap: 10px !important;
+    max-height: min(320px, 46vh) !important;
+    padding: 8px !important;
+    overflow-y: auto !important;
+    border: 1px solid rgba(203, 213, 225, 0.92) !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18) !important;
+    overscroll-behavior: contain !important;
+}
+
+html body #sec-interview-setup .setup-target-menu[hidden],
+html body #sec-interview-setup .setup-target-choice-group[hidden],
+html body #sec-interview-setup .setup-target-choice[hidden],
+html body #mob-content #sec-interview-setup .setup-target-menu[hidden],
+html body #mob-content #sec-interview-setup .setup-target-choice-group[hidden],
+html body #mob-content #sec-interview-setup .setup-target-choice[hidden] {
+    display: none !important;
+}
+
+html body #sec-interview-setup .setup-target-choice-group,
+html body #mob-content #sec-interview-setup .setup-target-choice-group {
+    display: grid !important;
+    gap: 6px !important;
+}
+
+html body #sec-interview-setup .setup-target-choice-group-title,
+html body #mob-content #sec-interview-setup .setup-target-choice-group-title {
+    margin: 0 -8px !important;
+    padding: 7px 12px !important;
+    color: #0f172a !important;
+    background: #f8fafc !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    line-height: 1.2 !important;
+}
+
+html body #sec-interview-setup .setup-target-choice-list,
+html body #mob-content #sec-interview-setup .setup-target-choice-list {
+    display: grid !important;
+    gap: 4px !important;
+}
+
+html body #sec-interview-setup .setup-target-choice,
+html body #mob-content #sec-interview-setup .setup-target-choice {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 18px !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-height: 36px !important;
+    padding: 8px 10px !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #0f172a !important;
+    text-align: left !important;
+    font-size: 0.86rem !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    cursor: pointer !important;
+}
+
+html body #sec-interview-setup .setup-target-choice span,
+html body #mob-content #sec-interview-setup .setup-target-choice span {
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
+}
+
+html body #sec-interview-setup .setup-target-choice i,
+html body #mob-content #sec-interview-setup .setup-target-choice i {
+    color: #2563eb !important;
+    opacity: 0 !important;
+}
+
+html body #sec-interview-setup .setup-target-choice:hover,
+html body #sec-interview-setup .setup-target-choice:focus,
+html body #mob-content #sec-interview-setup .setup-target-choice:hover,
+html body #mob-content #sec-interview-setup .setup-target-choice:focus {
+    background: rgba(37, 99, 235, 0.08) !important;
+    color: #1d4ed8 !important;
+    outline: none !important;
+}
+
+html body #sec-interview-setup .setup-target-choice-selected,
+html body #mob-content #sec-interview-setup .setup-target-choice-selected {
+    background: rgba(37, 99, 235, 0.12) !important;
+    color: #1d4ed8 !important;
+    font-weight: 500 !important;
+}
+
+html body #sec-interview-setup .setup-target-choice-selected i,
+html body #mob-content #sec-interview-setup .setup-target-choice-selected i {
+    opacity: 1 !important;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-target-trigger-text,
+html:not(.lm) body #sec-interview-setup .setup-target-choice-group-title,
+html:not(.lm) body #sec-interview-setup .setup-target-choice,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-target-trigger-text,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-target-choice-group-title,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-target-choice {
+    color: #f8fafc !important;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-target-placeholder,
+html:not(.lm) body #sec-interview-setup .setup-target-trigger-icon,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-target-placeholder,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-target-trigger-icon {
+    color: #cbd5e1 !important;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-target-menu,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-target-menu {
+    border-color: rgba(148, 163, 184, 0.28) !important;
+    background: #111827 !important;
+    box-shadow: 0 22px 52px rgba(0, 0, 0, 0.42) !important;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-target-choice-group-title,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-target-choice-group-title {
+    background: rgba(15, 23, 42, 0.82) !important;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-target-choice:hover,
+html:not(.lm) body #sec-interview-setup .setup-target-choice:focus,
+html:not(.lm) body #sec-interview-setup .setup-target-choice-selected,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-target-choice:hover,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-target-choice:focus,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-target-choice-selected {
+    background: rgba(37, 99, 235, 0.24) !important;
+    color: #bfdbfe !important;
+}

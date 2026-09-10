@@ -131,6 +131,18 @@
             'status' => ($scoreVal >= 80) ? 'Earned' : 'Locked',
         ],
     ];
+    $dashboardJobPositionOptions = collect(config('speakready_scope.job_positions', []))
+        ->flatten()
+        ->map(fn ($position) => trim((string) $position))
+        ->filter()
+        ->unique(fn (string $position) => strtolower($position))
+        ->values();
+    $dashboardSchoolProgramOptions = collect(config('speakready_scope.school_programs', []))
+        ->flatten()
+        ->map(fn ($program) => trim((string) $program))
+        ->filter()
+        ->unique(fn (string $program) => strtolower($program))
+        ->values();
 @endphp
 
 <div class="db-section active sr-dashboard" id="sec-overview">
@@ -767,7 +779,12 @@
 
                         <div class="sr-dashboard-mock-field">
                             <label class="sr-dashboard-coach-label" for="dashboardMockPosition">Target position</label>
-                            <input class="sr-dashboard-mock-control" type="text" name="target_position" id="dashboardMockPosition" maxlength="255" value="{{ old('target_position') }}" placeholder="e.g. Teacher, HR Assistant, Developer" required>
+                            <select class="sr-dashboard-mock-control" name="target_position" id="dashboardMockPosition" required data-selected-target="{{ old('target_position') }}">
+                                <option value="" disabled {{ old('target_position') ? '' : 'selected' }}>Choose a target position</option>
+                                @foreach($dashboardJobPositionOptions as $positionOption)
+                                    <option value="{{ $positionOption }}" {{ old('target_position') === $positionOption ? 'selected' : '' }}>{{ $positionOption }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div class="sr-dashboard-mock-field">
@@ -1270,6 +1287,11 @@ document.addEventListener("DOMContentLoaded", function() {
 @push('scripts')
 <script>
     (function() {
+        const dashboardTargetOptions = @json([
+            'job' => $dashboardJobPositionOptions,
+            'school' => $dashboardSchoolProgramOptions,
+        ]);
+
         function initDashboardMockModal() {
             const form = document.getElementById('dashboardMockForm');
             if (!form || form.dataset.bound === 'true') return;
@@ -1284,6 +1306,36 @@ document.addEventListener("DOMContentLoaded", function() {
             const status = document.getElementById('dashboardMockStatus');
             const defaultSubmitHtml = submitButton ? submitButton.innerHTML : '';
 
+            function syncTargetOptions(targetKind) {
+                if (!positionInput) return;
+
+                const previousKind = positionInput.dataset.targetKind || targetKind;
+                const previousValue = previousKind === targetKind
+                    ? String(positionInput.value || positionInput.dataset.selectedTarget || '').trim()
+                    : '';
+                const options = dashboardTargetOptions[targetKind] || [];
+                positionInput.innerHTML = '';
+
+                const placeholderOption = document.createElement('option');
+                placeholderOption.value = '';
+                placeholderOption.textContent = targetKind === 'school' ? 'Choose a target program' : 'Choose a target position';
+                placeholderOption.disabled = true;
+                positionInput.appendChild(placeholderOption);
+
+                options.forEach((optionValue) => {
+                    const option = document.createElement('option');
+                    option.value = optionValue;
+                    option.textContent = optionValue;
+                    positionInput.appendChild(option);
+                });
+
+                const hasPreviousValue = Array.from(positionInput.options).some((option) => option.value === previousValue);
+                positionInput.value = previousValue && hasPreviousValue ? previousValue : '';
+                placeholderOption.selected = positionInput.value === '';
+                positionInput.dataset.selectedTarget = positionInput.value;
+                positionInput.dataset.targetKind = targetKind;
+            }
+
             function syncScenarioFields() {
                 const selectedOption = scenarioSelect?.selectedOptions?.[0];
                 if (!selectedOption) return;
@@ -1291,6 +1343,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (focusInput) {
                     focusInput.value = selectedOption.dataset.focus || 'Job Interview';
                 }
+
+                const scenarioText = `${selectedOption.dataset.focus || ''} ${selectedOption.text || ''}`.toLowerCase();
+                const isSchoolScenario = scenarioText.includes('school') || scenarioText.includes('college') || scenarioText.includes('admission');
+                syncTargetOptions(isSchoolScenario ? 'school' : 'job');
             }
 
             function setStatus(message) {

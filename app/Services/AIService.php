@@ -876,7 +876,7 @@ class AIService
 
  private static function localHiringContextInstruction(): string
  {
- return 'Keep the interview grounded in hiring practice: local HR screening, role-fit questions, professionalism, communication clarity, common workplace scenarios in your target context, and realistic salary-expectation framing when relevant. Avoid company-specific interview cultures unless the user explicitly provides that employer context. ';
+ return 'Keep the interview grounded in Southern Leyte and Philippine hiring practice: local HR screening, role-fit questions, professionalism, communication clarity, and common workplace scenarios in local government/admin, education, healthcare, agriculture, fisheries, tourism, hospitality, engineering, IT, accounting, customer service, and sales. Include realistic salary-expectation framing when relevant. Avoid company-specific interview cultures unless the user explicitly provides that employer context. ';
  }
 
  private static function normalizeGeneratedQuestions(array $response): array

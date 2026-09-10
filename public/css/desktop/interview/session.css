@@ -2351,7 +2351,8 @@
             margin: 0 !important;
         }
 
-        html body #sec-interview-session #holdToTalkBtn {
+        html body #sec-interview-session #micPauseBtn,
+        html body #sec-interview-session #micStopBtn {
             width: 100% !important;
         }
 
@@ -2781,7 +2782,8 @@
             margin: 0 !important;
         }
 
-        html body #sec-interview-session #holdToTalkBtn {
+        html body #sec-interview-session #micPauseBtn,
+        html body #sec-interview-session #micStopBtn {
             width: auto !important;
             min-width: 44px !important;
             padding: 0 8px !important;
@@ -3293,7 +3295,19 @@
         box-shadow: none !important;
     }
 
-    html body #sec-interview-session .question-caption-line:not(.is-speaking) {
+    html body #sec-interview-session .question-caption-line.has-caption.is-static {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        background: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.98), 0 0 10px rgba(0, 0, 0, 0.72) !important;
+    }
+
+    html body #sec-interview-session .question-caption-line:not(.is-speaking):not(.is-static) {
         opacity: 0 !important;
         visibility: hidden !important;
         background: transparent !important;
@@ -3686,7 +3700,8 @@
         font-size: 0.84rem !important;
     }
 
-    html body #sec-interview-session .answer-transcript-controls #holdToTalkBtn {
+    html body #sec-interview-session .answer-transcript-controls #micPauseBtn,
+    html body #sec-interview-session .answer-transcript-controls #micStopBtn {
         width: auto !important;
         min-width: 78px !important;
         min-height: 40px !important;

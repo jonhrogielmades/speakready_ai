@@ -8,6 +8,15 @@
 
 @section('content')
 @include('mobile.partials.page-hero-styles')
+@php
+    $accountTargetPosition = old('target_position', Auth::user()->target_position);
+    $accountJobPositionOptions = collect(config('speakready_scope.job_positions', []))
+        ->flatten()
+        ->map(fn ($position) => trim((string) $position))
+        ->filter()
+        ->unique(fn (string $position) => strtolower($position))
+        ->values();
+@endphp
 
 <div class="db-section active animate-fade-up" id="account-page">
     <div class="sr-page-hero">
@@ -90,7 +99,15 @@
                     </div>
                     <div class="account-field">
                         <label class="account-field-label" for="accountTargetPosition"><span class="account-label-icon"><i class="fa-solid fa-briefcase"></i></span>Target Job Position</label>
-                        <input type="text" class="oinp" name="target_position" id="accountTargetPosition" value="{{ old('target_position', Auth::user()->target_position) }}" placeholder="e.g., Data Analyst" autocomplete="organization-title">
+                        <select class="oinp" name="target_position" id="accountTargetPosition" autocomplete="organization-title">
+                            <option value="" {{ trim((string) $accountTargetPosition) === ''? 'selected': '' }}>Choose a target position</option>
+                            @if(trim((string) $accountTargetPosition)!== '' && ! $accountJobPositionOptions->contains(fn ($positionOption): bool => strcasecmp((string) $positionOption, (string) $accountTargetPosition) === 0))
+                                <option value="{{ $accountTargetPosition }}" selected>{{ $accountTargetPosition }}</option>
+                            @endif
+                            @foreach($accountJobPositionOptions as $positionOption)
+                                <option value="{{ $positionOption }}" {{ strcasecmp((string) $positionOption, (string) $accountTargetPosition) === 0? 'selected': '' }}>{{ $positionOption }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="text-end">
                         <button type="submit" class="btn account-submit-btn btn-shine"><i class="fa-regular fa-floppy-disk"></i>Save Changes</button>

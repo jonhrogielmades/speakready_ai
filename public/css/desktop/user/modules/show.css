@@ -45,6 +45,125 @@
         border-color: rgba(59,130,246,0.4);
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
+    .module-chapter-gate {
+        display: grid;
+        gap: 0;
+    }
+    .chapter-gate-status {
+        border: 1px solid rgba(59,130,246,0.22);
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(16,185,129,0.1));
+        padding: 16px;
+        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: center;
+    }
+    .chapter-gate-main {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        min-width: 0;
+    }
+    .chapter-gate-icon,
+    .chapter-lock-icon {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(59,130,246,0.13);
+        color: var(--pur);
+    }
+    .chapter-gate-copy {
+        min-width: 0;
+    }
+    .chapter-gate-copy strong,
+    .chapter-lock-copy strong {
+        display: block;
+        color: var(--tx);
+        font-weight: 800;
+        line-height: 1.25;
+    }
+    .chapter-gate-copy span,
+    .chapter-lock-copy span {
+        display: block;
+        color: var(--tx3);
+        font-size: 0.86rem;
+        line-height: 1.45;
+        margin-top: 3px;
+    }
+    .chapter-gate-clock {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--tx2);
+        font-weight: 800;
+        white-space: nowrap;
+        border: 1px solid var(--bd);
+        border-radius: 999px;
+        background: var(--sf);
+        padding: 8px 12px;
+    }
+    .chapter-gate-track {
+        grid-column: 1 / -1;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(148,163,184,0.25);
+        overflow: hidden;
+    }
+    .chapter-gate-track span {
+        display: block;
+        height: 100%;
+        width: var(--chapter-gate-progress, 10%);
+        border-radius: inherit;
+        background: #10b981;
+        transition: width 0.25s ease;
+    }
+    .chapter-badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    .chapter-lock-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(148,163,184,0.12) !important;
+        color: var(--tx3) !important;
+        border: 1px solid var(--bd) !important;
+    }
+    .chapter-lock-badge.is-unlocked {
+        background: rgba(16,185,129,0.12) !important;
+        color: #10b981 !important;
+        border-color: rgba(16,185,129,0.25) !important;
+    }
+    .chapter-card.is-chapter-locked {
+        background: var(--bg2);
+        border-style: dashed;
+        box-shadow: none;
+    }
+    .chapter-card.is-chapter-locked:hover {
+        border-color: var(--bd);
+        box-shadow: none;
+    }
+    .chapter-lock-panel {
+        border: 1px dashed rgba(148,163,184,0.45);
+        border-radius: 12px;
+        background: var(--sf);
+        padding: 16px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    .chapter-lock-panel[hidden],
+    .chapter-content[hidden] {
+        display: none !important;
+    }
     .chapter-title {
         color: var(--tx);
         font-weight: 700;
@@ -221,6 +340,16 @@
         }
         .module-next-grid {
             grid-template-columns: 1fr;
+        }
+        .chapter-gate-status {
+            grid-template-columns: 1fr;
+        }
+        .chapter-gate-clock {
+            justify-content: center;
+            width: 100%;
+        }
+        .chapter-badge-row {
+            justify-content: flex-start;
         }
     }
 

@@ -154,9 +154,8 @@
         .panel { padding: 15px; }
         .panel-title { font-size: 0.9rem; }
         #answerTextarea { min-height:160px !important; }
-        #holdToTalkBtn {
-            width:104px !important;
-            height:104px !important;
+        .voice-recording-action {
+            min-width:104px !important;
         }
         .challenge-finish-modal .modal-dialog {
             margin: 12px;
@@ -603,12 +602,22 @@
         background: rgba(127, 29, 29, 0.22) !important;
     }
 
-    html body #sec-learning-game-session #holdToTalkBtn {
-        width: 104px !important;
-        height: 104px !important;
-        border-radius: 999px !important;
+    html body #sec-learning-game-session .voice-recording-actions {
+        padding-top: 10px !important;
+        padding-bottom: 2px !important;
+    }
+
+    html body #sec-learning-game-session .voice-recording-action {
+        min-width: 94px !important;
+        min-height: 42px !important;
+        border-radius: 10px !important;
         font-size: 0.76rem !important;
-        box-shadow: 0 10px 22px rgba(239, 68, 68, 0.24) !important;
+        box-shadow: none !important;
+    }
+
+    html body #sec-learning-game-session .voice-recording-action.voice-control-disabled {
+        opacity: 0.58 !important;
+        pointer-events: none !important;
     }
 
     html body #sec-learning-game-session #answerTextarea,
@@ -849,9 +858,9 @@
             padding: 9px !important;
         }
 
-        body.user-mobile-shell #mob-content #sec-learning-game-session #holdToTalkBtn {
-            width: clamp(88px, 28vw, 104px) !important;
-            height: clamp(88px, 28vw, 104px) !important;
+        body.user-mobile-shell #mob-content #sec-learning-game-session .voice-recording-action {
+            flex: 1 1 106px !important;
+            max-width: 132px !important;
         }
 
         body.user-mobile-shell #mob-content #sec-learning-game-session .col-lg-4 {
@@ -1302,13 +1311,13 @@
         border: 0 !important;
         border-radius: 0 !important;
         background: var(--question-caption-bg) !important;
-        color: var(--question-caption-color) !important;
-        -webkit-text-fill-color: var(--question-caption-color) !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
         font-size: clamp(0.72rem, 1.2vw, 0.88rem) !important;
         font-weight: 800 !important;
         line-height: 1.35 !important;
         text-align: center !important;
-        text-shadow: var(--question-caption-text-shadow) !important;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.92), 0 0 10px rgba(0, 0, 0, 0.65) !important;
         box-shadow: var(--question-caption-shadow) !important;
         overflow-y: auto !important;
         opacity: 1 !important;

@@ -120,8 +120,9 @@ Route::middleware(['auth', 'user'])->group(function () {
                 ->values()
             : collect();
         $sourceDatasets = \App\Services\QuestionDatasetProvider::all();
+        $targetScopes = config('speakready_scope');
 
-        return mobile_view('interview.setup', compact('categories', 'sourceDatasets'));
+        return mobile_view('interview.setup', compact('categories', 'sourceDatasets', 'targetScopes'));
     })->name('interview.setup');
 
     Route::get('/interview/session', function () {
@@ -223,6 +224,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/game/level/{id}/start', [\App\Http\Controllers\GameController::class, 'startLevel'])->name('user.game.start');
     Route::get('/game/match', [\App\Http\Controllers\GameController::class, 'arenaSession'])->name('user.game.match');
     Route::post('/game/answer', [\App\Http\Controllers\GameController::class, 'answer'])->name('user.game.answer');
+    Route::post('/game/transcribe', [\App\Http\Controllers\GameController::class, 'transcribe'])->name('user.game.transcribe');
     Route::post('/game/save-state', [\App\Http\Controllers\GameController::class, 'saveState'])->name('user.game.saveState');
     Route::post('/game/finish', [\App\Http\Controllers\GameController::class, 'finish'])->name('user.game.finish');
     Route::get('/game/answers/{answer}/voice-recording', [\App\Http\Controllers\GameController::class, 'voiceRecording'])->name('user.game.answer.voiceRecording');

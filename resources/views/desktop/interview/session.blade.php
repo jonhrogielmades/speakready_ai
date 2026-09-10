@@ -120,17 +120,11 @@
  </div>
  </div>
  <div class="question-caption-overlay" aria-live="polite" aria-atomic="true">
- <div id="questionCaptionText" class="question-caption-line"></div>
+ <div id="questionCaptionText" class="question-caption-line" style="color:#ffffff;-webkit-text-fill-color:#ffffff;text-shadow:0 2px 6px rgba(0,0,0,0.92),0 0 10px rgba(0,0,0,0.65);"></div>
  </div>
  </div>
 
- <div class="ai-question-card animate-fade-up delay-150">
- <div class="d-flex justify-content-center align-items-end gap-3 text-center">
- <div class="w-100">
- <div id="aiQuestionText">Loading your first question...</div>
- </div>
- </div>
- </div>
+ <div id="aiQuestionText" class="visually-hidden" aria-hidden="true">Loading your first question...</div>
 
  <!-- Unified Responsive Interview Controls (Desktop & Mobile) -->
  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
@@ -177,16 +171,10 @@
  <div id="answerTranscriptControls" class="answer-transcript-controls" aria-label="Voice recording controls" hidden>
  <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
  <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
- @if($sessionRecord->game_level_id)
- <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="border-radius:12px; font-weight:700; box-shadow: 0 4px 15px rgba(239,68,68,0.4); padding: 0.5rem 1rem; user-select:none; touch-action:manipulation;">
- <i class="fa-solid fa-microphone me-2"></i>HOLD
- </button>
- @else
  <div class="d-flex gap-2">
  <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i></button>
  <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
  </div>
- @endif
  </div>
  <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
  </div>
@@ -3107,6 +3095,27 @@
  caption.innerHTML = '';
  }
 
+ function renderStaticQuestionCaption(text) {
+ const caption = document.getElementById('questionCaptionText');
+ if (!caption) return;
+
+ const cleanText = String(text || '').trim();
+ if (!cleanText) {
+ clearQuestionCaption();
+ return;
+ }
+
+ caption.innerHTML = '';
+ caption.textContent = cleanText;
+ caption.classList.remove('is-speaking');
+ caption.classList.add('has-caption', 'is-static');
+ caption.style.setProperty('color', '#ffffff', 'important');
+ caption.style.setProperty('-webkit-text-fill-color', '#ffffff', 'important');
+ caption.style.setProperty('opacity', '1', 'important');
+ caption.style.setProperty('visibility', 'visible', 'important');
+ caption.style.setProperty('text-shadow', '0 2px 6px rgba(0, 0, 0, 0.98), 0 0 10px rgba(0, 0, 0, 0.72)', 'important');
+ }
+
  function wordIndexFromChar(words, charIndex) {
  const safeChar = Number(charIndex) || 0;
  const found = words.findIndex(word => safeChar >= word.start && safeChar < word.end);
@@ -3338,7 +3347,7 @@
  document.getElementById('aiAvatarHead')?.style.setProperty('--avatar-ring-color', '#8b5cf6');
  stopSpeechSpectrumVisualizer();
  clearCaptionInterval();
- clearQuestionCaption();
+ renderStaticQuestionCaption(text);
  document.getElementById('aiQuestionText').innerText = text;
  if (startTimerAfterSpeech) {
  startQuestionTimer();
@@ -3497,7 +3506,7 @@
  }
  } else {
  document.getElementById('aiQuestionText').innerText = text;
- clearQuestionCaption();
+ renderStaticQuestionCaption(text);
  if (startTimerAfterSpeech) startQuestionTimer();
  if (startTimerAfterSpeech) scheduleAutoTranscriptionStart(token);
  resolveSpeechCompletion(token);
@@ -3734,6 +3743,7 @@
  function showInterviewerConversation(text, counterText = null) {
  const qText = document.getElementById('aiQuestionText');
  if (qText) qText.innerText = text;
+ renderStaticQuestionCaption(text);
  setRepeatPrompt(text, {
  phase: counterText === 'Done'? 'closing': 'conversation',
  speechText: text
@@ -3953,21 +3963,6 @@
  
  if(timerSeconds % 30 === 0) autoSaveState(); // auto save every 30s
  }, 1000);
-
- // Hold-to-Talk Gamified Logic
- const holdBtn = document.getElementById('holdToTalkBtn');
- if (holdBtn) {
- const startHold = (e) => { e.preventDefault(); holdBtn.style.transform = 'scale(0.95)'; holdBtn.style.background = '#991b1b'; startRecording(); };
- const endHold = (e) => { e.preventDefault(); holdBtn.style.transform = 'scale(1)'; holdBtn.style.background = ''; stopRecording(); };
- 
- holdBtn.addEventListener('mousedown', startHold);
- holdBtn.addEventListener('mouseup', endHold);
- holdBtn.addEventListener('mouseleave', (e) => { if(isRecording || recordingStartPromise) endHold(e); });
- 
- holdBtn.addEventListener('touchstart', startHold, {passive: false});
- holdBtn.addEventListener('touchend', endHold, {passive: false});
- holdBtn.addEventListener('touchcancel', (e) => { if(isRecording || recordingStartPromise) endHold(e); });
- }
 
  const restoredChat = restoreChatHistory();
  (async () => {
@@ -4395,7 +4390,7 @@
  }
 
  function setVoiceControlsEnabled(enabled, reason = '') {
- ['holdToTalkBtn', 'micPauseBtn', 'micStopBtn'].forEach(id => {
+ ['micPauseBtn', 'micStopBtn'].forEach(id => {
  const button = document.getElementById(id);
  if (!button) return;
  button.disabled =!enabled;

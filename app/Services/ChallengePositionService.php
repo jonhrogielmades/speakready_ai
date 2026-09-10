@@ -25,16 +25,18 @@ class ChallengePositionService
  ];
 
  private const DEFAULT_POSITION_OPTIONS = [
- 'Call Center Agent',
+ 'Administrative Assistant / LGU Staff',
+ 'Teacher / Instructor',
+ 'Nurse / Healthcare Worker',
+ 'Agricultural Technician',
+ 'Fisheries Technician',
+ 'Tourism Staff / Hospitality Worker',
+ 'Civil Engineer',
+ 'IT Support Specialist',
  'Customer Service Representative',
  'Software Developer',
- 'Data Analyst',
- 'Teacher',
- 'Accounting Staff',
- 'Administrative Assistant',
- 'Sales Associate',
- 'Nurse',
- 'Engineer',
+ 'Accounting Assistant',
+ 'Sales Representative',
  ];
 
  public function clean(?string $position): string
@@ -210,8 +212,11 @@ class ChallengePositionService
  ['nurse', 'nursing', 'healthcare', 'caregiver', 'medical'],
  ['sales', 'marketing', 'account executive', 'business development'],
  ['accounting', 'bookkeeper', 'finance', 'cashier'],
- ['administrative', 'admin assistant', 'office staff', 'secretary'],
+ ['administrative', 'admin assistant', 'office staff', 'secretary', 'lgu', 'local government'],
  ['data analyst', 'analytics', 'data', 'reporting'],
+ ['agriculture', 'agricultural', 'fisheries', 'fishery', 'technician'],
+ ['tourism', 'hospitality', 'hotel', 'front desk', 'guest service'],
+ ['civil engineer', 'engineering', 'construction', 'infrastructure'],
  ];
 
  foreach ($groups as $terms) {

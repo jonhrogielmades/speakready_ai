@@ -33,7 +33,7 @@ class QuestionDatasetProvider
  'key' => 'ph_job_interview',
  'name' => 'Job Interview Questions',
  'category' => 'Job Interview',
- 'country' => 'General',
+ 'country' => 'Philippines',
  'source_type' => 'career_question_bank',
  'description' => 'Common interview questions and answer guidance from career platforms.',
  'sources' => [
@@ -56,7 +56,7 @@ class QuestionDatasetProvider
  'default_skills' => ['Communication', 'Role Fit', 'Self Awareness', 'STAR Method'],
  'questions' => [
  [
- 'question_text' => 'Tell me about yourself and why this role in your target context fits your next step.',
+ 'question_text' => 'Tell me about yourself and why this role in your Southern Leyte or Philippine context fits your next step.',
  'type' => 'Personal',
  'difficulty' => 'Easy',
  'expected_guide' => 'Summarize relevant background, key skills, one concrete achievement, and why the role fits your next step.',
@@ -91,7 +91,7 @@ class QuestionDatasetProvider
  'mapped_skills' => ['Problem Solving', 'STAR Method', 'Impact'],
  ],
  [
- 'question_text' => 'Where do you see yourself in five years, and how does this fit your career path in your target context?',
+ 'question_text' => 'Where do you see yourself in five years, and how does this fit your Southern Leyte or Philippine career path?',
  'type' => 'Personal',
  'difficulty' => 'Medium',
  'expected_guide' => 'Show realistic career direction, growth mindset, and alignment with the role and organization.',
@@ -124,7 +124,7 @@ class QuestionDatasetProvider
  'key' => 'ph_bpo_communication',
  'name' => 'BPO and Communication',
  'category' => 'BPO / Customer Support',
- 'country' => 'General',
+ 'country' => 'Philippines',
  'source_type' => 'competency_source',
  'description' => 'Communication and customer-contact prompts grounded in BPO interview guidance and TESDA competency standards.',
  'sources' => [
@@ -187,7 +187,7 @@ class QuestionDatasetProvider
  'key' => 'ph_college_admission',
  'name' => 'College Admission',
  'category' => 'College Admission',
- 'country' => 'General',
+ 'country' => 'Philippines',
  'source_type' => 'official_admission_source',
  'description' => 'College-admission practice prompts grounded in official admissions information.',
  'sources' => [

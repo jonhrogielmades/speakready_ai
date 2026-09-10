@@ -440,7 +440,7 @@ class UserSideHardeningTest extends TestCase
  $this->actingAs($user)
  ->from(route('interview.setup'))
  ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
- 'target_position' => 'Information Technology',
+ 'target_position' => 'BS Information Technology',
  ]))
  ->assertRedirect(route('interview.setup'))
  ->assertSessionHasErrors([
@@ -462,7 +462,7 @@ class UserSideHardeningTest extends TestCase
  ]))
  ->assertRedirect(route('interview.setup'))
  ->assertSessionHasErrors([
- 'target_position' => 'Job Interview accepts job-related target positions only. Enter a job role like Software Developer, Teacher, HR Assistant, or Call Center Agent, or choose School Admission Interviews for school programs like Information Technology.',
+ 'target_position' => 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative, or choose School Admission Interviews for school programs like BS Information Technology.',
  ]);
 
  $this->assertDatabaseCount('interview_sessions', 0);
@@ -648,30 +648,30 @@ class UserSideHardeningTest extends TestCase
 
  $this->actingAs($user)
  ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
- 'target_position' => 'Information Technology',
+ 'target_position' => 'BS Information Technology',
  ]))
  ->assertRedirect(route('interview.session'));
 
  $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
 
- $this->assertSame('Information Technology', $session->target_position);
+ $this->assertSame('BS Information Technology', $session->target_position);
  $this->assertStringContainsString('School Admission', $session->interview_focus);
  }
 
- public function test_interview_start_accepts_engineering_program_for_school_admission_scenario(): void
+ public function test_interview_start_accepts_agriculture_program_for_school_admission_scenario(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'College Admission']);
 
  $this->actingAs($user)
  ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
- 'target_position' => 'Software Engineering',
+ 'target_position' => 'BS Agriculture',
  ]))
  ->assertRedirect(route('interview.session'));
 
  $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
 
- $this->assertSame('Software Engineering', $session->target_position);
+ $this->assertSame('BS Agriculture', $session->target_position);
  $this->assertStringContainsString('School Admission', $session->interview_focus);
  }
 
@@ -735,7 +735,28 @@ class UserSideHardeningTest extends TestCase
  $response
  ->assertSee('Target Program')
  ->assertSee('Program:')
- ->assertSee('e.g. BS Information Technology, Computer Science, Nursing')
+ ->assertSee('<input type="hidden" class="setup-input setup-target-hidden-input" name="target_position" id="valPosition"', false)
+ ->assertSee('id="targetPositionDropdownButton"', false)
+ ->assertSee('id="targetPositionDropdownMenu"', false)
+ ->assertSee('<div class="setup-target-choice-group-title">College Programs - Version 1</div>', false)
+ ->assertSee('Choose a target program')
+ ->assertSee('data-target-dropdown-choice-value="BS Information Technology"', false)
+ ->assertSee('data-target-dropdown-choice-value="BS Nursing"', false)
+ ->assertSee('data-target-dropdown-choice-value="Bachelor of Elementary Education"', false)
+ ->assertSee('data-target-dropdown-choice-value="Bachelor of Secondary Education"', false)
+ ->assertSee('data-target-dropdown-choice-value="BS Civil Engineering"', false)
+ ->assertSee('data-target-dropdown-choice-value="BS Agriculture"', false)
+ ->assertSee('data-target-dropdown-choice-value="BS Fisheries"', false)
+ ->assertSee('data-target-dropdown-choice-value="BS Business Administration"', false)
+ ->assertSee('data-target-dropdown-choice-value="BS Accountancy / Accounting Information System"', false)
+ ->assertSee('data-target-dropdown-choice-value="BS Hospitality Management"', false)
+ ->assertDontSee('<select class="oinp setup-input" name="target_position" id="valPosition"', false)
+ ->assertDontSee('<option value="BS Information Technology"', false)
+ ->assertDontSee('<optgroup label="College Programs - Version 1">', false)
+ ->assertDontSee('STEM')
+ ->assertDontSee('TVL - ICT')
+ ->assertDontSee('Caregiving')
+ ->assertDontSee('Software Engineering')
  ->assertSee('Enter the target program before continuing.');
  }
  }
@@ -766,7 +787,7 @@ class UserSideHardeningTest extends TestCase
  }
  }
 
- public function test_interview_setup_uses_plain_target_field_on_desktop_and_mobile(): void
+ public function test_interview_setup_uses_downward_custom_target_dropdown_on_desktop_and_mobile(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
@@ -783,8 +804,31 @@ class UserSideHardeningTest extends TestCase
 
  foreach ([$desktopResponse, $mobileResponse] as $response) {
  $response
+ ->assertSee('<input type="hidden" class="setup-input setup-target-hidden-input" name="target_position" id="valPosition"', false)
+ ->assertSee('id="targetPositionDropdownButton"', false)
+ ->assertSee('id="targetPositionDropdownMenu"', false)
+ ->assertSee('data-target-dropdown-menu', false)
  ->assertSee('name="target_position"', false)
- ->assertSee('autocomplete="off"', false)
+ ->assertSee('<div class="setup-target-choice-group-title">Local Government / Office</div>', false)
+ ->assertSee('data-target-dropdown-choice-value="Administrative Assistant / LGU Staff"', false)
+ ->assertSee('data-target-dropdown-choice-value="Agricultural Technician"', false)
+ ->assertSee('data-target-dropdown-choice-value="Fisheries Technician"', false)
+ ->assertSee('data-target-dropdown-choice-value="Sales Representative"', false)
+ ->assertSee('Choose a target position')
+ ->assertDontSee('<select class="oinp setup-input" name="target_position" id="valPosition"', false)
+ ->assertDontSee('<option value="Administrative Assistant / LGU Staff"', false)
+ ->assertDontSee('<optgroup label="Local Government / Office">', false)
+ ->assertDontSee('id="targetPositionChooseButton"', false)
+ ->assertDontSee('data-bs-target="#targetPositionChoiceModal"', false)
+ ->assertDontSee('id="targetPositionChoiceModal"', false)
+ ->assertDontSee('data-target-option-kind="job"', false)
+ ->assertDontSee('data-target-option-value=', false)
+ ->assertDontSee('STEM')
+ ->assertDontSee('TVL - ICT')
+ ->assertDontSee('Caregiving')
+ ->assertDontSee('Software Engineering')
+ ->assertDontSee('type="text" name="target_position" id="valPosition"', false)
+ ->assertDontSee('<datalist id="jobPositionOptions"', false)
  ->assertDontSee('aria-autocomplete="list"', false)
  ->assertDontSee('aria-controls="targetSuggestionList"', false)
  ->assertDontSee('id="targetSuggestionList"', false)
@@ -798,6 +842,10 @@ class UserSideHardeningTest extends TestCase
  ->assertDontSee('targetPositionInput.addEventListener(\'input\'', false)
  ->assertDontSee('setupTargetSuggestionScore', false)
  ->assertDontSee('setupTargetSuggestionAcronym', false);
+
+ $content = $response->getContent();
+ $this->assertSame(12, substr_count($content, 'data-target-dropdown-choice-kind="job"'));
+ $this->assertSame(10, substr_count($content, 'data-target-dropdown-choice-kind="school"'));
  }
  }
 
@@ -1403,7 +1451,7 @@ class UserSideHardeningTest extends TestCase
 
  $this->actingAs($user)
  ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
- 'target_position' => 'Information Technology',
+ 'target_position' => 'BS Information Technology',
  'question_types' => ['Situational'],
  ]))
  ->assertRedirect(route('interview.session'));

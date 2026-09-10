@@ -10,6 +10,7 @@
 @php
  $selectedModulePosition = $selectedModulePosition?? '';
  $modulePositionOptions = collect($modulePositionOptions?? []);
+ $modulePositionValue = old('target_position', $selectedModulePosition);
  $showModulePositionModal = (bool) ($showModulePositionModal?? false);
  $usingGeneralModuleFallback = (bool) ($usingGeneralModuleFallback?? false);
 @endphp
@@ -205,12 +206,15 @@
  </div>
  <div class="modal-body">
  <label for="moduleTargetPosition" class="form-label">Target position</label>
- <input type="text" class="form-control module-position-input @error('target_position') is-invalid @enderror" id="moduleTargetPosition" name="target_position" list="modulePositionOptions" value="{{ old('target_position', $selectedModulePosition) }}" placeholder="e.g. Call Center Agent, Teacher, Software Developer" required autocomplete="organization-title">
- <datalist id="modulePositionOptions">
+ <select class="form-control module-position-input @error('target_position') is-invalid @enderror" id="moduleTargetPosition" name="target_position" required>
+ <option value="" disabled {{ $modulePositionValue === ''? 'selected': '' }}>Choose a target position</option>
+ @if($modulePositionValue!== '' && ! $modulePositionOptions->contains(fn ($positionOption): bool => strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0))
+ <option value="{{ $modulePositionValue }}" selected>{{ $modulePositionValue }}</option>
+ @endif
  @foreach($modulePositionOptions as $positionOption)
- <option value="{{ $positionOption }}"></option>
+ <option value="{{ $positionOption }}" {{ strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0? 'selected': '' }}>{{ $positionOption }}</option>
  @endforeach
- </datalist>
+ </select>
  @error('target_position')
  <div class="invalid-feedback">{{ $message }}</div>
  @enderror

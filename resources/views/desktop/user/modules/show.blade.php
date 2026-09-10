@@ -2,7 +2,7 @@
 @section('title', 'Module Details')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/show.css?v=2') }}" data-page-style="user-modules-show">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/show.css?v=3') }}" data-page-style="user-modules-show">
 @endpush
 
 @section('content')
@@ -29,6 +29,10 @@
             @php
                 $currentProgress = max(0, min(100, (int) ($moduleProgress->progress_percentage ?? 0)));
                 $progressLabel = $currentProgress >= 100 ? 'Completed' : ($currentProgress > 0 ? 'In progress' : 'Not started');
+                $chapterGateEnabled = collect($module->mapped_skills ?? [])
+                    ->contains(fn ($skill): bool => is_string($skill) && \Illuminate\Support\Str::startsWith($skill, 'ai_module_spec:'));
+                $chapterUnlockDelayMs = 5 * 60 * 1000;
+                $initialUnlockedChapters = $currentProgress >= 100 ? $module->chapters->count() : 1;
             @endphp
             <div class="module-progress-panel">
                 <div>
@@ -88,6 +92,25 @@
         <!-- Chapters Tab -->
         <div class="tab-pane fade show active" id="chapters" role="tabpanel" aria-labelledby="chapters-tab">
             @if($module->chapters->count() > 0)
+                <div @if($chapterGateEnabled) class="module-chapter-gate" data-chapter-gate data-module-id="{{ $module->id }}" data-user-id="{{ Auth::id() }}" data-unlock-delay-ms="{{ $chapterUnlockDelayMs }}" data-initial-unlocked="{{ $initialUnlockedChapters }}" @endif>
+                @if($chapterGateEnabled)
+                    <div class="chapter-gate-status">
+                        <div class="chapter-gate-main">
+                            <span class="chapter-gate-icon"><i class="fa-solid fa-lock-open"></i></span>
+                            <div class="chapter-gate-copy">
+                                <strong data-chapter-gate-progress>{{ $initialUnlockedChapters }} of {{ $module->chapters->count() }} chapters unlocked</strong>
+                                <span>Next chapter unlocks after 5:00 of active reading.</span>
+                            </div>
+                        </div>
+                        <div class="chapter-gate-clock">
+                            <i class="fa-solid fa-clock"></i>
+                            <span data-chapter-gate-next>{{ $initialUnlockedChapters >= $module->chapters->count() ? 'All unlocked' : 'Next in 05:00' }}</span>
+                        </div>
+                        <div class="chapter-gate-track" aria-hidden="true">
+                            <span data-chapter-gate-track style="--chapter-gate-progress: {{ $module->chapters->count() > 0 ? (($initialUnlockedChapters / $module->chapters->count()) * 100) : 100 }}%"></span>
+                        </div>
+                    </div>
+                @endif
                 @foreach($module->chapters as $index => $chapter)
                     @php
                         $chapterNumber = $index + 1;
@@ -95,17 +118,36 @@
                         $chapterLabel = preg_match('/^chapter\s+\d+\b/i', $chapterTitle)
                             ? $chapterTitle
                             : 'Chapter ' . $chapterNumber . ($chapterTitle !== '' ? ': ' . $chapterTitle : '');
+                        $isChapterInitiallyLocked = $chapterGateEnabled && $chapterNumber > $initialUnlockedChapters;
                     @endphp
-                    <div class="chapter-card">
+                    <div class="chapter-card {{ $isChapterInitiallyLocked ? 'is-chapter-locked' : 'is-chapter-unlocked' }}" data-module-chapter-card data-chapter-number="{{ $chapterNumber }}" aria-disabled="{{ $isChapterInitiallyLocked ? 'true' : 'false' }}">
                         <div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
                             <h4 class="chapter-title">{{ $chapterLabel }}</h4>
-                            <span class="badge" style="background:var(--bg2); color:var(--tx3); border:1px solid var(--bd);">{{ $chapter->reading_time ?? 5 }} min read</span>
+                            <div class="chapter-badge-row">
+                                <span class="badge" style="background:var(--bg2); color:var(--tx3); border:1px solid var(--bd);">{{ $chapter->reading_time ?? 5 }} min read</span>
+                                @if($chapterGateEnabled)
+                                    <span class="badge chapter-lock-badge {{ $isChapterInitiallyLocked ? '' : 'is-unlocked' }}" data-chapter-lock-badge>
+                                        <i class="fa-solid {{ $isChapterInitiallyLocked ? 'fa-lock' : 'fa-lock-open' }}"></i>
+                                        <span data-chapter-lock-label>{{ $isChapterInitiallyLocked ? 'Locked' : 'Unlocked' }}</span>
+                                    </span>
+                                @endif
+                            </div>
                         </div>
-                        <div class="chapter-content">
+                        @if($chapterGateEnabled)
+                            <div class="chapter-lock-panel" data-chapter-lock-panel @unless($isChapterInitiallyLocked) hidden @endunless>
+                                <span class="chapter-lock-icon"><i class="fa-solid fa-lock"></i></span>
+                                <div class="chapter-lock-copy">
+                                    <strong>Chapter {{ $chapterNumber }} is locked</strong>
+                                    <span data-chapter-lock-countdown>{{ $chapterNumber === ($initialUnlockedChapters + 1) ? 'Unlocks in 05:00' : 'Unlocks after earlier chapters' }}</span>
+                                </div>
+                            </div>
+                        @endif
+                        <div class="chapter-content" data-chapter-content @if($isChapterInitiallyLocked) hidden @endif>
                             {!! $chapter->content !!}
                         </div>
                     </div>
                 @endforeach
+                </div>
             @else
                 <div class="text-center py-5" style="background:var(--bg2); border-radius:16px; border:1px solid var(--bd);">
                     <i class="fa-solid fa-file-circle-xmark fa-3x mb-3" style="color:var(--bd)"></i>
@@ -229,6 +271,170 @@
                 button.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...';
             });
         });
+
+        initModuleChapterGate();
+
+        function initModuleChapterGate() {
+            const gate = document.querySelector('[data-chapter-gate]');
+            if (! gate) {
+                return;
+            }
+
+            const cards = Array.from(gate.querySelectorAll('[data-module-chapter-card]'));
+            if (cards.length <= 1) {
+                return;
+            }
+
+            const configuredDelayMs = Number(gate.dataset.unlockDelayMs || 300000);
+            const configuredInitialUnlocked = Number(gate.dataset.initialUnlocked || 1);
+            const delayMs = Number.isFinite(configuredDelayMs) ? Math.max(1000, configuredDelayMs) : 300000;
+            const initialUnlocked = Number.isFinite(configuredInitialUnlocked)
+                ? Math.max(1, Math.min(cards.length, configuredInitialUnlocked))
+                : 1;
+            const storageKey = ['speakready', 'moduleChapterGate', gate.dataset.userId || 'guest', gate.dataset.moduleId || 'module'].join(':');
+            const maxElapsedMs = Math.max(0, (cards.length - 1) * delayMs);
+            let elapsedAtStart = Math.min(maxElapsedMs, Math.max(0, (initialUnlocked - 1) * delayMs, savedElapsedMs(storageKey)));
+            let activeStartedAt = Date.now();
+            let isActive = document.visibilityState !== 'hidden';
+            let timerId = null;
+
+            render();
+            timerId = window.setInterval(function () {
+                persist();
+                render();
+            }, 1000);
+
+            document.addEventListener('visibilitychange', function () {
+                elapsedAtStart = currentElapsedMs();
+                activeStartedAt = Date.now();
+                isActive = document.visibilityState !== 'hidden';
+                persist();
+                render();
+            });
+
+            window.addEventListener('beforeunload', persist);
+
+            function currentElapsedMs() {
+                const activeElapsed = isActive ? Date.now() - activeStartedAt : 0;
+                return Math.min(maxElapsedMs, Math.max(0, elapsedAtStart + activeElapsed));
+            }
+
+            function unlockedCount() {
+                return Math.min(cards.length, Math.max(initialUnlocked, 1 + Math.floor(currentElapsedMs() / delayMs)));
+            }
+
+            function render() {
+                const elapsed = currentElapsedMs();
+                const unlocked = unlockedCount();
+
+                cards.forEach(function (card, index) {
+                    const isLocked = index >= unlocked;
+                    const content = card.querySelector('[data-chapter-content]');
+                    const lockPanel = card.querySelector('[data-chapter-lock-panel]');
+                    const badge = card.querySelector('[data-chapter-lock-badge]');
+                    const badgeIcon = badge ? badge.querySelector('i') : null;
+                    const badgeLabel = card.querySelector('[data-chapter-lock-label]');
+                    const countdown = card.querySelector('[data-chapter-lock-countdown]');
+
+                    card.classList.toggle('is-chapter-locked', isLocked);
+                    card.classList.toggle('is-chapter-unlocked', ! isLocked);
+                    card.setAttribute('aria-disabled', isLocked ? 'true' : 'false');
+                    setHidden(content, isLocked);
+                    setHidden(lockPanel, ! isLocked);
+
+                    if (badge) {
+                        badge.classList.toggle('is-unlocked', ! isLocked);
+                    }
+                    if (badgeIcon) {
+                        badgeIcon.className = 'fa-solid ' + (isLocked ? 'fa-lock' : 'fa-lock-open');
+                    }
+                    if (badgeLabel) {
+                        badgeLabel.textContent = isLocked ? 'Locked' : 'Unlocked';
+                    }
+                    if (countdown && isLocked) {
+                        countdown.textContent = index === unlocked
+                            ? 'Unlocks in ' + formatTime(msUntilNextUnlock(elapsed))
+                            : 'Unlocks after Chapter ' + index + ' opens';
+                    }
+                });
+
+                const progress = gate.querySelector('[data-chapter-gate-progress]');
+                const next = gate.querySelector('[data-chapter-gate-next]');
+                const track = gate.querySelector('[data-chapter-gate-track]');
+                const allUnlocked = unlocked >= cards.length;
+
+                if (progress) {
+                    progress.textContent = unlocked + ' of ' + cards.length + ' chapters unlocked';
+                }
+                if (next) {
+                    next.textContent = allUnlocked ? 'All unlocked' : 'Next in ' + formatTime(msUntilNextUnlock(elapsed));
+                }
+                if (track) {
+                    track.style.setProperty('--chapter-gate-progress', ((unlocked / cards.length) * 100) + '%');
+                }
+
+                document.querySelectorAll('.module-progress-button-complete').forEach(function (button) {
+                    if (allUnlocked) {
+                        button.disabled = false;
+                        button.removeAttribute('title');
+                    } else {
+                        button.disabled = true;
+                        button.setAttribute('title', 'Unlock all chapters before marking completed');
+                    }
+                });
+
+                if (allUnlocked && timerId) {
+                    window.clearInterval(timerId);
+                    timerId = null;
+                    persist();
+                }
+            }
+
+            function persist() {
+                try {
+                    window.localStorage.setItem(storageKey, JSON.stringify({
+                        elapsedMs: currentElapsedMs(),
+                        updatedAt: Date.now()
+                    }));
+                } catch (error) {
+                    // Storage can be unavailable in private browsing; the timer still works for the current page.
+                }
+            }
+
+            function savedElapsedMs(key) {
+                try {
+                    const saved = JSON.parse(window.localStorage.getItem(key) || '{}');
+                    const elapsed = Number(saved.elapsedMs || 0);
+                    return Number.isFinite(elapsed) ? elapsed : 0;
+                } catch (error) {
+                    return 0;
+                }
+            }
+
+            function setHidden(element, shouldHide) {
+                if (! element) {
+                    return;
+                }
+
+                if (shouldHide) {
+                    element.setAttribute('hidden', 'hidden');
+                } else {
+                    element.removeAttribute('hidden');
+                }
+            }
+
+            function msUntilNextUnlock(elapsed) {
+                const remainder = elapsed % delayMs;
+                return remainder === 0 ? delayMs : delayMs - remainder;
+            }
+
+            function formatTime(ms) {
+                const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+                const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+                const seconds = String(totalSeconds % 60).padStart(2, '0');
+                return minutes + ':' + seconds;
+            }
+        }
     });
 </script>
 @endpush

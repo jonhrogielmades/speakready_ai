@@ -4206,18 +4206,7 @@ class UserController extends Controller
  session('learning_challenge_position'),
  ])
  ->merge(LearningModule::where('status', 'published')->whereNotNull('career_path')->pluck('career_path'))
- ->merge([
- 'Call Center Agent',
- 'Customer Service Representative',
- 'Software Developer',
- 'Data Analyst',
- 'Teacher',
- 'Accounting Staff',
- 'Administrative Assistant',
- 'Sales Associate',
- 'Nurse',
- 'Engineer',
- ])
+ ->merge(collect(config('speakready_scope.job_positions', []))->flatten())
  ->map(fn ($position): string => $challengePositions->clean(is_scalar($position)? (string) $position: ''))
  ->filter()
  ->reject(fn (string $position): bool => $challengePositions->isGeneralPosition($position) || $this->isBroadModulePositionOption($position))
@@ -4259,9 +4248,12 @@ class UserController extends Controller
  ['nurse', 'nursing', 'healthcare', 'caregiver', 'medical'],
  ['sales', 'marketing', 'account executive', 'business development'],
  ['accounting', 'bookkeeper', 'finance', 'cashier'],
- ['administrative', 'admin assistant', 'office staff', 'secretary'],
+ ['administrative', 'admin assistant', 'office staff', 'secretary', 'lgu', 'local government'],
  ['data analyst', 'analytics', 'data', 'reporting'],
  ['engineer', 'engineering', 'technician', 'technical'],
+ ['agriculture', 'agricultural', 'fisheries', 'fishery', 'technician'],
+ ['tourism', 'hospitality', 'hotel', 'front desk', 'guest service'],
+ ['civil engineer', 'engineering', 'construction', 'infrastructure'],
  ];
 
  foreach ($aliasGroups as $group) {

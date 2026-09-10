@@ -34,10 +34,10 @@
  @if($sessionRecord && $questions->count() > 0)
 
  <!-- Get Ready Overlay -->
- <div id="get-ready-overlay">
- <h2 style="font-weight:800;text-transform:uppercase;margin-bottom:10px;color:var(--tx)">Level {{ $gameLevel->level_number }}</h2>
- <h1 id="countdown-text">3</h1>
- <p style="font-weight:600;color:var(--tx3);margin-top:20px;">Prepare your mic...</p>
+ <div id="get-ready-overlay" role="status" aria-live="assertive" aria-atomic="true">
+ <h2>Level {{ $gameLevel->level_number }}</h2>
+ <h1 id="countdown-text" style="color:#ffffff;-webkit-text-fill-color:#ffffff;background:none;">3</h1>
+ <p>Prepare your mic...</p>
  </div>
 
  <!-- HUD Banner -->
@@ -109,17 +109,11 @@
  </div>
  </div>
  <div class="question-caption-overlay ai-question-overlay" aria-live="polite" aria-atomic="true">
- <div id="questionCaptionText" class="question-caption-line custom-scrollbar">Loading your first question...</div>
+ <div id="questionCaptionText" class="question-caption-line custom-scrollbar" style="color:#ffffff;-webkit-text-fill-color:#ffffff;text-shadow:0 2px 6px rgba(0,0,0,0.92),0 0 10px rgba(0,0,0,0.65);">Loading your first question...</div>
  </div>
  </div>
 
- <div class="ai-question-card animate-fade-up delay-150">
- <div class="d-flex justify-content-center align-items-end gap-3 text-center">
- <div class="w-100">
- <div id="aiQuestionText">Loading your first question...</div>
- </div>
- </div>
- </div>
+ <div id="aiQuestionText" class="visually-hidden" aria-hidden="true">Loading your first question...</div>
 
  <!-- Unified challenge controls -->
  <div class="session-nav-row animate-fade-up delay-150" id="gameSessionControls">
@@ -145,29 +139,24 @@
  </div>
  
  <form id="answerForm">
+ <textarea id="answerTextarea" class="oinp mb-2" style="min-height:200px;font-size:.95rem" placeholder="{{ $isVoiceOnlyMode? 'Record your answer with voice. The transcript will appear here when available...': 'Type your answer here, or use voice to auto-transcribe...' }}" @if($isVoiceOnlyMode) readonly @endif></textarea>
+
  <div id="voiceControls" style="display:none;margin-bottom:20px;background:rgba(59,130,246,.05);padding:15px;border-radius:12px;border:1px solid rgba(59,130,246,.2)">
  <div class="d-flex align-items-center justify-content-between mb-2">
  <div style="font-weight:600;font-size:.9rem;color:#60a5fa"><i class="fa-solid fa-waveform me-2"></i>Voice Recording</div>
- <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:none;">00:00</span>
+ <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:inline-flex;">00:00</span>
  </div>
  
- @if($sessionRecord->game_level_id)
- <div class="d-flex justify-content-center py-3">
- <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="width:120px; height:120px; border-radius:50%; font-weight:800; border:4px solid #b91c1c; box-shadow: 0 10px 20px rgba(239,68,68,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; user-select:none; touch-action:manipulation;">
- <i class="fa-solid fa-microphone fa-2x mb-2"></i>
- HOLD
+ <div class="voice-recording-actions d-flex justify-content-center gap-2 flex-wrap py-3">
+ <button type="button" id="micPauseBtn" class="btn btn-warning voice-recording-action" onclick="toggleRecordingPause()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;font-weight:800;" aria-label="Start recording" title="Start recording">
+ <i class="fa-solid fa-microphone me-1"></i><span>Start</span>
+ </button>
+ <button type="button" id="micStopBtn" class="btn btn-danger voice-recording-action voice-control-disabled" onclick="stopRecording()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;font-weight:800;" aria-label="Stop recording" title="Stop recording" disabled>
+ <i class="fa-solid fa-stop me-1"></i><span>Stop</span>
  </button>
  </div>
- @else
- <div class="d-flex gap-2">
- <button type="button" id="micStartBtn" class="btn btn-primary" onclick="startRecording()"><i class="fa-solid fa-microphone me-2"></i>Start</button>
- <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="pauseRecording()" style="display:none;"><i class="fa-solid fa-pause me-2"></i>Pause</button>
- <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:none;"><i class="fa-solid fa-stop me-2"></i>Stop</button>
+ <span id="transcriptionStatus" class="transcription-status d-block text-center" style="min-height:18px;font-size:.78rem;color:var(--tx3);" aria-live="polite" aria-atomic="true"></span>
  </div>
- @endif
- </div>
-
- <textarea id="answerTextarea" class="oinp mb-2" style="min-height:200px;font-size:.95rem" placeholder="{{ $isVoiceOnlyMode? 'Record your answer with voice. The transcript will appear here when available...': 'Type your answer here, or use voice to auto-transcribe...' }}" @if($isVoiceOnlyMode) readonly @endif></textarea>
  
  <div class="answer-meta-row response-count-bar d-flex justify-content-between align-items-center mb-4">
  <div style="font-size:.8rem;color:var(--tx3)">
@@ -261,6 +250,7 @@
  let timerSeconds = 0;
  let timerInterval;
  let isFinishingChallenge = false;
+ let challengeSessionStarted = false;
  
  // Answers state
  let answersData = @json($initialAnswersData);
@@ -270,6 +260,7 @@
  let recognitionActive = false;
  let shouldAutoRestartRecognition = false;
  let isRecording = false;
+ let isRecordingPaused = false;
  let isStartingRecording = false;
  let stopRequestedWhileStarting = false;
  let recTimerSeconds = 0;
@@ -277,8 +268,8 @@
  let mediaRecorder = null;
  let mediaRecorderStream = null;
 let mediaRecorderChunks = [];
-let mediaRecorderStartedAt = 0;
 let voiceRecordingStopPromise = null;
+let voiceTranscriptionPromise = null;
 window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
 let gameCameraMovementBaseline = null;
 let preRecordingText = '';
@@ -469,6 +460,162 @@ let committedSpeechTranscript = '';
  if (clean) merged = appendWithoutOverlap(merged, clean);
  });
  return collapseRepeatedSpeech(merged);
+ }
+
+ function mergeFullVoiceTranscriptWithAnswer(existingText, previousSpeechTranscript, fullTranscript) {
+ const existing = cleanTranscriptText(existingText);
+ const previousSpeech = cleanTranscriptText(previousSpeechTranscript);
+ const transcript = cleanTranscriptText(fullTranscript);
+ if (!transcript) return existing;
+ if (!existing) return transcript;
+
+ if (previousSpeech && existing.includes(previousSpeech)) {
+ return collapseRepeatedSpeech(cleanTranscriptText(existing.replace(previousSpeech, transcript)));
+ }
+
+ const existingNorm = normalizeTranscriptForMatch(existing);
+ const previousNorm = normalizeTranscriptForMatch(previousSpeech);
+ const transcriptNorm = normalizeTranscriptForMatch(transcript);
+
+ if (!transcriptNorm) return existing;
+ if (existingNorm === previousNorm || existingNorm === transcriptNorm || transcriptNorm.includes(existingNorm)) {
+ return transcript;
+ }
+ if (existingNorm.includes(transcriptNorm)) {
+ return existing;
+ }
+
+ return mergeTranscriptParts(existing, transcript);
+ }
+
+ function setTranscriptionStatus(message, color = '') {
+ const status = document.getElementById('transcriptionStatus');
+ if (!status) return;
+ status.textContent = message || '';
+ status.style.color = color || 'var(--tx3)';
+ }
+
+ function gameTranscriptionErrorMessage(error) {
+ if (error?.errorCode === 'speech_transcription_rate_limited' || error?.status === 429) {
+ const waitSeconds = Number(error?.retryAfterSeconds || 0);
+ return waitSeconds > 0? `AI transcription is rate limited. Try again in ${Math.ceil(waitSeconds)}s.`: 'AI transcription is rate limited. Try again in a moment.';
+ }
+ if (error?.errorCode === 'speech_transcription_unavailable' || error?.status === 503) {
+ return 'Automatic transcription is unavailable right now.';
+ }
+ return error?.message || 'Automatic transcription failed. Please try again.';
+ }
+
+ async function requestGameVoiceTranscript(recording, questionIndex, previousTranscript = '') {
+ const formData = new FormData();
+ formData.append('_token', '{{ csrf_token() }}');
+ formData.append('game_session_id', gameSessionId);
+ formData.append('question_index', questionIndex);
+ formData.append('previous_transcript', cleanTranscriptText(previousTranscript).slice(-3000));
+ formData.append('audio', recording.blob, recording.filename || voiceFileName(questionIndex, recording.mime_type));
+
+ const controller = new AbortController();
+ const timeout = setTimeout(() => controller.abort(), 60000);
+ try {
+ const response = await fetch('{{ route("user.game.transcribe") }}', {
+ method: 'POST',
+ body: formData,
+ headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+ signal: controller.signal
+ });
+ let payload = {};
+ try {
+ payload = await response.json();
+ } catch (parseError) {
+ payload = {};
+ }
+
+ if (!response.ok) {
+ const error = new Error(payload.message || payload.error || 'Automatic transcription failed.');
+ error.status = response.status;
+ error.errorCode = payload.error_code || '';
+ error.retryAfterSeconds = Number(payload.retry_after_seconds || response.headers.get('Retry-After') || 0) || null;
+ throw error;
+ }
+
+ return payload;
+ } catch (error) {
+ if (error?.name === 'AbortError') {
+ throw new Error('Automatic transcription timed out. Try again with a shorter answer.');
+ }
+ throw error;
+ } finally {
+ clearTimeout(timeout);
+ }
+ }
+
+ function applyGameVoiceTranscript(questionIndex, transcript, data = {}, recording = null) {
+ const cleanTranscript = cleanTranscriptText(transcript);
+ if (!cleanTranscript ||!answersData[questionIndex]) return '';
+
+ const textarea = questionIndex === currentQIdx? document.getElementById('answerTextarea'): null;
+ const existingText = textarea? String(textarea.value || ''): String(answersData[questionIndex].text || '');
+ const previousSpeech = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
+ const mergedAnswerText = mergeFullVoiceTranscriptWithAnswer(existingText, previousSpeech, cleanTranscript);
+ const wordCount = cleanTranscript.split(/\s+/).filter(word => word.length > 0).length;
+ const duration = Math.max(
+ Number(answersData[questionIndex].voice_duration || 0),
+ Number(recording?.duration || 0)
+ );
+
+ answersData[questionIndex].text = mergedAnswerText;
+ answersData[questionIndex].voice_duration = Math.max(0, Math.round(duration));
+ if (answersData[questionIndex].voice_duration > 0) {
+ answersData[questionIndex].wpm = Math.round((wordCount / Math.max(1, answersData[questionIndex].voice_duration)) * 60);
+ }
+
+ if (recording) {
+ recording.transcript = cleanTranscript;
+ recording.transcription_status = data.transcription_status || 'transcribed';
+ recording.transcription_source = data.transcription_source || 'ai';
+ }
+
+ if (questionIndex === currentQIdx) {
+ if (textarea) textarea.value = mergedAnswerText;
+ committedSpeechTranscript = cleanTranscript;
+ liveSpeechInterim = '';
+ resetSpeechRecognitionBufferFromTextarea();
+ setElementText('vaDuration', answersData[questionIndex].voice_duration + 's');
+ setElementText('vaWpm', answersData[questionIndex].wpm);
+ triggerAnalysis();
+ }
+
+ return cleanTranscript;
+ }
+
+ async function transcribeStoppedVoiceRecording(recording, questionIndex = currentQIdx) {
+ if (!recording?.blob || voiceTranscriptionPromise) {
+ return voiceTranscriptionPromise || '';
+ }
+
+ voiceTranscriptionPromise = (async () => {
+ if (recording.blob.size > (25 * 1024 * 1024)) {
+ setTranscriptionStatus('Recording is too large to transcribe automatically.', '#fbbf24');
+ return '';
+ }
+
+ setTranscriptionStatus('Transcribing voice answer...', '#fbbf24');
+ try {
+ const previousTranscript = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
+ const data = await requestGameVoiceTranscript(recording, questionIndex, previousTranscript);
+ const transcript = applyGameVoiceTranscript(questionIndex, data.transcript || '', data, recording);
+ setTranscriptionStatus(transcript? 'Transcript added to answer.': 'No speech was detected.', transcript? '#22c55e': '#fbbf24');
+ return transcript;
+ } catch (error) {
+ console.warn('Challenge voice transcription failed:', error);
+ setTranscriptionStatus(gameTranscriptionErrorMessage(error), '#fbbf24');
+ return '';
+ } finally {
+ voiceTranscriptionPromise = null;
+ }
+ })();
+
+ return voiceTranscriptionPromise;
  }
 
  function bestSpeechAlternative(result) {
@@ -745,7 +892,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  if (token!== questionSpeechToken) return;
  clearTimeout(autoStartAfterQuestionTimer);
  if (!isVoiceTranscriptionMode()) return;
- if (isVoiceOnlySession && document.getElementById('holdToTalkBtn')) return;
+ if (isVoiceOnlySession || isRecordingPaused) return;
 
  autoStartAfterQuestionTimer = setTimeout(() => {
  if (token!== questionSpeechToken || isRecording) return;
@@ -769,7 +916,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  questionSpeechToken++;
  const token = questionSpeechToken;
 
- if (isRecording) {
+ if (isRecording || isRecordingPaused) {
  stopRecording();
  }
 
@@ -818,6 +965,8 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
 
  function startChallengeSession() {
+ if (challengeSessionStarted) return false;
+ challengeSessionStarted = true;
  const workspaceWrapper = document.getElementById('workspaceWrapper');
  if (workspaceWrapper) workspaceWrapper.style.display = 'block';
  enterGameMatchFullscreen({ auto: true });
@@ -840,20 +989,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  if(timerSeconds % 30 === 0) autoSaveState(); // auto save every 30s
  }, 1000);
 
- // Hold-to-Talk Gamified Logic
- const holdBtn = document.getElementById('holdToTalkBtn');
- if (holdBtn) {
- const startHold = (e) => { e.preventDefault(); holdBtn.style.transform = 'scale(0.95)'; holdBtn.style.background = '#991b1b'; startRecording(); };
- const endHold = (e) => { e.preventDefault(); holdBtn.style.transform = 'scale(1)'; holdBtn.style.background = ''; stopRecording(); };
- 
- holdBtn.addEventListener('mousedown', startHold);
- holdBtn.addEventListener('mouseup', endHold);
- holdBtn.addEventListener('mouseleave', (e) => { if(isRecording) endHold(e); });
- 
- holdBtn.addEventListener('touchstart', startHold, {passive: false});
- holdBtn.addEventListener('touchend', endHold, {passive: false});
- holdBtn.addEventListener('touchcancel', (e) => { if(isRecording) endHold(e); });
- }
+ setRecordingControlButtons('idle');
 
  loadQuestion(currentQIdx);
  
@@ -861,6 +997,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  const sessionNotes = document.getElementById('sessionNotes');
  if (answerTextarea) answerTextarea.addEventListener('input', triggerAnalysis);
  if (sessionNotes) sessionNotes.addEventListener('change', autoSaveState);
+ return true;
  }
 
  function loadQuestion(idx) {
@@ -876,6 +1013,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  // Restore answer state if navigated back
  document.getElementById('answerTextarea').value = answersData[idx].text;
  resetSpeechRecognitionBufferFromTextarea();
+ setTranscriptionStatus('');
  
  speakQuestion(questionText);
  
@@ -905,7 +1043,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
 
  function prevQuestion() {
- if(isRecording || isStartingRecording) stopRecording();
+ if(isRecording || isRecordingPaused || isStartingRecording) stopRecording();
  if (currentQIdx > 0) {
  loadQuestion(currentQIdx - 1);
  }
@@ -1042,6 +1180,23 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  return false;
  }
 
+ if (mediaRecorder && mediaRecorder.state === 'paused') {
+ try {
+ mediaRecorder.resume();
+ return true;
+ } catch (error) {
+ console.error('Voice recording failed to resume:', error);
+ stopVoiceRecordingTracks();
+ mediaRecorder = null;
+ mediaRecorderChunks = [];
+ return false;
+ }
+ }
+
+ if (mediaRecorder && mediaRecorder.state === 'recording') {
+ return true;
+ }
+
  try {
  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
  const recorderMimeType = preferredRecordingMimeType();
@@ -1050,7 +1205,6 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  mediaRecorderChunks = [];
  mediaRecorderStream = stream;
- mediaRecorderStartedAt = Date.now();
  mediaRecorder = new MediaRecorder(stream, recorderOptions);
  voiceRecordingStopPromise = null;
 
@@ -1062,10 +1216,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  mediaRecorder.onstop = function() {
  const mimeType = normalizeRecordingMimeType(mediaRecorder && mediaRecorder.mimeType? mediaRecorder.mimeType: recorderMimeType);
- const duration = Math.max(
- answersData[recordingQuestionIndex].voice_duration || 0,
- Math.round((Date.now() - mediaRecorderStartedAt) / 1000)
- );
+ const duration = answersData[recordingQuestionIndex].voice_duration || 0;
 
  if (mediaRecorderChunks.length > 0) {
  const blob = new Blob(mediaRecorderChunks, { type: mimeType });
@@ -1100,15 +1251,16 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  function stopVoiceAudioRecording() {
  if (!mediaRecorder) {
  stopVoiceRecordingTracks();
- return voiceRecordingStopPromise || Promise.resolve();
+ return voiceRecordingStopPromise || Promise.resolve(null);
  }
 
  if (mediaRecorder.state === 'inactive') {
  stopVoiceRecordingTracks();
- return voiceRecordingStopPromise || Promise.resolve();
+ return voiceRecordingStopPromise || Promise.resolve(null);
  }
 
  const recorder = mediaRecorder;
+ const stoppedQuestionIndex = currentQIdx;
  let fallbackTimer = null;
  let resolveStopPromise = function() {};
  voiceRecordingStopPromise = new Promise(resolve => {
@@ -1118,7 +1270,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  stopVoiceRecordingTracks();
  mediaRecorder = null;
  mediaRecorderChunks = [];
- resolve();
+ resolve(null);
  }, 5000);
 
  recorder.onstop = function(event) {
@@ -1126,13 +1278,17 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  if (typeof previousOnStop === 'function') {
  previousOnStop.call(recorder, event);
  }
- resolve();
+ resolve(answersData[stoppedQuestionIndex]?.voice_recording || null);
  };
  });
 
  try {
  if (typeof recorder.requestData === 'function') {
+ try {
  recorder.requestData();
+ } catch (error) {
+ console.warn('Voice recording final data flush failed:', error);
+ }
  }
  recorder.stop();
  } catch (error) {
@@ -1141,7 +1297,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  mediaRecorder = null;
  mediaRecorderChunks = [];
  if (fallbackTimer) clearTimeout(fallbackTimer);
- resolveStopPromise();
+ resolveStopPromise(null);
  }
 
  return voiceRecordingStopPromise;
@@ -1152,6 +1308,35 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  return Boolean(data.has_voice_recording || (data.voice_recording && data.voice_recording.blob));
  }
 
+ function setRecordingControlButtons(state) {
+ const pauseBtn = document.getElementById('micPauseBtn');
+ const stopBtn = document.getElementById('micStopBtn');
+ const startBtn = document.getElementById('micStartBtn');
+ const recordingTimer = document.getElementById('recordingTimer');
+ const isIdle = state === 'idle';
+ const isPaused = state === 'paused';
+
+ if (startBtn) startBtn.style.display = 'none';
+
+ if (pauseBtn) {
+ pauseBtn.style.display = 'inline-flex';
+ pauseBtn.innerHTML = isIdle? '<i class="fa-solid fa-microphone me-1"></i><span>Start</span>': (isPaused? '<i class="fa-solid fa-play me-1"></i><span>Resume</span>': '<i class="fa-solid fa-pause me-1"></i><span>Pause</span>');
+ const pauseLabel = isIdle? 'Start recording': (isPaused? 'Resume recording': 'Pause recording');
+ pauseBtn.setAttribute('aria-label', pauseLabel);
+ pauseBtn.setAttribute('title', pauseLabel);
+ }
+
+ if (stopBtn) {
+ stopBtn.style.display = 'inline-flex';
+ stopBtn.disabled = isIdle;
+ stopBtn.classList.toggle('voice-control-disabled', isIdle);
+ stopBtn.setAttribute('aria-label', 'Stop recording');
+ stopBtn.setAttribute('title', 'Stop recording');
+ }
+
+ if (recordingTimer) recordingTimer.style.display = 'inline-flex';
+ }
+
  async function startRecording(options = {}) {
  const silent = options && options.silent === true;
  if(!recognition &&!isVoiceOnlySession) {
@@ -1160,13 +1345,19 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
  if (isRecording || isStartingRecording) return;
 
+ if (!isRecordingPaused) {
  resetSpeechRecognitionBufferFromTextarea();
  lastSpeechEnd = 0;
+ }
  isStartingRecording = true;
  stopRequestedWhileStarting = false;
  const voiceRecorderStarted = await startVoiceAudioRecording(silent);
  isStartingRecording = false;
- if (!voiceRecorderStarted) return;
+ if (!voiceRecorderStarted) {
+ isRecordingPaused = false;
+ setRecordingControlButtons('idle');
+ return;
+ }
  if (stopRequestedWhileStarting) {
  stopRequestedWhileStarting = false;
  stopRecording();
@@ -1175,15 +1366,10 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  shouldAutoRestartRecognition = Boolean(recognition);
  isRecording = true;
+ isRecordingPaused = false;
  startSpeechRecognitionEngine();
- const micStartBtn = document.getElementById('micStartBtn');
- const micPauseBtn = document.getElementById('micPauseBtn');
- const micStopBtn = document.getElementById('micStopBtn');
- const recordingTimer = document.getElementById('recordingTimer');
- if (micStartBtn) micStartBtn.style.display = 'none';
- if (micPauseBtn) micPauseBtn.style.display = 'block';
- if (micStopBtn) micStopBtn.style.display = 'block';
- if (recordingTimer) recordingTimer.style.display = 'block';
+ setRecordingControlButtons('recording');
+ setTranscriptionStatus('Recording');
  clearInterval(recTimerInterval);
  
  recTimerInterval = setInterval(() => {
@@ -1212,7 +1398,35 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  if (scannerBox) scannerBox.style.display = 'block';
  }
 
+ function pauseVoiceAudioRecording() {
+ if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+ try {
+ if (typeof mediaRecorder.requestData === 'function') {
+ mediaRecorder.requestData();
+ }
+ mediaRecorder.pause();
+ } catch (error) {
+ console.error('Voice recording failed to pause:', error);
+ }
+ }
+
+ function toggleRecordingPause() {
+ if (!isVoiceTranscriptionMode()) return;
+
+ if (isRecording) {
+ pauseRecording();
+ return;
+ }
+
+ startRecording({ silent: false });
+ }
+
  function pauseRecording() {
+ if (!isRecording &&!isStartingRecording) {
+ setRecordingControlButtons(isRecordingPaused? 'paused': 'idle');
+ return false;
+ }
+
  finalizeInterimTranscript();
  shouldAutoRestartRecognition = false;
  if(recognition) {
@@ -1223,36 +1437,53 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
  }
  isRecording = false;
+ isRecordingPaused = true;
  clearInterval(recTimerInterval);
- const micStartBtn = document.getElementById('micStartBtn');
- const micPauseBtn = document.getElementById('micPauseBtn');
+ pauseVoiceAudioRecording();
  const scannerBox = document.getElementById('faceScannerBox');
- if (micStartBtn) {
- micStartBtn.style.display = 'block';
- micStartBtn.innerText = 'Resume';
- }
- if (micPauseBtn) micPauseBtn.style.display = 'none';
+ setRecordingControlButtons('paused');
+ setTranscriptionStatus('Paused');
  if (scannerBox) scannerBox.style.display = 'none';
+ return true;
  }
 
- function stopRecording() {
+ async function stopRecording() {
  if (isStartingRecording &&!isRecording) {
  stopRequestedWhileStarting = true;
- return voiceRecordingStopPromise || Promise.resolve();
+ return voiceRecordingStopPromise || Promise.resolve(null);
  }
 
- pauseRecording();
+ const stoppedQuestionIndex = currentQIdx;
+ finalizeInterimTranscript();
+ shouldAutoRestartRecognition = false;
+ if(recognition) {
+ try {
+ recognition.stop();
+ } catch (error) {
+ console.error('Speech recognition failed to stop:', error);
+ }
+ }
+ isRecording = false;
+ isRecordingPaused = false;
+ clearInterval(recTimerInterval);
+ if (answersData[currentQIdx]) {
+ answersData[currentQIdx].voice_duration = Math.max(answersData[currentQIdx].voice_duration || 0, recTimerSeconds);
+ }
  clearTimeout(autoStartAfterQuestionTimer);
  const stopPromise = stopVoiceAudioRecording();
- const micStartBtn = document.getElementById('micStartBtn');
- const micStopBtn = document.getElementById('micStopBtn');
  const recordingTimer = document.getElementById('recordingTimer');
- if (micStartBtn) micStartBtn.innerText = 'Start';
- if (micStopBtn) micStopBtn.style.display = 'none';
- if (recordingTimer) recordingTimer.style.display = 'none';
+ setRecordingControlButtons('idle');
+ setTranscriptionStatus('Preparing transcription...', '#fbbf24');
+ if (recordingTimer) recordingTimer.innerText = '00:00';
  recTimerSeconds = 0;
  resetSpeechRecognitionBufferFromTextarea();
- return stopPromise;
+ const recording = await stopPromise;
+ if (recording?.blob) {
+ await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex);
+ } else {
+ setTranscriptionStatus('');
+ }
+ return recording;
  }
 
  async function saveCurrentAnswer(isSkipped = false) {
@@ -1339,7 +1570,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  function submitAnswer() {
  if (isFinishingChallenge) return;
- const stopPromise = (isRecording || isStartingRecording)? stopRecording(): Promise.resolve();
+ const stopPromise = (isRecording || isRecordingPaused || isStartingRecording)? stopRecording(): Promise.resolve();
  const isFinalQuestion = currentQIdx >= questions.length - 1;
  document.querySelectorAll('.next-btn-class,.skip-btn-class').forEach(el => el.disabled = true);
  if (isFinalQuestion) {
@@ -1362,7 +1593,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  function skipQuestion() {
  if (isFinishingChallenge) return;
- const stopPromise = (isRecording || isStartingRecording)? stopRecording(): Promise.resolve();
+ const stopPromise = (isRecording || isRecordingPaused || isStartingRecording)? stopRecording(): Promise.resolve();
  const isFinalQuestion = currentQIdx >= questions.length - 1;
  document.querySelectorAll('.next-btn-class,.skip-btn-class').forEach(el => el.disabled = true);
  if (isFinalQuestion) {
@@ -1384,7 +1615,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
 
  function prevQuestion() {
- if(isRecording || isStartingRecording) stopRecording();
+ if(isRecording || isRecordingPaused || isStartingRecording) stopRecording();
  if (currentQIdx > 0) {
  loadQuestion(currentQIdx - 1);
  }
@@ -1532,22 +1763,21 @@ const stepsDesktop = [
  });
  }
 
- if (typeof window.enterGameMatchFullscreen === 'function') {
- window.enterGameMatchFullscreen({ auto: true });
- }
- 
  // Expose startOnboardingTour to be called after the challenge starts
  const originalStartChallenge = window.startChallengeSession;
  window.startChallengeSession = function() {
+ let started = true;
  if (typeof originalStartChallenge === 'function') {
- originalStartChallenge.apply(this, arguments);
+ started = originalStartChallenge.apply(this, arguments);
  }
+ if (started === false) return false;
 
  if (onboardingTour &&!onboardingTour.isCompleted()) {
  setTimeout(() => {
  onboardingTour.start();
  }, 1000);
  }
+ return started;
  };
 
  // Learning Game countdown logic
@@ -1559,24 +1789,44 @@ const stepsDesktop = [
  return;
  }
  
+ const setCountdownState = (text, isGo = false) => {
+ countdownText.innerText = text;
+ countdownText.classList.toggle('is-go', isGo);
+ const textColor = isGo? '#34d399': '#ffffff';
+ countdownText.style.setProperty('color', textColor, 'important');
+ countdownText.style.setProperty('-webkit-text-fill-color', textColor, 'important');
+ countdownText.style.setProperty('background', 'none', 'important');
+ countdownText.style.setProperty('-webkit-background-clip', 'border-box', 'important');
+ countdownText.style.setProperty('background-clip', 'border-box', 'important');
+ if (isGo) {
+ countdownText.style.setProperty('animation', 'none', 'important');
+ countdownText.style.setProperty('transform', 'scale(1.08)', 'important');
+ } else {
+ countdownText.style.removeProperty('animation');
+ countdownText.style.removeProperty('transform');
+ }
+ };
+
+ setCountdownState('3');
+
+ const finishCountdown = () => {
+ overlay.classList.add('is-exiting');
+ window.setTimeout(() => {
+ overlay.hidden = true;
+ overlay.style.display = 'none';
+ window.startChallengeSession();
+ }, 360);
+ };
+
  const countdownInterval = setInterval(() => {
  countdownValue--;
  if (countdownValue > 0) {
- countdownText.innerText = countdownValue;
+ setCountdownState(String(countdownValue));
  } else if (countdownValue === 0) {
- countdownText.innerText = "GO!";
- countdownText.style.color = "#34d399";
- countdownText.style.animation = "none";
- countdownText.style.transform = "scale(1.5)";
- countdownText.style.transition = "0.2s transform";
+ setCountdownState('GO!', true);
  } else {
  clearInterval(countdownInterval);
- overlay.style.opacity = '0';
- overlay.style.transition = 'opacity 0.5s';
- setTimeout(() => {
- overlay.style.display = 'none';
- window.startChallengeSession();
- }, 500);
+ finishCountdown();
  }
  }, 1000);
  });

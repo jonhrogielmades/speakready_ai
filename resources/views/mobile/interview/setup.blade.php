@@ -1,13 +1,40 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=10') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=14') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=1') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
 @php
  $sourceDatasets = $sourceDatasets?? [];
+ $targetScopes = $targetScopes?? config('speakready_scope', []);
+ $jobPositionOptionGroups = collect($targetScopes['job_positions']?? [])
+ ->map(fn ($positions) => collect(is_array($positions)? $positions: [$positions])
+ ->map(fn ($position) => trim((string) $position))
+ ->filter()
+ ->values()
+ ->all())
+ ->filter(fn (array $positions) => $positions!== []);
+ $jobPositionOptions = collect($targetScopes['job_positions']?? [])
+ ->flatMap(fn ($positions) => is_array($positions)? $positions: [$positions])
+ ->map(fn ($position) => trim((string) $position))
+ ->filter()
+ ->unique(fn (string $position) => strtolower($position))
+ ->values();
+ $schoolProgramOptionGroups = collect($targetScopes['school_programs']?? [])
+ ->map(fn ($programs) => collect(is_array($programs)? $programs: [$programs])
+ ->map(fn ($program) => trim((string) $program))
+ ->filter()
+ ->values()
+ ->all())
+ ->filter(fn (array $programs) => $programs!== []);
+ $schoolProgramOptions = collect($targetScopes['school_programs']?? [])
+ ->flatMap(fn ($programs) => is_array($programs)? $programs: [$programs])
+ ->map(fn ($program) => trim((string) $program))
+ ->filter()
+ ->unique(fn (string $program) => strtolower($program))
+ ->values();
  $interviewCategories = ($categories?? collect())
  ->filter(function ($category): bool {
  $title = strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title))?? ''));
@@ -101,14 +128,14 @@
  'job' => [
  'label' => 'Target Position',
  'summary_label' => 'Position:',
- 'placeholder' => 'e.g. Call Center Agent, Teacher, Software Developer',
+ 'placeholder' => 'Choose a target position',
  'required_message' => 'Enter the target position before continuing.',
- 'calibration_title' => 'role-calibrated practice',
+ 'calibration_title' => 'Southern Leyte role-calibrated practice',
  ],
  'school' => [
  'label' => 'Target Program',
  'summary_label' => 'Program:',
- 'placeholder' => 'e.g. BS Information Technology, Computer Science, Nursing',
+ 'placeholder' => 'Choose a target program',
  'required_message' => 'Enter the target program before continuing.',
  'calibration_title' => 'program-calibrated practice',
  ],
@@ -237,12 +264,33 @@
  </div>
 
  <div class="setup-card-field">
- <label class="setup-card-label" for="valPosition">
+ <label class="setup-card-label" for="targetPositionDropdownButton">
  <span class="setup-card-label-icon" aria-hidden="true"><i class="fa-solid fa-bullseye-arrow"></i></span>
  <span id="targetPositionLabelText">{{ $targetFieldCopy['label'] }}</span>
  </label>
- <div class="setup-search-wrap">
- <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="{{ $targetFieldCopy['placeholder'] }}" value="{{ $targetPositionDefault }}" autocomplete="off" required aria-describedby="targetPositionError">
+ <input type="hidden" class="setup-input setup-target-hidden-input" name="target_position" id="valPosition" value="{{ $targetPositionDefault }}" required data-selected-target="{{ $targetPositionDefault }}" data-target-kind="{{ $targetFieldMode }}">
+ <div class="setup-target-dropdown" data-target-dropdown>
+ <button type="button" class="oinp setup-target-trigger" id="targetPositionDropdownButton" aria-haspopup="true" aria-expanded="false" aria-controls="targetPositionDropdownMenu" aria-describedby="targetPositionError">
+ <span class="setup-target-trigger-text {{ $targetPositionDefault === ''? 'setup-target-placeholder': '' }}" id="targetPositionDropdownLabel">{{ $targetPositionDefault !== ''? $targetPositionDefault: $targetFieldCopy['placeholder'] }}</span>
+ <i class="fa-solid fa-chevron-down setup-target-trigger-icon" aria-hidden="true"></i>
+ </button>
+ <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="list" aria-labelledby="targetPositionLabelText" hidden>
+ @foreach(['job' => $jobPositionOptionGroups, 'school' => $schoolProgramOptionGroups] as $targetKind => $targetGroups)
+ @foreach($targetGroups as $groupLabel => $targetChoices)
+ <div class="setup-target-choice-group" data-target-dropdown-group-kind="{{ $targetKind }}" {{ $targetFieldMode === $targetKind? '': 'hidden' }}>
+ <div class="setup-target-choice-group-title">{{ $groupLabel }}</div>
+ <div class="setup-target-choice-list">
+ @foreach($targetChoices as $targetChoice)
+ <button type="button" class="setup-target-choice" data-target-dropdown-choice-kind="{{ $targetKind }}" data-target-dropdown-choice-value="{{ $targetChoice }}" aria-pressed="{{ $targetFieldMode === $targetKind && strcasecmp($targetPositionDefault, $targetChoice) === 0? 'true': 'false' }}">
+ <span>{{ $targetChoice }}</span>
+ <i class="fa-solid fa-check" aria-hidden="true"></i>
+ </button>
+ @endforeach
+ </div>
+ </div>
+ @endforeach
+ @endforeach
+ </div>
  </div>
  <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>{{ $targetFieldCopy['required_message'] }}</div>
  </div>
@@ -566,11 +614,11 @@
  const setupScenarioMismatchMessages = {
  job: {
  title: 'Use a job target',
- message: 'Job Interview accepts job-related target positions only. Enter a job role like Software Developer, Teacher, HR Assistant, or Call Center Agent, or choose School Admission Interviews for school programs like Information Technology.',
+ message: 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative, or choose School Admission Interviews for school programs like BS Information Technology.',
  },
  school: {
  title: 'Use a school target',
- message: 'School Admission accepts school-related target programs only. Enter a school program like BS Information Technology, Computer Science, or Nursing, or choose Job Interviews for job roles like Software Developer.',
+ message: 'School Admission accepts school-related target programs only. Enter a Version 1 program like BS Information Technology, BS Nursing, or BS Agriculture, or choose Job Interviews for Southern Leyte roles like Administrative Assistant / LGU Staff or Software Developer.',
  },
  recommendJob: {
  title: 'Proceed with Job Interview',
@@ -599,25 +647,37 @@
  job: {
  label: 'Target Position',
  summaryLabel: 'Position:',
- placeholder: 'e.g. Call Center Agent, Teacher, Software Developer',
+ placeholder: 'Choose a target position',
  requiredTitle: 'Target position required',
  requiredMessage: 'Enter the target position before continuing.',
- calibrationTitle: 'role-calibrated practice',
+ calibrationTitle: 'Southern Leyte role-calibrated practice',
  },
  school: {
  label: 'Target Program',
  summaryLabel: 'Program:',
- placeholder: 'e.g. BS Information Technology, Computer Science, Nursing',
+ placeholder: 'Choose a target program',
  requiredTitle: 'Target program required',
  requiredMessage: 'Enter the target program before continuing.',
  calibrationTitle: 'program-calibrated practice',
  },
  };
+ const setupTargetChoiceGroups = @json([
+ 'job' => $jobPositionOptionGroups,
+ 'school' => $schoolProgramOptionGroups,
+ ]);
 
  function setSetupFieldInvalid(field, invalid) {
  if (!field) return;
  field.classList.toggle('setup-field-invalid', invalid);
  field.setAttribute('aria-invalid', invalid? 'true': 'false');
+
+ if (field.id === 'valPosition') {
+ const trigger = document.getElementById('targetPositionDropdownButton');
+ if (trigger) {
+ trigger.classList.toggle('setup-field-invalid', invalid);
+ trigger.setAttribute('aria-invalid', invalid? 'true': 'false');
+ }
+ }
  }
 
  function setSetupFieldError(fieldId, visible) {
@@ -649,7 +709,7 @@
  targetPositionAlertVisible = true;
  modalElement.addEventListener('hidden.bs.modal', () => {
  targetPositionAlertVisible = false;
- document.getElementById('valPosition')?.focus();
+ document.getElementById('targetPositionDropdownButton')?.focus();
  }, { once: true });
 
  if (window.bootstrap?.Modal) {
@@ -707,33 +767,33 @@
 
  const jobIndicators = [
  'accountant', 'admin', 'administrator', 'agent', 'aide', 'analyst', 'architect',
- 'associate', 'assistant', 'attendant', 'auditor', 'banker', 'barista', 'bookkeeper',
- 'caregiver', 'carpenter', 'call center', 'cashier', 'chef', 'clerk', 'consultant',
+ 'agricultural', 'agriculture', 'associate', 'assistant', 'attendant', 'auditor', 'banker', 'barista', 'bookkeeper',
+ 'caregiver', 'carpenter', 'call center', 'cashier', 'chef', 'civil engineer', 'clerk', 'consultant',
  'cleaner', 'cleaning', 'coordinator', 'cook', 'crew', 'custodian', 'dentist',
  'data encoder', 'data entry', 'designer',
  'developer', 'director', 'doctor', 'driver', 'editor', 'electrician', 'employee',
- 'engineer', 'executive', 'facilities', 'finance', 'front desk', 'guard', 'housekeeper',
- 'housekeeping', 'hr', 'instructor', 'intern',
+ 'engineer', 'executive', 'facilities', 'finance', 'fisheries', 'fishery', 'front desk', 'guard', 'healthcare worker', 'hospitality', 'housekeeper',
+ 'housekeeping', 'hr', 'instructor', 'intern', 'local government', 'lgu',
  'janitor', 'janitorial', 'janitorial services', 'job', 'lawyer', 'lead', 'manager',
  'marketer', 'marketing', 'maintenance', 'mechanic',
  'medical technologist', 'midwife', 'nurse', 'officer', 'operator', 'paralegal',
  'pharmacist', 'physician', 'pilot', 'plumber', 'principal', 'professor', 'programmer',
  'qa', 'quality assurance', 'receptionist', 'recruiter', 'representative', 'researcher', 'sales',
  'scientist', 'secretary', 'seo', 'server', 'specialist', 'staff', 'supervisor',
- 'support', 'teacher', 'technician', 'therapist', 'trainee', 'tutor', 'veterinarian',
+ 'support', 'teacher', 'technician', 'therapist', 'tourism', 'trainee', 'tutor', 'veterinarian',
  'waiter', 'worker', 'writer',
  ];
  const schoolIndicators = [
- 'abm', 'accountancy', 'admission', 'architecture', 'bachelor', 'bs computer science',
+ 'abm', 'accountancy', 'admission', 'agriculture', 'architecture', 'bachelor', 'bs agriculture', 'bs accountancy accounting information system', 'bs computer science',
  'bs computer engineering', 'bs cybersecurity', 'bs data science', 'bs electronics engineering',
  'bs entrepreneurship', 'bs financial management', 'bs industrial engineering',
- 'bs information systems', 'bs information technology', 'bs marketing management',
+ 'bs fisheries', 'bs information systems', 'bs information technology', 'bs marketing management',
  'bs office administration', 'bs public administration', 'bs social work',
  'bs software engineering', 'bscpe', 'bscs', 'bsis', 'bsit',
  'business administration', 'college', 'computer engineering', 'computer science',
  'course', 'criminology', 'cybersecurity', 'data science', 'degree',
- 'education', 'electrical engineering', 'electronics engineering', 'engineering', 'entrepreneurship', 'freshman',
- 'gas', 'graduate program', 'hospitality management', 'humss', 'ict', 'industrial engineering',
+ 'education', 'electrical engineering', 'electronics engineering', 'engineering', 'entrepreneurship', 'fisheries', 'freshman',
+ 'gas', 'graduate program', 'hospitality management', 'humss', 'ict', 'industrial engineering', 'accounting information system',
  'information systems', 'information technology', 'it', 'law school', 'master',
  'marketing management', 'mechanical engineering', 'medicine', 'nursing', 'program',
  'psychology', 'public administration', 'school',
@@ -742,10 +802,10 @@
  ];
  const schoolProgramOverrideIndicators = [
  'bachelor of elementary education', 'bachelor of secondary education',
- 'bs accountancy', 'bs architecture', 'bs biology', 'bs business administration',
+ 'bs accountancy', 'bs accountancy accounting information system', 'bs agriculture', 'bs architecture', 'bs biology', 'bs business administration',
  'bs civil engineering', 'bs computer engineering', 'bs computer science',
  'bs criminology', 'bs cybersecurity', 'bs data science', 'bs electrical engineering',
- 'bs electronics engineering', 'bs entrepreneurship', 'bs financial management',
+ 'bs electronics engineering', 'bs entrepreneurship', 'bs fisheries', 'bs financial management',
  'bs hospitality management', 'bs industrial engineering', 'bs information systems',
  'bs information technology', 'bs marketing management', 'bs mechanical engineering',
  'bs medical technology', 'bs nursing', 'bs office administration', 'bs pharmacy',
@@ -755,7 +815,7 @@
  'senior high ict strand', 'senior high stem strand',
  ];
  const explicitSchoolProgramIndicators = [
- 'admission', 'bachelor', 'bs computer science', 'bs information systems',
+ 'admission', 'bachelor', 'bs accountancy', 'bs agriculture', 'bs computer science', 'bs fisheries', 'bs information systems',
  'bs information technology', 'bscs', 'bsis', 'bsit', 'course', 'degree', 'freshman',
  'graduate program', 'law school', 'master in', 'master of', 'masters in', 'masters of',
  'senior high', 'strand',
@@ -804,17 +864,80 @@
  return setupTargetFieldCopies[selectedSetupScenarioKind() === 'school'? 'school': 'job'];
  }
 
+ function flattenSetupTargetChoices(choiceGroups) {
+ return Object.values(choiceGroups || {}).flatMap((choices) => Array.isArray(choices)? choices: []);
+ }
+
+ function setSetupTargetDropdownOpen(open) {
+ const dropdown = document.querySelector('[data-target-dropdown]');
+ const trigger = document.getElementById('targetPositionDropdownButton');
+ const menu = document.getElementById('targetPositionDropdownMenu');
+
+ if (!dropdown || !trigger || !menu) return;
+
+ dropdown.classList.toggle('setup-target-dropdown-open', open);
+ trigger.setAttribute('aria-expanded', open? 'true': 'false');
+ menu.hidden = !open;
+
+ if (open) {
+ window.setTimeout(() => menu.scrollIntoView({ block: 'nearest', inline: 'nearest' }), 0);
+ }
+ }
+
+ function visibleSetupTargetChoices() {
+ return Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]')).filter((choice) => !choice.hidden && !choice.closest('[hidden]'));
+ }
+
+ function syncSetupTargetDropdown(positionField, targetKind, targetCopy) {
+ if (!positionField) return;
+ const choiceGroups = setupTargetChoiceGroups[targetKind] || {};
+ const previousKind = positionField.dataset.targetKind || targetKind;
+ const previousValue = previousKind === targetKind? String(positionField.value || positionField.dataset.selectedTarget || '').trim(): '';
+ const availableValues = flattenSetupTargetChoices(choiceGroups);
+
+ positionField.value = previousValue && availableValues.includes(previousValue)? previousValue: '';
+ positionField.dataset.selectedTarget = positionField.value;
+ positionField.dataset.targetKind = targetKind;
+
+ const selectedValue = String(positionField.value || '').trim();
+ const trigger = document.getElementById('targetPositionDropdownButton');
+ const label = document.getElementById('targetPositionDropdownLabel');
+
+ if (trigger) {
+ trigger.title = selectedValue || targetCopy.placeholder;
+ trigger.setAttribute('aria-label', `${targetCopy.label}: ${selectedValue || targetCopy.placeholder}`);
+ }
+
+ if (label) {
+ label.textContent = selectedValue || targetCopy.placeholder;
+ label.classList.toggle('setup-target-placeholder', !selectedValue);
+ }
+
+ document.querySelectorAll('[data-target-dropdown-group-kind]').forEach((group) => {
+ group.hidden = group.dataset.targetDropdownGroupKind !== targetKind;
+ });
+
+ document.querySelectorAll('[data-target-dropdown-choice-value]').forEach((choice) => {
+ const isCurrentKind = choice.dataset.targetDropdownChoiceKind === targetKind;
+ const isSelected = isCurrentKind && choice.dataset.targetDropdownChoiceValue === selectedValue;
+ choice.hidden = !isCurrentKind;
+ choice.classList.toggle('setup-target-choice-selected', isSelected);
+ choice.setAttribute('aria-pressed', isSelected? 'true': 'false');
+ });
+ }
+
  function syncSetupTargetFieldCopy() {
+ const targetKind = selectedSetupScenarioKind() === 'school'? 'school': 'job';
  const targetCopy = currentSetupTargetFieldCopy();
  const labelText = document.getElementById('targetPositionLabelText');
  const summaryLabel = document.getElementById('summaryPositionLabel');
- const positionInput = document.getElementById('valPosition');
+ const positionField = document.getElementById('valPosition');
  const positionError = document.getElementById('targetPositionError');
  const calibrationTitle = document.getElementById('targetCalibrationTitle');
 
  if (labelText) labelText.textContent = targetCopy.label;
  if (summaryLabel) summaryLabel.textContent = targetCopy.summaryLabel;
- if (positionInput) positionInput.placeholder = targetCopy.placeholder;
+ syncSetupTargetDropdown(positionField, targetKind, targetCopy);
  if (positionError) positionError.textContent = targetCopy.requiredMessage;
  if (calibrationTitle) calibrationTitle.textContent = targetCopy.calibrationTitle;
  }
@@ -903,6 +1026,10 @@
 
  window.setTimeout(() => {
  if (item.type === 'field') {
+ if (item.id === 'valPosition') {
+ document.getElementById('targetPositionDropdownButton')?.focus();
+ return;
+ }
  document.getElementById(item.id)?.focus();
  return;
  }
@@ -1052,6 +1179,81 @@
 
  document.querySelectorAll('input[name="question_types[]"]').forEach(el => {
  el.addEventListener('change', updateSummary);
+ });
+
+ const targetPositionDropdown = document.querySelector('[data-target-dropdown]');
+ const targetPositionDropdownButton = document.getElementById('targetPositionDropdownButton');
+
+ function chooseSetupTargetValue(choice) {
+ const targetKind = selectedSetupScenarioKind() === 'school'? 'school': 'job';
+ if (!choice || choice.dataset.targetDropdownChoiceKind !== targetKind) return;
+
+ const positionField = document.getElementById('valPosition');
+ if (!positionField) return;
+
+ positionField.value = choice.dataset.targetDropdownChoiceValue || '';
+ positionField.dataset.selectedTarget = positionField.value;
+ positionField.dataset.targetKind = targetKind;
+ syncSetupTargetDropdown(positionField, targetKind, currentSetupTargetFieldCopy());
+ positionField.dispatchEvent(new Event('change', { bubbles: true }));
+ setSetupTargetDropdownOpen(false);
+ targetPositionDropdownButton?.focus();
+ }
+
+ targetPositionDropdownButton?.addEventListener('click', () => {
+ const willOpen = targetPositionDropdownButton.getAttribute('aria-expanded') !== 'true';
+ syncSetupTargetFieldCopy();
+ setSetupTargetDropdownOpen(willOpen);
+ });
+
+ targetPositionDropdownButton?.addEventListener('keydown', (event) => {
+ if (!['ArrowDown', 'Enter', ' '].includes(event.key)) return;
+ event.preventDefault();
+ syncSetupTargetFieldCopy();
+ setSetupTargetDropdownOpen(true);
+ window.setTimeout(() => visibleSetupTargetChoices()[0]?.focus(), 0);
+ });
+
+ document.querySelectorAll('[data-target-dropdown-choice-value]').forEach((choice) => {
+ choice.addEventListener('click', () => chooseSetupTargetValue(choice));
+ choice.addEventListener('keydown', (event) => {
+ const choices = visibleSetupTargetChoices();
+ const currentIndex = choices.indexOf(choice);
+
+ if (event.key === 'Escape') {
+ event.preventDefault();
+ setSetupTargetDropdownOpen(false);
+ targetPositionDropdownButton?.focus();
+ return;
+ }
+
+ if (event.key === 'Enter' || event.key === ' ') {
+ event.preventDefault();
+ chooseSetupTargetValue(choice);
+ return;
+ }
+
+ if (event.key === 'ArrowDown') {
+ event.preventDefault();
+ choices[(currentIndex + 1) % choices.length]?.focus();
+ return;
+ }
+
+ if (event.key === 'ArrowUp') {
+ event.preventDefault();
+ choices[(currentIndex - 1 + choices.length) % choices.length]?.focus();
+ }
+ });
+ });
+
+ document.addEventListener('click', (event) => {
+ if (!targetPositionDropdown || targetPositionDropdown.contains(event.target)) return;
+ setSetupTargetDropdownOpen(false);
+ });
+
+ document.addEventListener('keydown', (event) => {
+ if (event.key !== 'Escape') return;
+ setSetupTargetDropdownOpen(false);
  });
 
  const setupStepState = {

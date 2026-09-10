@@ -3586,7 +3586,7 @@ class InterviewController extends Controller
  return 'This looks like a school-related target program. Recommendation: proceed with School Admission Interviews. Job Interview accepts job-related target positions only.';
  }
 
- return 'Job Interview accepts job-related target positions only. Enter a job role like Software Developer, Teacher, HR Assistant, or Call Center Agent, or choose School Admission Interviews for school programs like Information Technology.';
+ return 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative, or choose School Admission Interviews for school programs like BS Information Technology.';
  }
 
  if ($scenarioKind === 'school' && $targetKind!== 'school') {
@@ -3594,7 +3594,7 @@ class InterviewController extends Controller
  return 'This looks like a job-related target position. Recommendation: proceed with Job Interview. School Admission accepts school-related target programs only.';
  }
 
- return 'School Admission accepts school-related target programs only. Enter a school program like BS Information Technology, Computer Science, or Nursing, or choose Job Interviews for job roles like Software Developer.';
+ return 'School Admission accepts school-related target programs only. Enter a Version 1 program like BS Information Technology, BS Nursing, or BS Agriculture, or choose Job Interviews for Southern Leyte roles like Administrative Assistant / LGU Staff or Software Developer.';
  }
 
  return null;
@@ -3651,6 +3651,8 @@ class InterviewController extends Controller
  'administrator',
  'agent',
  'aide',
+ 'agricultural',
+ 'agriculture',
  'analyst',
  'architect',
  'associate',
@@ -3665,6 +3667,7 @@ class InterviewController extends Controller
  'call center',
  'cashier',
  'chef',
+ 'civil engineer',
  'clerk',
  'cleaner',
  'cleaning',
@@ -3687,9 +3690,13 @@ class InterviewController extends Controller
  'engineer',
  'executive',
  'finance',
+ 'fisheries',
+ 'fishery',
  'front desk',
  'guard',
  'facilities',
+ 'healthcare worker',
+ 'hospitality',
  'hr',
  'housekeeper',
  'housekeeping',
@@ -3701,6 +3708,8 @@ class InterviewController extends Controller
  'job',
  'lawyer',
  'lead',
+ 'local government',
+ 'lgu',
  'manager',
  'marketer',
  'marketing',
@@ -3737,6 +3746,7 @@ class InterviewController extends Controller
  'teacher',
  'technician',
  'therapist',
+ 'tourism',
  'trainee',
  'tutor',
  'veterinarian',
@@ -3748,8 +3758,11 @@ class InterviewController extends Controller
  'abm',
  'accountancy',
  'admission',
+ 'agriculture',
  'architecture',
  'bachelor',
+ 'bs agriculture',
+ 'bs accountancy accounting information system',
  'bs computer engineering',
  'bs computer science',
  'bs cybersecurity',
@@ -3761,6 +3774,7 @@ class InterviewController extends Controller
  'bs information systems',
  'bs information technology',
  'bs marketing management',
+ 'bs fisheries',
  'bs office administration',
  'bs public administration',
  'bs social work',
@@ -3783,6 +3797,7 @@ class InterviewController extends Controller
  'electronics engineering',
  'engineering',
  'entrepreneurship',
+ 'fisheries',
  'freshman',
  'gas',
  'graduate program',
@@ -3790,6 +3805,7 @@ class InterviewController extends Controller
  'humss',
  'ict',
  'industrial engineering',
+ 'accounting information system',
  'information systems',
  'information technology',
  'it',
@@ -3815,6 +3831,8 @@ class InterviewController extends Controller
  'bachelor of elementary education',
  'bachelor of secondary education',
  'bs accountancy',
+ 'bs accountancy accounting information system',
+ 'bs agriculture',
  'bs architecture',
  'bs biology',
  'bs business administration',
@@ -3827,6 +3845,7 @@ class InterviewController extends Controller
  'bs electrical engineering',
  'bs electronics engineering',
  'bs entrepreneurship',
+ 'bs fisheries',
  'bs financial management',
  'bs hospitality management',
  'bs industrial engineering',
@@ -3854,7 +3873,10 @@ class InterviewController extends Controller
  $explicitSchoolProgramIndicators = [
  'admission',
  'bachelor',
+ 'bs accountancy',
+ 'bs agriculture',
  'bs computer science',
+ 'bs fisheries',
  'bs information systems',
  'bs information technology',
  'bscs',
