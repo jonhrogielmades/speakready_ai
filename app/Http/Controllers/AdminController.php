@@ -16,7 +16,6 @@ use App\Services\ReadinessAlgorithmSuite;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Schema;
 
@@ -400,60 +399,25 @@ class AdminController extends Controller
  $category = Category::findOrFail($request->category_id);
  $position = trim($request->position);
  $difficulty = trim($request->difficulty);
- $provider = $this->normalizeQuestionProvider(
- $request->input('ai_provider', $this->defaultQuestionProvider())
- );
  $dataset = QuestionDatasetProvider::find($request->input('dataset'))?? QuestionDatasetProvider::forCategory($category);
- $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
  $fallbackQuestion = QuestionDatasetProvider::fallbackQuestion($dataset, $category, $position, $difficulty);
- $categoryFocus = trim($category->title). ' interview';
-
- $questionText = null;
- $source = 'fallback';
-
- if ($this->providerCanGenerateQuestions($provider)) {
- try {
- $generated = AIService::generateQuestions(
- 1,
- $position,
- $difficulty,
- $categoryFocus,
- $provider,
- null,
- null,
- [],
- 'standard',
- $dataset
- );
-
- $questionText = collect($generated)
- ->first(fn ($question) => is_string($question) && trim($question)!== '');
-
- if ($questionText) {
- $source = 'ai_dataset';
- }
- } catch (\Throwable $e) {
- Log::warning('Admin AI question generation failed; using deterministic fallback.', [
- 'provider' => $provider,
- 'category_id' => $category->id,
- 'dataset' => $dataset['key']?? null,
- 'error' => $e->getMessage(),
- ]);
- }
- }
-
- $questionText = $questionText?: (
- $provider === 'local'? $this->legacyFallbackInterviewQuestion($category, $position, $difficulty): ($fallbackQuestion['question_text']?? $this->fallbackInterviewQuestion($category, $position, $difficulty))
+ $rankedQuestion = collect(QuestionDatasetProvider::rankedQuestions($dataset, $position, $difficulty, [], 1))
+ ->first();
+ $questionRecord = is_array($rankedQuestion)? $rankedQuestion: $fallbackQuestion;
+ $source = is_array($rankedQuestion)? 'dataset': 'fallback';
+ $questionText = $this->roleAlignedQuestionText(
+ (string) ($questionRecord['question_text']?? $this->fallbackInterviewQuestion($category, $position, $difficulty)),
+ $position
  );
 
  return response()->json([
  'question_text' => trim($questionText),
  'source' => $source,
- 'expected_guide' => $fallbackQuestion['expected_guide']?? null,
- 'mapped_skills' => $fallbackQuestion['mapped_skills']?? ($dataset['default_skills']?? []),
- 'source_name' => $sourceMetadata['source_name']?? null,
- 'source_url' => $sourceMetadata['source_url']?? null,
- 'source_type' => $sourceMetadata['source_type']?? null,
+ 'expected_guide' => $questionRecord['expected_guide']?? null,
+ 'mapped_skills' => $questionRecord['mapped_skills']?? ($dataset['default_skills']?? []),
+ 'source_name' => $questionRecord['source_name']?? null,
+ 'source_url' => $questionRecord['source_url']?? null,
+ 'source_type' => $questionRecord['source_type']?? null,
  'dataset_name' => $dataset['name']?? null,
  ]);
  }
@@ -494,11 +458,6 @@ class AdminController extends Controller
  ));
  }
 
- private function providerCanGenerateQuestions(string $provider): bool
- {
- return AIService::providerIsConfigured($provider);
- }
-
  private function defaultQuestionProvider(): string
  {
  $provider = AIService::defaultProviderKey();
@@ -536,6 +495,42 @@ class AdminController extends Controller
  ->all();
  }
 
+ private function roleAlignedQuestionText(string $questionText, string $position): string
+ {
+ $questionText = trim($questionText);
+ $position = trim($position);
+
+ if ($questionText === '' || $position === '') {
+ return $questionText;
+ }
+
+ $rolePhrase = "the {$position} role";
+ $replacements = [
+ '/\bfor this role\b/i' => "for {$rolePhrase}",
+ '/\bfor the role\b/i' => "for {$rolePhrase}",
+ '/\bfor your target role\b/i' => "for {$rolePhrase}",
+ '/\bthis role\b/i' => $rolePhrase,
+ '/\bthe target role\b/i' => $rolePhrase,
+ '/\byour target role\b/i' => $rolePhrase,
+ ];
+
+ foreach ($replacements as $pattern => $replacement) {
+ $questionText = preg_replace($pattern, $replacement, $questionText)?? $questionText;
+ }
+
+ if (str_contains(mb_strtolower($questionText), mb_strtolower($position))) {
+ return $questionText;
+ }
+
+ if (preg_match('/^(.+[.!])\s+([^.!?]+\?)$/s', $questionText, $matches)) {
+ $finalQuestion = rtrim(trim($matches[2]), '?');
+
+ return trim($matches[1]).' '.$finalQuestion.' for '.$rolePhrase.'?';
+ }
+
+ return 'For your target position of '.$position.', '.lcfirst($questionText);
+ }
+
  private function fallbackInterviewQuestion(Category $category, string $position, string $difficulty): string
  {
  $categoryTitle = trim($category->title)?: 'this skill area';
@@ -548,20 +543,6 @@ class AdminController extends Controller
  };
 
  return "For a {$targetPosition} role in your target context, describe a {$difficultyPrompt} school, internship, BPO, freelance, or workplace situation where you used {$categoryTitle}. What was your responsibility, what actions did you take, and what result would help a local HR interviewer judge your readiness?";
- }
-
- private function legacyFallbackInterviewQuestion(Category $category, string $position, string $difficulty): string
- {
- $categoryTitle = trim($category->title)?: 'this skill area';
- $targetPosition = $position!== ''? $position: 'your target role';
-
- $difficultyPrompt = match (strtolower($difficulty)) {
- 'easy' => 'foundational',
- 'hard' => 'complex or high-pressure',
- default => 'realistic',
- };
-
- return "For a {$targetPosition} role, describe a {$difficultyPrompt} situation where you used {$categoryTitle}. What was your responsibility, what actions did you take, and what measurable result followed?";
  }
 
  public function importQuestions(Request $request)

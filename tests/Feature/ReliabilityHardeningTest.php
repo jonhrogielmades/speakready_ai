@@ -203,12 +203,12 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  }
 
- public function test_admin_question_generation_has_deterministic_fallback_without_ai_credentials(): void
+ public function test_admin_question_generation_returns_fast_dataset_question_without_ai_credentials(): void
  {
  $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
  $category = $this->category(['title' => 'Behavioral']);
 
- $this->actingAs($admin)
+ $response = $this->actingAs($admin)
  ->postJson(route('admin.questions.ai-generate'), [
  'category_id' => $category->id,
  'position' => 'Software Engineer',
@@ -217,9 +217,13 @@ class ReliabilityHardeningTest extends TestCase
  ])
  ->assertOk()
  ->assertJson([
- 'source' => 'fallback',
- ])
- ->assertJsonPath('question_text', 'For a Software Engineer role, describe a complex or high-pressure situation where you used Behavioral. What was your responsibility, what actions did you take, and what measurable result followed?');
+ 'source' => 'dataset',
+ ]);
+
+ $this->assertStringContainsString('Software Engineer', (string) $response->json('question_text'));
+ $this->assertNotEmpty($response->json('expected_guide'));
+ $this->assertNotEmpty($response->json('mapped_skills'));
+ $this->assertNotEmpty($response->json('source_type'));
  }
 
  public function test_default_ai_provider_uses_openai_first_when_no_primary_or_env_override_is_set(): void
@@ -381,31 +385,19 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame(['For your target position of Developer, describe a technical issue you debugged.'], $questions);
  $this->assertStringContainsString("Reliable question-bank version: {$questionBankVersion}", $capturedPrompt);
  $this->assertStringContainsString('Job Interview Questions', $capturedPrompt);
- $this->assertStringContainsString('Tell me about yourself and why this role in your target context fits your next step.', $capturedPrompt);
+ $this->assertStringContainsString('Tell me about yourself and why this role in your Southern Leyte or Philippine context fits your next step.', $capturedPrompt);
  }
 
- public function test_user_ai_generated_start_question_is_saved_to_admin_question_bank(): void
+ public function test_user_start_question_uses_source_backed_dataset_without_ai_blocking(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Job Interview']);
- $questionText = 'Tell me about a production issue you diagnosed and resolved.';
- $roleAlignedQuestionText = 'For your target position of Backend Developer, tell me about a production issue you diagnosed and resolved.';
  $this->aiProvider('OpenAI', [
  'api_endpoint' => 'https://api.openai.com/v1',
  'is_primary' => true,
  ]);
 
- Http::fake([
- 'api.openai.com/*' => Http::response([
- 'choices' => [
- [
- 'message' => [
- 'content' => json_encode(['questions' => [$questionText]]),
- ],
- ],
- ],
- ], 200),
- ]);
+ Http::fake();
 
  $this->actingAs($user)
  ->post(route('interview.start'), [
@@ -420,21 +412,18 @@ class ReliabilityHardeningTest extends TestCase
  ->assertRedirect(route('interview.session'));
 
  $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
+ $startQuestion = Question::where('interview_session_id', $session->id)
+ ->where('source_type', '!=', 'real_interview_opening')
+ ->firstOrFail();
 
- $this->assertDatabaseHas('questions', [
- 'interview_session_id' => $session->id,
- 'category_id' => $category->id,
- 'question_text' => $roleAlignedQuestionText,
- 'ai_provider' => 'openai',
+ $this->assertMatchesRegularExpression('/backend developer/i', $startQuestion->question_text);
+ $this->assertNull($startQuestion->ai_provider);
+ $this->assertNotSame('ai_adapted_source_backed', $startQuestion->source_type);
+ $this->assertContains($startQuestion->source_type, [
+ 'career_question_bank',
+ 'speakready_reliable_question_bank',
  ]);
-
- $this->assertDatabaseHas('questions', [
- 'interview_session_id' => null,
- 'category_id' => $category->id,
- 'question_text' => $roleAlignedQuestionText,
- 'source_type' => 'ai_adapted_source_backed',
- 'ai_provider' => 'openai',
- ]);
+ Http::assertNothingSent();
  }
 
  public function test_user_ai_follow_up_question_is_saved_to_admin_question_bank(): void

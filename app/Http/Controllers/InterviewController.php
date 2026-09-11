@@ -188,40 +188,6 @@ class InterviewController extends Controller
  ])
  );
 
- if ($provider!== 'local' &&! $this->hasNonOpeningQuestion($session)) {
- $generated = AIService::generateQuestions(
- 1, // Only generate the first question upfront for the real-time loop
- $position,
- $validated['difficulty'],
- $validated['interview_focus']?? 'Job Interview',
- $provider,
- $validated['resume_text']?? null,
- $validated['job_description']?? null,
- $questionTypes,
- $validated['ai_assistance_level']?? 'standard',
- $dataset,
- $this->currentLanguageConfig(),
- $accommodationProfile['simplified_questions']
- );
-
- if (is_array($generated)) {
- $generated = $this->roleAlignedQuestionTexts($generated, $position);
-
- foreach ($generated as $idx => $qText) {
- $this->createInterviewQuestion(
- $session,
- $category,
- $qText,
- $validated['difficulty'],
- $questionTypes,
- $idx,
- $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider),
- true
- );
- }
- }
- }
-
  if (! $this->hasNonOpeningQuestion($session)) {
  $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
  $fallbackQuestions = $this->sourceBackedQuestionRecords($dataset, $session, $questionTypes, 1, $validated['difficulty'], $position);
@@ -3390,6 +3356,28 @@ class InterviewController extends Controller
  $limit = max(1, min(30, $limit));
  $selectedTypes = array_values(array_filter($selectedQuestionTypes));
  $difficulty = ucfirst(strtolower($difficulty));
+ $existingQuestionTexts = Question::where('interview_session_id', $session->id)
+ ->pluck('question_text')
+ ->all();
+ $datasetRanked = QuestionDatasetProvider::rankedQuestions(
+ $dataset,
+ $position,
+ $difficulty,
+ $selectedTypes,
+ $limit,
+ $existingQuestionTexts
+ );
+
+ if (! empty($datasetRanked)) {
+ $alignedTexts = $this->roleAlignedQuestionTexts(array_column($datasetRanked, 'question_text'), $position);
+
+ return array_map(function (array $record, int $index) use ($alignedTexts): array {
+ $record['question_text'] = $alignedTexts[$index]?? $record['question_text'];
+
+ return $record;
+ }, $datasetRanked, array_keys($datasetRanked));
+ }
+
  $recommended = app(QuestionRecommendationService::class)->recommend($session, $dataset, $selectedTypes, $limit);
  if (! empty($recommended)) {
  $alignedTexts = $this->roleAlignedQuestionTexts(array_column($recommended, 'question_text'), $position);

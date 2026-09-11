@@ -653,7 +653,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  $this->assertSame('groq', app(AiProviderEvaluationService::class)->bestProviderKeyForInterviewTask('feedback_generation'));
  }
 
- public function test_interview_start_uses_ranked_question_and_feedback_providers(): void
+ public function test_interview_start_sets_ranked_providers_and_uses_dataset_question(): void
  {
  $this->clearProviderEnv();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -669,23 +669,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  $cohere = $this->configuredProvider('Cohere', false);
  $this->rankedEvaluationRun($openAi, $groq, $cohere);
 
- $requestedUrls = [];
- Http::fake(function ($request) use (&$requestedUrls) {
- $requestedUrls[] = (string) $request->url();
-
- return Http::response([
- 'choices' => [[
- 'finish_reason' => 'stop',
- 'message' => [
- 'content' => json_encode([
- 'questions' => [
- 'As a Developer, how would you debug a production issue while keeping stakeholders updated?',
- ],
- ]),
- ],
- ]],
- ], 200);
- });
+ Http::fake();
 
  $this->actingAs($user)
  ->post(route('interview.start'), [
@@ -702,15 +686,13 @@ class AdminAiProviderEvaluationTest extends TestCase
 
  $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
  $generatedQuestion = Question::where('interview_session_id', $session->id)
- ->where('source_type', 'ai_adapted_source_backed')
+ ->where('source_type', '!=', 'real_interview_opening')
  ->firstOrFail();
 
- $this->assertSame('groq', $generatedQuestion->ai_provider);
- $this->assertSame(
- 'As a Developer, how would you debug a production issue while keeping stakeholders updated?',
- $generatedQuestion->question_text
- );
- $this->assertTrue(collect($requestedUrls)->contains(fn (string $url): bool => str_contains($url, 'groq')));
+ $this->assertNull($generatedQuestion->ai_provider);
+ $this->assertNotSame('ai_adapted_source_backed', $generatedQuestion->source_type);
+ $this->assertStringContainsString('Developer', $generatedQuestion->question_text);
+ Http::assertNothingSent();
  }
 
  public function test_interview_finish_uses_ranked_feedback_provider(): void

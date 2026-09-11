@@ -518,6 +518,105 @@ class QuestionDatasetProvider
  return trim((string) preg_replace('/[^a-z0-9]+/u', ' ', mb_strtolower((string) $question)));
  }
 
+ private static function questionSelectionScore(array $question, array $dataset, string $position, string $difficulty, array $selectedTypes): int
+ {
+ $score = 0;
+ $questionDifficulty = ucfirst(strtolower(trim((string) ($question['difficulty']?? 'Medium'))));
+ $questionType = trim((string) ($question['type']?? ''));
+ $sourceType = mb_strtolower((string) ($question['source_type']?? $dataset['source_type']?? ''));
+
+ if ($questionDifficulty === $difficulty) {
+ $score += 40;
+ }
+
+ if ($selectedTypes!== [] && in_array($questionType, $selectedTypes, true)) {
+ $score += 30;
+ } elseif ($selectedTypes === [] && $questionType!== '') {
+ $score += 8;
+ }
+
+ if (str_contains($sourceType, 'speakready_reliable_question_bank')) {
+ $score += 18;
+ } elseif (str_contains($sourceType, 'official') || str_contains($sourceType, 'competency')) {
+ $score += 12;
+ } elseif ($sourceType!== '') {
+ $score += 6;
+ }
+
+ if (! empty($question['source_keys']?? [])) {
+ $score += 6;
+ }
+
+ if (! empty($question['dataset_record_id']?? $question['id']?? null)) {
+ $score += 4;
+ }
+
+ $roleTokens = self::selectionTokens($position);
+ if ($roleTokens!== []) {
+ $haystack = implode(' ', [
+ (string) ($question['question_text']?? ''),
+ (string) ($question['expected_guide']?? ''),
+ implode(' ', (array) ($question['mapped_skills']?? [])),
+ implode(' ', (array) ($question['archive_roles']?? [])),
+ (string) ($question['category']?? $dataset['category']?? ''),
+ ]);
+ $haystackTokens = array_flip(self::selectionTokens($haystack));
+ $matches = 0;
+
+ foreach ($roleTokens as $token) {
+ if (isset($haystackTokens[$token])) {
+ $matches++;
+ }
+ }
+
+ $score += min(30, $matches * 8);
+
+ $normalizedPosition = self::questionDedupeKey($position);
+ $normalizedHaystack = self::questionDedupeKey($haystack);
+ if ($normalizedPosition!== '' && str_contains(" {$normalizedHaystack} ", " {$normalizedPosition} ")) {
+ $score += 16;
+ }
+ }
+
+ return $score;
+ }
+
+ private static function selectionTokens(string $text): array
+ {
+ $stopWords = [
+ 'about' => true,
+ 'after' => true,
+ 'also' => true,
+ 'and' => true,
+ 'are' => true,
+ 'for' => true,
+ 'from' => true,
+ 'have' => true,
+ 'how' => true,
+ 'interview' => true,
+ 'into' => true,
+ 'job' => true,
+ 'role' => true,
+ 'that' => true,
+ 'the' => true,
+ 'this' => true,
+ 'what' => true,
+ 'when' => true,
+ 'where' => true,
+ 'with' => true,
+ 'would' => true,
+ 'you' => true,
+ 'your' => true,
+ ];
+
+ return collect(preg_split('/[^a-z0-9]+/u', mb_strtolower($text))?: [])
+ ->map(fn (string $token) => trim($token))
+ ->filter(fn (string $token) => strlen($token) >= 3 && ! isset($stopWords[$token]))
+ ->unique()
+ ->values()
+ ->all();
+ }
+
  private static function readQuestionCsv(string $contents,?string $path = null): array
  {
  $stream = fopen('php://temp', 'r+');
@@ -807,6 +906,74 @@ class QuestionDatasetProvider
  return array_merge(self::sourceMetadata($dataset), $question, [
  'category' => $dataset['category']?? $category->title,
  ]);
+ }
+
+ public static function rankedQuestions(array $dataset, string $position, string $difficulty, array $questionTypes = [], int $limit = 1, array $excludeQuestionTexts = []): array
+ {
+ $limit = max(1, min(30, $limit));
+ $difficulty = ucfirst(strtolower(trim($difficulty)))?: 'Medium';
+ $selectedTypes = collect($questionTypes)
+ ->map(fn ($type) => trim((string) $type))
+ ->filter()
+ ->values()
+ ->all();
+ $excluded = collect($excludeQuestionTexts)
+ ->map(fn ($question) => self::questionDedupeKey($question))
+ ->filter()
+ ->flip()
+ ->all();
+ $metadata = self::sourceMetadata($dataset);
+ $questions = collect($dataset['questions']?? [])
+ ->filter(fn ($question) => is_array($question));
+
+ if ($selectedTypes!== []) {
+ $typedQuestions = $questions->filter(fn (array $question) => in_array(trim((string) ($question['type']?? '')), $selectedTypes, true));
+ if ($typedQuestions->isNotEmpty()) {
+ $questions = $typedQuestions;
+ }
+ }
+
+ return $questions
+ ->values()
+ ->map(function (array $question, int $index) use ($dataset, $metadata, $position, $difficulty, $selectedTypes, $excluded):?array {
+ $text = trim((string) ($question['question_text']?? ''));
+ $dedupeKey = self::questionDedupeKey($text);
+
+ if ($text === '' || $dedupeKey === '' || isset($excluded[$dedupeKey])) {
+ return null;
+ }
+
+ return [
+ 'index' => $index,
+ 'score' => self::questionSelectionScore($question, $dataset, $position, $difficulty, $selectedTypes),
+ 'record' => array_merge($metadata, [
+ 'question_text' => $text,
+ 'type' => trim((string) ($question['type']?? 'Behavioral'))?: 'Behavioral',
+ 'difficulty' => ucfirst(strtolower(trim((string) ($question['difficulty']?? $difficulty))))?: $difficulty,
+ 'expected_guide' => trim((string) ($question['expected_guide']?? '')),
+ 'mapped_skills' => array_values(array_filter((array) ($question['mapped_skills']?? ($dataset['default_skills']?? [])))),
+ 'source_name' => $question['source_name']?? $metadata['source_name']?? null,
+ 'source_url' => $question['source_url']?? $metadata['source_url']?? null,
+ 'source_type' => $question['source_type']?? $metadata['source_type']?? 'dataset',
+ 'source_keys' => array_values(array_filter((array) ($question['source_keys']?? []))),
+ 'dataset_record_id' => $question['dataset_record_id']?? $question['id']?? null,
+ 'provenance' => $question['provenance']?? null,
+ ]),
+ ];
+ })
+ ->filter()
+ ->sort(function (array $left, array $right): int {
+ if ($left['score'] === $right['score']) {
+ return $left['index'] <=> $right['index'];
+ }
+
+ return $right['score'] <=> $left['score'];
+ })
+ ->pluck('record')
+ ->unique(fn (array $question) => self::questionDedupeKey($question['question_text']?? ''))
+ ->take($limit)
+ ->values()
+ ->all();
  }
 
  public static function preparedQuestions(string $key): array
