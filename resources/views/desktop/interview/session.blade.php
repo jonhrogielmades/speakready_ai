@@ -103,7 +103,7 @@
  <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;--avatar-ring-color:#8b5cf6;">
  <!-- The Image Container (with border, glow, and clipping for the image itself) -->
  <div class="avatar-frame">
- <img src="{{ asset('img/ai_avatar.jpg') }}" alt="AI Avatar" style="width:100%;height:100%;object-fit:cover;">
+ <img src="{{ asset('img/ai_interviewer_avatar.png') }}" alt="AI Interviewer" style="width:100%;height:100%;object-fit:cover;">
  </div>
  </div>
  
@@ -3741,7 +3741,7 @@
  function openingConversationText() {
  const modeLine = liveFeedbackMode === 'real_interview'? 'I will save feedback until the end.': 'I may ask follow-ups based on your answers.';
 
- return `Hi, I'm Mia, good to meet you. I will be your interviewer for the ${sessionTargetPosition} role. We have ${pluralizeQuestionCount()} today. ${modeLine} To begin, I would like to get to know you first.`;
+ return `Hi, I'm Karyl, good to meet you. I will be your interviewer for the ${sessionTargetPosition} role. We have ${pluralizeQuestionCount()} today. ${modeLine} To begin, I would like to get to know you first.`;
  }
 
  function closingConversationText() {

@@ -4054,12 +4054,12 @@ class InterviewController extends Controller
  $clean = trim(preg_replace('/\s+/u', ' ', $questionText)?? $questionText);
  $patterns = [
  '/^(?:hi|hello|okay|alright|sure)[,.!\s]+/i',
- '/^[a-z][a-z\'-]{1,30},\s*(?:i am|i\'m)\s+mia,\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
- '/^[a-z][a-z\'-]{1,30},\s*(?:my name is|you can call me)\s+mia,\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
- '/^(?:i am|i\'m)\s+mia[,.]?\s*(?:nice to meet you(?:,\s*[a-z][a-z\'-]{1,30})?)?[,.!\s]+/i',
- '/^(?:my name is|you can call me)\s+mia[,.]?\s*(?:nice to meet you(?:,\s*[a-z][a-z\'-]{1,30})?)?[,.!\s]+/i',
- '/^(?:i am|i\'m)\s+mia,\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
- '/^(?:my name is|you can call me)\s+mia,\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
+ '/^[a-z][a-z\'-]{1,30},\s*(?:i am|i\'m)\s+(?:mia|karyl),\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
+ '/^[a-z][a-z\'-]{1,30},\s*(?:my name is|you can call me)\s+(?:mia|karyl),\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
+ '/^(?:i am|i\'m)\s+(?:mia|karyl)[,.]?\s*(?:nice to meet you(?:,\s*[a-z][a-z\'-]{1,30})?)?[,.!\s]+/i',
+ '/^(?:my name is|you can call me)\s+(?:mia|karyl)[,.]?\s*(?:nice to meet you(?:,\s*[a-z][a-z\'-]{1,30})?)?[,.!\s]+/i',
+ '/^(?:i am|i\'m)\s+(?:mia|karyl),\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
+ '/^(?:my name is|you can call me)\s+(?:mia|karyl),\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
  '/^(?:as\s+)?(?:the\s+)?(?:hiring\s+manager|interviewer|recruiter)[,.!\s]+/i',
  '/^nice to meet you(?:,\s*[a-z][a-z\'-]{1,30})?[,.!\s]+/i',
  '/^(?:thanks|thank you)\s+for\s+(?:sharing|that\s+background)[,.!\s]+/i',

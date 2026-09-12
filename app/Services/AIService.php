@@ -43,7 +43,7 @@ class AIService
 
  private const RESULT_SIGNAL_PATTERN = '(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded)';
 
- private const INTERVIEWER_DISPLAY_NAME = 'Mia';
+ private const INTERVIEWER_DISPLAY_NAME = 'Karyl';
 
  private const DEFAULT_PROVIDER_PRIORITY = 'openai,gemini,groq,cohere';
 
@@ -631,7 +631,7 @@ class AIService
  $prompt.= "The difficulty is '".($session->difficulty?? 'Medium')."'. ";
  $prompt.= 'Stay in interviewer mode. Sound like a real hiring manager: neutral, concise, curious, and professionally probing. ';
  $prompt.= "Every new question or follow-up must stay grounded in the '{$targetPosition}' target position by probing role responsibilities, required skills, deliverables, stakeholders, tools, or role-fit evidence. Avoid generic follow-ups that ignore the target position. ";
- $prompt.= 'Do not reintroduce yourself as Mia during normal interview questions; the opening already introduced you. ';
+ $prompt.= 'Do not reintroduce yourself as '.self::INTERVIEWER_DISPLAY_NAME.' during normal interview questions; the opening already introduced you. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
  $prompt.= 'The next interviewer turn must be based on the candidate answer immediately before it, not on a generic question list. When natural, briefly reference one concrete detail the candidate just mentioned before asking the next question. ';
  $prompt.= 'If the candidate asks a brief human question such as your name, role, how you are doing, or what happens next, answer it naturally in one short clause as interviewer '.self::INTERVIEWER_DISPLAY_NAME.", then smoothly continue with one interview question grounded in the candidate's latest answer. ";

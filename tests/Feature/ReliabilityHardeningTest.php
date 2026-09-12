@@ -650,7 +650,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertJsonPath('success', true);
 
  $nextQuestion = (string) $response->json('next_question_text');
- $this->assertStringContainsString('I am Mia, nice to meet you.', $nextQuestion);
+ $this->assertStringContainsString('I am Karyl, nice to meet you.', $nextQuestion);
  $this->assertSame(1, substr_count($nextQuestion, '?'));
  $this->assertStringContainsString('Developer', $nextQuestion);
  }
