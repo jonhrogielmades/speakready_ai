@@ -325,9 +325,28 @@
  </div>
  </div>
 
+ @php
+ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
+ 'id' => (int) $question->id,
+ 'question_text' => (string) $question->question_text,
+ 'source_type' => $question->source_type,
+ ])->all();
+ $clientSavedStateForUi = is_array($savedStateForUi?? null)? $savedStateForUi: [];
+ if (isset($clientSavedStateForUi['questions']) && is_array($clientSavedStateForUi['questions'])) {
+ $clientSavedStateForUi['questions'] = collect($clientSavedStateForUi['questions'])
+ ->map(fn ($question) => [
+ 'id' => (int) ($question['id']?? 0),
+ 'question_text' => (string) ($question['question_text']?? ''),
+ 'source_type' => $question['source_type']?? null,
+ ])
+ ->filter(fn ($question) => $question['id'] > 0 && $question['question_text']!== '')
+ ->values()
+ ->all();
+ }
+ @endphp
  <script>
- const savedSessionState = @json($savedStateForUi?? []);
- const initialQuestions = @json($questions->values());
+ const savedSessionState = @json($clientSavedStateForUi);
+ const initialQuestions = @json($clientQuestionsForUi);
  const savedQuestionSequence = Array.isArray(savedSessionState.questions)? savedSessionState.questions.filter(question => question && question.id && question.question_text): [];
  let questions = savedQuestionSequence.length > 0? savedQuestionSequence: initialQuestions;
  const interviewSessionId = {{ (int) $sessionRecord->id }};
@@ -3654,8 +3673,6 @@
  return questions.map(question => ({
  id: question.id,
  question_text: question.question_text,
- source_name: question.source_name || '',
- source_url: question.source_url || '',
  source_type: question.source_type || ''
  }));
  }
@@ -4935,8 +4952,6 @@
  const newQ = {
  id: data.next_question_id,
  question_text: data.next_question_text,
- source_name: data.source_name || '',
- source_url: data.source_url || '',
  source_type: data.source_type || ''
  };
  const nextQuestionIndex = placeNextQuestion(newQ);

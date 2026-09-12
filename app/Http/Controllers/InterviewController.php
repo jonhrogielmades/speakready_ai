@@ -190,7 +190,7 @@ class InterviewController extends Controller
 
  if (! $this->hasNonOpeningQuestion($session)) {
  $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
- $fallbackQuestions = $this->sourceBackedQuestionRecords($dataset, $session, $questionTypes, 1, $validated['difficulty'], $position);
+ $fallbackQuestions = $this->sourceBackedQuestionRecords($dataset, $session, $questionTypes, 1, $validated['difficulty'], $position, $provider);
  $localizedTexts = $this->localizedQuestionTexts(array_column($fallbackQuestions, 'question_text'), $provider);
 
  foreach ($fallbackQuestions as $idx => $questionRecord) {
@@ -3260,8 +3260,6 @@ class InterviewController extends Controller
  'success' => true,
  'next_question_id' => $question->id,
  'next_question_text' => $question->question_text,
- 'source_name' => $question->source_name,
- 'source_url' => $question->source_url,
  'source_type' => $question->source_type,
  ]);
  }
@@ -3351,7 +3349,7 @@ class InterviewController extends Controller
  }, $records, array_keys($records));
  }
 
- private function sourceBackedQuestionRecords(array $dataset, InterviewSession $session, array $selectedQuestionTypes, int $limit, string $difficulty, string $position): array
+ private function sourceBackedQuestionRecords(array $dataset, InterviewSession $session, array $selectedQuestionTypes, int $limit, string $difficulty, string $position,?string $provider = null): array
  {
  $limit = max(1, min(30, $limit));
  $selectedTypes = array_values(array_filter($selectedQuestionTypes));
@@ -3359,16 +3357,29 @@ class InterviewController extends Controller
  $existingQuestionTexts = Question::where('interview_session_id', $session->id)
  ->pluck('question_text')
  ->all();
+ $questionRecommendations = app(QuestionRecommendationService::class);
+ $candidateLimit = $questionRecommendations->candidatePoolLimit($limit);
  $datasetRanked = QuestionDatasetProvider::rankedQuestions(
  $dataset,
  $position,
  $difficulty,
  $selectedTypes,
- $limit,
+ $candidateLimit,
  $existingQuestionTexts
  );
 
  if (! empty($datasetRanked)) {
+ $modelRanked = $questionRecommendations->rerankCandidatesForContext([
+ 'category' => $dataset['category']?? null,
+ 'target_position' => $session->target_position,
+ 'difficulty' => $difficulty,
+ 'question_types' => $selectedTypes,
+ 'interview_focus' => $session->interview_focus,
+ 'resume_text' => $session->resume_text,
+ 'job_description' => $session->job_description,
+ 'ai_provider' => $provider,
+ ], $datasetRanked, $limit);
+ $datasetRanked = ! empty($modelRanked)? $modelRanked: array_slice($datasetRanked, 0, $limit);
  $alignedTexts = $this->roleAlignedQuestionTexts(array_column($datasetRanked, 'question_text'), $position);
 
  return array_map(function (array $record, int $index) use ($alignedTexts): array {

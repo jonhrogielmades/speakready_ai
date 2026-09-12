@@ -186,7 +186,7 @@
                             <input class="oinp mb-3" type="text" name="mapped_skills" value="{{ is_array($q->mapped_skills) ? implode(', ', $q->mapped_skills) : '' }}" placeholder="Communication, Professionalism">
 
                             <label class="olbl">Source Name</label>
-                            <input class="oinp mb-3" type="text" name="source_name" value="{{ $q->source_name }}" placeholder="e.g. JobStreet">
+                            <input class="oinp mb-3" type="text" name="source_name" value="{{ $q->source_name }}" placeholder="e.g. Career source">
 
                             <label class="olbl">Source URL</label>
                             <input class="oinp mb-3" type="url" name="source_url" value="{{ $q->source_url }}" placeholder="https://...">

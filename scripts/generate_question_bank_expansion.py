@@ -19,7 +19,6 @@ JOB_SOURCE_KEYS = [
  "ny_dol_p679_interviewing",
  "ny_dol_interviewing",
  "ny_civil_service_interviewing",
- "jobstreet_ph_common_interview",
  "michaelpage_ph_common_interview",
  "bossjob_ph_interview_questions",
 ]

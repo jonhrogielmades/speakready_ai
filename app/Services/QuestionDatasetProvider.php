@@ -38,11 +38,6 @@ class QuestionDatasetProvider
  'description' => 'Common interview questions and answer guidance from career platforms.',
  'sources' => [
  [
- 'name' => 'JobStreet Career Advice',
- 'url' => 'https://ph.jobstreet.com/career-advice/article/job-interview-questions-answers',
- 'note' => 'Common job interview questions for job seekers.',
- ],
- [
  'name' => 'Michael Page Career Advice',
  'url' => 'https://www.michaelpage.com.ph/advice/career-advice/interview/common-job-interview-questions',
  'note' => 'General interview questions and sample-answer guidance for candidates.',

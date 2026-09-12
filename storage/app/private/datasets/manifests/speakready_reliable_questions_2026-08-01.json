@@ -22,17 +22,17 @@
     ],
     "raw_source_index": {
         "path": "raw/question_sources/2026-08-01/_source_index.json",
-        "sha256": "0d83fd53fc601f34cfb156fec1c3c6f6edac6f4c74429154165acdc5ccdb13f8",
-        "bytes": 5852
+        "sha256": "4087b9d463957e7fbe8beafb4ac5c828319f56896cf7030210db3396669e17ae",
+        "bytes": 5242
     },
     "normalized_files": [
         {
             "path": "normalized/questions/2026-08-01/speakready_reliable_questions.jsonl",
             "format": "jsonl",
-            "sha256": "32ab7ac96a7a3c3401bb680ff9cb00df2de4689ba3426fc56126ee584192a6a5",
-            "bytes": 31243
+            "sha256": "9d2a2692754462dfbc21b5191288a03c945cfeb0c0d8c9ed289eff01afe37d6f",
+            "bytes": 30827
         }
     ],
-    "source_count": 10,
+    "source_count": 9,
     "license_and_use_notes": "Raw snapshots are retained for private provenance. Review each publisher terms before redistribution. Normalized questions are short adapted practice prompts with source keys for traceability. Do not claim adapted prompts are exact source wording unless independently verified."
 }

@@ -37,17 +37,6 @@
             "sha256": "ee5f02f8121bf9caa8ae9ae2e521255edbe680005b944e3958e75c70ce27fa87"
         },
         {
-            "key": "jobstreet_ph_common_interview",
-            "name": "JobStreet Philippines Career Advice - Job interview questions and answers",
-            "url": "https://ph.jobstreet.com/career-advice/article/job-interview-questions-answers",
-            "file": "jobstreet_ph_common_interview.html",
-            "publisher": "JobStreet Philippines",
-            "source_type": "career_platform_article",
-            "reliability": "established_career_platform",
-            "bytes": 246487,
-            "sha256": "1ddb8208edeae71c242b10fbbdb3b2aeee45b4c5062d6a596557711a9cb76f27"
-        },
-        {
             "key": "michaelpage_ph_common_interview",
             "name": "Michael Page Philippines - Common job interview questions",
             "url": "https://www.michaelpage.com.ph/advice/career-advice/interview/common-job-interview-questions-philippines",
