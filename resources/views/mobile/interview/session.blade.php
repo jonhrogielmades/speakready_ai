@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=11') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=21') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -157,7 +157,7 @@
  </div>
  
  <form id="answerForm">
- <!-- Voice controls are anchored to the transcript textarea. -->
+ <!-- Voice controls sit below the transcript textarea. -->
 
  <div id="chatTranscriptContainer" style="max-height: none; overflow: visible; padding: 0; margin-bottom: 12px; background: transparent; border: 0; display: none; flex-direction: column; gap: 10px;"></div>
  <label for="answerTextarea" class="visually-hidden">Your interview answer</label>
@@ -166,7 +166,11 @@
  <span>Voice Mode is voice-only. Text transcription and typing are disabled; use Hybrid Mode for voice-to-text.</span>
  </div>
  <div class="answer-transcript-stage">
- <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer using your own local school, work, internship, or project evidence..." aria-describedby="sessionNotice responseModeLockNotice"></textarea>
+ <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer using your own local school, work, internship, or project evidence..." aria-describedby="sessionNotice responseModeLockNotice responseCountBar"></textarea>
+ <div class="response-count-bar" id="responseCountBar" aria-live="polite">
+ <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
+ </div>
+ </div>
  <div id="answerTranscriptControls" class="answer-transcript-controls" aria-label="Voice recording controls" hidden>
  <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
  <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
@@ -177,13 +181,8 @@
  </div>
  <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
  </div>
- </div>
- 
- <div class="response-count-bar">
- <div>
- <span id="wordCount">0 words</span> - <span id="charCount">0 characters</span>
- <span id="autoSaveIndicator" class="ms-3 text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
- </div>
+ <div class="response-autosave-row">
+ <span id="autoSaveIndicator" class="text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
  </div>
 
  <div id="voiceSessionPanel" class="voice-session-panel" hidden data-state="idle">
@@ -552,6 +551,8 @@
  let isRecordingPaused = false;
  let recTimerSeconds = 0;
  let recTimerInterval;
+ let recTimerStartedAt = 0;
+ let recTimerBaseSeconds = 0;
  let recordingStartPromise = null;
  let recordingStopPromise = null;
  let preRecordingText = '';
@@ -639,6 +640,7 @@
  let voiceSessionStartPromise = null;
  let voiceSessionTranscriptPromise = null;
  let voiceSessionTranscriptQuestionKey = null;
+ let voiceSessionRecordingStartedAt = 0;
  let voiceSessionTrackListeners = [];
  let voiceSessionUiState = 'idle';
  let voiceSessionUiMessage = '';
@@ -1499,6 +1501,7 @@
  if (voiceSessionRecorder && voiceSessionQuestionKey === key && voiceSessionRecorder.state === 'paused') {
  try {
  voiceSessionRecorder.resume();
+ voiceSessionRecordingStartedAt = recordingTimerNow();
  setVoiceSessionUiState('recording', 'Recording', key);
  return true;
  } catch (error) {
@@ -1507,6 +1510,7 @@
  }
 
  if (voiceSessionRecorder && voiceSessionQuestionKey === key && voiceSessionRecorder.state === 'recording') {
+ if (!voiceSessionRecordingStartedAt) voiceSessionRecordingStartedAt = recordingTimerNow();
  return true;
  }
 
@@ -1530,6 +1534,7 @@
  voiceSessionQuestionIndex = currentQIdx;
  voiceSessionChunks = [];
  voiceSessionStopPromise = null;
+ voiceSessionRecordingStartedAt = 0;
  attachVoiceSessionTrackGuards(sourceStream, key);
  updateAnswerVoiceRecordingMetadata(currentQIdx, null);
 
@@ -1545,6 +1550,7 @@
  recorder.onpause = () => setVoiceSessionUiState('paused', 'Paused', key);
  recorder.onresume = () => setVoiceSessionUiState('recording', 'Recording', key);
  recorder.start(voiceSessionTimesliceMs);
+ voiceSessionRecordingStartedAt = recordingTimerNow();
  setVoiceSessionUiState('recording', 'Recording', key);
  return true;
  } catch (error) {
@@ -1553,6 +1559,7 @@
  releaseVoiceSessionStream();
  voiceSessionRecorder = null;
  voiceSessionChunks = [];
+ voiceSessionRecordingStartedAt = 0;
  setVoiceSessionUiState('error', microphoneErrorMessage(error), key);
  return false;
  }
@@ -1589,6 +1596,7 @@
  voiceSessionQuestionKey = null;
  voiceSessionQuestionIndex = null;
  voiceSessionStopPromise = null;
+ voiceSessionRecordingStartedAt = 0;
  releaseVoiceSessionStream();
 
  if (revokeSaved) {
@@ -1629,6 +1637,7 @@
  voiceSessionQuestionKey = null;
  voiceSessionQuestionIndex = null;
  voiceSessionStopPromise = null;
+ voiceSessionRecordingStartedAt = 0;
 
  let recording = null;
  if (!discard && chunks.length > 0) {
@@ -4222,6 +4231,101 @@
  }
  }
 
+ function recordingTimerNow() {
+ return window.performance && typeof window.performance.now === 'function'? window.performance.now(): Date.now();
+ }
+
+ function formatRecordingTimer(seconds) {
+ const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+ const m = Math.floor(safeSeconds / 60).toString().padStart(2, '0');
+ const s = (safeSeconds % 60).toString().padStart(2, '0');
+ return m + ':' + s;
+ }
+
+ function currentRecordingTimerSeconds() {
+ if (!recTimerStartedAt) return recTimerSeconds;
+ const elapsedSeconds = Math.floor(Math.max(0, recordingTimerNow() - recTimerStartedAt) / 1000);
+ return Math.max(recTimerSeconds, recTimerBaseSeconds + elapsedSeconds);
+ }
+
+ function syncRecordingTimerDisplay(force = false) {
+ const previousSeconds = recTimerSeconds;
+ recTimerSeconds = currentRecordingTimerSeconds();
+ const secondsChanged = recTimerSeconds!== previousSeconds;
+ if (!force &&!secondsChanged) return recTimerSeconds;
+
+ const timer = document.getElementById('recordingTimer');
+ if (timer) timer.innerText = formatRecordingTimer(recTimerSeconds);
+
+ const durationTarget = document.getElementById('vaDuration');
+ if (durationTarget) durationTarget.innerText = recTimerSeconds + 's';
+
+ const answerState = answersData[currentQIdx];
+ if (answerState) {
+ answerState.voice_duration = recTimerSeconds;
+ const wordCount = String(answerState.speech_transcript || '').trim().split(/\s+/).filter(w=>w.length>0).length;
+
+ // Match the server report: speech-transcript words divided
+ // by the browser-timed recording duration.
+ const timedSeconds = Math.max(1, recTimerSeconds);
+ const wpm = Math.round((wordCount / timedSeconds) * 60);
+
+ const wpmTarget = document.getElementById('vaWpm');
+ if (wpmTarget) wpmTarget.innerText = wpm;
+ answerState.wpm = wpm;
+ }
+
+ renderVoiceSessionPanel();
+
+ if (secondsChanged) scheduleRecordingTimerSideEffects(previousSeconds);
+
+ return recTimerSeconds;
+ }
+
+ function scheduleRecordingTimerSideEffects(previousSeconds) {
+ const crossedAnalysisBoundary = recTimerSeconds >= 2 && Math.floor(recTimerSeconds / 2) > Math.floor(Math.max(0, previousSeconds) / 2);
+ if (!crossedAnalysisBoundary) return;
+
+ const analysisSecond = recTimerSeconds;
+ setTimeout(() => {
+ if (!isRecording || recTimerSeconds < analysisSecond) return;
+ triggerAnalysis();
+
+ // Optional body-language detection is descriptive and never affects readiness scoring.
+ if (cameraDetectionEnabled) {
+ trackBodyLanguageDetection();
+ }
+ }, 50);
+ }
+
+ function startRecordingTimer(startedAt = null) {
+ clearInterval(recTimerInterval);
+ recTimerBaseSeconds = recTimerSeconds;
+ const startedAtMs = Number(startedAt) || recordingTimerNow();
+ recTimerStartedAt = startedAtMs;
+ syncRecordingTimerDisplay(true);
+ recTimerInterval = setInterval(() => syncRecordingTimerDisplay(), 250);
+ }
+
+ function pauseRecordingTimer() {
+ syncRecordingTimerDisplay(true);
+ clearInterval(recTimerInterval);
+ recTimerInterval = null;
+ recTimerBaseSeconds = recTimerSeconds;
+ recTimerStartedAt = 0;
+ }
+
+ function resetRecordingTimer() {
+ clearInterval(recTimerInterval);
+ recTimerInterval = null;
+ recTimerStartedAt = 0;
+ recTimerBaseSeconds = 0;
+ voiceSessionRecordingStartedAt = 0;
+ recTimerSeconds = 0;
+ const timer = document.getElementById('recordingTimer');
+ if (timer) timer.innerText = '00:00';
+ }
+
  async function startRecording(options = {}) {
  if (recordingStartPromise) return recordingStartPromise;
  if (recordingStopPromise) {
@@ -4317,38 +4421,7 @@
  clearSessionNotice();
  setVoiceControlsEnabled(true);
  setRecordingControlButtons('recording');
- clearInterval(recTimerInterval);
- 
- recTimerInterval = setInterval(() => {
- recTimerSeconds++;
- const m = Math.floor(recTimerSeconds / 60).toString().padStart(2, '0');
- const s = (recTimerSeconds % 60).toString().padStart(2, '0');
- document.getElementById('recordingTimer').innerText = m + ':' + s;
- const durationTarget = document.getElementById('vaDuration');
- if (durationTarget) durationTarget.innerText = recTimerSeconds + 's';
- answersData[currentQIdx].voice_duration = recTimerSeconds;
- 
- const wordCount = String(answersData[currentQIdx]?.speech_transcript || '').trim().split(/\s+/).filter(w=>w.length>0).length;
- 
- // Match the server report: speech-transcript words divided
- // by the browser-timed recording duration.
- const timedSeconds = Math.max(1, recTimerSeconds);
- const wpm = Math.round((wordCount / timedSeconds) * 60);
- 
- const wpmTarget = document.getElementById('vaWpm');
- if (wpmTarget) wpmTarget.innerText = wpm;
- answersData[currentQIdx].wpm = wpm;
- renderVoiceSessionPanel();
- if (recTimerSeconds % 2 === 0) {
- triggerAnalysis();
- }
-
- // Optional body-language detection is descriptive and never affects readiness scoring.
- if (cameraDetectionEnabled && recTimerSeconds % 2 === 0) {
- trackBodyLanguageDetection();
- }
-
- }, 1000);
+ startRecordingTimer(voiceSessionRecordingStartedAt);
 
  const scannerBox = document.getElementById('faceScannerBox');
  if (scannerBox) scannerBox.style.display = 'block';
@@ -4395,7 +4468,7 @@
  }
  isRecording = false;
  isRecordingPaused = true;
- clearInterval(recTimerInterval);
+ pauseRecordingTimer();
  pauseVoiceSessionRecorder();
  setRecordingControlButtons('paused');
  const scannerBox = document.getElementById('faceScannerBox');
@@ -4432,9 +4505,7 @@
  }
  clearTimeout(autoStartAfterQuestionTimer);
  isRecordingPaused = false;
- recTimerSeconds = 0;
- const timer = document.getElementById('recordingTimer');
- if (timer) timer.innerText = '00:00';
+ resetRecordingTimer();
  setRecordingControlButtons('idle');
  resetSpeechRecognitionBufferFromTextarea();
  if (isHybridTranscriptionMode() && recording?.blob) {
@@ -4558,8 +4629,16 @@
 
  function appendChatMessage(role, text, record = true) {
  const chatContainer = document.getElementById('chatTranscriptContainer');
+ if (!chatContainer) return;
  if (role === 'interviewer') {
  chatContainer.innerHTML = '';
+ chatContainer.style.display = 'none';
+ if (record) {
+ interviewChatHistory.push({ role, text });
+ if (interviewChatHistory.length > 80) interviewChatHistory = interviewChatHistory.slice(interviewChatHistory.length - 80);
+ scheduleStateSave();
+ }
+ return;
  }
  chatContainer.style.display = 'flex';
 
@@ -4572,17 +4651,10 @@
  bubble.style.lineHeight = '1.35';
  bubble.style.fontSize = '0.76rem';
  
- if (role === 'interviewer') {
- bubble.style.background = 'rgba(139,92,246,0.15)';
- bubble.style.border = '1px solid rgba(139,92,246,0.3)';
- bubble.style.alignSelf = 'flex-start';
- bubble.innerHTML = '<strong><i class="fa-solid fa-robot me-1"></i> Interviewer</strong><br>' + escapeHtml(text);
- } else {
  bubble.style.background = 'rgba(59,130,246,0.15)';
  bubble.style.border = '1px solid rgba(59,130,246,0.3)';
  bubble.style.alignSelf = 'flex-end';
  bubble.innerHTML = '<strong><i class="fa-solid fa-user me-1"></i> You</strong><br>' + escapeHtml(text);
- }
  
  chatContainer.appendChild(bubble);
 

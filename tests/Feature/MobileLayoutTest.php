@@ -344,7 +344,7 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'));
 
         $response->assertOk()
-            ->assertSee('css/desktop/interview/session.css?v=25', false)
+            ->assertSee('css/desktop/interview/session.css?v=31', false)
             ->assertSee('const cameraDetectionEnabled = true;', false)
             ->assertSee('interview-session-browser-fullscreen', false)
             ->assertSee('interview-ready-fullscreen', false)
@@ -355,11 +355,24 @@ class MobileLayoutTest extends TestCase
             ->assertSee('has-desktop-camera-pip', false)
             ->assertSee('class="desktop-camera-pip d-none d-lg-flex"', false)
             ->assertSee('id="userCamera"', false)
-            ->assertSee('alt="AI Avatar"', false)
+            ->assertSee('alt="AI Interviewer"', false)
             ->assertSee("document.getElementById('userCamera') || document.getElementById('userCameraMobile')", false)
             ->assertDontSee('id="questionTimerChip"', false)
             ->assertDontSee('id="cameraPanel"', false)
             ->assertDontSee('id="cameraDetectionStatus"', false);
+
+        $desktopSessionCss = file_get_contents(public_path('css/desktop/interview/session.css'));
+        $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen #sec-interview-session', $desktopSessionCss);
+        $this->assertStringContainsString('height: calc(100dvh - clamp(32px, 4vw, 60px)) !important;', $desktopSessionCss);
+        $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen #workspaceRow > [class*="col-"]', $desktopSessionCss);
+        $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen .desktop-session-two-column', $desktopSessionCss);
+        $this->assertStringContainsString('grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.80fr) !important;', $desktopSessionCss);
+        $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen .desktop-interview-panel .ai-avatar-panel', $desktopSessionCss);
+        $this->assertStringContainsString('width: clamp(320px, 21vw, 440px)', $desktopSessionCss);
+        $this->assertStringContainsString('--spectrum-radius: clamp(178px, 11.6vw, 240px);', $desktopSessionCss);
+        $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen .desktop-response-column .response-panel', $desktopSessionCss);
+        $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen .desktop-response-column #answerTextarea', $desktopSessionCss);
+        $this->assertStringContainsString('max-height: none !important;', $desktopSessionCss);
     }
 
     public function test_voice_and_hybrid_interview_sessions_use_inline_transcript_field_without_manual_transcript_button(): void
@@ -404,8 +417,9 @@ class MobileLayoutTest extends TestCase
                     ->assertOk()
                     ->assertSee('id="answerTextarea"', false)
                     ->assertSee('class="answer-transcript-stage"', false)
+                    ->assertSee('id="responseCountBar"', false)
                     ->assertSee('id="answerTranscriptControls"', false)
-                    ->assertSeeInOrder(['id="answerTextarea"', 'id="answerTranscriptControls"', 'id="recordingTimer"', 'id="voiceControls"'], false)
+                    ->assertSeeInOrder(['id="answerTextarea"', 'id="responseCountBar"', 'id="answerTranscriptControls"', 'id="recordingTimer"', 'id="voiceControls"'], false)
                     ->assertSee('Speak your answer, then edit the transcript here if needed...', false)
                     ->assertSee('const displayRealtimeTranscriptInTextarea = false;', false)
                     ->assertSee('function fullVoiceTranscriptionUnavailableMessage()', false)
@@ -413,6 +427,15 @@ class MobileLayoutTest extends TestCase
                     ->assertSee('shouldAutoRestartRecognition =!voiceOnly &&!stopBasedHybrid;', false)
                     ->assertSee('activeTranscriptionEngine = voiceOnly || stopBasedHybrid? null: engine;', false)
                     ->assertSee('let started = voiceOnly || stopBasedHybrid? true:', false)
+                    ->assertSee('function currentRecordingTimerSeconds()', false)
+                    ->assertSee('function scheduleRecordingTimerSideEffects(previousSeconds)', false)
+                    ->assertSee('setInterval(() => syncRecordingTimerDisplay(), 250)', false)
+                    ->assertSee('setTimeout(() => {', false)
+                    ->assertSee('let voiceSessionRecordingStartedAt = 0;', false)
+                    ->assertSee('voiceSessionRecordingStartedAt = recordingTimerNow();', false)
+                    ->assertSee('startRecordingTimer(voiceSessionRecordingStartedAt);', false)
+                    ->assertSee('pauseRecordingTimer();', false)
+                    ->assertDontSee('recTimerSeconds++;', false)
                     ->assertSee('Recording ready - transcript appears after Stop', false)
                     ->assertSee('Recording - transcript appears after Stop', false)
                     ->assertSee('Full voice transcript added', false)
@@ -482,7 +505,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=11', false)
+            ->assertSee('css/mobile/interview/session.css?v=21', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)
@@ -499,6 +522,46 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('class="mobile-camera-pip d-lg-none"', false)
             ->assertDontSee('id="userCameraMobile"', false)
             ->assertDontSee('<body class="mobile-interview-fullscreen"', false);
+
+        $content = $response->getContent();
+        $textareaPosition = strpos($content, 'id="answerTextarea"');
+        $stageSearchContent = $textareaPosition === false? '': substr($content, 0, $textareaPosition);
+        $stageOpenPosition = strrpos($stageSearchContent, 'class="answer-transcript-stage"');
+        $counterPosition = strpos($content, 'id="responseCountBar"');
+        $counterClosePosition = strpos($content, '</div>', $counterPosition);
+        $stageClosePosition = strpos($content, '</div>', $counterClosePosition + 6);
+        $controlsPosition = strpos($content, 'id="answerTranscriptControls"');
+
+        $this->assertNotFalse($stageOpenPosition);
+        $this->assertNotFalse($textareaPosition);
+        $this->assertNotFalse($counterPosition);
+        $this->assertNotFalse($counterClosePosition);
+        $this->assertNotFalse($stageClosePosition);
+        $this->assertNotFalse($controlsPosition);
+        $this->assertLessThan($textareaPosition, $stageOpenPosition);
+        $this->assertLessThan($counterPosition, $textareaPosition);
+        $this->assertLessThan($counterClosePosition, $counterPosition);
+        $this->assertLessThan($stageClosePosition, $counterClosePosition);
+        $this->assertLessThan($controlsPosition, $stageClosePosition);
+        $this->assertLessThan($controlsPosition, $counterPosition);
+
+        $mobileSessionCss = file_get_contents(public_path('css/mobile/interview/session.css'));
+        $this->assertStringContainsString('position: static;', $mobileSessionCss);
+        $this->assertStringContainsString('padding: 12px 12px 36px !important;', $mobileSessionCss);
+        $this->assertStringContainsString('inset: auto 12px 10px auto !important;', $mobileSessionCss);
+        $this->assertStringContainsString('right: 12px !important;', $mobileSessionCss);
+        $this->assertStringContainsString('left: auto !important;', $mobileSessionCss);
+        $this->assertStringContainsString('background: transparent !important;', $mobileSessionCss);
+        $this->assertStringContainsString('box-shadow: none !important;', $mobileSessionCss);
+        $this->assertStringContainsString('overflow-wrap: anywhere !important;', $mobileSessionCss);
+        $this->assertStringContainsString('text-overflow: clip !important;', $mobileSessionCss);
+        $this->assertStringContainsString('white-space: normal !important;', $mobileSessionCss);
+        $this->assertStringContainsString('--interview-avatar-lift: clamp(-34px, -4vh, -22px);', $mobileSessionCss);
+        $this->assertStringContainsString('height: clamp(390px, calc(var(--sr-visual-vh, 100dvh) * 0.55), 520px) !important;', $mobileSessionCss);
+        $this->assertStringContainsString('width: clamp(152px, 42vw, 180px) !important;', $mobileSessionCss);
+        $this->assertStringContainsString('--spectrum-radius: clamp(88px, 23vw, 96px);', $mobileSessionCss);
+        $this->assertStringContainsString('transform: translateY(var(--interview-avatar-lift)) !important;', $mobileSessionCss);
+        $this->assertStringContainsString('inset: auto 16px 22px 16px !important;', $mobileSessionCss);
 
         $session->update([
             'accommodation_profile' => ['camera_detection' => true],

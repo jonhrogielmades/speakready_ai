@@ -847,6 +847,26 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame(12, substr_count($content, 'data-target-dropdown-choice-kind="job"'));
  $this->assertSame(10, substr_count($content, 'data-target-dropdown-choice-kind="school"'));
  }
+
+ $mobileResponse
+ ->assertSee('css/mobile/interview/setup.css?v=16', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=2', false)
+ ->assertSee('function setupTargetFieldValue(positionField)', false)
+ ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
+ ->assertSee("positionField.setAttribute('value', nextValue);", false)
+ ->assertSee('function isSetupCompactMobile()', false)
+ ->assertSee('function syncSetupTargetMenuViewport()', false)
+ ->assertSee("targetPositionDropdownMenu?.addEventListener('touchmove'", false)
+ ->assertSee('setup-target-dropdown-open .setup-target-menu', false)
+ ->assertSee('-webkit-overflow-scrolling: touch!important;', false);
+
+ $mobileSetupCss = file_get_contents(public_path('css/mobile/interview/setup.css'));
+
+ $this->assertStringContainsString('setup-target-dropdown-open .setup-target-menu', $mobileSetupCss);
+ $this->assertStringContainsString('position: relative !important;', $mobileSetupCss);
+ $this->assertStringContainsString('scroll-margin-bottom: calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 24px) !important;', $mobileSetupCss);
+ $this->assertStringContainsString('pointer-events: auto !important;', $mobileSetupCss);
+ $this->assertStringContainsString('-webkit-overflow-scrolling: touch !important;', $mobileSetupCss);
  }
 
  public function test_interview_setup_shows_added_question_count_options_on_desktop_and_mobile(): void
@@ -1397,7 +1417,7 @@ class UserSideHardeningTest extends TestCase
  ]);
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
  $expectedMarkup = [
- 'css/desktop/interview/session.css?v=25',
+ 'css/desktop/interview/session.css?v=31',
  'id="coachingTip"',
  'session-live-coaching coaching-only',
  'interview-confidence-control coaching-only',
@@ -1414,6 +1434,7 @@ class UserSideHardeningTest extends TestCase
  'AI-adapted from:',
  'Source will appear when the question starts.',
  'function updateQuestionSource',
+ 'fa-solid fa-robot me-1"></i> Interviewer</strong><br>',
  ];
 
  $desktopResponse = $this->actingAs($user)
@@ -1434,14 +1455,18 @@ class UserSideHardeningTest extends TestCase
  ->get(route('interview.session'))
  ->assertOk();
 
- foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=25']), [
- 'css/mobile/interview/session.css?v=11',
+ foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=31']), [
+ 'css/mobile/interview/session.css?v=21',
  ]) as $markup) {
  $mobileResponse->assertSee($markup, false);
  }
  foreach ($removedSourceMarkup as $markup) {
  $mobileResponse->assertDontSee($markup, false);
  }
+
+ $mobileSessionCss = file_get_contents(public_path('css/mobile/interview/session.css'));
+ $this->assertStringContainsString('height: clamp(390px, calc(var(--sr-visual-vh, 100dvh) * 0.55), 520px) !important;', $mobileSessionCss);
+ $this->assertStringContainsString('min-height: 390px !important;', $mobileSessionCss);
  }
 
  public function test_interview_start_uses_category_source_dataset(): void

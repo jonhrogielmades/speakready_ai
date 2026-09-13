@@ -1,8 +1,8 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=14') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=1') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=16') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=2') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -734,7 +734,7 @@
  }
 
  function vagueSetupTargetRecommendation() {
- const target = normalizeSetupScenarioText(document.getElementById('valPosition')?.value);
+ const target = normalizeSetupScenarioText(setupTargetFieldValue(document.getElementById('valPosition')));
 
  if (!target) return null;
 
@@ -762,7 +762,7 @@
  }
 
  function targetSetupScenarioKind() {
- const target = normalizeSetupScenarioText(document.getElementById('valPosition')?.value);
+ const target = normalizeSetupScenarioText(setupTargetFieldValue(document.getElementById('valPosition')));
  if (!target) return null;
 
  const jobIndicators = [
@@ -868,6 +868,75 @@
  return Object.values(choiceGroups || {}).flatMap((choices) => Array.isArray(choices)? choices: []);
  }
 
+ function setupTargetFieldValue(positionField) {
+ if (!positionField) return '';
+ const value = String(positionField.value || positionField.dataset.selectedTarget || positionField.getAttribute('value') || '').trim();
+ if (value && positionField.value !== value) {
+ positionField.value = value;
+ positionField.setAttribute('value', value);
+ }
+ return value;
+ }
+
+ function setSetupTargetInputValue(positionField, value, targetKind = null) {
+ if (!positionField) return;
+ const nextValue = String(value || '').trim();
+ positionField.value = nextValue;
+ positionField.dataset.selectedTarget = nextValue;
+ if (targetKind) {
+ positionField.dataset.targetKind = targetKind;
+ }
+ if (nextValue) {
+ positionField.setAttribute('value', nextValue);
+ } else {
+ positionField.removeAttribute('value');
+ }
+ }
+
+ function setupNumericCssVar(name, fallback = 0) {
+ const rootValue = getComputedStyle(document.documentElement).getPropertyValue(name);
+ const bodyValue = document.body? getComputedStyle(document.body).getPropertyValue(name): '';
+ const value = parseFloat(rootValue || bodyValue);
+ return Number.isFinite(value)? value: fallback;
+ }
+
+ function isSetupCompactMobile() {
+ return window.matchMedia('(max-width: 767.98px)').matches;
+ }
+
+ function syncSetupTargetMenuViewport() {
+ const trigger = document.getElementById('targetPositionDropdownButton');
+ const menu = document.getElementById('targetPositionDropdownMenu');
+ if (!trigger || !menu) return;
+
+ const viewportHeight = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 640;
+ const triggerRect = trigger.getBoundingClientRect();
+ const isMobile = isSetupCompactMobile();
+ const topChrome = isMobile? setupNumericCssVar('--mob-top-h', 64) + setupNumericCssVar('--mob-safe-top', 0) + 16: 16;
+ const bottomChrome = isMobile? setupNumericCssVar('--mob-nav-h', 72) + setupNumericCssVar('--mob-safe-bottom', 0) + 24: 24;
+ const viewportRoom = viewportHeight - topChrome - bottomChrome;
+ const hardMax = Math.max(isMobile? 160: 180, Math.min(isMobile? 440: 420, viewportRoom));
+ const minHeight = Math.min(220, hardMax);
+ const spaceBelow = Math.max(0, viewportHeight - triggerRect.bottom - bottomChrome);
+ const maxHeight = Math.min(hardMax, Math.max(minHeight, spaceBelow));
+ menu.style.setProperty('--setup-target-menu-max-height', `${Math.round(maxHeight)}px`);
+ }
+
+ function scrollSetupTargetMenuIntoView() {
+ const dropdown = document.querySelector('[data-target-dropdown]');
+ const menu = document.getElementById('targetPositionDropdownMenu');
+ if (!dropdown || !menu) return;
+
+ dropdown.scrollIntoView({ block: isSetupCompactMobile()? 'start': 'nearest', inline: 'nearest', behavior: 'auto' });
+ window.requestAnimationFrame(() => {
+ syncSetupTargetMenuViewport();
+ window.setTimeout(() => {
+ syncSetupTargetMenuViewport();
+ menu.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+ }, 60);
+ });
+ }
+
  function setSetupTargetDropdownOpen(open) {
  const dropdown = document.querySelector('[data-target-dropdown]');
  const trigger = document.getElementById('targetPositionDropdownButton');
@@ -880,7 +949,9 @@
  menu.hidden = !open;
 
  if (open) {
- window.setTimeout(() => menu.scrollIntoView({ block: 'nearest', inline: 'nearest' }), 0);
+ syncSetupTargetMenuViewport();
+ menu.scrollTop = 0;
+ scrollSetupTargetMenuIntoView();
  }
  }
 
@@ -892,14 +963,16 @@
  if (!positionField) return;
  const choiceGroups = setupTargetChoiceGroups[targetKind] || {};
  const previousKind = positionField.dataset.targetKind || targetKind;
- const previousValue = previousKind === targetKind? String(positionField.value || positionField.dataset.selectedTarget || '').trim(): '';
+ const previousValue = previousKind === targetKind? setupTargetFieldValue(positionField): '';
  const availableValues = flattenSetupTargetChoices(choiceGroups);
 
- positionField.value = previousValue && availableValues.includes(previousValue)? previousValue: '';
- positionField.dataset.selectedTarget = positionField.value;
- positionField.dataset.targetKind = targetKind;
+ setSetupTargetInputValue(
+ positionField,
+ previousValue && availableValues.includes(previousValue)? previousValue: '',
+ targetKind
+ );
 
- const selectedValue = String(positionField.value || '').trim();
+ const selectedValue = setupTargetFieldValue(positionField);
  const trigger = document.getElementById('targetPositionDropdownButton');
  const label = document.getElementById('targetPositionDropdownLabel');
 
@@ -963,7 +1036,8 @@
  const fieldIds = panelId? (setupPanelRequiredFields[panelId] || []): setupRequiredFieldIds;
  const missing = fieldIds.map(id => ({ type: 'field', id, panelId })).filter(item => {
  const field = document.getElementById(item.id);
- return!field || String(field.value || '').trim().length === 0;
+ const value = item.id === 'valPosition'? setupTargetFieldValue(field): String(field?.value || '').trim();
+ return!field || value.length === 0;
  });
 
  if ((!panelId || panelId === 'panel-basic') && !missing.some(item => item.id === 'valPosition')) {
@@ -1102,7 +1176,7 @@
  }
 
  syncSetupTargetFieldCopy();
- const posVal = document.getElementById('valPosition').value;
+ const posVal = setupTargetFieldValue(document.getElementById('valPosition'));
  setSummaryValue('sumPosition', posVal, detailsReady);
 
  const diff = document.querySelector('input[name="difficulty"]:checked');
@@ -1146,7 +1220,8 @@
 
  const hasRequiredFields = setupRequiredFieldIds.every(id => {
  const field = document.getElementById(id);
- return field && String(field.value || '').trim().length > 0;
+ const value = id === 'valPosition'? setupTargetFieldValue(field): String(field?.value || '').trim();
+ return field && value.length > 0;
  });
 
  const hasDifficulty = hasCheckedSetupInput('difficulty');
@@ -1183,6 +1258,7 @@
 
  const targetPositionDropdown = document.querySelector('[data-target-dropdown]');
  const targetPositionDropdownButton = document.getElementById('targetPositionDropdownButton');
+ const targetPositionDropdownMenu = document.getElementById('targetPositionDropdownMenu');
 
  function chooseSetupTargetValue(choice) {
  const targetKind = selectedSetupScenarioKind() === 'school'? 'school': 'job';
@@ -1191,14 +1267,32 @@
  const positionField = document.getElementById('valPosition');
  if (!positionField) return;
 
- positionField.value = choice.dataset.targetDropdownChoiceValue || '';
- positionField.dataset.selectedTarget = positionField.value;
- positionField.dataset.targetKind = targetKind;
+ setSetupTargetInputValue(positionField, choice.dataset.targetDropdownChoiceValue || '', targetKind);
  syncSetupTargetDropdown(positionField, targetKind, currentSetupTargetFieldCopy());
  positionField.dispatchEvent(new Event('change', { bubbles: true }));
  setSetupTargetDropdownOpen(false);
  targetPositionDropdownButton?.focus();
  }
+
+ targetPositionDropdown?.addEventListener('click', (event) => {
+ event.stopPropagation();
+ });
+
+ targetPositionDropdown?.addEventListener('pointerdown', (event) => {
+ event.stopPropagation();
+ });
+
+ targetPositionDropdown?.addEventListener('touchstart', (event) => {
+ event.stopPropagation();
+ }, { passive: true });
+
+ targetPositionDropdownMenu?.addEventListener('touchmove', (event) => {
+ event.stopPropagation();
+ }, { passive: true });
+
+ targetPositionDropdownMenu?.addEventListener('wheel', (event) => {
+ event.stopPropagation();
+ }, { passive: true });
 
  targetPositionDropdownButton?.addEventListener('click', () => {
  const willOpen = targetPositionDropdownButton.getAttribute('aria-expanded') !== 'true';
@@ -1215,7 +1309,11 @@
  });
 
  document.querySelectorAll('[data-target-dropdown-choice-value]').forEach((choice) => {
- choice.addEventListener('click', () => chooseSetupTargetValue(choice));
+ choice.addEventListener('click', (event) => {
+ event.preventDefault();
+ event.stopPropagation();
+ chooseSetupTargetValue(choice);
+ });
  choice.addEventListener('keydown', (event) => {
  const choices = visibleSetupTargetChoices();
  const currentIndex = choices.indexOf(choice);
@@ -1255,6 +1353,30 @@
  if (event.key !== 'Escape') return;
  setSetupTargetDropdownOpen(false);
  });
+
+ window.addEventListener('resize', () => {
+ if (targetPositionDropdownButton?.getAttribute('aria-expanded') === 'true') {
+ syncSetupTargetMenuViewport();
+ }
+ });
+
+ window.addEventListener('scroll', () => {
+ if (targetPositionDropdownButton?.getAttribute('aria-expanded') === 'true') {
+ syncSetupTargetMenuViewport();
+ }
+ }, { passive: true });
+
+ window.visualViewport?.addEventListener('resize', () => {
+ if (targetPositionDropdownButton?.getAttribute('aria-expanded') === 'true') {
+ syncSetupTargetMenuViewport();
+ }
+ });
+
+ window.visualViewport?.addEventListener('scroll', () => {
+ if (targetPositionDropdownButton?.getAttribute('aria-expanded') === 'true') {
+ syncSetupTargetMenuViewport();
+ }
+ }, { passive: true });
 
  const setupStepState = {
  index: 0,
@@ -1481,9 +1603,9 @@
  body.interview-setup-page #sec-interview-setup,
  body.interview-setup-page #sec-interview-setup #setupForm,
  body.interview-setup-page #sec-interview-setup #setup-left-col,
- body.interview-setup-page #sec-interview-setup.col-lg-4,
- body.interview-setup-page #sec-interview-setup.setup-summary-wrap,
- body.interview-setup-page #sec-interview-setup.setup-panel,
+ body.interview-setup-page #sec-interview-setup .col-lg-4,
+ body.interview-setup-page #sec-interview-setup .setup-summary-wrap,
+ body.interview-setup-page #sec-interview-setup .setup-panel,
  body.interview-setup-page #sec-interview-setup #panel-summary {
  height: auto!important;
  max-height: none!important;
@@ -1496,21 +1618,61 @@
  overflow-x: clip!important;
  }
 
- body.interview-setup-page #sec-interview-setup.setup-summary-wrap,
+ body.interview-setup-page #sec-interview-setup .setup-summary-wrap,
  body.interview-setup-page #sec-interview-setup #panel-summary,
- body.interview-setup-page #sec-interview-setup.col-lg-4 > div {
+ body.interview-setup-page #sec-interview-setup .col-lg-4 > div {
  position: static!important;
  top: auto!important;
  }
 
- body.interview-setup-page #dashboard.db-nav,
- html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard.db-nav {
+ @media (max-width: 767.98px) {
+ body.interview-setup-page #sec-interview-setup .setup-target-dropdown {
+ isolation: isolate!important;
+ overflow: visible!important;
+ scroll-margin-top: calc(var(--mob-top-h, 64px) + var(--mob-safe-top, 0px) + 16px)!important;
+ scroll-margin-bottom: calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 24px)!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup .setup-target-dropdown-open {
+ z-index: 10000!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup .setup-target-dropdown-open .setup-target-menu {
+ position: relative!important;
+ top: auto!important;
+ left: auto!important;
+ right: auto!important;
+ width: 100%!important;
+ max-height: var(--setup-target-menu-max-height, min(420px, 52vh))!important;
+ margin-top: 8px!important;
+ padding: 6px 6px calc(8px + env(safe-area-inset-bottom, 0px))!important;
+ overflow-y: auto!important;
+ -webkit-overflow-scrolling: touch!important;
+ touch-action: pan-y!important;
+ overscroll-behavior: contain!important;
+ pointer-events: auto!important;
+ scrollbar-gutter: stable!important;
+ transform: translateZ(0)!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup .setup-target-choice {
+ min-height: 44px!important;
+ position: relative!important;
+ z-index: 2!important;
+ pointer-events: auto!important;
+ touch-action: manipulation!important;
+ -webkit-tap-highlight-color: transparent!important;
+ }
+ }
+
+ body.interview-setup-page #dashboard .db-nav,
+ html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard .db-nav {
  scrollbar-width: none!important;
  -ms-overflow-style: none!important;
  }
 
- body.interview-setup-page #dashboard.db-nav::-webkit-scrollbar,
- html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard.db-nav::-webkit-scrollbar {
+ body.interview-setup-page #dashboard .db-nav::-webkit-scrollbar,
+ html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard .db-nav::-webkit-scrollbar {
  width: 0!important;
  height: 0!important;
  display: none!important;

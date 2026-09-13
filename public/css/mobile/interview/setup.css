@@ -5755,3 +5755,59 @@ html:not(.lm) body #mob-content #sec-interview-setup .setup-target-choice-select
     background: rgba(37, 99, 235, 0.24) !important;
     color: #bfdbfe !important;
 }
+
+@media (max-width: 767.98px) {
+    html body.user-mobile-shell #sec-interview-setup .setup-target-dropdown,
+    html body #mob-content #sec-interview-setup .setup-target-dropdown {
+        isolation: isolate !important;
+        overflow: visible !important;
+        scroll-margin-top: calc(var(--mob-top-h, 64px) + var(--mob-safe-top, 0px) + 16px) !important;
+        scroll-margin-bottom: calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 24px) !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-target-dropdown-open,
+    html body #mob-content #sec-interview-setup .setup-target-dropdown-open {
+        z-index: 10000 !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-target-dropdown-open .setup-target-menu,
+    html body #mob-content #sec-interview-setup .setup-target-dropdown-open .setup-target-menu {
+        position: relative !important;
+        inset: auto !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        max-height: var(--setup-target-menu-max-height, min(420px, 52vh)) !important;
+        margin-top: 8px !important;
+        padding: 6px 6px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+        box-sizing: border-box !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-y !important;
+        overscroll-behavior: contain !important;
+        scroll-padding: 8px !important;
+        pointer-events: auto !important;
+        scrollbar-gutter: stable !important;
+        transform: translateZ(0) !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-target-dropdown-open .setup-target-choice-group-title,
+    html body #mob-content #sec-interview-setup .setup-target-dropdown-open .setup-target-choice-group-title {
+        position: sticky !important;
+        top: -6px !important;
+        z-index: 1 !important;
+        margin: 0 -6px !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-target-choice,
+    html body #mob-content #sec-interview-setup .setup-target-choice {
+        position: relative !important;
+        z-index: 2 !important;
+        min-height: 44px !important;
+        padding: 10px !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+}
