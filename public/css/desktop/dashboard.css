@@ -9179,6 +9179,112 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
         border-bottom: 0 !important;
     }
 
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-sessions-table table {
+        table-layout: fixed;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-sessions-table :is(th, td) {
+        max-width: none !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-sessions-table :is(th:nth-child(1), td:nth-child(1)) {
+        width: 24%;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-sessions-table :is(th:nth-child(2), td:nth-child(2)) {
+        width: 34%;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-sessions-table :is(th:nth-child(3), td:nth-child(3)) {
+        width: 16%;
+        white-space: nowrap;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-sessions-table :is(th:nth-child(4), td:nth-child(4)) {
+        width: 156px;
+        white-space: nowrap;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-category-chip {
+        max-width: 100%;
+        padding: 8px 12px;
+        background: rgba(37, 99, 235, 0.09) !important;
+        color: #334155 !important;
+        -webkit-text-fill-color: #334155 !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-category-chip,
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-category-chip,
+    body.dm.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-category-chip {
+        background: rgba(96, 165, 250, 0.16) !important;
+        color: #dbeafe !important;
+        -webkit-text-fill-color: #dbeafe !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-score-value {
+        display: inline-flex;
+        min-width: 42px;
+        color: var(--session-score-color, var(--sr-saas-danger)) !important;
+        -webkit-text-fill-color: var(--session-score-color, var(--sr-saas-danger)) !important;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-action-cell {
+        padding-right: 18px !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-row-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        width: 100%;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-row-actions form {
+        margin: 0;
+        line-height: 0;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-review-table {
+        min-height: 34px;
+        padding: 6px 13px;
+        border-radius: 8px;
+        font-size: 0.74rem;
+        font-weight: 850;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-delete-table {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        padding: 0 !important;
+        border-color: rgba(239, 68, 68, 0.36) !important;
+        background: rgba(239, 68, 68, 0.04) !important;
+        color: #ef4444 !important;
+        -webkit-text-fill-color: #ef4444 !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-delete-table:is(:hover, :focus-visible) {
+        border-color: rgba(239, 68, 68, 0.58) !important;
+        background: rgba(239, 68, 68, 0.1) !important;
+        color: #dc2626 !important;
+        -webkit-text-fill-color: #dc2626 !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-delete-table i {
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 0.86rem;
+    }
+
     body.user-desktop-shell:not(.admin-shell) .sr-side-stack {
         gap: 12px !important;
     }

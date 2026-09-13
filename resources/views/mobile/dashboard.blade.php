@@ -433,7 +433,7 @@
                         <p class="sr-plan-subtitle">Follow a short sequence built from your latest readiness signals.</p>
                     </div>
                 </div>
-                <a href="{{ route('user.progress') }}" class="sr-plan-full-link">
+                <a href="{{ route('user.practice.plan') }}" class="sr-plan-full-link">
                     <i class="fa-solid fa-chart-line"></i>
                     View complete progress plan
                     <i class="fa-solid fa-chevron-right"></i>

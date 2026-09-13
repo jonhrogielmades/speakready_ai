@@ -6813,6 +6813,284 @@
     line-height: 1.35;
 }
 
+/* Final standalone practice hero sizing and animated art. */
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-inner {
+    gap: 12px !important;
+    padding: 10px 138px 10px 14px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-title {
+    font-size: 1.16rem !important;
+    line-height: 1.12 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-subtitle {
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .practice-hero-icon {
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    font-size: 0.95rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .practice-hero-art {
+    display: block !important;
+    position: absolute !important;
+    z-index: 0 !important;
+    right: 10px !important;
+    bottom: -8px !important;
+    width: 126px !important;
+    height: auto !important;
+    opacity: 0.94 !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    filter: drop-shadow(0 16px 24px rgba(37, 99, 235, 0.18)) !important;
+    transform-origin: 50% 60% !important;
+    animation: practiceHeroArtFloat 5.5s ease-in-out infinite !important;
+}
+
+/* Final practice plan panel polish: full-width panel with compact card sizing. */
+html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan {
+    --bs-gutter-x: 0 !important;
+    --bs-gutter-y: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 14px !important;
+    box-sizing: border-box !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan > .col-12 {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-panel {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 12px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-heading {
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    align-items: center !important;
+    margin: 0 0 10px !important;
+    padding: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-heading-icon,
+html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-icon {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    flex: 0 0 34px !important;
+    border-radius: 10px !important;
+    font-size: 0.84rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-heading-title {
+    margin: 0 0 3px !important;
+    font-size: 0.94rem !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-heading-text {
+    margin: 0 !important;
+    font-size: 0.68rem !important;
+    line-height: 1.25 !important;
+}
+
+@media (min-width: 768px) {
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-auto-rows: 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-row {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        min-height: 104px !important;
+        height: 100% !important;
+        padding: 9px !important;
+        border-radius: 9px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-title {
+        font-size: 0.82rem !important;
+        font-weight: 900 !important;
+        line-height: 1.15 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-text {
+        margin: 0 !important;
+        font-size: 0.66rem !important;
+        line-height: 1.28 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-tasks li {
+        gap: 6px !important;
+        font-size: 0.64rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-tasks li i {
+        width: 16px !important;
+        height: 16px !important;
+        min-width: 16px !important;
+        flex-basis: 16px !important;
+        font-size: 0.56rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-pill,
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-step,
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-link {
+        min-height: 20px !important;
+        padding: 4px 7px !important;
+        font-size: 0.6rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+}
+
+/* Last practice plan layout override: four items render as 2 columns by 2 rows. */
+@media (min-width: 768px) {
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-auto-rows: 1fr !important;
+        gap: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-row {
+        grid-template-columns: 54px minmax(0, 1fr) !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+        min-height: 188px !important;
+        height: 100% !important;
+        padding: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-icon {
+        width: 54px !important;
+        height: 54px !important;
+        flex-basis: 54px !important;
+        border-radius: 14px !important;
+        font-size: 1.35rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-title {
+        font-size: 1rem !important;
+        line-height: 1.22 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-text {
+        font-size: 0.86rem !important;
+        line-height: 1.36 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-tasks li {
+        font-size: 0.82rem !important;
+        line-height: 1.3 !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1080px) {
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-row {
+        grid-template-columns: 46px minmax(0, 1fr) !important;
+        gap: 12px !important;
+        padding: 15px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-plan-page #personalized-practice-plan .practice-plan-icon {
+        width: 46px !important;
+        height: 46px !important;
+        flex-basis: 46px !important;
+        font-size: 1.15rem !important;
+    }
+}
+
+:is(#practice-plan-page, #practice-calendar-page) .practice-hero-art .practice-art-panel {
+    transform-origin: 50% 50%;
+    animation: practiceHeroPanelBreathe 5.5s ease-in-out infinite;
+}
+
+:is(#practice-plan-page, #practice-calendar-page) .practice-hero-art .practice-art-line {
+    transform-origin: 50% 50%;
+    animation: practiceHeroLineSlide 3.8s ease-in-out infinite;
+}
+
+:is(#practice-plan-page, #practice-calendar-page) .practice-hero-art :is(.practice-art-dot, .practice-art-cell) {
+    transform-origin: center;
+    animation: practiceHeroPulse 3.2s ease-in-out infinite;
+}
+
+:is(#practice-plan-page, #practice-calendar-page) .practice-hero-art .practice-art-check {
+    transform-origin: 164px 50px;
+    animation: practiceHeroCheckPulse 2.6s ease-in-out infinite;
+}
+
+:is(#practice-plan-page, #practice-calendar-page) .practice-hero-art .practice-art-spark {
+    transform-origin: center;
+    animation: practiceHeroSparkDrift 3.2s ease-in-out infinite;
+}
+
+@keyframes practiceHeroArtFloat {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+    35% { transform: translate3d(0, -6px, 0) rotate(1.3deg) scale(1.012); }
+    70% { transform: translate3d(-3px, -2px, 0) rotate(-0.8deg) scale(1.004); }
+}
+
+@keyframes practiceHeroPanelBreathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.018); opacity: 0.94; }
+}
+
+@keyframes practiceHeroLineSlide {
+    0%, 100% { transform: translateX(0); opacity: 0.92; }
+    50% { transform: translateX(3px); opacity: 1; }
+}
+
+@keyframes practiceHeroPulse {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes practiceHeroCheckPulse {
+    0%, 100% { transform: scale(1); opacity: 0.95; }
+    50% { transform: scale(1.12); opacity: 1; }
+}
+
+@keyframes practiceHeroSparkDrift {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.66; }
+    50% { transform: translate3d(2px, -5px, 0) scale(1.18); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :is(#practice-plan-page, #practice-calendar-page) .practice-hero-art,
+    :is(#practice-plan-page, #practice-calendar-page) .practice-hero-art * {
+        animation: none !important;
+    }
+}
+
 /* Final desktop Skill and Strengths panels equal natural row height. */
 @media (min-width: 1181px) {
     html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker,
@@ -8794,4 +9072,197 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-
         max-width: 100% !important;
         flex-basis: 100% !important;
     }
+}
+
+/* Standalone practice pages use the same compact hero rhythm as Interview Setup. */
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero.setup-hero {
+    display: block !important;
+    min-height: 80px !important;
+    margin-bottom: 14px !important;
+    border: 1px solid rgba(147, 197, 253, 0.48) !important;
+    border-radius: 8px !important;
+    background:
+        radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+        radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+        linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+    box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+    color: #f8fbff !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero.setup-hero::before,
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero.setup-hero::after {
+    content: none !important;
+    display: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-inner {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 14px !important;
+    min-height: 80px !important;
+    padding: 10px 14px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-copy {
+    min-width: 0 !important;
+    width: auto !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-title {
+    display: block !important;
+    margin: 0 0 3px !important;
+    background: none !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-size: 1.42rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.08 !important;
+    text-shadow: none !important;
+    text-transform: none !important;
+    white-space: normal !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-subtitle {
+    max-width: 760px !important;
+    margin: 0 !important;
+    color: rgba(248, 251, 255, 0.92) !important;
+    -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    line-height: 1.28 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .practice-hero-icon {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 48px !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    border: 1px solid rgba(255, 255, 255, 0.62) !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    color: #1d4ed8 !important;
+    -webkit-text-fill-color: #1d4ed8 !important;
+    font-size: 1.15rem !important;
+    box-shadow: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .practice-hero-icon :is(i, svg, svg *) {
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+    stroke: currentColor !important;
+}
+
+/* Standalone Practice Activity Calendar: match the compact user-page layout. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #practice-calendar-page {
+        --practice-calendar-gap: 8px;
+        width: 100% !important;
+        max-width: var(--desktop-content-max, 1480px) !important;
+        margin: 0 auto !important;
+        padding-bottom: 12px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--practice-calendar-gap) !important;
+        overflow-x: hidden !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-calendar-page > :is(.setup-hero, #practiceCalendarActions, .row) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practiceCalendarActions {
+        justify-content: flex-end !important;
+        gap: 6px !important;
+        margin: 0 0 var(--practice-calendar-gap) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practiceCalendarActions .btn,
+    html body.user-desktop-shell:not(.admin-shell) #practice-calendar-page #activity-calendar .activity-cta {
+        min-height: 28px !important;
+        padding: 5px 8px !important;
+        border-radius: 7px !important;
+        gap: 5px !important;
+        font-size: 0.58rem !important;
+        line-height: 1.1 !important;
+        font-weight: 900 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practiceCalendarActions .btn i,
+    html body.user-desktop-shell:not(.admin-shell) #practice-calendar-page #activity-calendar .activity-cta i {
+        font-size: 0.64rem !important;
+        margin-right: 3px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-calendar-page > .row {
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-calendar-page #activity-calendar {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #practice-calendar-page #activity-calendar .activity-panel {
+        padding: 12px !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+    }
+}
+
+/* Last practice hero override: keep the standalone pages aligned with Interview Setup. */
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-inner {
+    gap: 12px !important;
+    padding: 10px 138px 10px 14px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-title {
+    font-size: 1.16rem !important;
+    line-height: 1.12 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-subtitle {
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .practice-hero-icon {
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    font-size: 0.95rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .practice-hero-art {
+    display: block !important;
+    position: absolute !important;
+    z-index: 0 !important;
+    right: 10px !important;
+    bottom: -8px !important;
+    width: 126px !important;
+    height: auto !important;
+    opacity: 0.94 !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    filter: drop-shadow(0 16px 24px rgba(37, 99, 235, 0.18)) !important;
+    transform-origin: 50% 60% !important;
+    animation: practiceHeroArtFloat 5.5s ease-in-out infinite !important;
 }

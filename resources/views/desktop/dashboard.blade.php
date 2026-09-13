@@ -561,17 +561,17 @@
                                     $sessionScore = $session->score ? (int) $session->score->overall_readiness_score : 0;
                                     $sessionColor = $sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444');
                                 @endphp
-                                <tr>
+                                <tr style="--session-score-color: {{ $sessionColor }};">
                                     <td>{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</td>
-                                    <td><span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">{{ $session->category ? $session->category->title : 'Interview' }}</span></td>
-                                    <td><span style="color:{{ $sessionColor }};font-weight:900">{{ $sessionScore }}%</span></td>
-                                    <td class="text-end">
-                                        <div class="d-flex justify-content-end gap-2">
-                                            <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary" style="min-height:34px;padding:6px 11px;font-size:.78rem">Review</a>
+                                    <td><span class="sr-chip sr-session-category-chip">{{ $session->category ? $session->category->title : 'Interview' }}</span></td>
+                                    <td><span class="sr-session-score-value">{{ $sessionScore }}%</span></td>
+                                    <td class="text-end sr-session-action-cell">
+                                        <div class="sr-session-row-actions">
+                                            <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary sr-session-review-table">Review</a>
                                             <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Delete this session?" data-sr-confirm-message="This interview session and its saved feedback will be permanently deleted." data-sr-confirm-action="Delete Session" data-sr-confirm-variant="danger">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="sr-btn" title="Delete session" aria-label="Delete session from {{ $session->created_at ? $session->created_at->format('M d, Y') : 'recent sessions' }}" style="width:34px;min-height:34px;padding:0;color:#ef4444;border-color:rgba(239,68,68,.35)">
+                                                <button type="submit" class="sr-btn sr-session-delete-table" title="Delete session" aria-label="Delete session from {{ $session->created_at ? $session->created_at->format('M d, Y') : 'recent sessions' }}">
                                                     <i class="fa-solid fa-trash-can"></i>
                                                 </button>
                                             </form>

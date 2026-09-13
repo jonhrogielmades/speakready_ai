@@ -109,7 +109,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $response->assertOk()
  ->assertSee('STAR coverage')
  ->assertSee('Add a measurable result.')
- ->assertSee('Practice Again')
+ ->assertDontSee('id="activity-calendar"', false)
  ->assertSee('3/3 day streak')
  ->assertSee('2/5 completed interviews')
  ->assertViewHas('starProgress', fn ($progress) => $progress
@@ -135,7 +135,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('No readiness trend yet')
  ->assertSee('No scenario performance yet')
  ->assertSee('First milestone waiting')
- ->assertSee('Start Practice')
+ ->assertDontSee('id="personalized-practice-plan"', false)
+ ->assertDontSee('id="activity-calendar"', false)
  ->assertSee('id="historyNoResults"', false)
  ->assertSee('No history records match your search.')
  ->assertViewHas('starProgress', fn ($progress) => $progress &&! $progress->has_data)
@@ -143,7 +144,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertViewHas('goalNote', fn ($note) => $note && $note->title === 'First milestone waiting');
  }
 
- public function test_progress_page_renders_live_learning_plan_recommendation_and_interview_activity(): void
+ public function test_progress_page_moves_plan_and_activity_to_dedicated_pages(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('Behavioral');
@@ -167,11 +168,11 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $response = $this->actingAs($user)->get(route('user.progress'));
 
  $response->assertOk()
- ->assertSee('Personalized Practice Plan')
+ ->assertDontSee('id="personalized-practice-plan"', false)
  ->assertSee('Learning Progress')
  ->assertSee('Answer Clarity Sprint')
  ->assertSee('Recommended Next')
- ->assertSee('Practice Activity Calendar')
+ ->assertDontSee('id="activity-calendar"', false)
  ->assertDontSee('Voice Progress')
  ->assertViewHas('currentStreak', 2)
  ->assertViewHas('totalPracticeDays', 2)
@@ -181,10 +182,57 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  && $calendar->total_interviews === 2);
 
  $this->actingAs($user)
+ ->get(route('user.practice.plan'))
+ ->assertOk()
+ ->assertSee('Personalized Practice Plan')
+ ->assertSee('class="setup-hero-art practice-hero-art practice-plan-art"', false)
+ ->assertSee('practiceHeroArtFloat', false)
+ ->assertSee('Standalone practice pages should fill the same content lane', false)
+ ->assertSee('Compact practice page action buttons', false)
+ ->assertSee('Final night theme visibility', false)
+ ->assertSee('color: #f8fafc !important', false)
+ ->assertSee('min-height: 28px !important', false)
+ ->assertSee('font-size: 0.62rem !important', false)
+ ->assertSee('Final practice plan panel polish', false)
+ ->assertSee('flex: 0 0 38px', false)
+ ->assertSee('grid-template-columns: 34px minmax(0, 1fr)', false)
+ ->assertSee('width: 100% !important', false)
+ ->assertSee('grid-template-columns: repeat(2, minmax(0, 1fr))', false)
+ ->assertSee('Answer Clarity Sprint')
+ ->assertSee('Start Practice')
+ ->assertViewHas('practicePlan', fn ($plan) => $plan && $plan->count() === 4);
+
+ $this->actingAs($user)
+ ->get(route('user.practice.calendar'))
+ ->assertOk()
+ ->assertSee('Practice Activity Calendar')
+ ->assertSee('class="setup-hero-art practice-hero-art practice-calendar-art"', false)
+ ->assertSee('practiceHeroArtFloat', false)
+ ->assertSee('Final activity calendar panel polish', false)
+ ->assertSee('rgba(30, 41, 59, 0.82)', false)
+ ->assertSee('min-height: 48px !important', false)
+ ->assertSee('grid-template-columns: repeat(7, minmax(0, 1fr))', false)
+ ->assertSee('grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)', false)
+ ->assertSee('justify-self: center !important', false)
+ ->assertSee('Practice Again')
+ ->assertViewHas('activityCalendar', fn ($calendar) => $calendar
+ && $calendar->active_days === 2
+ && $calendar->current_streak === 2
+ && $calendar->total_interviews === 2);
+
+ $this->actingAs($user)
+ ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1')
+ ->get(route('user.practice.calendar'))
+ ->assertOk()
+ ->assertSee('Mobile activity calendar footer action hidden', false)
+ ->assertSee('body.user-mobile-shell #mob-content #practice-calendar-page #activity-calendar .activity-cta.compact', false)
+ ->assertSee('display: none !important', false);
+
+ $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1')
  ->get(route('user.progress'))
  ->assertOk()
- ->assertSee('Personalized Practice Plan')
+ ->assertDontSee('id="personalized-practice-plan"', false)
  ->assertDontSee('Voice Progress');
  }
 

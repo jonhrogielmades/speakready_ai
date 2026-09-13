@@ -232,6 +232,8 @@ Route::middleware(['auth', 'user'])->group(function () {
 
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');
     Route::get('/progress', [UserController::class, 'progress'])->name('user.progress');
+    Route::get('/practice-plan', [UserController::class, 'practicePlan'])->name('user.practice.plan');
+    Route::get('/practice-activity-calendar', [UserController::class, 'practiceActivityCalendar'])->name('user.practice.calendar');
     Route::get('/session/{id}/review', [UserController::class, 'review'])->name('user.review');
     Route::get('/session/{session}/export', [UserController::class, 'exportSession'])->name('user.sessions.export');
     Route::delete('/session/{id}', [UserController::class, 'destroySession'])->name('user.sessions.destroy');

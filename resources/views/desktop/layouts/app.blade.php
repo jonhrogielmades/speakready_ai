@@ -106,6 +106,8 @@
 
                <div class="db-nav-section">Performance</div>
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>
+               <a href="{{ route('user.practice.plan') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.practice.plan') ? 'active' : '' }}" title="Personalized Practice Plan"><i class="fa-solid fa-route"></i><span class="db-nav-label">Practice Plan</span></a>
+               <a href="{{ route('user.practice.calendar') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}" title="Practice Activity Calendar"><i class="fa-regular fa-calendar-days"></i><span class="db-nav-label">Activity Calendar</span></a>
                <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
             </div>
@@ -910,6 +912,7 @@
          #portfolioReport .reports-hero-icon,
          #notifications-page .notif-hero-icon,
          #account-page .account-hero-icon,
+         .practice-page-hero .practice-hero-icon,
          #skill-trees-page .skill-tree-hero-icon,
          #feedbackModulesLikeHero .feedback-chat-mark {
             background: rgba(15, 23, 42, 0.16) !important;

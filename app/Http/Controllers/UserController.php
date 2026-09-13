@@ -382,8 +382,21 @@ class UserController extends Controller
 
  public function progress()
  {
- $userId = Auth::id();
+ return $this->mobileView('user.progress', $this->progressViewData(Auth::id()));
+ }
 
+ public function practicePlan()
+ {
+ return $this->mobileView('user.practice-plan', $this->progressViewData(Auth::id()));
+ }
+
+ public function practiceActivityCalendar()
+ {
+ return $this->mobileView('user.practice-calendar', $this->progressViewData(Auth::id()));
+ }
+
+ private function progressViewData($userId): array
+ {
  $sessions = InterviewSession::where('user_id', $userId)
  ->where('interview_sessions.status', 'completed')
  ->with([
@@ -419,7 +432,7 @@ class UserController extends Controller
  ->orderBy('updated_at', 'desc')
  ->get();
  $moduleRecommendations = app(LearningRecommendationService::class)->forUser($userId, 3);
- $practicePlan = app(PersonalizedPracticePlanService::class)->forUser($userId, 4);
+ $practicePlan = app(PersonalizedPracticePlanService::class)->forUser((int) $userId, 4);
 
  $currentStreak = (int) ($activityCalendar->current_streak?? 0);
  $longestStreak = max(
@@ -470,7 +483,7 @@ class UserController extends Controller
  }
  $goalNote = $this->progressGoalNoteFor($goals, $sessions->count());
 
- return $this->mobileView('user.progress', compact(
+ return compact(
  'sessions',
  'scoredSessions',
  'scoreTrend',
@@ -491,7 +504,7 @@ class UserController extends Controller
  'goals',
  'goalNote',
  'badges'
- ));
+ );
  }
 
  public function feedback(Request $request)

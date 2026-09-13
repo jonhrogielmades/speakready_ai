@@ -2986,6 +2986,8 @@
                 <a href="{{ route('user.modules.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i><span>Modules</span></a>
                <a href="{{ route('user.learning') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.learning*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Challenges</span></a>
                <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>Coach</span></a>
+               <a href="{{ route('user.practice.plan') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.practice.plan') ? 'active' : '' }}"><i class="fa-solid fa-route"></i><span>Practice Plan</span></a>
+               <a href="{{ route('user.practice.calendar') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}"><i class="fa-regular fa-calendar-days"></i><span>Calendar</span></a>
                <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>Reports</span></a>
                <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
                <a href="{{ route('user.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('user.account') ? 'active' : '' }}"><i class="fa-solid fa-user-gear"></i><span>Account</span></a>
@@ -3096,7 +3098,7 @@
                <span class="mob-nav-icon"><i class="fa-solid fa-clipboard-check"></i></span>
                <span>Feedback</span>
             </a>
-            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.modules.*', 'user.learning*', 'user.coach*', 'user.reports') ? 'active' : '' }}"
+            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.modules.*', 'user.learning*', 'user.coach*', 'user.practice.*', 'user.reports') ? 'active' : '' }}"
                     id="mobnav-more"
                     type="button"
                     aria-controls="mobProfileDropdown"
@@ -3775,6 +3777,7 @@
          #portfolioReport .reports-hero-icon,
          #notifications-page .notif-hero-icon,
          #account-page .account-hero-icon,
+         .practice-page-hero .practice-hero-icon,
          #skill-trees-page .skill-hero-icon,
          #skill-trees-page .skill-tree-hero-icon,
          #feedbackModulesLikeHero .feedback-chat-mark {
@@ -4231,6 +4234,7 @@
                .coach-hero-icon,
                .reports-hero-icon,
                .account-hero-icon,
+               .practice-hero-icon,
                .skill-hero-icon,
                .skill-tree-hero-icon,
                .notif-hero-icon,

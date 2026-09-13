@@ -653,17 +653,51 @@
             if (routeMatches(routeName, ['user.progress'])) {
                 return withDefaults({
                     heroTitle: 'Progress analytics',
-                    heroDescription: 'Track readiness movement, practice consistency, learning progress, goals, and badges in one private dashboard.',
-                    workspaceTitle: 'Practice plan and trends',
-                    workspaceDescription: 'Follow personalized practice recommendations and compare readiness trends across your completed sessions.',
+                    heroDescription: 'Track readiness movement, learning progress, goals, and badges in one private dashboard.',
+                    workspaceTitle: 'Trends and history',
+                    workspaceDescription: 'Compare readiness trends and open previous sessions from your completed interview history.',
                     metricsTitle: 'Skill signals',
-                    metricsDescription: 'Scenario, skill, STAR, activity, milestone, and achievement panels show where growth is happening.',
+                    metricsDescription: 'Scenario, skill, STAR, milestone, and achievement panels show where growth is happening.',
                     actionsTitle: 'Open next work',
                     actionsDescription: 'Use suggested modules, session history, and goal links to continue the most useful next practice.',
                     heroSelectors: ['#progressModulesLikeHero', '#progress-stats'],
-                    workspaceSelectors: ['#personalized-practice-plan', '#readiness-trend', '#history-table'],
-                    metricsSelectors: ['#category-perf', '#skill-tracker', '#strengths-tracker', '#activity-calendar', '#goals-milestones', '#achievements-badges'],
+                    workspaceSelectors: ['#readiness-trend', '#history-table'],
+                    metricsSelectors: ['#category-perf', '#skill-tracker', '#strengths-tracker', '#goals-milestones', '#achievements-badges'],
                     actionSelectors: ['#recommended-next', '#learning-progress', '.progress-actions'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.practice.plan'])) {
+                return withDefaults({
+                    heroTitle: 'Personalized practice plan',
+                    heroDescription: 'Follow the next recommended practice steps generated from your latest readiness data.',
+                    workspaceTitle: 'Practice steps',
+                    workspaceDescription: 'Each row shows the focus, action, time estimate, and best next place to continue.',
+                    metricsTitle: 'Plan detail',
+                    metricsDescription: 'Use the focus labels, task checklist, and timing chips to choose a useful practice block.',
+                    actionsTitle: 'Continue practice',
+                    actionsDescription: 'Open a recommended step, return to progress analytics, or start a fresh mock interview.',
+                    heroSelectors: ['#practicePlanHero'],
+                    workspaceSelectors: ['#personalized-practice-plan'],
+                    metricsSelectors: ['.practice-plan-row', '.practice-plan-pill'],
+                    actionSelectors: ['#practicePlanActions', '.practice-plan-link'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.practice.calendar'])) {
+                return withDefaults({
+                    heroTitle: 'Practice activity calendar',
+                    heroDescription: 'Review recent practice days, active streaks, and completed interview activity.',
+                    workspaceTitle: 'Activity calendar',
+                    workspaceDescription: 'The calendar shows the last 28 days so you can see consistency and gaps quickly.',
+                    metricsTitle: 'Activity summary',
+                    metricsDescription: 'Active days, weekly activity, streaks, and latest practice summarize your current rhythm.',
+                    actionsTitle: 'Practice again',
+                    actionsDescription: 'Return to progress analytics or start another mock interview from the page actions.',
+                    heroSelectors: ['#practiceCalendarHero'],
+                    workspaceSelectors: ['#activity-calendar'],
+                    metricsSelectors: ['.activity-summary-grid', '.activity-grid', '.activity-empty'],
+                    actionSelectors: ['#practiceCalendarActions', '.activity-cta'],
                 });
             }
 

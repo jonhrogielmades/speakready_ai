@@ -78,6 +78,8 @@ class PageSmokeTest extends TestCase
  route('user.notifications'),
  route('user.feedback'),
  route('user.progress'),
+ route('user.practice.plan'),
+ route('user.practice.calendar'),
  route('user.reports'),
  route('user.coach'),
  route('user.learning', ['category_id' => $gameCategory->id]),
@@ -273,6 +275,20 @@ class PageSmokeTest extends TestCase
  ->assertSee('id="exportPdfBtn"', false)
  ->assertSee('id="exportExcelBtn"', false)
  ->assertSee(route('user.sessions.export', $session), false)
+ ->assertSee(route('interview.setup'), false);
+
+ $this->actingAs($user)
+ ->get(route('user.practice.plan'))
+ ->assertOk()
+ ->assertSee('Personalized Practice Plan')
+ ->assertSee(route('user.progress'), false)
+ ->assertSee(route('interview.setup'), false);
+
+ $this->actingAs($user)
+ ->get(route('user.practice.calendar'))
+ ->assertOk()
+ ->assertSee('Practice Activity Calendar')
+ ->assertSee(route('user.progress'), false)
  ->assertSee(route('interview.setup'), false);
 
  $this->actingAs($user)
