@@ -4,7 +4,6 @@ use Illuminate\Support\Str;
 
 $databaseUrl = env('DATABASE_URL');
 $databaseUrlScheme = is_string($databaseUrl) ? parse_url($databaseUrl, PHP_URL_SCHEME) : null;
-$databaseUrlHost = is_string($databaseUrl) ? parse_url($databaseUrl, PHP_URL_HOST) : null;
 $defaultDatabaseConnection = match ($databaseUrlScheme) {
     'postgres', 'postgresql', 'pgsql' => 'pgsql',
     'mysql', 'mysql2', 'mariadb' => 'mysql',
@@ -12,25 +11,6 @@ $defaultDatabaseConnection = match ($databaseUrlScheme) {
     'sqlsrv', 'mssql' => 'sqlsrv',
     default => 'mysql',
 };
-$postgresHost = env('DB_HOST', '127.0.0.1');
-$postgresHostWasPartialRenderHost = is_string($postgresHost) && preg_match('/^dpg-[^.]+$/', $postgresHost);
-
-if ($postgresHostWasPartialRenderHost) {
-    $postgresRegion = env('RENDER_POSTGRES_REGION', 'singapore');
-    $postgresHost = "{$postgresHost}.{$postgresRegion}-postgres.render.com";
-}
-
-if (is_string($databaseUrlHost) && preg_match('/^dpg-[^.]+$/', $databaseUrlHost)) {
-    $postgresRegion = env('RENDER_POSTGRES_REGION', 'singapore');
-    $expandedDatabaseUrlHost = "{$databaseUrlHost}.{$postgresRegion}-postgres.render.com";
-    $databaseUrl = preg_replace(
-        '/(^[a-z][a-z0-9+.-]*:\/\/(?:[^@\/?#]*@)?)'.preg_quote($databaseUrlHost, '/').'(?=[:\/?#]|$)/i',
-        '${1}'.$expandedDatabaseUrlHost,
-        $databaseUrl,
-        1
-    );
-    $postgresHostWasPartialRenderHost = true;
-}
 
 return [
 
@@ -96,7 +76,7 @@ return [
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => $databaseUrl,
-            'host' => $postgresHost,
+            'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'forge'),
             'username' => env('DB_USERNAME', 'forge'),
@@ -105,7 +85,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', $postgresHostWasPartialRenderHost ? 'require' : 'prefer'),
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
         'sqlsrv' => [

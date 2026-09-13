@@ -2,7 +2,7 @@
 
 SpeakReady AI is a Laravel-based interview preparation and career readiness platform. It combines mock interview sessions, AI-assisted feedback, learning modules, learning games, progress reporting, mentor review links, and an admin console for managing the whole system.
 
-The current system includes separate desktop and mobile Blade experiences, a redesigned guest/landing experience, legal and security pages, richer user dashboards, AI provider fallbacks, local speech assessment hooks, Render deployment hardening, and automated schema repair commands for production reliability.
+The current system includes separate desktop and mobile Blade experiences, a redesigned guest/landing experience, legal and security pages, richer user dashboards, AI provider fallbacks, local speech assessment hooks, container startup hardening, and automated schema repair commands for production reliability.
 
 ## Repository
 
@@ -26,14 +26,14 @@ The current system includes separate desktop and mobile Blade experiences, a red
 - Public shared review pages with optional unlock flow and mentor comments.
 - Public contact form, newsletter subscription response, privacy policy, terms of service, security page, and cookie preferences page.
 - Admin console for users, categories, questions, modules, learning games, interview sessions, contacts, feedback audits, AI providers, settings, notifications, and activity logs.
-- Render-focused production startup script that binds early, runs migrations, repairs known schema drift, links storage, seeds the admin account, and rebuilds Laravel caches.
+- Container startup script that binds early, runs migrations, repairs known schema drift, links storage, seeds the admin account, and rebuilds Laravel caches.
 
 ## Tech Stack
 
 - Laravel 12 with Blade views
 - PHP 8.2+ with PDO MySQL and PDO PostgreSQL support
 - MySQL for local development by default
-- PostgreSQL support for Render production through `DATABASE_URL`
+- PostgreSQL support for production through `DATABASE_URL`
 - Laravel Sanctum, Socialite, Breeze scaffolding dependencies, and Tinker
 - Jenssegers Agent for device-aware desktop/mobile view selection
 - Vite 8 for front-end asset builds
@@ -179,7 +179,7 @@ routes/web.php             Public, user, and admin web routes
 scripts/local_speech_assess.py
 tests/Feature/             Feature, smoke, hardening, and route tests
 Dockerfile
-render-start.sh            Render startup and maintenance entrypoint
+docker-start.sh            Container startup and maintenance entrypoint
 ```
 
 ## Requirements
@@ -329,8 +329,6 @@ APP_URL=https://your-domain.example
 SESSION_SECURE_COOKIE=true
 ```
 
-When deployed on Render, `config/app.php` and `render-start.sh` can use `RENDER_EXTERNAL_URL` if `APP_URL` is missing or still points to localhost.
-
 ### Database
 
 Local MySQL example:
@@ -344,16 +342,15 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-Render PostgreSQL example:
+PostgreSQL production example:
 
 ```env
 DB_CONNECTION=pgsql
 DATABASE_URL=postgresql://user:password@host:5432/database
 DB_SSLMODE=require
-RENDER_POSTGRES_REGION=singapore
 ```
 
-Use the full internal database URL when the Render web service and database are in the same account and region. Use the full external database URL otherwise. Do not use only a partial host such as `dpg-...-a`; the app includes fallback expansion for partial Render hosts, but the full URL is still the preferred setup.
+Use the full database URL from your hosting provider. If you prefer separate environment variables, set `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_SSLMODE` explicitly.
 
 ### Mail And Password Reset
 
@@ -383,9 +380,9 @@ MAIL_FROM_ADDRESS=yourgmail@gmail.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-Gmail requires a Google App Password. Render Free web services block common SMTP ports, so use a paid Render instance for SMTP or use an HTTPS/API mail provider.
+Gmail requires a Google App Password. Some hosts block common SMTP ports, so use an HTTPS/API mail provider if SMTP is unavailable in your production environment.
 
-Brevo API example for Render Free password reset emails:
+Brevo API example for password reset emails:
 
 ```env
 BREVO_API_KEY=your_brevo_api_key
@@ -592,17 +589,16 @@ LOCAL_GOP_COMMAND=
 
 Install the selected Python tools first. If `LOCAL_GOP_COMMAND` is not configured, the app does not invent a true GOP score; it reports GOP as unavailable or uses limited proxy evidence where supported.
 
-## Render Deployment
+## Container Deployment
 
-This repository includes `Dockerfile`, `railpack.json`, `nginx.conf`, and `render-start.sh`.
+This repository includes `Dockerfile`, `nginx.conf`, and `docker-start.sh`.
 
-Recommended Render settings:
+Recommended container settings:
 
-- Environment: Docker or Railpack-compatible PHP runtime
-- PHP package version: 8.3 when using `railpack.json`
 - Start command: handled by the Docker `CMD` when using the included Dockerfile
 - Public port: `$PORT`, defaulting to `10000`
-- Database: Render PostgreSQL with `DATABASE_URL`
+- Database: configure `DATABASE_URL` or the standard `DB_*` variables
+- `APP_URL` set to your production domain
 - `APP_ENV=production`
 - `APP_DEBUG=false`
 - `SESSION_SECURE_COOKIE=true`
@@ -610,11 +606,8 @@ Recommended Render settings:
 - `QUEUE_CONNECTION=sync`
 - `SESSION_DRIVER=file`
 
-On startup, `render-start.sh`:
+On startup, `docker-start.sh`:
 
-- Sets `APP_URL` from `RENDER_EXTERNAL_URL` when needed.
-- Warns when Gmail SMTP is configured on Render Free.
-- Expands partial Render PostgreSQL hosts if necessary.
 - Creates required storage and cache directories.
 - Starts PHP-FPM and binds Nginx early.
 - Clears stale Laravel caches.
@@ -625,13 +618,11 @@ On startup, `render-start.sh`:
 Optional production maintenance:
 
 ```env
-RENDER_REPAIR_FEEDBACK_ON_START=true
-RENDER_REPAIR_FEEDBACK_LIMIT=250
+REPAIR_FEEDBACK_ON_START=true
+REPAIR_FEEDBACK_LIMIT=250
 ```
 
 Use this only when older completed interviews need feedback coaching backfill during startup.
-
-Do not set `RUN_RENDER_DATA_CLEANUP=true` during normal deploys. That maintenance flag intentionally wipes user data while preserving the admin account.
 
 ## Useful Artisan Commands
 
@@ -674,11 +665,11 @@ The current feature tests cover authentication, password reset, route integrity,
 - Uploaded files or audio are not loading: run `php artisan storage:link`.
 - Login or session problems in production: verify `APP_URL`, HTTPS, `SESSION_SECURE_COOKIE`, and cache state.
 - Google login fails: verify Google OAuth credentials and callback URL.
-- Password reset emails do not send: check mail credentials; on Render Free use Brevo/API mail instead of SMTP.
+- Password reset emails do not send: check mail credentials; if your host blocks SMTP, use an HTTPS/API mail provider instead.
 - AI features return fallback messages: configure at least one provider API key and check provider priority values.
 - Speech analysis is incomplete: configure OpenAI transcription or enable and install the local speech pipeline tools.
-- Render database host cannot resolve: use the full `DATABASE_URL` or set `RENDER_POSTGRES_REGION` for partial Render hosts.
-- Schema drift after deployment: run the relevant `app:ensure-*` command or redeploy so `render-start.sh` runs maintenance.
+- Database host cannot resolve: use the full `DATABASE_URL` or verify the standard `DB_*` variables for your hosting provider.
+- Schema drift after deployment: run the relevant `app:ensure-*` command or redeploy so `docker-start.sh` runs maintenance.
 
 ## Notes For Maintainers
 

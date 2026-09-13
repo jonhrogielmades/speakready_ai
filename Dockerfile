@@ -30,7 +30,7 @@ RUN { \
         echo "max_execution_time=3600"; \
         echo "max_input_time=3600"; \
         echo "memory_limit=512M"; \
-    } > /usr/local/etc/php/conf.d/99-render-timeouts.ini \
+    } > /usr/local/etc/php/conf.d/99-app-timeouts.ini \
     && { \
         echo "opcache.enable=1"; \
         echo "opcache.enable_cli=1"; \
@@ -43,7 +43,7 @@ RUN { \
     && { \
         echo "[www]"; \
         echo "request_terminate_timeout = 3600s"; \
-    } > /usr/local/etc/php-fpm.d/zz-render-timeouts.conf
+    } > /usr/local/etc/php-fpm.d/zz-app-timeouts.conf
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -65,7 +65,7 @@ RUN php -d memory_limit=-1 /usr/bin/composer install --no-interaction --prefer-d
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Send Laravel logs to container stderr by default so Render can collect them
+# Send Laravel logs to container stderr by default so container platforms can collect them
 ENV LOG_CHANNEL=stderr
 ENV LOG_EMERGENCY_PATH=php://stderr
 
@@ -73,7 +73,7 @@ ENV LOG_EMERGENCY_PATH=php://stderr
 COPY . /var/www
 
 # Build production frontend assets inside the image. public/build is intentionally
-# ignored by Git/Docker context, so Render needs this step during the Docker build.
+# ignored by Git/Docker context, so the image build needs this step.
 RUN npm run build && rm -rf node_modules
 
 # Copy Nginx config
@@ -91,11 +91,11 @@ RUN mkdir -p \
     && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
     && chmod -R ug+rwX /var/www/storage /var/www/bootstrap/cache
 
-# Render web services expect the app to bind to $PORT.
+# Container platforms can override PORT at runtime.
 EXPOSE 10000
 
 # Make the start script executable and fix line endings
-RUN dos2unix /var/www/render-start.sh && chmod +x /var/www/render-start.sh
+RUN dos2unix /var/www/docker-start.sh && chmod +x /var/www/docker-start.sh
 
 # Start Nginx and PHP-FPM
-CMD ["/var/www/render-start.sh"]
+CMD ["/var/www/docker-start.sh"]
