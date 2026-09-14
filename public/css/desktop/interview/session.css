@@ -161,6 +161,9 @@
         cursor: not-allowed;
         box-shadow: none;
     }
+    .response-send-answer-btn.is-awaiting-transcript {
+        background: var(--tx3);
+    }
     .response-panel {
         padding: 14px;
         border-radius: 16px;
@@ -327,6 +330,87 @@
         font-weight: 900;
         line-height: 1;
         white-space: nowrap;
+    }
+    .voice-session-actions {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex: 0 0 auto;
+    }
+    .voice-session-menu {
+        position: relative;
+        display: inline-flex;
+    }
+    .voice-session-menu-button {
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--bd);
+        border-radius: 9px;
+        background: var(--bg3);
+        color: var(--tx2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        line-height: 1;
+        transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+    .voice-session-menu-button:hover,
+    .voice-session-menu-button:focus {
+        border-color: rgba(14, 165, 233, 0.35);
+        background: rgba(14, 165, 233, 0.1);
+        color: #0284c7;
+    }
+    .voice-session-menu-button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+    .voice-session-menu-panel {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 30;
+        min-width: 178px;
+        padding: 6px;
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        background: var(--sf);
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.22);
+    }
+    .voice-session-menu-panel[hidden] {
+        display: none !important;
+    }
+    .voice-session-menu-item {
+        width: 100%;
+        min-height: 34px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--tx);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 9px;
+        font-size: 0.74rem;
+        font-weight: 850;
+        line-height: 1.2;
+        text-align: left;
+    }
+    .voice-session-menu-item:hover,
+    .voice-session-menu-item:focus {
+        background: rgba(14, 165, 233, 0.1);
+    }
+    .voice-session-menu-item.danger {
+        color: #dc2626;
+    }
+    .voice-session-menu-item.danger:hover,
+    .voice-session-menu-item.danger:focus {
+        background: rgba(239, 68, 68, 0.1);
+    }
+    .voice-session-menu-item:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
     .voice-session-panel[data-state="recording"] .voice-session-badge {
         border-color: rgba(239, 68, 68, 0.36);

@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=21') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=22') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -143,7 +143,7 @@
  <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle d-md-none" onclick="toggleMobileFullscreen()" title="Enter fullscreen" aria-label="Enter fullscreen">
  <i class="fa-solid fa-expand"></i>
  </button>
- <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()">
+ <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()" disabled aria-disabled="true" title="Start the interview to answer">
  Send Answer <i class="fa-solid fa-paper-plane"></i>
  </button>
  </div>
@@ -184,7 +184,24 @@
  <i class="fa-solid fa-wave-square"></i>
  <span>Voice Session</span>
  </div>
+ <div class="voice-session-actions">
  <span id="voiceSessionBadge" class="voice-session-badge">Ready</span>
+ <div class="voice-session-menu">
+ <button type="button" id="voiceSessionMenuButton" class="voice-session-menu-button" onclick="toggleVoiceSessionMenu(event)" aria-label="Voice session actions" aria-haspopup="true" aria-expanded="false" aria-controls="voiceSessionMenu" disabled>
+ <i class="fa-solid fa-ellipsis-vertical"></i>
+ </button>
+ <div id="voiceSessionMenu" class="voice-session-menu-panel" role="menu" hidden>
+ <button type="button" id="voiceSessionDownloadButton" class="voice-session-menu-item" onclick="downloadVoiceSessionRecording(event)" role="menuitem" disabled>
+ <i class="fa-solid fa-download"></i>
+ <span>Download</span>
+ </button>
+ <button type="button" id="voiceSessionClearButton" class="voice-session-menu-item danger" onclick="clearCurrentVoiceSession(event)" role="menuitem" disabled>
+ <i class="fa-solid fa-trash-can"></i>
+ <span>Clear voice session</span>
+ </button>
+ </div>
+ </div>
+ </div>
  </div>
  <div class="voice-session-controls">
  <audio id="voiceSessionPlayback" class="voice-session-playback audio-disabled" controls preload="metadata"></audio>
@@ -374,6 +391,7 @@
  let answerListenersBound = false;
  let isSubmittingAnswer = false;
  let finalAnswerSubmitted = false;
+ let answerInputEnabled = false;
  let feedbackSubmissionInFlight = false;
  let openingHasPlayed = Boolean(savedSessionState.openingHasPlayed || (Array.isArray(interviewChatHistory) && interviewChatHistory.some(item => {
  const text = String(item?.text || '');
@@ -964,6 +982,7 @@
  function handleAnswerInput() {
  syncSpeechRecognitionBufferFromManualEdit();
  triggerAnalysis();
+ updateSendAnswerButtonState();
  }
 
  function isFillerOnlySpeech(segment) {
@@ -1183,7 +1202,10 @@
 
  const shouldShow = isVoiceTranscriptionMode();
  panel.hidden =!shouldShow;
- if (!shouldShow) return;
+ if (!shouldShow) {
+ updateVoiceSessionActionState(null);
+ return;
+ }
 
  const key = voiceSessionKeyFor(index);
  const recording = voiceSessionRecordings.get(key);
@@ -1258,6 +1280,135 @@
  player.classList.toggle('audio-disabled',!hasPlayback);
  player.setAttribute('aria-disabled', String(!hasPlayback));
  }
+
+ updateVoiceSessionActionState(recording, { hasPlayback, transcribingForQuestion });
+ }
+
+ function updateVoiceSessionActionState(recording = null, details = {}) {
+ const hasRecording = Boolean(recording?.blob || recording?.url);
+ const isBusy = Boolean(details.transcribingForQuestion);
+ const menuButton = document.getElementById('voiceSessionMenuButton');
+ const downloadButton = document.getElementById('voiceSessionDownloadButton');
+ const clearButton = document.getElementById('voiceSessionClearButton');
+ const menuDisabled =!hasRecording || isBusy;
+
+ if (menuButton) {
+ menuButton.disabled = menuDisabled;
+ menuButton.setAttribute('aria-disabled', String(menuDisabled));
+ menuButton.setAttribute('title', isBusy? 'Voice session is processing': (hasRecording? 'Voice session actions': 'Record a voice session first'));
+ }
+ if (downloadButton) {
+ downloadButton.disabled =!hasRecording || isBusy;
+ downloadButton.setAttribute('aria-disabled', String(downloadButton.disabled));
+ }
+ if (clearButton) {
+ clearButton.disabled =!hasRecording || isBusy;
+ clearButton.setAttribute('aria-disabled', String(clearButton.disabled));
+ }
+
+ if (menuDisabled) {
+ closeVoiceSessionMenu();
+ }
+ }
+
+ function setVoiceSessionMenuOpen(open) {
+ const button = document.getElementById('voiceSessionMenuButton');
+ const menu = document.getElementById('voiceSessionMenu');
+ if (!button ||!menu) return;
+
+ const shouldOpen = Boolean(open) &&!button.disabled;
+ menu.hidden =!shouldOpen;
+ button.setAttribute('aria-expanded', String(shouldOpen));
+ }
+
+ function closeVoiceSessionMenu() {
+ setVoiceSessionMenuOpen(false);
+ }
+
+ function toggleVoiceSessionMenu(event) {
+ event?.preventDefault();
+ event?.stopPropagation();
+ const menu = document.getElementById('voiceSessionMenu');
+ const button = document.getElementById('voiceSessionMenuButton');
+ if (!menu ||!button || button.disabled) return;
+ setVoiceSessionMenuOpen(menu.hidden);
+ }
+
+ function downloadVoiceSessionRecording(event) {
+ event?.preventDefault();
+ event?.stopPropagation();
+ closeVoiceSessionMenu();
+
+ const recording = voiceSessionRecordings.get(voiceSessionKeyFor());
+ if (!recording?.blob &&!recording?.url) {
+ showSessionNotice('Record a voice session before downloading.', 'warning');
+ return;
+ }
+
+ const mimeType = recording.mimeType || recording.blob?.type || '';
+ const url = recording.url || URL.createObjectURL(recording.blob);
+ const link = document.createElement('a');
+ link.href = url;
+ link.download = recording.filename || voiceSessionFilename(currentQIdx, mimeType);
+ document.body.appendChild(link);
+ link.click();
+ link.remove();
+
+ if (!recording.url) {
+ setTimeout(() => URL.revokeObjectURL(url), 1000);
+ }
+ }
+
+ function clearCurrentVoiceSession(event) {
+ event?.preventDefault();
+ event?.stopPropagation();
+ closeVoiceSessionMenu();
+
+ const key = voiceSessionKeyFor();
+ const recording = voiceSessionRecordings.get(key);
+ if (!recording) {
+ showSessionNotice('There is no voice session to clear.', 'warning');
+ return;
+ }
+ if (voiceSessionTranscriptPromise && voiceSessionTranscriptQuestionKey === key) {
+ showSessionNotice('Wait for transcription to finish before clearing this voice session.', 'warning');
+ return;
+ }
+
+ const answerState = answersData[currentQIdx] || defaultAnswerState();
+ const generatedTranscript = cleanTranscriptText(answerState.speech_transcript || recording.transcript || '');
+ const textarea = document.getElementById('answerTextarea');
+ const currentText = textarea? String(textarea.value || ''): String(answerState.text || '');
+ const canClearGeneratedText = isHybridTranscriptionMode()
+ && generatedTranscript
+ && normalizeTranscriptForMatch(currentText) === normalizeTranscriptForMatch(generatedTranscript);
+
+ clearVoiceSessionRecordingFor(key);
+ answerState.speech_transcript = '';
+ answerState.voice_duration = 0;
+ answerState.wpm = 0;
+ answerState.pronunciation_analysis = null;
+
+ if (canClearGeneratedText) {
+ if (textarea) textarea.value = '';
+ answerState.text = '';
+ } else {
+ answerState.text = currentText;
+ }
+
+ answersData[currentQIdx] = answerState;
+ resetSpeechRecognitionBufferFromTextarea();
+ setTranscriptionStatus('');
+ setVoiceSessionUiState('idle', 'Voice session cleared', key);
+
+ if (canClearGeneratedText) {
+ triggerAnalysis();
+ } else {
+ updateSendAnswerButtonState();
+ scheduleStateSave();
+ }
+
+ showSessionNotice(canClearGeneratedText? 'Voice session and generated transcript cleared.': 'Voice session cleared.', 'success');
  }
 
  function voiceSessionTranscriptionErrorMessage(error) {
@@ -1703,6 +1854,7 @@
  if (wordCount) wordCount.innerText = '0 words';
  if (charCount) charCount.innerText = '0 characters';
  syncSelfConfidenceControl(0);
+ updateSendAnswerButtonState();
 
  const chatContainer = document.getElementById('chatTranscriptContainer');
  if (chatContainer) {
@@ -1723,6 +1875,7 @@
  }
  resetSpeechRecognitionBufferFromTextarea();
  triggerAnalysis();
+ updateSendAnswerButtonState();
  }
 
  function showSessionNotice(message, type = 'error', focus = false) {
@@ -2810,6 +2963,30 @@
  return 'Speak your answer, then edit the transcript here if needed...';
  }
 
+ function currentAnswerTextareaText() {
+ const textarea = document.getElementById('answerTextarea');
+ return textarea? String(textarea.value || ''): '';
+ }
+
+ function hybridModeHasTranscriptText() {
+ return currentAnswerTextareaText().trim() !== '';
+ }
+
+ function updateSendAnswerButtonState() {
+ const hybridNeedsTranscript = isHybridTranscriptionMode() &&!hybridModeHasTranscriptText();
+ const disabled =!answerInputEnabled || hybridNeedsTranscript || isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted;
+ const title = hybridNeedsTranscript && answerInputEnabled
+ ? 'Add transcript text before sending in Hybrid Mode'
+ : (answerInputEnabled? 'Send answer': 'Start the interview to answer');
+
+ document.querySelectorAll('.send-answer-btn').forEach(button => {
+ button.disabled = disabled;
+ button.setAttribute('aria-disabled', String(disabled));
+ button.classList.toggle('is-awaiting-transcript', hybridNeedsTranscript && answerInputEnabled);
+ button.setAttribute('title', title);
+ });
+ }
+
  function applyVoiceOnlyAnswerLock() {
  const textarea = document.getElementById('answerTextarea');
  const lockNotice = document.getElementById('responseModeLockNotice');
@@ -2824,6 +3001,8 @@
  if (lockNotice) {
  lockNotice.hidden =!locked;
  }
+
+ updateSendAnswerButtonState();
  }
 
  function applyResponseModeUi() {
@@ -3502,7 +3681,7 @@
 
  function handleQuestionTimeout() {
  clearInterval(questionTimerInterval);
- if (document.querySelector('.next-btn-class:disabled')) return;
+ if (!answerInputEnabled || isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted) return;
  submitAnswer({ timedOut: true });
  }
 
@@ -3600,12 +3779,13 @@
  }
 
  function setAnswerInputEnabled(enabled) {
+ answerInputEnabled = Boolean(enabled);
  const textarea = document.getElementById('answerTextarea');
  if (textarea) {
  textarea.disabled =!enabled;
  applyVoiceOnlyAnswerLock();
  }
- document.querySelectorAll('.next-btn-class').forEach(el => el.disabled =!enabled);
+ updateSendAnswerButtonState();
  }
 
  function showInterviewerConversation(text, counterText = null) {
@@ -3811,6 +3991,10 @@
  answerTextarea.addEventListener('input', handleAnswerInput);
  answerTextarea.addEventListener('paste', handleAnswerPaste);
  }
+ document.addEventListener('click', closeVoiceSessionMenu);
+ document.addEventListener('keydown', event => {
+ if (event.key === 'Escape') closeVoiceSessionMenu();
+ });
  document.addEventListener('visibilitychange', () => {
  if (document.visibilityState === 'hidden') autoSaveState();
  });
@@ -4183,6 +4367,7 @@
  captureTranscriptTimeline('input');
  }
  scheduleStateSave();
+ updateSendAnswerButtonState();
  }
 
  function updateStarIcon(id, status) {
@@ -4690,6 +4875,7 @@
  async function submitAnswer(options = {}) {
  if (isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted) return;
  isSubmittingAnswer = true;
+ updateSendAnswerButtonState();
  try {
  await finalizeCurrentTranscriptionForSubmit();
  } catch (error) {
@@ -4718,6 +4904,7 @@
  const wasSkipped = options.skipped === true || (timedOut &&!answerText &&!hasSubmittableVoiceRecording);
  if(!answerText &&!timedOut &&!wasSkipped &&!hasSubmittableVoiceRecording) {
  isSubmittingAnswer = false;
+ updateSendAnswerButtonState();
  showSessionNotice(hasLocalVoiceRecording? (isVoiceOnlyMode()? 'This recording cannot be submitted. Record your voice answer again before sending.': 'This recording cannot be submitted. Record again, generate the transcript, or type the answer before submitting.'): (isVoiceOnlyMode()? 'Record a voice answer before submitting.': 'Please provide an answer before submitting.'));
  document.getElementById('answerTextarea')?.focus();
  return;
@@ -4748,11 +4935,13 @@
  try {
  await saveCurrentAnswer(wasSkipped, timedOut);
  isSubmittingAnswer = false;
+ updateSendAnswerButtonState();
  await concludeAndFinishInterview();
  } catch(error) {
  console.error(error);
  finalAnswerSubmitted = false;
  isSubmittingAnswer = false;
+ updateSendAnswerButtonState();
  if (!interviewTerminated) {
  restoreSubmittedAnswerInput(answerText);
  setAnswerInputEnabled(true);
@@ -4822,6 +5011,7 @@
  if (data.interview_completed) {
  finalAnswerSubmitted = true;
  isSubmittingAnswer = false;
+ updateSendAnswerButtonState();
  await concludeAndFinishInterview();
  return;
  }
@@ -4834,11 +5024,13 @@
  const nextQuestionIndex = placeNextQuestion(newQ);
  currentQIdx = nextQuestionIndex;
  isSubmittingAnswer = false;
+ updateSendAnswerButtonState();
  await loadQuestion(currentQIdx);
  } catch(err) {
  const tb = document.getElementById('thinkingBubble');
  if(tb) tb.remove();
  isSubmittingAnswer = false;
+ updateSendAnswerButtonState();
  console.error(err);
  if (!interviewTerminated && err.name!== 'AbortError') {
  restoreSubmittedAnswerInput(answerText);
