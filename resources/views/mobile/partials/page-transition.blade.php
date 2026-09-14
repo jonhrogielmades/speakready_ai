@@ -88,6 +88,23 @@
         overflow-wrap: anywhere;
     }
 
+    .sr-page-reload {
+        margin-top: 14px;
+        border: 1px solid var(--bd, #e2e8f0);
+        background: var(--bg2, #f8fafc);
+        color: var(--tx, #0f172a);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1.2;
+        cursor: pointer;
+    }
+
+    .sr-page-reload[hidden] {
+        display: none !important;
+    }
+
     @media (max-width: 575px) {
         .sr-page-loading-wrapper {
             width: 98px;
@@ -141,6 +158,7 @@
     </div>
     <h4 id="pageTransitionTitle">Opening page...</h4>
     <p id="pageTransitionCopy">Please wait while SpeakReady AI loads.</p>
+    <button type="button" id="pageTransitionReload" class="sr-page-reload" hidden>Reload page</button>
 </div>
 
 <script>
@@ -148,7 +166,9 @@
         var overlayId = 'pageTransitionOverlay';
         var activeClass = 'sr-page-transition-active';
         var showTimer = null;
+        var longLoadTimer = null;
         var defaultDelayMs = 650;
+        var longLoadMs = 12000;
 
         function getOverlay() {
             return document.getElementById(overlayId);
@@ -163,6 +183,7 @@
 
         function showPageTransition(options) {
             window.clearTimeout(showTimer);
+            window.clearTimeout(longLoadTimer);
             showTimer = window.setTimeout(function() {
                 if (options && options.event && options.event.defaultPrevented) return;
 
@@ -171,19 +192,32 @@
 
                 options = options || {};
                 setText(options.title || 'Opening page...', options.copy || 'Please wait while SpeakReady AI loads.');
+                var reloadButton = document.getElementById('pageTransitionReload');
+                if (reloadButton) reloadButton.hidden = true;
                 overlay.classList.add('active');
                 overlay.setAttribute('aria-hidden', 'false');
                 document.body.classList.add(activeClass);
+                longLoadTimer = window.setTimeout(function() {
+                    var activeOverlay = getOverlay();
+                    if (!activeOverlay || !activeOverlay.classList.contains('active')) return;
+
+                    setText('Still working...', 'This is taking longer than usual. You can keep waiting or reload the page.');
+                    var delayedReloadButton = document.getElementById('pageTransitionReload');
+                    if (delayedReloadButton) delayedReloadButton.hidden = false;
+                }, Math.max(1000, Number(options.longLoadMs) || longLoadMs));
             }, Math.max(0, Number(options && options.delayMs) || defaultDelayMs));
         }
 
         function hidePageTransition() {
             window.clearTimeout(showTimer);
+            window.clearTimeout(longLoadTimer);
             var overlay = getOverlay();
             if (overlay) {
                 overlay.classList.remove('active');
                 overlay.setAttribute('aria-hidden', 'true');
             }
+            var reloadButton = document.getElementById('pageTransitionReload');
+            if (reloadButton) reloadButton.hidden = true;
             document.body.classList.remove(activeClass);
         }
 
@@ -258,6 +292,13 @@
             if (typeof form.checkValidity === 'function' && !form.checkValidity()) return false;
 
             return true;
+        }
+
+        var reloadButton = document.getElementById('pageTransitionReload');
+        if (reloadButton) {
+            reloadButton.addEventListener('click', function() {
+                window.location.reload();
+            });
         }
 
         document.addEventListener('click', function(event) {

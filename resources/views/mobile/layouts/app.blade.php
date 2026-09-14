@@ -1,3 +1,27 @@
+@php
+   $isUserPartialNavigation = request()->headers->get('X-SpeakReady-Partial-Navigation') === '1';
+   $mobileHeaderPageTitle = trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview');
+@endphp
+@if($isUserPartialNavigation)
+<!DOCTYPE html>
+<html lang="{{ $systemHtmlLocale ?? 'en' }}" id="htmlRoot" data-speech-locale="{{ $systemSpeechLocale ?? 'en-US' }}">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+      <meta name="csrf-token" content="{{ csrf_token() }}">
+      <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
+      @stack('styles')
+   </head>
+   <body class="user-mobile-shell mobile-shell @yield('body-class')" data-layout-shell="mobile" data-app-surface="user" data-partial-navigation-response="true">
+      <div class="db-content" id="userAppContent" data-layout-shell="mobile" data-user-ajax-content data-page-title="{{ $mobileHeaderPageTitle }}">
+         @yield('content')
+      </div>
+      <!-- USER_PAGE_SCRIPTS_START -->
+      @stack('scripts')
+      <!-- USER_PAGE_SCRIPTS_END -->
+   </body>
+</html>
+@else
 <!DOCTYPE html>
 <html lang="{{ $systemHtmlLocale ?? 'en' }}" id="htmlRoot" data-speech-locale="{{ $systemSpeechLocale ?? 'en-US' }}">
    <head>
@@ -3134,7 +3158,7 @@
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=16" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=17" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {
@@ -4257,3 +4281,4 @@
       @include('mobile.layouts.logout-transition')
    </body>
 </html>
+@endif

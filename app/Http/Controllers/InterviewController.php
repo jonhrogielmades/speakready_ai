@@ -117,8 +117,6 @@ class InterviewController extends Controller
  ->withInput();
  }
 
- $dataset = QuestionDatasetProvider::forCategory($category);
-
  $questionTypes = $validated['question_types']?? [];
 
  $validated['interview_focus'] = $this->interviewFocus(
@@ -126,9 +124,6 @@ class InterviewController extends Controller
  );
  $pressureMode = false;
 
- // Provider choice follows the latest admin evaluation evidence.
- $provider = $this->bestEvaluatedInterviewProvider('question_generation');
- $feedbackProvider = $this->bestEvaluatedInterviewProvider('feedback_generation', $provider);
  $profilePreferences = Profile::firstOrCreate(['user_id' => Auth::id()])->inclusive_preferences?? [];
  $cameraDetectionEnabled = filter_var(
  $validated['camera_detection']?? $validated['camera_coaching']?? data_get($profilePreferences, 'camera_detection', data_get($profilePreferences, 'camera_coaching', false)),
@@ -172,7 +167,6 @@ class InterviewController extends Controller
  'status' => 'in_progress',
  ]);
 
- $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
  $this->createInterviewQuestion(
  $session,
  $category,
@@ -180,87 +174,23 @@ class InterviewController extends Controller
  $validated['difficulty'],
  ['Personal'],
  0,
- array_merge($sourceMetadata, [
+ [
  'question_type' => 'Personal',
  'expected_guide' => 'Give your name, current location or city/province, brief background, and the role or opportunity you are interviewing for. Share only interview-appropriate personal details.',
  'mapped_skills' => ['self_introduction', 'communication_clarity', 'professional_presence'],
+ 'source_name' => 'SpeakReady interview opening',
+ 'source_url' => null,
  'source_type' => 'real_interview_opening',
- ])
- );
-
- if (! $this->hasNonOpeningQuestion($session)) {
- $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
- $fallbackQuestions = $this->sourceBackedQuestionRecords($dataset, $session, $questionTypes, 1, $validated['difficulty'], $position, $provider);
- $localizedTexts = $this->localizedQuestionTexts(array_column($fallbackQuestions, 'question_text'), $provider);
-
- foreach ($fallbackQuestions as $idx => $questionRecord) {
- $this->createInterviewQuestion(
- $session,
- $category,
- $localizedTexts[$idx]?? $questionRecord['question_text'],
- $validated['difficulty'],
- $questionTypes,
- $idx,
- array_merge($sourceMetadata, [
- 'question_type' => $questionRecord['type']?? null,
- 'expected_guide' => $questionRecord['expected_guide']?? null,
- 'mapped_skills' => $questionRecord['mapped_skills']?? [],
- 'source_name' => $questionRecord['source_name']?? $sourceMetadata['source_name']?? null,
- 'source_url' => $questionRecord['source_url']?? $sourceMetadata['source_url']?? null,
- 'source_type' => $questionRecord['source_type']?? $sourceMetadata['source_type']?? null,
- ])
- );
- }
- }
-
- if (! $this->hasNonOpeningQuestion($session)) {
- $fallbackQuestions = $this->fallbackQuestionRecordsForSession($session, $questionTypes, 1);
- $localizedTexts = $this->localizedQuestionTexts(array_column($fallbackQuestions, 'question_text'), $provider);
-
- foreach ($fallbackQuestions as $idx => $questionRecord) {
- $this->createInterviewQuestion(
- $session,
- $category,
- $localizedTexts[$idx]?? $questionRecord['question_text'],
- $validated['difficulty'],
- $questionTypes,
- $idx,
- [
- 'question_type' => $questionRecord['type']?? null,
- 'expected_guide' => $questionRecord['expected_guide']?? null,
- 'mapped_skills' => $questionRecord['mapped_skills']?? [],
- 'source_name' => $questionRecord['source_name']?? null,
- 'source_url' => $questionRecord['source_url']?? null,
- 'source_type' => $questionRecord['source_type']?? null,
  ]
  );
- }
- }
 
- if (! $this->hasNonOpeningQuestion($session)) {
- Log::warning('Interview setup used built-in fallback questions because no AI or question-bank questions were available.', [
- 'session_id' => $session->id,
- 'category_id' => $category->id,
- 'provider' => $provider,
+ session()->forget([
+ 'game_level_id',
+ 'active_interview_provider',
+ 'active_interview_feedback_provider',
  ]);
-
- foreach ($this->builtInFallbackQuestionTexts($session, $questionTypes, 1) as $idx => $qText) {
- $this->createInterviewQuestion(
- $session,
- $category,
- $qText,
- $validated['difficulty'],
- $questionTypes,
- $idx
- );
- }
- }
-
- session()->forget('game_level_id');
  session([
  'active_interview_id' => $session->id,
- 'active_interview_provider' => $provider,
- 'active_interview_feedback_provider' => $feedbackProvider,
  'active_interview_context' => 'interview',
  ]);
 

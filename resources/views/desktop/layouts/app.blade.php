@@ -1,3 +1,27 @@
+@php
+   $isUserPartialNavigation = request()->headers->get('X-SpeakReady-Partial-Navigation') === '1';
+   $userPartialPageTitle = trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview');
+@endphp
+@if($isUserPartialNavigation)
+<!DOCTYPE html>
+<html lang="{{ $systemHtmlLocale ?? 'en' }}" id="htmlRoot" data-speech-locale="{{ $systemSpeechLocale ?? 'en-US' }}">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+      <meta name="csrf-token" content="{{ csrf_token() }}">
+      <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
+      @stack('styles')
+   </head>
+   <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user" data-partial-navigation-response="true">
+      <div class="db-content" id="userAppContent" data-layout-shell="desktop" data-user-ajax-content data-page-title="{{ $userPartialPageTitle }}">
+         @yield('content')
+      </div>
+      <!-- USER_PAGE_SCRIPTS_START -->
+      @stack('scripts')
+      <!-- USER_PAGE_SCRIPTS_END -->
+   </body>
+</html>
+@else
 <!DOCTYPE html>
 <html lang="{{ $systemHtmlLocale ?? 'en' }}" id="htmlRoot" data-speech-locale="{{ $systemSpeechLocale ?? 'en-US' }}">
    <head>
@@ -106,7 +130,7 @@
 
                <div class="db-nav-section">Performance</div>
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>
-               <a href="{{ route('user.practice.plan') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.practice.plan') ? 'active' : '' }}" title="Personalized Practice Plan"><i class="fa-solid fa-route"></i><span class="db-nav-label">Practice Plan</span></a>
+               <a href="{{ route('user.practice.plan') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.practice.plan') ? 'active' : '' }}" title="Practice Plan"><i class="fa-solid fa-route"></i><span class="db-nav-label">Practice Plan</span></a>
                <a href="{{ route('user.practice.calendar') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}" title="Practice Activity Calendar"><i class="fa-regular fa-calendar-days"></i><span class="db-nav-label">Activity Calendar</span></a>
                <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
@@ -275,6 +299,7 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=8') }}"></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=17" defer></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>
@@ -1162,3 +1187,4 @@
       @include('desktop.layouts.logout-transition')
    </body>
 </html>
+@endif

@@ -575,6 +575,10 @@ class AIService
 
  $providers = self::providerPriorityList($provider, config('services.question_recommender.ai_provider_priority', env('QUESTION_AI_PROVIDER_RERANK_PRIORITY', env('AI_DEFAULT_PROVIDER_PRIORITY', self::DEFAULT_PROVIDER_PRIORITY))));
  foreach ($providers as $currentProvider) {
+ if (! self::shouldAttemptProvider($currentProvider) || self::questionRerankProviderCoolingDown($currentProvider)) {
+ continue;
+ }
+
  try {
  $response = self::callStructuredProvider($currentProvider, $prompt, array_merge([
  'module' => 'question_generation',
@@ -594,6 +598,8 @@ class AIService
  continue;
  }
 
+ self::clearQuestionRerankProviderCooldown($currentProvider);
+
  $reasons = is_array($response['reasons']?? null)? $response['reasons']: [];
 
  return collect($indexes)
@@ -612,6 +618,8 @@ class AIService
  return [];
  }
 
+ self::cooldownQuestionRerankProvider($currentProvider);
+
  Log::warning('AI provider question rerank failed.', [
  'provider' => $currentProvider,
  'error_type' => $error::class,
@@ -621,6 +629,27 @@ class AIService
  }
 
  return [];
+ }
+
+ private static function questionRerankProviderCooldownKey(string $provider): string
+ {
+ return 'question-rerank-provider-unavailable:'.self::normalizeProviderName($provider);
+ }
+
+ private static function questionRerankProviderCoolingDown(string $provider): bool
+ {
+ return Cache::has(self::questionRerankProviderCooldownKey($provider));
+ }
+
+ private static function cooldownQuestionRerankProvider(string $provider): void
+ {
+ $seconds = max(5, min(900, (int) config('services.question_recommender.ai_provider_failure_cooldown', 180)));
+ Cache::put(self::questionRerankProviderCooldownKey($provider), true, $seconds);
+ }
+
+ private static function clearQuestionRerankProviderCooldown(string $provider): void
+ {
+ Cache::forget(self::questionRerankProviderCooldownKey($provider));
  }
 
  public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false, $targetLanguage = null, array $conversationContext = [], $datasetContext = null)
@@ -707,7 +736,12 @@ class AIService
  }
  $prompt.= ' Keep the reply natural for speech, under 75 words, with exactly one interviewer question. '.self::liveFeedbackReplyBoundary($liveFeedbackMode);
 
- $maxRetries = 3;
+ $maxRetries = max(1, min(2, (int) config('services.interview_follow_up.max_retries', 1)));
+ $chatRequestOptions = [
+ 'timeout_seconds' => max(2, min(20, (int) config('services.interview_follow_up.timeout', 6))),
+ 'attempts' => max(1, min(2, (int) config('services.interview_follow_up.http_attempts', 1))),
+ 'max_providers' => max(1, min(count(self::activeProviderKeys()), (int) config('services.interview_follow_up.max_providers', 1))),
+ ];
  $attempt = 0;
 
  while ($attempt < $maxRetries) {
@@ -715,7 +749,7 @@ class AIService
  $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation the way a live interviewer would, but stay in interview mode. If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
 
  // Rely on chatMessage for robust failover
- $response = self::chatMessage($prompt, [], $provider, $systemPrompt);
+ $response = self::chatMessage($prompt, [], $provider, $systemPrompt, $chatRequestOptions);
  $response = self::sanitizeInterviewerReply($response);
 
  if (! empty($response) && $response!== self::AI_FAILURE_MESSAGE) {
@@ -897,6 +931,10 @@ class AIService
 
  $firstQuestionMark = strpos($reply, '?');
  if ($firstQuestionMark === false) {
+ if (self::wordCount($reply) <= 75 && preg_match('/\b(?:what|how|why|when|where|which|can you|could you|would you|do you|did you|tell me)\b/i', $reply)) {
+ return $reply;
+ }
+
  return '';
  }
 
@@ -1599,12 +1637,12 @@ EOT;
  }
  $requestOptions = [
  'module' => 'feedback_generation',
- 'timeout_seconds' => max(5, min(30, (int) env('AI_FEEDBACK_TIMEOUT', 15))),
+ 'timeout_seconds' => max(2, min(20, (int) env('AI_FEEDBACK_TIMEOUT', 4))),
  'attempts' => max(1, min(2, (int) env('AI_FEEDBACK_HTTP_ATTEMPTS', 1))),
  'response_format' => self::feedbackResponseFormat(),
  'model' => trim((string) env('OPENAI_FEEDBACK_MODEL', env('OPENAI_MODEL', 'gpt-4o-mini'))),
  ];
- $deadlineSeconds = max(8, min(45, (int) env('AI_FEEDBACK_DEADLINE_SECONDS', 25)));
+ $deadlineSeconds = max(3, min(30, (int) env('AI_FEEDBACK_DEADLINE_SECONDS', 5)));
  $deadlineAt = microtime(true) + $deadlineSeconds;
  $attemptedProviders = [];
  $repairableProviderResponse = null;
@@ -1624,7 +1662,7 @@ EOT;
 
  $currentRequestOptions = $requestOptions;
  $currentRequestOptions['timeout_seconds'] = max(
- 3,
+ 2,
  min(
  $requestOptions['timeout_seconds'],
  (int) floor($remainingSeconds / max(1, $requestOptions['attempts']))
@@ -3070,7 +3108,7 @@ PROMPT;
  return array_values(array_unique(array_filter($keywords)));
  }
 
- public static function chatMessage($message, $history = [], $provider = 'openai', $systemPrompt = null)
+ public static function chatMessage($message, $history = [], $provider = 'openai', $systemPrompt = null, array $requestOptions = [])
  {
  $providers = self::providerPriorityList($provider);
 
@@ -3078,18 +3116,23 @@ PROMPT;
  $providers = self::activeProviderKeys();
  }
 
+ $maxProviders = max(1, min(count($providers), (int) ($requestOptions['max_providers']?? count($providers))));
+ $providers = array_slice($providers, 0, $maxProviders);
+ $timeoutSeconds = array_key_exists('timeout_seconds', $requestOptions)? max(1, (int) $requestOptions['timeout_seconds']): null;
+ $attempts = array_key_exists('attempts', $requestOptions)? max(1, (int) $requestOptions['attempts']): null;
+
  foreach ($providers as $currentProvider) {
  if (! self::shouldAttemptProvider($currentProvider)) {
  continue;
  }
 
  try {
- $response = self::recordProviderAttempt($currentProvider, 'chat', function () use ($currentProvider, $message, $history, $systemPrompt) {
+ $response = self::recordProviderAttempt($currentProvider, 'chat', function () use ($currentProvider, $message, $history, $systemPrompt, $timeoutSeconds, $attempts) {
  $candidate = match ($currentProvider) {
- 'openai' => self::chatOpenAI($message, $history, $systemPrompt),
- 'gemini' => self::chatGemini($message, $history, $systemPrompt),
- 'cohere' => self::chatCohere($message, $history, $systemPrompt),
- 'groq' => self::chatGroq($message, $history, $systemPrompt),
+ 'openai' => self::chatOpenAI($message, $history, $systemPrompt, $timeoutSeconds, $attempts),
+ 'gemini' => self::chatGemini($message, $history, $systemPrompt, $timeoutSeconds, $attempts),
+ 'cohere' => self::chatCohere($message, $history, $systemPrompt, $timeoutSeconds, $attempts),
+ 'groq' => self::chatGroq($message, $history, $systemPrompt, $timeoutSeconds, $attempts),
  default => null,
  };
 
@@ -3393,7 +3436,7 @@ PROMPT;
  fn (string $name): bool => self::providerIsSupported($name)
  ));
  $providers = array_values(array_filter($providers, fn (string $name) => self::feedbackProviderCanRun($name)));
- $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_FEEDBACK_MAX_PROVIDERS', 6)));
+ $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_FEEDBACK_MAX_PROVIDERS', 1)));
 
  return array_slice($providers, 0, $maxProviders);
  }
@@ -6480,14 +6523,14 @@ PROMPT;
  return $contents;
  }
 
- private static function chatGemini($message, $history, $systemPrompt = null)
+ private static function chatGemini($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null)
  {
  $credentials = self::providerCredentials('gemini');
  $url = self::geminiGenerateContentEndpoint($credentials['endpoint'], $credentials['model'], $credentials['api_key']);
 
  $sysMsg = $systemPrompt?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on interview preparation. Help users prepare for local HR screening, BPO/customer support, IT, fresh graduate, scholarship/admission, resume, and behavioral interview scenarios. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to role-focused interview preparation.';
 
- $response = self::providerRequest()->post($url, [
+ $response = self::providerRequest($timeoutSeconds, $attempts)->post($url, [
  'contents' => self::formatHistoryForGemini($message, $history),
  'systemInstruction' => [
  'parts' => [['text' => $sysMsg]],
@@ -6522,11 +6565,11 @@ PROMPT;
  return $messages;
  }
 
- private static function chatOpenAI($message, $history, $systemPrompt = null)
+ private static function chatOpenAI($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null)
  {
  $credentials = self::providerCredentials('openai');
 
- $response = self::providerRequest()->withHeaders([
+ $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([
  'Authorization' => "Bearer {$credentials['api_key']}",
  'Content-Type' => 'application/json',
  ])->post(self::openAiChatEndpoint($credentials['endpoint']), [
@@ -6542,13 +6585,13 @@ PROMPT;
  return 'Sorry, I am having trouble connecting to my brain right now.';
  }
 
- private static function chatCohere($message, $history, $systemPrompt = null)
+ private static function chatCohere($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null)
  {
  $credentials = self::providerCredentials('cohere');
  $sysMsg = $systemPrompt?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on interview preparation. Provide concise, helpful, and encouraging responses for local interview practice, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to role-focused interview preparation.';
  $messages = self::formatHistoryForStandard($message, $history, $sysMsg);
 
- $response = self::providerRequest()->withHeaders([
+ $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([
  'Authorization' => "Bearer {$credentials['api_key']}",
  'Content-Type' => 'application/json',
  ])->post(self::cohereChatEndpoint($credentials['endpoint']), [
@@ -6566,16 +6609,16 @@ PROMPT;
  return 'Sorry, I am having trouble connecting to my brain right now.';
  }
 
- private static function chatGroq($message, $history, $systemPrompt = null)
+ private static function chatGroq($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null)
  {
- return self::chatOpenAiCompatibleProvider('groq', $message, $history, $systemPrompt);
+ return self::chatOpenAiCompatibleProvider('groq', $message, $history, $systemPrompt, $timeoutSeconds, $attempts);
  }
 
- private static function chatOpenAiCompatibleProvider(string $provider, $message, $history, $systemPrompt = null): string
+ private static function chatOpenAiCompatibleProvider(string $provider, $message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null): string
  {
  $credentials = self::providerCredentials($provider);
 
- $response = self::providerRequest()->withHeaders([...self::openAiCompatibleHeaders($provider, $credentials['api_key']),
+ $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([...self::openAiCompatibleHeaders($provider, $credentials['api_key']),
  ])->post(self::providerChatEndpoint($provider, $credentials['endpoint']), [
  'model' => $credentials['model'],
  'max_tokens' => (int) env('AI_CHAT_MAX_TOKENS', 1000),

@@ -142,7 +142,7 @@ class QuestionRecommendationPipelineTest extends TestCase
  ->with('Skipping Sentence-BERT question recommender during tests. Use a lexical_hash test index to exercise recommendations.');
  }
 
- public function test_mock_interview_uses_fast_dataset_question_before_embedding_index(): void
+ public function test_mock_interview_setup_defers_source_backed_questions_until_after_opening(): void
  {
  Storage::fake('datasets');
 
@@ -195,12 +195,12 @@ class QuestionRecommendationPipelineTest extends TestCase
  ->assertRedirect(route('interview.session'));
 
  $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
- $recommendedQuestion = Question::where('interview_session_id', $session->id)
- ->where('source_type', '!=', 'real_interview_opening')
- ->firstOrFail();
+ $questions = Question::where('interview_session_id', $session->id)
+ ->orderBy('id')
+ ->get();
 
- $this->assertMatchesRegularExpression('/hr specialist/i', $recommendedQuestion->question_text);
- $this->assertSame('Behavioral', $recommendedQuestion->type);
- $this->assertNotSame('SpeakReady HR embedding recommender', $recommendedQuestion->source_name);
+ $this->assertCount(1, $questions);
+ $this->assertSame('real_interview_opening', $questions->first()->source_type);
+ $this->assertSame('Personal', $questions->first()->type);
  }
 }

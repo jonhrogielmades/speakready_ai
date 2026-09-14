@@ -3,13 +3,6 @@
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
-$appUrl = env('APP_URL');
-$renderExternalUrl = env('RENDER_EXTERNAL_URL');
-
-if ($renderExternalUrl && (!$appUrl || str_starts_with($appUrl, 'http://localhost'))) {
-    $appUrl = $renderExternalUrl;
-}
-
 return [
 
     /*
@@ -62,7 +55,7 @@ return [
     |
     */
 
-    'url' => $appUrl ?: 'http://localhost',
+    'url' => env('APP_URL', 'http://localhost'),
 
     'asset_url' => env('ASSET_URL'),
 

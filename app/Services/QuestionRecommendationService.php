@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\InterviewSession;
 use App\Support\PythonRuntime;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -151,11 +152,19 @@ class QuestionRecommendationService
  'candidates' => array_values(array_filter($candidates, fn ($candidate): bool => is_array($candidate))),
  ];
 
+ if (count($payload['candidates']) <= $limit) {
+ return array_slice($payload['candidates'], 0, $limit);
+ }
+
+ $rerankServerUnavailable = false;
+
  if ($this->trainedModelAvailable()) {
  $serverMatches = $this->rerankViaServer($payload, $context, $limit);
  if (! empty($serverMatches)) {
  return $serverMatches;
  }
+
+ $rerankServerUnavailable = $this->rerankServerUnavailable();
 
  if (filter_var(config('services.question_recommender.trained_model_process_fallback_enabled', false), FILTER_VALIDATE_BOOLEAN)) {
  $processMatches = $this->rerankViaProcess($payload, $context, $limit);
@@ -163,6 +172,10 @@ class QuestionRecommendationService
  return $processMatches;
  }
  }
+ }
+
+ if ($rerankServerUnavailable && filter_var(config('services.question_recommender.skip_ai_provider_rerank_when_server_unavailable', true), FILTER_VALIDATE_BOOLEAN)) {
+ return [];
  }
 
  if (filter_var(config('services.question_recommender.ai_provider_rerank_enabled', true), FILTER_VALIDATE_BOOLEAN)) {
@@ -188,6 +201,13 @@ class QuestionRecommendationService
  }
 
  return [];
+ }
+
+ private function rerankServerUnavailable(): bool
+ {
+ $endpoint = trim((string) config('services.question_recommender.rerank_endpoint', 'http://127.0.0.1:8765/rerank'));
+
+ return $endpoint!== '' && Cache::has($this->rerankServerUnavailableCacheKey($endpoint));
  }
 
  private function rerankViaProcess(array $payload, array $context, int $limit): array
@@ -255,11 +275,18 @@ class QuestionRecommendationService
  return [];
  }
 
+ $cacheKey = $this->rerankServerUnavailableCacheKey($endpoint);
+ if (Cache::has($cacheKey)) {
+ return [];
+ }
+
  try {
- $response = Http::timeout(max(1, (int) config('services.question_recommender.rerank_server_timeout', 3)))
+ $response = Http::connectTimeout(1)
+ ->timeout(max(1, (int) config('services.question_recommender.rerank_server_timeout', 3)))
  ->acceptJson()
  ->post($endpoint, array_merge($payload, ['limit' => $limit]));
  } catch (\Throwable $error) {
+ $this->rememberRerankServerUnavailable($endpoint);
  Log::debug('Warm question reranker server was not available.', [
  'endpoint' => $endpoint,
  'error_type' => $error::class,
@@ -270,6 +297,7 @@ class QuestionRecommendationService
  }
 
  if (! $response->successful()) {
+ $this->rememberRerankServerUnavailable($endpoint);
  Log::debug('Warm question reranker server returned a non-success response.', [
  'endpoint' => $endpoint,
  'status' => $response->status(),
@@ -281,10 +309,24 @@ class QuestionRecommendationService
 
  $decoded = $response->json();
  if (! is_array($decoded) || ($decoded['status']?? null) === 'unavailable') {
+ $this->rememberRerankServerUnavailable($endpoint);
  return [];
  }
 
+ Cache::forget($cacheKey);
+
  return $this->normalizeRerankMatches($decoded, $context, $limit);
+ }
+
+ private function rerankServerUnavailableCacheKey(string $endpoint): string
+ {
+ return 'question-reranker-unavailable:'.sha1($endpoint);
+ }
+
+ private function rememberRerankServerUnavailable(string $endpoint): void
+ {
+ $seconds = max(5, min(900, (int) config('services.question_recommender.rerank_server_failure_cooldown', 120)));
+ Cache::put($this->rerankServerUnavailableCacheKey($endpoint), true, $seconds);
  }
 
  private function normalizeRerankMatches(array $decoded, array $context, int $limit): array

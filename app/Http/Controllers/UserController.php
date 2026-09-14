@@ -4006,10 +4006,21 @@ class UserController extends Controller
  }
  }
 
- $scopedModules = (clone $query)->get();
- $modules = $query->orderBy('created_at', 'desc')->paginate(12);
- $moduleRecommendations = app(LearningRecommendationService::class)->forUser(Auth::id(), 3, $scopedModules);
- $learningPaths = app(LearningRecommendationService::class)->learningPathsForUser(Auth::id(), $scopedModules);
+ $recommendationModules = (clone $query)
+ ->orderByDesc('is_featured')
+ ->orderByDesc('views')
+ ->orderByDesc('created_at')
+ ->limit(80)
+ ->get();
+ $pathModules = (clone $query)
+ ->select(['id', 'category', 'career_path'])
+ ->orderBy('category')
+ ->orderBy('career_path')
+ ->limit(200)
+ ->get();
+ $modules = (clone $query)->orderBy('created_at', 'desc')->paginate(12);
+ $moduleRecommendations = app(LearningRecommendationService::class)->forUser(Auth::id(), 3, $recommendationModules);
+ $learningPaths = app(LearningRecommendationService::class)->learningPathsForUser(Auth::id(), $pathModules);
  $modulePositionOptions = $this->modulePositionOptions(
  $challengePositions,
  $selectedModulePosition,
@@ -4069,8 +4080,9 @@ class UserController extends Controller
 
  $generation = $moduleGenerator->ensureAiModulesForPosition($position);
  $createdCount = (int) ($generation['created_count']?? 0);
+ $createdCount += $this->ensureFastRoleModuleTopUp($position);
  $usedAi = (bool) ($generation['used_ai']?? false);
- $message = $createdCount > 0? ($usedAi? "Generated {$createdCount} AI learning module(s) for {$position}.": "Generated {$createdCount} role-specific learning module(s) for {$position} with reliable fallback content while the AI provider was unavailable."): "Showing interview modules for {$position}.";
+ $message = $createdCount > 0? ($usedAi? "Generated {$createdCount} role-specific learning module(s) for {$position}.": "Generated {$createdCount} role-specific learning module(s) for {$position} with reliable fallback content while the AI provider was unavailable."): "Showing interview modules for {$position}.";
 
  $redirectParams = collect([
  'category' => (string) Str::of((string) ($validated['category']?? ''))->squish()->limit(120, ''),
@@ -4082,6 +4094,63 @@ class UserController extends Controller
  return redirect()
  ->route('user.modules.index', $redirectParams)
  ->with('success', $message);
+ }
+
+ private function ensureFastRoleModuleTopUp(string $position, int $targetCount = 5): int
+ {
+ $normalizedPosition = Str::of($position)->lower()->toString();
+ $publishedCount = LearningModule::where('status', 'published')
+ ->whereRaw('LOWER(career_path) =?', [$normalizedPosition])
+ ->count();
+
+ if ($publishedCount >= $targetCount) {
+ return 0;
+ }
+
+ $title = "{$position} Interview: Final Mock Readiness Sprint";
+ $exists = LearningModule::where('status', 'published')
+ ->whereRaw('LOWER(career_path) =?', [$normalizedPosition])
+ ->where('title', $title)
+ ->exists();
+
+ if ($exists) {
+ return 0;
+ }
+
+ DB::transaction(function () use ($position, $title): void {
+ $module = LearningModule::create([
+ 'title' => $title,
+ 'description' => "A fast role-specific practice sprint for {$position} applicants to rehearse a complete interview flow before starting a mock session.",
+ 'type' => 'article',
+ 'career_path' => $position,
+ 'category' => "Interview Modules - {$position}",
+ 'difficulty' => 'Advanced',
+ 'status' => 'published',
+ 'views' => 0,
+ 'is_featured' => false,
+ 'mapped_skills' => [$position, 'Confidence', 'Final Mock Readiness'],
+ ]);
+
+ $module->chapters()->create([
+ 'title' => 'Build Your Final Interview Run Sheet',
+ 'content' => "<p><strong>Interview context:</strong> Use this sprint to prepare one complete {$position} interview flow: opening, motivation, evidence, behavior story, role fit, and closing question.</p><p><strong>Practice drill:</strong> Write a five-line run sheet with the exact examples you will use, then rehearse it aloud once at normal speed and once under a two-minute limit.</p><p><strong>Completion check:</strong> You are ready when every answer points back to {$position} responsibilities, customer or team impact, and one proof from work, school, training, or practice.</p>",
+ 'order' => 1,
+ ]);
+
+ $module->chapters()->create([
+ 'title' => 'Rehearse Follow-Up Pressure',
+ 'content' => "<p><strong>Interview context:</strong> Interviewers often ask follow-up questions to test whether your {$position} examples are real, specific, and adaptable.</p><p><strong>Practice drill:</strong> Pick your strongest answer and prepare two follow-ups: one about what you personally did and one about what you learned or improved.</p><p><strong>Completion check:</strong> Mark this module complete after you can answer both follow-ups without reading notes and without adding unrelated details.</p>",
+ 'order' => 2,
+ ]);
+
+ $module->activities()->create([
+ 'title' => 'Final Mock Interview Sprint',
+ 'type' => 'written-practice',
+ 'description' => "Record or write a full {$position} interview run-through, then revise the answer that sounded least specific.",
+ ]);
+ });
+
+ return 1;
  }
 
  public function moduleShow($id)
@@ -4105,11 +4174,15 @@ class UserController extends Controller
  'user_id' => Auth::id(),
  'learning_module_id' => $module->id,
  ]);
+ $recommendationCandidates = LearningModule::where('status', 'published')
+ ->where('id', '!=', $module->id)
+ ->orderByDesc('is_featured')
+ ->orderByDesc('views')
+ ->orderByDesc('created_at')
+ ->limit(80)
+ ->get();
  $moduleRecommendations = app(LearningRecommendationService::class)
- ->forUser(Auth::id(), 4)
- ->filter(fn ($recommendation) => $recommendation->module->id!== $module->id)
- ->take(3)
- ->values();
+ ->forUser(Auth::id(), 3, $recommendationCandidates);
 
  return $this->mobileView('user.modules.show', compact('module', 'moduleProgress', 'moduleRecommendations'));
  }

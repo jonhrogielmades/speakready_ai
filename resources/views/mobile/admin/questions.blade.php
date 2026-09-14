@@ -400,7 +400,7 @@
                 </select>
                 
                 <div class="text-end">
-                    <button type="button" class="btn btn-outline-info" onclick="generateAiQuestion()"><i class="fa-solid fa-robot me-1"></i> Generate Interview Question</button>
+                    <button type="button" class="btn btn-outline-info" onclick="generateAiQuestion(event)"><i class="fa-solid fa-robot me-1"></i> Generate Interview Question</button>
                 </div>
             </div>
         </div>
@@ -557,17 +557,20 @@ function openAnalytics(questionId) {
         });
 }
 
-function generateAiQuestion() {
+function generateAiQuestion(triggerEvent) {
     let catId = document.getElementById('aiCatId').value;
     let pos = document.getElementById('aiPosition').value;
     let diff = document.getElementById('aiDiff').value;
     let provider = document.getElementById('aiProvider') ? document.getElementById('aiProvider').value : 'gemini';
     let dataset = document.getElementById('aiDataset') ? document.getElementById('aiDataset').value : 'auto';
     
-    let btn = event.target;
+    let btn = (triggerEvent && (triggerEvent.currentTarget || triggerEvent.target)) || (window.event && window.event.target);
+    if (!btn) return;
     let originalHtml = btn.innerHTML;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
     btn.disabled = true;
+    let controller = new AbortController();
+    let timeout = setTimeout(() => controller.abort(), 15000);
 
     fetch("{{ route('admin.questions.ai-generate') }}", {
         method: 'POST',
@@ -575,6 +578,7 @@ function generateAiQuestion() {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
         },
+        signal: controller.signal,
         body: JSON.stringify({
             category_id: catId,
             position: pos,
@@ -583,7 +587,13 @@ function generateAiQuestion() {
             dataset: dataset
         })
     })
-    .then(res => res.json())
+    .then(async res => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.question_text) {
+            throw new Error(data.message || data.error || 'Unable to generate a question right now.');
+        }
+        return data;
+    })
     .then(data => {
         btn.innerHTML = originalHtml;
         btn.disabled = false;
@@ -591,7 +601,7 @@ function generateAiQuestion() {
         // Close AI modal
         var aiModalEl = document.getElementById('aiGenerateModal');
         var aiModal = bootstrap.Modal.getInstance(aiModalEl);
-        aiModal.hide();
+        if (aiModal) aiModal.hide();
         
         // Open Add Question modal and pre-fill
         var addModal = new bootstrap.Modal(document.getElementById('addQuestionModal'));
@@ -617,7 +627,10 @@ function generateAiQuestion() {
     .catch(err => {
         btn.innerHTML = originalHtml;
         btn.disabled = false;
-        alert("Error generating question.");
+        alert(err.name === 'AbortError' ? 'Question generation took too long. Please try again.' : err.message || "Error generating question.");
+    })
+    .finally(() => {
+        clearTimeout(timeout);
     });
 }
 

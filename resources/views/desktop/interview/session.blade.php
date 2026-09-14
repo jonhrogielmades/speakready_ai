@@ -41,22 +41,15 @@
  }
  }
  $focusText = strtolower((string) $sessionRecord->interview_focus);
- $sourcePackKey = match (true) {
- str_contains($focusText, 'bpo'), str_contains($focusText, 'customer support'), str_contains($focusText, 'contact center') => 'ph_bpo_communication',
- str_contains($focusText, 'it / programming'), str_contains($focusText, 'programming'), str_contains($focusText, 'software'), str_contains($focusText, 'technical') => 'ph_it_programming',
- str_contains($focusText, 'scholarship') => 'ph_scholarship',
- str_contains($focusText, 'college'), str_contains($focusText, 'admission') => 'ph_college_admission',
- default => \App\Services\QuestionDatasetProvider::defaultKeyForCategory($sessionRecord->category->title?? null),
- };
- $sourcePack = \App\Services\QuestionDatasetProvider::find($sourcePackKey)?? ($sessionRecord->category? \App\Services\QuestionDatasetProvider::forCategory($sessionRecord->category): null);
- $scenarioLabels = [
- 'ph_job_interview' => 'Job Interviews',
- 'ph_bpo_communication' => 'Job Interviews',
- 'ph_it_programming' => 'Job Interviews',
- 'ph_scholarship' => 'School Admission Interviews',
- 'ph_college_admission' => 'School Admission Interviews',
- ];
- $scenarioLabel = $scenarioLabels[$sourcePack['key']?? $sourcePackKey]?? 'Interview';
+ $categoryText = strtolower((string) ($sessionRecord->category->title?? ''));
+ $scenarioLabel = str_contains($focusText, 'college')
+ || str_contains($focusText, 'school')
+ || str_contains($focusText, 'admission')
+ || str_contains($categoryText, 'college')
+ || str_contains($categoryText, 'school')
+ || str_contains($categoryText, 'admission')
+ ? 'School Admission Interviews'
+ : 'Job Interviews';
  } else {
  $questions = collect([]);
  }
@@ -2961,11 +2954,12 @@
  return!error.status || [408, 425, 429, 500, 502, 503, 504].includes(Number(error.status));
  }
 
- async function postFormJson(url, formData, fallbackMessage = 'The request could not be completed.') {
+ async function postFormJson(url, formData, fallbackMessage = 'The request could not be completed.', timeoutMs = 60000) {
  const response = await managedFetch(url, {
  method: 'POST',
  body: formData,
- headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+ headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+ timeoutMs
  });
  const payload = await parseResponsePayload(response);
 
@@ -2982,18 +2976,19 @@
  async function postFormJsonWithRetry(url, formData, options = {}) {
  const attempts = Math.max(1, Number(options.attempts || 1));
  const fallbackMessage = options.fallbackMessage || 'The request could not be completed.';
+ const timeoutMs = Math.max(10000, Number(options.timeoutMs || 60000));
  let lastError = null;
 
  for (let attempt = 1; attempt <= attempts; attempt++) {
  try {
- return await postFormJson(url, formData, fallbackMessage);
+ return await postFormJson(url, formData, fallbackMessage, timeoutMs);
  } catch (error) {
  lastError = error;
  if (attempt >= attempts ||!isRetryableRequestError(error)) {
  throw error;
  }
 
- setTranscriptionStatus('Connection hiccup - retrying answer submit', '#fbbf24');
+ setTranscriptionStatus('Connection hiccup - retrying request', '#fbbf24');
  await waitForRequestRetry(650 * attempt);
  }
  }
@@ -3834,6 +3829,18 @@
 
  let interviewAutoFullscreenRequested = false;
  let interviewSessionBrowserFullscreenRequested = false;
+ const setupAutoFullscreenPreferenceKey = 'speakready.interview.autoFullscreen';
+
+ function consumeSetupAutoFullscreenPreference() {
+ try {
+ const requested = window.sessionStorage.getItem(setupAutoFullscreenPreferenceKey) === '1';
+ window.sessionStorage.removeItem(setupAutoFullscreenPreferenceKey);
+ return requested;
+ } catch (error) {
+ console.warn('Unable to read interview fullscreen preference:', error);
+ return false;
+ }
+ }
 
  function refreshInterviewFullscreenLayout() {
  if (window.SpeakReadyViewport?.refreshNow) {
@@ -3853,8 +3860,12 @@
  document.body.classList.add('mobile-interview-fullscreen');
  }
  document.body.classList.add('interview-session-browser-fullscreen');
+ interviewAutoFullscreenRequested = options.auto === true;
+ interviewSessionBrowserFullscreenRequested = true;
  updateMobileFullscreenToggle();
  refreshInterviewFullscreenLayout();
+
+ if (options.requestBrowser === false) return;
 
  const root = document.documentElement;
  if (!document.fullscreenElement && root.requestFullscreen) {
@@ -5421,6 +5432,11 @@
 
  function exitReadyFullscreenShell() {
  document.body.classList.remove('interview-ready-fullscreen');
+ if (!interviewStarted) {
+ interviewAutoFullscreenRequested = false;
+ interviewSessionBrowserFullscreenRequested = false;
+ document.body.classList.remove('mobile-interview-fullscreen', 'interview-session-browser-fullscreen');
+ }
  if (document.fullscreenElement && document.exitFullscreen) {
  return document.exitFullscreen().catch(() => {}).finally(() => {
  updateMobileFullscreenToggle();
@@ -5484,6 +5500,11 @@
  }
 
  document.addEventListener('DOMContentLoaded', () => {
+ const shouldAutoFullscreenFromSetup = consumeSetupAutoFullscreenPreference();
+ if (shouldAutoFullscreenFromSetup) {
+ enterInterviewFullscreen({ auto: true, requestBrowser: false });
+ }
+
  updateMobileFullscreenToggle();
  document.addEventListener('fullscreenchange', handleBrowserFullscreenChange);
  document.addEventListener('keydown', event => {

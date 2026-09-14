@@ -342,7 +342,7 @@ class ReliabilityHardeningTest extends TestCase
  $providers = $method->invoke(null, null);
 
  $this->assertSame('openai', $providers[0]?? null);
- $this->assertSame(['openai', 'gemini', 'groq', 'cohere'], $providers);
+ $this->assertSame(['openai'], $providers);
  $this->assertNotContains('localmodel', $providers);
  }
 
@@ -388,7 +388,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertStringContainsString('Tell me about yourself and why this role in your Southern Leyte or Philippine context fits your next step.', $capturedPrompt);
  }
 
- public function test_user_start_question_uses_source_backed_dataset_without_ai_blocking(): void
+ public function test_user_start_defers_source_backed_questions_without_ai_blocking(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Job Interview']);
@@ -412,17 +412,13 @@ class ReliabilityHardeningTest extends TestCase
  ->assertRedirect(route('interview.session'));
 
  $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
- $startQuestion = Question::where('interview_session_id', $session->id)
- ->where('source_type', '!=', 'real_interview_opening')
- ->firstOrFail();
+ $startQuestions = Question::where('interview_session_id', $session->id)->get();
 
- $this->assertMatchesRegularExpression('/backend developer/i', $startQuestion->question_text);
- $this->assertNull($startQuestion->ai_provider);
- $this->assertNotSame('ai_adapted_source_backed', $startQuestion->source_type);
- $this->assertContains($startQuestion->source_type, [
- 'career_question_bank',
- 'speakready_reliable_question_bank',
- ]);
+ $this->assertCount(1, $startQuestions);
+ $openingQuestion = $startQuestions->first();
+ $this->assertMatchesRegularExpression('/backend developer/i', $openingQuestion->question_text);
+ $this->assertNull($openingQuestion->ai_provider);
+ $this->assertSame('real_interview_opening', $openingQuestion->source_type);
  Http::assertNothingSent();
  }
 

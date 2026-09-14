@@ -653,7 +653,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  $this->assertSame('groq', app(AiProviderEvaluationService::class)->bestProviderKeyForInterviewTask('feedback_generation'));
  }
 
- public function test_interview_start_sets_ranked_providers_and_uses_dataset_question(): void
+ public function test_interview_start_defers_ranked_providers_and_real_questions(): void
  {
  $this->clearProviderEnv();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -681,17 +681,17 @@ class AdminAiProviderEvaluationTest extends TestCase
  'time_limit' => 0,
  ])
  ->assertRedirect(route('interview.session'))
- ->assertSessionHas('active_interview_provider', 'groq')
- ->assertSessionHas('active_interview_feedback_provider', 'cohere');
+ ->assertSessionMissing('active_interview_provider')
+ ->assertSessionMissing('active_interview_feedback_provider');
 
  $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
- $generatedQuestion = Question::where('interview_session_id', $session->id)
- ->where('source_type', '!=', 'real_interview_opening')
- ->firstOrFail();
+ $questions = Question::where('interview_session_id', $session->id)
+ ->orderBy('id')
+ ->get();
 
- $this->assertNull($generatedQuestion->ai_provider);
- $this->assertNotSame('ai_adapted_source_backed', $generatedQuestion->source_type);
- $this->assertStringContainsString('Developer', $generatedQuestion->question_text);
+ $this->assertCount(1, $questions);
+ $this->assertSame('real_interview_opening', $questions->first()->source_type);
+ $this->assertSame('Personal', $questions->first()->type);
  Http::assertNothingSent();
  }
 

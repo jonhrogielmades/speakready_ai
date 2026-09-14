@@ -5,6 +5,31 @@
     if (!window.SpeakReadyUserApp) {
         window.SpeakReadyUserApp = userApp;
     }
+    var NAVIGATION_CACHE_TTL_MS = 30000;
+    var NAVIGATION_STATUS_DELAY_MS = 220;
+    var NAVIGATION_STYLESHEET_TIMEOUT_MS = 1800;
+    var NAVIGATION_SCRIPT_TIMEOUT_MS = 3500;
+    var TRANSIENT_USER_PAGE_BODY_CLASSES = [
+        'interview-setup-page',
+        'interview-session-shell',
+        'interview-start-modal-active',
+        'interview-ready-fullscreen',
+        'interview-session-browser-fullscreen',
+        'mobile-interview-fullscreen',
+        'finish-transition-active',
+        'sr-page-transition-active',
+        'modal-open'
+    ];
+    var TRANSIENT_USER_PAGE_HTML_CLASSES = [
+        'interview-setup-page-root'
+    ];
+    var DETACHED_USER_PAGE_ARTIFACT_IDS = [
+        'setupTransitionOverlay',
+        'targetPositionAlertModal',
+        'interviewStartModal',
+        'finishTransitionOverlay',
+        'endSessionModal'
+    ];
 
     function onReady(callback) {
         if (document.readyState === 'loading') {
@@ -780,6 +805,8 @@
         userApp.navigationInitialized = true;
         userApp.navigationController = null;
         userApp.navigationToken = 0;
+        userApp.navigationCache = userApp.navigationCache || Object.create(null);
+        userApp.navigationStatusTimer = 0;
         markInitialPageStylesManaged();
         updateActiveUserNavigation(new URL(window.location.href, window.location.href));
 
@@ -791,6 +818,7 @@
 
             event.preventDefault();
             closeOpenUserMenus();
+            updateActiveUserNavigation(new URL(anchor.href, window.location.href));
             navigateUserApp(anchor.href, { push: true });
         });
 
@@ -852,6 +880,71 @@
         });
     }
 
+    function userNavigationCacheKey(url) {
+        var parsed = new URL(url, window.location.href);
+        parsed.hash = '';
+        return parsed.href;
+    }
+
+    function shouldCacheUserNavigation(url) {
+        var parsed = new URL(url, window.location.href);
+        var path = normalizeUserNavigationPath(parsed.pathname);
+        var excludedPrefixes = ['/interview/session', '/game/match', '/session/', '/notifications'];
+
+        return !excludedPrefixes.some(function (prefix) {
+            return path === prefix || path.startsWith(prefix);
+        });
+    }
+
+    function getCachedUserNavigationHtml(url) {
+        if (!userApp.navigationCache) return null;
+
+        var key = userNavigationCacheKey(url);
+        var entry = userApp.navigationCache[key];
+        if (!entry || Date.now() - entry.savedAt > NAVIGATION_CACHE_TTL_MS) {
+            delete userApp.navigationCache[key];
+            return null;
+        }
+
+        return entry.html || null;
+    }
+
+    function putCachedUserNavigationHtml(url, html) {
+        if (!shouldCacheUserNavigation(url)) return;
+
+        userApp.navigationCache = userApp.navigationCache || Object.create(null);
+        userApp.navigationCache[userNavigationCacheKey(url)] = {
+            html: html,
+            savedAt: Date.now()
+        };
+    }
+
+    async function fetchUserNavigationHtml(url, controller) {
+        var cachedHtml = getCachedUserNavigationHtml(url);
+        if (cachedHtml) return cachedHtml;
+
+        var response = await fetch(url, {
+            method: 'GET',
+            cache: 'default',
+            credentials: 'same-origin',
+            signal: controller.signal,
+            headers: {
+                'Accept': 'text/html, application/xhtml+xml',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-SpeakReady-Partial-Navigation': '1'
+            }
+        });
+
+        if (!response.ok || response.redirected && new URL(response.url).pathname !== new URL(url, window.location.href).pathname) {
+            throw new Error('Navigation response was not usable: ' + response.status);
+        }
+
+        var html = await response.text();
+        putCachedUserNavigationHtml(url, html);
+
+        return html;
+    }
+
     async function navigateUserApp(url, options) {
         var content = document.querySelector('[data-user-ajax-content]');
         if (!content) {
@@ -868,27 +961,11 @@
         var controller = new AbortController();
         userApp.navigationController = controller;
         content.setAttribute('aria-busy', 'true');
-        showSafeNavigationStatus('Loading page...');
+        showSafeNavigationStatus('Loading page...', { delayMs: NAVIGATION_STATUS_DELAY_MS });
 
         try {
-            var response = await fetch(url, {
-                method: 'GET',
-                cache: 'no-store',
-                credentials: 'same-origin',
-                signal: controller.signal,
-                headers: {
-                    'Accept': 'text/html, application/xhtml+xml',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-SpeakReady-Partial-Navigation': '1'
-                }
-            });
-
             if (token !== userApp.navigationToken) return;
-            if (!response.ok || response.redirected && new URL(response.url).pathname !== new URL(url, window.location.href).pathname) {
-                throw new Error('Navigation response was not usable: ' + response.status);
-            }
-
-            var html = await response.text();
+            var html = await fetchUserNavigationHtml(url, controller);
             if (token !== userApp.navigationToken) return;
 
             var parser = new DOMParser();
@@ -917,7 +994,7 @@
         } catch (error) {
             if (error.name === 'AbortError') return;
             console.error('User Side AJAX navigation failed, falling back to normal navigation:', error);
-            showSafeNavigationStatus('This page needs a normal reload. Redirecting...');
+            showSafeNavigationStatus('This page needs a normal reload. Redirecting...', { immediate: true });
             window.location.assign(url);
         } finally {
             if (token === userApp.navigationToken) {
@@ -938,7 +1015,7 @@
     function updateDocumentMetadata(doc, nextContent, url, options) {
         var nextTitle = (doc.querySelector('title') || {}).textContent || document.title;
         document.title = nextTitle;
-        document.body.classList.toggle('interview-session-shell', Boolean(doc.body && doc.body.classList.contains('interview-session-shell')));
+        syncUserPageDocumentClasses(doc);
 
         var contextTitle = nextContent.getAttribute('data-page-title') || nextTitle.replace(/\s*-\s*SpeakReady AI.*$/i, '');
         var desktopContext = document.querySelector('.db-page-context strong');
@@ -949,6 +1026,24 @@
         }
 
         updateActiveUserNavigation(new URL(url, window.location.href));
+    }
+
+    function syncUserPageDocumentClasses(doc) {
+        var nextBody = doc && doc.body;
+        var nextHtml = doc && doc.documentElement;
+
+        TRANSIENT_USER_PAGE_BODY_CLASSES.forEach(function (className) {
+            if (className === 'modal-open') {
+                document.body.classList.remove(className);
+                return;
+            }
+
+            document.body.classList.toggle(className, Boolean(nextBody && nextBody.classList.contains(className)));
+        });
+
+        TRANSIENT_USER_PAGE_HTML_CLASSES.forEach(function (className) {
+            document.documentElement.classList.toggle(className, Boolean(nextHtml && nextHtml.classList.contains(className)));
+        });
     }
 
     function normalizeUserNavigationPath(pathname) {
@@ -1205,7 +1300,7 @@
                 finish();
             }, { once: true });
 
-            fallbackTimer = window.setTimeout(finish, 8000);
+            fallbackTimer = window.setTimeout(finish, NAVIGATION_STYLESHEET_TIMEOUT_MS);
         });
     }
 
@@ -1243,7 +1338,7 @@
             if (!replacement.src) replacement.text = script.textContent;
             document.body.appendChild(replacement);
 
-            fallbackTimer = window.setTimeout(finish, 15000);
+            fallbackTimer = window.setTimeout(finish, NAVIGATION_SCRIPT_TIMEOUT_MS);
         });
     }
 
@@ -1513,6 +1608,33 @@
                 console.warn('User Side page cleanup failed:', error);
             }
         }
+
+        cleanupDetachedUserPageArtifacts();
+        clearTransientUserPageState();
+    }
+
+    function cleanupDetachedUserPageArtifacts() {
+        DETACHED_USER_PAGE_ARTIFACT_IDS.forEach(function (id) {
+            var element = document.getElementById(id);
+            if (element && element.parentElement === document.body) {
+                element.remove();
+            }
+        });
+
+        document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+            backdrop.remove();
+        });
+    }
+
+    function clearTransientUserPageState() {
+        TRANSIENT_USER_PAGE_BODY_CLASSES.forEach(function (className) {
+            document.body.classList.remove(className);
+        });
+        TRANSIENT_USER_PAGE_HTML_CLASSES.forEach(function (className) {
+            document.documentElement.classList.remove(className);
+        });
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
     }
 
     function restorePageFunctionExports() {
@@ -1825,7 +1947,8 @@
         document.getElementById('profileDropdown')?.classList.remove('open');
     }
 
-    function showSafeNavigationStatus(message) {
+    function showSafeNavigationStatus(message, options) {
+        window.clearTimeout(userApp.navigationStatusTimer || 0);
         var status = document.getElementById('userAjaxNavigationStatus');
         if (!status) {
             status = document.createElement('div');
@@ -1837,10 +1960,18 @@
         }
 
         status.textContent = message;
-        status.style.display = 'block';
+        if (options && options.immediate) {
+            status.style.display = 'block';
+            return;
+        }
+
+        userApp.navigationStatusTimer = window.setTimeout(function () {
+            status.style.display = 'block';
+        }, Math.max(0, Number(options && options.delayMs) || 0));
     }
 
     function hideSafeNavigationStatus() {
+        window.clearTimeout(userApp.navigationStatusTimer || 0);
         var status = document.getElementById('userAjaxNavigationStatus');
         if (status) status.style.display = 'none';
     }

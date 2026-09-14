@@ -21,7 +21,7 @@ return new class extends Migration
         echo Artisan::output();
 
         if ($exitCode !== 0) {
-            throw new RuntimeException('Automatic Render ID sequence normalization failed. The deploy was stopped before the app started.');
+            throw new RuntimeException('Automatic database ID sequence normalization failed. The deploy was stopped before the app started.');
         }
     }
 

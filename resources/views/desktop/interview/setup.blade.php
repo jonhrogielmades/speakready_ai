@@ -208,7 +208,7 @@
  </div>
  @endif
 
- <form action="{{ route('interview.start') }}" method="POST" id="setupForm">
+ <form action="{{ route('interview.start') }}" method="POST" id="setupForm" data-sr-no-transition="true">
  @csrf
  <div class="row g-4">
  <!-- Left Column: Form Settings -->
@@ -1434,8 +1434,33 @@
  const setupForm = document.getElementById('setupForm');
  const setupTransitionOverlay = document.getElementById('setupTransitionOverlay');
  const startInterviewButton = document.getElementById('btn-start-interview');
+ const setupAutoFullscreenPreferenceKey = 'speakready.interview.autoFullscreen';
+
+ function rememberSetupAutoFullscreenPreference() {
+ try {
+ window.sessionStorage.setItem(setupAutoFullscreenPreferenceKey, '1');
+ } catch (error) {
+ console.warn('Unable to save interview fullscreen preference:', error);
+ }
+ }
+
+ function requestSetupBrowserFullscreen() {
+ rememberSetupAutoFullscreenPreference();
+
+ const root = document.documentElement;
+ if (!document.fullscreenElement && root && typeof root.requestFullscreen === 'function') {
+ root.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+ }
+ }
+
+ function ensureSetupTransitionFullscreenOverlay() {
+ if (setupTransitionOverlay && setupTransitionOverlay.parentElement!== document.body) {
+ document.body.appendChild(setupTransitionOverlay);
+ }
+ }
 
  if (setupForm && setupTransitionOverlay) {
+ ensureSetupTransitionFullscreenOverlay();
  setupForm.addEventListener('submit', function(event) {
  updateStartInterviewState();
  if (!validateSetupForm(true) || startInterviewButton?.disabled) {
@@ -1443,6 +1468,8 @@
  return;
  }
 
+ ensureSetupTransitionFullscreenOverlay();
+ requestSetupBrowserFullscreen();
  setupTransitionOverlay.classList.add('active');
  document.body.classList.add('finish-transition-active');
 
