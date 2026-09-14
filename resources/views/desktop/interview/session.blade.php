@@ -5324,7 +5324,8 @@
  headers: {
  'X-Requested-With': 'XMLHttpRequest',
  'Accept': 'application/json'
- }
+ },
+ timeoutMs: 45000
  });
  const payload = await parseResponsePayload(response);
  const data = payload.data || {};
