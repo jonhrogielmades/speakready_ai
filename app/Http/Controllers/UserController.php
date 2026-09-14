@@ -167,22 +167,6 @@ class UserController extends Controller
  'delivery_stability' => round($scoreAverages['delivery_stability_score']?? 0),
  ];
 
- // Category Performance
- $categoryPerformance = InterviewSession::where('user_id', $user_id)
- ->where('interview_sessions.status', 'completed')
- ->join('scores', 'interview_sessions.id', '=', 'scores.interview_session_id')
- ->join('categories', 'interview_sessions.category_id', '=', 'categories.id')
- ->readinessEligible()
- ->selectRaw('categories.title, AVG(scores.overall_readiness_score) as avg_score')
- ->groupBy('categories.id', 'categories.title')
- ->get()
- ->map(function ($item) {
- return (object) [
- 'name' => $item->title,
- 'score' => round($item->avg_score),
- ];
- });
-
  // AI Feedback Parsing (Get recent top strengths and areas for improvement)
  $latestFeedback = Feedback::whereHas('session', function ($q) use ($user_id) {
  $q->where('user_id', $user_id)->where('status', 'completed');
@@ -271,8 +255,6 @@ class UserController extends Controller
  'percent' => $currentGoalScore > 0? (round($avgScore) / $currentGoalScore) * 100: 0,
  ];
 
- $aiRecommendations = app(LearningRecommendationService::class)->forUser($user_id, 3);
- $practicePlan = app(PersonalizedPracticePlanService::class)->forUser($user_id, 3, $aiRecommendations);
  $dashboardMockScenarios = $this->dashboardMockScenarios();
 
  // Get the latest scored sessions, then render them chronologically for the chart.
@@ -293,8 +275,8 @@ class UserController extends Controller
 
  return $this->mobileView('dashboard', compact(
  'profile', 'totalSessions', 'avgScore', 'recentSessions', 'scoreTrend',
- 'radarData', 'categoryPerformance', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
- 'learningLabProgress', 'recentNotifications', 'upcomingGoal', 'aiRecommendations', 'practicePlan',
+ 'radarData', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
+ 'learningLabProgress', 'recentNotifications', 'upcomingGoal',
  'dashboardMockScenarios'
  ));
  }

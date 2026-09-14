@@ -182,7 +182,7 @@ class LearningModuleRecommendationTest extends TestCase
         $this->assertTrue($plan->contains(fn ($item) => $item->cta === 'Start Interview'));
     }
 
-    public function test_dashboard_hides_personalized_practice_plan_card(): void
+    public function test_dashboard_hides_personalized_practice_plan_and_ai_recommendation_cards(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category('Job Interview');
@@ -204,7 +204,11 @@ class LearningModuleRecommendationTest extends TestCase
             ->assertOk()
             ->assertDontSee('Personalized Practice Plan')
             ->assertDontSee('id="card-practice-plan"', false)
-            ->assertSee('Clear Answer Structure')
+            ->assertDontSee('AI Recommendations')
+            ->assertDontSee('id="card-ai-recommendations"', false)
+            ->assertDontSee('Category Performance')
+            ->assertDontSee('id="category-performance-summary"', false)
+            ->assertDontSee('Clear Answer Structure')
             ->assertDontSee('id="dashboardMockTrigger"', false)
             ->assertDontSee('sr-saas-command-actions', false)
             ->assertDontSee('aria-label="Open progress"', false)
@@ -232,6 +236,14 @@ class LearningModuleRecommendationTest extends TestCase
             ->assertSee(route('user.coach.chat'), false)
             ->assertSee(url('/coach/conversation'), false)
             ->assertSee('initDashboardCoachModal', false);
+
+        $this->actingAs($user)
+            ->get(route('user.practice.plan'))
+            ->assertOk()
+            ->assertSee('Personalized Practice Plan')
+            ->assertSee('AI Recommendations')
+            ->assertSee('id="practice-ai-recommendations"', false)
+            ->assertSee('Clear Answer Structure');
     }
 
     public function test_personalized_practice_plan_avoids_disabled_feature_links(): void

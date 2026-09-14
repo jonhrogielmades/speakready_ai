@@ -40,5 +40,6 @@
         <a href="{{ route('interview.setup') }}" class="btn btn-outline-primary history-feedback-btn"><i class="fa-solid fa-play"></i> Start Practice</a>
     </div>
 
+    @include('shared.partials.ai-recommendations')
     @include('shared.partials.personalized-practice-plan')
 </div>

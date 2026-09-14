@@ -9,7 +9,7 @@
  </div>
  </div>
  </div>
- <svg class="progress-hero-art" viewBox="0 0 220 150" aria-hidden="true" role="img">
+ <svg class="progress-hero-art progress-hero-motion-art" viewBox="0 0 220 150" aria-hidden="true" role="img">
  <defs>
  <linearGradient id="progressArtPanel" x1="36" y1="18" x2="176" y2="128" gradientUnits="userSpaceOnUse">
  <stop stop-color="#DBEAFE"/>
@@ -20,19 +20,23 @@
  <stop offset="1" stop-color="#06B6D4"/>
  </linearGradient>
  </defs>
- <rect x="31" y="21" width="158" height="108" rx="18" fill="url(#progressArtPanel)" stroke="#BFDBFE" stroke-width="3"/>
- <path d="M54 105V52" stroke="#93C5FD" stroke-width="5" stroke-linecap="round"/>
- <path d="M54 105h113" stroke="#93C5FD" stroke-width="5" stroke-linecap="round"/>
- <path d="M65 92l25-28 27 16 38-43" fill="none" stroke="url(#progressArtBlue)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
- <circle cx="90" cy="64" r="9" fill="#2563EB" stroke="#EFF6FF" stroke-width="4"/>
- <circle cx="117" cy="80" r="9" fill="#0EA5E9" stroke="#EFF6FF" stroke-width="4"/>
- <circle cx="155" cy="37" r="11" fill="#22C55E" stroke="#EFF6FF" stroke-width="4"/>
- <rect x="67" y="101" width="13" height="16" rx="5" fill="#60A5FA" opacity=".65"/>
- <rect x="93" y="91" width="13" height="26" rx="5" fill="#38BDF8" opacity=".75"/>
- <rect x="119" y="97" width="13" height="20" rx="5" fill="#818CF8" opacity=".65"/>
- <rect x="145" y="75" width="13" height="42" rx="5" fill="#22C55E" opacity=".75"/>
- <path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
- <path d="M194 28l10-10m-6 30l14-2M24 59l-11-7m18 55l-14 3" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+ <rect class="progress-art-panel" x="31" y="21" width="158" height="108" rx="18" fill="url(#progressArtPanel)" stroke="#BFDBFE" stroke-width="3"/>
+ <path class="progress-art-axis" d="M54 105V52" stroke="#93C5FD" stroke-width="5" stroke-linecap="round"/>
+ <path class="progress-art-axis" d="M54 105h113" stroke="#93C5FD" stroke-width="5" stroke-linecap="round"/>
+ <path class="progress-art-trend" d="M65 92l25-28 27 16 38-43" fill="none" stroke="url(#progressArtBlue)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+ <circle class="progress-art-runner" r="5" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="2">
+ <animateMotion dur="3.8s" repeatCount="indefinite" path="M65 92 L90 64 L117 80 L155 37"/>
+ <animate attributeName="opacity" values=".35;1;.35" dur="3.8s" repeatCount="indefinite"/>
+ </circle>
+ <circle class="progress-art-node progress-art-node-1" cx="90" cy="64" r="9" fill="#2563EB" stroke="#EFF6FF" stroke-width="4"/>
+ <circle class="progress-art-node progress-art-node-2" cx="117" cy="80" r="9" fill="#0EA5E9" stroke="#EFF6FF" stroke-width="4"/>
+ <circle class="progress-art-node progress-art-node-3" cx="155" cy="37" r="11" fill="#22C55E" stroke="#EFF6FF" stroke-width="4"/>
+ <rect class="progress-art-bar progress-art-bar-1" x="67" y="101" width="13" height="16" rx="5" fill="#60A5FA" opacity=".65"/>
+ <rect class="progress-art-bar progress-art-bar-2" x="93" y="91" width="13" height="26" rx="5" fill="#38BDF8" opacity=".75"/>
+ <rect class="progress-art-bar progress-art-bar-3" x="119" y="97" width="13" height="20" rx="5" fill="#818CF8" opacity=".65"/>
+ <rect class="progress-art-bar progress-art-bar-4" x="145" y="75" width="13" height="42" rx="5" fill="#22C55E" opacity=".75"/>
+ <path class="progress-art-wave" d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+ <path class="progress-art-sparks" d="M194 28l10-10m-6 30l14-2M24 59l-11-7m18 55l-14 3" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>
  </svg>
  </div>
  <div class="progress-summary-strip">
@@ -206,7 +210,7 @@
  @if($starProgress->has_data)
  <p class="star-text">{{ $starProgress->message }}</p>
  <div class="star-progress-summary">
- <div class="star-progress-score">
+ <div class="star-progress-score" style="--star-overall: {{ $starProgress->overall_percent?? 0 }}%;">
  <span>{{ $starProgress->overall_percent }}%</span>
  <small>STAR coverage</small>
  </div>
@@ -603,7 +607,6 @@
  { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'top', align: 'start' }},
  { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
  { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Review active module progress connected to your readiness growth.', side: 'top', align: 'start' }},
- { element: '#recommended-next', popover: { title: 'Recommended Next', description: 'Open suggested modules based on your latest practice signals.', side: 'top', align: 'start' }},
  { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'top', align: 'start' }},
  { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'top', align: 'start' }}
  ];
@@ -616,7 +619,6 @@
  { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'left', align: 'start' }},
  { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
  { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Review active module progress connected to your readiness growth.', side: 'top', align: 'start' }},
- { element: '#recommended-next', popover: { title: 'Recommended Next', description: 'Open suggested modules based on your latest practice signals.', side: 'top', align: 'start' }},
  { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'right', align: 'start' }},
  { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'left', align: 'start' }}
  ];

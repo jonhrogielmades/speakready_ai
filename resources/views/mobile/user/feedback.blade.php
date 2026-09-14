@@ -2,7 +2,7 @@
 @section('title', 'Feedback Center')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/feedback.css?v=5') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/feedback.css?v=8') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')
@@ -90,7 +90,7 @@
  <p>{{ $feedbackSummary->suggestions }}</p>
  </div>
  </div>
- <div class="feedback-summary-actions">
+ <div class="feedback-summary-actions {{ $latestFeedbackSession ? 'feedback-summary-actions-pair' : 'feedback-summary-actions-single' }}">
  <a href="{{ route('interview.setup') }}" class="feedback-summary-action feedback-summary-action-primary">
  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
  Practice again

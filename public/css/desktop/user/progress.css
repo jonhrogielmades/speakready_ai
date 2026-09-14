@@ -409,6 +409,86 @@
     .progress-chart-frame.scenario {
         height: 340px;
     }
+    .progress-category-panel {
+        --category-muted: #64748b;
+    }
+    .progress-category-list {
+        display: grid;
+        gap: 14px;
+    }
+    .progress-category-row {
+        display: grid;
+        gap: 9px;
+        min-width: 0;
+        padding: 14px;
+        border: 1px solid color-mix(in srgb, var(--category-color, #10b981) 18%, rgba(226, 232, 240, 0.9));
+        border-radius: 14px;
+        background:
+            radial-gradient(circle at 92% 24%, color-mix(in srgb, var(--category-color, #10b981) 9%, transparent), transparent 32%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.78));
+    }
+    :root:not(.lm) .progress-category-row {
+        background:
+            radial-gradient(circle at 92% 24%, color-mix(in srgb, var(--category-color, #10b981) 18%, transparent), transparent 32%),
+            rgba(15, 23, 42, 0.38);
+        border-color: rgba(148, 163, 184, 0.24);
+    }
+    .progress-category-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+    }
+    .progress-category-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--tx);
+        font-size: 0.88rem;
+        font-weight: 850;
+        line-height: 1.2;
+    }
+    .progress-category-score {
+        color: var(--category-muted);
+        font-size: 0.82rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+    :root:not(.lm) .progress-category-score {
+        color: #c2ccda;
+    }
+    .progress-category-track {
+        width: 100%;
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.18);
+    }
+    .progress-category-track span {
+        display: block;
+        width: var(--category-value, 0%);
+        height: 100%;
+        border-radius: inherit;
+        background: var(--category-color, #10b981);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--category-color, #10b981) 24%, transparent);
+    }
+    .skill-empty-state.progress-category-empty {
+        min-height: 170px;
+        border-color: color-mix(in srgb, var(--panel-accent, #10b981) 34%, rgba(148, 163, 184, 0.28));
+        background:
+            radial-gradient(circle at 50% 25%, color-mix(in srgb, var(--panel-accent, #10b981) 8%, transparent), transparent 32%),
+            linear-gradient(135deg, rgba(255,255,255,0.82), rgba(248,250,252,0.7));
+    }
+    .progress-category-empty .skill-empty-icon {
+        color: #334155;
+    }
+    :root:not(.lm) .skill-empty-state.progress-category-empty {
+        background: rgba(16, 185, 129, 0.06);
+    }
+    :root:not(.lm) .progress-category-empty .skill-empty-icon {
+        color: #cbd5e1;
+    }
     .skill-empty-state {
         min-height: 210px;
         border: 2px dashed rgba(139, 92, 246, 0.45);
@@ -6813,6 +6893,140 @@
     line-height: 1.35;
 }
 
+/* Final desktop animated hero SVG: keep the Interview Progress art visible. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero.progress-hero {
+        position: relative !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-hero-inner {
+        padding-right: 152px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-hero-copy {
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-hero-motion-art {
+        display: block !important;
+        position: absolute !important;
+        z-index: 1 !important;
+        top: 50% !important;
+        right: 8px !important;
+        bottom: auto !important;
+        width: 126px !important;
+        max-width: 126px !important;
+        height: auto !important;
+        opacity: 0.94 !important;
+        pointer-events: none !important;
+        transform-origin: 50% 50% !important;
+        filter: drop-shadow(0 12px 18px rgba(15, 23, 42, 0.16)) !important;
+        animation: progressHeroDesktopFloat 4.8s ease-in-out infinite !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-panel {
+        fill: rgba(239, 246, 255, 0.58) !important;
+        stroke: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-axis,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-wave,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-sparks {
+        stroke: rgba(255, 255, 255, 0.72) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-trend {
+        stroke-dasharray: 170 !important;
+        stroke-dashoffset: 170 !important;
+        animation: progressHeroLineDraw 3.8s ease-in-out infinite !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-node {
+        transform-box: fill-box !important;
+        transform-origin: center !important;
+        animation: progressHeroNodePulse 2.6s ease-in-out infinite !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-node-2 {
+        animation-delay: 0.18s !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-node-3 {
+        animation-delay: 0.36s !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-bar {
+        transform-box: fill-box !important;
+        transform-origin: 50% 100% !important;
+        animation: progressHeroBarRise 3.1s ease-in-out infinite !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-bar-2 {
+        animation-delay: 0.12s !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-bar-3 {
+        animation-delay: 0.24s !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-bar-4 {
+        animation-delay: 0.36s !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-wave {
+        animation: progressHeroWave 5.2s ease-in-out infinite !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-sparks {
+        animation: progressHeroSparkFlash 2.9s ease-in-out infinite !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-hero-motion-art,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-hero-motion-art * {
+        animation: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-art-runner {
+        display: none !important;
+    }
+}
+
+@keyframes progressHeroDesktopFloat {
+    0%, 100% { transform: translate3d(0, -50%, 0) rotate(0deg) scale(1); }
+    45% { transform: translate3d(-4px, calc(-50% - 6px), 0) rotate(1.6deg) scale(1.025); }
+    75% { transform: translate3d(2px, calc(-50% - 2px), 0) rotate(-1deg) scale(1.01); }
+}
+
+@keyframes progressHeroLineDraw {
+    0% { stroke-dashoffset: 170; opacity: 0.68; }
+    42%, 72% { stroke-dashoffset: 0; opacity: 1; }
+    100% { stroke-dashoffset: -170; opacity: 0.68; }
+}
+
+@keyframes progressHeroNodePulse {
+    0%, 100% { transform: scale(0.92); opacity: 0.78; }
+    50% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes progressHeroBarRise {
+    0%, 100% { transform: scaleY(0.72); opacity: 0.5; }
+    52% { transform: scaleY(1.08); opacity: 0.9; }
+}
+
+@keyframes progressHeroWave {
+    0%, 100% { opacity: 0.35; transform: translateX(0); }
+    50% { opacity: 0.7; transform: translateX(-6px); }
+}
+
+@keyframes progressHeroSparkFlash {
+    0%, 100% { opacity: 0.28; }
+    50% { opacity: 0.82; }
+}
+
 /* Final standalone practice hero sizing and animated art. */
 html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practice-calendar-page) .practice-page-hero .setup-hero-inner {
     gap: 12px !important;
@@ -9265,4 +9479,837 @@ html body.user-desktop-shell:not(.admin-shell) :is(#practice-plan-page, #practic
     filter: drop-shadow(0 16px 24px rgba(37, 99, 235, 0.18)) !important;
     transform-origin: 50% 60% !important;
     animation: practiceHeroArtFloat 5.5s ease-in-out infinite !important;
+}
+
+/* Interview Progress true final override: keep this after legacy progress rules. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking {
+        --progress-final-gap: 12px;
+        --progress-final-radius: 8px;
+        --progress-final-pad: 14px;
+        --progress-final-icon: 34px;
+        max-width: var(--desktop-content-max, 1480px) !important;
+        margin: 0 auto !important;
+        gap: var(--progress-final-gap) !important;
+        overflow-x: hidden !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > :is(.progress-hero, .progress-summary-strip, .progress-live-grid, .row) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero.progress-hero {
+        min-height: 82px !important;
+        border-radius: var(--progress-final-radius) !important;
+        border: 1px solid rgba(147, 197, 253, 0.5) !important;
+        background:
+            radial-gradient(circle at 92% 12%, rgba(255, 255, 255, 0.28), transparent 24%),
+            linear-gradient(110deg, #2563eb 0%, #1d7fe4 50%, #38a9dc 100%) !important;
+        box-shadow: 0 12px 28px rgba(37, 99, 235, 0.16) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero-inner {
+        min-height: 82px !important;
+        padding: 11px 138px 11px 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero-copy {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero-icon {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        flex-basis: 38px !important;
+        border-radius: var(--progress-final-radius) !important;
+        background: rgba(255, 255, 255, 0.94) !important;
+        border: 1px solid rgba(255, 255, 255, 0.66) !important;
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+        font-size: 0.95rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero-title,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero-title.text-gradient-primary {
+        margin: 0 0 3px !important;
+        background: none !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        font-size: 1.16rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+        line-height: 1.12 !important;
+        text-transform: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero-subtitle {
+        margin: 0 !important;
+        color: rgba(248, 251, 255, 0.92) !important;
+        -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        line-height: 1.4 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero-art {
+        right: 8px !important;
+        bottom: -10px !important;
+        width: 126px !important;
+        max-width: 126px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip > #progress-stats,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progress-stats {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: var(--progress-final-gap) !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progress-stats > [class*="col-"] {
+        width: auto !important;
+        max-width: none !important;
+        flex: none !important;
+        padding: 0 !important;
+        display: flex !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-stat-card {
+        min-height: 92px !important;
+        height: 100% !important;
+        padding: 12px !important;
+        border-radius: var(--progress-final-radius) !important;
+        grid-template-rows: 34px auto auto !important;
+        gap: 4px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-stat-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: var(--progress-final-radius) !important;
+        font-size: 0.82rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-stat-value {
+        font-size: 1rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-stat-label {
+        font-size: 0.62rem !important;
+        line-height: 1.16 !important;
+        text-transform: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.progress-chart-panel, .learning-panel, .progress-category-panel, .strengths-star-panel, .history-panel, .goals-panel, .badges-panel) {
+        padding: var(--progress-final-pad) !important;
+        border-radius: var(--progress-final-radius) !important;
+        border: 1px solid color-mix(in srgb, var(--panel-accent, #2563eb) 18%, var(--bd, rgba(148, 163, 184, 0.24))) !important;
+        box-shadow: 0 9px 22px rgba(15, 23, 42, 0.06) !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.progress-panel-heading, .learning-heading, .goals-heading, .badges-heading, .history-heading, .strengths-overview, .star-overview) {
+        display: grid !important;
+        grid-template-columns: var(--progress-final-icon) minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: start !important;
+        margin: 0 0 12px !important;
+        padding-bottom: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.progress-panel-icon, .learning-heading-icon, .goals-heading-icon, .badges-heading-icon, .history-icon, .strengths-icon, .star-icon) {
+        width: var(--progress-final-icon) !important;
+        height: var(--progress-final-icon) !important;
+        min-width: var(--progress-final-icon) !important;
+        border-radius: var(--progress-final-radius) !important;
+        font-size: 0.82rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.progress-panel-title, .learning-title, .goals-title, .badges-title, .history-title, .strengths-title, .star-title) {
+        margin: 0 0 3px !important;
+        font-size: 0.96rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+        line-height: 1.16 !important;
+        text-transform: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.progress-panel-subtitle, .learning-subtitle, .goals-subtitle, .badges-subtitle, .strengths-text, .star-text, .star-note-text, .goal-note-text, .badge-desc) {
+        font-size: 0.74rem !important;
+        font-weight: 600 !important;
+        line-height: 1.34 !important;
+        text-transform: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.learning-module, .progress-category-row, .skill-metric-row, .strengths-list-card, .star-note, .history-card, .goal-row, .goal-note, .badge-item) {
+        padding: 10px !important;
+        border-radius: var(--progress-final-radius) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.progress-chart-frame, .progress-chart-frame.scenario) {
+        height: 246px !important;
+        min-height: 246px !important;
+        max-height: none !important;
+        border-radius: var(--progress-final-radius) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .skill-empty-state {
+        min-height: 150px !important;
+        padding: 18px !important;
+        border-radius: var(--progress-final-radius) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-list {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--progress-final-gap) !important;
+        align-items: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #category-performance-summary) {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 100% !important;
+        flex: none !important;
+        padding: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid :is(.learning-panel, .progress-category-panel) {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 214px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid :is(.learning-list, .progress-category-list) {
+        flex: 1 1 auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid :is(#learning-progress, #category-performance-summary) .skill-empty-state {
+        flex: 1 1 auto !important;
+        min-height: 142px !important;
+        display: grid !important;
+        place-items: center !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1180px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip > #progress-stats,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progress-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#skill-tracker, #strengths-tracker, #goals-milestones, #achievements-badges) {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex-basis: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+/* Progress live pair: force Learning and Category into one equal row. */
+@media (min-width: 768px) {
+    html body #sec-progress-tracking > .progress-live-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--progress-final-gap, 12px) !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #category-performance-summary) {
+        display: flex !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        height: 100% !important;
+        padding: 0 !important;
+    }
+
+    html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #category-performance-summary) > :is(.learning-panel, .progress-category-panel) {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 236px !important;
+    }
+
+    html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #category-performance-summary) .skill-empty-state {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        display: grid !important;
+        place-items: center !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    html body #sec-progress-tracking > .progress-live-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: var(--progress-final-gap, 10px) !important;
+    }
+}
+
+/* Progress panel spacing: add clear gutters between panel groups. */
+@media (min-width: 768px) {
+    html body #sec-progress-tracking {
+        --progress-panel-group-gap: 18px;
+    }
+
+    html body #sec-progress-tracking > .progress-summary-strip {
+        margin-bottom: var(--progress-panel-group-gap) !important;
+    }
+
+    html body #sec-progress-tracking > .progress-live-grid {
+        gap: var(--progress-panel-group-gap) !important;
+        margin: 0 0 var(--progress-panel-group-gap) !important;
+    }
+
+    html body #sec-progress-tracking > .progress-live-grid + .row,
+    html body #sec-progress-tracking > .row + .row {
+        margin-top: var(--progress-panel-group-gap) !important;
+    }
+}
+
+/* Last-word desktop hero artwork override. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero.progress-hero {
+        position: relative !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-hero-inner {
+        padding-right: 152px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-hero-copy {
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progressModulesLikeHero .progress-hero-motion-art {
+        display: block !important;
+        position: absolute !important;
+        z-index: 1 !important;
+        top: 50% !important;
+        right: 8px !important;
+        bottom: auto !important;
+        width: 126px !important;
+        max-width: 126px !important;
+        height: auto !important;
+        opacity: 0.94 !important;
+        pointer-events: none !important;
+        transform-origin: 50% 50% !important;
+        filter: drop-shadow(0 12px 18px rgba(15, 23, 42, 0.16)) !important;
+        animation: progressHeroDesktopFloat 4.8s ease-in-out infinite !important;
+    }
+}
+
+/* Plain desktop layout for Strengths/STAR and Recent History panels. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-star-panel, #history-table .history-panel) {
+        background: var(--sf, #ffffff) !important;
+        border: 1px solid var(--bd, #dbe3ef) !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        padding: 16px !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-star-panel {
+        display: grid !important;
+        gap: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-overview, #strengths-tracker .star-overview, #history-table .history-heading) {
+        display: grid !important;
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: start !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-overview {
+        border-top: 1px solid var(--bd, #dbe3ef) !important;
+        padding-top: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-icon, #strengths-tracker .star-icon, #history-table .history-icon, #strengths-tracker .star-note-icon) {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        border-radius: 8px !important;
+        background: #f4f7fb !important;
+        border: 1px solid #e5ebf3 !important;
+        color: #4b5563 !important;
+        box-shadow: none !important;
+        font-size: 0.8rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-title, #strengths-tracker .star-title, #history-table .history-title) {
+        margin: 0 0 4px !important;
+        color: var(--tx, #111827) !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 1rem !important;
+        font-weight: 850 !important;
+        line-height: 1.18 !important;
+        letter-spacing: 0 !important;
+        text-transform: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-text, #strengths-tracker .star-text, #strengths-tracker .star-note-text) {
+        margin: 0 !important;
+        color: var(--tx3, #475569) !important;
+        font-size: 0.76rem !important;
+        font-weight: 600 !important;
+        line-height: 1.38 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-lists {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        margin: 10px 0 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-list-card,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-note,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-card {
+        background: #f8fafc !important;
+        border: 1px solid #dbe3ef !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        padding: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-list-card h6,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-note-title {
+        margin: 0 0 8px !important;
+        color: var(--tx, #111827) !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 0.8rem !important;
+        font-weight: 850 !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-list-card ul {
+        display: grid !important;
+        gap: 6px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-list-card li {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 7px !important;
+        color: var(--tx3, #475569) !important;
+        font-size: 0.74rem !important;
+        font-weight: 500 !important;
+        line-height: 1.3 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-list-card li i {
+        width: 11px !important;
+        min-width: 11px !important;
+        margin: 1px 0 0 !important;
+        font-size: 0.62rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-progress-summary {
+        display: grid !important;
+        grid-template-columns: 96px minmax(0, 1fr) !important;
+        gap: 14px !important;
+        align-items: center !important;
+        margin-top: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-progress-score {
+        width: 96px !important;
+        height: 96px !important;
+        min-width: 96px !important;
+        padding: 10px !important;
+        background:
+            radial-gradient(circle at center, var(--sf, #ffffff) 0 55%, transparent 56%),
+            conic-gradient(#14b8a6 var(--star-overall, 0%), #e5e7eb 0) !important;
+        border: 1px solid #dbe3ef !important;
+        box-shadow: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-progress-score span {
+        color: var(--tx, #111827) !important;
+        font-size: 1.05rem !important;
+        font-weight: 850 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-progress-score small {
+        color: var(--tx3, #475569) !important;
+        font-size: 0.52rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-part-list {
+        display: grid !important;
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-part-top {
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+        margin-bottom: 4px !important;
+        color: var(--tx, #111827) !important;
+        font-size: 0.72rem !important;
+        font-weight: 750 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-part-track {
+        height: 6px !important;
+        background: #e5e7eb !important;
+        border-radius: 999px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-part-fill {
+        background: #14b8a6 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-note {
+        display: grid !important;
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: start !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-top {
+        display: block !important;
+        margin: 0 0 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-search {
+        display: grid !important;
+        grid-template-columns: 28px minmax(0, 1fr) !important;
+        align-items: center !important;
+        width: 100% !important;
+        min-height: 40px !important;
+        height: 40px !important;
+        margin: 0 0 10px !important;
+        padding: 0 12px !important;
+        background: #f8fafc !important;
+        border: 1px solid #dbe3ef !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-search i {
+        color: #475569 !important;
+        font-size: 0.9rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-search input {
+        min-width: 0 !important;
+        height: 100% !important;
+        color: var(--tx, #111827) !important;
+        font-size: 0.78rem !important;
+        font-weight: 500 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-card {
+        display: grid !important;
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-date {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin: 0 !important;
+        color: var(--tx3, #64748b) !important;
+        font-size: 0.72rem !important;
+        font-weight: 750 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-scenario {
+        margin: 0 !important;
+        color: var(--tx, #111827) !important;
+        font-size: 0.82rem !important;
+        font-weight: 850 !important;
+        line-height: 1.22 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-meta {
+        display: grid !important;
+        gap: 6px !important;
+        margin: 0 !important;
+        color: var(--tx, #111827) !important;
+        font-size: 0.7rem !important;
+        font-weight: 750 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-rating-badge {
+        min-height: 0 !important;
+        padding: 2px 8px !important;
+        border-radius: 999px !important;
+        font-size: 0.62rem !important;
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-card-actions {
+        margin: 2px 0 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-feedback-btn,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-clear-btn,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-delete-btn {
+        width: 100% !important;
+        min-height: 36px !important;
+        height: 36px !important;
+        padding: 0 12px !important;
+        border-radius: 8px !important;
+        border: 1px solid #d1d8e3 !important;
+        background: #ffffff !important;
+        color: var(--tx, #111827) !important;
+        box-shadow: none !important;
+        font-size: 0.72rem !important;
+        font-weight: 800 !important;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-star-panel, #history-table .history-panel),
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker :is(.strengths-list-card, .star-note),
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table :is(.history-card, .history-search, .history-feedback-btn, .history-clear-btn, .history-delete-btn),
+    body.dm.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-star-panel, #history-table .history-panel),
+    body.dm.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker :is(.strengths-list-card, .star-note),
+    body.dm.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table :is(.history-card, .history-search, .history-feedback-btn, .history-clear-btn, .history-delete-btn) {
+        background: #111827 !important;
+        border-color: rgba(148, 163, 184, 0.32) !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    html body #sec-progress-tracking {
+        --progress-panel-group-gap: 12px;
+    }
+
+    html body #sec-progress-tracking > .progress-summary-strip {
+        margin-bottom: var(--progress-panel-group-gap) !important;
+    }
+
+    html body #sec-progress-tracking > .progress-live-grid {
+        gap: var(--progress-panel-group-gap) !important;
+        margin: 0 0 var(--progress-panel-group-gap) !important;
+    }
+
+    html body #sec-progress-tracking > .progress-live-grid + .row,
+    html body #sec-progress-tracking > .row + .row {
+        margin-top: var(--progress-panel-group-gap) !important;
+    }
+}
+
+/* Last-word plain desktop lower panels. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-star-panel, #history-table .history-panel) {
+        background: var(--sf, #ffffff) !important;
+        border: 1px solid var(--bd, #dbe3ef) !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        padding: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-star-panel {
+        display: grid !important;
+        gap: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-overview, #strengths-tracker .star-overview, #history-table .history-heading, #strengths-tracker .star-note) {
+        display: grid !important;
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: start !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-overview {
+        padding-top: 14px !important;
+        border-top: 1px solid var(--bd, #dbe3ef) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-icon, #strengths-tracker .star-icon, #history-table .history-icon, #strengths-tracker .star-note-icon) {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        border-radius: 8px !important;
+        background: #f4f7fb !important;
+        border: 1px solid #e5ebf3 !important;
+        color: #4b5563 !important;
+        box-shadow: none !important;
+        font-size: 0.8rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-title, #strengths-tracker .star-title, #history-table .history-title) {
+        margin: 0 0 4px !important;
+        color: var(--tx, #111827) !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 1rem !important;
+        font-weight: 850 !important;
+        line-height: 1.18 !important;
+        text-transform: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-lists {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        margin: 10px 0 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-list-card, #strengths-tracker .star-note, #history-table .history-card) {
+        background: #f8fafc !important;
+        border: 1px solid #dbe3ef !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        padding: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-progress-summary {
+        display: grid !important;
+        grid-template-columns: 96px minmax(0, 1fr) !important;
+        gap: 14px !important;
+        align-items: center !important;
+        margin-top: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-progress-score {
+        width: 96px !important;
+        height: 96px !important;
+        min-width: 96px !important;
+        background:
+            radial-gradient(circle at center, var(--sf, #ffffff) 0 55%, transparent 56%),
+            conic-gradient(#14b8a6 var(--star-overall, 0%), #e5e7eb 0) !important;
+        border: 1px solid #dbe3ef !important;
+        box-shadow: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-search {
+        display: grid !important;
+        grid-template-columns: 28px minmax(0, 1fr) !important;
+        width: 100% !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        margin: 0 0 10px !important;
+        padding: 0 12px !important;
+        background: #f8fafc !important;
+        border: 1px solid #dbe3ef !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-card {
+        display: grid !important;
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table :is(.history-feedback-btn, .history-clear-btn, .history-delete-btn) {
+        width: 100% !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 12px !important;
+        border-radius: 8px !important;
+        border: 1px solid #d1d8e3 !important;
+        background: #ffffff !important;
+        color: var(--tx, #111827) !important;
+        box-shadow: none !important;
+        font-size: 0.72rem !important;
+        font-weight: 800 !important;
+    }
+}
+
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-star-panel, #history-table .history-panel, #strengths-tracker .strengths-list-card, #strengths-tracker .star-note, #history-table .history-card, #history-table .history-search, #history-table .history-feedback-btn),
+body.dm.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-star-panel, #history-table .history-panel, #strengths-tracker .strengths-list-card, #strengths-tracker .star-note, #history-table .history-card, #history-table .history-search, #history-table .history-feedback-btn) {
+    background: #111827 !important;
+    border-color: rgba(148, 163, 184, 0.32) !important;
+}
+
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-icon, #strengths-tracker .star-icon, #history-table .history-icon, #strengths-tracker .star-note-icon),
+body.dm.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#strengths-tracker .strengths-icon, #strengths-tracker .star-icon, #history-table .history-icon, #strengths-tracker .star-note-icon) {
+    background: #1f2937 !important;
+    border-color: rgba(148, 163, 184, 0.28) !important;
+    color: #cbd5e1 !important;
+}
+
+/* Keep feedback action centered and on one line inside two-column history cards. */
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-card-actions {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 2px 0 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-feedback-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+    width: 100% !important;
+    max-width: 144px !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    line-height: 1 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-feedback-btn i {
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    font-size: 0.68rem !important;
 }

@@ -586,14 +586,14 @@
                 return withDefaults({
                     heroTitle: 'Readiness workspace',
                     heroDescription: 'This dashboard ties together your latest interview readiness, practice history, and next recommended actions.',
-                    workspaceTitle: 'Recommended next steps',
-                    workspaceDescription: 'Use AI recommendations, recent sessions, and the daily challenge to decide what to practice next.',
+                    workspaceTitle: 'Practice next steps',
+                    workspaceDescription: 'Use recent sessions, the daily challenge, and coach prompts to decide what to practice next.',
                     metricsTitle: 'Readiness snapshot',
                     metricsDescription: 'Your score, XP, streak, rating, and trend summarize recent practice across interviews, challenges, and drills.',
                     actionsTitle: 'Start practice',
                     actionsDescription: 'Jump into a mock interview, challenge, module, or coach prompt from the visible action buttons.',
                     heroSelectors: ['.sr-hero-image-panel', '.sr-score-panel', '#srDashboardTitle'],
-                    workspaceSelectors: ['#card-ai-recommendations', '#card-recent-sessions', '#dashboardCoachForm'],
+                    workspaceSelectors: ['#card-recent-sessions', '#dashboardCoachForm'],
                     metricsSelectors: ['.sr-mobile-stat-grid', '.sr-stats-desktop', '#card-progress-chart', '#card-skill-radar'],
                     actionSelectors: ['#card-daily-challenge', '.sr-challenge-cta', '.sr-btn-primary'],
                 });
@@ -659,11 +659,11 @@
                     metricsTitle: 'Skill signals',
                     metricsDescription: 'Scenario, skill, STAR, milestone, and achievement panels show where growth is happening.',
                     actionsTitle: 'Open next work',
-                    actionsDescription: 'Use suggested modules, session history, and goal links to continue the most useful next practice.',
+                    actionsDescription: 'Use learning progress, session history, and goal links to continue the most useful next practice.',
                     heroSelectors: ['#progressModulesLikeHero', '#progress-stats'],
                     workspaceSelectors: ['#readiness-trend', '#history-table'],
                     metricsSelectors: ['#category-perf', '#skill-tracker', '#strengths-tracker', '#goals-milestones', '#achievements-badges'],
-                    actionSelectors: ['#recommended-next', '#learning-progress', '.progress-actions'],
+                    actionSelectors: ['#learning-progress', '.progress-actions'],
                 });
             }
 

@@ -858,3 +858,540 @@
         text-align: center;
         white-space: normal;
     }
+
+/* Final detailed review summary panel layout. */
+@media (max-width: 991.98px) {
+    html body #mob-content .review-quick-panel,
+    html body .review-quick-panel {
+        display: grid !important;
+        gap: 12px !important;
+        margin-bottom: 16px !important;
+        padding: 12px !important;
+        border-radius: 10px !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+    }
+
+    html body #mob-content .review-quick-head,
+    html body .review-quick-head {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(84px, auto) !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin: 0 !important;
+        padding: 0 0 10px !important;
+        border-bottom: 1px solid var(--bd) !important;
+        min-width: 0 !important;
+    }
+
+    html body #mob-content .review-kicker,
+    html body .review-kicker {
+        color: #2563eb !important;
+        -webkit-text-fill-color: #2563eb !important;
+        font-size: 0.58rem !important;
+        font-weight: 950 !important;
+        line-height: 1.1 !important;
+        letter-spacing: 0 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    html body #mob-content .review-quick-head h5,
+    html body .review-quick-head h5 {
+        color: var(--tx, #0f172a) !important;
+        -webkit-text-fill-color: var(--tx, #0f172a) !important;
+        font-size: 0.98rem !important;
+        font-weight: 950 !important;
+        line-height: 1.16 !important;
+        margin: 3px 0 0 !important;
+    }
+
+    html body #mob-content .review-overall-score,
+    html body .review-overall-score {
+        display: grid !important;
+        align-content: center !important;
+        justify-items: start !important;
+        min-width: 84px !important;
+        width: 100% !important;
+        min-height: 48px !important;
+        padding: 7px 9px !important;
+        border-radius: 8px !important;
+        background: color-mix(in srgb, var(--review-score-color) 9%, transparent) !important;
+        text-align: left !important;
+    }
+
+    html body #mob-content .review-overall-score strong,
+    html body .review-overall-score strong {
+        color: var(--review-score-color, #2563eb) !important;
+        -webkit-text-fill-color: var(--review-score-color, #2563eb) !important;
+        font-size: 1.22rem !important;
+        font-weight: 950 !important;
+        line-height: 1 !important;
+    }
+
+    html body #mob-content .review-overall-score span,
+    html body .review-overall-score span {
+        color: var(--review-score-color, #2563eb) !important;
+        -webkit-text-fill-color: var(--review-score-color, #2563eb) !important;
+        font-size: 0.62rem !important;
+        font-weight: 900 !important;
+        line-height: 1.05 !important;
+        margin-top: 3px !important;
+    }
+
+    html body #mob-content .review-quick-grid,
+    html body .review-quick-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+
+    html body #mob-content .review-quick-block,
+    html body #mob-content .review-quick-block-wide,
+    html body .review-quick-block,
+    html body .review-quick-block-wide {
+        grid-column: 1 !important;
+        gap: 7px !important;
+        min-width: 0 !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+        background: var(--sf, #ffffff) !important;
+        box-shadow: none !important;
+    }
+
+    html body #mob-content .review-block-title,
+    html body .review-block-title {
+        display: flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        margin: 0 !important;
+        color: var(--tx, #0f172a) !important;
+        -webkit-text-fill-color: var(--tx, #0f172a) !important;
+        font-size: 0.62rem !important;
+        font-weight: 950 !important;
+        line-height: 1.12 !important;
+        letter-spacing: 0 !important;
+    }
+
+    html body #mob-content .review-block-title i,
+    html body .review-block-title i {
+        flex: 0 0 auto !important;
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 0.68rem !important;
+    }
+
+    html body #mob-content .review-quick-block p,
+    html body #mob-content .review-short-list,
+    html body .review-quick-block p,
+    html body .review-short-list {
+        color: var(--tx2, #334155) !important;
+        -webkit-text-fill-color: var(--tx2, #334155) !important;
+        font-size: 0.76rem !important;
+        line-height: 1.42 !important;
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+    }
+
+    html body #mob-content .review-short-list,
+    html body .review-short-list {
+        gap: 6px !important;
+    }
+
+    html body #mob-content .review-score-grid,
+    html body .review-score-grid,
+    html body #mob-content .review-example-grid,
+    html body .review-example-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 7px !important;
+    }
+
+    html body #mob-content .review-score-item,
+    html body .review-score-item {
+        min-height: 34px !important;
+        padding: 7px 8px !important;
+        border-radius: 7px !important;
+    }
+
+    html body #mob-content .review-score-item span,
+    html body .review-score-item span {
+        color: var(--tx2, #334155) !important;
+        -webkit-text-fill-color: var(--tx2, #334155) !important;
+        font-size: 0.7rem !important;
+        font-weight: 850 !important;
+        line-height: 1.18 !important;
+    }
+
+    html body #mob-content .review-score-item strong,
+    html body .review-score-item strong {
+        font-size: 0.76rem !important;
+        font-weight: 950 !important;
+        line-height: 1 !important;
+    }
+
+    html body #mob-content .review-practice-btn,
+    html body .review-practice-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        min-height: 36px !important;
+        gap: 7px !important;
+        border-radius: 8px !important;
+        font-size: 0.72rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+}
+
+/* Final answer review accordion panel layout. */
+@media (max-width: 991.98px) {
+    html body #mob-content .answer-review-heading,
+    html body .answer-review-heading {
+        margin: 20px 0 10px !important;
+        color: var(--tx, #0f172a) !important;
+        -webkit-text-fill-color: var(--tx, #0f172a) !important;
+        font-size: 1.02rem !important;
+        font-weight: 950 !important;
+        line-height: 1.15 !important;
+    }
+
+    html body #mob-content #answersAccordion,
+    html body #answersAccordion {
+        display: grid !important;
+        gap: 10px !important;
+    }
+
+    html body #mob-content .answer-review-card,
+    html body .answer-review-card {
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 10px !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+    }
+
+    html body #mob-content .answer-review-toggle,
+    html body .answer-review-toggle {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 18px !important;
+        align-items: start !important;
+        gap: 8px !important;
+        min-height: 0 !important;
+        padding: 10px 12px !important;
+        border: 0 !important;
+        background: transparent !important;
+        color: var(--tx, #0f172a) !important;
+        -webkit-text-fill-color: var(--tx, #0f172a) !important;
+        box-shadow: none !important;
+    }
+
+    html body #mob-content .answer-review-toggle::after,
+    html body .answer-review-toggle::after {
+        grid-column: 2 !important;
+        align-self: start !important;
+        width: 14px !important;
+        height: 14px !important;
+        margin: 3px 0 0 !important;
+        background-size: 14px 14px !important;
+    }
+
+    html body #mob-content .answer-review-header,
+    html body .answer-review-header {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+    }
+
+    html body #mob-content .answer-review-title,
+    html body .answer-review-title {
+        display: block !important;
+        color: var(--tx, #0f172a) !important;
+        -webkit-text-fill-color: var(--tx, #0f172a) !important;
+        font-size: 0.82rem !important;
+        font-weight: 750 !important;
+        line-height: 1.32 !important;
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+    }
+
+    html body #mob-content .answer-review-title strong,
+    html body .answer-review-title strong {
+        font-weight: 950 !important;
+    }
+
+    html body #mob-content .answer-review-score,
+    html body .answer-review-score {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+
+    html body #mob-content .answer-review-score .badge,
+    html body .answer-review-score .badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 26px !important;
+        max-width: 100% !important;
+        padding: 5px 8px !important;
+        border-radius: 999px !important;
+        font-size: 0.62rem !important;
+        font-weight: 900 !important;
+        line-height: 1.08 !important;
+        text-align: center !important;
+        white-space: normal !important;
+    }
+
+    html body #mob-content .answer-review-body,
+    html body .answer-review-body {
+        display: grid !important;
+        gap: 10px !important;
+        padding: 10px 12px 12px !important;
+        border-top: 1px solid var(--bd) !important;
+    }
+
+    html body #mob-content .review-answer-simple,
+    html body .review-answer-simple {
+        display: grid !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+
+    html body #mob-content .review-answer-status-row,
+    html body .review-answer-status-row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        margin: 0 !important;
+    }
+
+    html body #mob-content .retry-chip,
+    html body .retry-chip {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 24px !important;
+        padding: 4px 8px !important;
+        border-radius: 999px !important;
+        color: #2563eb !important;
+        -webkit-text-fill-color: #2563eb !important;
+        font-size: 0.62rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body #mob-content .review-answer-summary-grid,
+    html body .review-answer-summary-grid,
+    html body #mob-content .review-answer-example-grid,
+    html body .review-answer-example-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+
+    html body #mob-content .review-answer-section,
+    html body #mob-content .review-answer-section-wide,
+    html body #mob-content .review-answer-example-grid > section,
+    html body .review-answer-section,
+    html body .review-answer-section-wide,
+    html body .review-answer-example-grid > section {
+        grid-column: 1 !important;
+        display: grid !important;
+        gap: 7px !important;
+        min-width: 0 !important;
+        padding: 10px !important;
+        border: 1px solid var(--bd) !important;
+        border-radius: 8px !important;
+        background: var(--sf, #ffffff) !important;
+        box-shadow: none !important;
+    }
+
+    html body #mob-content .answer-review-body .review-block-title,
+    html body .answer-review-body .review-block-title {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin: 0 !important;
+        color: var(--tx, #0f172a) !important;
+        -webkit-text-fill-color: var(--tx, #0f172a) !important;
+        font-size: 0.58rem !important;
+        font-weight: 950 !important;
+        line-height: 1.12 !important;
+        letter-spacing: 0 !important;
+    }
+
+    html body #mob-content .answer-review-body .review-block-title i,
+    html body .answer-review-body .review-block-title i {
+        flex: 0 0 auto !important;
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 0.64rem !important;
+    }
+
+    html body #mob-content .review-answer-section p,
+    html body #mob-content .review-answer-example-grid p,
+    html body #mob-content .early-ended-response-card,
+    html body .review-answer-section p,
+    html body .review-answer-example-grid p,
+    html body .early-ended-response-card {
+        color: var(--tx2, #334155) !important;
+        -webkit-text-fill-color: var(--tx2, #334155) !important;
+        font-size: 0.76rem !important;
+        line-height: 1.42 !important;
+        margin: 0 !important;
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+    }
+
+    html body #mob-content .review-answer-example-grid span,
+    html body .review-answer-example-grid span {
+        color: var(--tx3, #64748b) !important;
+        -webkit-text-fill-color: var(--tx3, #64748b) !important;
+        font-size: 0.58rem !important;
+        font-weight: 950 !important;
+        line-height: 1.1 !important;
+        margin: 0 0 4px !important;
+    }
+
+    html body #mob-content .review-answer-proof,
+    html body .review-answer-proof {
+        display: grid !important;
+        gap: 6px !important;
+        padding: 9px 0 0 !important;
+        border-top: 1px solid var(--bd) !important;
+        color: var(--tx2, #334155) !important;
+        -webkit-text-fill-color: var(--tx2, #334155) !important;
+        font-size: 0.72rem !important;
+        line-height: 1.36 !important;
+    }
+
+    html body #mob-content .review-answer-proof > span:not(.retry-chip),
+    html body .review-answer-proof > span:not(.retry-chip) {
+        display: block !important;
+        min-width: 0 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    html body #mob-content .early-ended-answer-note,
+    html body .early-ended-answer-note,
+    html body #mob-content .answer-review-body .alert,
+    html body .answer-review-body .alert {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        padding: 9px 10px !important;
+        border-radius: 8px !important;
+        font-size: 0.74rem !important;
+        line-height: 1.38 !important;
+    }
+
+    html body #mob-content .early-ended-response-card,
+    html body .early-ended-response-card {
+        margin: 0 !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+        background: var(--sf, #ffffff) !important;
+        border: 1px solid var(--bd) !important;
+    }
+
+    html body #mob-content .answer-review-body > .mt-4.p-4,
+    html body .answer-review-body > .mt-4.p-4 {
+        display: grid !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+    }
+
+    html body #mob-content .answer-review-body > .mt-4.p-4 h6,
+    html body .answer-review-body > .mt-4.p-4 h6 {
+        margin: 0 !important;
+        font-size: 0.72rem !important;
+        font-weight: 950 !important;
+        line-height: 1.2 !important;
+    }
+
+    html body #mob-content .answer-review-body > .mt-4.p-4 p,
+    html body .answer-review-body > .mt-4.p-4 p {
+        font-size: 0.72rem !important;
+        line-height: 1.4 !important;
+    }
+
+    html body #mob-content .answer-retry-action,
+    html body .answer-retry-action {
+        display: grid !important;
+        gap: 8px !important;
+        margin-top: 0 !important;
+        padding-top: 10px !important;
+        border-top: 1px solid var(--bd) !important;
+    }
+
+    html body #mob-content .answer-retry-action > .btn,
+    html body .answer-retry-action > .btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        min-height: 34px !important;
+        gap: 6px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body #mob-content .retry-panel,
+    html body .retry-panel {
+        margin-top: 0 !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+        background: var(--sf, #ffffff) !important;
+    }
+
+    html body #mob-content .retry-panel.active,
+    html body .retry-panel.active {
+        display: grid !important;
+        gap: 10px !important;
+    }
+
+    html body #mob-content .retry-meta,
+    html body .retry-meta {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+
+    html body #mob-content .retry-textarea,
+    html body .retry-textarea {
+        width: 100% !important;
+        min-height: 112px !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+        font-size: 0.76rem !important;
+        line-height: 1.45 !important;
+    }
+
+    html body #mob-content .retry-panel .btn,
+    html body .retry-panel .btn {
+        width: 100% !important;
+        min-height: 34px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 900 !important;
+    }
+}

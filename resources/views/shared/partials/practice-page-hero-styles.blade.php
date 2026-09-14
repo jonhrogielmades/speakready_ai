@@ -904,7 +904,243 @@
         }
     }
 
+    /* Practice page AI recommendation panel. */
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations,
+    #practice-plan-page #practice-ai-recommendations {
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 14px !important;
+        box-sizing: border-box !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations > .col-12,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations > .col-12,
+    #practice-plan-page #practice-ai-recommendations > .col-12 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-panel,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-panel,
+    #practice-plan-page #practice-ai-recommendations .practice-ai-panel {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 12px !important;
+        border-radius: 10px !important;
+        box-sizing: border-box !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-heading,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-heading,
+    #practice-plan-page #practice-ai-recommendations .practice-ai-heading {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) auto !important;
+        gap: 8px !important;
+        align-items: center !important;
+        margin: 0 0 10px !important;
+        padding: 0 !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .recommend-heading-icon,
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .recommend-item-icon,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .recommend-heading-icon,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .recommend-item-icon,
+    #practice-plan-page #practice-ai-recommendations .recommend-heading-icon,
+    #practice-plan-page #practice-ai-recommendations .recommend-item-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        flex: 0 0 34px !important;
+        border-radius: 10px !important;
+        font-size: 0.84rem !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .recommend-title,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .recommend-title,
+    #practice-plan-page #practice-ai-recommendations .recommend-title {
+        margin: 0 0 3px !important;
+        font-size: 0.94rem !important;
+        font-weight: 900 !important;
+        line-height: 1.15 !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .recommend-subtitle,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .recommend-subtitle,
+    #practice-plan-page #practice-ai-recommendations .recommend-subtitle {
+        margin: 0 !important;
+        font-size: 0.68rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-badge,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-badge,
+    #practice-plan-page #practice-ai-recommendations .practice-ai-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 22px !important;
+        padding: 4px 8px !important;
+        border-radius: 999px !important;
+        background: rgba(245, 158, 11, 0.14) !important;
+        color: #b45309 !important;
+        font-size: 0.6rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
+    #practice-plan-page #practice-ai-recommendations .practice-ai-list {
+        display: grid !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-item,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-item,
+    #practice-plan-page #practice-ai-recommendations .practice-ai-item {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) 18px !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-height: 84px !important;
+        padding: 9px !important;
+        border-radius: 9px !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .recommend-item-title,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .recommend-item-title,
+    #practice-plan-page #practice-ai-recommendations .recommend-item-title {
+        font-size: 0.82rem !important;
+        font-weight: 900 !important;
+        line-height: 1.15 !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .recommend-item-text,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .recommend-item-text,
+    #practice-plan-page #practice-ai-recommendations .recommend-item-text {
+        margin: 4px 0 0 !important;
+        font-size: 0.66rem !important;
+        line-height: 1.28 !important;
+    }
+
+    html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .recommend-arrow,
+    html body #mob-content #practice-plan-page #practice-ai-recommendations .recommend-arrow,
+    #practice-plan-page #practice-ai-recommendations .recommend-arrow {
+        font-size: 0.82rem !important;
+        justify-self: end !important;
+    }
+
+    @media (min-width: 768px) {
+        html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
+        html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
+        #practice-plan-page #practice-ai-recommendations .practice-ai-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            grid-auto-rows: 1fr !important;
+        }
+
+        html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-item,
+        html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-item,
+        #practice-plan-page #practice-ai-recommendations .practice-ai-item {
+            height: 100% !important;
+        }
+    }
+
+    @media (min-width: 1180px) {
+        html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
+        html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
+        #practice-plan-page #practice-ai-recommendations .practice-ai-list {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+    }
+
+    @media (max-width: 430px) {
+        html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-heading,
+        html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-heading,
+        #practice-plan-page #practice-ai-recommendations .practice-ai-heading {
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+        }
+
+        html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-badge,
+        html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-badge,
+        #practice-plan-page #practice-ai-recommendations .practice-ai-badge {
+            grid-column: 2 !important;
+            justify-self: start !important;
+            margin-top: 2px !important;
+        }
+    }
+
     /* Final night theme visibility: keep practice pages readable on dark surfaces. */
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations .practice-ai-panel,
+    .dm :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations .practice-ai-panel,
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-plan-page #practice-ai-recommendations .practice-ai-panel,
+    .dm #practice-plan-page #practice-ai-recommendations .practice-ai-panel {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96)) !important;
+        border-color: rgba(148, 163, 184, 0.24) !important;
+        box-shadow: 0 16px 34px rgba(2, 6, 23, 0.24) !important;
+        color: #dbe5f3 !important;
+    }
+
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations .practice-ai-item,
+    .dm :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations .practice-ai-item,
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-plan-page #practice-ai-recommendations .practice-ai-item,
+    .dm #practice-plan-page #practice-ai-recommendations .practice-ai-item {
+        background:
+            radial-gradient(circle at 86% 16%, rgba(245, 158, 11, 0.15), transparent 34%),
+            linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.88)) !important;
+        border-color: rgba(148, 163, 184, 0.28) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+        color: #f8fafc !important;
+        opacity: 1 !important;
+    }
+
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations :is(.recommend-title, .recommend-item-title),
+    .dm :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations :is(.recommend-title, .recommend-item-title),
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-plan-page #practice-ai-recommendations :is(.recommend-title, .recommend-item-title),
+    .dm #practice-plan-page #practice-ai-recommendations :is(.recommend-title, .recommend-item-title) {
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+        opacity: 1 !important;
+    }
+
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations :is(.recommend-subtitle, .recommend-item-text),
+    .dm :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations :is(.recommend-subtitle, .recommend-item-text),
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-plan-page #practice-ai-recommendations :is(.recommend-subtitle, .recommend-item-text),
+    .dm #practice-plan-page #practice-ai-recommendations :is(.recommend-subtitle, .recommend-item-text) {
+        color: #dbe5f3 !important;
+        -webkit-text-fill-color: #dbe5f3 !important;
+        opacity: 1 !important;
+    }
+
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations :is(.recommend-heading-icon, .recommend-item-icon),
+    .dm :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations :is(.recommend-heading-icon, .recommend-item-icon),
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-plan-page #practice-ai-recommendations :is(.recommend-heading-icon, .recommend-item-icon),
+    .dm #practice-plan-page #practice-ai-recommendations :is(.recommend-heading-icon, .recommend-item-icon) {
+        background: rgba(245, 158, 11, 0.16) !important;
+        border-color: rgba(251, 191, 36, 0.22) !important;
+        color: #fcd34d !important;
+        -webkit-text-fill-color: #fcd34d !important;
+        opacity: 1 !important;
+    }
+
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations .practice-ai-badge,
+    .dm :is(#dashboard .db-content, #mob-content) #practice-plan-page #practice-ai-recommendations .practice-ai-badge,
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-plan-page #practice-ai-recommendations .practice-ai-badge,
+    .dm #practice-plan-page #practice-ai-recommendations .practice-ai-badge {
+        background: rgba(245, 158, 11, 0.18) !important;
+        color: #fcd34d !important;
+        -webkit-text-fill-color: #fcd34d !important;
+    }
+
     :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-plan-page #personalized-practice-plan .practice-plan-panel,
     .dm :is(#dashboard .db-content, #mob-content) #practice-plan-page #personalized-practice-plan .practice-plan-panel,
     :is(html:not(.lm), html[data-theme="dark"]) body #practice-plan-page #personalized-practice-plan .practice-plan-panel,

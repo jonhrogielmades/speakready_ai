@@ -895,3 +895,527 @@
             white-space: normal;
         }
     }
+
+/* Final detailed review summary panel layout. */
+html body.user-desktop-shell:not(.admin-shell) .review-quick-panel {
+    display: grid !important;
+    gap: 16px !important;
+    margin-bottom: 20px !important;
+    padding: 18px !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-quick-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(118px, auto) !important;
+    align-items: center !important;
+    gap: 16px !important;
+    margin: 0 !important;
+    padding: 0 0 14px !important;
+    border-bottom: 1px solid var(--bd) !important;
+    min-width: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-kicker {
+    color: #2563eb !important;
+    -webkit-text-fill-color: #2563eb !important;
+    font-size: 0.66rem !important;
+    font-weight: 950 !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-quick-head h5 {
+    color: var(--tx, #0f172a) !important;
+    -webkit-text-fill-color: var(--tx, #0f172a) !important;
+    font-size: 1.08rem !important;
+    font-weight: 950 !important;
+    line-height: 1.18 !important;
+    margin: 4px 0 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-overall-score {
+    display: grid !important;
+    align-content: center !important;
+    justify-items: start !important;
+    min-width: 118px !important;
+    min-height: 58px !important;
+    padding: 9px 12px !important;
+    border-radius: 8px !important;
+    background: color-mix(in srgb, var(--review-score-color) 9%, transparent) !important;
+    text-align: left !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-overall-score strong {
+    color: var(--review-score-color, #2563eb) !important;
+    -webkit-text-fill-color: var(--review-score-color, #2563eb) !important;
+    font-size: 1.42rem !important;
+    font-weight: 950 !important;
+    line-height: 1 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-overall-score span {
+    color: var(--review-score-color, #2563eb) !important;
+    -webkit-text-fill-color: var(--review-score-color, #2563eb) !important;
+    font-size: 0.7rem !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    margin-top: 4px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-quick-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-quick-block {
+    grid-column: span 2 !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    background: var(--sf, #ffffff) !important;
+    box-shadow: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-quick-block-wide {
+    grid-column: span 4 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-block-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    color: var(--tx, #0f172a) !important;
+    -webkit-text-fill-color: var(--tx, #0f172a) !important;
+    font-size: 0.68rem !important;
+    font-weight: 950 !important;
+    line-height: 1.14 !important;
+    letter-spacing: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-block-title i {
+    flex: 0 0 auto !important;
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+    font-size: 0.74rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-quick-block p,
+html body.user-desktop-shell:not(.admin-shell) .review-short-list {
+    color: var(--tx2, #334155) !important;
+    -webkit-text-fill-color: var(--tx2, #334155) !important;
+    font-size: 0.82rem !important;
+    line-height: 1.46 !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-short-list {
+    gap: 7px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-score-grid,
+html body.user-desktop-shell:not(.admin-shell) .review-example-grid {
+    gap: 8px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-score-item {
+    min-height: 36px !important;
+    padding: 8px 9px !important;
+    border-radius: 7px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-score-item span {
+    color: var(--tx2, #334155) !important;
+    -webkit-text-fill-color: var(--tx2, #334155) !important;
+    font-size: 0.74rem !important;
+    font-weight: 850 !important;
+    line-height: 1.2 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-score-item strong {
+    font-size: 0.82rem !important;
+    font-weight: 950 !important;
+    line-height: 1 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-practice-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 36px !important;
+    gap: 7px !important;
+    border-radius: 8px !important;
+    font-size: 0.74rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 767.98px) {
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-head,
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-block,
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-block-wide {
+        grid-column: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-practice-btn {
+        width: 100% !important;
+    }
+}
+
+/* Final answer review accordion panel layout. */
+html body.user-desktop-shell:not(.admin-shell) .answer-review-heading {
+    margin: 28px 0 12px !important;
+    color: var(--tx, #0f172a) !important;
+    -webkit-text-fill-color: var(--tx, #0f172a) !important;
+    font-size: 1.16rem !important;
+    font-weight: 950 !important;
+    line-height: 1.16 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #answersAccordion {
+    display: grid !important;
+    gap: 12px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-card {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-toggle {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 20px !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-height: 0 !important;
+    padding: 13px 16px !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--tx, #0f172a) !important;
+    -webkit-text-fill-color: var(--tx, #0f172a) !important;
+    box-shadow: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-toggle::after {
+    grid-column: 2 !important;
+    align-self: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    background-size: 16px 16px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-title {
+    display: block !important;
+    color: var(--tx, #0f172a) !important;
+    -webkit-text-fill-color: var(--tx, #0f172a) !important;
+    font-size: 0.92rem !important;
+    font-weight: 750 !important;
+    line-height: 1.34 !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-title strong {
+    font-weight: 950 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-score {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-score .badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 28px !important;
+    max-width: 100% !important;
+    padding: 6px 9px !important;
+    border-radius: 999px !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    text-align: center !important;
+    white-space: normal !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-body {
+    display: grid !important;
+    gap: 12px !important;
+    padding: 14px 16px 16px !important;
+    border-top: 1px solid var(--bd) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-answer-simple {
+    display: grid !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-answer-status-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 7px !important;
+    margin: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .retry-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 26px !important;
+    padding: 5px 9px !important;
+    border-radius: 999px !important;
+    color: #2563eb !important;
+    -webkit-text-fill-color: #2563eb !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-answer-summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-answer-section,
+html body.user-desktop-shell:not(.admin-shell) .review-answer-section-wide,
+html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid > section {
+    display: grid !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    padding: 12px !important;
+    border: 1px solid var(--bd) !important;
+    border-radius: 8px !important;
+    background: var(--sf, #ffffff) !important;
+    box-shadow: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-answer-section-wide {
+    grid-column: 1 / -1 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-body .review-block-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    margin: 0 !important;
+    color: var(--tx, #0f172a) !important;
+    -webkit-text-fill-color: var(--tx, #0f172a) !important;
+    font-size: 0.64rem !important;
+    font-weight: 950 !important;
+    line-height: 1.12 !important;
+    letter-spacing: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-body .review-block-title i {
+    flex: 0 0 auto !important;
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+    font-size: 0.7rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-answer-section p,
+html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid p,
+html body.user-desktop-shell:not(.admin-shell) .early-ended-response-card {
+    color: var(--tx2, #334155) !important;
+    -webkit-text-fill-color: var(--tx2, #334155) !important;
+    font-size: 0.82rem !important;
+    line-height: 1.46 !important;
+    margin: 0 !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid span {
+    color: var(--tx3, #64748b) !important;
+    -webkit-text-fill-color: var(--tx3, #64748b) !important;
+    font-size: 0.62rem !important;
+    font-weight: 950 !important;
+    line-height: 1.1 !important;
+    margin: 0 0 4px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-answer-proof {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 7px 10px !important;
+    padding: 10px 0 0 !important;
+    border-top: 1px solid var(--bd) !important;
+    color: var(--tx2, #334155) !important;
+    -webkit-text-fill-color: var(--tx2, #334155) !important;
+    font-size: 0.76rem !important;
+    line-height: 1.4 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .review-answer-proof > span:not(.retry-chip) {
+    display: block !important;
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .early-ended-answer-note,
+html body.user-desktop-shell:not(.admin-shell) .answer-review-body .alert {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 9px !important;
+    margin: 0 !important;
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .early-ended-response-card {
+    margin: 0 !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    background: var(--sf, #ffffff) !important;
+    border: 1px solid var(--bd) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-body > .mt-4.p-4 {
+    display: grid !important;
+    gap: 9px !important;
+    margin: 0 !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-body > .mt-4.p-4 h6 {
+    margin: 0 !important;
+    font-size: 0.78rem !important;
+    font-weight: 950 !important;
+    line-height: 1.2 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-review-body > .mt-4.p-4 p {
+    font-size: 0.78rem !important;
+    line-height: 1.44 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-retry-action {
+    display: grid !important;
+    gap: 10px !important;
+    margin-top: 0 !important;
+    padding-top: 12px !important;
+    border-top: 1px solid var(--bd) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .answer-retry-action > .btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: start !important;
+    min-height: 36px !important;
+    gap: 7px !important;
+    border-radius: 8px !important;
+    font-size: 0.76rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .retry-panel {
+    margin-top: 0 !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    background: var(--sf, #ffffff) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .retry-panel.active {
+    display: grid !important;
+    gap: 12px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .retry-meta {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 7px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .retry-textarea {
+    width: 100% !important;
+    min-height: 124px !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    font-size: 0.82rem !important;
+    line-height: 1.48 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .retry-panel .btn {
+    min-height: 36px !important;
+    border-radius: 8px !important;
+    font-size: 0.76rem !important;
+    font-weight: 900 !important;
+}
+
+@media (max-width: 767.98px) {
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-toggle {
+        align-items: start !important;
+        padding: 10px 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-header,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-summary-grid,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-score {
+        justify-content: flex-start !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-section,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-section-wide,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid > section {
+        grid-column: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-retry-action > .btn,
+    html body.user-desktop-shell:not(.admin-shell) .retry-panel .btn {
+        width: 100% !important;
+    }
+}

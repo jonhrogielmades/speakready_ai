@@ -1637,12 +1637,12 @@ EOT;
  }
  $requestOptions = [
  'module' => 'feedback_generation',
- 'timeout_seconds' => max(2, min(20, (int) env('AI_FEEDBACK_TIMEOUT', 4))),
+ 'timeout_seconds' => max(2, min(20, (int) env('AI_FEEDBACK_TIMEOUT', 15))),
  'attempts' => max(1, min(2, (int) env('AI_FEEDBACK_HTTP_ATTEMPTS', 1))),
  'response_format' => self::feedbackResponseFormat(),
  'model' => trim((string) env('OPENAI_FEEDBACK_MODEL', env('OPENAI_MODEL', 'gpt-4o-mini'))),
  ];
- $deadlineSeconds = max(3, min(30, (int) env('AI_FEEDBACK_DEADLINE_SECONDS', 5)));
+ $deadlineSeconds = max(3, min(30, (int) env('AI_FEEDBACK_DEADLINE_SECONDS', 25)));
  $deadlineAt = microtime(true) + $deadlineSeconds;
  $attemptedProviders = [];
  $repairableProviderResponse = null;
@@ -3436,7 +3436,7 @@ PROMPT;
  fn (string $name): bool => self::providerIsSupported($name)
  ));
  $providers = array_values(array_filter($providers, fn (string $name) => self::feedbackProviderCanRun($name)));
- $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_FEEDBACK_MAX_PROVIDERS', 1)));
+ $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_FEEDBACK_MAX_PROVIDERS', 4)));
 
  return array_slice($providers, 0, $maxProviders);
  }

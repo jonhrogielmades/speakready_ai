@@ -85,6 +85,7 @@ class InterviewController extends Controller
  'time_limit' => ['nullable', 'integer', Rule::in([0, 1, 2, 3])],
  'question_types' => 'nullable|array',
  'question_types.*' => ['string', Rule::in(['Behavioral', 'Situational', 'Technical', 'Personal'])],
+ 'ai_provider' => 'nullable|string|max:40',
  'ai_assistance_level' => ['nullable', Rule::in(['beginner', 'standard', 'challenge'])],
  'live_feedback_mode' => ['nullable', Rule::in(['coaching', 'real_interview'])],
  'camera_detection' => 'nullable|boolean',
@@ -182,6 +183,12 @@ class InterviewController extends Controller
  'source_url' => null,
  'source_type' => 'real_interview_opening',
  ]
+ );
+
+ $this->preloadInitialInterviewQuestion(
+ $session,
+ $category,
+ AIService::normalizeProviderKey($validated['ai_provider']?? null)
  );
 
  session()->forget([
@@ -3133,6 +3140,181 @@ class InterviewController extends Controller
  return $sessionQuestion;
  }
 
+ private function preloadInitialInterviewQuestion(InterviewSession $session, Category $category, string $requestedProvider = ''): void
+ {
+ if ((int) ($session->num_questions?? 1) < 1 || $this->hasNonOpeningQuestion($session)) {
+ return;
+ }
+
+ $selectedTypes = $this->decodeQuestionTypes($session->question_types);
+ if ($requestedProvider!== '' && $requestedProvider!== 'local' && AIService::providerIsSupported($requestedProvider)) {
+ return;
+ }
+ if (empty($selectedTypes) && $this->rankedQuestionProviderAvailable()) {
+ return;
+ }
+ if ($this->shouldDeferInitialQuestionPreload($session, $selectedTypes)) {
+ return;
+ }
+
+ $selectionTypes = ! empty($selectedTypes)? $selectedTypes: ['Behavioral', 'Situational', 'Technical'];
+ $position = trim((string) $session->target_position)?: 'this role';
+ $difficulty = (string) ($session->difficulty?: 'medium');
+ $existingQuestionTexts = Question::where('interview_session_id', $session->id)
+ ->pluck('question_text')
+ ->all();
+ $records = [];
+ $dataset = $this->datasetForSession($session);
+
+ if ($dataset) {
+ $record = $this->firstLocalSourceQuestionRecord(
+ $dataset,
+ $selectionTypes,
+ $difficulty,
+ $position,
+ $existingQuestionTexts
+ );
+ if ($record) {
+ $records[] = $record;
+ }
+ }
+
+ if (empty($records)) {
+ $records = $this->fallbackQuestionRecordsForSession($session, $selectionTypes, 1);
+ }
+
+ if (empty($records) && $dataset) {
+ $records[] = QuestionDatasetProvider::fallbackQuestion($dataset, $category, $position, $difficulty);
+ }
+
+ if (empty($records)) {
+ $questionType = $selectionTypes[0]?? 'Behavioral';
+ $records[] = [
+ 'question_text' => $this->defaultInitialPracticeQuestionText($position, $questionType),
+ 'type' => $questionType,
+ 'source_name' => 'SpeakReady local fallback',
+ 'source_url' => null,
+ 'source_type' => 'local_question_fallback',
+ ];
+ }
+
+ $record = $records[0]?? [];
+ $questionText = $this->uniqueQuestionTextForSession(
+ $session,
+ (string) ($record['question_text']?? $this->defaultInitialPracticeQuestionText($position, $selectionTypes[0]?? 'Behavioral')),
+ $existingQuestionTexts
+ );
+
+ $this->createInterviewQuestion(
+ $session,
+ $category,
+ $questionText,
+ $difficulty,
+ $selectionTypes,
+ 1,
+ [
+ 'question_type' => $record['type']?? $selectionTypes[0]?? 'Behavioral',
+ 'expected_guide' => $record['expected_guide']?? null,
+ 'mapped_skills' => $record['mapped_skills']?? [],
+ 'source_name' => $record['source_name']?? null,
+ 'source_url' => $record['source_url']?? null,
+ 'source_type' => $record['source_type']?? null,
+ 'ai_provider' => $record['ai_provider']?? null,
+ ]
+ );
+ }
+
+ private function firstLocalSourceQuestionRecord(array $dataset, array $selectedTypes, string $difficulty, string $position, array $existingQuestionTexts):?array
+ {
+ $metadata = QuestionDatasetProvider::sourceMetadata($dataset);
+ $difficulty = ucfirst(strtolower(trim($difficulty)))?: 'Medium';
+ $selectedTypes = array_values(array_filter(array_map(fn ($type) => trim((string) $type), $selectedTypes)));
+ $existingKeys = collect($existingQuestionTexts)
+ ->map(fn ($text) => $this->normalizedQuestionText((string) $text))
+ ->filter()
+ ->flip()
+ ->all();
+ $passes = [
+ ['type' => true, 'difficulty' => true],
+ ['type' => true, 'difficulty' => false],
+ ['type' => false, 'difficulty' => true],
+ ['type' => false, 'difficulty' => false],
+ ];
+
+ foreach ($passes as $pass) {
+ foreach (($dataset['questions']?? []) as $question) {
+ if (! is_array($question)) {
+ continue;
+ }
+
+ $questionText = trim((string) ($question['question_text']?? ''));
+ $questionKey = $this->normalizedQuestionText($questionText);
+ if ($questionText === '' || $questionKey === '' || isset($existingKeys[$questionKey])) {
+ continue;
+ }
+
+ $questionType = trim((string) ($question['type']?? ''))?: ($selectedTypes[0]?? 'Behavioral');
+ $questionDifficulty = ucfirst(strtolower(trim((string) ($question['difficulty']?? $difficulty))))?: $difficulty;
+ if ($pass['type'] && ! empty($selectedTypes) && ! in_array($questionType, $selectedTypes, true)) {
+ continue;
+ }
+ if ($pass['difficulty'] && $questionDifficulty!== $difficulty) {
+ continue;
+ }
+
+ return array_merge($metadata, [
+ 'question_text' => $this->roleAlignedQuestionText($questionText, $position),
+ 'type' => $questionType,
+ 'difficulty' => $questionDifficulty,
+ 'expected_guide' => trim((string) ($question['expected_guide']?? '')),
+ 'mapped_skills' => array_values(array_filter((array) ($question['mapped_skills']?? ($dataset['default_skills']?? [])))),
+ 'source_name' => $question['source_name']?? $metadata['source_name']?? null,
+ 'source_url' => $question['source_url']?? $metadata['source_url']?? null,
+ 'source_type' => $question['source_type']?? $metadata['source_type']?? 'dataset',
+ ]);
+ }
+ }
+
+ return null;
+ }
+
+ private function rankedQuestionProviderAvailable(): bool
+ {
+ try {
+ return filled(app(AiProviderEvaluationService::class)->bestProviderKeyForInterviewTask('question_generation'));
+ } catch (\Throwable $error) {
+ Log::debug('Question provider ranking was unavailable during interview start preloading.', [
+ 'error_type' => $error::class,
+ ]);
+
+ return false;
+ }
+ }
+
+ private function shouldDeferInitialQuestionPreload(InterviewSession $session, array $selectedTypes): bool
+ {
+ if (empty($selectedTypes) || (! filled($session->resume_text) && ! filled($session->job_description))) {
+ return false;
+ }
+
+ $indexPath = trim((string) config('services.question_recommender.index_path', ''));
+ if ($indexPath === '') {
+ return false;
+ }
+
+ return is_file($indexPath) || is_file(base_path($indexPath));
+ }
+
+ private function defaultInitialPracticeQuestionText(string $position, string $questionType): string
+ {
+ return match (strtolower(trim($questionType))) {
+ 'technical' => "For the {$position} role, walk me through how you would diagnose and solve a realistic work problem.",
+ 'situational' => "For the {$position} role, what would you do first if priorities changed suddenly during an important task?",
+ 'personal' => "What experience or strength makes you a good fit for the {$position} role?",
+ default => "Tell me about a specific experience that shows you can succeed in the {$position} role.",
+ };
+ }
+
  private function initialInterviewQuestionText(InterviewSession $session): string
  {
  $targetPosition = trim((string) $session->target_position)?: 'this role';
@@ -4520,7 +4702,7 @@ class InterviewController extends Controller
 
  return AIService::generateLocalFeedback($sessionData, $answersData);
  } catch (\Throwable $error) {
- Log::warning('Interview feedback generation failed; AI-only report was not finalized.', [
+ Log::warning('Interview feedback generation failed; using local evidence report fallback.', [
  'session_id' => $session->id,
  'user_id' => $session->user_id,
  'provider' => $feedbackProvider,
@@ -4528,7 +4710,21 @@ class InterviewController extends Controller
  'message' => Str::limit($error->getMessage(), 300),
  ]);
 
+ try {
+ return AIService::generateLocalFeedback($sessionData, $answersData);
+ } catch (\Throwable $fallbackError) {
+ Log::error('Local feedback fallback failed after AI feedback generation error.', [
+ 'session_id' => $session->id,
+ 'user_id' => $session->user_id,
+ 'provider' => $feedbackProvider,
+ 'original_error_type' => $error::class,
+ 'original_message' => Str::limit($error->getMessage(), 300),
+ 'fallback_error_type' => $fallbackError::class,
+ 'fallback_message' => Str::limit($fallbackError->getMessage(), 300),
+ ]);
+
  throw $error;
+ }
  }
  }
 

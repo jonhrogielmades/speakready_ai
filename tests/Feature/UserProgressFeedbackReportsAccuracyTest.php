@@ -43,6 +43,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $response->assertOk()
  ->assertSee('+30%')
  ->assertSee('Score pending')
+ ->assertSee('Category Performance')
+ ->assertSee('id="category-performance-summary"', false)
  ->assertViewHas('longestStreak', 4)
  ->assertViewHas('scoreTrend', function ($trend) {
  return $trend->pluck('score')->all() === [60, 90];
@@ -171,7 +173,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('id="personalized-practice-plan"', false)
  ->assertSee('Learning Progress')
  ->assertSee('Answer Clarity Sprint')
- ->assertSee('Recommended Next')
+ ->assertDontSee('Recommended Next')
+ ->assertDontSee('id="recommended-next"', false)
  ->assertDontSee('id="activity-calendar"', false)
  ->assertDontSee('Voice Progress')
  ->assertViewHas('currentStreak', 2)
@@ -606,14 +609,14 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/desktop/user/feedback.css?v=8', false)
+ ->assertSee('css/desktop/user/feedback.css?v=11', false)
  ->assertSee('data-page-style="user-feedback"', false);
 
  $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/mobile/user/feedback.css?v=5', false)
+ ->assertSee('css/mobile/user/feedback.css?v=8', false)
  ->assertSee('serverDetectedMobile: true', false);
 
  foreach (['desktop', 'mobile'] as $device) {

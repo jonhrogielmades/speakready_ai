@@ -1173,7 +1173,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
  }
 
- public function test_interview_finish_does_not_complete_when_ai_feedback_generation_crashes(): void
+ public function test_interview_finish_uses_local_feedback_when_ai_feedback_generation_crashes(): void
  {
  Http::preventStrayRequests();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -1204,13 +1204,15 @@ class ReliabilityHardeningTest extends TestCase
  'active_interview_provider' => 'openai',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertStatus(503)
- ->assertJsonPath('retry_after_ms', 1500);
+ ->assertOk()
+ ->assertJsonPath('redirect_url', route('user.review', $session));
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
- $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
- $this->assertEmpty(InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail()->ai_feedback);
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+ $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+ $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
+ $this->assertNotEmpty($savedAnswer->ai_feedback);
+ $this->assertSame('local_evidence', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
  }
 
  public function test_interview_finish_uses_local_feedback_when_all_ai_feedback_providers_fail(): void

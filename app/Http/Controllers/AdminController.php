@@ -639,11 +639,11 @@ class AdminController extends Controller
 
  foreach ($questions as $question) {
  $row['ID'] = $question->id;
- $row['Category'] = $question->category->title?? 'N/A';
- $row['Question'] = $question->question_text;
+ $row['Category'] = admin_without_restricted_country_text($question->category->title?? 'N/A');
+ $row['Question'] = admin_without_restricted_country_text($question->question_text);
  $row['Type'] = $question->type;
  $row['Difficulty'] = $question->difficulty;
- $row['Source Name'] = $question->source_name;
+ $row['Source Name'] = admin_without_restricted_country_text($question->source_name);
  $row['Source URL'] = $question->source_url;
  $row['Source Type'] = $question->source_type;
 

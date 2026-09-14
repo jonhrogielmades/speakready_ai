@@ -11,14 +11,14 @@
     $learningAverage = $learningRecords->isNotEmpty()
         ? (int) round($learningRecords->avg(fn ($progress) => (int) ($progress->progress_percentage ?? 0)))
         : 0;
-    $recommendations = collect($moduleRecommendations ?? [])->take(3)->values();
-    $safeCssColor = fn ($value, $fallback = '#3b82f6') => preg_match('/^#[0-9a-fA-F]{3,8}$/', trim((string) $value)) ? trim((string) $value) : $fallback;
     $percent = fn ($value) => max(0, min(100, (int) round((float) $value)));
     $moduleColors = ['#0ea5e9', '#7c3aed', '#10b981'];
+    $progressCategoryItems = collect($categoryPerf ?? []);
+    $progressCategoryColors = ['#22c55e', '#3b82f6', '#06b6d4', '#f59e0b', '#8b5cf6'];
 @endphp
 
-<div class="row g-4 mb-4 progress-live-grid">
-    <div class="col-12 col-lg-6 progress-live-card" id="learning-progress">
+<div class="progress-live-grid" style="gap: 18px !important; margin-top: 18px !important; margin-bottom: 18px !important;">
+    <div class="progress-live-card" id="learning-progress">
         <div class="learning-panel" style="--panel-accent:#0ea5e9;">
             <div class="learning-heading">
                 <div class="learning-heading-icon"><i class="fa-solid fa-book-open"></i></div>
@@ -67,36 +67,40 @@
         </div>
     </div>
 
-    <div class="col-12 col-lg-6 progress-live-card" id="recommended-next">
-        <div class="recommend-panel" style="--panel-accent:#7c3aed;">
-            <div class="recommend-heading">
-                <div class="recommend-heading-icon"><i class="fa-solid fa-compass"></i></div>
+    <div class="progress-live-card animate-fade-up" id="category-performance-summary" style="animation-delay: 0.55s;">
+        <div class="premium-panel progress-category-panel" style="--panel-accent:#10b981;">
+            <div class="progress-panel-heading">
+                <div class="progress-panel-icon"><i class="fa-solid fa-layer-group"></i></div>
                 <div>
-                    <h5 class="recommend-title">Recommended Next</h5>
-                    <p class="recommend-subtitle">Modules selected from your latest progress signals.</p>
+                    <h5 class="progress-panel-title">Category Performance</h5>
+                    <p class="progress-panel-subtitle">Where your interview scores are strongest.</p>
                 </div>
             </div>
-            <div class="recommend-list">
-                @forelse($recommendations as $recommendation)
-                    <a href="{{ $recommendation->url ?? route('user.modules.index') }}" class="recommend-item" style="--panel-accent: {{ $safeCssColor($recommendation->color ?? null, '#7c3aed') }};">
-                        <div class="recommend-item-icon"><i class="fa-solid {{ $recommendation->icon ?? 'fa-lightbulb' }}"></i></div>
-                        <div>
-                            <div class="recommend-item-title">{{ $recommendation->text ?? $recommendation->skill ?? 'Recommended module' }}</div>
-                            <div class="recommend-item-text">{{ $recommendation->reason ?? 'This matches your current interview practice needs.' }}</div>
+
+            @if($progressCategoryItems->isNotEmpty())
+                <div class="progress-category-list">
+                    @foreach($progressCategoryItems as $categoryName => $score)
+                        @php
+                            $categoryScore = max(0, min(100, (int) round($score)));
+                            $categoryColor = $progressCategoryColors[$loop->index % count($progressCategoryColors)];
+                        @endphp
+                        <div class="progress-category-row" style="--category-color: {{ $categoryColor }}; --category-value: {{ $categoryScore }}%;">
+                            <div class="progress-category-top">
+                                <span class="progress-category-name">{{ $categoryName }}</span>
+                                <span class="progress-category-score">{{ $categoryScore }}%</span>
+                            </div>
+                            <div class="progress-category-track" aria-hidden="true"><span></span></div>
                         </div>
-                        <div class="recommend-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-                    </a>
-                @empty
-                    <a href="{{ route('user.modules.index') }}" class="recommend-item">
-                        <div class="recommend-item-icon"><i class="fa-solid fa-book"></i></div>
-                        <div>
-                            <div class="recommend-item-title">Explore learning modules</div>
-                            <div class="recommend-item-text">Published modules will appear here as recommendations.</div>
-                        </div>
-                        <div class="recommend-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-                    </a>
-                @endforelse
-            </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="skill-empty-state progress-category-empty">
+                    <div>
+                        <div class="skill-empty-icon"><i class="fa-solid fa-folder-open"></i></div>
+                        <p class="skill-empty-text">Complete an interview session to unlock category performance.</p>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>

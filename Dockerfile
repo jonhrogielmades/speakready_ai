@@ -42,6 +42,9 @@ RUN { \
     } > /usr/local/etc/php/conf.d/10-opcache.ini \
     && { \
         echo "[www]"; \
+        echo "clear_env = no"; \
+        echo "catch_workers_output = yes"; \
+        echo "decorate_workers_output = no"; \
         echo "request_terminate_timeout = 3600s"; \
     } > /usr/local/etc/php-fpm.d/zz-app-timeouts.conf
 

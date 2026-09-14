@@ -3941,3 +3941,196 @@ body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badg
     -webkit-text-fill-color: #fde68a !important;
     background: rgba(146, 64, 14, 0.54) !important;
 }
+
+/* Final Feedback Center report action layout. */
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-actions .btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    min-width: 112px !important;
+    max-width: 132px !important;
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    font-size: 0.72rem !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-actions .btn i {
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    font-size: 0.72rem !important;
+}
+
+/* Final Feedback Center summary action row. */
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-actions {
+    display: grid !important;
+    gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-actions-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-actions-single {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-action {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 0 12px !important;
+    gap: 7px !important;
+    border-radius: 8px !important;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-action-primary {
+    border-color: #2563eb !important;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-action i {
+    flex: 0 0 auto !important;
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+    font-size: 0.78rem !important;
+    line-height: 1 !important;
+}
+
+html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-action:not(.feedback-summary-action-primary),
+:root:not(.lm) body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-action:not(.feedback-summary-action-primary),
+body.user-desktop-shell.dm:not(.admin-shell) .feedback-shell .feedback-summary-action:not(.feedback-summary-action-primary) {
+    color: #e2e8f0 !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+}
+
+/* Final Feedback Center answer review layout. */
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-grid {
+    gap: 12px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-item {
+    display: grid !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-top {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-top strong {
+    display: block !important;
+    min-width: 0 !important;
+    color: var(--feedback-feature-title, #0f172a) !important;
+    -webkit-text-fill-color: var(--feedback-feature-title, #0f172a) !important;
+    font-size: 0.86rem !important;
+    font-weight: 900 !important;
+    line-height: 1.28 !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-score {
+    justify-content: center !important;
+    align-self: start !important;
+    min-width: 42px !important;
+    min-height: 26px !important;
+    padding: 0 8px !important;
+    color: #2563eb !important;
+    -webkit-text-fill-color: #2563eb !important;
+    font-size: 0.64rem !important;
+    font-weight: 950 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-user {
+    padding: 9px !important;
+    border-radius: 8px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-user b {
+    color: var(--feedback-feature-title, #0f172a) !important;
+    -webkit-text-fill-color: var(--feedback-feature-title, #0f172a) !important;
+    font-size: 0.62rem !important;
+    font-weight: 950 !important;
+    line-height: 1.1 !important;
+    margin-bottom: 5px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-item p {
+    color: var(--feedback-feature-text, #334155) !important;
+    -webkit-text-fill-color: var(--feedback-feature-text, #334155) !important;
+    font-size: 0.76rem !important;
+    line-height: 1.42 !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-feedback strong,
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-focus strong {
+    color: var(--feedback-feature-title, #0f172a) !important;
+    -webkit-text-fill-color: var(--feedback-feature-title, #0f172a) !important;
+    font-weight: 950 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-focus {
+    margin: 0 !important;
+    padding: 8px 10px 8px 12px !important;
+    border-left: 3px solid #10b981 !important;
+    border-radius: 0 8px 8px 0 !important;
+    background: rgba(16, 185, 129, 0.07) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-action {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    width: fit-content !important;
+    min-height: 28px !important;
+    color: var(--feedback-feature-link, #2563eb) !important;
+    -webkit-text-fill-color: var(--feedback-feature-link, #2563eb) !important;
+    font-size: 0.76rem !important;
+    font-weight: 950 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}

@@ -29,3 +29,22 @@ if (! function_exists('mobile_view')) {
         return view($resolved, array_merge($data, ['isMobile' => $isMobile]));
     }
 }
+
+if (! function_exists('admin_without_restricted_country_text')) {
+    function admin_without_restricted_country_text(?string $text): string
+    {
+        $text = (string) $text;
+
+        if ($text === '') {
+            return '';
+        }
+
+        $clean = preg_replace('/\bphilippines?\b/i', '', $text) ?? $text;
+        $clean = preg_replace('/[ \t]{2,}/', ' ', $clean) ?? $clean;
+        $clean = preg_replace('/\s+([,.;:!?])/', '$1', $clean) ?? $clean;
+        $clean = preg_replace('/([({\[])\s+/', '$1', $clean) ?? $clean;
+        $clean = preg_replace('/\s+([)}\]])/', '$1', $clean) ?? $clean;
+
+        return trim($clean);
+    }
+}

@@ -771,6 +771,46 @@ class AdminReliabilityTest extends TestCase
         $this->assertStringContainsString('&lt;script&gt;', $html);
     }
 
+    public function test_admin_responses_hide_philippines_wording(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $category = $this->category([
+            'title' => 'Philippines Interview',
+            'description' => 'Philippine readiness questions',
+        ]);
+
+        Question::create([
+            'category_id' => $category->id,
+            'question_text' => 'How does this fit your Philippines career path?',
+            'expected_guide' => 'Keep the Philippine interview context clear.',
+            'difficulty' => 'medium',
+            'type' => 'Personal',
+            'status' => 'active',
+            'source_name' => 'Michael Page Philippines',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.questions'))
+            ->assertOk()
+            ->assertDontSee('Philippines')
+            ->assertDontSee('Philippine')
+            ->assertSee('Interview')
+            ->assertSee('your career path');
+
+        ActivityLog::create([
+            'user_id' => $admin->id,
+            'action' => 'test',
+            'description' => 'Philippines activity item',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.api.latest-activities'))
+            ->assertOk();
+
+        $this->assertStringNotContainsString('Philippines', $response->getContent());
+        $this->assertStringContainsString('activity item', $response->getContent());
+    }
+
     private function category(array $overrides = []): Category
     {
         return Category::create(array_merge([

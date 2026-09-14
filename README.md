@@ -425,7 +425,7 @@ Recommended hosted AI runtime limits:
 ```env
 AI_FEEDBACK_TIMEOUT=15
 AI_FEEDBACK_DEADLINE_SECONDS=25
-AI_FEEDBACK_MAX_PROVIDERS=6
+AI_FEEDBACK_MAX_PROVIDERS=4
 AI_FEEDBACK_ATTEMPTS=1
 AI_FEEDBACK_HTTP_ATTEMPTS=1
 AI_FEEDBACK_RETRY_DELAY_MS=200
@@ -609,10 +609,11 @@ Recommended container settings:
 On startup, `docker-start.sh`:
 
 - Creates required storage and cache directories.
-- Starts PHP-FPM and binds Nginx early.
+- Validates required production environment values and infers `DB_CONNECTION` from `DATABASE_URL` when possible.
 - Clears stale Laravel caches.
-- Runs schema repair commands for AI providers, voice sessions, questions, interview answers, scores, feedback, and game tables.
-- Runs migrations and seeds the admin account.
+- Runs migrations, then repairs runtime schemas for AI providers, voice sessions, questions, interview answers, scores, feedback, and game tables.
+- Starts PHP-FPM and binds Nginx only after required startup maintenance passes.
+- Seeds the admin account.
 - Links storage and rebuilds optimized caches.
 
 Optional production maintenance:

@@ -18,7 +18,6 @@
     $welcomeName = $firstName;
     $rating = round(($avgScore ?? 0) / 20, 1);
     $goalPercent = isset($upcomingGoal) ? max(0, min(100, round($upcomingGoal->percent ?? 0))) : 0;
-    $categoryCount = isset($categoryPerformance) ? count($categoryPerformance) : 0;
     $moduleCount = isset($learningLabProgress) ? count($learningLabProgress) : 0;
     $sessionsMeter = max(0, min(100, (int) round((($totalSessions ?? 0) / 10) * 100)));
     $ratingMeter = max(0, min(100, (int) round(($rating / 5) * 100)));
@@ -69,20 +68,6 @@
         ? 'Polish role-fit stories, metrics, and confident closing answers.'
         : 'Practice structure, confidence, and local role-fit responses.';
     $challengeXp = $hasTrendScores ? 60 : 40;
-    $dashboardAccentFallbacks = ['#3b82f6', '#22c55e', '#06b6d4', '#f59e0b', '#8b5cf6', '#ec4899', '#ef4444'];
-    $safeAccent = static function ($value, string $fallback = '#3b82f6') use ($dashboardAccentFallbacks): string {
-        $color = trim((string) $value);
-        if (preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $color)) {
-            return $color;
-        }
-
-        return in_array($fallback, $dashboardAccentFallbacks, true) ? $fallback : '#3b82f6';
-    };
-    $safeFaIcon = static function ($value, string $fallback = 'fa-clipboard-list'): string {
-        $icon = trim((string) $value);
-
-        return preg_match('/^fa-[a-z0-9-]+$/', $icon) ? $icon : $fallback;
-    };
     $achievementCatalog = [
         [
             'name' => 'First Interview',
@@ -348,129 +333,6 @@
                     <i class="{{ $trendNoteIcon }}"></i>
                     <span><strong>{{ $trendNoteTitle }}.</strong> {{ $trendNoteBody }}</span>
                 </div>
-            </section>
-
-            <div class="sr-two-col sr-inline-panels">
-                <section class="sr-card sr-card-pad sr-polished-card" style="--polish-accent:#10b981">
-                    <div class="sr-polished-header">
-                        <div class="sr-polished-icon"><i class="fa-solid fa-layer-group"></i></div>
-                        <div>
-                            <h5 class="sr-polished-title">Category Performance</h5>
-                            <p class="sr-polished-subtitle">Where your interview scores are strongest.</p>
-                        </div>
-                    </div>
-                    @if($categoryCount > 0)
-                        <div class="sr-progress-list">
-                            @foreach($categoryPerformance as $index => $cat)
-                                @php
-                                    $colors = ['#22c55e', '#3b82f6', '#06b6d4', '#f59e0b', '#8b5cf6'];
-                                    $color = $colors[$index % count($colors)];
-                                    $catScore = max(0, min(100, (int) $cat->score));
-                                @endphp
-                                <div class="sr-progress-row">
-                                    <div class="sr-progress-name">{{ $cat->name }}</div>
-                                    <div class="sr-progress-score">{{ $catScore }}%</div>
-                                    <div class="sr-progress"><span style="--value: {{ $catScore }}%; background: {{ $color }}"></span></div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="sr-polished-empty">
-                            <div class="sr-polished-empty-inner">
-                                <div class="sr-empty-visual"><i class="fa-solid fa-folder-open"></i></div>
-                                <p class="sr-polished-empty-text">Complete a interview session to unlock category performance.</p>
-                            </div>
-                        </div>
-                    @endif
-                </section>
-
-                <section id="card-ai-recommendations" class="sr-card sr-card-pad sr-polished-card" style="--polish-accent:#f59e0b">
-                    <div class="sr-polished-header">
-                        <div class="sr-polished-icon"><i class="fa-solid fa-lightbulb"></i></div>
-                        <div class="min-w-0 flex-grow-1">
-                            <div class="d-flex align-items-start justify-content-between gap-2">
-                                <h5 class="sr-polished-title">AI Recommendations</h5>
-                                <span class="sr-rec-badge">Personalized for you</span>
-                            </div>
-                            <p class="sr-polished-subtitle">Next actions based on your performance.</p>
-                        </div>
-                    </div>
-                    @if(isset($aiRecommendations) && count($aiRecommendations) > 0)
-                        <div class="sr-rec-list">
-                            @foreach($aiRecommendations as $rec)
-                                @php
-                                    $recAccent = $safeAccent($rec->color ?? null, '#f59e0b');
-                                    $recIcon = $safeFaIcon($rec->icon ?? null, 'fa-lightbulb');
-                                @endphp
-                                <a href="{{ $rec->url ?? route('user.modules.index') }}" class="sr-recommendation-card" style="--accent: {{ $recAccent }}">
-                                    <div class="sr-recommendation-icon"><i class="fa-solid {{ $recIcon }}"></i></div>
-                                    <div class="min-w-0">
-                                        <div class="sr-recommendation-title">{{ $rec->text }}</div>
-                                        @if(!empty($rec->reason))
-                                            <div class="sr-recommendation-reason">{{ $rec->reason }}</div>
-                                        @endif
-                                    </div>
-                                    <div class="sr-recommendation-next"><i class="fa-solid fa-chevron-right"></i></div>
-                                </a>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="sr-polished-empty">
-                            <div class="sr-polished-empty-inner">
-                                <div class="sr-empty-visual"><i class="fa-solid fa-lightbulb"></i></div>
-                                <p class="sr-polished-empty-text">Complete a interview to get tailored recommendations.</p>
-                            </div>
-                        </div>
-                    @endif
-                </section>
-            </div>
-
-            <section id="card-practice-plan" class="sr-card sr-card-pad" aria-labelledby="dashboard-practice-plan-title">
-                <div class="sr-plan-header">
-                    <div class="sr-plan-header-icon"><i class="fa-solid fa-list-check"></i></div>
-                    <div class="sr-plan-header-copy">
-                        <h5 id="dashboard-practice-plan-title" class="sr-plan-title">Personalized Practice Plan</h5>
-                        <p class="sr-plan-subtitle">Follow a short sequence built from your latest readiness signals.</p>
-                    </div>
-                </div>
-                <a href="{{ route('user.practice.plan') }}" class="sr-plan-full-link">
-                    <i class="fa-solid fa-chart-line"></i>
-                    View complete progress plan
-                    <i class="fa-solid fa-chevron-right"></i>
-                </a>
-                @if(isset($practicePlan) && count($practicePlan) > 0)
-                    <div class="sr-rec-list">
-                        @foreach($practicePlan as $plan)
-                            @php
-                                $planAccent = $safeAccent($plan->color ?? null, '#10b981');
-                                $planIcon = $safeFaIcon($plan->icon ?? null, 'fa-list-check');
-                            @endphp
-                            <a href="{{ $plan->url ?? route('interview.setup') }}" class="sr-rec-item" style="--accent: {{ $planAccent }}">
-                                <div class="sr-rec-icon"><i class="fa-solid {{ $planIcon }}"></i></div>
-                                <div class="sr-plan-copy">
-                                    <div class="sr-plan-top">
-                                        <span class="sr-plan-step">{{ $plan->day ?? 'Today' }}</span>
-                                        <span class="sr-tag sr-tag-accent">{{ $plan->minutes ?? 10 }} min</span>
-                                    </div>
-                                    <div class="sr-plan-task-title">{{ $plan->title ?? 'Practice next step' }}</div>
-                                    <div class="sr-plan-action">{{ $plan->action ?? 'Complete one focused interview practice task.' }}</div>
-                                    <div class="sr-plan-meta">
-                                        <span class="sr-tag">{{ $plan->focus ?? 'Readiness' }}</span>
-                                    </div>
-                                    <span class="sr-plan-cta">{{ $plan->cta ?? 'Start Practice' }} <i class="fa-solid fa-chevron-right"></i></span>
-                                </div>
-                                <i class="fa-solid fa-chevron-right sr-plan-card-chevron" aria-hidden="true"></i>
-                            </a>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="sr-polished-empty">
-                        <div class="sr-polished-empty-inner">
-                            <div class="sr-empty-visual"><i class="fa-solid fa-clipboard-list"></i></div>
-                            <p class="sr-polished-empty-text">Complete a scored interview to generate your practice plan.</p>
-                        </div>
-                    </div>
-                @endif
             </section>
 
             <section id="card-recent-sessions" class="sr-card sr-card-pad sr-polished-card" style="--polish-accent:#06b6d4">
@@ -1320,7 +1182,6 @@ document.addEventListener("DOMContentLoaded", function() {
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
             { element: '.sr-mobile-stat-grid', popover: { title: 'Practice Snapshot', description: 'Track interviews, ratings, XP, and streaks without opening a report.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to choose the module, challenge, or interview that fits your latest gaps.', side: 'top', align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
             { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused interview task for XP, streak progress, and sharper answer structure.', side: 'top', align: 'start' }},
             { element: '#mobThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable view.', side: 'bottom', align: 'end' }}
@@ -1332,7 +1193,6 @@ document.addEventListener("DOMContentLoaded", function() {
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed interviews, ratings, XP, streaks, and active practice days at a glance.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to choose the module, challenge, or interview that fits your latest gaps.', side: 'bottom', align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
             { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused interview task for XP, streak progress, and sharper answer structure.', side: 'left', align: 'start' }},
             { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: 'bottom', align: 'center' }},

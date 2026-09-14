@@ -88,6 +88,74 @@
     }
 }
 
+/* Final Feedback Center summary action row. */
+@media (max-width: 991.98px) {
+    html body #mob-content .feedback-shell .feedback-summary-actions,
+    html body .feedback-shell .feedback-summary-actions {
+        display: grid !important;
+        gap: 8px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-summary-actions-pair,
+    html body .feedback-shell .feedback-summary-actions-pair {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-summary-actions-single,
+    html body .feedback-shell .feedback-summary-actions-single {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-summary-action,
+    html body .feedback-shell .feedback-summary-action {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 36px !important;
+        height: 36px !important;
+        padding: 0 8px !important;
+        gap: 5px !important;
+        border-radius: 8px !important;
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        font-size: 0.68rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        text-align: center !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-summary-action-primary,
+    html body .feedback-shell .feedback-summary-action-primary {
+        border-color: #2563eb !important;
+        background: #2563eb !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-summary-action i,
+    html body .feedback-shell .feedback-summary-action i {
+        flex: 0 0 auto !important;
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 0.7rem !important;
+        line-height: 1 !important;
+    }
+
+    html[data-theme="dark"] body #mob-content .feedback-shell .feedback-summary-action:not(.feedback-summary-action-primary),
+    :root:not(.lm) body #mob-content .feedback-shell .feedback-summary-action:not(.feedback-summary-action-primary),
+    body.dm #mob-content .feedback-shell .feedback-summary-action:not(.feedback-summary-action-primary) {
+        color: #e2e8f0 !important;
+        -webkit-text-fill-color: #e2e8f0 !important;
+    }
+}
+
 /* Final Feedback search input clipping fix */
 html body .feedback-shell #feedback-filters .feedback-search-wrap {
     display: grid !important;
@@ -3436,4 +3504,276 @@ body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badg
     color: #fde68a !important;
     -webkit-text-fill-color: #fde68a !important;
     background: rgba(146, 64, 14, 0.54) !important;
+}
+
+/* Final Feedback Center mobile history card layout. */
+@media (max-width: 991.98px) {
+    html body #mob-content .feedback-shell #feedbackTable tbody,
+    html body .feedback-shell #feedbackTable tbody {
+        display: grid !important;
+        gap: 8px !important;
+    }
+
+    html body #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row),
+    html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 5px !important;
+        width: 100% !important;
+        padding: 9px 10px !important;
+        border: 1px solid var(--feedback-history-row-border, #dbe4f0) !important;
+        border-radius: 8px !important;
+        background: var(--feedback-history-row-bg, #f8fafc) !important;
+        box-shadow: none !important;
+    }
+
+    html body #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(1),
+    html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(1),
+    html body #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(2),
+    html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(2),
+    html body #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td.feedback-mobile-history-cell,
+    html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td.feedback-mobile-history-cell {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+    }
+
+    html body #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(1),
+    html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(1) {
+        color: var(--feedback-history-muted, #64748b) !important;
+        -webkit-text-fill-color: var(--feedback-history-muted, #64748b) !important;
+        font-size: 0.58rem !important;
+        font-weight: 850 !important;
+        line-height: 1.1 !important;
+        text-transform: uppercase !important;
+    }
+
+    html body #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(2),
+    html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(2) {
+        color: var(--feedback-history-title, #0f172a) !important;
+        -webkit-text-fill-color: var(--feedback-history-title, #0f172a) !important;
+        font-size: 0.82rem !important;
+        font-weight: 900 !important;
+        line-height: 1.14 !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-mobile-history-row,
+    html body .feedback-shell .feedback-mobile-history-row {
+        display: grid !important;
+        grid-template-columns: minmax(42px, 0.55fr) minmax(64px, 0.85fr) minmax(96px, 1.25fr) !important;
+        align-items: center !important;
+        gap: 7px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-mobile-history-stat,
+    html body .feedback-shell .feedback-mobile-history-stat {
+        min-width: 0 !important;
+        min-height: 30px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        justify-content: center !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-mobile-history-stat > span:first-child,
+    html body .feedback-shell .feedback-mobile-history-stat > span:first-child {
+        color: var(--feedback-history-muted, #64748b) !important;
+        -webkit-text-fill-color: var(--feedback-history-muted, #64748b) !important;
+        font-size: 0.46rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        text-transform: uppercase !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-mobile-history-stat strong,
+    html body .feedback-shell .feedback-mobile-history-stat strong {
+        color: var(--feedback-history-text, #334155) !important;
+        -webkit-text-fill-color: var(--feedback-history-text, #334155) !important;
+        font-size: 0.62rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+    }
+
+    html body #mob-content .feedback-shell #feedbackTable .feedback-mobile-history-stat .badge,
+    html body .feedback-shell #feedbackTable .feedback-mobile-history-stat .badge {
+        max-width: 100% !important;
+        min-height: 0 !important;
+        padding: 3px 6px !important;
+        overflow: hidden !important;
+        font-size: 0.45rem !important;
+        line-height: 1 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions,
+    html body .feedback-shell .feedback-mobile-history-row .feedback-history-actions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        margin: 0 !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn,
+    html body .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-wrap: nowrap !important;
+        gap: 5px !important;
+        width: 100% !important;
+        max-width: 118px !important;
+        min-width: 0 !important;
+        min-height: 32px !important;
+        height: 32px !important;
+        padding: 0 8px !important;
+        border-radius: 7px !important;
+        font-size: 0.58rem !important;
+        font-weight: 850 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        box-shadow: none !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn i,
+    html body .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn i {
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+        font-size: 0.58rem !important;
+    }
+}
+
+/* Final Feedback Center answer review layout. */
+@media (max-width: 991.98px) {
+    html body #mob-content .feedback-shell .feedback-answer-panel,
+    html body .feedback-shell .feedback-answer-panel {
+        margin-bottom: 14px !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-grid,
+    html body .feedback-shell .feedback-answer-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-item,
+    html body .feedback-shell .feedback-answer-item {
+        display: grid !important;
+        gap: 9px !important;
+        padding: 10px !important;
+        border-radius: 9px !important;
+        box-shadow: none !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-top,
+    html body .feedback-shell .feedback-answer-top {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: start !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-top strong,
+    html body .feedback-shell .feedback-answer-top strong {
+        display: block !important;
+        min-width: 0 !important;
+        color: var(--feedback-feature-title, #0f172a) !important;
+        -webkit-text-fill-color: var(--feedback-feature-title, #0f172a) !important;
+        font-size: 0.78rem !important;
+        font-weight: 900 !important;
+        line-height: 1.24 !important;
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-score,
+    html body .feedback-shell .feedback-answer-score {
+        justify-content: center !important;
+        align-self: start !important;
+        min-width: 36px !important;
+        min-height: 24px !important;
+        padding: 0 7px !important;
+        color: #2563eb !important;
+        -webkit-text-fill-color: #2563eb !important;
+        font-size: 0.58rem !important;
+        font-weight: 950 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-user,
+    html body .feedback-shell .feedback-answer-user {
+        padding: 8px !important;
+        border-radius: 8px !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-user b,
+    html body .feedback-shell .feedback-answer-user b {
+        color: var(--feedback-feature-title, #0f172a) !important;
+        -webkit-text-fill-color: var(--feedback-feature-title, #0f172a) !important;
+        font-size: 0.58rem !important;
+        font-weight: 950 !important;
+        line-height: 1.1 !important;
+        margin-bottom: 5px !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-item p,
+    html body .feedback-shell .feedback-answer-item p {
+        color: var(--feedback-feature-text, #334155) !important;
+        -webkit-text-fill-color: var(--feedback-feature-text, #334155) !important;
+        font-size: 0.7rem !important;
+        line-height: 1.38 !important;
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-feedback,
+    html body .feedback-shell .feedback-answer-feedback {
+        padding: 0 !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-feedback strong,
+    html body .feedback-shell .feedback-answer-feedback strong,
+    html body #mob-content .feedback-shell .feedback-answer-focus strong,
+    html body .feedback-shell .feedback-answer-focus strong {
+        color: var(--feedback-feature-title, #0f172a) !important;
+        -webkit-text-fill-color: var(--feedback-feature-title, #0f172a) !important;
+        font-weight: 950 !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-focus,
+    html body .feedback-shell .feedback-answer-focus {
+        margin: 0 !important;
+        padding: 7px 8px 7px 10px !important;
+        border-left: 3px solid #10b981 !important;
+        border-radius: 0 8px 8px 0 !important;
+        background: rgba(16, 185, 129, 0.07) !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-action,
+    html body .feedback-shell .feedback-answer-action {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        width: fit-content !important;
+        min-height: 26px !important;
+        color: var(--feedback-feature-link, #2563eb) !important;
+        -webkit-text-fill-color: var(--feedback-feature-link, #2563eb) !important;
+        font-size: 0.72rem !important;
+        font-weight: 950 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
 }
