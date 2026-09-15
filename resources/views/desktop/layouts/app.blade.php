@@ -299,7 +299,7 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=8') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=17" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=18" defer></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>
@@ -519,6 +519,19 @@
             'Content-Type': 'application/json',
             'Accept': 'application/json'
          };
+         const notificationCacheTtlMs = 45000;
+         const notificationRefreshIntervalMs = 60000;
+         let notificationRequest = null;
+         let notificationLastLoadedAt = 0;
+
+         function scheduleIdleUserTask(callback, timeout = 1500) {
+            if ('requestIdleCallback' in window) {
+               window.requestIdleCallback(callback, { timeout });
+               return;
+            }
+
+            window.setTimeout(callback, Math.min(timeout, 1200));
+         }
 
          function toggleNotif(e) {
             e?.stopPropagation?.();
@@ -577,16 +590,30 @@
 
          function fetchNotifications(options = {}) {
             const quiet = Boolean(options.quiet);
+            const force = Boolean(options.force);
             const dropdown = document.getElementById('notifDropdown');
             const isDropdownOpen = dropdown?.classList.contains('open');
+            const hasFreshData = notificationLastLoadedAt > 0
+               && Date.now() - notificationLastLoadedAt < notificationCacheTtlMs;
+
+            if (!force && hasFreshData) {
+               return Promise.resolve(null);
+            }
+
+            if (!force && notificationRequest) {
+               return notificationRequest;
+            }
+
             if (!quiet && dropdown?.getAttribute('data-loaded') !== 'true') {
                renderNotificationStatus('Loading notifications...');
             }
 
-            requestNotificationJson('/notifications/fetch')
+            notificationRequest = requestNotificationJson('/notifications/fetch')
                .then(data => {
                   updateNotifUI(data);
                   dropdown?.setAttribute('data-loaded', 'true');
+                  notificationLastLoadedAt = Date.now();
+                  return data;
                })
                .catch(err => {
                   if (!quiet) {
@@ -595,7 +622,12 @@
                   if (!quiet && isDropdownOpen) {
                      renderNotificationStatus('Notifications could not load right now.', true);
                   }
+               })
+               .finally(() => {
+                  notificationRequest = null;
                });
+
+            return notificationRequest;
          }
 
          function updateNotifUI(data) {
@@ -657,7 +689,7 @@
             requestNotificationJson('/notifications/read-all', { method: 'POST' })
                .then(data => {
                   if(data.success) {
-                     fetchNotifications();
+                     fetchNotifications({ force: true });
                      if(typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
                   }
                })
@@ -679,7 +711,7 @@
                requestNotificationJson('/notifications/clear-all', { method: 'DELETE' })
                   .then(data => {
                      if(data.success) {
-                        fetchNotifications();
+                        fetchNotifications({ force: true });
                         if(typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
                      }
                   })
@@ -697,7 +729,7 @@
             requestNotificationJson('/notifications/' + encodeURIComponent(id) + '/read', { method: 'POST' })
                .then(data => {
                   if(data.success) {
-                     fetchNotifications();
+                     fetchNotifications({ force: true });
                   }
                })
                .catch(err => {
@@ -721,7 +753,7 @@
                requestNotificationJson('/notifications/' + encodeURIComponent(id), { method: 'DELETE' })
                   .then(data => {
                      if(data.success) {
-                        fetchNotifications();
+                        fetchNotifications({ force: true });
                      }
                   })
                   .catch(err => {
@@ -733,9 +765,11 @@
 
          // Fetch initially to set badge
          document.addEventListener('DOMContentLoaded', function() {
-            fetchNotifications({ quiet: true });
-            // Poll every minute
-            setInterval(() => fetchNotifications({ quiet: true }), 60000);
+            scheduleIdleUserTask(function() {
+               fetchNotifications({ quiet: true });
+               // Poll every minute after the first idle badge refresh.
+               setInterval(() => fetchNotifications({ quiet: true }), notificationRefreshIntervalMs);
+            });
          });
 
          document.addEventListener('click', function(event) {

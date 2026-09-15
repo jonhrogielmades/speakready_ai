@@ -5,8 +5,11 @@
     if (!window.SpeakReadyUserApp) {
         window.SpeakReadyUserApp = userApp;
     }
-    var NAVIGATION_CACHE_TTL_MS = 30000;
-    var NAVIGATION_STATUS_DELAY_MS = 220;
+    var NAVIGATION_CACHE_TTL_MS = 120000;
+    var NAVIGATION_STATUS_DELAY_MS = 700;
+    var NAVIGATION_PREFETCH_DELAY_MS = 90;
+    var NAVIGATION_PREFETCH_LIMIT = 8;
+    var NAVIGATION_PREFETCH_TIMEOUT_MS = 2500;
     var NAVIGATION_STYLESHEET_TIMEOUT_MS = 1800;
     var NAVIGATION_SCRIPT_TIMEOUT_MS = 3500;
     var TRANSIENT_USER_PAGE_BODY_CLASSES = [
@@ -806,6 +809,9 @@
         userApp.navigationController = null;
         userApp.navigationToken = 0;
         userApp.navigationCache = userApp.navigationCache || Object.create(null);
+        userApp.navigationPrefetchInflight = userApp.navigationPrefetchInflight || Object.create(null);
+        userApp.navigationPrefetchCount = userApp.navigationPrefetchCount || 0;
+        userApp.navigationPrefetchTimer = 0;
         userApp.navigationStatusTimer = 0;
         markInitialPageStylesManaged();
         updateActiveUserNavigation(new URL(window.location.href, window.location.href));
@@ -813,13 +819,26 @@
         window.history.replaceState(makeHistoryState(window.location.href), document.title, window.location.href);
 
         document.addEventListener('click', function (event) {
-            var anchor = event.target.closest('a[href]');
+            var target = event.target instanceof Element ? event.target : (event.target ? event.target.parentElement : null);
+            var anchor = target && target.closest ? target.closest('a[href]') : null;
             if (!anchor || !shouldHandleLink(anchor, event)) return;
 
             event.preventDefault();
             closeOpenUserMenus();
             updateActiveUserNavigation(new URL(anchor.href, window.location.href));
             navigateUserApp(anchor.href, { push: true });
+        });
+
+        document.addEventListener('pointerover', function (event) {
+            var target = event.target instanceof Element ? event.target : (event.target ? event.target.parentElement : null);
+            var anchor = target && target.closest ? target.closest('a[href]') : null;
+            scheduleUserNavigationPrefetch(anchor);
+        }, { passive: true });
+
+        document.addEventListener('focusin', function (event) {
+            var target = event.target instanceof Element ? event.target : null;
+            var anchor = target && target.closest ? target.closest('a[href]') : null;
+            scheduleUserNavigationPrefetch(anchor);
         });
 
         window.addEventListener('popstate', function () {
@@ -836,6 +855,11 @@
 
     function shouldHandleLink(anchor, event) {
         if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false;
+        return isUserPartialNavigationAnchor(anchor);
+    }
+
+    function isUserPartialNavigationAnchor(anchor) {
+        if (!anchor) return false;
         if (anchor.target && anchor.target !== '_self') return false;
         if (anchor.hasAttribute('download')) return false;
         if (anchor.dataset.fullReload === 'true' || anchor.dataset.noAjax === 'true') return false;
@@ -853,6 +877,7 @@
 
         if (url.origin !== window.location.origin) return false;
         if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return false;
+        if (isUserNavigationFileOrDownloadPath(url.pathname)) return false;
 
         var reloadPrefixes = ['/logout', '/login', '/register', '/auth/', '/shared/', '/admin'];
         if (reloadPrefixes.some(function (prefix) { return url.pathname === prefix || url.pathname.startsWith(prefix); })) return false;
@@ -868,9 +893,14 @@
             '/coach',
             '/learning',
             '/skills',
+            '/missions',
+            '/drills/voice',
+            '/personal-mastery',
             '/modules',
             '/game/match',
             '/progress',
+            '/practice-plan',
+            '/practice-activity-calendar',
             '/session/',
             '/reports',
         ];
@@ -878,6 +908,88 @@
         return userPrefixes.some(function (prefix) {
             return url.pathname === prefix || url.pathname.startsWith(prefix);
         });
+    }
+
+    function isUserNavigationFileOrDownloadPath(pathname) {
+        var path = normalizeUserNavigationPath(pathname);
+
+        return /\.(?:7z|csv|docx?|gif|jpe?g|json|m4a|mp3|mp4|pdf|png|svg|wav|webm|webp|xlsx?|zip)$/i.test(path)
+            || /\/(?:download|export|storage)\b/i.test(path)
+            || /^\/interview\/answers\/[^/]+\/voice-recording$/i.test(path)
+            || /^\/game\/answers\/[^/]+\/voice-recording$/i.test(path)
+            || /^\/game\/certificates\/[^/]+\/download$/i.test(path);
+    }
+
+    function canPrefetchUserNavigation() {
+        var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (!connection) return true;
+        if (connection.saveData) return false;
+
+        return !/^(?:slow-)?2g$/i.test(connection.effectiveType || '');
+    }
+
+    function scheduleUserNavigationPrefetch(anchor) {
+        window.clearTimeout(userApp.navigationPrefetchTimer || 0);
+
+        if (!canPrefetchUserNavigation() || !isUserPartialNavigationAnchor(anchor)) return;
+        if (!shouldPrefetchUserNavigation(anchor.href) || getCachedUserNavigationHtml(anchor.href)) return;
+
+        var url = new URL(anchor.href, window.location.href).href;
+        userApp.navigationPrefetchTimer = window.setTimeout(function () {
+            prefetchUserNavigationHtml(url);
+        }, NAVIGATION_PREFETCH_DELAY_MS);
+    }
+
+    async function prefetchUserNavigationHtml(url) {
+        if (userApp.navigationPrefetchCount >= NAVIGATION_PREFETCH_LIMIT) return;
+        if (getCachedUserNavigationHtml(url)) return;
+
+        var key = userNavigationCacheKey(url);
+        if (userApp.navigationPrefetchInflight[key]) return;
+
+        userApp.navigationPrefetchInflight[key] = true;
+        userApp.navigationPrefetchCount += 1;
+
+        var controller = new AbortController();
+        var timeout = window.setTimeout(function () {
+            controller.abort();
+        }, NAVIGATION_PREFETCH_TIMEOUT_MS);
+
+        try {
+            await fetchUserNavigationHtml(url, controller);
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.debug('User Side navigation prefetch skipped:', error);
+            }
+        } finally {
+            window.clearTimeout(timeout);
+            delete userApp.navigationPrefetchInflight[key];
+        }
+    }
+
+    function shouldPrefetchUserNavigation(url) {
+        if (!shouldCacheUserNavigation(url)) return false;
+
+        var path = normalizeUserNavigationPath(new URL(url, window.location.href).pathname);
+        var prefetchablePaths = [
+            '/dashboard',
+            '/interview/setup',
+            '/account',
+            '/feedback',
+            '/coach',
+            '/learning',
+            '/skills',
+            '/missions',
+            '/drills/voice',
+            '/personal-mastery',
+            '/modules',
+            '/progress',
+            '/practice-plan',
+            '/practice-activity-calendar',
+            '/reports'
+        ];
+
+        return prefetchablePaths.indexOf(path) !== -1;
     }
 
     function userNavigationCacheKey(url) {

@@ -3593,8 +3593,11 @@ class UserController extends Controller
  AccountNotificationSchema::ensure();
 
  $user = Auth::user();
- $unreadCount = $user->unreadNotifications->count();
- $notifications = $user->notifications()->take(5)->get();
+ $unreadCount = $user->unreadNotifications()->count();
+ $notifications = $user->notifications()
+ ->latest()
+ ->take(5)
+ ->get();
 
  return response()->json([
  'unreadCount' => $unreadCount,
@@ -3620,7 +3623,7 @@ class UserController extends Controller
  {
  AccountNotificationSchema::ensure();
 
- Auth::user()->unreadNotifications->markAsRead();
+ Auth::user()->unreadNotifications()->update(['read_at' => now()]);
 
  return response()->json(['success' => true]);
  }

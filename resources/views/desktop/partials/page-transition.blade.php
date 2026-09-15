@@ -167,7 +167,8 @@
         var activeClass = 'sr-page-transition-active';
         var showTimer = null;
         var longLoadTimer = null;
-        var defaultDelayMs = 650;
+        var defaultDelayMs = 1100;
+        var formDelayMs = 900;
         var longLoadMs = 12000;
 
         function getOverlay() {
@@ -235,14 +236,72 @@
         }
 
         function isFileOrDownloadPath(pathname) {
-            return /\.(?:7z|csv|docx?|gif|jpe?g|json|pdf|png|svg|webp|xlsx?|zip)$/i.test(pathname)
-                || /\/(?:download|export|storage)\b/i.test(pathname);
+            return /\.(?:7z|csv|docx?|gif|jpe?g|json|m4a|mp3|mp4|pdf|png|svg|wav|webm|webp|xlsx?|zip)$/i.test(pathname)
+                || /\/(?:download|export|storage)\b/i.test(pathname)
+                || /^\/interview\/answers\/[^/]+\/voice-recording$/i.test(pathname)
+                || /^\/game\/answers\/[^/]+\/voice-recording$/i.test(pathname)
+                || /^\/game\/certificates\/[^/]+\/download$/i.test(pathname);
+        }
+
+        function isUserShellPartialNavigationCandidate(link) {
+            if (!link || document.body?.dataset?.appSurface !== 'user') return false;
+            if (!document.querySelector('[data-user-ajax-content]')) return false;
+            if (link.dataset.fullReload === 'true' || link.dataset.noAjax === 'true') return false;
+
+            var target = (link.getAttribute('target') || '').toLowerCase();
+            if (target && target !== '_self') return false;
+
+            var href = link.getAttribute('href') || '';
+            if (!href || href === '#' || href.charAt(0) === '#') return false;
+            if (/^(?:javascript:|mailto:|tel:|sms:)/i.test(href)) return false;
+
+            var url;
+            try {
+                url = new URL(link.href, window.location.href);
+            } catch (error) {
+                return false;
+            }
+
+            if (url.origin !== window.location.origin) return false;
+            if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return false;
+            if (isFileOrDownloadPath(url.pathname)) return false;
+
+            var reloadPrefixes = ['/logout', '/login', '/register', '/auth/', '/shared/', '/admin'];
+            if (reloadPrefixes.some(function(prefix) { return url.pathname === prefix || url.pathname.startsWith(prefix); })) return false;
+
+            var userPrefixes = [
+                '/dashboard',
+                '/interview/setup',
+                '/interview/session',
+                '/interview/',
+                '/account',
+                '/notifications',
+                '/feedback',
+                '/coach',
+                '/learning',
+                '/skills',
+                '/missions',
+                '/drills/voice',
+                '/personal-mastery',
+                '/modules',
+                '/game/match',
+                '/progress',
+                '/practice-plan',
+                '/practice-activity-calendar',
+                '/session/',
+                '/reports'
+            ];
+
+            return userPrefixes.some(function(prefix) {
+                return url.pathname === prefix || url.pathname.startsWith(prefix);
+            });
         }
 
         function isEligibleLink(link, event) {
             if (!link || event.defaultPrevented || event.button !== 0 || hasModifierKey(event)) return false;
             if (link.dataset.srNoTransition === 'true' || link.dataset.srTransition === 'off') return false;
             if (link.hasAttribute('download') || isBootstrapToggle(link)) return false;
+            if (isUserShellPartialNavigationCandidate(link)) return false;
 
             var target = (link.getAttribute('target') || '').toLowerCase();
             if (target && target !== '_self') return false;
@@ -323,7 +382,7 @@
                 showPageTransition({
                     title: 'Processing...',
                     copy: 'Please wait while SpeakReady AI saves your request.',
-                    delayMs: 450
+                    delayMs: formDelayMs
                 });
             }, 0);
         });

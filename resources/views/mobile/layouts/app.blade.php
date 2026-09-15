@@ -3158,7 +3158,7 @@
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=17" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=18" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {
@@ -3454,6 +3454,20 @@
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
          };
+         const mobileNotificationCacheTtlMs = 45000;
+         const mobileNotificationRefreshIntervalMs = 60000;
+         let mobileNotificationRequest = null;
+         let mobileNotificationLastLoadedAt = 0;
+         let mobileNotificationLastData = null;
+
+         function scheduleIdleMobileUserTask(callback, timeout = 1500) {
+            if ('requestIdleCallback' in window) {
+               window.requestIdleCallback(callback, { timeout });
+               return;
+            }
+
+            window.setTimeout(callback, Math.min(timeout, 1200));
+         }
 
          function safeMobileNotificationIcon(value) {
             const icon = String(value ?? '').trim();
@@ -3511,14 +3525,44 @@
 
          function fetchMobileNotifications(forceRender = false, options = {}) {
             const quiet = options.quiet === true;
+            const force = options.force === true;
             const shouldRender = forceRender || (!quiet && isMobileNotificationDrawerOpen());
+            const hasFreshData = mobileNotificationLastLoadedAt > 0
+               && Date.now() - mobileNotificationLastLoadedAt < mobileNotificationCacheTtlMs;
+
+            if (!force && hasFreshData) {
+               if (forceRender && mobileNotificationLastData) {
+                  updateMobileNotifUI(mobileNotificationLastData, true);
+               }
+
+               return Promise.resolve(mobileNotificationLastData);
+            }
+
+            if (!force && mobileNotificationRequest) {
+               return mobileNotificationRequest;
+            }
+
             if (shouldRender) {
                renderMobileNotificationStatus('Loading notifications...');
             }
 
-            requestMobileNotificationJson('/notifications/fetch')
-               .then(data => updateMobileNotifUI(data, forceRender))
-               .catch(error => handleMobileNotificationError(error, 'Notifications could not be loaded.', !quiet && shouldRender));
+            mobileNotificationRequest = requestMobileNotificationJson('/notifications/fetch')
+               .then(data => {
+                  mobileNotificationLastData = data;
+                  mobileNotificationLastLoadedAt = Date.now();
+                  updateMobileNotifUI(data, forceRender);
+
+                  return data;
+               })
+               .catch(error => {
+                  handleMobileNotificationError(error, 'Notifications could not be loaded.', !quiet && shouldRender);
+                  return null;
+               })
+               .finally(() => {
+                  mobileNotificationRequest = null;
+               });
+
+            return mobileNotificationRequest;
          }
 
          function updateMobileNotifUI(data = {}, forceRender = false) {
@@ -3589,7 +3633,7 @@
                throw new Error(data.message || 'Notification action could not be completed.');
             }
 
-            fetchMobileNotifications(true);
+            fetchMobileNotifications(true, { force: true });
             if (typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
          }
 
@@ -3679,8 +3723,10 @@
                }
             });
 
-            fetchMobileNotifications(false, { quiet: true });
-            setInterval(() => fetchMobileNotifications(false, { quiet: true }), 60000);
+            scheduleIdleMobileUserTask(function() {
+               fetchMobileNotifications(false, { quiet: true });
+               setInterval(() => fetchMobileNotifications(false, { quiet: true }), mobileNotificationRefreshIntervalMs);
+            });
             document.addEventListener('click', function(e) {
                const notifDropdown = document.getElementById('mobNotifDropdown');
                const notifWrap = document.getElementById('mobNotifWrap');
