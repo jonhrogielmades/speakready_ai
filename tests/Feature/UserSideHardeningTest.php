@@ -1401,7 +1401,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringNotContainsString('stronger practice answer', $realReply);
  }
 
- public function test_interview_session_marks_live_coaching_aids_as_coaching_only_on_desktop_and_mobile(): void
+ public function test_interview_session_keeps_ai_coach_mode_without_live_confidence_widgets_on_desktop_and_mobile(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
@@ -1417,16 +1417,22 @@ class UserSideHardeningTest extends TestCase
  ]);
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
  $expectedMarkup = [
- 'css/desktop/interview/session.css?v=31',
- 'id="coachingTip"',
- 'session-live-coaching coaching-only',
- 'interview-confidence-control coaching-only',
+ 'css/desktop/interview/session.css?v=41',
  'Coaching On',
  'Challenge Assistance',
- "liveFeedbackMode!== 'real_interview'",
  "classList.toggle('real-interview-mode', liveFeedbackMode === 'real_interview')",
  'const assistanceLevel = "challenge";',
  'const liveFeedbackMode = "coaching";',
+ ];
+ $removedLiveWidgetMarkup = [
+ 'id="coachingTip"',
+ 'session-live-coaching coaching-only',
+ 'interview-confidence-control coaching-only',
+ 'Realtime confidence',
+ 'Biggest Suggestion:',
+ 'function syncSelfConfidenceControl',
+ 'function calculateRealtimeConfidenceScore',
+ 'function biggestSuggestion',
  ];
  $removedSourceMarkup = [
  'id="questionSourcePanel"',
@@ -1445,6 +1451,9 @@ class UserSideHardeningTest extends TestCase
  foreach ($expectedMarkup as $markup) {
  $desktopResponse->assertSee($markup, false);
  }
+ foreach ($removedLiveWidgetMarkup as $markup) {
+ $desktopResponse->assertDontSee($markup, false);
+ }
  foreach ($removedSourceMarkup as $markup) {
  $desktopResponse->assertDontSee($markup, false);
  }
@@ -1455,10 +1464,13 @@ class UserSideHardeningTest extends TestCase
  ->get(route('interview.session'))
  ->assertOk();
 
- foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=31']), [
- 'css/mobile/interview/session.css?v=21',
+ foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=41']), [
+ 'css/mobile/interview/session.css?v=42',
  ]) as $markup) {
  $mobileResponse->assertSee($markup, false);
+ }
+ foreach ($removedLiveWidgetMarkup as $markup) {
+ $mobileResponse->assertDontSee($markup, false);
  }
  foreach ($removedSourceMarkup as $markup) {
  $mobileResponse->assertDontSee($markup, false);

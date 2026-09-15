@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=27') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=42') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -122,19 +122,30 @@
  <div class="question-caption-overlay" aria-live="polite" aria-atomic="true">
  <div id="questionCaptionText" class="question-caption-line" style="color:#ffffff;-webkit-text-fill-color:#ffffff;text-shadow:0 2px 6px rgba(0,0,0,0.92),0 0 10px rgba(0,0,0,0.65);"></div>
  </div>
- </div>
 
- <div id="aiQuestionText" class="visually-hidden" aria-hidden="true">Loading your first question...</div>
-
- <!-- Unified Responsive Interview Controls (Desktop & Mobile) -->
- <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
+ <!-- Interview Panel Quick Actions -->
+ <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150 interview-panel-actions" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
  <!-- Left: Navigation / Secondary -->
  <div class="d-flex gap-2 w-100 flex-fill">
- <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
- <button type="button" class="btn btn-outline-danger flex-fill" onclick="requestAbortInterviewSession()" style="border-radius:12px;"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
+ <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question"><i class="fa-solid fa-volume-high"></i></button>
+ <button type="button" class="btn btn-outline-danger flex-fill" onclick="requestAbortInterviewSession()" style="border-radius:12px;" aria-label="End session" title="End session"><i class="fa-solid fa-flag-checkered"></i></button>
  </div>
  
  </div>
+
+ <div id="answerTranscriptControls" class="answer-transcript-controls interview-panel-voice-actions" aria-label="Voice recording controls" hidden>
+ <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
+ <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
+ <div class="d-flex gap-2">
+ <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i></button>
+ <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
+ </div>
+ </div>
+ <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
+ </div>
+ </div>
+
+ <div id="aiQuestionText" class="visually-hidden" aria-hidden="true">Loading your first question...</div>
  <div id="sessionNotice" class="session-inline-alert" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
 
  <!-- Answer Response System -->
@@ -156,7 +167,7 @@
  </div>
  
  <form id="answerForm">
- <!-- Voice controls sit below the transcript textarea. -->
+ <!-- Voice controls are mounted inside the interview panel. -->
 
  <div id="chatTranscriptContainer" style="max-height: none; overflow: visible; padding: 0; margin-bottom: 12px; background: transparent; border: 0; display: none; flex-direction: column; gap: 10px;"></div>
  <label for="answerTextarea" class="visually-hidden">Your interview answer</label>
@@ -170,20 +181,11 @@
  <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
  </div>
  </div>
- <div id="answerTranscriptControls" class="answer-transcript-controls" aria-label="Voice recording controls" hidden>
- <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
- <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
- <div class="d-flex gap-2">
- <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i></button>
- <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
- </div>
- </div>
- <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
- </div>
  <div class="response-autosave-row">
  <span id="autoSaveIndicator" class="text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
  </div>
 
+ @if(strtolower((string) ($sessionRecord->response_mode?? '')) === 'voice')
  <div id="voiceSessionPanel" class="voice-session-panel" hidden data-state="idle">
  <div class="voice-session-summary">
  <div class="voice-session-title">
@@ -217,21 +219,8 @@
  <span id="voiceSessionMeta"></span>
  </div>
  </div>
+ @endif
 
- <div class="interview-confidence-control coaching-only" id="realtimeConfidenceControl" data-confidence-band="empty">
- <div class="confidence-meter-label" id="realtimeConfidenceLabel">
- <span><i class="fa-solid fa-chart-simple"></i> Realtime confidence</span>
- <strong id="selfConfidenceValue">0%</strong>
- </div>
- <div class="confidence-meter-track" id="confidenceMeter" role="meter" aria-labelledby="realtimeConfidenceLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
- <div class="confidence-meter-fill" id="confidenceMeterFill"></div>
- </div>
- <div class="confidence-signal-text" id="confidenceSignalText">Waiting for response</div>
- <input type="hidden" id="selfConfidenceRange" value="0">
- </div>
- <div id="coachingTip" class="session-live-coaching coaching-only" aria-live="polite">
- <i class="fa-solid fa-lightbulb me-1" aria-hidden="true"></i> <strong>Biggest Suggestion:</strong> Waiting for response
- </div>
  <div id="aiCoachPanel" class="ai-coach-answer-panel coaching-only" hidden data-state="idle">
  <div class="ai-coach-answer-header">
  <div class="ai-coach-answer-title">
@@ -243,17 +232,7 @@
  </button>
  </div>
  <div id="aiCoachStatus" class="ai-coach-answer-meta">Possible answer</div>
- <div id="aiCoachAnswerText" class="ai-coach-answer-text" aria-live="polite"></div>
- <div class="ai-coach-answer-actions">
- <button type="button" id="aiCoachCopyButton" class="ai-coach-action-button secondary" onclick="copyAiCoachAnswer()" disabled>
- <i class="fa-solid fa-copy" aria-hidden="true"></i>
- <span>Copy</span>
- </button>
- <button type="button" id="aiCoachDraftButton" class="ai-coach-action-button primary" onclick="useAiCoachAnswerAsDraft()" disabled>
- <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
- <span>Use as Draft</span>
- </button>
- </div>
+ <div id="aiCoachAnswerText" class="ai-coach-answer-text" aria-live="polite" aria-label="AI Coach possible answer" draggable="false" oncopy="return false" oncut="return false" onpaste="return false" oncontextmenu="return false" ondragstart="return false" onselectstart="return false"></div>
  </div>
 
  </form>
@@ -551,55 +530,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  });
  }
  answersData = answersData.map(answerState => normalizeVoiceRecordingAnswerState(normalizeCameraDetectionObservationState(answerState)));
-
- function normalizeSelfConfidence(value) {
- const numeric = Number(value);
- if (!Number.isFinite(numeric)) return 0;
- return Math.max(0, Math.min(100, Math.round(numeric)));
- }
-
- function syncSelfConfidenceControl(value = null) {
- const normalized = normalizeSelfConfidence(value?? document.getElementById('selfConfidenceRange')?.value?? 0);
- const selfConfidenceRange = document.getElementById('selfConfidenceRange');
- const selfConfidenceValue = document.getElementById('selfConfidenceValue');
- const confidenceMeter = document.getElementById('confidenceMeter');
- const confidenceMeterFill = document.getElementById('confidenceMeterFill');
- const confidenceControl = document.getElementById('realtimeConfidenceControl');
- const confidenceSignalText = document.getElementById('confidenceSignalText');
- const band = normalized >= 78? 'high': (normalized >= 52? 'medium': (normalized > 0? 'low': 'empty'));
- const signalText = {
- empty: 'Waiting for response',
- low: 'Building signal',
- medium: 'Steady delivery',
- high: 'Strong delivery'
- }[band];
-
- if (selfConfidenceRange) {
- selfConfidenceRange.value = normalized;
- }
- if (selfConfidenceValue) {
- selfConfidenceValue.textContent = normalized + '%';
- }
- if (confidenceMeter) {
- confidenceMeter.setAttribute('aria-valuenow', String(normalized));
- confidenceMeter.setAttribute('aria-valuetext', `${normalized}% ${signalText}`);
- }
- if (confidenceMeterFill) {
- confidenceMeterFill.style.width = normalized + '%';
- }
- if (confidenceControl) {
- confidenceControl.dataset.confidenceBand = band;
- }
- if (confidenceSignalText) {
- confidenceSignalText.textContent = signalText;
- }
- if (answersData[currentQIdx]) {
- answersData[currentQIdx].self_reported_confidence = normalized;
- answersData[currentQIdx].confidence_score = normalized;
- }
-
- return normalized;
- }
 
  // Voice state and optional, non-scoring body-language state
  let recognition = null;
@@ -1248,7 +1178,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const panel = document.getElementById('voiceSessionPanel');
  if (!panel) return;
 
- const shouldShow = isVoiceTranscriptionMode();
+ const shouldShow = isVoiceOnlyMode();
  panel.hidden =!shouldShow;
  if (!shouldShow) {
  updateVoiceSessionActionState(null);
@@ -1901,7 +1831,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const charCount = document.getElementById('charCount');
  if (wordCount) wordCount.innerText = '0 words';
  if (charCount) charCount.innerText = '0 characters';
- syncSelfConfidenceControl(0);
+ if (answersData[currentQIdx]) {
+ answersData[currentQIdx].confidence_score = 0;
+ answersData[currentQIdx].self_reported_confidence = 0;
+ }
  updateSendAnswerButtonState();
 
  const chatContainer = document.getElementById('chatTranscriptContainer');
@@ -3258,15 +3191,37 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  button.classList.toggle('is-active', expanded);
  }
 
- function setAiCoachActionButtons(enabled) {
- const copyButton = document.getElementById('aiCoachCopyButton');
- const draftButton = document.getElementById('aiCoachDraftButton');
- if (copyButton) copyButton.disabled =!enabled;
- if (draftButton) {
- const voiceOnly = typeof isVoiceOnlyMode === 'function' && isVoiceOnlyMode();
- draftButton.disabled =!enabled || voiceOnly;
- draftButton.title = voiceOnly? 'Voice Mode is voice-only': 'Use as Draft';
+ function protectAiCoachPossibleAnswer() {
+ const text = document.getElementById('aiCoachAnswerText');
+ if (!text || text.dataset.copyGuardBound === '1') return;
+ text.dataset.copyGuardBound = '1';
+ const block = event => {
+ event.preventDefault();
+ event.stopPropagation();
+ if (event.clipboardData) {
+ event.clipboardData.setData('text/plain', '');
  }
+ };
+ const nodeInsideAnswer = node => {
+ if (!node ||!text) return false;
+ const element = node.nodeType === Node.ELEMENT_NODE? node: node.parentElement;
+ return element === text || text.contains(element);
+ };
+ ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach(eventName => {
+ text.addEventListener(eventName, block);
+ });
+ document.addEventListener('copy', event => {
+ const selection = window.getSelection();
+ if (selection && (nodeInsideAnswer(selection.anchorNode) || nodeInsideAnswer(selection.focusNode))) {
+ block(event);
+ }
+ });
+ document.addEventListener('cut', event => {
+ const selection = window.getSelection();
+ if (selection && (nodeInsideAnswer(selection.anchorNode) || nodeInsideAnswer(selection.focusNode))) {
+ block(event);
+ }
+ });
  }
 
  function setAiCoachPanelState(state, message = '') {
@@ -3283,7 +3238,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  button.disabled = state === 'loading';
  button.classList.toggle('is-loading', state === 'loading');
  }
- setAiCoachActionButtons(state === 'ready' && aiCoachCurrentAnswer.trim()!== '');
  }
 
  function resetAiCoachPanel() {
@@ -3298,7 +3252,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  panel.dataset.questionId = '';
  }
  setAiCoachButtonExpanded(false);
- setAiCoachActionButtons(false);
  }
 
  function closeAiCoachPanel() {
@@ -3386,63 +3339,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  button.classList.remove('is-loading');
  }
  }
- }
-
- async function copyAiCoachAnswer() {
- const text = aiCoachCurrentAnswer.trim();
- if (!text) return;
-
- try {
- if (navigator.clipboard && window.isSecureContext) {
- await navigator.clipboard.writeText(text);
- } else {
- const textarea = document.createElement('textarea');
- textarea.value = text;
- textarea.setAttribute('readonly', '');
- textarea.style.position = 'fixed';
- textarea.style.opacity = '0';
- document.body.appendChild(textarea);
- textarea.select();
- document.execCommand('copy');
- textarea.remove();
- }
-
- const copyButton = document.getElementById('aiCoachCopyButton');
- if (copyButton) {
- const original = copyButton.innerHTML;
- copyButton.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i><span>Copied</span>';
- setTimeout(() => {
- copyButton.innerHTML = original;
- }, 1400);
- }
- showSessionNotice('AI Coach answer copied.', 'success');
- } catch (error) {
- showSessionNotice('Copy failed. Select the coach answer text and copy it manually.', 'warning');
- }
- }
-
- function useAiCoachAnswerAsDraft() {
- const text = aiCoachCurrentAnswer.trim();
- if (!text) return;
- if (isVoiceOnlyMode()) {
- showSessionNotice('Voice Mode is voice-only. Copy the coach answer and practice saying it in your own words.', 'warning');
- return;
- }
-
- const textarea = document.getElementById('answerTextarea');
- if (!textarea) return;
- const currentText = String(textarea.value || '').trim();
- if (currentText && currentText!== text &&!window.confirm('Replace your current draft with the AI Coach answer?')) {
- return;
- }
-
- textarea.value = text;
- if (answersData[currentQIdx]) {
- answersData[currentQIdx].text = text;
- }
- handleAnswerInput();
- textarea.focus();
- showSessionNotice('AI Coach answer added as your draft. Edit it with your own real details before sending.', 'success');
  }
 
  function abortManagedFetches() {
@@ -4318,7 +4214,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  answersData[idx] = answerState;
  document.getElementById('answerTextarea').value = restoredAnswerText;
  applyResponseModeUi();
- syncSelfConfidenceControl(answerState.confidence_score?? answerState.self_reported_confidence?? 0);
  resetSpeechRecognitionBufferFromTextarea();
  renderVoiceSessionPanel(idx);
  lastTimelineCaptureAt = 0;
@@ -4521,80 +4416,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  };
  }
 
- function calculateRealtimeConfidenceScore(answerText, wordCount, fillerCount, starSignals, scores) {
- if (wordCount === 0) return 0;
-
- const state = answersData[currentQIdx] || {};
- const wpm = Number(state.wpm || 0);
- const pauseCount = Number(state.pause_count || 0);
- const voiceDuration = Number(state.voice_duration || 0);
- const hasFirstPersonOwnership = /\b(i|my|me)\b/i.test(answerText);
-
- let confidence = 24 + Math.min(30, wordCount * 1.2);
- confidence += hasFirstPersonOwnership? 6: 0;
- confidence += starSignals.hasA? 8: 0;
- confidence += starSignals.hasR? 7: 0;
- confidence += starSignals.componentCount >= 3? 7: 0;
- confidence += scores.clarity >= 70? 6: (scores.clarity >= 55? 3: 0);
- confidence += scores.relevance >= 70? 5: (scores.relevance >= 55? 2: 0);
- confidence -= wordCount < 18? 14: 0;
- confidence -= Math.min(18, Math.round((fillerCount / Math.max(1, wordCount)) * 180));
-
- if (isVoiceTranscriptionMode() && (voiceDuration > 0 || wpm > 0 || pauseCount > 0)) {
- if (wpm >= 100 && wpm <= 170) {
- confidence += 8;
- } else if (wpm >= 80 && wpm <= 210) {
- confidence += 3;
- } else if (wpm > 0) {
- confidence -= 8;
- }
-
- confidence -= Math.min(16, Math.round((pauseCount / Math.max(1, wordCount)) * 120));
- }
-
- return clampScore(confidence);
- }
-
- function questionFocus(questionText) {
- const keywords = meaningfulWords(questionText).slice(0, 5);
- return keywords.length > 0? keywords.join(' / '): 'the question asked';
- }
-
- function biggestSuggestion(answerText, questionText, wordCount, fillerCount, scores, starSignals) {
- if (wordCount === 0) {
- return 'Give one specific example, your role, the action you took, and the result.';
- }
- if (wordCount < 25) {
- return 'Expand this into a complete interview answer: context, your responsibility, specific action, and result.';
- }
- if (scores.relevance < 55) {
- return `Tie the answer more directly to ${questionFocus(questionText)} with a relevant example.`;
- }
- if (isBehavioralQuestion(questionText) &&!starSignals.hasS) {
- return 'Open with the situation so the interviewer understands the context before your action.';
- }
- if (!starSignals.hasT) {
- return 'State your exact responsibility or goal so your ownership is clear.';
- }
- if (!starSignals.hasA) {
- return 'Describe the specific actions you personally took, not only what the team did.';
- }
- if (!starSignals.hasR) {
- return 'Close with the result or impact, ideally with a number, outcome, or lesson learned.';
- }
- if (!starSignals.hasMetric && wordCount >= 40) {
- return 'Add one measurable detail, such as time saved, quality improved, revenue, volume, or customer impact.';
- }
- if (fillerCount >= 3) {
- return 'The transcript detected several possible filler phrases. Try a brief silent pause when gathering your next thought.';
- }
- if (wordCount > 220) {
- return 'Tighten the answer to the strongest 60-90 seconds: situation, decision, action, result.';
- }
-
- return 'Strong direction. Make it sharper by naming the key decision, tradeoff, and measurable impact.';
- }
-
  function triggerAnalysis() {
  const text = document.getElementById('answerTextarea').value;
  const currentQuestion = questions[currentQIdx]? questions[currentQIdx].question_text: '';
@@ -4615,15 +4436,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const matches = deliveryText.match(fillerPattern);
  const fillers = matches? matches.length: 0;
  const scores = calculateLiveScores(text, currentQuestion, wordCount, fillers, starSignals);
- const realtimeConfidence = calculateRealtimeConfidenceScore(text, wordCount, fillers, starSignals, scores);
- const tip = liveFeedbackMode === 'real_interview'? '': biggestSuggestion(text, currentQuestion, wordCount, fillers, scores, starSignals);
-
- const coachingTip = document.getElementById('coachingTip');
- if (coachingTip && liveFeedbackMode!== 'real_interview') {
- coachingTip.innerHTML = `<i class="fa-solid fa-lightbulb me-1"></i> <strong>Biggest Suggestion:</strong> ${escapeHtml(tip)}`;
- } else if (coachingTip) {
- coachingTip.textContent = '';
- }
  const metricTargets = {
  overallReadiness: scores.readiness + '%',
  metClarity: scores.clarity + '%',
@@ -4638,9 +4450,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  });
  answersData[currentQIdx].text = text;
  answersData[currentQIdx].filler_words = fillers;
- answersData[currentQIdx].confidence_score = realtimeConfidence;
- answersData[currentQIdx].self_reported_confidence = realtimeConfidence;
- syncSelfConfidenceControl(realtimeConfidence);
+ answersData[currentQIdx].confidence_score = 0;
+ answersData[currentQIdx].self_reported_confidence = 0;
  answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
  if (getQuestionElapsedSeconds() - lastTimelineCaptureAt >= 5) {
  captureTranscriptTimeline('input');
@@ -5035,9 +4846,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  appendVoiceSessionRecordingUpload(formData, currentQIdx);
  formData.append('filler_words_count', answersData[currentQIdx].filler_words);
  formData.append('pause_count', answersData[currentQIdx].pause_count);
- const realtimeConfidence = syncSelfConfidenceControl(answersData[currentQIdx].confidence_score?? 0);
- formData.append('confidence_score', realtimeConfidence);
- formData.append('self_reported_confidence', realtimeConfidence);
+ formData.append('confidence_score', 0);
+ formData.append('self_reported_confidence', 0);
  formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
  formData.append('posture_score', answersData[currentQIdx].posture_score);
  formData.append('notes', '');
@@ -5264,9 +5074,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  appendVoiceSessionRecordingUpload(formData, currentQIdx);
  formData.append('filler_words_count', answersData[currentQIdx].filler_words);
  formData.append('pause_count', answersData[currentQIdx].pause_count);
- const realtimeConfidence = syncSelfConfidenceControl(answersData[currentQIdx].confidence_score?? 0);
- formData.append('confidence_score', realtimeConfidence);
- formData.append('self_reported_confidence', realtimeConfidence);
+ formData.append('confidence_score', 0);
+ formData.append('self_reported_confidence', 0);
  formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
  formData.append('posture_score', answersData[currentQIdx].posture_score);
  formData.append('is_final_question', (!answeredOpeningQuestion && isPenultimateScoredQuestion(currentQIdx)));
@@ -5431,9 +5240,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  formData.append('voice_duration', answerState.voice_duration || 0);
  formData.append('filler_words_count', answerState.filler_words || 0);
  formData.append('pause_count', answerState.pause_count || 0);
- const realtimeConfidence = syncSelfConfidenceControl(answerState.confidence_score?? 0);
- formData.append('confidence_score', realtimeConfidence);
- formData.append('self_reported_confidence', realtimeConfidence);
+ formData.append('confidence_score', 0);
+ formData.append('self_reported_confidence', 0);
  formData.append('eye_contact_score', answerState.eye_contact_score || 0);
  formData.append('posture_score', answerState.posture_score || 0);
  }
@@ -5739,6 +5547,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  enterMobileFullscreen({ requestBrowser: false });
  updateMobileFullscreenToggle();
  document.addEventListener('fullscreenchange', handleBrowserFullscreenChange);
+ protectAiCoachPossibleAnswer();
  document.addEventListener('keydown', event => {
  if (handleInterviewEscapeKey(event)) return;
 

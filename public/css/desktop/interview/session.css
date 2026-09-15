@@ -240,42 +240,6 @@
         font-weight: 700;
         line-height: 1.2;
     }
-    .session-live-coaching {
-        display: flex;
-        align-items: flex-start;
-        gap: 7px;
-        margin: 8px 0 12px;
-        padding: 9px 11px;
-        border: 1px solid rgba(14, 165, 233, 0.22);
-        border-radius: 10px;
-        background: rgba(14, 165, 233, 0.08);
-        color: var(--tx2);
-        font-size: 0.72rem;
-        font-weight: 750;
-        line-height: 1.35;
-    }
-    .session-live-coaching i {
-        margin-top: 2px;
-        color: #0284c7;
-    }
-    .session-live-coaching strong {
-        color: var(--tx);
-        font-weight: 900;
-    }
-    :root:not(.lm) .session-live-coaching,
-    html[data-theme="dark"] .session-live-coaching,
-    body.dm .session-live-coaching,
-    .dm .session-live-coaching {
-        border-color: rgba(56, 189, 248, 0.24);
-        background: rgba(14, 165, 233, 0.12);
-        color: #cbd5e1;
-    }
-    :root:not(.lm) .session-live-coaching strong,
-    html[data-theme="dark"] .session-live-coaching strong,
-    body.dm .session-live-coaching strong,
-    .dm .session-live-coaching strong {
-        color: #f8fafc;
-    }
     .ai-coach-head-button {
         position: absolute;
         top: 15px;
@@ -331,18 +295,16 @@
     }
     .ai-coach-answer-panel {
         position: absolute;
-        left: 14px;
-        right: 14px;
-        bottom: 14px;
+        inset: 0;
         z-index: 1080;
         width: auto;
-        height: min(330px, 42dvh);
-        max-height: calc(100% - 190px);
+        height: auto;
+        max-height: none;
         box-sizing: border-box;
         margin: 0;
-        padding: 10px;
+        padding: 14px;
         border: 1px solid rgba(14, 165, 233, 0.28);
-        border-radius: 12px;
+        border-radius: 16px;
         background: linear-gradient(180deg, rgba(236, 254, 255, 0.88), rgba(248, 250, 252, 0.96));
         color: var(--tx);
         box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
@@ -413,48 +375,17 @@
         line-height: 1.48;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
+        cursor: default;
+        user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
     }
     .ai-coach-answer-panel[data-state="loading"] .ai-coach-answer-text,
     .ai-coach-answer-panel[data-state="error"] .ai-coach-answer-text {
         color: var(--tx2);
         background: var(--bg3);
-    }
-    .ai-coach-answer-actions {
-        flex: 0 0 auto;
-        display: flex;
-        justify-content: flex-end;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 9px;
-    }
-    .ai-coach-action-button {
-        min-height: 32px;
-        border-radius: 9px;
-        border: 1px solid var(--bd);
-        padding: 0.42rem 0.66rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        font-size: 0.72rem;
-        font-weight: 900;
-        line-height: 1.1;
-        white-space: nowrap;
-    }
-    .ai-coach-action-button.primary {
-        border-color: transparent;
-        background: #0891b2;
-        color: #ffffff;
-        box-shadow: 0 8px 18px rgba(8, 145, 178, 0.22);
-    }
-    .ai-coach-action-button.secondary {
-        background: var(--bg3);
-        color: var(--tx);
-    }
-    .ai-coach-action-button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-        box-shadow: none;
     }
     :root:not(.lm) .ai-coach-answer-panel,
     html[data-theme="dark"] .ai-coach-answer-panel,
@@ -1554,27 +1485,17 @@
             display: none;
         }
         .ai-coach-answer-panel {
-            top: auto;
-            left: 10px;
-            right: 10px;
-            bottom: 10px;
+            inset: 0;
             width: auto;
-            height: min(300px, 38dvh);
-            max-height: calc(100% - 170px);
+            height: auto;
+            max-height: none;
             padding: 10px;
-            border-radius: 10px;
+            border-radius: 16px;
         }
         .ai-coach-answer-text {
             max-height: none;
             font-size: 0.76rem;
             line-height: 1.44;
-        }
-        .ai-coach-answer-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
-        .ai-coach-action-button {
-            min-width: 0;
         }
         #sec-interview-session > .interview-session-header {
             margin-bottom: 10px !important;
@@ -3663,102 +3584,6 @@
         transform: translateY(8px) !important;
     }
 
-    html body #sec-interview-session .interview-confidence-control {
-        display: grid;
-        gap: 8px;
-        margin: 10px 0 12px;
-        padding: 10px 12px;
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        border-radius: 10px;
-        background: rgba(248, 250, 252, 0.72);
-    }
-
-    html:not(.lm) body #sec-interview-session .interview-confidence-control,
-    html[data-theme="dark"] body #sec-interview-session .interview-confidence-control,
-    body.dm #sec-interview-session .interview-confidence-control,
-    .dm #sec-interview-session .interview-confidence-control {
-        border-color: rgba(148, 163, 184, 0.2);
-        background: rgba(15, 23, 42, 0.46);
-    }
-
-    html body #sec-interview-session .interview-confidence-control label,
-    html body #sec-interview-session .confidence-meter-label {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin: 0;
-        color: var(--tx2);
-        font-size: 0.74rem;
-        font-weight: 800;
-        line-height: 1.2;
-    }
-
-    html body #sec-interview-session .interview-confidence-control label span,
-    html body #sec-interview-session .confidence-meter-label span {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        min-width: 0;
-    }
-
-    html body #sec-interview-session .interview-confidence-control strong {
-        flex: 0 0 auto;
-        color: #2563eb;
-        font-size: 0.78rem;
-        font-weight: 900;
-    }
-
-    html:not(.lm) body #sec-interview-session .interview-confidence-control strong,
-    html[data-theme="dark"] body #sec-interview-session .interview-confidence-control strong,
-    body.dm #sec-interview-session .interview-confidence-control strong,
-    .dm #sec-interview-session .interview-confidence-control strong {
-        color: #93c5fd;
-    }
-
-    html body #sec-interview-session #selfConfidenceRange {
-        display: none;
-    }
-
-    html body #sec-interview-session .confidence-meter-track {
-        width: 100%;
-        height: 8px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(148, 163, 184, 0.32);
-    }
-
-    html body #sec-interview-session .confidence-meter-fill {
-        width: 0%;
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, #60a5fa, #2563eb);
-        transition: width 0.28s ease, background 0.28s ease;
-    }
-
-    html body #sec-interview-session .confidence-signal-text {
-        color: var(--tx3);
-        font-size: 0.66rem;
-        font-weight: 700;
-        line-height: 1.25;
-    }
-
-    html body #sec-interview-session .interview-confidence-control[data-confidence-band="empty"] .confidence-meter-fill {
-        background: rgba(148, 163, 184, 0.5);
-    }
-
-    html body #sec-interview-session .interview-confidence-control[data-confidence-band="low"] .confidence-meter-fill {
-        background: linear-gradient(90deg, #f97316, #f59e0b);
-    }
-
-    html body #sec-interview-session .interview-confidence-control[data-confidence-band="medium"] .confidence-meter-fill {
-        background: linear-gradient(90deg, #38bdf8, #2563eb);
-    }
-
-    html body #sec-interview-session .interview-confidence-control[data-confidence-band="high"] .confidence-meter-fill {
-        background: linear-gradient(90deg, #22c55e, #14b8a6);
-    }
-
     @media (min-width: 992px) {
         body.user-desktop-shell.interview-session-shell {
             min-height: 100dvh;
@@ -3938,19 +3763,6 @@
 
         body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen #sec-interview-session #cameraPanel {
             top: clamp(16px, 2vw, 30px) !important;
-        }
-    }
-
-    @media (max-width: 767px) {
-        html body #sec-interview-session .interview-confidence-control {
-            margin: 8px 0 10px !important;
-            padding: 8px 9px !important;
-            border-radius: 9px !important;
-        }
-
-        html body #sec-interview-session .interview-confidence-control label,
-        html body #sec-interview-session .confidence-meter-label {
-            font-size: 0.66rem !important;
         }
     }
 
@@ -4287,5 +4099,55 @@ html body #sec-interview-session .answer-transcript-stage #responseCountBar.resp
         right: 10px !important;
         bottom: 9px !important;
         font-size: clamp(0.54rem, 2.45vw, 0.58rem) !important;
+    }
+}
+
+html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button {
+    position: absolute !important;
+    inset: auto auto 14px 50% !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: 14px !important;
+    left: 50% !important;
+    z-index: 78 !important;
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    padding: 0 !important;
+    border-radius: 12px !important;
+    font-size: 0 !important;
+    transform: translateX(-50%) !important;
+}
+
+html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button .ai-coach-head-label {
+    display: none !important;
+}
+
+html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button i {
+    margin: 0 !important;
+    font-size: 1rem !important;
+}
+
+html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button:active {
+    transform: translateX(-50%) scale(0.96) !important;
+}
+
+@media (max-width: 390px) {
+    html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button {
+        bottom: 12px !important;
+        width: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
+        border-radius: 10px !important;
+    }
+
+    html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button i {
+        font-size: 0.92rem !important;
     }
 }
