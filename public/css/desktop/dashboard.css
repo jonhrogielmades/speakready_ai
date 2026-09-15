@@ -8393,6 +8393,10 @@ body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
     font-weight: 900;
 }
 
+.sr-dashboard-coach-input-wrap {
+    position: relative;
+}
+
 .sr-dashboard-coach-input {
     display: block;
     width: 100%;
@@ -8411,6 +8415,10 @@ body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
     transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
+.sr-dashboard-coach-input-wrap .sr-dashboard-coach-input {
+    padding-right: 58px;
+}
+
 .sr-dashboard-coach-input:focus {
     border-color: rgba(37, 99, 235, 0.42);
     background: var(--sr-saas-surface, #ffffff);
@@ -8419,6 +8427,58 @@ body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
 
 .sr-dashboard-coach-input::placeholder {
     color: var(--sr-saas-muted, #64748b);
+}
+
+.sr-dashboard-coach-voice {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    padding: 0;
+    border: 1px solid rgba(37, 99, 235, 0.24);
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.sr-dashboard-coach-voice:hover,
+.sr-dashboard-coach-voice:focus-visible {
+    background: rgba(37, 99, 235, 0.16);
+    color: #1d4ed8;
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.sr-dashboard-coach-voice.is-recording {
+    border-color: rgba(239, 68, 68, 0.38);
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14);
+    animation: dashboardCoachVoicePulse 1.15s ease-in-out infinite;
+}
+
+.sr-dashboard-coach-voice:disabled,
+.sr-dashboard-coach-voice.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+    box-shadow: none;
+}
+
+.sr-dashboard-coach-voice i,
+.sr-dashboard-coach-voice i::before,
+.sr-dashboard-coach-voice i::after {
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+    opacity: 1 !important;
 }
 
 .sr-dashboard-coach-link,
@@ -8553,6 +8613,31 @@ body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
 
 .sr-dashboard-coach-response-body strong {
     color: var(--sr-saas-text, #0f172a);
+}
+
+html:not(.lm) body.user-desktop-shell .sr-dashboard-coach-voice,
+html[data-theme="dark"] body.user-desktop-shell .sr-dashboard-coach-voice,
+body.dm.user-desktop-shell .sr-dashboard-coach-voice {
+    border-color: rgba(147, 197, 253, 0.28);
+    background: rgba(96, 165, 250, 0.12);
+    color: #bfdbfe;
+}
+
+html:not(.lm) body.user-desktop-shell .sr-dashboard-coach-voice.is-recording,
+html[data-theme="dark"] body.user-desktop-shell .sr-dashboard-coach-voice.is-recording,
+body.dm.user-desktop-shell .sr-dashboard-coach-voice.is-recording {
+    border-color: rgba(252, 165, 165, 0.56);
+    background: linear-gradient(135deg, #dc2626, #ea580c);
+    color: #ffffff;
+}
+
+@keyframes dashboardCoachVoicePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.04);
+    }
 }
 
 .sr-dashboard-mock-modal .modal-dialog {

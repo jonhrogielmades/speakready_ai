@@ -222,7 +222,7 @@
                               [
                                  'image' => 'img/desktop-preview/desktop-preview-readiness-coach.png',
                                  'alt' => 'SpeakReady AI desktop readiness coach preview',
-                                 'kicker' => 'AI Chatbot Coach',
+                                 'kicker' => 'AI Coach',
                                  'title' => 'Ask for focused interview help.',
                                  'text' => 'Use the desktop coach chat for resume, certificate, score explanation, and practice guidance.',
                               ],
@@ -727,7 +727,7 @@
                                                 </div>
                                                 <div class="ui-desktop-wire-rec-row">
                                                    <span class="ui-desktop-wire-icon"><i class="fa-solid fa-robot"></i></span>
-                                                   <div><strong>Ask AI Chatbot Coach</strong><span>Refine one weak answer.</span></div>
+                                                   <div><strong>Ask AI Coach</strong><span>Refine one weak answer.</span></div>
                                                    <i class="fa-solid fa-chevron-right"></i>
                                                 </div>
                                              </div>

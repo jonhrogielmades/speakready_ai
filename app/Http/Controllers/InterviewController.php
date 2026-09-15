@@ -318,6 +318,66 @@ class InterviewController extends Controller
  return response()->json(['success' => true]);
  }
 
+ public function coachAnswer(Request $request)
+ {
+ $this->ensureInterviewRuntimeSchema();
+
+ $validated = $request->validate([
+ 'session_id' => 'nullable|exists:interview_sessions,id',
+ 'question_id' => 'required|exists:questions,id',
+ ]);
+
+ $session = $this->activeInterviewSession($validated['session_id']?? null, $validated['question_id']);
+ if (! $session) {
+ return response()->json(['error' => 'No active session'], session('active_interview_id')? 403: 400);
+ }
+
+ if (strtolower((string) ($session->live_feedback_mode?? 'coaching')) === 'real_interview') {
+ return response()->json(['error' => 'AI Coach is available only when Coaching On is selected.'], 403);
+ }
+
+ $question = $this->questionForSession($validated['question_id'], $session);
+ if (! $question) {
+ return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
+ }
+
+ $provider = $this->bestEvaluatedInterviewProvider(
+ 'question_generation',
+ session('active_interview_provider', AIService::defaultProviderKey())
+ );
+ session(['active_interview_provider' => $provider]);
+
+ try {
+ $coachAnswer = AIService::generateCoachPossibleAnswer(
+ $session,
+ $question,
+ $provider,
+ $this->currentLanguageConfig()
+ );
+ } catch (\Throwable $error) {
+ Log::warning('Interview AI Coach answer generation failed; using local fallback.', [
+ 'session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'provider' => $provider,
+ 'error_type' => $error::class,
+ ]);
+
+ $coachAnswer = [
+ 'possible_answer' => AIService::fallbackCoachPossibleAnswer($session, $question),
+ 'source' => 'local',
+ 'provider' => 'local',
+ ];
+ }
+
+ return response()->json([
+ 'success' => true,
+ 'question_id' => $question->id,
+ 'possible_answer' => $coachAnswer['possible_answer']?? '',
+ 'source' => $coachAnswer['source']?? 'ai',
+ 'provider' => $coachAnswer['provider']?? $provider,
+ ]);
+ }
+
  public function chatReply(Request $request)
  {
  $this->ensureInterviewRuntimeSchema();

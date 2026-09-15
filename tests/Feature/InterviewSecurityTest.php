@@ -90,6 +90,90 @@ class InterviewSecurityTest extends TestCase
             ->assertSee('Describe a difficult project.');
     }
 
+    public function test_ai_coach_generates_possible_answer_for_coaching_session_question(): void
+    {
+        Http::fake([
+            '*' => Http::response([
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => 'During my capstone project, I faced [brief challenge]. My responsibility was to [your task], so I [specific action]. The result was [result or lesson], and I would use that ownership in the Developer role.',
+                        ],
+                    ],
+                ],
+            ]),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, [
+            'ai_assistance_level' => 'beginner',
+            'live_feedback_mode' => 'coaching',
+        ]);
+        $question = $this->sessionQuestion($session, $category);
+        $question->update([
+            'type' => 'Behavioral',
+            'expected_guide' => 'Use situation, task, action, and result.',
+            'mapped_skills' => ['ownership', 'problem solving'],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.coachAnswer'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('question_id', $question->id)
+            ->assertJsonPath('source', 'ai')
+            ->assertJsonPath('provider', 'openai');
+
+        $this->assertStringContainsString('During my capstone project', $response->json('possible_answer'));
+        $this->assertDatabaseCount('interview_answers', 0);
+
+        Http::assertSent(function ($request) use ($question) {
+            $prompt = data_get($request->data(), 'messages.1.content', '');
+
+            return str_contains($prompt, 'Create one possible interview answer')
+                && str_contains($prompt, $question->question_text)
+                && str_contains($prompt, 'ai_assistance_level');
+        });
+    }
+
+    public function test_ai_coach_possible_answer_is_blocked_in_real_interview_mode(): void
+    {
+        Http::fake();
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, [
+            'live_feedback_mode' => 'real_interview',
+        ]);
+        $question = $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.coachAnswer'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+            ])
+            ->assertForbidden()
+            ->assertJsonPath('error', 'AI Coach is available only when Coaching On is selected.');
+
+        Http::assertNothingSent();
+    }
+
     public function test_user_cannot_answer_an_active_session_owned_by_another_user(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

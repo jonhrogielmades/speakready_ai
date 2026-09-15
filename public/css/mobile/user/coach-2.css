@@ -1261,3 +1261,125 @@
         justify-content: center !important;
     }
 }
+
+/* AI Coach voice prompt control. */
+html body #ai-coach-page .chat-voice-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    flex: 0 0 32px !important;
+    margin: 0 7px 0 0 !important;
+    padding: 0 !important;
+    border: 1px solid rgba(37, 99, 235, 0.34) !important;
+    border-radius: 9px !important;
+    background: rgba(37, 99, 235, 0.08) !important;
+    color: #2563eb !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease !important;
+}
+
+html body #ai-coach-page .chat-voice-btn:hover,
+html body #ai-coach-page .chat-voice-btn:focus-visible {
+    background: rgba(37, 99, 235, 0.14) !important;
+    color: #1d4ed8 !important;
+    outline: none !important;
+    transform: translateY(-1px) !important;
+}
+
+html body #ai-coach-page .chat-voice-btn.is-recording {
+    border-color: rgba(239, 68, 68, 0.42) !important;
+    background: linear-gradient(135deg, #ef4444, #f97316) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14) !important;
+    animation: coachVoicePulse 1.15s ease-in-out infinite !important;
+}
+
+html body #ai-coach-page .chat-voice-btn:disabled,
+html body #ai-coach-page .chat-voice-btn.is-disabled {
+    cursor: not-allowed !important;
+    opacity: 0.55 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+html body #ai-coach-page .chat-voice-btn i,
+html body #ai-coach-page .chat-voice-btn i::before,
+html body #ai-coach-page .chat-voice-btn i::after {
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+    opacity: 1 !important;
+}
+
+html[data-theme="dark"] body #ai-coach-page .chat-voice-btn,
+:root:not(.lm) body #ai-coach-page .chat-voice-btn,
+body.dm #ai-coach-page .chat-voice-btn,
+.dm #ai-coach-page .chat-voice-btn {
+    border-color: rgba(147, 197, 253, 0.28) !important;
+    background: rgba(96, 165, 250, 0.12) !important;
+    color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] body #ai-coach-page .chat-voice-btn.is-recording,
+:root:not(.lm) body #ai-coach-page .chat-voice-btn.is-recording,
+body.dm #ai-coach-page .chat-voice-btn.is-recording,
+.dm #ai-coach-page .chat-voice-btn.is-recording {
+    border-color: rgba(252, 165, 165, 0.56) !important;
+    background: linear-gradient(135deg, #dc2626, #ea580c) !important;
+    color: #ffffff !important;
+}
+
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-voice-btn {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        flex: 0 0 34px !important;
+        margin: 0 !important;
+        border-radius: 9px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+@media (max-width: 767px) {
+    html body #mob-content #ai-coach-page .chat-input-wrapper,
+    html body #ai-coach-page .chat-input-wrapper {
+        grid-template-columns: 38px minmax(0, 1fr) 38px 38px !important;
+    }
+
+    html body #mob-content #ai-coach-page .chat-voice-btn,
+    html body #ai-coach-page .chat-voice-btn {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        aspect-ratio: 1 / 1 !important;
+        margin: 0 !important;
+        border-radius: 8px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    html body #ai-coach-page .chat-input-wrapper {
+        grid-template-columns: 34px minmax(0, 1fr) 34px 34px !important;
+    }
+
+    html body #ai-coach-page .chat-voice-btn {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        min-height: 34px !important;
+    }
+}
+
+@keyframes coachVoicePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.04);
+    }
+}

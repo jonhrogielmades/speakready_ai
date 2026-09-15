@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=33') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=34') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -184,7 +184,7 @@
                     <div class="sr-image-speech" aria-hidden="true">
                         <strong>Hi! {{ $welcomeName }}</strong>
                         <span>You're <span class="sr-image-speech-accent">ready</span> to practice and <span class="sr-image-speech-accent is-success">succeed</span> today!</span>
-                        <span class="sr-image-speech-action">Click the robot for AI Chatbot Coach.</span>
+                        <span class="sr-image-speech-action">Click the robot for AI Coach.</span>
                     </div>
                     <div class="sr-image-head-icons" aria-hidden="true">
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-microphone"></i></span></span>
@@ -201,11 +201,11 @@
                         data-bs-toggle="modal"
                         data-bs-target="#dashboardCoachModal"
                         aria-controls="dashboardCoachModal"
-                        aria-label="Open AI Chatbot Coach"
-                        title="AI Chatbot Coach"
+                        aria-label="Open AI Coach"
+                        title="AI Coach"
                     >
                         <img src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true" draggable="false">
-                        <span class="visually-hidden">Open AI Chatbot Coach</span>
+                        <span class="visually-hidden">Open AI Coach</span>
                     </button>
                     <img class="sr-image-robot-hand" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true" draggable="false">
                 </div>
@@ -784,7 +784,7 @@
                     <div class="sr-dashboard-coach-heading">
                         <span class="sr-dashboard-coach-icon"><i class="fa-solid fa-robot"></i></span>
                         <div>
-                            <h5 class="modal-title" id="dashboardCoachModalTitle">AI Chatbot Coach</h5>
+                            <h5 class="modal-title" id="dashboardCoachModalTitle">AI Coach</h5>
                             <p>Ask for focused interview guidance.</p>
                         </div>
                     </div>
@@ -792,7 +792,12 @@
                 </div>
                 <div class="modal-body">
                     <label class="sr-dashboard-coach-label" for="dashboardCoachMessage">Question or focus</label>
-                    <textarea class="sr-dashboard-coach-input" id="dashboardCoachMessage" name="message" rows="4" maxlength="10000" required placeholder="Example: Help me prepare a stronger answer for a customer service interview."></textarea>
+                    <div class="sr-dashboard-coach-input-wrap">
+                        <textarea class="sr-dashboard-coach-input" id="dashboardCoachMessage" name="message" rows="4" maxlength="10000" required placeholder="Example: Help me prepare a stronger answer for a customer service interview."></textarea>
+                        <button class="sr-dashboard-coach-voice" type="button" id="dashboardCoachVoice" aria-label="Start voice prompt" aria-pressed="false" title="Speak a question">
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+                    </div>
                     <div class="sr-dashboard-coach-status" id="dashboardCoachStatus" role="status" aria-live="polite"></div>
                     <div class="sr-dashboard-coach-response" id="dashboardCoachResponse" hidden>
                         <div class="sr-dashboard-coach-response-head">
@@ -1327,12 +1332,19 @@ document.addEventListener("DOMContentLoaded", function() {
             const textarea = document.getElementById('dashboardCoachMessage');
             const submitButton = document.getElementById('dashboardCoachSubmit');
             const clearButton = document.getElementById('dashboardCoachClear');
+            const voiceButton = document.getElementById('dashboardCoachVoice');
             const status = document.getElementById('dashboardCoachStatus');
             const responsePanel = document.getElementById('dashboardCoachResponse');
             const responseBody = document.getElementById('dashboardCoachResponseBody');
             const defaultSubmitHtml = submitButton ? submitButton.innerHTML : '';
             const defaultClearHtml = clearButton ? clearButton.innerHTML : '';
+            const DashboardCoachSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             let conversationId = null;
+            let voiceRecognition = null;
+            let voiceActive = false;
+            let voiceBaseText = '';
+            let voiceFinalText = '';
+            let voiceStopRequested = false;
             const chatHistory = [];
 
             function csrfToken() {
@@ -1369,14 +1381,163 @@ document.addEventListener("DOMContentLoaded", function() {
                 status.classList.toggle('show', Boolean(message));
             }
 
-            function setSending(isSending) {
-                if (!submitButton) return;
+            function voiceLocale() {
+                return document.documentElement.lang || navigator.language || 'en-US';
+            }
 
-                submitButton.disabled = isSending;
-                submitButton.setAttribute('aria-busy', isSending ? 'true' : 'false');
-                submitButton.innerHTML = isSending
-                    ? '<i class="fa-solid fa-spinner fa-spin"></i> Asking...'
-                    : defaultSubmitHtml;
+            function voiceSegment(value) {
+                return String(value || '').replace(/\s+/g, ' ').trim();
+            }
+
+            function voiceText(...segments) {
+                return segments.map(voiceSegment).filter(Boolean).join(' ');
+            }
+
+            function setVoiceState(isActive) {
+                voiceActive = isActive;
+                if (!voiceButton) return;
+
+                voiceButton.classList.toggle('is-recording', isActive);
+                voiceButton.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                voiceButton.setAttribute('aria-label', isActive ? 'Stop voice prompt' : 'Start voice prompt');
+                voiceButton.title = isActive ? 'Stop voice prompt' : 'Speak a question';
+
+                const icon = voiceButton.querySelector('i');
+                if (icon) {
+                    icon.className = isActive ? 'fa-solid fa-stop' : 'fa-solid fa-microphone';
+                }
+            }
+
+            function initializeVoicePrompt() {
+                if (!voiceButton || DashboardCoachSpeechRecognition) return;
+
+                voiceButton.disabled = true;
+                voiceButton.classList.add('is-disabled');
+                voiceButton.title = 'Voice prompt is not supported in this browser';
+                voiceButton.setAttribute('aria-label', 'Voice prompt is not supported in this browser');
+            }
+
+            function ensureVoiceRecognition() {
+                if (voiceRecognition || !DashboardCoachSpeechRecognition) {
+                    return voiceRecognition;
+                }
+
+                voiceRecognition = new DashboardCoachSpeechRecognition();
+                voiceRecognition.continuous = true;
+                voiceRecognition.interimResults = true;
+                voiceRecognition.maxAlternatives = 1;
+
+                voiceRecognition.onresult = function (event) {
+                    if (!voiceActive) return;
+
+                    let interimText = '';
+
+                    for (let i = event.resultIndex; i < event.results.length; i += 1) {
+                        const result = event.results[i];
+                        const transcript = result?.[0]?.transcript || '';
+
+                        if (result.isFinal) {
+                            voiceFinalText = voiceText(voiceFinalText, transcript);
+                        } else {
+                            interimText = voiceText(interimText, transcript);
+                        }
+                    }
+
+                    if (textarea) {
+                        textarea.value = voiceText(voiceBaseText, voiceFinalText, interimText);
+                        resizeTextarea();
+                    }
+                };
+
+                voiceRecognition.onerror = function (event) {
+                    const voiceError = event?.error || '';
+                    const errorMessages = {
+                        'not-allowed': 'Microphone permission was blocked. Enable it in your browser and try again.',
+                        'service-not-allowed': 'Voice prompt is not available in this browser session.',
+                        'no-speech': 'I did not catch speech. Tap the mic and try again.',
+                        'audio-capture': 'No microphone was found. Check your audio input and try again.'
+                    };
+
+                    voiceStopRequested = true;
+                    setStatus(errorMessages[voiceError] || 'Could not capture the voice prompt. Please try again.', voiceError === 'no-speech' ? 'info' : 'error');
+                };
+
+                voiceRecognition.onend = function () {
+                    const capturedText = textarea?.value.trim() || '';
+                    setVoiceState(false);
+
+                    if (!voiceStopRequested && capturedText) {
+                        setStatus('Voice prompt added. Review it, then ask Coach.', 'info');
+                    }
+                };
+
+                return voiceRecognition;
+            }
+
+            function startVoicePrompt() {
+                if (submitButton?.getAttribute('aria-busy') === 'true') return;
+
+                if (!DashboardCoachSpeechRecognition) {
+                    initializeVoicePrompt();
+                    setStatus('Voice prompt is not supported in this browser. You can still type your question.', 'error');
+                    return;
+                }
+
+                const recognition = ensureVoiceRecognition();
+                voiceBaseText = textarea?.value.trim() || '';
+                voiceFinalText = '';
+                voiceStopRequested = false;
+                recognition.lang = voiceLocale();
+
+                try {
+                    recognition.start();
+                    setVoiceState(true);
+                    setStatus('Listening... speak your question, then tap the mic or Ask Coach.', 'info');
+                } catch (error) {
+                    console.warn('Dashboard coach voice prompt could not start:', error);
+                    setStatus('Voice prompt is already listening. Speak your question or tap the mic to stop.', 'info');
+                }
+            }
+
+            function stopVoicePrompt(silent = false) {
+                voiceStopRequested = true;
+
+                if (voiceRecognition && voiceActive) {
+                    try {
+                        voiceRecognition.stop();
+                    } catch (error) {
+                        console.warn('Dashboard coach voice prompt could not stop:', error);
+                    }
+                }
+
+                setVoiceState(false);
+
+                if (!silent) {
+                    const capturedText = textarea?.value.trim() || '';
+                    setStatus(capturedText ? 'Voice prompt added. Review it, then ask Coach.' : 'Stopped listening.', 'info');
+                }
+            }
+
+            function toggleVoicePrompt() {
+                if (voiceActive) {
+                    stopVoicePrompt();
+                    return;
+                }
+
+                startVoicePrompt();
+            }
+
+            function setSending(isSending) {
+                if (submitButton) {
+                    submitButton.disabled = isSending;
+                    submitButton.setAttribute('aria-busy', isSending ? 'true' : 'false');
+                    submitButton.innerHTML = isSending
+                        ? '<i class="fa-solid fa-spinner fa-spin"></i> Asking...'
+                        : defaultSubmitHtml;
+                }
+                if (voiceButton) {
+                    voiceButton.disabled = isSending || !DashboardCoachSpeechRecognition;
+                }
             }
 
             function setClearing(isClearing) {
@@ -1409,12 +1570,19 @@ document.addEventListener("DOMContentLoaded", function() {
             }
 
             textarea?.addEventListener('input', resizeTextarea);
+            voiceButton?.addEventListener('click', toggleVoicePrompt);
+            initializeVoicePrompt();
             modal?.addEventListener('shown.bs.modal', () => {
                 textarea?.focus();
                 resizeTextarea();
             });
+            modal?.addEventListener('hidden.bs.modal', () => {
+                stopVoicePrompt(true);
+            });
 
             clearButton?.addEventListener('click', async () => {
+                stopVoicePrompt(true);
+
                 if (!conversationId && !chatHistory.length && !(textarea?.value || '').trim()) {
                     setStatus('No modal conversation to clear.', 'info');
                     return;
@@ -1451,6 +1619,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
+                stopVoicePrompt(true);
 
                 const message = textarea ? textarea.value.trim() : '';
                 if (!message) {
@@ -1531,7 +1700,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const stepsMobile = [];
 
         const stepsDesktop = [
-            { element: '#dbSidebar', popover: { title: 'Practice Navigation', description: 'Open Mock Interview, Modules, Challenges, AI Chatbot Coach, Progress, Feedback, and Reports.', side: 'right', align: 'start' }},
+            { element: '#dbSidebar', popover: { title: 'Practice Navigation', description: 'Open Mock Interview, Modules, Challenges, AI Coach, Progress, Feedback, and Reports.', side: 'right', align: 'start' }},
             { element: '#dbTutorialBtn', popover: { title: 'Replay Tutorial', description: 'Restart this walkthrough whenever the page changes or you want a quick orientation.', side: 'bottom', align: 'center' }},
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed interviews, ratings, XP, streaks, and active practice days at a glance.', side: 'top', align: 'start' }},

@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=22') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=27') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -92,6 +92,12 @@
  <div class="question-timer-anchor">
  <span class="session-chip" id="questionTimerChip"><i class="fa-regular fa-clock"></i><span id="perQuestionTimer">Self-paced</span></span>
  </div>
+ @if(($sessionRecord->live_feedback_mode?? 'coaching') !== 'real_interview')
+ <button type="button" id="aiCoachHeadButton" class="ai-coach-head-button coaching-only" onclick="toggleAiCoachPanel()" aria-label="Open AI Coach possible answer" aria-controls="aiCoachPanel" aria-expanded="false" title="AI Coach possible answer">
+ <i class="fa-solid fa-head-side-brain" aria-hidden="true"></i>
+ <span class="ai-coach-head-label">AI Coach</span>
+ </button>
+ @endif
 
  <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);">
  <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;--avatar-ring-color:#8b5cf6;">
@@ -226,6 +232,29 @@
  <div id="coachingTip" class="session-live-coaching coaching-only" aria-live="polite">
  <i class="fa-solid fa-lightbulb me-1" aria-hidden="true"></i> <strong>Biggest Suggestion:</strong> Waiting for response
  </div>
+ <div id="aiCoachPanel" class="ai-coach-answer-panel coaching-only" hidden data-state="idle">
+ <div class="ai-coach-answer-header">
+ <div class="ai-coach-answer-title">
+ <i class="fa-solid fa-head-side-brain" aria-hidden="true"></i>
+ <span>AI Coach</span>
+ </div>
+ <button type="button" class="ai-coach-close-button" onclick="closeAiCoachPanel()" aria-label="Close AI Coach" title="Close AI Coach">
+ <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+ </button>
+ </div>
+ <div id="aiCoachStatus" class="ai-coach-answer-meta">Possible answer</div>
+ <div id="aiCoachAnswerText" class="ai-coach-answer-text" aria-live="polite"></div>
+ <div class="ai-coach-answer-actions">
+ <button type="button" id="aiCoachCopyButton" class="ai-coach-action-button secondary" onclick="copyAiCoachAnswer()" disabled>
+ <i class="fa-solid fa-copy" aria-hidden="true"></i>
+ <span>Copy</span>
+ </button>
+ <button type="button" id="aiCoachDraftButton" class="ai-coach-action-button primary" onclick="useAiCoachAnswerAsDraft()" disabled>
+ <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+ <span>Use as Draft</span>
+ </button>
+ </div>
+ </div>
 
  </form>
  </div>
@@ -304,10 +333,10 @@
  </div>
  </div>
 
- <div id="endSessionModal" class="interview-start-modal interview-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="endSessionTitle" aria-describedby="endSessionDescription">
- <div class="interview-start-dialog">
- <div class="interview-start-icon danger" aria-hidden="true">
- <i class="fa-solid fa-flag-checkered"></i>
+<div id="endSessionModal" class="interview-start-modal interview-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="endSessionTitle" aria-describedby="endSessionDescription">
+<div class="interview-start-dialog">
+<div class="interview-start-icon danger" aria-hidden="true">
+<i class="fa-solid fa-flag-checkered"></i>
  </div>
  <h4 id="endSessionTitle">End without feedback?</h4>
  <p id="endSessionDescription">Your saved responses will stay available for review, but this session will not receive a score, AI feedback, or improved answer suggestions.</p>
@@ -327,11 +356,26 @@
  End without feedback <i class="fa-solid fa-flag-checkered"></i>
  </button>
  </div>
- </div>
- </div>
+</div>
+</div>
 
- @php
- $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
+<div id="sessionAlertModal" class="interview-start-modal interview-alert-modal" role="alertdialog" aria-modal="true" aria-labelledby="sessionAlertTitle" aria-describedby="sessionAlertMessage">
+<div class="interview-start-dialog">
+<div id="sessionAlertIcon" class="interview-start-icon success" aria-hidden="true">
+<i class="fa-solid fa-circle-check"></i>
+</div>
+<h4 id="sessionAlertTitle">Voice Session Cleared</h4>
+<p id="sessionAlertMessage" class="interview-alert-message">Voice session cleared.</p>
+<div class="interview-start-actions">
+<button type="button" id="sessionAlertOkButton" class="interview-start-button success" onclick="closeSessionAlertModal()">
+OK <i class="fa-solid fa-check"></i>
+</button>
+</div>
+</div>
+</div>
+
+@php
+$clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  'id' => (int) $question->id,
  'question_text' => (string) $question->question_text,
  'source_type' => $question->source_type,
@@ -405,6 +449,9 @@
  let currentRepeatPrompt = '';
  let currentRepeatOptions = {};
  let sessionNoticeTimer = null;
+ let aiCoachRequestInFlight = false;
+ let aiCoachCurrentAnswer = '';
+ let aiCoachCurrentQuestionId = null;
  
  // Answers state
  function defaultVoiceRecordingState() {
@@ -632,7 +679,7 @@
  const serverTranscriptionSupported = serverTranscriptionEnabled
  && Boolean(window.MediaRecorder)
  && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
- const displayRealtimeTranscriptInTextarea = false;
+ const displayRealtimeTranscriptInTextarea = true;
  let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null)): null;
  const duplicateSafeWordSet = new Set([
  'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
@@ -1037,6 +1084,7 @@
 
  const answerState = answersData[currentQIdx] || defaultAnswerState();
  answerState.text = renderedTranscript;
+ answerState.speech_transcript = renderedTranscript;
  answersData[currentQIdx] = answerState;
 
  triggerAnalysis();
@@ -1408,7 +1456,7 @@
  scheduleStateSave();
  }
 
- showSessionNotice(canClearGeneratedText? 'Voice session and generated transcript cleared.': 'Voice session cleared.', 'success');
+ showSessionAlertModal(canClearGeneratedText? 'Voice session and generated transcript cleared.': 'Voice session cleared.', 'Voice Session Cleared', 'success');
  }
 
  function voiceSessionTranscriptionErrorMessage(error) {
@@ -1865,6 +1913,7 @@
  resetSpeechRecognitionBufferFromTextarea();
  setTranscriptionStatus('');
  renderVoiceSessionPanel();
+ resetAiCoachPanel();
  }
 
  function restoreSubmittedAnswerInput(answerText) {
@@ -1896,6 +1945,43 @@
  const notice = document.getElementById('sessionNotice');
  clearTimeout(sessionNoticeTimer);
  if (notice) notice.hidden = true;
+ }
+
+ function showSessionAlertModal(message, title = 'Notice', type = 'success') {
+ const modal = document.getElementById('sessionAlertModal');
+ const titleEl = document.getElementById('sessionAlertTitle');
+ const messageEl = document.getElementById('sessionAlertMessage');
+ const icon = document.getElementById('sessionAlertIcon');
+ if (!modal ||!messageEl) {
+ showSessionNotice(message, type === 'success'? 'success': 'warning');
+ return;
+ }
+
+ if (modal.parentElement!== document.body) {
+ document.body.appendChild(modal);
+ }
+
+ if (titleEl) titleEl.textContent = title || 'Notice';
+ messageEl.textContent = message || '';
+ if (icon) {
+ icon.classList.toggle('success', type === 'success');
+ icon.classList.toggle('danger', type === 'error');
+ icon.classList.toggle('warning', type === 'warning');
+ icon.innerHTML = type === 'error'
+ ? '<i class="fa-solid fa-circle-exclamation"></i>'
+ : (type === 'warning'? '<i class="fa-solid fa-triangle-exclamation"></i>': '<i class="fa-solid fa-circle-check"></i>');
+ }
+
+ clearSessionNotice();
+ modal.classList.add('active');
+ syncInterviewModalBodyState();
+ focusFirstModalAction(modal, '#sessionAlertOkButton');
+ }
+
+ function closeSessionAlertModal() {
+ const modal = document.getElementById('sessionAlertModal');
+ modal?.classList.remove('active');
+ syncInterviewModalBodyState();
  }
 
  function microphoneRequiresSecureOrigin() {
@@ -2359,7 +2445,7 @@
  }
 
  if (isRecording && activeTranscriptionEngine === 'server') {
- setTranscriptionStatus('Recording - transcript appears after Stop');
+ setTranscriptionStatus('Listening - live transcript is updating');
  }
  }
 
@@ -2508,7 +2594,7 @@
  setTranscriptionStatus('Microphone recording failed. Try again.', '#f87171');
  };
  serverTranscriptionRecorder.start(serverTranscriptionTimesliceMs);
- setTranscriptionStatus('Recording - transcript appears after Stop');
+ setTranscriptionStatus('Listening - live transcript is updating');
  return true;
  } catch (error) {
  console.error('Server transcription recorder failed:', error);
@@ -2585,7 +2671,7 @@
 
  recognition.onstart = function() {
  recognitionActive = true;
- setTranscriptionStatus('Recording - transcript appears after Stop');
+ setTranscriptionStatus('Listening - live transcript is updating');
  };
  
  recognition.onsoundstart = function() {
@@ -3163,6 +3249,200 @@
  }
 
  throw lastError || new Error(fallbackMessage);
+ }
+
+ function setAiCoachButtonExpanded(expanded) {
+ const button = document.getElementById('aiCoachHeadButton');
+ if (!button) return;
+ button.setAttribute('aria-expanded', expanded? 'true': 'false');
+ button.classList.toggle('is-active', expanded);
+ }
+
+ function setAiCoachActionButtons(enabled) {
+ const copyButton = document.getElementById('aiCoachCopyButton');
+ const draftButton = document.getElementById('aiCoachDraftButton');
+ if (copyButton) copyButton.disabled =!enabled;
+ if (draftButton) {
+ const voiceOnly = typeof isVoiceOnlyMode === 'function' && isVoiceOnlyMode();
+ draftButton.disabled =!enabled || voiceOnly;
+ draftButton.title = voiceOnly? 'Voice Mode is voice-only': 'Use as Draft';
+ }
+ }
+
+ function setAiCoachPanelState(state, message = '') {
+ const panel = document.getElementById('aiCoachPanel');
+ const status = document.getElementById('aiCoachStatus');
+ const text = document.getElementById('aiCoachAnswerText');
+ const button = document.getElementById('aiCoachHeadButton');
+ if (panel) panel.dataset.state = state;
+ if (status) {
+ status.textContent = state === 'loading'? 'Generating possible answer': (state === 'error'? 'Coach unavailable': 'Possible answer');
+ }
+ if (text && message) text.textContent = message;
+ if (button) {
+ button.disabled = state === 'loading';
+ button.classList.toggle('is-loading', state === 'loading');
+ }
+ setAiCoachActionButtons(state === 'ready' && aiCoachCurrentAnswer.trim()!== '');
+ }
+
+ function resetAiCoachPanel() {
+ aiCoachCurrentAnswer = '';
+ aiCoachCurrentQuestionId = null;
+ const panel = document.getElementById('aiCoachPanel');
+ const text = document.getElementById('aiCoachAnswerText');
+ if (text) text.textContent = '';
+ if (panel) {
+ panel.hidden = true;
+ panel.dataset.state = 'idle';
+ panel.dataset.questionId = '';
+ }
+ setAiCoachButtonExpanded(false);
+ setAiCoachActionButtons(false);
+ }
+
+ function closeAiCoachPanel() {
+ const panel = document.getElementById('aiCoachPanel');
+ if (panel) panel.hidden = true;
+ setAiCoachButtonExpanded(false);
+ }
+
+ function toggleAiCoachPanel() {
+ if (liveFeedbackMode === 'real_interview') {
+ showSessionNotice('AI Coach is available only when Coaching On is selected.', 'warning');
+ return;
+ }
+
+ const panel = document.getElementById('aiCoachPanel');
+ if (!panel) return;
+ if (!panel.hidden) {
+ closeAiCoachPanel();
+ return;
+ }
+
+ openAiCoachPanel();
+ }
+
+ function openAiCoachPanel() {
+ const panel = document.getElementById('aiCoachPanel');
+ if (!panel) return;
+ const question = questions[currentQIdx] || null;
+ const questionId = question && question.id? String(question.id): '';
+ if (!questionId) {
+ showSessionNotice('AI Coach needs an active question first.', 'warning');
+ return;
+ }
+
+ panel.hidden = false;
+ setAiCoachButtonExpanded(true);
+
+ if (aiCoachCurrentAnswer && String(aiCoachCurrentQuestionId) === questionId) {
+ setAiCoachPanelState('ready');
+ return;
+ }
+
+ generateAiCoachAnswer(question);
+ }
+
+ async function generateAiCoachAnswer(question = null) {
+ if (aiCoachRequestInFlight) return;
+ const activeQuestion = question || questions[currentQIdx] || null;
+ const questionId = activeQuestion && activeQuestion.id? String(activeQuestion.id): '';
+ if (!questionId) return;
+
+ aiCoachRequestInFlight = true;
+ aiCoachCurrentAnswer = '';
+ aiCoachCurrentQuestionId = questionId;
+ setAiCoachPanelState('loading', 'Generating a possible answer...');
+
+ const formData = new FormData();
+ formData.append('_token', '{{ csrf_token() }}');
+ formData.append('session_id', interviewSessionId);
+ formData.append('question_id', questionId);
+
+ try {
+ const data = await postFormJson('{{ route("interview.coachAnswer") }}', formData, 'AI Coach could not generate a possible answer right now.', 45000);
+ const answer = String(data.possible_answer || '').trim();
+ if (!answer) {
+ throw new Error('AI Coach could not generate a possible answer right now.');
+ }
+
+ const panel = document.getElementById('aiCoachPanel');
+ const text = document.getElementById('aiCoachAnswerText');
+ aiCoachCurrentAnswer = answer;
+ aiCoachCurrentQuestionId = String(data.question_id || questionId);
+ if (panel) panel.dataset.questionId = aiCoachCurrentQuestionId;
+ if (text) text.textContent = answer;
+ setAiCoachPanelState('ready');
+ } catch (error) {
+ aiCoachCurrentAnswer = '';
+ setAiCoachPanelState('error', error.message || 'AI Coach could not generate a possible answer right now.');
+ showSessionNotice(error.message || 'AI Coach could not generate a possible answer right now.', 'warning');
+ } finally {
+ aiCoachRequestInFlight = false;
+ const button = document.getElementById('aiCoachHeadButton');
+ if (button) {
+ button.disabled = false;
+ button.classList.remove('is-loading');
+ }
+ }
+ }
+
+ async function copyAiCoachAnswer() {
+ const text = aiCoachCurrentAnswer.trim();
+ if (!text) return;
+
+ try {
+ if (navigator.clipboard && window.isSecureContext) {
+ await navigator.clipboard.writeText(text);
+ } else {
+ const textarea = document.createElement('textarea');
+ textarea.value = text;
+ textarea.setAttribute('readonly', '');
+ textarea.style.position = 'fixed';
+ textarea.style.opacity = '0';
+ document.body.appendChild(textarea);
+ textarea.select();
+ document.execCommand('copy');
+ textarea.remove();
+ }
+
+ const copyButton = document.getElementById('aiCoachCopyButton');
+ if (copyButton) {
+ const original = copyButton.innerHTML;
+ copyButton.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i><span>Copied</span>';
+ setTimeout(() => {
+ copyButton.innerHTML = original;
+ }, 1400);
+ }
+ showSessionNotice('AI Coach answer copied.', 'success');
+ } catch (error) {
+ showSessionNotice('Copy failed. Select the coach answer text and copy it manually.', 'warning');
+ }
+ }
+
+ function useAiCoachAnswerAsDraft() {
+ const text = aiCoachCurrentAnswer.trim();
+ if (!text) return;
+ if (isVoiceOnlyMode()) {
+ showSessionNotice('Voice Mode is voice-only. Copy the coach answer and practice saying it in your own words.', 'warning');
+ return;
+ }
+
+ const textarea = document.getElementById('answerTextarea');
+ if (!textarea) return;
+ const currentText = String(textarea.value || '').trim();
+ if (currentText && currentText!== text &&!window.confirm('Replace your current draft with the AI Coach answer?')) {
+ return;
+ }
+
+ textarea.value = text;
+ if (answersData[currentQIdx]) {
+ answersData[currentQIdx].text = text;
+ }
+ handleAnswerInput();
+ textarea.focus();
+ showSessionNotice('AI Coach answer added as your draft. Edit it with your own real details before sending.', 'success');
  }
 
  function abortManagedFetches() {
@@ -3941,25 +4221,23 @@
  if(isVoiceTranscriptionMode()) {
  applyResponseModeUi();
  const recorderUnavailableMessage = voiceRecordingUnavailableMessage();
- const stopBasedHybrid = isHybridTranscriptionMode() &&!displayRealtimeTranscriptInTextarea;
- const fullTranscriptUnavailableMessage = stopBasedHybrid &&!recorderUnavailableMessage? fullVoiceTranscriptionUnavailableMessage(): '';
- const transcriptionEngine = isVoiceOnlyMode() || stopBasedHybrid || recorderUnavailableMessage? null: preferredTranscriptionEngine();
- if (recorderUnavailableMessage || fullTranscriptUnavailableMessage || (!isVoiceOnlyMode() &&!stopBasedHybrid &&!transcriptionEngine)) {
- const message = recorderUnavailableMessage || fullTranscriptUnavailableMessage || transcriptionUnavailableMessage();
+ const transcriptionEngine = isVoiceOnlyMode() || recorderUnavailableMessage? null: preferredTranscriptionEngine();
+ if (recorderUnavailableMessage || (!isVoiceOnlyMode() &&!transcriptionEngine)) {
+ const message = recorderUnavailableMessage || transcriptionUnavailableMessage();
  setTranscriptionStatus(message, '#f87171');
  setVoiceControlsEnabled(false, message);
  showSessionNotice(isVoiceOnlyMode()? `${message} Voice Mode needs microphone recording.`: `${message} You can type your answer instead.`, 'warning');
- } else if (stopBasedHybrid) {
- setVoiceControlsEnabled(true);
- setTranscriptionStatus('Recording ready - transcript appears after Stop');
  } else if (transcriptionEngine === 'server') {
  setVoiceControlsEnabled(true);
- setTranscriptionStatus('Recording ready - transcript appears after Stop');
+ setTranscriptionStatus('Recording ready - live transcript will appear in the answer box');
  } else if (isVoiceOnlyMode()) {
  setVoiceControlsEnabled(true);
  setTranscriptionStatus('Voice-only mode. Text transcription is off.');
  } else {
  setVoiceControlsEnabled(true);
+ if (isHybridTranscriptionMode()) {
+ setTranscriptionStatus('Recording ready - live transcript will appear in the answer box');
+ }
  }
  } else {
  applyResponseModeUi();
@@ -4021,6 +4299,7 @@
  currentQIdx = idx;
  const q = questions[idx];
  if (!q) return;
+ resetAiCoachPanel();
  setAnswerInputEnabled(false);
  
  document.getElementById('aiQuestionText').innerText = '...';
@@ -4545,11 +4824,9 @@
 
  const recorderUnavailableMessage = voiceRecordingUnavailableMessage();
  const voiceOnly = isVoiceOnlyMode();
- const stopBasedHybrid = isHybridTranscriptionMode() &&!displayRealtimeTranscriptInTextarea;
- const fullTranscriptUnavailableMessage = stopBasedHybrid &&!recorderUnavailableMessage? fullVoiceTranscriptionUnavailableMessage(): '';
- let engine = recorderUnavailableMessage || voiceOnly || stopBasedHybrid? null: preferredTranscriptionEngine();
- if (recorderUnavailableMessage || fullTranscriptUnavailableMessage || (!voiceOnly &&!stopBasedHybrid &&!engine)) {
- const message = recorderUnavailableMessage || fullTranscriptUnavailableMessage || transcriptionUnavailableMessage();
+ let engine = recorderUnavailableMessage || voiceOnly? null: preferredTranscriptionEngine();
+ if (recorderUnavailableMessage || (!voiceOnly &&!engine)) {
+ const message = recorderUnavailableMessage || transcriptionUnavailableMessage();
  setTranscriptionStatus(message, '#f87171');
  setVoiceControlsEnabled(false, message);
  if(!silent) showSessionNotice(voiceOnly? `${message} Voice Mode needs microphone recording.`: `${message} You can type your answer instead.`);
@@ -4560,7 +4837,7 @@
  resetSpeechRecognitionBufferFromTextarea();
  }
 
- if (!voiceOnly &&!stopBasedHybrid &&!await ensureMicrophoneReady(engine)) {
+ if (!voiceOnly &&!await ensureMicrophoneReady(engine)) {
  if(!silent) {
  const message = document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage();
  showSessionNotice(`${message} You can type your answer instead.`);
@@ -4580,14 +4857,14 @@
  }
 
  lastSpeechEnd = 0;
- shouldAutoRestartRecognition =!voiceOnly &&!stopBasedHybrid;
+ shouldAutoRestartRecognition =!voiceOnly;
  isRecording = true;
  isRecordingPaused = false;
- activeTranscriptionEngine = voiceOnly || stopBasedHybrid? null: engine;
+ activeTranscriptionEngine = voiceOnly? null: engine;
 
- let started = voiceOnly || stopBasedHybrid? true: (engine === 'server'? startServerTranscriptionEngine(): startSpeechRecognitionEngine());
+ let started = voiceOnly? true: (engine === 'server'? startServerTranscriptionEngine(): startSpeechRecognitionEngine());
 
- if (!started &&!voiceOnly &&!stopBasedHybrid && engine === 'browser' && canUseServerTranscription()) {
+ if (!started &&!voiceOnly && engine === 'browser' && canUseServerTranscription()) {
  activeTranscriptionEngine = 'server';
  engine = 'server';
  started = await ensureMicrophoneReady('server') && startServerTranscriptionEngine();
@@ -4606,8 +4883,6 @@
 
  if (voiceOnly) {
  setTranscriptionStatus('Voice-only recording. Text transcription is off.');
- } else if (stopBasedHybrid) {
- setTranscriptionStatus('Recording - transcript appears after Stop');
  }
 
  clearSessionNotice();
@@ -4691,22 +4966,22 @@
 
  async function stopRecordingInternal() {
  await pauseRecording();
- const recording = await stopVoiceSessionRecorder();
+ await stopVoiceSessionRecorder();
  if (isHybridTranscriptionMode() && answersData[currentQIdx]) {
- answersData[currentQIdx].speech_transcript = '';
+ const textareaText = currentAnswerTextareaText();
+ answersData[currentQIdx].text = textareaText;
+ answersData[currentQIdx].speech_transcript = cleanTranscriptText(textareaText);
  }
  clearTimeout(autoStartAfterQuestionTimer);
  isRecordingPaused = false;
  resetRecordingTimer();
  setRecordingControlButtons('idle');
  resetSpeechRecognitionBufferFromTextarea();
- if (isHybridTranscriptionMode() && recording?.blob) {
- await transcribeVoiceSessionRecording(currentQIdx, {
- silent: true,
- skipStopRecording: true,
- previousTranscript: '',
- replaceAnswerText: true
- });
+ if (isHybridTranscriptionMode()) {
+ const hasTranscriptText = currentAnswerTextareaText().trim() !== '';
+ setTranscriptionStatus(hasTranscriptText? 'Recording stopped - transcript is ready to edit': 'Recording stopped - no speech detected yet', hasTranscriptText? '#16a34a': '#fbbf24');
+ } else if (isVoiceOnlyMode()) {
+ setTranscriptionStatus('Recording stopped');
  } else {
  setTranscriptionStatus('');
  }
@@ -5200,7 +5475,7 @@
  }
 
  function activeInterviewModal() {
- return document.querySelector('#interviewStartModal.active, #endSessionModal.active');
+ return document.querySelector('#interviewStartModal.active, #endSessionModal.active, #sessionAlertModal.active');
  }
 
  function syncInterviewModalBodyState() {
@@ -5435,6 +5710,12 @@
  if (modal?.id === 'endSessionModal') {
  event.preventDefault();
  cancelAbortInterviewSession();
+ return true;
+ }
+
+ if (modal?.id === 'sessionAlertModal') {
+ event.preventDefault();
+ closeSessionAlertModal();
  return true;
  }
 

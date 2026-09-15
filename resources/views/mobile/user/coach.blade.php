@@ -1,9 +1,9 @@
 @extends('mobile.layouts.app')
-@section('title', 'AI Chatbot Coach')
+@section('title', 'AI Coach')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/coach.css?v=1') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=1') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/coach.css?v=2') }}" data-page-style="user-coach">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=3') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -29,7 +29,7 @@
                 <div>
                     <h4 class="sr-page-hero-title text-gradient-primary">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 0-7 7v3a4 4 0 0 0 4 4h1v-6H7v-1a5 5 0 0 1 10 0v1h-3v6h1a4 4 0 0 0 4-4v-3a7 7 0 0 0-7-7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        AI Chatbot Coach
+                        AI Coach
                     </h4>
                     <p class="sr-page-hero-subtitle">Ask for advice, resume feedback, and focused practice guidance.</p>
                 </div>
@@ -171,6 +171,9 @@
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
                     <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask about interviews, resumes, certificates..." oninput="resizeCoachTextarea(this)"></textarea>
+                    <button class="chat-voice-btn" type="button" id="coachVoiceBtn" aria-label="Start voice prompt" aria-pressed="false" title="Speak a message" onclick="toggleCoachVoicePrompt()">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
                     <button class="chat-send-btn" type="button" id="chatSendBtn" aria-label="Send message" title="Send message" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
                 <div class="coach-inline-feedback" id="coachInlineFeedback" role="status" aria-live="polite"></div>
@@ -188,6 +191,12 @@
         const initialCoachPrompt = @json((string) request('ask', ''));
         let coachSelectedFiles = [];
         let coachSending = false;
+        let coachVoiceRecognition = null;
+        let coachVoiceActive = false;
+        let coachVoiceBaseText = '';
+        let coachVoiceFinalText = '';
+        let coachVoiceStopRequested = false;
+        const CoachSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const coachAllowedExtensions = ['pdf', 'doc', 'docx', 'odt', 'txt', 'rtf', 'csv', 'md', 'json', 'html', 'htm', 'ppt', 'pptx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tif', 'tiff', 'heic', 'heif'];
         const coachMaxFiles = 3;
         const coachMaxFileBytes = 5 * 1024 * 1024;
@@ -250,15 +259,169 @@
         function setCoachSending(isSending) {
             coachSending = isSending;
             const sendButton = document.getElementById('chatSendBtn');
+            const voiceButton = document.getElementById('coachVoiceBtn');
             const input = document.getElementById('chatMsg');
 
             if (sendButton) {
                 sendButton.disabled = isSending;
                 sendButton.setAttribute('aria-busy', isSending ? 'true' : 'false');
             }
+            if (voiceButton) {
+                voiceButton.disabled = isSending || !CoachSpeechRecognition;
+            }
             if (input) {
                 input.setAttribute('aria-busy', isSending ? 'true' : 'false');
             }
+        }
+
+        function coachVoiceLocale() {
+            return document.documentElement.lang || navigator.language || 'en-US';
+        }
+
+        function coachVoiceSegment(text) {
+            return String(text || '').replace(/\s+/g, ' ').trim();
+        }
+
+        function coachVoiceText(...segments) {
+            return segments.map(coachVoiceSegment).filter(Boolean).join(' ');
+        }
+
+        function setCoachVoiceState(isActive) {
+            coachVoiceActive = isActive;
+            const button = document.getElementById('coachVoiceBtn');
+            if (!button) return;
+
+            button.classList.toggle('is-recording', isActive);
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            button.setAttribute('aria-label', isActive ? 'Stop voice prompt' : 'Start voice prompt');
+            button.title = isActive ? 'Stop voice prompt' : 'Speak a message';
+
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = isActive ? 'fa-solid fa-stop' : 'fa-solid fa-microphone';
+            }
+        }
+
+        function initializeCoachVoicePrompt() {
+            const button = document.getElementById('coachVoiceBtn');
+            if (!button || CoachSpeechRecognition) return;
+
+            button.disabled = true;
+            button.classList.add('is-disabled');
+            button.title = 'Voice prompt is not supported in this browser';
+            button.setAttribute('aria-label', 'Voice prompt is not supported in this browser');
+        }
+
+        function ensureCoachVoiceRecognition() {
+            if (coachVoiceRecognition || !CoachSpeechRecognition) {
+                return coachVoiceRecognition;
+            }
+
+            coachVoiceRecognition = new CoachSpeechRecognition();
+            coachVoiceRecognition.continuous = true;
+            coachVoiceRecognition.interimResults = true;
+            coachVoiceRecognition.maxAlternatives = 1;
+
+            coachVoiceRecognition.onresult = function (event) {
+                if (!coachVoiceActive) return;
+
+                let interimText = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i += 1) {
+                    const result = event.results[i];
+                    const transcript = result?.[0]?.transcript || '';
+
+                    if (result.isFinal) {
+                        coachVoiceFinalText = coachVoiceText(coachVoiceFinalText, transcript);
+                    } else {
+                        interimText = coachVoiceText(interimText, transcript);
+                    }
+                }
+
+                const input = document.getElementById('chatMsg');
+                if (input) {
+                    input.value = coachVoiceText(coachVoiceBaseText, coachVoiceFinalText, interimText);
+                    resizeCoachTextarea(input);
+                }
+            };
+
+            coachVoiceRecognition.onerror = function (event) {
+                const voiceError = event?.error || '';
+                const errorMessages = {
+                    'not-allowed': 'Microphone permission was blocked. Enable it in your browser and try again.',
+                    'service-not-allowed': 'Voice prompt is not available in this browser session.',
+                    'no-speech': 'I did not catch speech. Tap the mic and try again.',
+                    'audio-capture': 'No microphone was found. Check your audio input and try again.'
+                };
+
+                coachVoiceStopRequested = true;
+                showCoachFeedback(errorMessages[voiceError] || 'Could not capture the voice prompt. Please try again.', voiceError === 'no-speech' ? 'info' : 'error');
+            };
+
+            coachVoiceRecognition.onend = function () {
+                const capturedText = document.getElementById('chatMsg')?.value.trim() || '';
+                setCoachVoiceState(false);
+
+                if (!coachVoiceStopRequested && capturedText) {
+                    showCoachFeedback('Voice prompt added. Review it, then send.', 'info');
+                }
+            };
+
+            return coachVoiceRecognition;
+        }
+
+        function startCoachVoicePrompt() {
+            if (coachSending) return;
+
+            if (!CoachSpeechRecognition) {
+                initializeCoachVoicePrompt();
+                showCoachFeedback('Voice prompt is not supported in this browser. You can still type your message.', 'error');
+                return;
+            }
+
+            const input = document.getElementById('chatMsg');
+            const recognition = ensureCoachVoiceRecognition();
+            coachVoiceBaseText = input?.value.trim() || '';
+            coachVoiceFinalText = '';
+            coachVoiceStopRequested = false;
+            recognition.lang = coachVoiceLocale();
+
+            try {
+                recognition.start();
+                setCoachVoiceState(true);
+                showCoachFeedback('Listening... speak your coach message, then tap the mic or send.', 'info');
+            } catch (error) {
+                console.warn('Coach voice prompt could not start:', error);
+                showCoachFeedback('Voice prompt is already listening. Speak your message or tap the mic to stop.', 'info');
+            }
+        }
+
+        function stopCoachVoicePrompt(silent = false) {
+            coachVoiceStopRequested = true;
+
+            if (coachVoiceRecognition && coachVoiceActive) {
+                try {
+                    coachVoiceRecognition.stop();
+                } catch (error) {
+                    console.warn('Coach voice prompt could not stop:', error);
+                }
+            }
+
+            setCoachVoiceState(false);
+
+            if (!silent) {
+                const capturedText = document.getElementById('chatMsg')?.value.trim() || '';
+                showCoachFeedback(capturedText ? 'Voice prompt added. Review it, then send.' : 'Stopped listening.', 'info');
+            }
+        }
+
+        function toggleCoachVoicePrompt() {
+            if (coachVoiceActive) {
+                stopCoachVoicePrompt();
+                return;
+            }
+
+            startCoachVoicePrompt();
         }
 
         async function confirmCoachAction(options) {
@@ -447,6 +610,10 @@
         }
 
         async function sendMsg() {
+            if (coachVoiceActive) {
+                stopCoachVoicePrompt(true);
+            }
+
             const ta = document.getElementById('chatMsg');
             const box = document.getElementById('chatBox');
             const text = ta.value.trim();
@@ -657,6 +824,10 @@
         }
         
         function newConversation() {
+            if (coachVoiceActive) {
+                stopCoachVoicePrompt(true);
+            }
+
             // Reset state
             coachChatHistory = [];
             currentConversationId = null;
@@ -679,6 +850,10 @@
         }
 
         async function loadConversation(id) {
+            if (coachVoiceActive) {
+                stopCoachVoicePrompt(true);
+            }
+
             try {
                 const response = await coachFetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id));
                 const data = await coachJson(response, 'Failed to load conversation');
@@ -849,6 +1024,8 @@
         });
 
         document.addEventListener('DOMContentLoaded', function () {
+            initializeCoachVoicePrompt();
+
             const prompt = String(initialCoachPrompt || '').trim();
             const input = document.getElementById('chatMsg');
 
@@ -869,13 +1046,13 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Chatbot Coach responds here with interview prep, resume, job-description, and career guidance.', side: 'bottom', align: 'center' }},
+            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Coach responds here with interview prep, resume, job-description, and career guidance.', side: 'bottom', align: 'center' }},
             { element: '#coach-input-area', popover: { title: 'Ask Or Attach', description: 'Type a prep question, paste an answer, or attach a resume, certificate, or job description for coaching.', side: 'top', align: 'center' }}
         ];
 
         const stepsDesktop = [
             { element: '#coach-sidebar', popover: { title: 'Conversation History', description: 'Start a new chat or return to an earlier coaching conversation.', side: 'right', align: 'start' }},
-            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Chatbot Coach responds here with interview prep, resume, job-description, and career guidance.', side: 'bottom', align: 'center' }},
+            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Coach responds here with interview prep, resume, job-description, and career guidance.', side: 'bottom', align: 'center' }},
             { element: '#coach-input-area', popover: { title: 'Ask Or Attach', description: 'Type a prep question, paste an answer, or attach a resume, certificate, or job description for coaching.', side: 'top', align: 'center' }}
         ];
 

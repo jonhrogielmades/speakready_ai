@@ -126,7 +126,7 @@
                <div class="db-nav-section">Specialized Training</div>
                <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.modules.*') ? 'active' : '' }}" title="Modules"><i class="fa-solid fa-book-open"></i><span class="db-nav-label">Modules</span></a>
                <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}" title="Challenges"><i class="fa-solid fa-trophy"></i><span class="db-nav-label">Challenges</span></a>
-               <a href="{{ route('user.coach') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.coach') ? 'active' : '' }}" title="AI Chatbot Coach"><i class="fa-solid fa-robot"></i><span class="db-nav-label">AI Chatbot Coach</span></a>
+               <a href="{{ route('user.coach') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.coach') ? 'active' : '' }}" title="AI Coach"><i class="fa-solid fa-robot"></i><span class="db-nav-label">AI Coach</span></a>
 
                <div class="db-nav-section">Performance</div>
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>

@@ -720,7 +720,7 @@
 
             if (routeMatches(routeName, ['user.coach'])) {
                 return withDefaults({
-                    heroTitle: 'AI Chatbot Coach',
+                    heroTitle: 'AI Coach',
                     heroDescription: 'Chat with the interview coach for local preparation, resumes, job descriptions, answer evidence, and career planning.',
                     workspaceTitle: 'Coach conversation',
                     workspaceDescription: 'Messages appear in the chat area, while the input supports prompts, documents, resumes, and job descriptions.',

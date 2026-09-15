@@ -263,6 +263,8 @@ class PageSmokeTest extends TestCase
  ->assertSee(url('/coach/conversation'), false)
  ->assertSee(route('user.coach.clear'), false)
  ->assertSee('onclick="sendMsg()"', false)
+ ->assertSee('id="coachVoiceBtn"', false)
+ ->assertSee('CoachSpeechRecognition', false)
  ->assertSee('function coachFetch', false)
  ->assertSee("credentials: options.credentials || 'same-origin'", false)
  ->assertSee('async function coachJson', false)
