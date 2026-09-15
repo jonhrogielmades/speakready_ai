@@ -1545,8 +1545,16 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('const coachingHtml = retryCoachingHtml(data.coaching_feedback);', false)
+ ->assertSee('const coachingHtml = retryRenderedCoachingHtml(data);', false)
+ ->assertSee('appendRetryAttempt(answerId, data);', false)
  ->assertSee('${coachingHtml}', false);
+
+ $this->actingAs($user)
+ ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('css/mobile/user/review.css?v=8', false)
+ ->assertSee('appendRetryAttempt(answerId, data);', false);
  }
 
  public function test_shared_review_shows_session_summary_and_distinct_retry_coaching_without_retry_controls(): void

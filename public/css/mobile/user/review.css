@@ -27,10 +27,17 @@
     .action-plan-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px; }
     .action-plan-item { background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px; }
     .action-plan-links { display:flex;flex-wrap:wrap;gap:8px;align-items:center; }
+    .practice-attempts-panel { background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:12px; }
+    .practice-attempts-panel[hidden] { display:none !important; }
+    .retry-attempt-entry { color:var(--tx);border-bottom:1px solid var(--bd);display:grid;gap:8px;padding-bottom:14px; }
+    .retry-attempt-entry:last-child { border-bottom:0;padding-bottom:0; }
     .retry-panel { display:none;background:var(--bg);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-top:18px; }
     .retry-panel.active { display:block; }
     .retry-meta { display:flex;gap:10px;flex-wrap:wrap;align-items:center; }
     .retry-chip { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(59,130,246,.12);color:#3b82f6;font-size:.78rem;font-weight:700; }
+    .retry-result-card { background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:12px;color:var(--tx);padding:16px; }
+    .retry-server-coaching { margin-top:12px; }
+    .retry-server-coaching > section { margin-bottom:0 !important; }
     .timeline-row { display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--bd);padding:8px 0;font-size:.86rem;color:var(--tx2); }
     .timeline-row:last-child { border-bottom:0; }
     .feedback-report-meta { flex-wrap:wrap; }

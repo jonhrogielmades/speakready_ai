@@ -87,6 +87,44 @@
         opacity: 0.96;
         filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16));
     }
+    #portfolioReport .reports-hero-art :is(.reports-art-sheet, .reports-art-chart, .reports-art-badge, .reports-art-spark, .reports-art-line) {
+        transform-box: fill-box;
+        transform-origin: center;
+    }
+    #portfolioReport .reports-hero-art .reports-art-sheet {
+        animation: reportsHeroSheetFloat 5.4s ease-in-out infinite;
+    }
+    #portfolioReport .reports-hero-art .reports-art-chart {
+        animation: reportsHeroChartRise 4.6s ease-in-out infinite;
+    }
+    #portfolioReport .reports-hero-art .reports-art-badge {
+        animation: reportsHeroBadgePulse 3.8s ease-in-out infinite;
+    }
+    #portfolioReport .reports-hero-art .reports-art-line {
+        animation: reportsHeroLineGlow 3.2s ease-in-out infinite;
+    }
+    #portfolioReport .reports-hero-art .reports-art-line:nth-of-type(2) {
+        animation-delay: 0.24s;
+    }
+    #portfolioReport .reports-hero-art .reports-art-line:nth-of-type(3) {
+        animation-delay: 0.48s;
+    }
+    @keyframes reportsHeroSheetFloat {
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+        45% { transform: translate3d(-2px, -3px, 0) rotate(-0.7deg); }
+    }
+    @keyframes reportsHeroChartRise {
+        0%, 100% { transform: translate3d(0, 0, 0); }
+        50% { transform: translate3d(0, -4px, 0); }
+    }
+    @keyframes reportsHeroBadgePulse {
+        0%, 100% { transform: scale(1); opacity: 0.96; }
+        50% { transform: scale(1.06); opacity: 1; }
+    }
+    @keyframes reportsHeroLineGlow {
+        0%, 100% { opacity: 0.72; }
+        50% { opacity: 1; }
+    }
     #portfolioReport .report-export-actions {
         display: grid !important;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2104,5 +2142,680 @@
         color: currentColor !important;
         -webkit-text-fill-color: currentColor !important;
         stroke: currentColor !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero {
+        min-height: 92px !important;
+        margin-bottom: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero-inner {
+        min-height: 92px !important;
+        padding: 14px clamp(156px, 14vw, 178px) 14px 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero-title {
+        margin: 0 0 4px !important;
+        font-size: 1.16rem !important;
+        line-height: 1.12 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero-subtitle {
+        max-width: 720px !important;
+        font-size: 0.8rem !important;
+        line-height: 1.4 !important;
+        font-weight: 500 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero-art {
+        top: 50% !important;
+        right: 14px !important;
+        bottom: auto !important;
+        width: clamp(116px, 11vw, 132px) !important;
+        max-height: calc(100% - 14px) !important;
+        opacity: 0.94 !important;
+        transform: translate3d(0, -50%, 0) !important;
+        transform-origin: 50% 50% !important;
+        animation: reportsSetupShellHeroFloat 5.5s ease-in-out infinite !important;
+    }
+
+    @keyframes reportsSetupShellHeroFloat {
+        0%, 100% { transform: translate3d(0, -50%, 0) rotate(0deg) scale(1); }
+        35% { transform: translate3d(0, calc(-50% - 5px), 0) rotate(1deg) scale(1.01); }
+        70% { transform: translate3d(-2px, calc(-50% - 1px), 0) rotate(-0.75deg) scale(1.005); }
+    }
+}
+
+/* Final reports summary/detail text scale. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell #portfolioReport #report-readiness,
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown {
+        padding: 14px !important;
+        border-radius: 9px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness > .d-flex {
+        margin-bottom: 12px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness h5,
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown h5 {
+        margin: 3px 0 10px !important;
+        font-size: 0.92rem !important;
+        line-height: 1.18 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness h6,
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown small,
+    html body.user-desktop-shell #portfolioReport .report-section-kicker,
+    html body.user-desktop-shell #portfolioReport .report-summary-label {
+        margin-bottom: 4px !important;
+        font-size: 0.56rem !important;
+        line-height: 1.12 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .row.align-items-center {
+        align-items: stretch !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .row.align-items-center > [class*="col-"] {
+        min-height: 64px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        padding: 4px 10px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .report-final-score {
+        font-size: 1.64rem !important;
+        line-height: 0.98 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .report-score-percent {
+        font-size: 0.74rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .report-previous-score {
+        font-size: 1rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .report-readiness-delta {
+        font-size: 1.12rem !important;
+        line-height: 1.05 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .fs-1 {
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .report-readiness-message {
+        max-width: 620px !important;
+        margin-top: 5px !important;
+        margin-bottom: 0 !important;
+        font-size: 0.68rem !important;
+        line-height: 1.32 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .badge {
+        width: fit-content !important;
+        min-height: 20px !important;
+        margin-top: 6px !important;
+        padding: 3px 7px !important;
+        font-size: 0.56rem !important;
+        line-height: 1.05 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .report-summary-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+        margin-top: 12px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .report-summary-item {
+        min-height: 54px !important;
+        padding: 8px 9px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-readiness .report-summary-value {
+        font-size: 0.72rem !important;
+        line-height: 1.22 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown .report-score-meta-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        padding: 9px 10px !important;
+        margin-bottom: 12px !important;
+        border-radius: 8px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown .report-score-meta-grid > [class*="col-"] {
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown .report-score-meta-value {
+        font-size: 0.78rem !important;
+        line-height: 1.2 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown .report-score-list {
+        gap: 10px 12px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown .report-score-row .d-flex {
+        align-items: center !important;
+        margin-bottom: 5px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown .report-score-name,
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown .report-score-value {
+        font-size: 0.78rem !important;
+        line-height: 1.15 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-score-breakdown .progress {
+        height: 5px !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    html body.user-desktop-shell #portfolioReport #report-readiness .report-summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+/* Final reports feedback/question text scale. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell #portfolioReport #report-feedback,
+    html body.user-desktop-shell #portfolioReport #report-question-review {
+        padding: 14px !important;
+        border-radius: 9px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback {
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-panel-title,
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-panel-title {
+        margin: 3px 0 10px !important;
+        font-size: 0.92rem !important;
+        line-height: 1.18 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-grid {
+        --bs-gutter-x: 8px !important;
+        --bs-gutter-y: 8px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-grid > [class*="col-"] {
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-box {
+        min-height: 80px !important;
+        padding: 9px 10px !important;
+        border-radius: 8px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-box-title {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        margin-bottom: 7px !important;
+        font-size: 0.62rem !important;
+        line-height: 1.12 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-box-title i {
+        margin-right: 0 !important;
+        font-size: 0.68rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-list {
+        margin-bottom: 0 !important;
+        padding-left: 14px !important;
+        font-size: 0.72rem !important;
+        line-height: 1.28 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-list li + li {
+        margin-top: 3px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review {
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-review-header {
+        margin-bottom: 10px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-open-full-btn {
+        min-height: 30px !important;
+        padding: 5px 10px !important;
+        border-radius: 8px !important;
+        font-size: 0.62rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-open-full-btn i {
+        margin-right: 4px !important;
+        font-size: 0.62rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-list {
+        gap: 8px !important;
+        overflow: visible !important;
+        padding-right: 0 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-card {
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-card-header {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        gap: 8px !important;
+        margin-bottom: 9px !important;
+        align-items: start !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-title {
+        margin-top: 3px !important;
+        font-size: 0.64rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-chips {
+        gap: 5px !important;
+        justify-content: flex-end !important;
+        max-width: 190px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-chip {
+        min-height: 23px !important;
+        padding: 4px 7px !important;
+        gap: 4px !important;
+        border-radius: 999px !important;
+        font-size: 0.56rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-chip i {
+        margin-right: 0 !important;
+        font-size: 0.58rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .row.g-3 {
+        --bs-gutter-x: 8px !important;
+        --bs-gutter-y: 8px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-answer {
+        min-height: 0 !important;
+        padding: 9px 10px !important;
+        border-radius: 8px !important;
+        font-size: 0.72rem !important;
+        line-height: 1.34 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-insight {
+        height: 100% !important;
+        padding: 9px 10px !important;
+        border-radius: 8px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-insight-feedback {
+        margin-top: 8px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-insight-title {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin-bottom: 5px !important;
+        font-size: 0.62rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-insight-title i {
+        margin-right: 0 !important;
+        font-size: 0.64rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-insight-copy {
+        font-size: 0.68rem !important;
+        line-height: 1.32 !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #portfolioReport .reports-hero-art,
+    #portfolioReport .reports-hero-art * {
+        animation: none !important;
+    }
+}
+
+/* Readable feedback/question accordion scale. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell #portfolioReport #report-feedback,
+    html body.user-desktop-shell #portfolioReport #report-question-review {
+        padding: 18px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-panel-title,
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-panel-title {
+        margin: 4px 0 14px !important;
+        font-size: 1.04rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-grid {
+        --bs-gutter-x: 12px !important;
+        --bs-gutter-y: 12px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-box {
+        min-height: 104px !important;
+        padding: 13px 14px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-box-title {
+        gap: 6px !important;
+        margin-bottom: 8px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-box-title i {
+        font-size: 0.78rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-list {
+        padding-left: 18px !important;
+        font-size: 0.84rem !important;
+        line-height: 1.42 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-feedback-list li + li {
+        margin-top: 5px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-section-kicker,
+    html body.user-desktop-shell #portfolioReport #report-feedback .report-section-kicker {
+        display: block !important;
+        margin-bottom: 4px !important;
+        font-size: 0.68rem !important;
+        line-height: 1.16 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-open-full-btn {
+        min-height: 34px !important;
+        padding: 7px 12px !important;
+        font-size: 0.72rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-list {
+        display: grid !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-card {
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 10px !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .accordion-header {
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-toggle {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 20px !important;
+        align-items: center !important;
+        gap: 12px !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        padding: 13px 16px !important;
+        border: 0 !important;
+        background: transparent !important;
+        color: var(--tx, #0f172a) !important;
+        box-shadow: none !important;
+        text-align: left !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-toggle::after {
+        grid-column: 2 !important;
+        width: 16px !important;
+        height: 16px !important;
+        margin: 0 !important;
+        background-size: 16px 16px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-card-header {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) max-content !important;
+        align-items: center !important;
+        gap: 12px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-main {
+        display: grid !important;
+        gap: 4px !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-title {
+        display: block !important;
+        color: var(--tx, #0f172a) !important;
+        font-size: 0.92rem !important;
+        font-weight: 800 !important;
+        line-height: 1.34 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-chips {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: flex-end !important;
+        gap: 7px !important;
+        max-width: 260px !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-chip {
+        min-height: 28px !important;
+        padding: 6px 9px !important;
+        gap: 5px !important;
+        font-size: 0.68rem !important;
+        line-height: 1.08 !important;
+        white-space: normal !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-chip i {
+        font-size: 0.68rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-body {
+        padding: 14px 16px 16px !important;
+        border-top: 1px solid var(--bd) !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-body .row.g-3 {
+        --bs-gutter-x: 12px !important;
+        --bs-gutter-y: 12px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-answer {
+        padding: 12px 13px !important;
+        font-size: 0.86rem !important;
+        line-height: 1.45 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-insight {
+        padding: 12px 13px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-insight-feedback {
+        margin-top: 12px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-insight-title {
+        gap: 5px !important;
+        margin-bottom: 7px !important;
+        font-size: 0.74rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-insight-title i {
+        font-size: 0.74rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-insight-copy {
+        font-size: 0.84rem !important;
+        line-height: 1.42 !important;
+    }
+}
+
+@media print {
+    #portfolioReport #report-question-review .accordion-collapse.collapse {
+        display: block !important;
+        height: auto !important;
+        visibility: visible !important;
+    }
+
+    #portfolioReport #report-question-review .report-question-toggle::after {
+        display: none !important;
+    }
+}
+
+/* Readable improvements/export section scale. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell #portfolioReport #report-improvements,
+    html body.user-desktop-shell #portfolioReport #report-export {
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 18px !important;
+        border-radius: 10px !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport :is(#report-improvements, #report-export) .report-panel-kicker {
+        display: block !important;
+        margin-bottom: 4px !important;
+        font-size: 0.72rem !important;
+        font-weight: 850 !important;
+        line-height: 1.16 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport :is(#report-improvements, #report-export) .report-panel-title {
+        margin: 4px 0 15px !important;
+        font-size: 1.04rem !important;
+        font-weight: 850 !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport :is(#report-improvements, #report-export) .report-panel-title i {
+        font-size: 0.94rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-improvements .report-improvement-grid,
+    html body.user-desktop-shell #portfolioReport #report-export .report-export-grid {
+        --bs-gutter-x: 12px !important;
+        --bs-gutter-y: 12px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-improvements .report-improvement-card {
+        padding: 14px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-improvements .report-improvement-card > .d-flex {
+        gap: 12px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-improvements .report-improvement-icon {
+        width: 38px !important;
+        height: 38px !important;
+        flex-basis: 38px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-improvements .report-improvement-icon i {
+        font-size: 0.88rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-improvements .report-improvement-title {
+        margin-bottom: 8px !important;
+        font-size: 0.92rem !important;
+        line-height: 1.26 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-improvements .report-improvement-evidence,
+    html body.user-desktop-shell #portfolioReport #report-improvements .report-improvement-fix {
+        font-size: 0.84rem !important;
+        line-height: 1.42 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-improvements .report-improvement-evidence {
+        margin-bottom: 8px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-export .report-export-choice {
+        min-height: 84px !important;
+        padding: 14px !important;
+        border-radius: 10px !important;
+        gap: 12px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-export .report-export-choice-title {
+        margin-bottom: 5px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.18 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-export .report-export-choice-copy {
+        font-size: 0.82rem !important;
+        line-height: 1.38 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-export .report-export-action,
+    html body.user-desktop-shell #portfolioReport #report-export .report-print-btn {
+        min-height: 32px !important;
+        padding: 6px 10px !important;
+        border-radius: 8px !important;
+        font-size: 0.72rem !important;
+        font-weight: 850 !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-export .report-print-btn {
+        margin-top: 12px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-export .report-export-status {
+        font-size: 0.82rem !important;
+        line-height: 1.38 !important;
     }
 }

@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/reports.css?v=2') }}" data-page-style="user-reports">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/reports-2.css?v=1') }}" data-page-style="user-reports-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/reports-2.css?v=6') }}" data-page-style="user-reports-2">
 @endpush
 
 @section('content')
@@ -33,6 +33,32 @@
  </div>
  </div>
  </div>
+ <svg class="sr-page-hero-art reports-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+ <defs>
+ <linearGradient id="reportsHeroPaperMobile" x1="50" y1="22" x2="170" y2="128"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#EAF4FF"/></linearGradient>
+ <linearGradient id="reportsHeroBlueMobile" x1="74" y1="110" x2="168" y2="110"><stop stop-color="#2563EB"/><stop offset="1" stop-color="#1D9BF0"/></linearGradient>
+ <linearGradient id="reportsHeroAquaMobile" x1="128" y1="52" x2="192" y2="116"><stop stop-color="#22D3EE"/><stop offset="1" stop-color="#10B981"/></linearGradient>
+ </defs>
+ <g class="reports-art-sheet">
+ <rect x="48" y="22" width="112" height="106" rx="18" fill="url(#reportsHeroPaperMobile)" stroke="#BFDBFE" stroke-width="3"/>
+ <path d="M126 22v28h34" fill="#DBEAFE"/>
+ <path d="M126 22v28h34" fill="none" stroke="#93C5FD" stroke-width="3" stroke-linejoin="round"/>
+ <rect class="reports-art-line" x="66" y="58" width="58" height="8" rx="4" fill="#BFDBFE"/>
+ <rect class="reports-art-line" x="66" y="76" width="74" height="8" rx="4" fill="#BFDBFE"/>
+ <rect class="reports-art-line" x="66" y="94" width="46" height="8" rx="4" fill="#BFDBFE"/>
+ </g>
+ <g class="reports-art-chart">
+ <rect x="82" y="113" width="22" height="20" rx="6" fill="#60A5FA"/>
+ <rect x="112" y="98" width="22" height="35" rx="6" fill="#2563EB"/>
+ <rect x="142" y="82" width="22" height="51" rx="6" fill="url(#reportsHeroBlueMobile)"/>
+ <path d="M74 106c17-10 31-8 46-19 18-13 32-15 55-7" fill="none" stroke="#14B8A6" stroke-width="6" stroke-linecap="round"/>
+ </g>
+ <g class="reports-art-badge">
+ <circle cx="165" cy="58" r="32" fill="url(#reportsHeroAquaMobile)"/>
+ <path d="M151 58l9 9 20-25" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+ </g>
+ <path class="reports-art-spark" d="M35 52h13M41.5 45.5v13M176 122h10M181 117v10M26 108h8" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round"/>
+ </svg>
  </div>
 
  <!-- Print Header visible only when printing or mimicking paper -->
@@ -61,20 +87,20 @@
  <div class="row align-items-center text-center text-md-start">
  <div class="col-md-3 border-end" style="border-color:rgba(59, 130, 246, 0.2)!important;">
  <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:0;margin-bottom:8px;">Final Score</h6>
- <div style="font-size:3.5rem;font-weight:900;line-height:1;color:{{ $readinessSummary->color }};">{{ $readinessSummary->current }}<span style="font-size:1.5rem">%</span></div>
+ <div class="report-final-score" style="font-size:3.5rem;font-weight:900;line-height:1;color:{{ $readinessSummary->color }};">{{ $readinessSummary->current }}<span class="report-score-percent" style="font-size:1.5rem">%</span></div>
  <div class="badge mt-2 fs-6" style="background-color:{{ $readinessSummary->color }};color:#fff;">{{ $readinessSummary->rating }}</div>
  </div>
  <div class="col-md-3 border-end mt-4 mt-md-0" style="border-color:rgba(59, 130, 246, 0.2)!important;">
  <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:0;margin-bottom:8px;">Previous Score</h6>
- <div style="font-size:2rem;font-weight:700;line-height:1;color:var(--tx);">{{ $readinessSummary->previous === null? 'N/A': $readinessSummary->previous. '%' }}</div>
+ <div class="report-previous-score" style="font-size:2rem;font-weight:700;line-height:1;color:var(--tx);">{{ $readinessSummary->previous === null? 'N/A': $readinessSummary->previous. '%' }}</div>
  </div>
  <div class="col-md-6 mt-4 mt-md-0 ps-md-4">
  <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:0;margin-bottom:8px;">Readiness Change</h6>
  <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
  <i class="fa-solid {{ $readinessSummary->delta === null? 'fa-minus': ($readinessSummary->delta >= 0? 'fa-arrow-trend-up': 'fa-arrow-trend-down') }} fs-1" style="color:{{ $readinessSummary->delta_color }};"></i>
- <div style="font-size:2.5rem;font-weight:800;color:{{ $readinessSummary->delta_color }};">{{ $readinessSummary->delta_label }}</div>
+ <div class="report-readiness-delta" style="font-size:2.5rem;font-weight:800;color:{{ $readinessSummary->delta_color }};">{{ $readinessSummary->delta_label }}</div>
  </div>
- <p style="color:var(--tx);margin-top:8px;font-size:0.95rem;">{{ $readinessSummary->message }}</p>
+ <p class="report-readiness-message" style="color:var(--tx);margin-top:8px;font-size:0.95rem;">{{ $readinessSummary->message }}</p>
  </div>
  </div>
  <div class="report-summary-grid mt-4">
@@ -108,26 +134,26 @@
  <div class="row g-4 mb-4">
  <!-- Feature 2: Detailed Score Breakdown -->
  <div class="{{ $hasComparisonRows? 'col-lg-7': 'col-12' }}">
- <div class="print-card" style="padding:32px;height:100%;">
+ <div id="report-score-breakdown" class="print-card" style="padding:32px;height:100%;">
  <div class="report-section-kicker">Score details</div>
  <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 20px;"><i class="fa-solid fa-chart-simple text-primary me-2"></i>Detailed Score Breakdown</h5>
 
- <div class="row mb-4 bg-light bg-opacity-10 rounded p-3" style="background:var(--bg);">
+ <div class="row mb-4 bg-light bg-opacity-10 rounded p-3 report-score-meta-grid" style="background:var(--bg);">
  <div class="col-6 col-md-3 mb-3 mb-md-0">
  <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Scenario</small>
- <div style="color:var(--tx);font-weight:bold;">{{ $latestScenarioLabel }}</div>
+ <div class="report-score-meta-value" style="color:var(--tx);font-weight:bold;">{{ $latestScenarioLabel }}</div>
  </div>
  <div class="col-6 col-md-3 mb-3 mb-md-0">
  <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Date</small>
- <div style="color:var(--tx);font-weight:bold;">{{ $latestSession->created_at->format('M d, Y') }}</div>
+ <div class="report-score-meta-value" style="color:var(--tx);font-weight:bold;">{{ $latestSession->created_at->format('M d, Y') }}</div>
  </div>
  <div class="col-6 col-md-3">
  <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Difficulty</small>
- <div style="color:var(--tx);font-weight:bold;text-transform:capitalize;">{{ $reportSummary->difficulty }}</div>
+ <div class="report-score-meta-value" style="color:var(--tx);font-weight:bold;text-transform:capitalize;">{{ $reportSummary->difficulty }}</div>
  </div>
  <div class="col-6 col-md-3">
  <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Questions</small>
- <div style="color:var(--tx);font-weight:bold;">{{ $reportSummary->questions }}</div>
+ <div class="report-score-meta-value" style="color:var(--tx);font-weight:bold;">{{ $reportSummary->questions }}</div>
  </div>
  </div>
 
@@ -135,8 +161,8 @@
  @forelse($latestPerformanceMetrics as $metric)
  <div class="report-score-row">
  <div class="d-flex justify-content-between gap-3 mb-2">
- <span style="color:var(--tx);font-weight:800;">{{ $metric['name'] }}</span>
- <span style="color:var(--tx3);font-weight:800;">{{ $metric['score'] }}%</span>
+ <span class="report-score-name" style="color:var(--tx);font-weight:800;">{{ $metric['name'] }}</span>
+ <span class="report-score-value" style="color:var(--tx3);font-weight:800;">{{ $metric['score'] }}%</span>
  </div>
  <div class="progress">
  <div class="progress-bar bg-primary" role="progressbar" aria-label="{{ $metric['name'] }} score" aria-valuenow="{{ $metric['bar'] }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $metric['bar'] }}%;"></div>
@@ -193,8 +219,8 @@
  <!-- Feature 2: Feedback Summary Report -->
  <div class="row mb-4">
  <div class="col-12">
- <div id="report-feedback" class="print-card" style="padding:32px;">
- <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-comment-dots text-info me-2"></i>Feedback Summary Report</h5>
+ <div id="report-feedback" class="print-card report-feedback-card" style="padding:32px;">
+ <h5 class="report-panel-title" style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-comment-dots text-info me-2"></i>Feedback Summary Report</h5>
  @if($feedbackSummary->has_data)
  @php
  $strengths = $feedbackSummary->strengths?: ['None identified yet'];
@@ -202,11 +228,11 @@
  $suggestions = $feedbackSummary->suggestions?? [];
  $primaryRecommendation = ($suggestions[0]?? null)?: (($feedbackSummary->weaknesses[0]?? null)? 'Focus on your '. strtolower($feedbackSummary->weaknesses[0]): 'Maintain your strongest interview skills');
  @endphp
- <div class="row g-4">
+ <div class="row g-4 report-feedback-grid">
  <div class="col-md-4">
- <div class="p-3" style="background:rgba(16,185,129,0.05);border-radius:12px;border:1px solid rgba(16,185,129,0.2);height:100%;">
- <h6 style="color:#10b981;font-weight:bold;"><i class="fa-solid fa-check-circle me-2"></i>Strengths</h6>
- <ul style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
+ <div class="p-3 report-feedback-box report-feedback-box-strength" style="background:rgba(16,185,129,0.05);border-radius:12px;border:1px solid rgba(16,185,129,0.2);height:100%;">
+ <h6 class="report-feedback-box-title" style="color:#10b981;font-weight:bold;"><i class="fa-solid fa-check-circle me-2"></i>Strengths</h6>
+ <ul class="report-feedback-list" style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
  @foreach($strengths as $s)
  <li>{{ $s }}</li>
  @endforeach
@@ -214,9 +240,9 @@
  </div>
  </div>
  <div class="col-md-4">
- <div class="p-3" style="background:rgba(239,68,68,0.05);border-radius:12px;border:1px solid rgba(239,68,68,0.2);height:100%;">
- <h6 style="color:#ef4444;font-weight:bold;"><i class="fa-solid fa-circle-xmark me-2"></i>Areas for Improvement</h6>
- <ul style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
+ <div class="p-3 report-feedback-box report-feedback-box-improve" style="background:rgba(239,68,68,0.05);border-radius:12px;border:1px solid rgba(239,68,68,0.2);height:100%;">
+ <h6 class="report-feedback-box-title" style="color:#ef4444;font-weight:bold;"><i class="fa-solid fa-circle-xmark me-2"></i>Areas for Improvement</h6>
+ <ul class="report-feedback-list" style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
  @foreach($weaknesses as $w)
  <li>{{ $w }}</li>
  @endforeach
@@ -224,9 +250,9 @@
  </div>
  </div>
  <div class="col-md-4">
- <div class="p-3" style="background:rgba(59,130,246,0.05);border-radius:12px;border:1px solid rgba(59,130,246,0.2);height:100%;">
- <h6 style="color:#3b82f6;font-weight:bold;"><i class="fa-solid fa-lightbulb me-2"></i>Recommended Practice</h6>
- <ul style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
+ <div class="p-3 report-feedback-box report-feedback-box-practice" style="background:rgba(59,130,246,0.05);border-radius:12px;border:1px solid rgba(59,130,246,0.2);height:100%;">
+ <h6 class="report-feedback-box-title" style="color:#3b82f6;font-weight:bold;"><i class="fa-solid fa-lightbulb me-2"></i>Recommended Practice</h6>
+ <ul class="report-feedback-list" style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
  <li>{{ $primaryRecommendation }}</li>
  @forelse(array_slice($suggestions, 1, 2) as $suggestion)
  <li>{{ $suggestion }}</li>
@@ -250,37 +276,44 @@
  <!-- Feature 3: Question-by-Question Analysis -->
  <div class="row mb-4">
  <div class="col-12">
- <div id="report-question-review" class="print-card" style="padding:32px;">
- <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+ <div id="report-question-review" class="print-card report-question-review-card" style="padding:32px;">
+ <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4 report-question-review-header">
  <div>
  <div class="report-section-kicker">Answer review</div>
- <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 0;"><i class="fa-solid fa-list-check text-primary me-2"></i>Question-by-Question Analysis</h5>
+ <h5 class="report-panel-title" style="color:var(--tx);font-weight:bold;margin:4px 0 0;"><i class="fa-solid fa-list-check text-primary me-2"></i>Question-by-Question Analysis</h5>
  </div>
  @if($latestSession)
- <a href="{{ route('user.review', $latestSession->id) }}" class="btn btn-outline-primary btn-sm btn-no-print" style="border-radius:10px;font-weight:800;align-self:start;">
+ <a href="{{ route('user.review', $latestSession->id) }}" class="btn btn-outline-primary btn-sm btn-no-print report-open-full-btn" style="border-radius:10px;font-weight:800;align-self:start;">
  <i class="fa-solid fa-up-right-from-square me-1"></i>Open Full Report
  </a>
  @endif
  </div>
 
  @if($questionReviews->isNotEmpty())
- <div class="d-flex flex-column gap-3">
+ <div class="accordion report-question-list" id="reportQuestionAccordion">
  @foreach($questionReviews as $review)
- <div class="report-question-card">
- <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
- <div style="min-width:0;">
- <div class="report-section-kicker">Question {{ $review->number }}</div>
- <h6 style="color:var(--tx);font-weight:800;margin:5px 0 0;line-height:1.4;overflow-wrap:anywhere;">{{ $review->question }}</h6>
- </div>
- <div class="d-flex flex-wrap gap-2 align-items-start">
+ @php($collapseId = 'reportQuestionReview'.$loop->iteration)
+ <div class="accordion-item report-question-card">
+ <h2 class="accordion-header">
+ <button class="accordion-button collapsed report-question-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="false" aria-controls="{{ $collapseId }}">
+ <span class="report-question-card-header">
+ <span class="report-question-main">
+ <span class="report-section-kicker">Question {{ $review->number }}</span>
+ <span class="report-question-title">{{ $review->question }}</span>
+ </span>
+ <span class="report-question-chips">
  <span class="report-chip" style="color:{{ $review->score_color }};background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.18);">
  <i class="fa-solid fa-gauge-high"></i>{{ $review->score_label }}
  </span>
  <span class="report-chip" style="color:#3b82f6;background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.22);">
  <i class="fa-solid fa-clipboard-check"></i>{{ $review->status_label }}
  </span>
- </div>
- </div>
+ </span>
+ </span>
+ </button>
+ </h2>
+ <div id="{{ $collapseId }}" class="accordion-collapse collapse" data-bs-parent="#reportQuestionAccordion">
+ <div class="accordion-body report-question-body">
  <div class="row g-3">
  <div class="col-lg-5">
  <div class="report-section-kicker mb-2">User Answer</div>
@@ -289,21 +322,23 @@
  <div class="col-lg-7">
  <div class="row g-3">
  <div class="col-md-6">
- <div style="height:100%;padding:12px;border-radius:10px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);">
- <div style="color:#10b981;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:7px;"><i class="fa-solid fa-check-circle me-1"></i>Strength</div>
- <p style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;">{{ $review->strength }}</p>
+ <div class="report-question-insight report-question-insight-strength" style="height:100%;padding:12px;border-radius:10px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);">
+ <div class="report-question-insight-title" style="color:#10b981;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:7px;"><i class="fa-solid fa-check-circle me-1"></i>Strength</div>
+ <p class="report-question-insight-copy" style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;">{{ $review->strength }}</p>
  </div>
  </div>
  <div class="col-md-6">
- <div style="height:100%;padding:12px;border-radius:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);">
- <div style="color:#f59e0b;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:7px;"><i class="fa-solid fa-screwdriver-wrench me-1"></i>Improve</div>
- <p style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;">{{ $review->improvement }}</p>
+ <div class="report-question-insight report-question-insight-improve" style="height:100%;padding:12px;border-radius:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);">
+ <div class="report-question-insight-title" style="color:#f59e0b;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:7px;"><i class="fa-solid fa-screwdriver-wrench me-1"></i>Improve</div>
+ <p class="report-question-insight-copy" style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;">{{ $review->improvement }}</p>
  </div>
  </div>
  </div>
- <div class="mt-3" style="padding:12px;border-radius:10px;background:rgba(59,130,246,.055);border:1px solid rgba(59,130,246,.16);">
- <div style="color:#3b82f6;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:7px;"><i class="fa-solid fa-comment-dots me-1"></i>AI Feedback</div>
- <p style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;">{{ $review->feedback }}</p>
+ <div class="mt-3 report-question-insight report-question-insight-feedback" style="padding:12px;border-radius:10px;background:rgba(59,130,246,.055);border:1px solid rgba(59,130,246,.16);">
+ <div class="report-question-insight-title" style="color:#3b82f6;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:7px;"><i class="fa-solid fa-comment-dots me-1"></i>AI Feedback</div>
+ <p class="report-question-insight-copy" style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;">{{ $review->feedback }}</p>
+ </div>
+ </div>
  </div>
  </div>
  </div>
@@ -322,23 +357,23 @@
  <!-- Feature 4: Mistakes & Improvement Areas -->
  <div class="row mb-4">
  <div class="col-12">
- <div id="report-improvements" class="print-card" style="padding:32px;">
- <div class="report-section-kicker">Priority fixes</div>
- <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 20px;"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Mistakes &amp; Improvement Areas</h5>
+ <div id="report-improvements" class="print-card report-improvements-card" style="padding:32px;">
+ <div class="report-section-kicker report-panel-kicker">Priority fixes</div>
+ <h5 class="report-panel-title report-improvements-title" style="color:var(--tx);font-weight:bold;margin:4px 0 20px;"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Mistakes &amp; Improvement Areas</h5>
 
  @if($improvementAreas->isNotEmpty())
- <div class="row g-3">
+ <div class="row g-3 report-improvement-grid">
  @foreach($improvementAreas as $area)
  <div class="col-md-6">
  <div class="report-improvement-card">
  <div class="d-flex gap-3">
- <div style="width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.18);display:flex;align-items:center;justify-content:center;color:{{ $area->color }};">
+ <div class="report-improvement-icon" style="width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.18);display:flex;align-items:center;justify-content:center;color:{{ $area->color }};">
  <i class="fa-solid fa-arrow-trend-up"></i>
  </div>
- <div style="min-width:0;">
- <h6 style="color:var(--tx);font-weight:800;margin:0 0 7px;overflow-wrap:anywhere;">{{ $area->issue }}</h6>
- <p style="color:var(--tx3);font-size:.86rem;line-height:1.55;margin:0 0 8px;"><strong style="color:var(--tx);">Evidence:</strong> {{ $area->evidence }}</p>
- <p style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;"><strong style="color:{{ $area->color }};">Next fix:</strong> {{ $area->fix }}</p>
+ <div class="report-improvement-content" style="min-width:0;">
+ <h6 class="report-improvement-title" style="color:var(--tx);font-weight:800;margin:0 0 7px;overflow-wrap:anywhere;">{{ $area->issue }}</h6>
+ <p class="report-improvement-evidence" style="color:var(--tx3);font-size:.86rem;line-height:1.55;margin:0 0 8px;"><strong style="color:var(--tx);">Evidence:</strong> {{ $area->evidence }}</p>
+ <p class="report-improvement-fix" style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;"><strong style="color:{{ $area->color }};">Next fix:</strong> {{ $area->fix }}</p>
  </div>
  </div>
  </div>
@@ -357,43 +392,43 @@
  <!-- Feature 5: Download / Export Report -->
  <div class="row mb-4 btn-no-print">
  <div class="col-12">
- <div id="report-export" class="print-card" style="padding:32px;">
- <div class="report-section-kicker">Export options</div>
- <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 20px;"><i class="fa-solid fa-download text-success me-2"></i>Download / Export Report</h5>
- <div class="row g-3">
+ <div id="report-export" class="print-card report-export-card" style="padding:32px;">
+ <div class="report-section-kicker report-panel-kicker">Export options</div>
+ <h5 class="report-panel-title report-export-title" style="color:var(--tx);font-weight:bold;margin:4px 0 20px;"><i class="fa-solid fa-download text-success me-2"></i>Download / Export Report</h5>
+ <div class="row g-3 report-export-grid">
  <div class="col-md-4">
  <div class="report-export-choice">
  <div>
- <h6 style="color:var(--tx);font-weight:800;margin:0 0 5px;">PDF Report</h6>
- <p style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Save the full interview report view.</p>
+ <h6 class="report-export-choice-title" style="color:var(--tx);font-weight:800;margin:0 0 5px;">PDF Report</h6>
+ <p class="report-export-choice-copy" style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Save the full interview report view.</p>
  </div>
- <button type="button" class="btn btn-primary btn-sm js-export-pdf" id="exportPdfBtn"><i class="fa-solid fa-file-pdf me-1"></i>PDF</button>
- </div>
- </div>
- <div class="col-md-4">
- <div class="report-export-choice">
- <div>
- <h6 style="color:var(--tx);font-weight:800;margin:0 0 5px;">Score Sheet</h6>
- <p style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Export comparison rows to Excel.</p>
- </div>
- <button type="button" class="btn btn-success btn-sm js-export-excel" id="exportExcelBtn"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
+ <button type="button" class="btn btn-primary btn-sm js-export-pdf report-export-action" id="exportPdfBtn"><i class="fa-solid fa-file-pdf me-1"></i>PDF</button>
  </div>
  </div>
  <div class="col-md-4">
  <div class="report-export-choice">
  <div>
- <h6 style="color:var(--tx);font-weight:800;margin:0 0 5px;">Question CSV</h6>
- <p style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Download answers and feedback rows.</p>
+ <h6 class="report-export-choice-title" style="color:var(--tx);font-weight:800;margin:0 0 5px;">Score Sheet</h6>
+ <p class="report-export-choice-copy" style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Export comparison rows to Excel.</p>
+ </div>
+ <button type="button" class="btn btn-success btn-sm js-export-excel report-export-action" id="exportExcelBtn"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
+ </div>
+ </div>
+ <div class="col-md-4">
+ <div class="report-export-choice">
+ <div>
+ <h6 class="report-export-choice-title" style="color:var(--tx);font-weight:800;margin:0 0 5px;">Question CSV</h6>
+ <p class="report-export-choice-copy" style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Download answers and feedback rows.</p>
  </div>
  @if($latestSession)
- <a href="{{ route('user.sessions.export', $latestSession) }}" class="btn btn-outline-primary btn-sm"><i class="fa-solid fa-table me-1"></i>CSV</a>
+ <a href="{{ route('user.sessions.export', $latestSession) }}" class="btn btn-outline-primary btn-sm report-export-action"><i class="fa-solid fa-table me-1"></i>CSV</a>
  @else
- <button type="button" class="btn btn-outline-secondary btn-sm" disabled><i class="fa-solid fa-table me-1"></i>CSV</button>
+ <button type="button" class="btn btn-outline-secondary btn-sm report-export-action" disabled><i class="fa-solid fa-table me-1"></i>CSV</button>
  @endif
  </div>
  </div>
  </div>
- <button type="button" class="btn btn-outline-secondary btn-sm mt-3 js-print-report btn-no-print" style="border-radius:10px;font-weight:800;">
+ <button type="button" class="btn btn-outline-secondary btn-sm mt-3 js-print-report btn-no-print report-print-btn" style="border-radius:10px;font-weight:800;">
  <i class="fa-solid fa-print me-1"></i>Print Report
  </button>
  <p class="report-export-status" id="reportExportStatus" role="status" aria-live="polite" hidden></p>

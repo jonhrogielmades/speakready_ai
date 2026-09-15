@@ -1422,6 +1422,7 @@ class InterviewController extends Controller
  $retry->refresh();
  $coachingHtml = $this->mobileView('partials.interview-answer-coaching', [
  'answer' => $retry,
+ 'sessionRecord' => $session,
  ])->render();
 
  ActivityLogger::log(
@@ -1441,6 +1442,8 @@ class InterviewController extends Controller
  'grammar_score' => $retry->grammar_score?? 0,
  'confidence_score' => $retry->confidence_score?? 0,
  'delivery_stability_score' => $retry->delivery_stability_score,
+ 'response_mode' => $retry->response_mode?: 'text',
+ 'voice_duration' => $retry->voice_duration?? 0,
  'scoring_confidence' => $retry->scoring_confidence,
  'rubric_level' => $retry->rubric_level,
  'evidence_map' => $retry->evidence_map,

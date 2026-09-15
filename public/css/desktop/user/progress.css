@@ -10313,3 +10313,88 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-t
     margin: 0 !important;
     font-size: 0.68rem !important;
 }
+
+/* Give the top desktop progress charts enough room to read at a glance. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-chart-panel {
+        min-height: 400px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-frame,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-chart-frame {
+        height: 320px !important;
+        min-height: 320px !important;
+        max-height: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-frame canvas,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-chart-frame canvas {
+        height: 100% !important;
+        min-height: 100% !important;
+        max-height: none !important;
+    }
+}
+
+/* Desktop history cards need explicit placement; compact generic grid rules squeeze
+   the date and action into a 30px column otherwise. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-card {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) max-content !important;
+        grid-template-areas:
+            "date meta"
+            "scenario meta"
+            "actions actions" !important;
+        align-items: start !important;
+        column-gap: 16px !important;
+        row-gap: 6px !important;
+        min-height: 124px !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-date {
+        grid-area: date !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-date i {
+        flex: 0 0 auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-scenario {
+        grid-area: scenario !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-meta {
+        grid-area: meta !important;
+        justify-self: end !important;
+        min-width: max-content !important;
+        max-width: 100% !important;
+        text-align: left !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-card-actions {
+        grid-area: actions !important;
+        justify-content: center !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin-top: 6px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-feedback-btn {
+        width: auto !important;
+        max-width: 100% !important;
+        min-width: 124px !important;
+        padding-inline: 12px !important;
+    }
+}

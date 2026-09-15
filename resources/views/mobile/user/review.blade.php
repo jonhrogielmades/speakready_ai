@@ -2,7 +2,7 @@
 @section('title', 'Detailed Review')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=7') }}" data-page-style="user-review">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=8') }}" data-page-style="user-review">
 @endpush
 
 @section('content')
@@ -210,12 +210,12 @@
  @php
  $retryAttempts = $answer->retryAttempts?? collect();
  @endphp
- @if($retryAttempts->count() > 0)
- <div class="mt-4 p-4" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:12px;">
+ <div class="practice-attempts-panel mt-4 p-4" id="retry-attempts-{{ $answer->id }}" @if($retryAttempts->isEmpty()) hidden @endif>
  <h6 style="color:#10b981;font-weight:800;margin-bottom:12px;"><i class="fa-solid fa-rotate me-2"></i>Practice Attempts</h6>
- <div class="d-flex flex-column gap-2">
+ <div class="d-flex flex-column gap-3" id="retry-attempt-list-{{ $answer->id }}">
  @foreach($retryAttempts as $retry)
- <div class="d-flex flex-column flex-md-row justify-content-between gap-2" style="color:var(--tx);border-bottom:1px solid var(--bd);padding-bottom:10px;">
+ <div class="retry-attempt-entry" data-retry-attempt="{{ $retry->attempt_number }}">
+ <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
  <div>
  <strong>Attempt {{ $retry->attempt_number }}</strong>
  <div style="color:var(--tx3);font-size:.85rem;">{{ $retry->created_at?->format('M d, Y g:i A') }}</div>
@@ -230,10 +230,11 @@
  @if($retry->ai_feedback)
  <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">{{ $retry->ai_feedback }}</p>
  @endif
+ @include('mobile.partials.interview-answer-coaching', ['answer' => $retry, 'sessionRecord' => $sessionRecord])
+ </div>
  @endforeach
  </div>
  </div>
- @endif
 
  @if(!$sessionEndedEarly)
  <div class="answer-retry-action">
@@ -253,14 +254,14 @@
  </div>
  <textarea class="oinp retry-textarea" id="retry-text-{{ $answer->id }}" rows="5" style="font-size:.95rem;" placeholder="Type your improved answer here..." onfocus="startRetryTimer({{ $answer->id }})" oninput="updateRetryWordCount({{ $answer->id }})"></textarea>
  <div class="d-flex flex-column flex-md-row gap-2 mt-3">
- <button type="button" class="btn btn-outline-secondary" style="border-radius:12px;font-weight:700;" onclick="prefillRetry({{ $answer->id }}, @js($answer->better_sample_answer?: ''))">
+ <button type="button" class="btn btn-outline-secondary" style="border-radius:12px;font-weight:700;" onclick="prefillRetry({{ $answer->id }}, @js($answer->better_sample_answer?: ''), @js($answer->answer_text?: ''))">
  <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Use Better Draft
  </button>
- <button type="button" class="btn btn-primary" style="border-radius:12px;font-weight:700;" onclick="submitRetry({{ $answer->id }})">
+ <button type="button" class="btn btn-primary" id="retry-submit-{{ $answer->id }}" style="border-radius:12px;font-weight:700;" onclick="submitRetry({{ $answer->id }})">
  <i class="fa-solid fa-paper-plane me-1"></i>Submit Attempt
  </button>
  </div>
- <div class="mt-3" id="retry-result-{{ $answer->id }}" style="display:none;"></div>
+ <div class="mt-3" id="retry-result-{{ $answer->id }}" style="display:none;" aria-live="polite"></div>
  </div>
  </div>
  @endif
@@ -448,12 +449,109 @@ function updateRetryWordCount(answerId) {
  if (target) target.innerText = `${words} words`;
 }
 
-function prefillRetry(answerId, draft) {
+function retryRenderedCoachingHtml(data) {
+ const serverHtml = String(data?.coaching_html || '').trim();
+ if (serverHtml) return `<div class="retry-server-coaching">${serverHtml}</div>`;
+ return retryCoachingHtml(data?.coaching_feedback);
+}
+
+function retryDeliveryChip(data) {
+ return data.delivery_stability_score === null || data.delivery_stability_score === undefined
+ ? ''
+ : `<span class="retry-chip">Pacing ${retryEscape(data.delivery_stability_score)}%</span>`;
+}
+
+function retryResultCard(data) {
+ const coachingHtml = retryRenderedCoachingHtml(data);
+ return `
+ <div class="retry-result-card">
+ <div class="d-flex flex-wrap gap-2 mb-2">
+ <span class="retry-chip">Attempt ${retryEscape(data.attempt_number)}</span>
+ <span class="retry-chip">Score ${retryEscape(data.score)}%</span>
+ ${retryDeliveryChip(data)}
+ </div>
+ <p style="margin:0;color:var(--tx2);line-height:1.6;">${retryEscape(data.ai_feedback || 'Feedback is ready for this attempt.')}</p>
+ ${coachingHtml}
+ </div>
+ `;
+}
+
+function retryAttemptHistoryHtml(data) {
+ const coachingHtml = retryRenderedCoachingHtml(data);
+ return `
+ <div class="retry-attempt-entry" data-retry-attempt="${retryEscape(data.attempt_number)}">
+ <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
+ <div>
+ <strong>Attempt ${retryEscape(data.attempt_number)}</strong>
+ <div style="color:var(--tx3);font-size:.85rem;">${retryEscape(data.created_at || 'Just now')}</div>
+ </div>
+ <div class="retry-meta">
+ <span class="retry-chip">Score ${retryEscape(data.score)}%</span>
+ ${retryDeliveryChip(data)}
+ </div>
+ </div>
+ <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">${retryEscape(data.ai_feedback || 'Feedback is ready for this attempt.')}</p>
+ ${coachingHtml}
+ </div>
+ `;
+}
+
+function appendRetryAttempt(answerId, data) {
+ const panel = document.getElementById(`retry-attempts-${answerId}`);
+ const list = document.getElementById(`retry-attempt-list-${answerId}`);
+ if (!panel || !list) return;
+ panel.hidden = false;
+ list.insertAdjacentHTML('beforeend', retryAttemptHistoryHtml(data));
+}
+
+function showRetryMessage(answerId, message, type = 'info') {
+ const result = document.getElementById(`retry-result-${answerId}`);
+ if (!result) return;
+ result.style.display = 'block';
+ result.innerHTML = `<div class="alert alert-${type} mb-0">${retryEscape(message)}</div>`;
+}
+
+function setRetrySubmitting(answerId, submitting) {
+ const button = document.getElementById(`retry-submit-${answerId}`);
+ if (!button) return;
+ if (submitting) {
+ button.dataset.originalHtml = button.innerHTML;
+ button.disabled = true;
+ button.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-1"></i>Checking...';
+ return;
+ }
+ button.disabled = false;
+ if (button.dataset.originalHtml) {
+ button.innerHTML = button.dataset.originalHtml;
+ }
+}
+
+async function readRetryResponse(response) {
+ const contentType = response.headers.get('content-type') || '';
+ const data = contentType.includes('application/json')? await response.json(): {};
+ if (!response.ok) {
+ const validationMessage = Object.values(data.errors || {}).flat()[0];
+ throw new Error(data.message || data.error || validationMessage || `Practice attempt failed (${response.status}).`);
+ }
+ return data;
+}
+
+function prefillRetry(answerId, draft, fallback = '') {
  const textarea = document.getElementById(`retry-text-${answerId}`);
- if (!textarea ||!draft) return;
- textarea.value = draft;
+ if (!textarea) return;
+ const selectedDraft = String(draft || '').trim();
+ const fallbackDraft = String(fallback || '').trim();
+ const nextValue = selectedDraft || fallbackDraft;
+ if (!nextValue) {
+ showRetryMessage(answerId, 'No saved draft is available for this answer yet.', 'warning');
+ return;
+ }
+ textarea.value = nextValue;
  updateRetryWordCount(answerId);
  textarea.focus();
+ if (!selectedDraft && fallbackDraft) {
+ showRetryMessage(answerId, 'No better draft was available, so your saved answer was loaded for editing.', 'info');
+ }
 }
 
 function submitRetry(answerId) {
@@ -464,10 +562,12 @@ function submitRetry(answerId) {
 
  const text = textarea.value.trim();
  if (!text) {
- result.style.display = 'block';
- result.innerHTML = '<div class="alert alert-warning mb-0">Please enter your improved answer first.</div>';
- return;
+ showRetryMessage(answerId, 'Please enter your improved answer first.', 'warning');
+  return;
  }
+
+ const submitButton = document.getElementById(`retry-submit-${answerId}`);
+ if (submitButton?.disabled) return;
 
  const elapsed = retryElapsed(answerId);
  const words = text.split(/\s+/).filter(Boolean).length;
@@ -491,28 +591,20 @@ function submitRetry(answerId) {
 
  result.style.display = 'block';
  result.innerHTML = '<div class="alert alert-info mb-0"><i class="fa-solid fa-circle-notch fa-spin me-1"></i>Checking attempt...</div>';
+ setRetrySubmitting(answerId, true);
 
  fetch(panel.dataset.url, {
  method: 'POST',
  body: formData,
  headers: { 'X-Requested-With': 'XMLHttpRequest' }
- }).then(res => res.json()).then(data => {
+ }).then(readRetryResponse).then(data => {
  if (!data.success) throw new Error(data.error || 'Practice attempt failed');
- const deliveryChip = data.delivery_stability_score === null || data.delivery_stability_score === undefined? '': `<span class="retry-chip">Pacing ${retryEscape(data.delivery_stability_score)}%</span>`;
- const coachingHtml = retryCoachingHtml(data.coaching_feedback);
- result.innerHTML = `
- <div class="p-3" style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:12px;color:var(--tx);">
- <div class="d-flex flex-wrap gap-2 mb-2">
- <span class="retry-chip">Attempt ${retryEscape(data.attempt_number)}</span>
- <span class="retry-chip">Score ${retryEscape(data.score)}%</span>
- ${deliveryChip}
- </div>
- <p style="margin:0;color:var(--tx2);line-height:1.6;">${retryEscape(data.ai_feedback || 'Feedback is ready for this attempt.')}</p>
- ${coachingHtml}
- </div>
- `;
+ appendRetryAttempt(answerId, data);
+ result.innerHTML = retryResultCard(data);
  }).catch(error => {
  result.innerHTML = `<div class="alert alert-danger mb-0">${retryEscape(error.message || 'Practice attempt failed.')}</div>`;
+ }).finally(() => {
+ setRetrySubmitting(answerId, false);
  });
 }
 </script>
