@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=41') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=53') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -91,13 +91,6 @@
  <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">{{ $initialQuestionCounter }}</span>
  </div>
  <span class="badge interviewer-panel-badge"><i class="fa-solid fa-bolt me-1"></i> interviewer</span>
- @if(($sessionRecord->live_feedback_mode?? 'coaching') !== 'real_interview')
- <button type="button" id="aiCoachHeadButton" class="ai-coach-head-button coaching-only" onclick="toggleAiCoachPanel()" aria-label="Open AI Coach possible answer" aria-controls="aiCoachPanel" aria-expanded="false" title="AI Coach possible answer">
- <i class="fa-solid fa-head-side-brain" aria-hidden="true"></i>
- <span class="ai-coach-head-label">AI Coach</span>
- </button>
- @endif
-
  <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);">
  <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;--avatar-ring-color:#8b5cf6;">
  <!-- The Image Container (with border, glow, and clipping for the image itself) -->
@@ -121,7 +114,6 @@
  <div class="question-caption-overlay" aria-live="polite" aria-atomic="true">
  <div id="questionCaptionText" class="question-caption-line" style="color:#ffffff;-webkit-text-fill-color:#ffffff;text-shadow:0 2px 6px rgba(0,0,0,0.92),0 0 10px rgba(0,0,0,0.65);"></div>
  </div>
- </div>
 
  <div id="aiQuestionText" class="visually-hidden" aria-hidden="true">Loading your first question...</div>
 
@@ -129,10 +121,21 @@
  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
  <!-- Left: Navigation / Secondary -->
  <div class="d-flex gap-2 w-100 flex-fill">
- <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
- <button type="button" class="btn btn-outline-danger flex-fill" onclick="requestAbortInterviewSession()" style="border-radius:12px;"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
+ <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question"><i class="fa-solid fa-volume-high" aria-hidden="true"></i></button>
+ <button type="button" class="btn btn-outline-danger flex-fill" onclick="requestAbortInterviewSession()" style="border-radius:12px;" aria-label="End session" title="End session"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i></button>
  </div>
  
+ </div>
+ <div id="answerTranscriptControls" class="answer-transcript-controls" aria-label="Voice recording controls" hidden>
+ <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
+ <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
+ <div class="d-flex gap-2">
+ <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i></button>
+ <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
+ </div>
+ </div>
+ <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
+ </div>
  </div>
  </div>
 
@@ -147,6 +150,12 @@
  @if($sessionRecord->game_level_id)
  <span class="badge" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> GAME MODE</span>
  @endif
+ @if(($sessionRecord->live_feedback_mode?? 'coaching') !== 'real_interview')
+ <button type="button" id="aiCoachHeadButton" class="ai-coach-head-button response-ai-coach-toggle coaching-only" onclick="toggleAiCoachPanel()" aria-label="Open AI Coach possible answer" aria-controls="aiCoachPanel" aria-expanded="false" title="AI Coach possible answer">
+ <i class="fa-solid fa-head-side-brain" aria-hidden="true"></i>
+ <span class="ai-coach-head-label">AI Coach</span>
+ </button>
+ @endif
  <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleMobileFullscreen()" aria-label="Exit fullscreen" title="Exit fullscreen">
  <i class="fa-solid fa-compress"></i>
  </button>
@@ -157,8 +166,6 @@
  </div>
  
  <form id="answerForm">
- <!-- Voice controls sit below the transcript textarea. -->
-
  <div id="chatTranscriptContainer" style="max-height: none; overflow: visible; padding: 0; margin-bottom: 12px; background: transparent; border: 0; display: none; flex-direction: column; gap: 10px;"></div>
  <label for="answerTextarea" class="visually-hidden">Your interview answer</label>
  <div id="responseModeLockNotice" class="response-mode-lock-notice" hidden>
@@ -171,17 +178,6 @@
  <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
  </div>
  </div>
- <div id="answerTranscriptControls" class="answer-transcript-controls" aria-label="Voice recording controls" hidden>
- <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
- <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
- <div class="d-flex gap-2">
- <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i></button>
- <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
- </div>
- </div>
- <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
- </div>
- 
  <div class="response-autosave-row">
  <span id="autoSaveIndicator" class="text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
  </div>
@@ -222,6 +218,8 @@
  </div>
  @endif
 
+ <!-- Bottom mobile buttons moved to unified control panel above -->
+ </form>
  <div id="aiCoachPanel" class="ai-coach-answer-panel coaching-only" hidden data-state="idle">
  <div class="ai-coach-answer-header">
  <div class="ai-coach-answer-title">
@@ -235,9 +233,6 @@
  <div id="aiCoachStatus" class="ai-coach-answer-meta">Possible answer</div>
  <div id="aiCoachAnswerText" class="ai-coach-answer-text" aria-live="polite" aria-label="AI Coach possible answer" draggable="false" oncopy="return false" oncut="return false" onpaste="return false" oncontextmenu="return false" ondragstart="return false" onselectstart="return false"></div>
  </div>
-
- <!-- Bottom mobile buttons moved to unified control panel above -->
- </form>
  </div>
  </div>
  </div>
@@ -543,6 +538,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let isRecordingPaused = false;
  let recTimerSeconds = 0;
  let recTimerInterval;
+ let recTimerWatchdogInterval;
  let recTimerStartedAt = 0;
  let recTimerBaseSeconds = 0;
  let recordingStartPromise = null;
@@ -1027,9 +1023,15 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function setTranscriptionStatus(message, color = 'var(--tx3)') {
  const status = document.getElementById('transcriptionStatus');
  if (!status) return;
- status.textContent = message || '';
+ status.dataset.message = String(message || '');
+ status.textContent = '';
  status.style.color = color;
- status.style.display = message? 'inline-block': 'none';
+ status.style.display = 'none';
+ }
+
+ function currentTranscriptionStatusMessage() {
+ const status = document.getElementById('transcriptionStatus');
+ return status?.dataset?.message || '';
  }
 
  function voiceSessionRecorderSupported() {
@@ -4331,19 +4333,21 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  showSessionNotice(isVoiceOnlyMode()? `${message} Voice Mode needs microphone recording.`: `${message} You can type your answer instead.`, 'warning');
  } else if (transcriptionEngine === 'server') {
  setVoiceControlsEnabled(true);
- setTranscriptionStatus('Recording ready - live transcript will appear in the answer box');
+ setTranscriptionStatus('');
  } else if (isVoiceOnlyMode()) {
  setVoiceControlsEnabled(true);
  setTranscriptionStatus('Voice-only mode. Text transcription is off.');
  } else {
  setVoiceControlsEnabled(true);
  if (isHybridTranscriptionMode()) {
- setTranscriptionStatus('Recording ready - live transcript will appear in the answer box');
+ setTranscriptionStatus('');
  }
  }
  } else {
  applyResponseModeUi();
  }
+
+ window.dispatchEvent(new CustomEvent('speakready:interview-session-started'));
 
  timerInterval = setInterval(() => {
  timerSeconds++;
@@ -4764,7 +4768,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  answerState.wpm = wpm;
  }
 
+ if (force || secondsChanged) {
  renderVoiceSessionPanel();
+ }
 
  if (secondsChanged) scheduleRecordingTimerSideEffects(previousSeconds);
 
@@ -4778,35 +4784,64 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const analysisSecond = recTimerSeconds;
  setTimeout(() => {
  if (!isRecording || recTimerSeconds < analysisSecond) return;
+ try {
  triggerAnalysis();
+ } catch (error) {
+ console.warn('Live recording analysis update failed:', error);
+ }
 
  // Optional body-language detection is descriptive and never affects readiness scoring.
  if (cameraDetectionEnabled) {
+ try {
  trackBodyLanguageDetection();
+ } catch (error) {
+ console.warn('Body-language detection update failed:', error);
+ }
  }
  }, 50);
  }
 
- function startRecordingTimer(startedAt = null) {
+ function runRecordingTimerTick(force = false) {
+ try {
+ syncRecordingTimerDisplay(force);
+ } catch (error) {
+ console.warn('Recording timer update failed:', error);
+ recTimerSeconds = currentRecordingTimerSeconds();
+ const timer = document.getElementById('recordingTimer');
+ if (timer) timer.innerText = formatRecordingTimer(recTimerSeconds);
+ }
+ }
+
+ function stopRecordingTimerIntervals() {
  clearInterval(recTimerInterval);
+ clearInterval(recTimerWatchdogInterval);
+ recTimerInterval = null;
+ recTimerWatchdogInterval = null;
+ }
+
+ function startRecordingTimer(startedAt = null) {
+ stopRecordingTimerIntervals();
  recTimerBaseSeconds = recTimerSeconds;
  const startedAtMs = Number(startedAt) || recordingTimerNow();
  recTimerStartedAt = startedAtMs;
- syncRecordingTimerDisplay(true);
- recTimerInterval = setInterval(() => syncRecordingTimerDisplay(), 250);
+ runRecordingTimerTick(true);
+ recTimerInterval = setInterval(runRecordingTimerTick, 250);
+ recTimerWatchdogInterval = setInterval(() => {
+ if (!isRecording) return;
+ if (!recTimerInterval) recTimerInterval = setInterval(runRecordingTimerTick, 250);
+ runRecordingTimerTick();
+ }, 1000);
  }
 
  function pauseRecordingTimer() {
- syncRecordingTimerDisplay(true);
- clearInterval(recTimerInterval);
- recTimerInterval = null;
+ runRecordingTimerTick(true);
+ stopRecordingTimerIntervals();
  recTimerBaseSeconds = recTimerSeconds;
  recTimerStartedAt = 0;
  }
 
  function resetRecordingTimer() {
- clearInterval(recTimerInterval);
- recTimerInterval = null;
+ stopRecordingTimerIntervals();
  recTimerStartedAt = 0;
  recTimerBaseSeconds = 0;
  voiceSessionRecordingStartedAt = 0;
@@ -4857,7 +4892,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  if (!voiceOnly &&!await ensureMicrophoneReady(engine)) {
  if(!silent) {
- const message = document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage();
+ const message = currentTranscriptionStatusMessage() || transcriptionUnavailableMessage();
  showSessionNotice(`${message} You can type your answer instead.`);
  }
  return false;
@@ -4893,7 +4928,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  isRecording = false;
  isRecordingPaused = false;
  await stopVoiceSessionRecorder({ discard: true, skipStartWait: true });
- const message = document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage();
+ const message = currentTranscriptionStatusMessage() || transcriptionUnavailableMessage();
  setVoiceControlsEnabled(false, message);
  if(!silent) showSessionNotice(`${message} You can type your answer instead.`);
  return false;
@@ -5350,10 +5385,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  clearTimeout(stateSaveDebounce);
  clearInterval(timerInterval);
  clearInterval(questionTimerInterval);
- clearInterval(recTimerInterval);
+ stopRecordingTimerIntervals();
  questionTimerInterval = null;
  timerInterval = null;
- recTimerInterval = null;
  questionStartedAt = null;
  shouldAutoRestartRecognition = false;
 
@@ -5887,39 +5921,72 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const stepsMobile = [
- { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'bottom', align: 'start' }},
- { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
- { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness scoring.', side: 'top', align: 'start' }}
+ { element: '#interviewStartModal.active .interview-start-dialog', popover: { title: 'Session Preview', description: 'Review the scenario, response mode, coaching level, question count, and camera setting before entering the room.', side: 'bottom', align: 'center' }},
+ { element: '#interviewStartModal.active #confirmInterviewStartButton', popover: { title: 'Begin When Ready', description: 'Start or resume the interview after the setup summary looks right.', side: 'top', align: 'center' }},
+ { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'Questions appear here with the interviewer avatar, caption area, timer, and quick controls.', side: 'bottom', align: 'start' }},
+ { element: '#interviewControls', popover: { title: 'Question Controls', description: 'Repeat the current question or end the session from this compact control strip.', side: 'top', align: 'center' }},
+ { element: '#answerTranscriptControls:not([hidden])', popover: { title: 'Voice Controls', description: 'In Voice or Hybrid mode, use these buttons to pause or stop recording while the timer tracks your answer.', side: 'top', align: 'center' }},
+ { element: '.response-panel', popover: { title: 'Your Response', description: 'Type, speak, or edit your answer here. Word and character counts update as you work.', side: 'top', align: 'start' }},
+ { element: '.response-title-actions', popover: { title: 'Submit Tools', description: 'Send your answer, open fullscreen, or access coaching tools when they are available.', side: 'top', align: 'center' }},
+ { element: '#aiCoachHeadButton', popover: { title: 'AI Coach', description: 'In coaching mode, this opens a possible-answer panel for guidance without submitting anything for you.', side: 'top', align: 'center' }},
+ { element: '.desktop-camera-pip, .mobile-camera-pip, #cameraPanel', popover: { title: 'Camera Detection', description: 'If enabled, camera detection checks local framing and posture cues for coaching only. It is excluded from readiness scoring.', side: 'top', align: 'center' }}
  ];
 
  const stepsDesktop = [
- { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'right', align: 'start' }},
- { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
- { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness scoring.', side: 'left', align: 'start' }}
+ { element: '#interviewStartModal.active .interview-start-dialog', popover: { title: 'Session Preview', description: 'Review the scenario, response mode, coaching level, question count, and camera setting before entering the room.', side: 'bottom', align: 'center' }},
+ { element: '#interviewStartModal.active #confirmInterviewStartButton', popover: { title: 'Begin When Ready', description: 'Start or resume the interview after the setup summary looks right.', side: 'top', align: 'center' }},
+ { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'Questions appear here with the interviewer avatar, caption area, timer, and quick controls.', side: 'right', align: 'start' }},
+ { element: '#interviewControls', popover: { title: 'Question Controls', description: 'Repeat the current question or end the session from this compact control strip.', side: 'top', align: 'center' }},
+ { element: '#answerTranscriptControls:not([hidden])', popover: { title: 'Voice Controls', description: 'In Voice or Hybrid mode, use these buttons to pause or stop recording while the timer tracks your answer.', side: 'top', align: 'center' }},
+ { element: '.response-panel', popover: { title: 'Your Response', description: 'Type, speak, or edit your answer here. Word and character counts update as you work.', side: 'left', align: 'start' }},
+ { element: '.response-title-actions', popover: { title: 'Submit Tools', description: 'Send your answer, open fullscreen, or access coaching tools when they are available.', side: 'bottom', align: 'end' }},
+ { element: '#aiCoachHeadButton', popover: { title: 'AI Coach', description: 'In coaching mode, this opens a possible-answer panel for guidance without submitting anything for you.', side: 'bottom', align: 'center' }},
+ { element: '.desktop-camera-pip, .mobile-camera-pip, #cameraPanel', popover: { title: 'Camera Detection', description: 'If enabled, camera detection checks local framing and posture cues for coaching only. It is excluded from readiness scoring.', side: 'bottom', align: 'center' }}
  ];
+ const sessionTourCompletionKey = 'onboarding_completed_interview_session';
 
  const onboardingTour = window.createSpeakReadyTour({
- completionKey: 'onboarding_completed_interview_session',
+ completionKey: sessionTourCompletionKey,
  serverDetectedMobile: false,
- stepsMobile: stepsMobile.filter(step => document.querySelector(step.element)),
- stepsDesktop: stepsDesktop.filter(step => document.querySelector(step.element)),
+ stepsMobile: stepsMobile,
+ stepsDesktop: stepsDesktop,
  autoStart: false,
+ startDelay: 80,
+ onBeforeDestroy: () => {
+ if (isInterviewWorkspaceVisible()) return;
+
+ try {
+ localStorage.removeItem(sessionTourCompletionKey);
+ } catch (error) {
+ console.warn('Unable to keep session tutorial incomplete before start:', error);
+ }
+ },
  });
- 
- // Expose startOnboardingTour to be called after interview starts
- const originalStartInterview = window.startInterviewSession;
- window.startInterviewSession = function() {
- if (typeof originalStartInterview === 'function') {
- originalStartInterview.apply(this, arguments);
+
+ let sessionTourAutoStartTimer = null;
+
+ function isInterviewWorkspaceVisible() {
+ const workspace = document.getElementById('workspaceWrapper');
+ if (!workspace) return false;
+ const style = window.getComputedStyle(workspace);
+ return style.display !== 'none' && workspace.getClientRects().length > 0;
  }
 
- const shouldAutoStartTour =!window.matchMedia('(max-width: 767px)').matches;
- if (shouldAutoStartTour && onboardingTour &&!onboardingTour.isCompleted()) {
- setTimeout(() => {
+ function scheduleInterviewSessionTour(delay = 900) {
+ if (!onboardingTour || onboardingTour.isCompleted() || sessionTourAutoStartTimer) return;
+
+ sessionTourAutoStartTimer = window.setTimeout(() => {
+ sessionTourAutoStartTimer = null;
+ if (!isInterviewWorkspaceVisible() || onboardingTour.isCompleted()) return;
  onboardingTour.start();
- }, 1000);
+ }, delay);
  }
- };
+
+ window.addEventListener('speakready:interview-session-started', () => scheduleInterviewSessionTour());
+
+ if (isInterviewWorkspaceVisible()) {
+ scheduleInterviewSessionTour(500);
+ }
  });
 </script>
 @endpush

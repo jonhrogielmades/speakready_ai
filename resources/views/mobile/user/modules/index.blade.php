@@ -246,6 +246,43 @@
  }
 
  });
+
+ document.addEventListener('DOMContentLoaded', function() {
+ if (typeof window.createSpeakReadyTour!== 'function') return;
+
+ const stepsMobile = [
+ { element: '#modulePositionModal.show .modal-content', popover: { title: 'Choose Your Module Focus', description: 'Pick the target position so modules can match the interview path you are preparing for.', side: 'bottom', align: 'center' }},
+ { element: '#modulePositionModal.show #moduleTargetPositionButton, #modulePositionModal.show #moduleTargetPosition', popover: { title: 'Target Position', description: 'Select the role or program you want these modules to support.', side: 'bottom', align: 'start' }},
+ { element: '#modulePositionModal.show .module-position-submit-btn, #modulePositionModal.show .modal-footer .btn-primary', popover: { title: 'View Related Modules', description: 'Load modules connected to that target position.', side: 'top', align: 'center' }},
+ { element: 'body:not(.modal-open) #interview-modules-page .modules-page-hero, body:not(.modal-open) #interview-modules-page .modules-hero', popover: { title: 'Interview Modules', description: 'Use modules for focused preparation tasks like planning examples, improving structure, and polishing interview answers.', side: 'bottom', align: 'center' }},
+ { element: 'body:not(.modal-open) .module-position-strip', popover: { title: 'Target Position', description: 'This controls which role-specific modules appear. Change it whenever your interview target changes.', side: 'bottom', align: 'center' }},
+ { element: 'body:not(.modal-open) #moduleFiltersForm', popover: { title: 'Find A Module', description: 'Search by topic or skill, or filter by module category to narrow the list.', side: 'bottom', align: 'center' }},
+ { element: 'body:not(.modal-open) .module-smart-row', popover: { title: 'Smart Suggestions', description: 'Recommendations and learning paths pull from your interview performance and module progress when available.', side: 'top', align: 'center' }},
+ { element: 'body:not(.modal-open) .modules-card-grid', popover: { title: 'Module Library', description: 'Browse the module cards to find concrete preparation work for your next interview.', side: 'top', align: 'center' }},
+ { element: 'body:not(.modal-open) .module-card-link', popover: { title: 'Open Action Module', description: 'Open a module to work through its preparation actions and update your progress.', side: 'top', align: 'center' }}
+ ];
+
+ const stepsDesktop = [
+ { element: '#modulePositionModal.show .modal-content', popover: { title: 'Choose Your Module Focus', description: 'Pick the target position so modules can match the interview path you are preparing for.', side: 'bottom', align: 'center' }},
+ { element: '#modulePositionModal.show #moduleTargetPositionButton, #modulePositionModal.show #moduleTargetPosition', popover: { title: 'Target Position', description: 'Select the role or program you want these modules to support.', side: 'bottom', align: 'start' }},
+ { element: '#modulePositionModal.show .module-position-submit-btn, #modulePositionModal.show .modal-footer .btn-primary', popover: { title: 'View Related Modules', description: 'Load modules connected to that target position.', side: 'top', align: 'center' }},
+ { element: 'body:not(.modal-open) #interview-modules-page .modules-page-hero, body:not(.modal-open) #interview-modules-page .modules-hero', popover: { title: 'Interview Modules', description: 'Use modules for focused preparation tasks like planning examples, improving structure, and polishing interview answers.', side: 'bottom', align: 'center' }},
+ { element: 'body:not(.modal-open) .module-position-strip', popover: { title: 'Target Position', description: 'This controls which role-specific modules appear. Change it whenever your interview target changes.', side: 'bottom', align: 'center' }},
+ { element: 'body:not(.modal-open) #moduleFiltersForm', popover: { title: 'Find A Module', description: 'Search by topic or skill, or filter by module category to narrow the list.', side: 'bottom', align: 'center' }},
+ { element: 'body:not(.modal-open) .module-smart-row', popover: { title: 'Smart Suggestions', description: 'Recommendations and learning paths pull from your interview performance and module progress when available.', side: 'top', align: 'center' }},
+ { element: 'body:not(.modal-open) .modules-card-grid', popover: { title: 'Module Library', description: 'Browse the module cards to find concrete preparation work for your next interview.', side: 'top', align: 'center' }},
+ { element: 'body:not(.modal-open) .module-card-link', popover: { title: 'Open Action Module', description: 'Open a module to work through its preparation actions and update your progress.', side: 'top', align: 'center' }}
+ ];
+
+ window.createSpeakReadyTour({
+ completionKey: 'onboarding_completed_interview_modules',
+ serverDetectedMobile: true,
+ stepsMobile,
+ stepsDesktop,
+ autoStart: false,
+ autoStartDelay: 500,
+ });
+ });
 </script>
 @endpush
 @endsection

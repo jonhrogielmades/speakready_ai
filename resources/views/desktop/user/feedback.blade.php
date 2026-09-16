@@ -361,20 +361,48 @@
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const stepsMobile = [
- { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, strengths, focus area, and next practice.', side: 'bottom', align: 'start' }},
- { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review each latest answer with the answer text, feedback, and next practice.', side: 'bottom', align: 'start' }},
- { element: '#feedbackPracticeRecommendations', popover: { title: 'Next Practice', description: 'Choose a module, drill, challenge, or interview action based on the feedback patterns.', side: 'bottom', align: 'start' }},
- { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by scenario or search keywords to find a specific feedback record.', side: 'bottom', align: 'start' }},
- { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past practice interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
+ { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to turn completed interviews into strengths, focus areas, and next practice actions.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, focus area, and suggested next practice.', side: 'bottom', align: 'start' }},
+ { element: '.feedback-metric-grid', popover: { title: 'Category Breakdown', description: 'Scan the latest category scores to spot which interview skills are strongest or need attention.', side: 'top', align: 'start' }},
+ { element: '.feedback-summary-note-grid', popover: { title: 'Strengths And Focus', description: 'Use these notes to understand what worked, what needs work, and what to practice next.', side: 'top', align: 'start' }},
+ { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
+ { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
+ { element: '#feedbackPracticeRecommendations', popover: { title: 'Suggested Next Practice', description: 'Choose a module, drill, challenge, or interview action based on the feedback patterns.', side: 'bottom', align: 'start' }},
+ { element: '.feedback-recommend-item', popover: { title: 'Recommended Action', description: 'Open a focused next step directly from the recommendation list.', side: 'top', align: 'start' }},
+ { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review latest answers with the answer text, score, feedback, and next practice cue.', side: 'bottom', align: 'start' }},
+ { element: '.feedback-answer-item', popover: { title: 'Answer Coaching Card', description: 'Each card pairs your answer with short coaching and a shortcut to deeper review.', side: 'top', align: 'start' }},
+ { element: '.feedback-answer-voice', popover: { title: 'Voice Answer Playback', description: 'When an answer used audio, listen here and review coaching against the spoken response.', side: 'top', align: 'start' }},
+ { element: '#feedbackAnswerCoaching .feedback-feature-empty', popover: { title: 'Unlock Answer Coaching', description: 'Answer coaching appears after a completed interview with saved responses.', side: 'top', align: 'start' }},
+ { element: '#feedback-filters', popover: { title: 'Filters And Search', description: 'Filter by scenario, sort by date, or search keywords to find a specific feedback record.', side: 'bottom', align: 'start' }},
+ { element: '#scenarioFilter', popover: { title: 'Scenario Filter', description: 'Narrow the history to one interview scenario when you want targeted feedback.', side: 'bottom', align: 'start' }},
+ { element: '#sortDateBtn', popover: { title: 'Sort History', description: 'Switch between newest and oldest records while reviewing past practice.', side: 'bottom', align: 'center' }},
+ { element: '#feedbackSearch', popover: { title: 'Search Feedback', description: 'Search by scenario, notes, or keywords to quickly locate an interview.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past practice interviews, scores, ratings, and report actions.', side: 'top', align: 'center' }},
+ { element: '.feedback-history-actions', popover: { title: 'Open Report', description: 'Use the action button to view the full report for a previous interview.', side: 'top', align: 'center' }},
+ { element: '.feedback-empty-state', popover: { title: 'No Records Yet', description: 'If the history is empty, start a practice interview or clear filters to show available feedback.', side: 'top', align: 'start' }},
  { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'center' }}
  ];
 
  const stepsDesktop = [
- { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, strengths, focus area, and next practice.', side: 'bottom', align: 'start' }},
- { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review each latest answer with the answer text, feedback, and next practice.', side: 'bottom', align: 'start' }},
- { element: '#feedbackPracticeRecommendations', popover: { title: 'Next Practice', description: 'Choose a module, drill, challenge, or interview action based on the feedback patterns.', side: 'bottom', align: 'end' }},
- { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by scenario or search keywords to find a specific feedback record.', side: 'bottom', align: 'end' }},
- { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past practice interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
+ { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to turn completed interviews into strengths, focus areas, and next practice actions.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, focus area, and suggested next practice.', side: 'bottom', align: 'start' }},
+ { element: '.feedback-metric-grid', popover: { title: 'Category Breakdown', description: 'Scan the latest category scores to spot which interview skills are strongest or need attention.', side: 'top', align: 'start' }},
+ { element: '.feedback-summary-note-grid', popover: { title: 'Strengths And Focus', description: 'Use these notes to understand what worked, what needs work, and what to practice next.', side: 'top', align: 'start' }},
+ { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
+ { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
+ { element: '#feedbackPracticeRecommendations', popover: { title: 'Suggested Next Practice', description: 'Choose a module, drill, challenge, or interview action based on the feedback patterns.', side: 'bottom', align: 'end' }},
+ { element: '.feedback-recommend-item', popover: { title: 'Recommended Action', description: 'Open a focused next step directly from the recommendation list.', side: 'top', align: 'start' }},
+ { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review latest answers with the answer text, score, feedback, and next practice cue.', side: 'bottom', align: 'start' }},
+ { element: '.feedback-answer-item', popover: { title: 'Answer Coaching Card', description: 'Each card pairs your answer with short coaching and a shortcut to deeper review.', side: 'top', align: 'start' }},
+ { element: '.feedback-answer-voice', popover: { title: 'Voice Answer Playback', description: 'When an answer used audio, listen here and review coaching against the spoken response.', side: 'top', align: 'start' }},
+ { element: '#feedbackAnswerCoaching .feedback-feature-empty', popover: { title: 'Unlock Answer Coaching', description: 'Answer coaching appears after a completed interview with saved responses.', side: 'top', align: 'start' }},
+ { element: '#feedback-filters', popover: { title: 'Filters And Search', description: 'Filter by scenario, sort by date, or search keywords to find a specific feedback record.', side: 'bottom', align: 'end' }},
+ { element: '#scenarioFilter', popover: { title: 'Scenario Filter', description: 'Narrow the history to one interview scenario when you want targeted feedback.', side: 'bottom', align: 'start' }},
+ { element: '#sortDateBtn', popover: { title: 'Sort History', description: 'Switch between newest and oldest records while reviewing past practice.', side: 'bottom', align: 'center' }},
+ { element: '#feedbackSearch', popover: { title: 'Search Feedback', description: 'Search by scenario, notes, or keywords to quickly locate an interview.', side: 'bottom', align: 'end' }},
+ { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past practice interviews, scores, ratings, and report actions.', side: 'top', align: 'center' }},
+ { element: '.feedback-history-actions', popover: { title: 'Open Report', description: 'Use the action button to view the full report for a previous interview.', side: 'top', align: 'center' }},
+ { element: '.feedback-empty-state', popover: { title: 'No Records Yet', description: 'If the history is empty, start a practice interview or clear filters to show available feedback.', side: 'top', align: 'start' }},
  { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'end' }}
  ];
 

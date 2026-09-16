@@ -731,19 +731,45 @@
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const stepsMobile = [
- { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, result level, interview type, date, duration, and question count.', side: 'bottom', align: 'start' }},
- { element: '#report-question-review', popover: { title: 'Question Analysis', description: 'Review each question with the answer, score, strength, feedback, and next improvement.', side: 'bottom', align: 'start' }},
- { element: '#report-improvements', popover: { title: 'Improvement Areas', description: 'Focus on repeated mistakes and the next fix for each one.', side: 'top', align: 'start' }},
- { element: '#report-export', popover: { title: 'Export Report', description: 'Download the report as PDF, Excel, CSV, or print it.', side: 'top', align: 'start' }},
- { element: '#report-empty-state', popover: { title: 'No Report Yet', description: 'Complete a scored interview to unlock reports and exports.', side: 'top', align: 'start' }}
+ { element: '#portfolioReport .sr-page-hero', popover: { title: 'Interview Reports', description: 'Use reports to review readiness, scores, answer-level feedback, improvement areas, and exports from scored interviews.', side: 'bottom', align: 'start' }},
+ { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, previous score, readiness change, result level, target role, and question count.', side: 'bottom', align: 'start' }},
+ { element: '#report-score-breakdown', popover: { title: 'Score Breakdown', description: 'Review metric-level scores for the latest interview, including scenario, date, difficulty, and question count.', side: 'bottom', align: 'start' }},
+ { element: '.report-score-list', popover: { title: 'Metric Rows', description: 'Each row shows one scored skill so you can see where the final score came from.', side: 'top', align: 'start' }},
+ { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare first and latest scores to see which skills are moving up or down.', side: 'top', align: 'start' }},
+ { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review strengths, areas for improvement, and recommended practice for the latest scored report.', side: 'top', align: 'start' }},
+ { element: '.report-feedback-grid', popover: { title: 'Feedback Columns', description: 'Use the three columns to separate what worked, what needs attention, and what to practice next.', side: 'top', align: 'start' }},
+ { element: '#report-question-review', popover: { title: 'Question Analysis', description: 'Review each question with the answer, score, status, strength, feedback, and next improvement.', side: 'bottom', align: 'start' }},
+ { element: '.report-question-toggle', popover: { title: 'Expand A Question', description: 'Open a question card to inspect the answer and AI coaching details.', side: 'top', align: 'start' }},
+ { element: '.report-open-full-btn', popover: { title: 'Open Full Review', description: 'Jump to the detailed review view for the latest interview session.', side: 'top', align: 'start' }},
+ { element: '#report-improvements', popover: { title: 'Improvement Areas', description: 'Focus on repeated mistakes, supporting evidence, and the next fix for each one.', side: 'top', align: 'start' }},
+ { element: '.report-improvement-grid', popover: { title: 'Priority Fixes', description: 'Use these cards as a short practice checklist before the next mock interview.', side: 'top', align: 'start' }},
+ { element: '#report-export', popover: { title: 'Export Report', description: 'Download the report as PDF, export scores to Excel, download answers as CSV, or print it.', side: 'top', align: 'start' }},
+ { element: '#exportPdfBtn', popover: { title: 'PDF Export', description: 'Save the full report view as a PDF, with print fallback if PDF export is unavailable.', side: 'top', align: 'center' }},
+ { element: '#exportExcelBtn', popover: { title: 'Score Sheet Export', description: 'Export comparison rows or the latest score rows for spreadsheet review.', side: 'top', align: 'center' }},
+ { element: '#trendChart', popover: { title: 'Readiness Trend', description: 'When enough scored interviews exist, this chart shows readiness over time.', side: 'top', align: 'start' }},
+ { element: '#catChart', popover: { title: 'Scenario Performance', description: 'Compare average score patterns across interview scenarios.', side: 'top', align: 'start' }},
+ { element: '#report-empty-state', popover: { title: 'No Report Yet', description: 'Complete a scored interview to unlock reports, question analysis, improvement areas, and exports.', side: 'top', align: 'start' }}
  ];
 
  const stepsDesktop = [
- { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, result level, interview type, date, duration, and question count.', side: 'bottom', align: 'start' }},
- { element: '#report-question-review', popover: { title: 'Question Analysis', description: 'Review each question with the answer, score, strength, feedback, and next improvement.', side: 'bottom', align: 'start' }},
- { element: '#report-improvements', popover: { title: 'Improvement Areas', description: 'Focus on repeated mistakes and the next fix for each one.', side: 'top', align: 'start' }},
- { element: '#report-export', popover: { title: 'Export Report', description: 'Download the report as PDF, Excel, CSV, or print it.', side: 'top', align: 'end' }},
- { element: '#report-empty-state', popover: { title: 'No Report Yet', description: 'Complete a scored interview to unlock reports and exports.', side: 'top', align: 'center' }}
+ { element: '#portfolioReport .sr-page-hero', popover: { title: 'Interview Reports', description: 'Use reports to review readiness, scores, answer-level feedback, improvement areas, and exports from scored interviews.', side: 'bottom', align: 'start' }},
+ { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, previous score, readiness change, result level, target role, and question count.', side: 'bottom', align: 'start' }},
+ { element: '#report-score-breakdown', popover: { title: 'Score Breakdown', description: 'Review metric-level scores for the latest interview, including scenario, date, difficulty, and question count.', side: 'bottom', align: 'start' }},
+ { element: '.report-score-list', popover: { title: 'Metric Rows', description: 'Each row shows one scored skill so you can see where the final score came from.', side: 'top', align: 'start' }},
+ { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare first and latest scores to see which skills are moving up or down.', side: 'top', align: 'start' }},
+ { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review strengths, areas for improvement, and recommended practice for the latest scored report.', side: 'top', align: 'start' }},
+ { element: '.report-feedback-grid', popover: { title: 'Feedback Columns', description: 'Use the three columns to separate what worked, what needs attention, and what to practice next.', side: 'top', align: 'start' }},
+ { element: '#report-question-review', popover: { title: 'Question Analysis', description: 'Review each question with the answer, score, status, strength, feedback, and next improvement.', side: 'bottom', align: 'start' }},
+ { element: '.report-question-toggle', popover: { title: 'Expand A Question', description: 'Open a question card to inspect the answer and AI coaching details.', side: 'top', align: 'start' }},
+ { element: '.report-open-full-btn', popover: { title: 'Open Full Review', description: 'Jump to the detailed review view for the latest interview session.', side: 'top', align: 'end' }},
+ { element: '#report-improvements', popover: { title: 'Improvement Areas', description: 'Focus on repeated mistakes, supporting evidence, and the next fix for each one.', side: 'top', align: 'start' }},
+ { element: '.report-improvement-grid', popover: { title: 'Priority Fixes', description: 'Use these cards as a short practice checklist before the next mock interview.', side: 'top', align: 'start' }},
+ { element: '#report-export', popover: { title: 'Export Report', description: 'Download the report as PDF, export scores to Excel, download answers as CSV, or print it.', side: 'top', align: 'end' }},
+ { element: '#exportPdfBtn', popover: { title: 'PDF Export', description: 'Save the full report view as a PDF, with print fallback if PDF export is unavailable.', side: 'top', align: 'center' }},
+ { element: '#exportExcelBtn', popover: { title: 'Score Sheet Export', description: 'Export comparison rows or the latest score rows for spreadsheet review.', side: 'top', align: 'center' }},
+ { element: '#trendChart', popover: { title: 'Readiness Trend', description: 'When enough scored interviews exist, this chart shows readiness over time.', side: 'top', align: 'start' }},
+ { element: '#catChart', popover: { title: 'Scenario Performance', description: 'Compare average score patterns across interview scenarios.', side: 'top', align: 'start' }},
+ { element: '#report-empty-state', popover: { title: 'No Report Yet', description: 'Complete a scored interview to unlock reports, question analysis, improvement areas, and exports.', side: 'top', align: 'center' }}
  ];
 
  const filterTourSteps = (steps) => steps.filter((step) => document.querySelector(step.element));

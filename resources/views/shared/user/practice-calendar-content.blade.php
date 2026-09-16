@@ -45,3 +45,39 @@
 
     @include('shared.partials.practice-activity-calendar')
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.createSpeakReadyTour !== 'function') return;
+
+        const stepsMobile = [
+            { element: '#practiceCalendarHero', popover: { title: 'Activity Calendar', description: 'Use this page to see how consistently you have practiced over the last 28 days.', side: 'bottom', align: 'start' }},
+            { element: '#practiceCalendarActions', popover: { title: 'Quick Actions', description: 'Return to Interview Progress for full analytics or start another practice session from here.', side: 'bottom', align: 'start' }},
+            { element: '#activity-calendar', popover: { title: 'Calendar Panel', description: 'This panel summarizes recent practice activity, streaks, and daily interview completions.', side: 'top', align: 'start' }},
+            { element: '.activity-summary-grid', popover: { title: 'Activity Summary', description: 'Check active days, this week, current streak, and the latest practice timing at a glance.', side: 'top', align: 'start' }},
+            { element: '.activity-grid', popover: { title: '28-Day Grid', description: 'Each day tile shows whether practice was recorded and how active that day was.', side: 'top', align: 'start' }},
+            { element: '.activity-legend', popover: { title: 'Practice Again', description: 'Use the legend and shortcut to keep the streak moving with another practice session.', side: 'top', align: 'start' }},
+            { element: '.activity-empty', popover: { title: 'Start Tracking', description: 'Complete your first practice interview to fill the calendar with real activity.', side: 'top', align: 'start' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#practiceCalendarHero', popover: { title: 'Activity Calendar', description: 'Use this page to see how consistently you have practiced over the last 28 days.', side: 'bottom', align: 'start' }},
+            { element: '#practiceCalendarActions', popover: { title: 'Quick Actions', description: 'Return to Interview Progress for full analytics or start another practice session from here.', side: 'bottom', align: 'start' }},
+            { element: '#activity-calendar', popover: { title: 'Calendar Panel', description: 'This panel summarizes recent practice activity, streaks, and daily interview completions.', side: 'top', align: 'start' }},
+            { element: '.activity-summary-grid', popover: { title: 'Activity Summary', description: 'Check active days, this week, current streak, and the latest practice timing at a glance.', side: 'top', align: 'start' }},
+            { element: '.activity-grid', popover: { title: '28-Day Grid', description: 'Each day tile shows whether practice was recorded and how active that day was.', side: 'top', align: 'start' }},
+            { element: '.activity-legend', popover: { title: 'Practice Again', description: 'Use the legend and shortcut to keep the streak moving with another practice session.', side: 'top', align: 'start' }},
+            { element: '.activity-empty', popover: { title: 'Start Tracking', description: 'Complete your first practice interview to fill the calendar with real activity.', side: 'top', align: 'start' }}
+        ];
+
+        window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_practice_calendar',
+            serverDetectedMobile: {{ ($serverDetectedMobile ?? false) ? 'true' : 'false' }},
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 500,
+        });
+    });
+</script>
+@endpush

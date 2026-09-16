@@ -1738,13 +1738,16 @@
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const setupTourSteps = [
- { element: '#panel-basic', popover: { title: 'Interview Focus', description: 'Choose job or school practice, select an optional category, and enter the target role or program.', side: 'top', align: 'center' }},
- { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, question count, and timing before you start.', side: 'top', align: 'center' }},
- { element: '#panel-inclusive', popover: { title: 'Optional Camera Coaching', description: 'Camera On can detect visible body-language signals for coaching. Camera Off skips it, and readiness scoring stays based on answer quality.', side: 'top', align: 'center' }},
- { element: '#panel-content', popover: { title: 'Practice Scenario', description: 'Pick your assistance level, live feedback mode, and question types.', side: 'top', align: 'center' }},
- { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose typed, voice, or hybrid answers depending on how you want to practice.', side: 'top', align: 'center' }},
- { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Confirm the selected focus, structure, assistance, and response mode before generating the session.', side: 'top', align: 'center' }},
- { element: '#btn-start-interview', popover: { title: 'Start Interview', description: 'Generate the customized practice session when the setup looks right.', side: 'top', align: 'center' }}
+ { element: '#setupStepper', popover: { title: 'Setup Roadmap', description: 'Use this stepper to move through details, structure, camera, coaching, and response settings before launching.', side: 'bottom', align: 'center' }},
+ { element: '#panel-basic', popover: { title: 'Interview Focus', description: 'Choose whether this session is for job practice or school admission practice, then anchor it to the right scenario.', side: 'top', align: 'center' }},
+ { element: '#targetPositionDropdownButton', popover: { title: 'Target Role or Program', description: 'Pick the role, strand, or program you are practicing for so the questions match your goal.', side: 'bottom', align: 'start' }},
+ { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, number of questions, and timing. Shorter sessions are useful for quick drills; longer ones feel closer to a full interview.', side: 'top', align: 'center' }},
+ { element: '#panel-inclusive', popover: { title: 'Camera Detection', description: 'Camera On enables local body-language observations for coaching only. Camera Off keeps the session answer-focused.', side: 'top', align: 'center' }},
+ { element: '#valFeedbackMode', popover: { title: 'Coaching Style', description: 'Choose Coaching On for live help, or Real Interview Mode for a quieter practice run.', side: 'bottom', align: 'start' }},
+ { element: '#questionTypeGroup', popover: { title: 'Question Mix', description: 'Select the kinds of questions you want included in this practice session.', side: 'top', align: 'center' }},
+ { element: '#panel-response', popover: { title: 'Response Mode', description: 'Use Text for typing, Voice for spoken answers, or Hybrid when you want speech-to-text with manual edits.', side: 'top', align: 'center' }},
+ { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Review the generated setup summary so you can catch mismatches before the interview begins.', side: 'top', align: 'center' }},
+ { element: '#btn-start-interview', popover: { title: 'Start Interview', description: 'Launch the customized session once the setup matches what you want to practice.', side: 'top', align: 'center' }}
  ];
 
  window.createSpeakReadyTour({

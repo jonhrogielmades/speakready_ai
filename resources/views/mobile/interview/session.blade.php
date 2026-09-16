@@ -4139,6 +4139,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  applyResponseModeUi();
  }
 
+ window.dispatchEvent(new CustomEvent('speakready:interview-session-started'));
+
  timerInterval = setInterval(() => {
  timerSeconds++;
  const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
@@ -5645,39 +5647,72 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const stepsMobile = [
- { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'bottom', align: 'start' }},
- { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
- { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness scoring.', side: 'top', align: 'start' }}
+ { element: '#interviewStartModal.active .interview-start-dialog', popover: { title: 'Session Preview', description: 'Review the scenario, response mode, coaching level, question count, and camera setting before entering the room.', side: 'bottom', align: 'center' }},
+ { element: '#interviewStartModal.active #confirmInterviewStartButton', popover: { title: 'Begin When Ready', description: 'Start or resume the interview after the setup summary looks right.', side: 'top', align: 'center' }},
+ { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'Questions appear here with the interviewer avatar, caption area, timer, and quick controls.', side: 'bottom', align: 'start' }},
+ { element: '#interviewControls', popover: { title: 'Question Controls', description: 'Repeat the current question or end the session from this compact control strip.', side: 'top', align: 'center' }},
+ { element: '#answerTranscriptControls:not([hidden])', popover: { title: 'Voice Controls', description: 'In Voice or Hybrid mode, use these buttons to pause or stop recording while the timer tracks your answer.', side: 'top', align: 'center' }},
+ { element: '.response-panel', popover: { title: 'Your Response', description: 'Type, speak, or edit your answer here. Word and character counts update as you work.', side: 'top', align: 'start' }},
+ { element: '.response-title-actions', popover: { title: 'Submit Tools', description: 'Send your answer, open fullscreen, or access coaching tools when they are available.', side: 'top', align: 'center' }},
+ { element: '#aiCoachHeadButton', popover: { title: 'AI Coach', description: 'In coaching mode, this opens a possible-answer panel for guidance without submitting anything for you.', side: 'top', align: 'center' }},
+ { element: '.desktop-camera-pip, .mobile-camera-pip, #cameraPanel', popover: { title: 'Camera Detection', description: 'If enabled, camera detection checks local framing and posture cues for coaching only. It is excluded from readiness scoring.', side: 'top', align: 'center' }}
  ];
 
  const stepsDesktop = [
- { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'right', align: 'start' }},
- { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
- { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness scoring.', side: 'left', align: 'start' }}
+ { element: '#interviewStartModal.active .interview-start-dialog', popover: { title: 'Session Preview', description: 'Review the scenario, response mode, coaching level, question count, and camera setting before entering the room.', side: 'bottom', align: 'center' }},
+ { element: '#interviewStartModal.active #confirmInterviewStartButton', popover: { title: 'Begin When Ready', description: 'Start or resume the interview after the setup summary looks right.', side: 'top', align: 'center' }},
+ { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'Questions appear here with the interviewer avatar, caption area, timer, and quick controls.', side: 'right', align: 'start' }},
+ { element: '#interviewControls', popover: { title: 'Question Controls', description: 'Repeat the current question or end the session from this compact control strip.', side: 'top', align: 'center' }},
+ { element: '#answerTranscriptControls:not([hidden])', popover: { title: 'Voice Controls', description: 'In Voice or Hybrid mode, use these buttons to pause or stop recording while the timer tracks your answer.', side: 'top', align: 'center' }},
+ { element: '.response-panel', popover: { title: 'Your Response', description: 'Type, speak, or edit your answer here. Word and character counts update as you work.', side: 'left', align: 'start' }},
+ { element: '.response-title-actions', popover: { title: 'Submit Tools', description: 'Send your answer, open fullscreen, or access coaching tools when they are available.', side: 'bottom', align: 'end' }},
+ { element: '#aiCoachHeadButton', popover: { title: 'AI Coach', description: 'In coaching mode, this opens a possible-answer panel for guidance without submitting anything for you.', side: 'bottom', align: 'center' }},
+ { element: '.desktop-camera-pip, .mobile-camera-pip, #cameraPanel', popover: { title: 'Camera Detection', description: 'If enabled, camera detection checks local framing and posture cues for coaching only. It is excluded from readiness scoring.', side: 'bottom', align: 'center' }}
  ];
+ const sessionTourCompletionKey = 'onboarding_completed_interview_session';
 
  const onboardingTour = window.createSpeakReadyTour({
- completionKey: 'onboarding_completed_interview_session',
+ completionKey: sessionTourCompletionKey,
  serverDetectedMobile: true,
- stepsMobile: stepsMobile.filter(step => document.querySelector(step.element)),
- stepsDesktop: stepsDesktop.filter(step => document.querySelector(step.element)),
+ stepsMobile: stepsMobile,
+ stepsDesktop: stepsDesktop,
  autoStart: false,
+ startDelay: 80,
+ onBeforeDestroy: () => {
+ if (isInterviewWorkspaceVisible()) return;
+
+ try {
+ localStorage.removeItem(sessionTourCompletionKey);
+ } catch (error) {
+ console.warn('Unable to keep session tutorial incomplete before start:', error);
+ }
+ },
  });
- 
- // Expose startOnboardingTour to be called after interview starts
- const originalStartInterview = window.startInterviewSession;
- window.startInterviewSession = function() {
- if (typeof originalStartInterview === 'function') {
- originalStartInterview.apply(this, arguments);
+
+ let sessionTourAutoStartTimer = null;
+
+ function isInterviewWorkspaceVisible() {
+ const workspace = document.getElementById('workspaceWrapper');
+ if (!workspace) return false;
+ const style = window.getComputedStyle(workspace);
+ return style.display !== 'none' && workspace.getClientRects().length > 0;
  }
 
- const shouldAutoStartTour =!window.matchMedia('(max-width: 767px)').matches;
- if (shouldAutoStartTour && onboardingTour &&!onboardingTour.isCompleted()) {
- setTimeout(() => {
+ function scheduleInterviewSessionTour(delay = 900) {
+ if (!onboardingTour || onboardingTour.isCompleted() || sessionTourAutoStartTimer) return;
+
+ sessionTourAutoStartTimer = window.setTimeout(() => {
+ sessionTourAutoStartTimer = null;
+ if (!isInterviewWorkspaceVisible() || onboardingTour.isCompleted()) return;
  onboardingTour.start();
- }, 1000);
+ }, delay);
  }
- };
+
+ window.addEventListener('speakready:interview-session-started', () => scheduleInterviewSessionTour());
+
+ if (isInterviewWorkspaceVisible()) {
+ scheduleInterviewSessionTour(500);
+ }
  });
 </script>
 @endpush

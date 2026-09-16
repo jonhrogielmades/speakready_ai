@@ -600,26 +600,32 @@
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const stepsMobile = [
- { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, latest movement, streak, and practice days.', side: 'bottom', align: 'start' }},
- { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time.', side: 'bottom', align: 'start' }},
- { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare practice scenarios to find strengths and weak spots.', side: 'top', align: 'start' }},
- { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch the core interview skills that are improving across sessions.', side: 'top', align: 'start' }},
- { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'top', align: 'start' }},
+ { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, learning progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
+ { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
+ { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'See module work tied to your readiness so lessons and interview practice stay connected.', side: 'top', align: 'start' }},
+ { element: '#category-performance-summary', popover: { title: 'Category Summary', description: 'Check which scoring categories are currently strongest before drilling into the full chart.', side: 'top', align: 'start' }},
+ { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time as you complete more scored sessions.', side: 'bottom', align: 'start' }},
+ { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare practice scenarios to find strengths, weak spots, and where your next session should focus.', side: 'top', align: 'start' }},
+ { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
+ { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, STAR method coverage, and the next coaching suggestion.', side: 'top', align: 'start' }},
+ { element: '#historySearch', popover: { title: 'Search History', description: 'Filter your interview history when you want to revisit a scenario, date, rating, or score quickly.', side: 'top', align: 'start' }},
  { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
- { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Review active module progress connected to your readiness growth.', side: 'top', align: 'start' }},
- { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'top', align: 'start' }},
+ { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track practice goals and see the next milestone that will move your preparation forward.', side: 'top', align: 'start' }},
  { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'top', align: 'start' }}
  ];
 
  const stepsDesktop = [
- { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, latest movement, streak, and practice days.', side: 'bottom', align: 'start' }},
- { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time.', side: 'bottom', align: 'start' }},
- { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare practice scenarios to find strengths and weak spots.', side: 'bottom', align: 'start' }},
- { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch the core interview skills that are improving across sessions.', side: 'right', align: 'start' }},
- { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'left', align: 'start' }},
+ { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, learning progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
+ { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
+ { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'See module work tied to your readiness so lessons and interview practice stay connected.', side: 'top', align: 'start' }},
+ { element: '#category-performance-summary', popover: { title: 'Category Summary', description: 'Check which scoring categories are currently strongest before drilling into the full chart.', side: 'top', align: 'start' }},
+ { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time as you complete more scored sessions.', side: 'bottom', align: 'start' }},
+ { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare practice scenarios to find strengths, weak spots, and where your next session should focus.', side: 'bottom', align: 'start' }},
+ { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'right', align: 'start' }},
+ { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, STAR method coverage, and the next coaching suggestion.', side: 'left', align: 'start' }},
+ { element: '#historySearch', popover: { title: 'Search History', description: 'Filter your interview history when you want to revisit a scenario, date, rating, or score quickly.', side: 'top', align: 'start' }},
  { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
- { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Review active module progress connected to your readiness growth.', side: 'top', align: 'start' }},
- { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'right', align: 'start' }},
+ { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track practice goals and see the next milestone that will move your preparation forward.', side: 'right', align: 'start' }},
  { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'left', align: 'start' }}
  ];
 

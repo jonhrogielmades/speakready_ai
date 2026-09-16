@@ -22,7 +22,7 @@
 @include('mobile.partials.page-hero-styles')
 
 <div class="db-section active" id="ai-coach-page" data-chat-url="{{ route('user.coach.chat') }}" data-conversation-url="{{ url('/coach/conversation') }}" data-clear-url="{{ route('user.coach.clear') }}" style="height:100%">
-    <div class="sr-page-hero coach-progress-hero">
+    <div class="sr-page-hero coach-progress-hero" id="coachHero">
         <div class="sr-page-hero-inner">
             <div class="sr-page-hero-copy">
                 <div class="coach-hero-icon"><i class="fa-solid fa-headset"></i></div>
@@ -167,7 +167,7 @@
                 <div class="chat-attachment-preview" id="chatAttachmentPreview" aria-live="polite"></div>
                 <div class="chat-input-wrapper">
                     <input class="chat-file-input" id="coachFiles" type="file" multiple accept=".pdf,.doc,.docx,.odt,.txt,.rtf,.csv,.md,.json,.html,.htm,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tif,.tiff,.heic,.heif">
-                    <button class="chat-attachment-btn" type="button" aria-label="Attach interview file" title="Attach resume, certificate, PDF, DOCX, or image" onclick="document.getElementById('coachFiles').click()">
+                    <button class="chat-attachment-btn" type="button" id="coachAttachBtn" aria-label="Attach interview file" title="Attach resume, certificate, PDF, DOCX, or image" onclick="document.getElementById('coachFiles').click()">
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
                     <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask about interviews, resumes, certificates..." oninput="resizeCoachTextarea(this)"></textarea>
@@ -1131,14 +1131,29 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Coach responds here with interview prep, resume, job-description, and career guidance.', side: 'bottom', align: 'center' }},
-            { element: '#coach-input-area', popover: { title: 'Ask Or Attach', description: 'Type a prep question, paste an answer, or attach a resume, certificate, or job description for coaching.', side: 'top', align: 'center' }}
+            { element: '#coachHero', popover: { title: 'AI Coach Hub', description: 'Use this page when you need interview strategy, resume review, answer feedback, or a focused next practice step.', side: 'bottom', align: 'start' }},
+            { element: '.coach-chat-header', popover: { title: 'Current Conversation', description: 'The header shows the active coaching thread so you know whether you are starting fresh or continuing prior context.', side: 'bottom', align: 'start' }},
+            { element: '#coachActionsToggle', popover: { title: 'Conversation Actions', description: 'Open this menu to start a new conversation, revisit recent history, delete the current chat, or clear old coaching threads.', side: 'bottom', align: 'end' }},
+            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Coach responds here with interview prep, resume, job-description, certificate, and career guidance.', side: 'bottom', align: 'center' }},
+            { element: '#welcomeMsg', popover: { title: 'Truthful Coaching', description: 'The coach uses your competency map and verified stories to improve answers without inventing experience.', side: 'bottom', align: 'start' }},
+            { element: '#coachAttachBtn', popover: { title: 'Attach Evidence', description: 'Upload a resume, certificate, job description, or supporting file so the coach can tailor feedback to real material.', side: 'top', align: 'center' }},
+            { element: '#chatMsg', popover: { title: 'Ask A Question', description: 'Type a draft answer, prep concern, target role, or coaching request here.', side: 'top', align: 'center' }},
+            { element: '#coachVoiceBtn', popover: { title: 'Voice Prompt', description: 'Use the microphone to speak a message when rehearsing out loud is easier than typing.', side: 'top', align: 'center' }},
+            { element: '#chatSendBtn', popover: { title: 'Send To Coach', description: 'Send your prompt or attached context and wait for personalized coaching in the message stream.', side: 'top', align: 'center' }},
+            { element: '.coach-disclaimer', popover: { title: 'Verify Advice', description: 'Treat suggestions as coaching support and keep every personal claim accurate before using it in an interview.', side: 'top', align: 'center' }}
         ];
 
         const stepsDesktop = [
-            { element: '#coach-sidebar', popover: { title: 'Conversation History', description: 'Start a new chat or return to an earlier coaching conversation.', side: 'right', align: 'start' }},
-            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Coach responds here with interview prep, resume, job-description, and career guidance.', side: 'bottom', align: 'center' }},
-            { element: '#coach-input-area', popover: { title: 'Ask Or Attach', description: 'Type a prep question, paste an answer, or attach a resume, certificate, or job description for coaching.', side: 'top', align: 'center' }}
+            { element: '#coachHero', popover: { title: 'AI Coach Hub', description: 'Use this page when you need interview strategy, resume review, answer feedback, or a focused next practice step.', side: 'bottom', align: 'start' }},
+            { element: '.coach-chat-header', popover: { title: 'Current Conversation', description: 'The header shows the active coaching thread so you know whether you are starting fresh or continuing prior context.', side: 'bottom', align: 'start' }},
+            { element: '#coachActionsToggle', popover: { title: 'Conversation Actions', description: 'Open this menu to start a new conversation, revisit recent history, delete the current chat, or clear old coaching threads.', side: 'bottom', align: 'end' }},
+            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Coach responds here with interview prep, resume, job-description, certificate, and career guidance.', side: 'bottom', align: 'center' }},
+            { element: '#welcomeMsg', popover: { title: 'Truthful Coaching', description: 'The coach uses your competency map and verified stories to improve answers without inventing experience.', side: 'bottom', align: 'start' }},
+            { element: '#coachAttachBtn', popover: { title: 'Attach Evidence', description: 'Upload a resume, certificate, job description, or supporting file so the coach can tailor feedback to real material.', side: 'top', align: 'center' }},
+            { element: '#chatMsg', popover: { title: 'Ask A Question', description: 'Type a draft answer, prep concern, target role, or coaching request here.', side: 'top', align: 'center' }},
+            { element: '#coachVoiceBtn', popover: { title: 'Voice Prompt', description: 'Use the microphone to speak a message when rehearsing out loud is easier than typing.', side: 'top', align: 'center' }},
+            { element: '#chatSendBtn', popover: { title: 'Send To Coach', description: 'Send your prompt or attached context and wait for personalized coaching in the message stream.', side: 'top', align: 'center' }},
+            { element: '.coach-disclaimer', popover: { title: 'Verify Advice', description: 'Treat suggestions as coaching support and keep every personal claim accurate before using it in an interview.', side: 'top', align: 'center' }}
         ];
 
         window.createSpeakReadyTour({

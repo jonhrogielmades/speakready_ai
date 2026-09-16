@@ -43,3 +43,43 @@
     @include('shared.partials.ai-recommendations')
     @include('shared.partials.personalized-practice-plan')
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.createSpeakReadyTour !== 'function') return;
+
+        const stepsMobile = [
+            { element: '#practicePlanHero', popover: { title: 'Practice Plan', description: 'Use this page to turn recent interview results and module activity into focused next steps.', side: 'bottom', align: 'start' }},
+            { element: '#practicePlanActions', popover: { title: 'Quick Actions', description: 'Jump back to Interview Progress or start another practice session when you are ready to apply the plan.', side: 'bottom', align: 'start' }},
+            { element: '#practice-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Review the highest-priority actions the system recommends from your current performance patterns.', side: 'top', align: 'start' }},
+            { element: '.practice-ai-list', popover: { title: 'Recommended Actions', description: 'Open a recommended lesson, module, or activity to work on the area with the clearest payoff.', side: 'top', align: 'start' }},
+            { element: '.practice-ai-empty', popover: { title: 'Unlock Recommendations', description: 'Complete a scored interview to generate recommendations matched to your latest performance.', side: 'top', align: 'start' }},
+            { element: '#personalized-practice-plan', popover: { title: 'Personalized Plan', description: 'Follow this short plan to move from insight to practice without deciding from scratch each time.', side: 'top', align: 'start' }},
+            { element: '.practice-plan-list', popover: { title: 'Practice Steps', description: 'Each row gives a focused task, estimated time, and shortcut to the right practice area.', side: 'top', align: 'start' }},
+            { element: '.practice-plan-tasks', popover: { title: 'Task Checklist', description: 'Use these smaller tasks to keep the practice step concrete and easy to finish.', side: 'top', align: 'start' }},
+            { element: '#personalized-practice-plan .skill-empty-state', popover: { title: 'Generate A Plan', description: 'After a scored interview, your next steps will appear here automatically.', side: 'top', align: 'start' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#practicePlanHero', popover: { title: 'Practice Plan', description: 'Use this page to turn recent interview results and module activity into focused next steps.', side: 'bottom', align: 'start' }},
+            { element: '#practicePlanActions', popover: { title: 'Quick Actions', description: 'Jump back to Interview Progress or start another practice session when you are ready to apply the plan.', side: 'bottom', align: 'start' }},
+            { element: '#practice-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Review the highest-priority actions the system recommends from your current performance patterns.', side: 'top', align: 'start' }},
+            { element: '.practice-ai-list', popover: { title: 'Recommended Actions', description: 'Open a recommended lesson, module, or activity to work on the area with the clearest payoff.', side: 'top', align: 'start' }},
+            { element: '.practice-ai-empty', popover: { title: 'Unlock Recommendations', description: 'Complete a scored interview to generate recommendations matched to your latest performance.', side: 'top', align: 'start' }},
+            { element: '#personalized-practice-plan', popover: { title: 'Personalized Plan', description: 'Follow this short plan to move from insight to practice without deciding from scratch each time.', side: 'top', align: 'start' }},
+            { element: '.practice-plan-list', popover: { title: 'Practice Steps', description: 'Each row gives a focused task, estimated time, and shortcut to the right practice area.', side: 'top', align: 'start' }},
+            { element: '.practice-plan-tasks', popover: { title: 'Task Checklist', description: 'Use these smaller tasks to keep the practice step concrete and easy to finish.', side: 'top', align: 'start' }},
+            { element: '#personalized-practice-plan .skill-empty-state', popover: { title: 'Generate A Plan', description: 'After a scored interview, your next steps will appear here automatically.', side: 'top', align: 'start' }}
+        ];
+
+        window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_practice_plan',
+            serverDetectedMobile: {{ ($serverDetectedMobile ?? false) ? 'true' : 'false' }},
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 500,
+        });
+    });
+</script>
+@endpush
