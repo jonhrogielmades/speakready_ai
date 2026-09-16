@@ -173,6 +173,7 @@
             --mob-top-h: 64px;
             --mob-safe-top: env(safe-area-inset-top, 0px);
             --mob-safe-bottom: env(safe-area-inset-bottom, 0px);
+            --mob-nav-overlap: 0px;
          }
 
          html, body {
@@ -308,7 +309,7 @@
 
          .mob-profile-dropdown[data-origin="bottom"] {
             top: auto;
-            bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 10px);
+            bottom: calc(var(--mob-nav-h) + var(--mob-nav-overlap) + var(--mob-safe-bottom) + 10px);
             max-height: min(72dvh, 560px);
          }
 
@@ -1065,7 +1066,7 @@
          .ucp-mobile-launcher {
             position: fixed;
             right: 16px;
-            bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 16px);
+            bottom: calc(var(--mob-nav-h) + var(--mob-nav-overlap) + var(--mob-safe-bottom) + 16px);
             z-index: 1001;
             width: 48px;
             height: 48px;
@@ -1947,12 +1948,12 @@
                font-size: 1rem !important;
             }
 
-            .mob-nav-item.active:not(.mob-nav-primary) {
+            .mob-nav-item.active {
                color: #60a5fa !important;
                background: var(--mob-chrome-active) !important;
             }
 
-            .lm .mob-nav-item.active:not(.mob-nav-primary) {
+            .lm .mob-nav-item.active {
                color: #2563eb !important;
             }
 
@@ -2003,7 +2004,7 @@
 
             .mob-profile-dropdown[data-origin="bottom"] {
                top: auto !important;
-               bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 8px) !important;
+               bottom: calc(var(--mob-nav-h) + var(--mob-nav-overlap) + var(--mob-safe-bottom) + 8px) !important;
             }
 
             .mob-profile-dropdown {
@@ -2414,6 +2415,7 @@
             :root {
                --mob-top-h: 64px;
                --mob-nav-h: 74px;
+               --mob-nav-overlap: 0px;
             }
 
             #mob-header {
@@ -2535,61 +2537,109 @@
             }
 
             #mob-bottom-nav {
-               --mob-dock-bg: rgba(15, 23, 42, 0.94);
-               --mob-dock-card: rgba(30, 41, 59, 0.72);
+               --mob-dock-bg: #0f172a;
+               --mob-dock-surface: var(--mob-dock-bg);
                --mob-dock-border: rgba(148, 163, 184, 0.22);
                --mob-dock-text: #94a3b8;
-               --mob-dock-active: #e0f2fe;
+               --mob-dock-active: #dbeafe;
                --mob-dock-accent: #60a5fa;
-               --mob-dock-active-bg: rgba(37, 99, 235, 0.2);
-               height: calc(74px + var(--mob-safe-bottom)) !important;
-               padding-bottom: var(--mob-safe-bottom) !important;
-               background:
-                  linear-gradient(180deg, rgba(15, 23, 42, 0.86), var(--mob-dock-bg)) !important;
-               border-top: 1px solid var(--mob-dock-border) !important;
-               box-shadow: 0 -14px 32px rgba(2, 6, 23, 0.3) !important;
+               --mob-dock-active-bg: rgba(37, 99, 235, 0.22);
+               --mob-dock-active-shadow: 0 8px 20px rgba(2, 6, 23, 0.22);
+               --mob-dock-primary: #2563eb;
+               --mob-dock-primary-2: #1d4ed8;
+               height: calc(var(--mob-nav-h) + var(--mob-safe-bottom)) !important;
+               padding: 0 0 var(--mob-safe-bottom) !important;
+               background: transparent !important;
+               border-top: 0 !important;
+               box-shadow: none !important;
+               overflow: visible !important;
             }
 
             .lm #mob-bottom-nav {
-               --mob-dock-bg: rgba(255, 255, 255, 0.96);
-               --mob-dock-card: rgba(248, 250, 252, 0.92);
-               --mob-dock-border: rgba(148, 163, 184, 0.24);
-               --mob-dock-text: #64748b;
-               --mob-dock-active: #1d4ed8;
+               --mob-dock-bg: #ffffff;
+               --mob-dock-surface: var(--mob-dock-bg);
+               --mob-dock-border: rgba(226, 232, 240, 0.95);
+               --mob-dock-text: #8b96a5;
+               --mob-dock-active: #1f6fff;
                --mob-dock-accent: #2563eb;
-               --mob-dock-active-bg: rgba(37, 99, 235, 0.1);
+               --mob-dock-active-bg: #eef7ff;
+               --mob-dock-active-shadow: 0 9px 22px rgba(37, 99, 235, 0.1);
+               --mob-dock-primary: #2563eb;
+               --mob-dock-primary-2: #1d6df2;
+            }
+
+            #mob-bottom-nav::before {
+               top: 0 !important;
+               z-index: 1 !important;
                background:
-                  linear-gradient(180deg, rgba(255, 255, 255, 0.9), var(--mob-dock-bg)) !important;
-               box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.12) !important;
+                  linear-gradient(
+                     90deg,
+                     transparent 0,
+                     var(--mob-dock-border) 12px,
+                     var(--mob-dock-border) calc(100% - 12px),
+                     transparent 100%
+                  ) !important;
+            }
+
+            #mob-bottom-nav::after {
+               content: "" !important;
+               position: absolute !important;
+               left: 0 !important;
+               right: 0 !important;
+               bottom: 0 !important;
+               height: calc(var(--mob-nav-h) + var(--mob-safe-bottom)) !important;
+               background: var(--mob-dock-surface) !important;
+               border-top: 0 !important;
+               box-shadow: none !important;
+               backdrop-filter: none !important;
+               -webkit-backdrop-filter: none !important;
+               pointer-events: none !important;
+               z-index: 0 !important;
+            }
+
+            .lm #mob-bottom-nav::after {
+               box-shadow: none !important;
             }
 
             .mob-nav-items {
-               max-width: 520px !important;
+               display: grid !important;
+               grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+               width: 100% !important;
+               max-width: 540px !important;
+               height: 100% !important;
                margin: 0 auto !important;
-               gap: 6px !important;
+               gap: 0 !important;
                align-items: center !important;
-               padding: 8px max(8px, env(safe-area-inset-left, 0px)) 8px max(8px, env(safe-area-inset-right, 0px)) !important;
+               padding: 0 max(10px, env(safe-area-inset-left, 0px)) 8px max(10px, env(safe-area-inset-right, 0px)) !important;
+               position: relative !important;
+               z-index: 2 !important;
+               overflow: visible !important;
+            }
+
+            .mob-nav-item:not(.mob-nav-primary) {
+               margin-top: 0 !important;
             }
 
             .mob-nav-item {
-               height: 50px !important;
-               min-height: 50px !important;
-               padding: 4px 2px !important;
-               border: 1px solid transparent !important;
-               border-radius: 11px !important;
+               width: 100% !important;
+               height: 60px !important;
+               min-height: 60px !important;
+               padding: 7px 2px 6px !important;
+               border: 0 !important;
+               border-radius: 20px !important;
                color: var(--mob-dock-text) !important;
-               font-size: 0.58rem !important;
-               font-weight: 900 !important;
-               line-height: 1.05 !important;
+               font-size: 0.68rem !important;
+               font-weight: 800 !important;
+               line-height: 1.08 !important;
                background: transparent !important;
                align-self: center !important;
                transform: none !important;
             }
 
             .mob-nav-icon {
-               width: 24px !important;
-               height: 24px !important;
-               border-radius: 9px !important;
+               width: 32px !important;
+               height: 32px !important;
+               border-radius: 10px !important;
                background: transparent !important;
                color: currentColor !important;
             }
@@ -2597,58 +2647,91 @@
             .mob-nav-icon i {
                color: inherit !important;
                -webkit-text-fill-color: currentColor !important;
-               font-size: 0.98rem !important;
+               font-size: 1.24rem !important;
             }
 
             .mob-nav-item > span:last-child {
-               max-width: 58px !important;
+               max-width: 68px !important;
                color: inherit !important;
-               line-height: 1.05 !important;
+               font-size: 0.68rem !important;
+               line-height: 1.08 !important;
+               white-space: nowrap !important;
             }
 
-            .mob-nav-item.active:not(.mob-nav-primary) {
-               border-color: color-mix(in srgb, var(--mob-dock-accent) 34%, transparent) !important;
+            .mob-nav-item.active {
                background: var(--mob-dock-active-bg) !important;
                color: var(--mob-dock-active) !important;
+               box-shadow: var(--mob-dock-active-shadow) !important;
             }
 
-            .mob-nav-item.active:not(.mob-nav-primary) .mob-nav-icon {
-               background: color-mix(in srgb, var(--mob-dock-accent) 18%, transparent) !important;
+            .mob-nav-item.active .mob-nav-icon {
+               background: transparent !important;
                color: inherit !important;
             }
 
             .mob-nav-primary {
-               height: 50px !important;
-               min-height: 50px !important;
-               padding: 4px 2px !important;
+               height: 60px !important;
+               min-height: 60px !important;
+               padding: 7px 2px 6px !important;
+               gap: 4px !important;
+               align-self: center !important;
+               justify-content: center !important;
                transform: none !important;
+               margin-top: 0 !important;
                color: var(--mob-dock-active) !important;
                background: transparent !important;
+               overflow: visible !important;
+               position: relative !important;
+               z-index: 3 !important;
             }
 
             .mob-nav-primary-icon {
-               width: 34px !important;
-               height: 34px !important;
+               width: 32px !important;
+               height: 32px !important;
                border: 0 !important;
-               border-radius: 12px !important;
-               background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%) !important;
+               border-radius: 50% !important;
+               display: flex !important;
+               align-items: center !important;
+               justify-content: center !important;
+               background: linear-gradient(180deg, var(--mob-dock-primary) 0%, var(--mob-dock-primary-2) 100%) !important;
                color: #ffffff !important;
                box-shadow:
-                  0 8px 16px rgba(37, 99, 235, 0.28),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+                  0 7px 14px rgba(37, 99, 235, 0.28),
+                  0 0 0 1px rgba(96, 165, 250, 0.2),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
+               margin-bottom: 0 !important;
+               position: relative !important;
+               z-index: 4 !important;
             }
 
             .mob-nav-primary-icon i {
                color: #ffffff !important;
                -webkit-text-fill-color: #ffffff !important;
-               font-size: 1.1rem !important;
+               font-size: 1.24rem !important;
+            }
+
+            .mob-nav-primary > span:last-child {
+               max-width: 78px !important;
+               margin-top: 0 !important;
+               color: var(--mob-dock-active) !important;
+               -webkit-text-fill-color: var(--mob-dock-active) !important;
+               font-size: 0.68rem !important;
+               font-weight: 900 !important;
+               line-height: 1.08 !important;
+               text-shadow: 0 1px 0 var(--mob-dock-bg), 0 2px 5px rgba(37, 99, 235, 0.16) !important;
+               position: relative !important;
+               z-index: 5 !important;
             }
 
             .mob-nav-primary.active .mob-nav-primary-icon {
                box-shadow:
-                  0 9px 18px rgba(37, 99, 235, 0.36),
-                  0 0 0 1px rgba(125, 211, 252, 0.34),
+                  0 8px 16px rgba(37, 99, 235, 0.34),
+                  0 0 0 1px rgba(96, 165, 250, 0.26),
                   inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+            }
+
+            .mob-nav-primary:active .mob-nav-primary-icon {
+               transform: scale(0.94) !important;
             }
          }
 
@@ -2660,7 +2743,7 @@
          /* --- PWA Install Prompt --- */
          #pwa-install-prompt {
             display: none; position: fixed;
-            bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 20px);
+            bottom: calc(var(--mob-nav-h) + var(--mob-nav-overlap) + var(--mob-safe-bottom) + 20px);
             left: 16px; right: 16px; z-index: 1050;
             background: rgba(8, 8, 15, 0.95);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -3107,7 +3190,7 @@
             <a href="{{ route('user.progress') }}"
                class="mob-nav-item {{ request()->routeIs('user.progress') ? 'active' : '' }}"
                id="mobnav-progress">
-               <span class="mob-nav-icon"><i class="fa-solid fa-chart-line"></i></span>
+               <span class="mob-nav-icon"><i class="fa-solid fa-chart-simple"></i></span>
                <span>Progress</span>
             </a>
             <a href="{{ route('interview.setup') }}"
@@ -3119,7 +3202,7 @@
             <a href="{{ route('user.feedback') }}"
                class="mob-nav-item {{ request()->routeIs('user.feedback', 'user.review') ? 'active' : '' }}"
                id="mobnav-feedback">
-               <span class="mob-nav-icon"><i class="fa-solid fa-clipboard-check"></i></span>
+               <span class="mob-nav-icon"><i class="fa-regular fa-clipboard-list"></i></span>
                <span>Feedback</span>
             </a>
             <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.modules.*', 'user.learning*', 'user.coach*', 'user.practice.*', 'user.reports') ? 'active' : '' }}"
@@ -3129,7 +3212,7 @@
                     aria-expanded="false"
                     aria-label="Open more menu"
                     onclick="toggleMobileProfile(event, 'pages')">
-               <span class="mob-nav-icon"><i class="fa-solid fa-grid-2"></i></span>
+               <span class="mob-nav-icon"><i class="fa-solid fa-grid"></i></span>
                <span>More</span>
             </button>
          </div>

@@ -247,7 +247,10 @@ class MobileLayoutTest extends TestCase
         $response->assertOk()
             ->assertSee('class="mob-nav-primary-icon"', false)
             ->assertSee('<span>Interview</span>', false)
-            ->assertSee('<span>More</span>', false);
+            ->assertSee('<span>More</span>', false)
+            ->assertSee('class="fa-solid fa-chart-simple"', false)
+            ->assertSee('class="fa-regular fa-clipboard-list"', false)
+            ->assertSee('class="fa-solid fa-grid"', false);
 
         $content = $response->getContent();
 
@@ -257,6 +260,51 @@ class MobileLayoutTest extends TestCase
         );
 
         $this->assertStringContainsString('class="mob-nav-item mob-nav-primary ', $content);
+        $this->assertStringContainsString('--mob-nav-h: 74px;', $content);
+        $this->assertStringContainsString('--mob-nav-overlap: 0px;', $content);
+        $this->assertStringContainsString('grid-template-columns: repeat(5, minmax(0, 1fr)) !important;', $content);
+        $this->assertStringContainsString('padding-bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 8px);', $content);
+        $this->assertStringNotContainsString('padding-bottom: calc(var(--mob-nav-h) + var(--mob-nav-overlap) + var(--mob-safe-bottom) + 8px);', $content);
+        $this->assertStringNotContainsString('height: calc(var(--mob-nav-h) + var(--mob-nav-overlap) + var(--mob-safe-bottom)) !important;', $content);
+        $this->assertStringContainsString('--mob-dock-bg: #0f172a;', $content);
+        $this->assertStringContainsString('--mob-dock-surface: var(--mob-dock-bg);', $content);
+        $this->assertStringContainsString('background: transparent !important;', $content);
+        $this->assertStringNotContainsString('linear-gradient(180deg, var(--bg) 0 var(--mob-nav-overlap), transparent var(--mob-nav-overlap)) !important;', $content);
+        $this->assertStringNotContainsString('--mob-dock-cutout', $content);
+        $this->assertStringNotContainsString('.mob-nav-primary::before', $content);
+        $this->assertStringContainsString('height: calc(var(--mob-nav-h) + var(--mob-safe-bottom)) !important;', $content);
+        $this->assertStringContainsString('box-shadow: none !important;', $content);
+        $this->assertStringNotContainsString('box-shadow: 0 -14px 34px rgba(2, 6, 23, 0.3) !important;', $content);
+        $this->assertStringNotContainsString('border-top: 1px solid var(--mob-dock-border) !important;', $content);
+        $this->assertStringContainsString('backdrop-filter: none !important;', $content);
+        $this->assertStringContainsString('-webkit-backdrop-filter: none !important;', $content);
+        $this->assertStringContainsString('top: 0 !important;', $content);
+        $this->assertStringContainsString('z-index: 1 !important;', $content);
+        $this->assertStringNotContainsString('calc(50% - 48px)', $content);
+        $this->assertStringNotContainsString('calc(50% + 48px)', $content);
+        $this->assertStringContainsString('padding: 0 max(10px, env(safe-area-inset-left, 0px)) 8px max(10px, env(safe-area-inset-right, 0px)) !important;', $content);
+        $this->assertStringContainsString('.mob-nav-item:not(.mob-nav-primary)', $content);
+        $this->assertStringContainsString('.mob-nav-item.active {', $content);
+        $this->assertStringNotContainsString('.mob-nav-item.active:not(.mob-nav-primary) {', $content);
+        $this->assertStringContainsString('margin-top: 0 !important;', $content);
+        $this->assertStringContainsString('justify-content: center !important;', $content);
+        $this->assertStringContainsString('align-self: center !important;', $content);
+        $this->assertStringContainsString('transform: none !important;', $content);
+        $this->assertStringContainsString('height: 60px !important;', $content);
+        $this->assertStringContainsString('min-height: 60px !important;', $content);
+        $this->assertStringContainsString('padding: 7px 2px 6px !important;', $content);
+        $this->assertStringContainsString('.mob-nav-primary > span:last-child', $content);
+        $this->assertStringContainsString('font-size: 0.68rem !important;', $content);
+        $this->assertStringContainsString('font-weight: 900 !important;', $content);
+        $this->assertStringContainsString('text-shadow: 0 1px 0 var(--mob-dock-bg), 0 2px 5px rgba(37, 99, 235, 0.16) !important;', $content);
+        $this->assertStringContainsString('width: 32px !important;', $content);
+        $this->assertStringContainsString('height: 32px !important;', $content);
+        $this->assertStringContainsString('border: 0 !important;', $content);
+        $this->assertStringNotContainsString('border: 5px solid var(--mob-dock-bg) !important;', $content);
+        $this->assertStringContainsString('border-radius: 50% !important;', $content);
+        $this->assertStringContainsString('position: relative !important;', $content);
+        $this->assertStringNotContainsString('top: calc(var(--mob-nav-overlap) * -1) !important;', $content);
+        $this->assertStringNotContainsString('translate: -50% 0 !important;', $content);
     }
 
     public function test_user_mobile_shell_includes_fullscreen_viewport_hardening(): void
