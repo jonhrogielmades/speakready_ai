@@ -3776,7 +3776,7 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 }
 
 .module-position-modal .module-position-actions {
-    justify-content: flex-end;
+    justify-content: center;
     gap: 9px;
     padding: 12px 18px 18px;
     background: color-mix(in srgb, var(--sf) 94%, var(--bg3) 6%);

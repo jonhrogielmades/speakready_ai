@@ -2,7 +2,7 @@
 @section('title', 'Interview Modules')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=9') }}" data-page-style="user-modules-index">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=10') }}" data-page-style="user-modules-index">
 @endpush
 
 @section('content')
