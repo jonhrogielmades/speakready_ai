@@ -2,7 +2,7 @@
 @section('title', 'Interview Modules')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=6') }}" data-page-style="user-modules-index">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=7') }}" data-page-style="user-modules-index">
 @endpush
 
 @section('content')
@@ -190,20 +190,25 @@
 </div>
 
 <div class="modal fade module-position-modal" id="modulePositionModal" tabindex="-1" aria-labelledby="modulePositionModalTitle" aria-hidden="true" data-show-on-load="{{ ($showModulePositionModal || $errors->has('target_position'))? 'true': 'false' }}" data-require-choice="{{ $selectedModulePosition === ''? 'true': 'false' }}">
- <div class="modal-dialog modal-dialog-centered">
+ <div class="modal-dialog modal-dialog-centered module-position-dialog">
  <form action="{{ route('user.modules.position') }}" method="POST" class="modal-content">
  @csrf
  <input type="hidden" name="category" value="{{ $currentCategory }}">
  <input type="hidden" name="search" value="{{ $currentSearch }}">
  <div class="modal-header">
  <button type="button" class="btn-close module-position-close-right" data-bs-dismiss="modal" aria-label="Close"></button>
+ <div class="module-position-title-wrap">
+ <span class="module-position-title-icon" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></span>
  <div class="module-position-heading">
  <div class="module-position-kicker">Interview Modules</div>
  <h5 class="modal-title" id="modulePositionModalTitle">What position are you applying for?</h5>
  </div>
  </div>
+ </div>
  <div class="modal-body">
+ <div class="module-position-field">
  <label for="moduleTargetPosition" class="form-label">Target position</label>
+ <div class="module-position-select-shell">
  <select class="form-control module-position-input @error('target_position') is-invalid @enderror" id="moduleTargetPosition" name="target_position" required>
  <option value="" disabled {{ $modulePositionValue === ''? 'selected': '' }}>Choose a target position</option>
  @if($modulePositionValue!== '' && ! $modulePositionOptions->contains(fn ($positionOption): bool => strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0))
@@ -213,8 +218,10 @@
  <option value="{{ $positionOption }}" {{ strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0? 'selected': '' }}>{{ $positionOption }}</option>
  @endforeach
  </select>
+ <span class="module-position-select-icon" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+ </div>
  @error('target_position')
- <div class="invalid-feedback">{{ $message }}</div>
+ <div class="invalid-feedback d-block">{{ $message }}</div>
  @enderror
 
  @if($modulePositionOptions->isNotEmpty())
@@ -225,11 +232,12 @@
  </div>
  @endif
  </div>
- <div class="modal-footer">
+ </div>
+ <div class="modal-footer module-position-actions">
  @if($selectedModulePosition!== '')
  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
  @endif
- <button type="submit" class="btn btn-primary">
+ <button type="submit" class="btn btn-primary module-position-submit-btn">
  <i class="fa-solid fa-filter me-1"></i> View Related Modules
  </button>
  </div>
