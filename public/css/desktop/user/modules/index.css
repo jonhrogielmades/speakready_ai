@@ -3595,13 +3595,13 @@ body.dm #interview-modules-page .module-search-input::placeholder,
     position: relative;
     align-items: flex-start;
     min-height: 80px;
-    padding-left: 64px;
+    padding-right: 64px;
 }
 
-.module-position-modal .module-position-close-left {
+.module-position-modal .module-position-close-right {
     position: absolute;
     top: 18px;
-    left: 18px;
+    right: 18px;
     width: 34px;
     height: 34px;
     margin: 0;
@@ -3611,8 +3611,8 @@ body.dm #interview-modules-page .module-search-input::placeholder,
     opacity: 1;
 }
 
-.module-position-modal .module-position-close-left:hover,
-.module-position-modal .module-position-close-left:focus {
+.module-position-modal .module-position-close-right:hover,
+.module-position-modal .module-position-close-right:focus {
     background-color: var(--bg2);
     box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.32), 0 0 0 4px rgba(37, 99, 235, 0.1);
     opacity: 1;
@@ -3717,12 +3717,12 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 
     .module-position-modal .modal-header {
         min-height: 76px;
-        padding-left: 58px;
+        padding-right: 58px;
     }
 
-    .module-position-modal .module-position-close-left {
+    .module-position-modal .module-position-close-right {
         top: 16px;
-        left: 16px;
+        right: 16px;
         width: 32px;
         height: 32px;
     }
