@@ -2,7 +2,7 @@
 @section('title', 'Interview Modules')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=8') }}" data-page-style="user-modules-index">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=9') }}" data-page-style="user-modules-index">
 @endpush
 
 @section('content')
@@ -208,17 +208,21 @@
  <div class="modal-body">
  <div class="module-position-field">
  <label for="moduleTargetPosition" class="form-label">Target position</label>
- <div class="module-position-select-shell">
- <select class="form-control module-position-input @error('target_position') is-invalid @enderror" id="moduleTargetPosition" name="target_position" required>
- <option value="" disabled {{ $modulePositionValue === ''? 'selected': '' }}>Choose a target position</option>
+ <div class="module-position-select-shell" data-position-select>
+ <input type="hidden" id="moduleTargetPosition" name="target_position" value="{{ $modulePositionValue }}" data-position-select-input>
+ <button type="button" class="module-position-select-button @error('target_position') is-invalid @enderror" id="moduleTargetPositionButton" aria-haspopup="listbox" aria-expanded="false" aria-controls="moduleTargetPositionMenu">
+ <span data-position-select-label>{{ $modulePositionValue!== ''? $modulePositionValue: 'Choose a target position' }}</span>
+ <span class="module-position-select-icon" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+ </button>
+ <div class="module-position-dropdown" id="moduleTargetPositionMenu" role="listbox" aria-labelledby="moduleTargetPositionButton">
  @if($modulePositionValue!== '' && ! $modulePositionOptions->contains(fn ($positionOption): bool => strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0))
- <option value="{{ $modulePositionValue }}" selected>{{ $modulePositionValue }}</option>
+ <button type="button" class="module-position-option is-selected" role="option" aria-selected="true" data-position-option="{{ $modulePositionValue }}">{{ $modulePositionValue }}</button>
  @endif
  @foreach($modulePositionOptions as $positionOption)
- <option value="{{ $positionOption }}" {{ strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0? 'selected': '' }}>{{ $positionOption }}</option>
+ @php($moduleOptionSelected = strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0)
+ <button type="button" class="module-position-option {{ $moduleOptionSelected? 'is-selected': '' }}" role="option" aria-selected="{{ $moduleOptionSelected? 'true': 'false' }}" data-position-option="{{ $positionOption }}">{{ $positionOption }}</button>
  @endforeach
- </select>
- <span class="module-position-select-icon" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+ </div>
  </div>
  @error('target_position')
  <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -256,6 +260,63 @@
  keyboard:!requireChoice
  }).show();
  }
+
+ document.querySelectorAll('[data-position-select]').forEach(selectShell => {
+ const input = selectShell.querySelector('[data-position-select-input]');
+ const button = selectShell.querySelector('.module-position-select-button');
+ const label = selectShell.querySelector('[data-position-select-label]');
+ const options = Array.from(selectShell.querySelectorAll('[data-position-option]'));
+ const form = selectShell.closest('form');
+ if (!input || !button || !label) return;
+
+ const closeMenu = () => {
+ selectShell.classList.remove('is-open');
+ button.setAttribute('aria-expanded', 'false');
+ };
+
+ const openMenu = () => {
+ selectShell.classList.add('is-open');
+ button.setAttribute('aria-expanded', 'true');
+ };
+
+ button.addEventListener('click', event => {
+ event.stopPropagation();
+ selectShell.classList.contains('is-open')? closeMenu(): openMenu();
+ });
+
+ options.forEach(option => {
+ option.addEventListener('click', () => {
+ input.value = option.dataset.positionOption || option.textContent.trim();
+ label.textContent = input.value || 'Choose a target position';
+ button.classList.remove('is-invalid');
+ options.forEach(candidate => {
+ const isSelected = candidate === option;
+ candidate.classList.toggle('is-selected', isSelected);
+ candidate.setAttribute('aria-selected', isSelected? 'true': 'false');
+ });
+ closeMenu();
+ button.focus();
+ });
+ });
+
+ document.addEventListener('click', event => {
+ if (!selectShell.contains(event.target)) closeMenu();
+ });
+
+ document.addEventListener('keydown', event => {
+ if (event.key === 'Escape') closeMenu();
+ });
+
+ if (form) {
+ form.addEventListener('submit', event => {
+ if (input.value.trim() !== '') return;
+ event.preventDefault();
+ button.classList.add('is-invalid');
+ openMenu();
+ button.focus();
+ });
+ }
+ });
 
  });
 </script>
