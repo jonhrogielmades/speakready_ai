@@ -2717,63 +2717,171 @@
     font-weight: 700;
     line-height: 1.4;
 }
+.challenge-position-modal .challenge-position-dialog {
+    max-width: 640px;
+}
+
 .challenge-position-modal .modal-content {
-    background: var(--sf);
+    position: relative;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--sf) 96%, #eff6ff 4%) 0%, var(--sf) 58%),
+        var(--sf);
     color: var(--tx);
-    border: 1px solid var(--bd);
-    border-radius: 16px;
-    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    border: 1px solid color-mix(in srgb, var(--bd) 82%, #60a5fa 18%);
+    border-radius: 20px;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.32);
     overflow: hidden;
 }
 .challenge-position-modal .modal-header,
 .challenge-position-modal .modal-footer {
-    border-color: var(--bd);
-    padding: 18px;
+    border-color: color-mix(in srgb, var(--bd) 86%, transparent 14%);
+}
+.challenge-position-modal .modal-header {
+    position: relative;
+    align-items: flex-start;
+    min-height: 92px;
+    padding: 22px 72px 20px 22px;
+    background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(20, 184, 166, 0.08)),
+        color-mix(in srgb, var(--sf) 92%, #eff6ff 8%);
+}
+.challenge-position-modal .challenge-position-close-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    margin: 0;
+    border-radius: 12px;
+    background-color: color-mix(in srgb, var(--sf) 84%, var(--bg3) 16%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--bd) 86%, #2563eb 14%);
+    opacity: 1;
+}
+.challenge-position-modal .challenge-position-close-right:hover,
+.challenge-position-modal .challenge-position-close-right:focus {
+    background-color: var(--bg2);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.32), 0 0 0 4px rgba(37, 99, 235, 0.1);
+    opacity: 1;
+}
+.challenge-position-modal .challenge-position-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-width: 0;
+}
+.challenge-position-modal .challenge-position-title-icon {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2563eb, #14b8a6);
+    color: #fff;
+    box-shadow: 0 12px 26px rgba(37, 99, 235, 0.22);
+}
+.challenge-position-modal .challenge-position-heading {
+    min-width: 0;
+}
+.challenge-position-modal .challenge-position-kicker {
+    margin-bottom: 3px;
+    color: #2563eb;
 }
 .challenge-position-modal .modal-title {
     color: var(--tx);
-    font-size: 1.1rem;
+    font-size: 1.26rem;
     font-weight: 950;
     line-height: 1.2;
 }
 .challenge-position-modal .modal-body {
-    padding: 18px;
+    padding: 22px;
+}
+.challenge-position-modal .challenge-position-field {
+    padding: 16px;
+    border: 1px solid color-mix(in srgb, var(--bd) 88%, transparent 12%);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--bg3) 70%, var(--sf) 30%);
 }
 .challenge-position-modal .form-label {
     color: var(--tx2);
     font-size: 0.82rem;
     font-weight: 850;
+    margin-bottom: 10px;
+}
+.challenge-position-modal .challenge-position-select-shell {
+    position: relative;
 }
 .challenge-position-modal .challenge-position-input {
-    min-height: 46px;
-    border-color: var(--bd);
-    border-radius: 11px;
-    background: var(--bg3);
+    width: 100%;
+    min-height: 54px;
+    padding: 0 46px 0 15px;
+    border-color: color-mix(in srgb, var(--bd) 84%, #2563eb 16%);
+    border-radius: 14px;
+    background: var(--sf);
     color: var(--tx);
-    font-weight: 700;
+    font-weight: 850;
+    appearance: none;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
 }
 .challenge-position-modal .challenge-position-input:focus {
     border-color: #2563eb;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14), 0 14px 28px rgba(37, 99, 235, 0.1);
+}
+.challenge-position-modal .challenge-position-select-icon {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    color: var(--tx3);
+    font-size: 0.78rem;
+    pointer-events: none;
 }
 .challenge-position-modal .challenge-position-suggestions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 9px;
+    margin-top: 14px;
 }
 .challenge-position-modal .challenge-position-suggestion {
-    border: 1px solid var(--bd);
-    border-radius: 999px;
-    background: var(--bg3);
+    min-height: 38px;
+    border: 1px solid color-mix(in srgb, var(--bd) 86%, transparent 14%);
+    border-radius: 11px;
+    background: var(--sf);
     color: var(--tx2);
-    padding: 7px 10px;
-    font-size: 0.78rem;
-    font-weight: 800;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 850;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
-.challenge-position-modal .challenge-position-suggestion:hover {
+.challenge-position-modal .challenge-position-suggestion:hover,
+.challenge-position-modal .challenge-position-suggestion:focus {
     border-color: rgba(37, 99, 235, 0.45);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
     color: #2563eb;
+    transform: translateY(-1px);
+}
+.challenge-position-modal .challenge-position-actions {
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 22px 22px;
+    background: color-mix(in srgb, var(--sf) 94%, var(--bg3) 6%);
+}
+.challenge-position-modal .challenge-position-actions .btn {
+    min-height: 48px;
+    border-radius: 13px;
+    font-weight: 900;
+    padding-inline: 18px;
+}
+.challenge-position-modal .challenge-position-submit-btn {
+    border: 0;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    box-shadow: 0 14px 26px rgba(37, 99, 235, 0.22);
+}
+.challenge-position-modal .challenge-position-submit-btn:hover,
+.challenge-position-modal .challenge-position-submit-btn:focus {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    box-shadow: 0 16px 30px rgba(37, 99, 235, 0.28);
 }
 :root:not(.lm) #learning-games-page .challenge-position-strip,
 .dm #learning-games-page .challenge-position-strip {
@@ -2790,6 +2898,10 @@
     background: #3b82f6;
     border-color: rgba(147, 197, 253, 0.32);
 }
+:root:not(.lm) .challenge-position-modal .challenge-position-close-right,
+.dm .challenge-position-modal .challenge-position-close-right {
+    background-color: #f8fafc;
+}
 
 @media (max-width: 576px) {
     #learning-games-page .challenge-position-strip {
@@ -2804,10 +2916,43 @@
     .challenge-position-modal .modal-dialog {
         margin: 12px;
     }
-    .challenge-position-modal .modal-header,
+    .challenge-position-modal .modal-header {
+        min-height: auto;
+        padding: 18px 58px 17px 16px;
+    }
     .challenge-position-modal .modal-body,
     .challenge-position-modal .modal-footer {
         padding: 16px;
+    }
+    .challenge-position-modal .challenge-position-title-wrap {
+        gap: 10px;
+    }
+    .challenge-position-modal .challenge-position-title-icon {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+    }
+    .challenge-position-modal .modal-title {
+        font-size: 1.08rem;
+    }
+    .challenge-position-modal .challenge-position-close-right {
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+    }
+    .challenge-position-modal .challenge-position-field {
+        padding: 13px;
+    }
+    .challenge-position-modal .challenge-position-input {
+        min-height: 50px;
+    }
+    .challenge-position-modal .challenge-position-suggestion {
+        flex: 1 1 calc(50% - 9px);
+        padding-inline: 10px;
+    }
+    .challenge-position-modal .challenge-position-actions {
+        gap: 8px;
     }
     .challenge-position-modal .modal-footer .btn {
         width: 100%;

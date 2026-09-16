@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=6') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=7') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -394,21 +394,24 @@
 </div>
 
 <div class="modal fade challenge-position-modal" id="challengePositionModal" tabindex="-1" aria-labelledby="challengePositionModalTitle" aria-hidden="true" data-show-on-load="{{ ($showPositionModal || $errors->has('target_position'))? 'true': 'false' }}" data-require-choice="{{ $selectedChallengePosition === ''? 'true': 'false' }}">
- <div class="modal-dialog modal-dialog-centered">
+ <div class="modal-dialog modal-dialog-centered challenge-position-dialog">
  <form action="{{ route('user.learning.position') }}" method="POST" class="modal-content">
  @csrf
  <input type="hidden" name="category_id" value="{{ $selectedCategory?->id }}">
  <div class="modal-header">
- <div>
+ <button type="button" class="btn-close challenge-position-close-right" data-bs-dismiss="modal" aria-label="Close"></button>
+ <div class="challenge-position-title-wrap">
+ <span class="challenge-position-title-icon" aria-hidden="true"><i class="fa-solid fa-trophy"></i></span>
+ <div class="challenge-position-heading">
  <div class="challenge-position-kicker">Interview Challenges</div>
  <h5 class="modal-title" id="challengePositionModalTitle">What position are you applying for?</h5>
  </div>
- @if($selectedChallengePosition!== '')
- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
- @endif
+ </div>
  </div>
  <div class="modal-body">
+ <div class="challenge-position-field">
  <label for="challengeTargetPosition" class="form-label">Target position</label>
+ <div class="challenge-position-select-shell">
  <select class="form-control challenge-position-input @error('target_position') is-invalid @enderror" id="challengeTargetPosition" name="target_position" required>
  <option value="" disabled {{ $challengePositionValue === ''? 'selected': '' }}>Choose a target position</option>
  @if($challengePositionValue!== '' && ! $challengePositionOptions->contains(fn ($positionOption): bool => strcasecmp((string) $positionOption, (string) $challengePositionValue) === 0))
@@ -418,8 +421,10 @@
  <option value="{{ $positionOption }}" {{ strcasecmp((string) $positionOption, (string) $challengePositionValue) === 0? 'selected': '' }}>{{ $positionOption }}</option>
  @endforeach
  </select>
+ <span class="challenge-position-select-icon" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+ </div>
  @error('target_position')
- <div class="invalid-feedback">{{ $message }}</div>
+ <div class="invalid-feedback d-block">{{ $message }}</div>
  @enderror
 
  @if($challengePositionOptions->isNotEmpty())
@@ -430,11 +435,12 @@
  </div>
  @endif
  </div>
- <div class="modal-footer">
+ </div>
+ <div class="modal-footer challenge-position-actions">
  @if($selectedChallengePosition!== '')
  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
  @endif
- <button type="submit" class="btn btn-primary">
+ <button type="submit" class="btn btn-primary challenge-position-submit-btn">
  <i class="fa-solid fa-filter me-1"></i> View Related Challenges
  </button>
  </div>
