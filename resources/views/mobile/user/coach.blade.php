@@ -282,8 +282,93 @@
             return String(text || '').replace(/\s+/g, ' ').trim();
         }
 
+        const coachVoiceDuplicateSafeWords = new Set([
+            'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
+            'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
+        ]);
+
+        function coachVoiceNormalize(text) {
+            return coachVoiceSegment(text)
+                .toLocaleLowerCase(coachVoiceLocale())
+                .replace(/[^\p{L}\p{N}'\u2019\s]/gu, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function coachVoiceWords(text) {
+            return coachVoiceSegment(text).split(/\s+/).filter(Boolean);
+        }
+
+        function coachVoiceAppendWithoutOverlap(existing, addition) {
+            const existingClean = coachVoiceSegment(existing);
+            const additionClean = coachVoiceSegment(addition);
+            if (!existingClean) return additionClean;
+            if (!additionClean) return existingClean;
+
+            const existingWords = coachVoiceWords(existingClean);
+            const additionWords = coachVoiceWords(additionClean);
+            const existingNormalized = existingWords.map(coachVoiceNormalize);
+            const additionNormalized = additionWords.map(coachVoiceNormalize);
+            const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, 96);
+            let overlap = 0;
+
+            for (let size = maxOverlap; size > 0; size -= 1) {
+                const existingTail = existingNormalized.slice(existingNormalized.length - size).join(' ');
+                const additionHead = additionNormalized.slice(0, size).join(' ');
+                if (existingTail && existingTail === additionHead) {
+                    overlap = size;
+                    break;
+                }
+            }
+
+            const remainder = additionWords.slice(overlap).join(' ');
+            return coachVoiceSegment(existingClean + (remainder ? ' ' + remainder : ''));
+        }
+
+        function coachVoiceShouldCollapseDuplicate(size, normalizedPhrase) {
+            if (!normalizedPhrase) return false;
+            if (size >= 2) return true;
+
+            return normalizedPhrase.length > 2 || coachVoiceDuplicateSafeWords.has(normalizedPhrase);
+        }
+
+        function coachVoiceCollapseDuplicates(text) {
+            const words = coachVoiceWords(text);
+            if (words.length < 2) return coachVoiceSegment(text);
+
+            let index = 0;
+            while (index < words.length) {
+                let collapsed = false;
+                const maxWindow = Math.min(96, Math.floor((words.length - index) / 2));
+
+                for (let size = maxWindow; size > 0; size -= 1) {
+                    const first = words.slice(index, index + size).map(coachVoiceNormalize).join(' ');
+                    const second = words.slice(index + size, index + (size * 2)).map(coachVoiceNormalize).join(' ');
+
+                    if (first && first === second && coachVoiceShouldCollapseDuplicate(size, first)) {
+                        words.splice(index + size, size);
+                        index = Math.max(0, index - size);
+                        collapsed = true;
+                        break;
+                    }
+                }
+
+                if (!collapsed) index += 1;
+            }
+
+            return coachVoiceSegment(words.join(' '));
+        }
+
         function coachVoiceText(...segments) {
-            return segments.map(coachVoiceSegment).filter(Boolean).join(' ');
+            let merged = '';
+            segments.forEach(segment => {
+                const clean = coachVoiceSegment(segment);
+                if (clean) {
+                    merged = coachVoiceAppendWithoutOverlap(merged, clean);
+                }
+            });
+
+            return coachVoiceCollapseDuplicates(merged);
         }
 
         function setCoachVoiceState(isActive) {

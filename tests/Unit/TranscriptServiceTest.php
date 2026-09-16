@@ -49,6 +49,20 @@ class TranscriptServiceTest extends TestCase
         );
     }
 
+    public function test_it_collapses_very_long_repeated_ai_transcription_chunks(): void
+    {
+        $phrase = implode(' ', array_map(
+            fn (int $index): string => "milestone{$index}",
+            range(1, 48)
+        ));
+        $transcript = "{$phrase} {$phrase} after that I summarized the result.";
+
+        $this->assertSame(
+            "{$phrase} after that I summarized the result.",
+            TranscriptService::clean($transcript)
+        );
+    }
+
     public function test_it_auto_corrects_common_transcription_word_errors(): void
     {
         $transcript = 'teh api improovement helped alot because im responsable for qa and didnt miss teh sla.';

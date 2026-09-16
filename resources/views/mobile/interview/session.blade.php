@@ -615,9 +615,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
  'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
  ]);
- const transcriptDuplicatePhraseMaxWords = 32;
- const transcriptOverlapMaxWords = 64;
- const transcriptRecentDuplicateScanWords = 180;
+ const transcriptDuplicatePhraseMaxWords = 96;
+ const transcriptOverlapMaxWords = 240;
+ const transcriptRecentDuplicateScanWords = 360;
  const voiceSessionRecordings = new Map();
  let voiceSessionRecorder = null;
  let voiceSessionStream = null;

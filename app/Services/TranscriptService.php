@@ -4,7 +4,7 @@ namespace App\Services;
 
 final class TranscriptService
 {
-    private const MAX_DUPLICATE_PHRASE_WORDS = 32;
+    private const MAX_DUPLICATE_PHRASE_WORDS = 96;
 
     private const WORD_CORRECTIONS = [
         'i' => 'I',
