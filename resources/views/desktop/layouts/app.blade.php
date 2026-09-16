@@ -47,7 +47,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=35') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=36') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           

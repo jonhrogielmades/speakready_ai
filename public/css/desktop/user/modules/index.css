@@ -3576,6 +3576,7 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 }
 
 .module-position-modal .modal-content {
+    position: relative;
     background: var(--sf);
     color: var(--tx);
     border: 1px solid var(--bd);
@@ -3588,6 +3589,37 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 .module-position-modal .modal-footer {
     border-color: var(--bd);
     padding: 18px;
+}
+
+.module-position-modal .modal-header {
+    position: relative;
+    align-items: flex-start;
+    min-height: 80px;
+    padding-left: 64px;
+}
+
+.module-position-modal .module-position-close-left {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    width: 34px;
+    height: 34px;
+    margin: 0;
+    border-radius: 10px;
+    background-color: var(--bg3);
+    box-shadow: 0 0 0 1px var(--bd);
+    opacity: 1;
+}
+
+.module-position-modal .module-position-close-left:hover,
+.module-position-modal .module-position-close-left:focus {
+    background-color: var(--bg2);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.32), 0 0 0 4px rgba(37, 99, 235, 0.1);
+    opacity: 1;
+}
+
+.module-position-modal .module-position-heading {
+    min-width: 0;
 }
 
 .module-position-modal .modal-title {
@@ -3681,6 +3713,18 @@ body.dm #interview-modules-page .module-search-input::placeholder,
     .module-position-modal .modal-body,
     .module-position-modal .modal-footer {
         padding: 16px;
+    }
+
+    .module-position-modal .modal-header {
+        min-height: 76px;
+        padding-left: 58px;
+    }
+
+    .module-position-modal .module-position-close-left {
+        top: 16px;
+        left: 16px;
+        width: 32px;
+        height: 32px;
     }
 
     .module-position-modal .modal-footer .btn {

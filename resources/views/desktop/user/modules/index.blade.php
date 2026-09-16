@@ -2,7 +2,7 @@
 @section('title', 'Interview Modules')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=4') }}" data-page-style="user-modules-index">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=5') }}" data-page-style="user-modules-index">
 @endpush
 
 @section('content')
@@ -196,13 +196,11 @@
  <input type="hidden" name="category" value="{{ $currentCategory }}">
  <input type="hidden" name="search" value="{{ $currentSearch }}">
  <div class="modal-header">
- <div>
+ <button type="button" class="btn-close module-position-close-left" data-bs-dismiss="modal" aria-label="Close"></button>
+ <div class="module-position-heading">
  <div class="module-position-kicker">Interview Modules</div>
  <h5 class="modal-title" id="modulePositionModalTitle">What position are you applying for?</h5>
  </div>
- @if($selectedModulePosition!== '')
- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
- @endif
  </div>
  <div class="modal-body">
  <label for="moduleTargetPosition" class="form-label">Target position</label>
