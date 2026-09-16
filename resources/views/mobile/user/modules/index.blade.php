@@ -2,7 +2,7 @@
 @section('title', 'Interview Modules')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/modules/index.css?v=1') }}" data-page-style="user-modules-index">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/modules/index.css?v=2') }}" data-page-style="user-modules-index">
 @endpush
 
 @section('content')
@@ -213,13 +213,6 @@
  <div class="invalid-feedback">{{ $message }}</div>
  @enderror
 
- @if($modulePositionOptions->isNotEmpty())
- <div class="module-position-suggestions" aria-label="Suggested positions">
- @foreach($modulePositionOptions->take(6) as $positionOption)
- <button type="button" class="module-position-suggestion" data-module-position-suggestion="{{ $positionOption }}">{{ $positionOption }}</button>
- @endforeach
- </div>
- @endif
  </div>
  <div class="modal-footer">
  @if($selectedModulePosition!== '')
@@ -252,15 +245,6 @@
  }).show();
  }
 
- const positionInput = document.getElementById('moduleTargetPosition');
- document.querySelectorAll('[data-module-position-suggestion]').forEach(button => {
- button.addEventListener('click', function () {
- if (!positionInput) return;
-
- positionInput.value = this.dataset.modulePositionSuggestion || this.textContent.trim();
- positionInput.focus();
- });
- });
  });
 </script>
 @endpush

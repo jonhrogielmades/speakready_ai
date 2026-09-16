@@ -3244,28 +3244,6 @@ body.dm #interview-modules-page .module-search-input::placeholder,
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
 }
 
-.module-position-modal .module-position-suggestions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.module-position-modal .module-position-suggestion {
-    border: 1px solid var(--bd);
-    border-radius: 999px;
-    background: var(--bg3);
-    color: var(--tx2);
-    padding: 7px 10px;
-    font-size: 0.78rem;
-    font-weight: 800;
-}
-
-.module-position-modal .module-position-suggestion:hover {
-    border-color: rgba(37, 99, 235, 0.45);
-    color: #2563eb;
-}
-
 .module-position-modal .modal-footer .btn {
     width: 100%;
     min-height: 42px;

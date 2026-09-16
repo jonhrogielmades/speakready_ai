@@ -2482,25 +2482,6 @@
     border-color: #2563eb;
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
 }
-.challenge-position-modal .challenge-position-suggestions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-}
-.challenge-position-modal .challenge-position-suggestion {
-    border: 1px solid var(--bd);
-    border-radius: 999px;
-    background: var(--bg3);
-    color: var(--tx2);
-    padding: 7px 10px;
-    font-size: 0.78rem;
-    font-weight: 800;
-}
-.challenge-position-modal .challenge-position-suggestion:hover {
-    border-color: rgba(37, 99, 235, 0.45);
-    color: #2563eb;
-}
 :root:not(.lm) #learning-games-page .challenge-position-strip,
 .dm #learning-games-page .challenge-position-strip {
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.94), rgba(15, 23, 42, 0.96));

@@ -3712,33 +3712,6 @@ body.dm #interview-modules-page .module-search-input::placeholder,
     pointer-events: none;
 }
 
-.module-position-modal .module-position-suggestions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 9px;
-    margin-top: 14px;
-}
-
-.module-position-modal .module-position-suggestion {
-    min-height: 38px;
-    border: 1px solid color-mix(in srgb, var(--bd) 86%, transparent 14%);
-    border-radius: 11px;
-    background: var(--sf);
-    color: var(--tx2);
-    padding: 8px 12px;
-    font-size: 0.8rem;
-    font-weight: 850;
-    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
-}
-
-.module-position-modal .module-position-suggestion:hover,
-.module-position-modal .module-position-suggestion:focus {
-    border-color: rgba(37, 99, 235, 0.45);
-    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
-    color: #2563eb;
-    transform: translateY(-1px);
-}
-
 .module-position-modal .module-position-actions {
     justify-content: flex-end;
     gap: 10px;
@@ -3841,11 +3814,6 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 
     .module-position-modal .module-position-input {
         min-height: 50px;
-    }
-
-    .module-position-modal .module-position-suggestion {
-        flex: 1 1 calc(50% - 9px);
-        padding-inline: 10px;
     }
 
     .module-position-modal .module-position-actions {

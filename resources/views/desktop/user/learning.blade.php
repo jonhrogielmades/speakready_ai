@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=7') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=8') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -427,13 +427,6 @@
  <div class="invalid-feedback d-block">{{ $message }}</div>
  @enderror
 
- @if($challengePositionOptions->isNotEmpty())
- <div class="challenge-position-suggestions" aria-label="Suggested positions">
- @foreach($challengePositionOptions->take(6) as $positionOption)
- <button type="button" class="challenge-position-suggestion" data-position-suggestion="{{ $positionOption }}">{{ $positionOption }}</button>
- @endforeach
- </div>
- @endif
  </div>
  </div>
  <div class="modal-footer challenge-position-actions">
@@ -778,15 +771,6 @@
  });
  });
 
- const positionInput = document.getElementById('challengeTargetPosition');
- document.querySelectorAll('[data-position-suggestion]').forEach(button => {
- button.addEventListener('click', function () {
- if (!positionInput) return;
-
- positionInput.value = this.dataset.positionSuggestion || this.textContent.trim();
- positionInput.focus();
- });
- });
  });
 
  document.addEventListener("DOMContentLoaded", function() {

@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=2') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=3') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -422,13 +422,6 @@
  <div class="invalid-feedback">{{ $message }}</div>
  @enderror
 
- @if($challengePositionOptions->isNotEmpty())
- <div class="challenge-position-suggestions" aria-label="Suggested positions">
- @foreach($challengePositionOptions->take(6) as $positionOption)
- <button type="button" class="challenge-position-suggestion" data-position-suggestion="{{ $positionOption }}">{{ $positionOption }}</button>
- @endforeach
- </div>
- @endif
  </div>
  <div class="modal-footer">
  @if($selectedChallengePosition!== '')
@@ -772,15 +765,6 @@
  });
  });
 
- const positionInput = document.getElementById('challengeTargetPosition');
- document.querySelectorAll('[data-position-suggestion]').forEach(button => {
- button.addEventListener('click', function () {
- if (!positionInput) return;
-
- positionInput.value = this.dataset.positionSuggestion || this.textContent.trim();
- positionInput.focus();
- });
- });
  });
 
  document.addEventListener("DOMContentLoaded", function() {
