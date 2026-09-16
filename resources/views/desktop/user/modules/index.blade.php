@@ -219,7 +219,9 @@
  <button type="button" class="module-position-option is-selected" role="option" aria-selected="true" data-position-option="{{ $modulePositionValue }}">{{ $modulePositionValue }}</button>
  @endif
  @foreach($modulePositionOptions as $positionOption)
- @php($moduleOptionSelected = strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0)
+ @php
+ $moduleOptionSelected = strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0;
+ @endphp
  <button type="button" class="module-position-option {{ $moduleOptionSelected? 'is-selected': '' }}" role="option" aria-selected="{{ $moduleOptionSelected? 'true': 'false' }}" data-position-option="{{ $positionOption }}">{{ $positionOption }}</button>
  @endforeach
  </div>

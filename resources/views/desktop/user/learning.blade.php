@@ -422,7 +422,9 @@
  <button type="button" class="challenge-position-option is-selected" role="option" aria-selected="true" data-position-option="{{ $challengePositionValue }}">{{ $challengePositionValue }}</button>
  @endif
  @foreach($challengePositionOptions as $positionOption)
- @php($challengeOptionSelected = strcasecmp((string) $positionOption, (string) $challengePositionValue) === 0)
+ @php
+ $challengeOptionSelected = strcasecmp((string) $positionOption, (string) $challengePositionValue) === 0;
+ @endphp
  <button type="button" class="challenge-position-option {{ $challengeOptionSelected? 'is-selected': '' }}" role="option" aria-selected="{{ $challengeOptionSelected? 'true': 'false' }}" data-position-option="{{ $positionOption }}">{{ $positionOption }}</button>
  @endforeach
  </div>
