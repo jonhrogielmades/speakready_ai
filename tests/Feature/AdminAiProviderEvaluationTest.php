@@ -669,7 +669,16 @@ class AdminAiProviderEvaluationTest extends TestCase
  $cohere = $this->configuredProvider('Cohere', false);
  $this->rankedEvaluationRun($openAi, $groq, $cohere);
 
- Http::fake();
+ $generatedOpening = "Good to meet you, I'm Karyl, and I'll guide this Developer interview. To start, could you introduce yourself with your name, where you're currently based, and the background you want me to know first?";
+ Http::fake([
+ 'api.openai.com/*' => Http::response([
+ 'choices' => [[
+ 'message' => [
+ 'content' => $generatedOpening,
+ ],
+ ]],
+ ], 200),
+ ]);
 
  $this->actingAs($user)
  ->post(route('interview.start'), [
@@ -692,7 +701,9 @@ class AdminAiProviderEvaluationTest extends TestCase
  $this->assertCount(1, $questions);
  $this->assertSame('real_interview_opening', $questions->first()->source_type);
  $this->assertSame('Personal', $questions->first()->type);
- Http::assertNothingSent();
+ $this->assertSame($generatedOpening, $questions->first()->question_text);
+ $this->assertSame('openai', $questions->first()->ai_provider);
+ Http::assertSent(fn ($request) => str_contains($request->url(), 'api.openai.com'));
  }
 
  public function test_interview_finish_uses_ranked_feedback_provider(): void

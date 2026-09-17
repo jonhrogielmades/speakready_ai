@@ -64,7 +64,7 @@ return [
  'openai' => [
  'tts_enabled' => env('AI_TTS_ENABLED', false),
  'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
- 'tts_voice' => env('OPENAI_TTS_VOICE', 'alloy'),
+ 'tts_voice' => env('OPENAI_TTS_VOICE', 'nova'),
  'tts_speed' => env('OPENAI_TTS_SPEED', 0.95),
  'tts_timeout' => env('AI_TTS_TIMEOUT', 30),
  'transcription_model' => env('OPENAI_TRANSCRIPTION_MODEL', 'gpt-transcribe'),
@@ -74,7 +74,7 @@ return [
  'gemini' => [
  'tts_model' => env('GEMINI_TTS_MODEL', 'gemini-3.1-flash-tts-preview'),
  'tts_voice' => env('GEMINI_TTS_VOICE', 'Kore'),
- 'tts_style' => env('GEMINI_TTS_STYLE', 'Say in a warm, clear, professional interviewer voice with natural English pronunciation and steady pacing'),
+ 'tts_style' => env('GEMINI_TTS_STYLE', 'Say in a warm, clear, professional female interviewer voice with natural English pronunciation and steady pacing'),
  'transcription_model' => env('GEMINI_TRANSCRIPTION_MODEL', env('GEMINI_MODEL', 'gemini-3.6-flash')),
  ],
 
@@ -82,7 +82,7 @@ return [
  'api_key' => env('ELEVENLABS_API_KEY'),
  'api_endpoint' => env('ELEVENLABS_API_URL', 'https://api.elevenlabs.io/v1'),
  'tts_model' => env('ELEVENLABS_TTS_MODEL', 'eleven_multilingual_v2'),
- 'tts_voice_id' => env('ELEVENLABS_TTS_VOICE_ID', 'XrExE9yKIg1WjnnlVkGX'),
+ 'tts_voice_id' => env('ELEVENLABS_TTS_VOICE_ID', '21m00Tcm4TlvDq8ikWAM'),
  'tts_output_format' => env('ELEVENLABS_TTS_OUTPUT_FORMAT', 'mp3_44100_128'),
  'tts_language_code' => env('ELEVENLABS_TTS_LANGUAGE_CODE'),
  'tts_stability' => env('ELEVENLABS_TTS_STABILITY', 0.45),

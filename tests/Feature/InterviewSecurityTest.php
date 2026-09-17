@@ -298,6 +298,8 @@ class InterviewSecurityTest extends TestCase
 
         Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'
             && $request['model'] === 'gpt-4o-mini-tts'
+            && $request['voice'] === 'nova'
+            && str_contains((string) $request['instructions'], 'female interviewer')
             && $request['input'] === $question->question_text);
     }
 
@@ -339,6 +341,8 @@ class InterviewSecurityTest extends TestCase
 
         Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'
             && $request['model'] === 'gpt-4o-mini-tts'
+            && $request['voice'] === 'nova'
+            && str_contains((string) $request['instructions'], 'female interviewer')
             && $request['input'] === $closingText);
     }
 
@@ -392,6 +396,7 @@ class InterviewSecurityTest extends TestCase
         Http::assertSent(fn ($request) => $request->url() === 'https://generativelanguage.googleapis.com/v1beta/interactions'
             && $request['model'] === 'gemini-3.1-flash-tts-preview'
             && data_get($request->data(), 'generation_config.speech_config.0.voice') === 'Kore'
+            && str_contains((string) $request['input'], 'female interviewer')
             && str_contains((string) $request['input'], $question->question_text));
     }
 

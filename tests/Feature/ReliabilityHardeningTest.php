@@ -388,7 +388,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertStringContainsString('Tell me about yourself and why this role in your Southern Leyte or Philippine context fits your next step.', $capturedPrompt);
  }
 
- public function test_user_start_defers_source_backed_questions_without_ai_blocking(): void
+ public function test_user_start_saves_provider_generated_opening_intro_without_question_count(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Job Interview']);
@@ -396,8 +396,17 @@ class ReliabilityHardeningTest extends TestCase
  'api_endpoint' => 'https://api.openai.com/v1',
  'is_primary' => true,
  ]);
+ $generatedOpening = "Good to meet you, I'm Karyl, and I'll guide this Backend Developer interview. To start, could you introduce yourself with your name, where you're currently based, and the background you want me to know first?";
 
- Http::fake();
+ Http::fake([
+ 'api.openai.com/*' => Http::response([
+ 'choices' => [[
+ 'message' => [
+ 'content' => $generatedOpening,
+ ],
+ ]],
+ ], 200),
+ ]);
 
  $this->actingAs($user)
  ->post(route('interview.start'), [
@@ -416,10 +425,11 @@ class ReliabilityHardeningTest extends TestCase
 
  $this->assertCount(1, $startQuestions);
  $openingQuestion = $startQuestions->first();
- $this->assertMatchesRegularExpression('/backend developer/i', $openingQuestion->question_text);
- $this->assertNull($openingQuestion->ai_provider);
+ $this->assertSame($generatedOpening, $openingQuestion->question_text);
+ $this->assertStringNotContainsString('questions', strtolower($openingQuestion->question_text));
+ $this->assertSame('openai', $openingQuestion->ai_provider);
  $this->assertSame('real_interview_opening', $openingQuestion->source_type);
- Http::assertNothingSent();
+ Http::assertSent(fn ($request) => str_contains($request->url(), 'api.openai.com'));
  }
 
  public function test_user_ai_follow_up_question_is_saved_to_admin_question_bank(): void
@@ -804,7 +814,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Final draft answer saved before ending.');
  }
 
- public function test_interview_session_renders_human_opening_and_closing_conversation_flow(): void
+ public function test_interview_session_renders_single_saved_intro_and_closing_conversation_flow(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Software Engineering']);
@@ -822,8 +832,8 @@ class ReliabilityHardeningTest extends TestCase
  ->withSession(['active_interview_id' => $session->id])
  ->get(route('interview.session'))
  ->assertOk()
- ->assertSee('openingConversationText', false)
- ->assertSee('beginOpeningConversation', false)
+ ->assertDontSee('openingConversationText', false)
+ ->assertDontSee('beginOpeningConversation', false)
  ->assertSee('closingConversationText', false)
  ->assertSee('concludeAndFinishInterview', false)
  ->assertSee('playClosingConversationAndSubmit', false)
@@ -831,7 +841,9 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('requestAbortInterviewSession', false)
  ->assertSee('confirmAbortInterviewSession', false)
  ->assertSee(route('interview.abort'), false)
- ->assertSee('openingHasPlayed', false)
+ ->assertDontSee('openingHasPlayed', false)
+ ->assertDontSee('pluralizeQuestionCount', false)
+ ->assertDontSee('We have ${pluralizeQuestionCount()} today.', false)
  ->assertDontSee('firstQuestionIntroText', false)
  ->assertDontSee('Here is your first question.', false)
  ->assertDontSee('first_question_intro', false)
@@ -1553,7 +1565,7 @@ class ReliabilityHardeningTest extends TestCase
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('css/mobile/user/review.css?v=8', false)
+ ->assertSee('css/mobile/user/review.css?v=9', false)
  ->assertSee('appendRetryAttempt(answerId, data);', false);
  }
 

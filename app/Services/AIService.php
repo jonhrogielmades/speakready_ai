@@ -768,6 +768,94 @@ class AIService
  return self::fallbackInterviewReply($session, $history, $latestAnswer, $isFinal);
  }
 
+ public static function generateInterviewOpeningIntro($session, $provider = 'openai', $targetLanguage = null, $datasetContext = null): array
+ {
+ $requestedProvider = self::normalizeProviderName($provider);
+ if (in_array($requestedProvider, ['local', 'localmodel'], true)) {
+ return [
+ 'text' => self::fallbackInterviewOpeningIntro($session),
+ 'provider' => 'local',
+ 'source' => 'local_fallback',
+ ];
+ }
+
+ $targetPosition = trim((string) ($session->target_position?? ''))?: 'this role';
+ $difficulty = trim((string) ($session->difficulty?? 'medium'))?: 'medium';
+ $focus = trim((string) ($session->interview_focus?? 'Interview'))?: 'Interview';
+ $liveFeedbackMode = self::normalizedLiveFeedbackMode($session->live_feedback_mode?? 'coaching');
+ $prompt = "Create ONE spoken opening introduction for a realistic mock interview. ";
+ $prompt.= 'Combine the interviewer greeting and the candidate self-introduction prompt into one natural turn. ';
+ $prompt.= 'The interviewer is named '.self::INTERVIEWER_DISPLAY_NAME.". The target position is '{$targetPosition}'. The difficulty is '{$difficulty}', and the interview focus is '{$focus}'. ";
+ $prompt.= "Ask the candidate to introduce themselves with their name, current location, and brief background or experience relevant to '{$targetPosition}'. ";
+ $prompt.= 'Do not mention how many questions there will be. Do not say "first question", "question count", or any number of questions. ';
+ $prompt.= 'Do not evaluate, coach, explain the rubric, or mention feedback timing unless it is necessary in a short natural phrase. ';
+ $prompt.= 'Use one concise paragraph for speech, under 70 words, with exactly one question mark. ';
+ $prompt.= 'Do not include markdown, labels, JSON, or prefixes like "Interviewer:". ';
+ $prompt.= self::languageOutputInstruction($targetLanguage, 'the whole interviewer opening');
+ $prompt.= self::assistanceLevelInstruction($session->ai_assistance_level?? 'standard');
+ $prompt.= self::liveFeedbackModeInstruction($liveFeedbackMode);
+
+ $sessionContext = strtolower($focus.' '.(is_array($datasetContext)? ($datasetContext['country']?? '').' '.($datasetContext['name']?? ''): (string) $datasetContext));
+ if (str_contains($sessionContext, 'philipp') || str_contains($sessionContext, 'filipino')) {
+ $prompt.= self::localHiringContextInstruction();
+ }
+
+ if (data_get($session->accommodation_profile?? [], 'simplified_questions', false)) {
+ $prompt.= 'Use plain, literal wording without lowering the interview standard. ';
+ }
+
+ if (! empty($session->resume_text)) {
+ $prompt.= "Candidate background summary: '".self::truncateText(trim(preg_replace('/\s+/', ' ', $session->resume_text)?? ''), 160)."'. ";
+ }
+
+ if (! empty($session->job_description)) {
+ $prompt.= "Target job description summary: '".self::truncateText(trim(preg_replace('/\s+/', ' ', $session->job_description)?? ''), 140)."'. ";
+ }
+
+ $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Write only the spoken opening turn. It must greet the candidate and ask for their self-introduction in one combined prompt. Never mention the number of interview questions. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $providers = self::providerPriorityList($provider);
+ $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_INTERVIEW_OPENING_MAX_PROVIDERS', 2)));
+ $providers = array_slice($providers, 0, $maxProviders);
+ $requestOptions = [
+ 'timeout_seconds' => max(2, min(20, (int) env('AI_INTERVIEW_OPENING_TIMEOUT', 6))),
+ 'attempts' => max(1, min(2, (int) env('AI_INTERVIEW_OPENING_HTTP_ATTEMPTS', 1))),
+ 'max_providers' => 1,
+ ];
+
+ foreach ($providers as $currentProvider) {
+ if (! self::shouldAttemptProvider($currentProvider)) {
+ continue;
+ }
+
+ try {
+ $response = self::chatMessage($prompt, [], $currentProvider, $systemPrompt, $requestOptions);
+ $opening = self::sanitizeInterviewOpeningIntro($response);
+
+ if ($opening!== '') {
+ return [
+ 'text' => $opening,
+ 'provider' => $currentProvider,
+ 'source' => 'ai_provider',
+ ];
+ }
+ } catch (\Throwable $error) {
+ if (! self::externalAiDisabledForTests()) {
+ Log::warning('AI interview opening generation failed.', [
+ 'provider' => $currentProvider,
+ 'error_type' => $error::class,
+ 'message' => self::safeProviderErrorMessage($error),
+ ]);
+ }
+ }
+ }
+
+ return [
+ 'text' => self::fallbackInterviewOpeningIntro($session),
+ 'provider' => 'local',
+ 'source' => 'local_fallback',
+ ];
+ }
+
  public static function generateCoachPossibleAnswer($session, $question, $provider = 'openai', $targetLanguage = null): array
  {
  $provider = self::normalizeProviderName($provider);
@@ -1016,6 +1104,31 @@ class AIService
  }
 
  return '';
+ }
+
+ private static function fallbackInterviewOpeningIntro($session): string
+ {
+ $targetPosition = trim((string) ($session->target_position?? ''))?: 'this role';
+
+ return 'I am '.self::INTERVIEWER_DISPLAY_NAME.", and I will be your interviewer for the {$targetPosition} interview. To begin, could you introduce yourself with your name, where you are currently based, and the background or experience you would like me to know first?";
+ }
+
+ private static function sanitizeInterviewOpeningIntro(string $reply): string
+ {
+ $reply = self::sanitizeInterviewerReply($reply);
+ if ($reply === '') {
+ return '';
+ }
+
+ if (preg_match('/\b(?:first\s+question|question\s+count|how\s+many\s+questions|(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|several|few)\s+questions?)\b/i', $reply)) {
+ return '';
+ }
+
+ if (! preg_match('/\b(?:introduce yourself|your name|name|background|experience|currently based|location|where you are based)\b/i', $reply)) {
+ return '';
+ }
+
+ return $reply;
  }
 
  private static function answerAnchor(string $answerText): string
@@ -2194,7 +2307,7 @@ PROMPT;
 
  $language = self::languageConfigFrom($targetLanguage);
  $model = (string) config('services.openai.tts_model', 'gpt-4o-mini-tts');
- $voice = (string) config('services.openai.tts_voice', 'alloy');
+ $voice = self::openAiFemaleSpeechVoice((string) config('services.openai.tts_voice', 'nova'));
  $speed = (float) config('services.openai.tts_speed', 0.95);
  $speed = max(0.25, min(4.0, $speed));
 
@@ -2208,7 +2321,7 @@ PROMPT;
 
  if (! in_array($model, ['tts-1', 'tts-1-hd'], true)) {
  $target = $language['ai_label']?? $language['label']?? 'the selected language';
- $payload['instructions'] = "Speak as a calm, professional interviewer. Use natural {$target} pronunciation and keep company names, role titles, acronyms, and numbers clear.";
+ $payload['instructions'] = "Speak as a calm, professional female interviewer. Use natural {$target} pronunciation and keep company names, role titles, acronyms, and numbers clear.";
  }
 
  try {
@@ -2244,6 +2357,14 @@ PROMPT;
  'audio' => $audio,
  'mime_type' => $mimeType!== ''? $mimeType: 'audio/mpeg',
  ];
+ }
+
+ private static function openAiFemaleSpeechVoice(string $configuredVoice): string
+ {
+ $voice = strtolower(trim($configuredVoice));
+ $femaleVoices = ['nova', 'shimmer', 'coral'];
+
+ return in_array($voice, $femaleVoices, true)? $voice: 'nova';
  }
 
  private static function synthesizeSpeechWithGemini(string $text, array|string|null $targetLanguage = null):?array
@@ -2786,7 +2907,10 @@ PROMPT;
  $target = $language['ai_label']?? $language['label']?? 'the selected language';
  $style = trim((string) config('services.gemini.tts_style', ''));
  if ($style === '') {
- $style = 'Say in a warm, clear, professional interviewer voice with steady pacing';
+ $style = 'Say in a warm, clear, professional female interviewer voice with steady pacing';
+ }
+ if (! preg_match('/\bfemale\b|\bwoman\b|\bwoman\'s\b|\bgirl\b|\bgirl\'s\b/i', $style)) {
+ $style.= ' in a warm, clear, professional female interviewer voice';
  }
 
  return "{$style}. Use natural {$target} pronunciation. Speak only this transcript: {$text}";

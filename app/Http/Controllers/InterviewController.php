@@ -168,10 +168,21 @@ class InterviewController extends Controller
  'status' => 'in_progress',
  ]);
 
+ $requestedProvider = AIService::normalizeProviderKey($validated['ai_provider']?? null);
+ $openingProvider = AIService::defaultProviderKey($requestedProvider);
+ $openingIntro = AIService::generateInterviewOpeningIntro(
+ $session,
+ $openingProvider,
+ $this->currentLanguageConfig(),
+ $this->datasetForSession($session)
+ );
+ $openingIntroProvider = AIService::normalizeProviderKey($openingIntro['provider']?? null);
+ $openingIntroText = trim((string) ($openingIntro['text']?? ''));
+
  $this->createInterviewQuestion(
  $session,
  $category,
- $this->initialInterviewQuestionText($session),
+ $openingIntroText,
  $validated['difficulty'],
  ['Personal'],
  0,
@@ -179,16 +190,17 @@ class InterviewController extends Controller
  'question_type' => 'Personal',
  'expected_guide' => 'Give your name, current location or city/province, brief background, and the role or opportunity you are interviewing for. Share only interview-appropriate personal details.',
  'mapped_skills' => ['self_introduction', 'communication_clarity', 'professional_presence'],
- 'source_name' => 'SpeakReady interview opening',
+ 'source_name' => $openingIntroProvider === 'local'? 'SpeakReady interview opening fallback': 'AI-generated interview opening',
  'source_url' => null,
  'source_type' => 'real_interview_opening',
+ 'ai_provider' => $openingIntroProvider,
  ]
  );
 
  $this->preloadInitialInterviewQuestion(
  $session,
  $category,
- AIService::normalizeProviderKey($validated['ai_provider']?? null)
+ $requestedProvider
  );
 
  session()->forget([
@@ -3376,13 +3388,6 @@ class InterviewController extends Controller
  'personal' => "What experience or strength makes you a good fit for the {$position} role?",
  default => "Tell me about a specific experience that shows you can succeed in the {$position} role.",
  };
- }
-
- private function initialInterviewQuestionText(InterviewSession $session): string
- {
- $targetPosition = trim((string) $session->target_position)?: 'this role';
-
- return "Before we get into the {$targetPosition} interview, please introduce yourself. What is your name, where are you currently based, and what background or experience would you like me to know first?";
  }
 
  private function orderedQuestionsForSession(InterviewSession $session)

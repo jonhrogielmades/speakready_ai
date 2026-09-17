@@ -416,13 +416,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let finalAnswerSubmitted = false;
  let answerInputEnabled = false;
  let feedbackSubmissionInFlight = false;
- let openingHasPlayed = Boolean(savedSessionState.openingHasPlayed || (Array.isArray(interviewChatHistory) && interviewChatHistory.some(item => {
- const text = String(item?.text || '');
- return item && item.role === 'interviewer' && (
- text.includes('Let us start with the first question.')
- || text.includes('To begin, I would like to get to know you first.')
- );
- })));
  const pendingFetchControllers = new Set();
  const displayedQuestionIds = new Set();
  let currentRepeatPrompt = '';
@@ -3379,12 +3372,31 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return /google|premium|natural|siri|microsoft|enhanced/i.test(voice.name || '');
  }
 
+ function voiceLooksFemale(voice) {
+ const name = String(voice.name || '').toLowerCase();
+ return /\b(female|woman|girl|zira|aria|jenny|natasha|sonia|libby|hazel|susan|samantha|karen|moira|tessa|victoria|fiona|ava|allison|shelley|shelly|joanna|salli|kimberly|kendra|ivy|emma|amy|nicole|olivia|serena|veena|linda|melina|carmit|paulina|monica|marisol|lucia|maria|lupe|paloma|google us english|google uk english female)\b/i.test(name);
+ }
+
+ function voiceLooksMale(voice) {
+ const name = String(voice.name || '').toLowerCase();
+ return /\b(male|man|boy|david|mark|george|daniel|alex|fred|tom|ralph|bruce|arthur|albert|jorge|diego|carlos|miguel|juan|paul|ryan|liam|brian|guy|aaron|eric|nathan|christopher|jacob|justin|matthew|joey|onyx|echo)\b/i.test(name);
+ }
+
  // Initialize preferred voice
  function loadVoices() {
  let voices = window.speechSynthesis.getVoices();
  if (voices.length > 0) {
  const languagePriority = speechLocalePriority();
- preferredVoice = languagePriority.map(language => voices.find(v => voiceMatchesLanguage(v, language) && voiceLooksNatural(v)) || voices.find(v => voiceMatchesLanguage(v, language))).find(Boolean) || voices[0];
+ preferredVoice = languagePriority.map(language =>
+ voices.find(v => voiceMatchesLanguage(v, language) && voiceLooksFemale(v) && voiceLooksNatural(v))
+ || voices.find(v => voiceMatchesLanguage(v, language) && voiceLooksFemale(v))
+ || voices.find(v => voiceMatchesLanguage(v, language) && voiceLooksNatural(v) &&!voiceLooksMale(v))
+ || voices.find(v => voiceMatchesLanguage(v, language) &&!voiceLooksMale(v))
+ ).find(Boolean)
+ || voices.find(v => voiceLooksFemale(v) && voiceLooksNatural(v))
+ || voices.find(v => voiceLooksFemale(v))
+ || voices.find(v =>!voiceLooksMale(v))
+ || voices[0];
  }
  }
  if ('speechSynthesis' in window) {
@@ -3897,10 +3909,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return remaining > 0? pauseFor(remaining): Promise.resolve();
  }
 
- function pluralizeQuestionCount() {
- return targetQuestionCount === 1? '1 question': `${targetQuestionCount} questions`;
- }
-
  function isOpeningQuestion(question) {
  return question && question.source_type === 'real_interview_opening';
  }
@@ -3944,12 +3952,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return '';
  }
 
- function openingConversationText() {
- const modeLine = liveFeedbackMode === 'real_interview'? 'I will save feedback until the end.': 'I may ask follow-ups based on your answers.';
-
- return `Hi, I'm Karyl, good to meet you. I will be your interviewer for the ${sessionTargetPosition} role. We have ${pluralizeQuestionCount()} today. ${modeLine} To begin, I would like to get to know you first.`;
- }
-
  function closingConversationText() {
  return `Thank you for walking me through your answers today. This ${sessionTargetPosition} interview is now complete, and your responses are being analyzed for feedback.`;
  }
@@ -3976,30 +3978,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const qCounter = document.getElementById('qCounter');
  if (qCounter && counterText) qCounter.innerText = counterText;
 
- }
-
- async function beginOpeningConversation() {
- if (openingHasPlayed || interviewTerminated) {
- await loadQuestion(currentQIdx, { append: true });
- return;
- }
-
- openingHasPlayed = true;
- const introText = openingConversationText();
- setAnswerInputEnabled(false);
- appendChatMessage('interviewer', introText);
- showInterviewerConversation(introText, 'Intro');
- scheduleStateSave();
- await speakQuestion(introText, {
- startTimerAfterSpeech: false,
- phase: 'intro',
- speechText: introText
- });
-
- if (interviewTerminated) return;
-
- setAnswerInputEnabled(true);
- await loadQuestion(currentQIdx, { append: true });
  }
 
  async function playClosingConversationAndSubmit() {
@@ -4153,11 +4131,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  const restoredChat = restoreChatHistory();
  (async () => {
- if (!restoredChat && currentQIdx === 0 &&!openingHasPlayed) {
- await beginOpeningConversation();
- } else {
  await loadQuestion(currentQIdx, { append:!restoredChat });
- }
  })();
  
  if (!answerListenersBound) {
@@ -4883,7 +4857,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  has_started: true,
  currentQIdx,
  timerSeconds,
- openingHasPlayed,
  questions: questionSnapshot(),
  answersData: answersForAutosave,
  chatHistory: interviewChatHistory,
