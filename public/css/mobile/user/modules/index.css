@@ -3217,6 +3217,26 @@ body.dm #interview-modules-page .module-search-input::placeholder,
     border-color: var(--bd);
 }
 
+.module-position-modal .modal-header {
+    position: relative;
+    padding-right: 58px;
+}
+
+.module-position-modal .module-position-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    border-radius: 12px;
+    background-color: var(--bg3);
+    border: 1px solid var(--bd);
+    opacity: 1;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
 .module-position-modal .modal-title {
     color: var(--tx);
     font-size: 1.1rem;
@@ -3265,4 +3285,65 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 .dm #interview-modules-page .module-position-change-btn {
     background: #3b82f6;
     border-color: rgba(147, 197, 253, 0.32);
+}
+
+/* Match Progress mobile content width and panel rhythm only. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content #interview-modules-page,
+    html body #mob-content #interview-modules-page {
+        --modules-progress-gap: 14px;
+        --modules-progress-panel-pad: 16px;
+        --modules-progress-panel-radius: 16px;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page > :is(.modules-hero, .module-position-strip, .module-position-note, .module-filter-bar, .module-smart-row, .modules-card-grid, .d-flex.justify-content-center),
+    html body #mob-content #interview-modules-page > :is(.modules-hero, .module-position-strip, .module-position-note, .module-filter-bar, .module-smart-row, .modules-card-grid, .d-flex.justify-content-center) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: var(--modules-progress-gap) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page > :last-child,
+    html body #mob-content #interview-modules-page > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page :is(.module-smart-row, .module-rec-grid, .module-path-grid, .modules-card-grid),
+    html body #mob-content #interview-modules-page :is(.module-smart-row, .module-rec-grid, .module-path-grid, .modules-card-grid) {
+        gap: var(--modules-progress-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page .modules-card-grid,
+    html body #mob-content #interview-modules-page .modules-card-grid {
+        --bs-gutter-x: var(--modules-progress-gap) !important;
+        --bs-gutter-y: var(--modules-progress-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page .modules-card-grid > [class*="col-"],
+    html body #mob-content #interview-modules-page .modules-card-grid > [class*="col-"] {
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page :is(.modules-hero, .module-position-strip, .module-position-note, .module-filter-bar, .module-smart-panel, .module-card),
+    html body #mob-content #interview-modules-page :is(.modules-hero, .module-position-strip, .module-position-note, .module-filter-bar, .module-smart-panel, .module-card) {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: var(--modules-progress-panel-radius) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page :is(.module-smart-panel, .module-card),
+    html body #mob-content #interview-modules-page :is(.module-smart-panel, .module-card) {
+        padding: var(--modules-progress-panel-pad) !important;
+    }
 }

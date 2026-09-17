@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=3') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=5') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -403,9 +403,7 @@
  <div class="challenge-position-kicker">Interview Challenges</div>
  <h5 class="modal-title" id="challengePositionModalTitle">What position are you applying for?</h5>
  </div>
- @if($selectedChallengePosition!== '')
- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
- @endif
+ <button type="button" class="btn-close challenge-position-close" data-bs-dismiss="modal" aria-label="Close"></button>
  </div>
  <div class="modal-body">
  <label for="challengeTargetPosition" class="form-label">Target position</label>

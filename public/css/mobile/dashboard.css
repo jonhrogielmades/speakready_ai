@@ -7334,79 +7334,80 @@
         .sr-image-chip-row {
             position: absolute;
             z-index: 4;
-            left: 10px;
-            bottom: 10px;
-            gap: 3px;
+            left: 12px;
+            bottom: 9px;
+            gap: 4px;
             margin: 0;
-            max-width: calc(100% - 88px);
+            max-width: calc(100% - 104px);
         }
 
         .sr-image-chip {
-            min-height: 16px;
-            padding: 0 3px;
-            border-radius: 5px;
-            font-size: 0.36rem;
-            gap: 2px;
+            min-height: 18px;
+            padding: 0 6px;
+            border-radius: 999px;
+            font-size: 0.42rem;
+            gap: 3px;
+            box-shadow: 0 5px 12px rgba(13, 55, 130, 0.14);
         }
 
         .sr-image-chip:nth-child(1) {
-            --sr-chip-launch-x: 248px;
-            --sr-chip-launch-y: 2px;
-        }
-
-        .sr-image-chip:nth-child(2) {
             --sr-chip-launch-x: 218px;
             --sr-chip-launch-y: 2px;
         }
 
+        .sr-image-chip:nth-child(2) {
+            --sr-chip-launch-x: 190px;
+            --sr-chip-launch-y: 2px;
+        }
+
         .sr-image-chip:nth-child(3) {
-            --sr-chip-launch-x: 188px;
+            --sr-chip-launch-x: 162px;
             --sr-chip-launch-y: 2px;
         }
 
         .sr-image-chip:nth-child(4) {
-            --sr-chip-launch-x: 150px;
+            --sr-chip-launch-x: 128px;
             --sr-chip-launch-y: 2px;
         }
 
         .sr-image-chip:nth-child(5) {
-            --sr-chip-launch-x: 104px;
+            --sr-chip-launch-x: 88px;
             --sr-chip-launch-y: 2px;
         }
 
         .sr-image-chip i {
-            font-size: 0.4rem;
+            font-size: 0.44rem;
         }
 
         .sr-image-speech {
             display: flex;
             top: auto;
-            right: clamp(76px, 26vw, 104px);
-            bottom: 42px;
-            width: clamp(112px, 32vw, 126px);
-            min-height: 64px;
-            padding: 9px 10px 8px;
-            border-radius: 15px;
-            box-shadow: 0 10px 18px rgba(5, 23, 66, 0.14);
+            right: clamp(78px, 25vw, 100px);
+            bottom: 43px;
+            width: clamp(104px, 30vw, 118px);
+            min-height: 58px;
+            padding: 8px 9px 7px;
+            border-radius: 13px;
+            box-shadow: 0 8px 16px rgba(5, 23, 66, 0.13);
             transform-origin: calc(100% + 12px) 74%;
         }
 
         .sr-image-speech::after {
-            right: -13px;
-            bottom: 13px;
-            width: 21px;
-            height: 19px;
-            border-radius: 0 8px 11px 0;
+            right: -11px;
+            bottom: 12px;
+            width: 18px;
+            height: 16px;
+            border-radius: 0 7px 10px 0;
         }
 
         .sr-image-speech > strong {
-            font-size: 0.58rem;
-            margin-bottom: 3px;
+            font-size: 0.54rem;
+            margin-bottom: 2px;
         }
 
         .sr-image-speech > span {
-            font-size: 0.43rem;
-            line-height: 1.1;
+            font-size: 0.39rem;
+            line-height: 1.12;
         }
 
         .sr-image-robot,
@@ -7418,11 +7419,11 @@
         }
 
         .sr-image-head-icons {
-            --sr-head-orbit-radius: 22px;
-            right: clamp(18px, 5vw, 24px);
-            top: clamp(22px, 6vw, 30px);
-            width: 60px;
-            height: 60px;
+            --sr-head-orbit-radius: 20px;
+            right: clamp(17px, 4.8vw, 22px);
+            top: clamp(20px, 5.5vw, 28px);
+            width: 56px;
+            height: 56px;
         }
 
         .sr-image-head-icons::before {
@@ -7430,14 +7431,14 @@
         }
 
         .sr-image-head-icon {
-            --sr-head-icon-size: 14px;
+            --sr-head-icon-size: 12px;
             border-radius: 999px;
-            font-size: 0.38rem;
-            box-shadow: 0 5px 10px rgba(9, 82, 200, 0.18), 0 0 8px rgba(71, 197, 255, 0.28);
+            font-size: 0.32rem;
+            box-shadow: 0 4px 8px rgba(9, 82, 200, 0.14), 0 0 7px rgba(71, 197, 255, 0.22);
         }
 
         .sr-image-head-icon:nth-child(3) {
-            --sr-head-icon-size: 16px;
+            --sr-head-icon-size: 14px;
         }
     }
 
@@ -7480,13 +7481,13 @@
         }
 
         .sr-image-chip {
-            min-height: 15px;
-            padding: 0 3px;
-            font-size: 0.34rem;
+            min-height: 17px;
+            padding: 0 5px;
+            font-size: 0.38rem;
         }
 
         .sr-image-chip i {
-            font-size: 0.38rem;
+            font-size: 0.4rem;
         }
 
         .sr-image-chip-row {
@@ -8485,4 +8486,195 @@ body.dm #card-skill-radar .sr-radar-locked-icon {
         padding: 0 7px !important;
         font-size: 0.56rem !important;
     }
+}
+
+/* Mobile dashboard UX enhancement layer. Keeps the same dashboard content, but
+   improves scan order, tap comfort, and readability on phone screens. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content .sr-dashboard {
+        --dash-section-gap: 14px;
+        gap: var(--dash-section-gap) !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 22px) !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-card,
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-polished-card,
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-side-feature,
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-session-card-polished,
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-recommendation-card {
+        border-radius: 16px !important;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1) !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-summary-grid,
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-dashboard-shell {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--dash-section-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-summary-grid > * + *,
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-dashboard-shell > * + * {
+        margin-top: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-readiness-row {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        margin-top: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-panel {
+        padding: 16px !important;
+        border-radius: 18px !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-top {
+        display: flex !important;
+        justify-content: space-between !important;
+        margin-bottom: 14px !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-top .sr-status-pill,
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-top .sr-chip {
+        min-height: 34px !important;
+        padding: 8px 12px !important;
+        border-radius: 999px !important;
+        font-size: 0.72rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-layout {
+        display: grid !important;
+        grid-template-columns: minmax(118px, 0.88fr) minmax(0, 1.12fr) !important;
+        gap: 14px !important;
+        align-items: center !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-readiness-ring {
+        --ring-size: clamp(118px, 35vw, 142px) !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-value {
+        font-size: clamp(2rem, 8.4vw, 2.65rem) !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-value span {
+        font-size: 0.88rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-ring-label {
+        font-size: 0.62rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-meta {
+        gap: 9px !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-meta-item {
+        min-height: 64px !important;
+        padding: 10px !important;
+        border-radius: 12px !important;
+        gap: 9px !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-meta-label {
+        font-size: 0.64rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-meta-value {
+        font-size: 1.08rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-icon {
+        width: 34px !important;
+        height: 34px !important;
+        flex-basis: 34px !important;
+        border-radius: 10px !important;
+        font-size: 0.84rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-auto-rows: minmax(112px, auto) !important;
+        gap: 10px !important;
+        margin: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-card {
+        min-height: 112px !important;
+        padding: 12px !important;
+        border-radius: 16px !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-icon {
+        width: 34px !important;
+        height: 34px !important;
+        flex-basis: 34px !important;
+        border-radius: 11px !important;
+        font-size: 0.84rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-chip {
+        min-height: 24px !important;
+        max-width: calc(100% - 42px) !important;
+        padding: 5px 8px !important;
+        border-radius: 999px !important;
+        font-size: 0.62rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-value {
+        font-size: clamp(1.22rem, 5vw, 1.44rem) !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-label {
+        font-size: 0.68rem !important;
+        line-height: 1.22 !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-meter {
+        width: 42px !important;
+        height: 42px !important;
+        opacity: 0.72 !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard #card-progress-chart,
+    body.user-mobile-shell #mob-content .sr-dashboard #card-practice-plan,
+    body.user-mobile-shell #mob-content .sr-dashboard #card-recent-sessions,
+    body.user-mobile-shell #mob-content .sr-dashboard #card-daily-challenge,
+    body.user-mobile-shell #mob-content .sr-dashboard #card-skill-radar,
+    body.user-mobile-shell #mob-content .sr-dashboard #card-ai-recommendations {
+        padding: 16px !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard #card-progress-chart .sr-trend-actions {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard #card-progress-chart .sr-trend-detail-btn,
+    body.user-mobile-shell #mob-content .sr-dashboard #card-progress-chart .sr-trend-filter,
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-section-action,
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-session-review-btn,
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-session-delete-btn {
+        min-height: 44px !important;
+        border-radius: 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard #card-progress-chart .sr-trend-chart-wrap {
+        height: 220px !important;
+    }
+}
+
+@media (max-width: 420px) {
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-layout {
+        grid-template-columns: 1fr !important;
+        justify-items: center !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-score-meta {
+        width: 100% !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
 }

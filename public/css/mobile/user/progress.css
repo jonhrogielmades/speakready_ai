@@ -7197,6 +7197,147 @@ body.dm #sec-progress-tracking :is(#strengths-tracker .strengths-icon, #strength
     color: #cbd5e1 !important;
 }
 
+/* Final override: match Dashboard mobile stats as a 2x2 card grid. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #sec-progress-tracking .progress-summary-strip,
+    html body #sec-progress-tracking .progress-summary-strip {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats,
+    html body #sec-progress-tracking #progress-stats {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats > [class*="col-"],
+    html body #sec-progress-tracking #progress-stats > [class*="col-"] {
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        flex: none !important;
+        padding: 0 !important;
+        display: flex !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats .progress-stat-card,
+    html body #sec-progress-tracking #progress-stats .progress-stat-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 112px !important;
+        height: auto !important;
+        padding: 12px !important;
+        border-radius: 16px !important;
+        grid-template-rows: auto auto auto !important;
+        gap: 5px !important;
+        overflow: hidden !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats .progress-stat-icon,
+    html body #sec-progress-tracking #progress-stats .progress-stat-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 11px !important;
+        font-size: 0.9rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats .progress-stat-value,
+    html body #sec-progress-tracking #progress-stats .progress-stat-value {
+        max-width: 100% !important;
+        margin: 2px 0 0 !important;
+        font-size: clamp(1.12rem, 5vw, 1.4rem) !important;
+        line-height: 1.05 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats .progress-stat-label,
+    html body #sec-progress-tracking #progress-stats .progress-stat-label {
+        max-width: 100% !important;
+        margin: 0 !important;
+        font-size: 0.68rem !important;
+        line-height: 1.22 !important;
+        letter-spacing: 0 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        text-transform: none !important;
+    }
+
+}
+
+/* Match Dashboard mobile content width and panel rhythm only. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #sec-progress-tracking {
+        --progress-dashboard-gap: 14px;
+        --progress-dashboard-panel-pad: 16px;
+        --progress-dashboard-panel-radius: 16px;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking > :is(
+        .progress-hero,
+        .progress-actions,
+        .progress-summary-strip,
+        .progress-live-grid,
+        .row
+    ) {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: var(--progress-dashboard-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking > :is(
+        .progress-hero,
+        .progress-actions,
+        .progress-summary-strip,
+        .progress-live-grid,
+        .row
+    ):last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking :is(.row, .progress-live-grid) {
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: var(--progress-dashboard-gap) !important;
+        gap: var(--progress-dashboard-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking :is(
+        .premium-panel,
+        .progress-chart-panel,
+        .practice-plan-panel,
+        .progress-category-panel,
+        .learning-panel,
+        .voice-panel,
+        .activity-panel,
+        .goals-panel,
+        .badges-panel,
+        .strengths-star-panel,
+        .history-panel
+    ) {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        border-radius: var(--progress-dashboard-panel-radius) !important;
+        padding: var(--progress-dashboard-panel-pad) !important;
+    }
+}
+
 /* Keep feedback action centered and on one line inside two-column history cards. */
 html body #sec-progress-tracking #history-table .history-card-actions {
     display: flex !important;
@@ -9238,6 +9379,102 @@ html body #mob-content :is(#practice-plan-page, #practice-calendar-page) .practi
     }
 }
 
+/* Match Progress mobile content width and panel rhythm for the standalone Calendar page only. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content #practice-calendar-page,
+    html body #mob-content #practice-calendar-page {
+        --calendar-progress-gap: 14px;
+        --calendar-progress-panel-pad: 16px;
+        --calendar-progress-panel-radius: 16px;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #practice-calendar-page > :is(.practice-page-hero, #activity-calendar),
+    html body #mob-content #practice-calendar-page > :is(.practice-page-hero, #activity-calendar) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: var(--calendar-progress-gap) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #practice-calendar-page > :last-child,
+    html body #mob-content #practice-calendar-page > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #practice-calendar-page :is(#activity-calendar, .activity-panel, .activity-summary-item, .activity-day),
+    html body #mob-content #practice-calendar-page :is(#activity-calendar, .activity-panel, .activity-summary-item, .activity-day) {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: var(--calendar-progress-panel-radius) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #practice-calendar-page :is(.activity-summary-grid, .activity-grid),
+    html body #mob-content #practice-calendar-page :is(.activity-summary-grid, .activity-grid) {
+        gap: var(--calendar-progress-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #practice-calendar-page .activity-panel,
+    html body #mob-content #practice-calendar-page .activity-panel {
+        padding: var(--calendar-progress-panel-pad) !important;
+    }
+}
+
+/* Match Progress mobile content width and panel rhythm for the standalone Practice Plan page only. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content #practice-plan-page,
+    html body #mob-content #practice-plan-page {
+        --practice-progress-gap: 14px;
+        --practice-progress-panel-pad: 16px;
+        --practice-progress-panel-radius: 16px;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #practice-plan-page > :is(.practice-page-hero, .sr-page-actions, #practice-ai-recommendations, #personalized-practice-plan),
+    html body #mob-content #practice-plan-page > :is(.practice-page-hero, .sr-page-actions, #practice-ai-recommendations, #personalized-practice-plan) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: var(--practice-progress-gap) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #practice-plan-page > :last-child,
+    html body #mob-content #practice-plan-page > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #practice-plan-page :is(#practice-ai-recommendations, #personalized-practice-plan, .practice-ai-panel, .practice-plan-panel, .practice-plan-row),
+    html body #mob-content #practice-plan-page :is(#practice-ai-recommendations, #personalized-practice-plan, .practice-ai-panel, .practice-plan-panel, .practice-plan-row) {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: var(--practice-progress-panel-radius) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #practice-plan-page :is(.practice-ai-list, .practice-plan-list),
+    html body #mob-content #practice-plan-page :is(.practice-ai-list, .practice-plan-list) {
+        gap: var(--practice-progress-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #practice-plan-page :is(.practice-ai-panel, .practice-plan-panel),
+    html body #mob-content #practice-plan-page :is(.practice-ai-panel, .practice-plan-panel) {
+        padding: var(--practice-progress-panel-pad) !important;
+    }
+}
+
 /* Last-word mobile hero artwork override. */
 @media (max-width: 991.98px) {
     html body #sec-progress-tracking #progressModulesLikeHero.progress-hero {
@@ -9540,4 +9777,80 @@ body.dm #sec-progress-tracking :is(#strengths-tracker .strengths-icon, #strength
     background: #1f2937 !important;
     border-color: rgba(148, 163, 184, 0.28) !important;
     color: #cbd5e1 !important;
+}
+
+/* Final override: match Dashboard mobile stats as a 2x2 card grid. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #sec-progress-tracking .progress-summary-strip,
+    html body #sec-progress-tracking .progress-summary-strip {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats,
+    html body #sec-progress-tracking #progress-stats {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats > [class*="col-"],
+    html body #sec-progress-tracking #progress-stats > [class*="col-"] {
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        flex: none !important;
+        padding: 0 !important;
+        display: flex !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats .progress-stat-card,
+    html body #sec-progress-tracking #progress-stats .progress-stat-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 112px !important;
+        height: auto !important;
+        padding: 12px !important;
+        border-radius: 16px !important;
+        grid-template-rows: auto auto auto !important;
+        gap: 5px !important;
+        overflow: hidden !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats .progress-stat-icon,
+    html body #sec-progress-tracking #progress-stats .progress-stat-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 11px !important;
+        font-size: 0.9rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats .progress-stat-value,
+    html body #sec-progress-tracking #progress-stats .progress-stat-value {
+        max-width: 100% !important;
+        margin: 2px 0 0 !important;
+        font-size: clamp(1.12rem, 5vw, 1.4rem) !important;
+        line-height: 1.05 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats .progress-stat-label,
+    html body #sec-progress-tracking #progress-stats .progress-stat-label {
+        max-width: 100% !important;
+        margin: 0 !important;
+        font-size: 0.68rem !important;
+        line-height: 1.22 !important;
+        letter-spacing: 0 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        text-transform: none !important;
+    }
 }

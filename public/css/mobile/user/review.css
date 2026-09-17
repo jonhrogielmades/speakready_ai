@@ -1402,3 +1402,57 @@
         font-weight: 900 !important;
     }
 }
+
+/* Match Progress mobile content width and panel rhythm only. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content .review-shell,
+    html body #mob-content .review-shell {
+        --review-progress-gap: 14px;
+        --review-progress-panel-pad: 16px;
+        --review-progress-panel-radius: 16px;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell > :is(.mb-4, .alert, .early-ended-review-alert, .review-quick-panel, .answer-review-heading, #answersAccordion),
+    html body #mob-content .review-shell > :is(.mb-4, .alert, .early-ended-review-alert, .review-quick-panel, .answer-review-heading, #answersAccordion) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: var(--review-progress-gap) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell > :last-child,
+    html body #mob-content .review-shell > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell #answersAccordion,
+    html body #mob-content .review-shell #answersAccordion {
+        display: grid !important;
+        gap: var(--review-progress-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell :is(.review-quick-panel, .answer-review-card, .early-ended-review-alert, .alert),
+    html body #mob-content .review-shell :is(.review-quick-panel, .answer-review-card, .early-ended-review-alert, .alert) {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: var(--review-progress-panel-radius) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell :is(.review-quick-panel, .early-ended-review-alert, .alert),
+    html body #mob-content .review-shell :is(.review-quick-panel, .early-ended-review-alert, .alert) {
+        padding: var(--review-progress-panel-pad) !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .answer-review-card,
+    html body #mob-content .review-shell .answer-review-card {
+        margin: 0 !important;
+    }
+}

@@ -2,12 +2,12 @@
 @section('title', 'Detailed Review')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=8') }}" data-page-style="user-review">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=9') }}" data-page-style="user-review">
 @endpush
 
 @section('content')
 
-<div class="db-section active animate-fade-up">
+<div class="db-section active animate-fade-up review-shell">
  @php
  $sessionEndedEarly = isset($sessionEndedEarly)? (bool) $sessionEndedEarly: ($sessionRecord->status === 'ended' || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false));
  $feedback = $sessionRecord->feedback;

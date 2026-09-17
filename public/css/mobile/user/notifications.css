@@ -1993,3 +1993,176 @@
             max-width: 78px !important;
         }
     }
+
+/* Match Progress mobile content width and panel rhythm only. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content #notifications-page,
+    html body #mob-content #notifications-page {
+        --notifications-progress-gap: 14px;
+        --notifications-progress-panel-pad: 16px;
+        --notifications-progress-panel-radius: 16px;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page > :is(.notif-hero, .notif-page-alert, .notif-bulk-actions, .notifications-list-panel, .notifications-pagination, .activity-history-section),
+    html body #mob-content #notifications-page > :is(.notif-hero, .notif-page-alert, .notif-bulk-actions, .notifications-list-panel, .notifications-pagination, .activity-history-section) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: var(--notifications-progress-gap) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page > :last-child,
+    html body #mob-content #notifications-page > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page :is(.notif-hero, .notifications-list-panel, .activity-history-header, .activity-history-list, .notification-row, .activity-history-row, .notifications-empty-state),
+    html body #mob-content #notifications-page :is(.notif-hero, .notifications-list-panel, .activity-history-header, .activity-history-list, .notification-row, .activity-history-row, .notifications-empty-state) {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: var(--notifications-progress-panel-radius) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page :is(.activity-history-section, .activity-history-list),
+    html body #mob-content #notifications-page :is(.activity-history-section, .activity-history-list) {
+        display: grid !important;
+        gap: var(--notifications-progress-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page :is(.activity-history-header, .notifications-empty-state),
+    html body #mob-content #notifications-page :is(.activity-history-header, .notifications-empty-state) {
+        padding: var(--notifications-progress-panel-pad) !important;
+    }
+}
+
+/* Final activity history mobile alignment and button sizing. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-section,
+    html body #mob-content #notifications-page .activity-history-section {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        gap: 14px !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-header,
+    html body #mob-content #notifications-page .activity-history-header {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 100px !important;
+        margin: 0 !important;
+        padding: 14px !important;
+        border-radius: 16px !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-heading,
+    html body #mob-content #notifications-page .activity-history-heading {
+        min-width: 0 !important;
+        display: grid !important;
+        grid-template-columns: 32px minmax(0, 1fr) !important;
+        align-items: start !important;
+        gap: 9px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-header-meta,
+    html body #mob-content #notifications-page .activity-history-header-meta {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        display: grid !important;
+        justify-items: end !important;
+        align-content: center !important;
+        gap: 8px !important;
+        min-width: 76px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-count,
+    html body #mob-content #notifications-page .activity-history-count {
+        justify-self: end !important;
+        min-height: 22px !important;
+        padding: 4px 8px !important;
+        border-radius: 999px !important;
+        font-size: 0.64rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-action-btn,
+    html body #mob-content #notifications-page .activity-history-action-btn {
+        width: 78px !important;
+        min-width: 78px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 9px !important;
+        border-radius: 9px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        font-size: 0.62rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-action-btn i,
+    html body #mob-content #notifications-page .activity-history-action-btn i {
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+        font-size: 0.62rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-list,
+    html body #mob-content #notifications-page .activity-history-list {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 16px !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-row,
+    html body #mob-content #notifications-page .activity-history-row {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 14px !important;
+        border-radius: 16px !important;
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        gap: 9px !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-row-foot,
+    html body #mob-content #notifications-page .activity-history-row-foot {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-date,
+    html body #mob-content #notifications-page .activity-history-date {
+        min-width: 0 !important;
+        max-width: calc(100% - 86px) !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+}

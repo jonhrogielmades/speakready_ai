@@ -1383,3 +1383,40 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
         transform: scale(1.04);
     }
 }
+
+/* Match Progress mobile content width and panel rhythm only. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content #ai-coach-page,
+    html body #mob-content #ai-coach-page {
+        --coach-progress-gap: 14px;
+        --coach-progress-panel-radius: 16px;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page > :is(.coach-progress-hero, .chat-container),
+    html body #mob-content #ai-coach-page > :is(.coach-progress-hero, .chat-container) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: var(--coach-progress-gap) !important;
+        border-radius: var(--coach-progress-panel-radius) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page > :last-child,
+    html body #mob-content #ai-coach-page > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page :is(.chat-main, .coach-chat-header, .chat-messages, .chat-input-area),
+    html body #mob-content #ai-coach-page :is(.chat-main, .coach-chat-header, .chat-messages, .chat-input-area) {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}

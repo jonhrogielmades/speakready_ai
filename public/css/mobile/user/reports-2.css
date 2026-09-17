@@ -2398,3 +2398,60 @@
         line-height: 1.36 !important;
     }
 }
+
+/* Match Progress mobile content width and panel rhythm only. */
+@media screen and (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content #portfolioReport,
+    html body #mob-content #portfolioReport {
+        --reports-progress-gap: 14px;
+        --reports-progress-panel-pad: 16px;
+        --reports-progress-panel-radius: 16px;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #portfolioReport > :is(.sr-page-hero, .report-export-actions, .report-print-identity, .row, .print-card, #report-empty-state),
+    html body #mob-content #portfolioReport > :is(.sr-page-hero, .report-export-actions, .report-print-identity, .row, .print-card, #report-empty-state) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: var(--reports-progress-gap) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #portfolioReport > :last-child,
+    html body #mob-content #portfolioReport > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #portfolioReport > .row,
+    html body #mob-content #portfolioReport > .row {
+        --bs-gutter-x: var(--reports-progress-gap) !important;
+        --bs-gutter-y: var(--reports-progress-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #portfolioReport > .row > [class*="col-"],
+    html body #mob-content #portfolioReport > .row > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #portfolioReport :is(.sr-page-hero, .print-card, .report-empty-card, .report-summary-item, .report-question-card, .report-improvement-card, .report-export-choice),
+    html body #mob-content #portfolioReport :is(.sr-page-hero, .print-card, .report-empty-card, .report-summary-item, .report-question-card, .report-improvement-card, .report-export-choice) {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: var(--reports-progress-panel-radius) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #portfolioReport :is(.print-card, .report-empty-card),
+    html body #mob-content #portfolioReport :is(.print-card, .report-empty-card) {
+        padding: var(--reports-progress-panel-pad) !important;
+    }
+}

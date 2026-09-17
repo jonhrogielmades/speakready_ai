@@ -2,7 +2,7 @@
 @section('title', 'Practice Activity Calendar')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/progress.css?v=24') }}" data-page-style="user-practice-calendar">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/progress.css?v=25') }}" data-page-style="user-practice-calendar">
 @endpush
 
 @section('content')

@@ -43,7 +43,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=32') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=33') }}" />
       @include('mobile.partials.onboarding-styles')
       <style>
          /* Global Mobile Responsiveness for Premium UI Updates */
@@ -3096,17 +3096,10 @@
                <a href="{{ route('user.practice.plan') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.practice.plan') ? 'active' : '' }}"><i class="fa-solid fa-route"></i><span>Practice Plan</span></a>
                <a href="{{ route('user.practice.calendar') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}"><i class="fa-regular fa-calendar-days"></i><span>Calendar</span></a>
                <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>Reports</span></a>
-               <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
-               <a href="{{ route('user.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('user.account') ? 'active' : '' }}"><i class="fa-solid fa-user-gear"></i><span>Account</span></a>
                </div>
             </div>
 
             <div class="mob-profile-account">
-               <div class="mob-profile-section-title">Account</div>
-               <div class="mob-profile-grid mb-2">
-                  <a href="{{ route('user.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('user.account') ? 'active' : '' }}"><i class="fa-solid fa-user-gear"></i><span>Account Management</span></a>
-                  <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
-               </div>
                <div class="mob-profile-section-title">Settings</div>
                <div class="mob-profile-settings-row">
                   <form action="{{ route('user.language.update') }}" method="POST" class="mob-profile-language">

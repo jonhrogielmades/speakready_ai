@@ -2456,6 +2456,24 @@
     border-color: var(--bd);
     padding: 18px;
 }
+.challenge-position-modal .modal-header {
+    position: relative;
+    padding-right: 58px;
+}
+.challenge-position-modal .challenge-position-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    border-radius: 12px;
+    background-color: var(--bg3);
+    border: 1px solid var(--bd);
+    opacity: 1;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
 .challenge-position-modal .modal-title {
     color: var(--tx);
     font-size: 1.1rem;
@@ -2519,5 +2537,61 @@
     .challenge-position-modal .modal-footer .btn {
         width: 100%;
         min-height: 42px;
+    }
+}
+
+/* Match Progress mobile content width and panel rhythm only. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content #learning-games-page,
+    html body #mob-content #learning-games-page {
+        --challenges-progress-gap: 14px;
+        --challenges-progress-panel-pad: 16px;
+        --challenges-progress-panel-radius: 16px;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page > :is(.sr-learning-hero, .challenge-position-strip, .challenge-position-note, #dashboard-stats, .row),
+    html body #mob-content #learning-games-page > :is(.sr-learning-hero, .challenge-position-strip, .challenge-position-note, #dashboard-stats, .row) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: var(--challenges-progress-gap) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page > :last-child,
+    html body #mob-content #learning-games-page > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page > :is(#dashboard-stats, .row),
+    html body #mob-content #learning-games-page > :is(#dashboard-stats, .row) {
+        --bs-gutter-x: var(--challenges-progress-gap) !important;
+        --bs-gutter-y: var(--challenges-progress-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page > :is(#dashboard-stats, .row) > [class*="col-"],
+    html body #mob-content #learning-games-page > :is(#dashboard-stats, .row) > [class*="col-"] {
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page :is(.sr-learning-hero, .challenge-position-strip, .challenge-position-note, .ll-stat-card, .journey-header, .level-path-container, .level-node, .active-challenge-panel, .learning-notice),
+    html body #mob-content #learning-games-page :is(.sr-learning-hero, .challenge-position-strip, .challenge-position-note, .ll-stat-card, .journey-header, .level-path-container, .level-node, .active-challenge-panel, .learning-notice) {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: var(--challenges-progress-panel-radius) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page :is(.ll-stat-card, .journey-header, .level-path-container, .level-node, .active-challenge-panel, .learning-notice),
+    html body #mob-content #learning-games-page :is(.ll-stat-card, .journey-header, .level-path-container, .level-node, .active-challenge-panel, .learning-notice) {
+        padding: var(--challenges-progress-panel-pad) !important;
     }
 }

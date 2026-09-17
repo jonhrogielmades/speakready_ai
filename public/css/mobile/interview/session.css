@@ -4188,3 +4188,86 @@ html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-he
         font-size: 0.92rem !important;
     }
 }
+
+/* Match Progress mobile content width and panel rhythm only. */
+@media (max-width: 991.98px) {
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content > .db-content {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session {
+        --session-progress-gap: 14px;
+        --session-progress-panel-pad: 16px;
+        --session-progress-panel-radius: 16px;
+        --session-gap: var(--session-progress-gap);
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #workspaceWrapper,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #workspaceWrapper,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #workspaceRow,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #workspaceRow {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #workspaceRow,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #workspaceRow {
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: var(--session-progress-gap) !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: var(--session-progress-gap) !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #workspaceRow > [class*="col-"],
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #workspaceRow > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session :is(.panel, .ai-avatar-panel, #interviewControls, .response-panel, .question-source-panel, .ai-question-card, .voice-session-panel, .ai-coach-answer-panel, .session-inline-alert),
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session :is(.panel, .ai-avatar-panel, #interviewControls, .response-panel, .question-source-panel, .ai-question-card, .voice-session-panel, .ai-coach-answer-panel, .session-inline-alert) {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: var(--session-progress-panel-radius) !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session :is(.panel, #interviewControls, .response-panel, .question-source-panel, .ai-question-card, .voice-session-panel, .ai-coach-answer-panel, .session-inline-alert),
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session :is(.panel, #interviewControls, .response-panel, .question-source-panel, .ai-question-card, .voice-session-panel, .ai-coach-answer-panel, .session-inline-alert) {
+        padding: var(--session-progress-panel-pad) !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session .ai-avatar-panel,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session .ai-avatar-panel {
+        margin-bottom: var(--session-progress-gap) !important;
+        padding: 0 !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #interviewControls,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #interviewControls,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session .response-panel,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session .response-panel,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session .question-source-panel,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session .question-source-panel {
+        margin: 0 0 var(--session-progress-gap) !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #workspaceRow > [class*="col-"] > :last-child,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session #workspaceRow > [class*="col-"] > :last-child {
+        margin-bottom: 0 !important;
+    }
+}

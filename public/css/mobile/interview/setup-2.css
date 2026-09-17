@@ -100,3 +100,86 @@ html.interview-setup-page-root,
         height: 0 !important;
         display: none !important;
     }
+
+    /* Match Progress mobile content width and panel rhythm only. */
+    @media (max-width: 767px) {
+        body.user-mobile-shell #mob-content #sec-interview-setup,
+        body.interview-setup-page #mob-content #sec-interview-setup {
+            --setup-progress-gap: 14px;
+            --setup-progress-panel-pad: 16px;
+            --setup-progress-panel-radius: 16px;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup > :is(
+            .setup-hero,
+            form,
+            .alert
+        ),
+        body.interview-setup-page #mob-content #sec-interview-setup > :is(
+            .setup-hero,
+            form,
+            .alert
+        ) {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: var(--setup-progress-gap) !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup #setupForm > .row,
+        body.user-mobile-shell #mob-content #sec-interview-setup .row.g-4,
+        body.interview-setup-page #mob-content #sec-interview-setup #setupForm > .row,
+        body.interview-setup-page #mob-content #sec-interview-setup .row.g-4 {
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: var(--setup-progress-gap) !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            gap: var(--setup-progress-gap) !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup #setupForm > .row > [class*="col-"],
+        body.interview-setup-page #mob-content #sec-interview-setup #setupForm > .row > [class*="col-"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            box-sizing: border-box !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup #setup-left-col,
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-summary-wrap,
+        body.interview-setup-page #mob-content #sec-interview-setup #setup-left-col,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-summary-wrap {
+            width: 100% !important;
+            max-width: 100% !important;
+            gap: var(--setup-progress-gap) !important;
+            box-sizing: border-box !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(
+            .setup-panel,
+            #panel-summary
+        ),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(
+            .setup-panel,
+            #panel-summary
+        ) {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 0 !important;
+            border-radius: var(--setup-progress-panel-radius) !important;
+            padding: var(--setup-progress-panel-pad) !important;
+        }
+    }

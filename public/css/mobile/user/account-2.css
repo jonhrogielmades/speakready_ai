@@ -1343,3 +1343,66 @@
             padding: 10px 12px !important;
         }
     }
+
+/* Match Progress mobile content width and panel rhythm only. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content #account-page,
+    html body #mob-content #account-page {
+        --account-progress-gap: 14px;
+        --account-progress-panel-pad: 16px;
+        --account-progress-panel-radius: 16px;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page > :is(.sr-page-hero, .alert, .account-grid),
+    html body #mob-content #account-page > :is(.sr-page-hero, .alert, .account-grid) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: var(--account-progress-gap) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page > :last-child,
+    html body #mob-content #account-page > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-grid,
+    html body #mob-content #account-page .account-grid {
+        --bs-gutter-x: var(--account-progress-gap) !important;
+        --bs-gutter-y: var(--account-progress-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-grid > [class*="col-"],
+    html body #mob-content #account-page .account-grid > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page :is(.sr-page-hero, .alert, .premium-panel, .account-card, .danger-card),
+    html body #mob-content #account-page :is(.sr-page-hero, .alert, .premium-panel, .account-card, .danger-card) {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: var(--account-progress-panel-radius) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page :is(.premium-panel, .account-card),
+    html body #mob-content #account-page :is(.premium-panel, .account-card) {
+        padding: var(--account-progress-panel-pad) !important;
+        margin-bottom: var(--account-progress-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page :is(.premium-panel, .account-card):last-child,
+    html body #mob-content #account-page :is(.premium-panel, .account-card):last-child {
+        margin-bottom: 0 !important;
+    }
+}
