@@ -3781,10 +3781,14 @@ body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badg
 /* Final Progress-matched mobile content width and panel rhythm. */
 @media (max-width: 991.98px) {
     body.user-mobile-shell #mob-content .feedback-shell,
-    html body #mob-content .feedback-shell {
-        --feedback-progress-gap: 14px;
+    html body #mob-content .feedback-shell,
+    html body .feedback-shell {
+        --feedback-progress-gap: 15px;
         --feedback-progress-panel-pad: 16px;
         --feedback-progress-panel-radius: 16px;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--feedback-progress-gap) !important;
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
@@ -3793,31 +3797,37 @@ body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badg
     }
 
     body.user-mobile-shell #mob-content .feedback-shell > :is(.feedback-hero, .feedback-insight-grid, .feedback-answer-panel, .premium-panel, #feedbackPagination),
-    html body #mob-content .feedback-shell > :is(.feedback-hero, .feedback-insight-grid, .feedback-answer-panel, .premium-panel, #feedbackPagination) {
+    html body #mob-content .feedback-shell > :is(.feedback-hero, .feedback-insight-grid, .feedback-answer-panel, .premium-panel, #feedbackPagination),
+    html body .feedback-shell > :is(.feedback-hero, .feedback-insight-grid, .feedback-answer-panel, .premium-panel, #feedbackPagination) {
         width: 100% !important;
         max-width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        margin-bottom: var(--feedback-progress-gap) !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
     }
 
     body.user-mobile-shell #mob-content .feedback-shell > :last-child,
-    html body #mob-content .feedback-shell > :last-child {
+    html body #mob-content .feedback-shell > :last-child,
+    html body .feedback-shell > :last-child {
         margin-bottom: 0 !important;
     }
 
     body.user-mobile-shell #mob-content .feedback-shell .feedback-insight-grid,
-    html body #mob-content .feedback-shell .feedback-insight-grid {
+    html body #mob-content .feedback-shell .feedback-insight-grid,
+    html body .feedback-shell .feedback-insight-grid,
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-answer-grid,
+    html body #mob-content .feedback-shell .feedback-answer-grid,
+    html body .feedback-shell .feedback-answer-grid {
         gap: var(--feedback-progress-gap) !important;
     }
 
     body.user-mobile-shell #mob-content .feedback-shell :is(.feedback-insight-panel, .premium-panel),
-    html body #mob-content .feedback-shell :is(.feedback-insight-panel, .premium-panel) {
+    html body #mob-content .feedback-shell :is(.feedback-insight-panel, .premium-panel),
+    html body .feedback-shell :is(.feedback-insight-panel, .premium-panel) {
         width: 100% !important;
         max-width: 100% !important;
         border-radius: var(--feedback-progress-panel-radius) !important;
         padding: var(--feedback-progress-panel-pad) !important;
         box-sizing: border-box !important;
+        margin: 0 !important;
     }
 }

@@ -356,7 +356,7 @@
     @media (max-width: 767px) {
         .db-section.active {
             --module-detail-radius: 12px;
-            --module-detail-gap: 10px;
+            --module-detail-gap: 15px;
             --module-detail-border: rgba(37, 99, 235, 0.14);
             --module-detail-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
             --module-detail-card: rgba(248, 250, 252, 0.76);
@@ -948,3 +948,61 @@
             font-size: 0.7rem !important;
         }
     }
+
+/* Final mobile module detail spacing: match 15px page rhythm. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content #module-detail-page,
+    html body #mob-content #module-detail-page,
+    html body #module-detail-page {
+        --module-detail-gap: 15px;
+        --module-detail-panel-pad: 16px;
+        --module-detail-panel-radius: 16px;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--module-detail-gap) !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 8px 12px calc(var(--mob-nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 22px) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #module-detail-page > :is(.mb-3, .mod-hero, #moduleTabs, #moduleTabsContent, .premium-panel),
+    html body #mob-content #module-detail-page > :is(.mb-3, .mod-hero, #moduleTabs, #moduleTabsContent, .premium-panel),
+    html body #module-detail-page > :is(.mb-3, .mod-hero, #moduleTabs, #moduleTabsContent, .premium-panel) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #module-detail-page :is(.mod-hero, .chapter-card, .resource-item, .module-next-item, .chapter-gate-status, .module-progress-panel),
+    html body #mob-content #module-detail-page :is(.mod-hero, .chapter-card, .resource-item, .module-next-item, .chapter-gate-status, .module-progress-panel),
+    html body #module-detail-page :is(.mod-hero, .chapter-card, .resource-item, .module-next-item, .chapter-gate-status, .module-progress-panel) {
+        border-radius: var(--module-detail-panel-radius) !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #module-detail-page :is(.chapter-card, .resource-item, .module-next-item, .chapter-gate-status),
+    html body #mob-content #module-detail-page :is(.chapter-card, .resource-item, .module-next-item, .chapter-gate-status),
+    html body #module-detail-page :is(.chapter-card, .resource-item, .module-next-item, .chapter-gate-status) {
+        padding: var(--module-detail-panel-pad) !important;
+    }
+
+    body.user-mobile-shell #mob-content #module-detail-page :is(.tab-pane > .row, .module-next-grid, .module-chapter-gate),
+    html body #mob-content #module-detail-page :is(.tab-pane > .row, .module-next-grid, .module-chapter-gate),
+    html body #module-detail-page :is(.tab-pane > .row, .module-next-grid, .module-chapter-gate) {
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: var(--module-detail-gap) !important;
+        gap: var(--module-detail-gap) !important;
+        margin: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #module-detail-page :is(.tab-pane > .row) > [class*="col-"],
+    html body #mob-content #module-detail-page :is(.tab-pane > .row) > [class*="col-"],
+    html body #module-detail-page :is(.tab-pane > .row) > [class*="col-"] {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}

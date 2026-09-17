@@ -2,7 +2,7 @@
 @section('title', 'Module Details')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/modules/show.css?v=3') }}" data-page-style="user-modules-show">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/modules/show.css?v=5') }}" data-page-style="user-modules-show">
 @endpush
 
 @section('content')

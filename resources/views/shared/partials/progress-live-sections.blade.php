@@ -17,7 +17,7 @@
     $progressCategoryColors = ['#22c55e', '#3b82f6', '#06b6d4', '#f59e0b', '#8b5cf6'];
 @endphp
 
-<div class="progress-live-grid" style="gap: 18px !important; margin-top: 18px !important; margin-bottom: 18px !important;">
+<div class="progress-live-grid">
     <div class="progress-live-card" id="learning-progress">
         <div class="learning-panel" style="--panel-accent:#0ea5e9;">
             <div class="learning-heading">

@@ -2,7 +2,7 @@
 @section('title', 'Personalized Practice Plan')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/progress.css?v=25') }}" data-page-style="user-practice-plan">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/progress.css?v=36') }}" data-page-style="user-practice-plan">
 @endpush
 
 @section('content')

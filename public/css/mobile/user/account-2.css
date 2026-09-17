@@ -1348,9 +1348,12 @@
 @media (max-width: 991.98px) {
     body.user-mobile-shell #mob-content #account-page,
     html body #mob-content #account-page {
-        --account-progress-gap: 14px;
+        --account-progress-gap: 15px;
         --account-progress-panel-pad: 16px;
         --account-progress-panel-radius: 16px;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--account-progress-gap) !important;
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
@@ -1362,9 +1365,7 @@
     html body #mob-content #account-page > :is(.sr-page-hero, .alert, .account-grid) {
         width: 100% !important;
         max-width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        margin-bottom: var(--account-progress-gap) !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
     }
 

@@ -3291,9 +3291,12 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 @media (max-width: 991.98px) {
     body.user-mobile-shell #mob-content #interview-modules-page,
     html body #mob-content #interview-modules-page {
-        --modules-progress-gap: 14px;
+        --modules-progress-gap: 15px;
         --modules-progress-panel-pad: 16px;
         --modules-progress-panel-radius: 16px;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--modules-progress-gap) !important;
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
@@ -3305,9 +3308,7 @@ body.dm #interview-modules-page .module-search-input::placeholder,
     html body #mob-content #interview-modules-page > :is(.modules-hero, .module-position-strip, .module-position-note, .module-filter-bar, .module-smart-row, .modules-card-grid, .d-flex.justify-content-center) {
         width: 100% !important;
         max-width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        margin-bottom: var(--modules-progress-gap) !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
     }
 

@@ -1998,9 +1998,12 @@
 @media (max-width: 991.98px) {
     body.user-mobile-shell #mob-content #notifications-page,
     html body #mob-content #notifications-page {
-        --notifications-progress-gap: 14px;
+        --notifications-progress-gap: 15px;
         --notifications-progress-panel-pad: 16px;
         --notifications-progress-panel-radius: 16px;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--notifications-progress-gap) !important;
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
@@ -2012,9 +2015,7 @@
     html body #mob-content #notifications-page > :is(.notif-hero, .notif-page-alert, .notif-bulk-actions, .notifications-list-panel, .notifications-pagination, .activity-history-section) {
         width: 100% !important;
         max-width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        margin-bottom: var(--notifications-progress-gap) !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
     }
 
@@ -2051,7 +2052,7 @@
         max-width: 100% !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
-        gap: 14px !important;
+        gap: 15px !important;
         box-sizing: border-box !important;
     }
 
