@@ -29,7 +29,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4" aria-expanded="false" aria-controls="f4">Can I practice multiple interview types?</button></h2>
                            <div id="f4" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Yes. You can practice Job and School Admission interviews, then adjust difficulty, focus area, timer, resume context, and role or program details.</div>
+                              <div class="accordion-body">Yes. You can practice job interviews, then adjust difficulty, focus area, timer, resume context, and role details.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
@@ -43,4 +43,3 @@
                </div>
             </div>
          </section>
-

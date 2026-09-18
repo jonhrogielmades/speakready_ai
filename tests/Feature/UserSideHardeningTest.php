@@ -444,7 +444,7 @@ class UserSideHardeningTest extends TestCase
  ]))
  ->assertRedirect(route('interview.setup'))
  ->assertSessionHasErrors([
- 'target_position' => 'This looks like a school-related target program. Recommendation: proceed with School Admission Interviews. Job Interview accepts job-related target positions only.',
+ 'target_position' => 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative.',
  ]);
 
  $this->assertDatabaseCount('interview_sessions', 0);
@@ -462,7 +462,7 @@ class UserSideHardeningTest extends TestCase
  ]))
  ->assertRedirect(route('interview.setup'))
  ->assertSessionHasErrors([
- 'target_position' => 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative, or choose School Admission Interviews for school programs like BS Information Technology.',
+ 'target_position' => 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative.',
  ]);
 
  $this->assertDatabaseCount('interview_sessions', 0);
@@ -571,7 +571,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('Job Interview', $session->interview_focus);
  }
 
- public function test_interview_start_rejects_job_role_target_for_school_admission_scenario(): void
+ public function test_interview_start_rejects_removed_school_admission_category(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'College Admission']);
@@ -583,99 +583,13 @@ class UserSideHardeningTest extends TestCase
  ]))
  ->assertRedirect(route('interview.setup'))
  ->assertSessionHasErrors([
- 'target_position' => 'This looks like a job-related target position. Recommendation: proceed with Job Interview. School Admission accepts school-related target programs only.',
+ 'category_id' => 'Only job interview practice is available.',
  ]);
 
  $this->assertDatabaseCount('interview_sessions', 0);
  }
 
- public function test_interview_start_recommends_job_interview_for_janitorial_services_under_school_admission(): void
- {
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category(['title' => 'College Admission']);
-
- $this->actingAs($user)
- ->from(route('interview.setup'))
- ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
- 'target_position' => 'Janitorial Services',
- ]))
- ->assertRedirect(route('interview.setup'))
- ->assertSessionHasErrors([
- 'target_position' => 'This looks like a job-related target position. Recommendation: proceed with Job Interview. School Admission accepts school-related target programs only.',
- ]);
-
- $this->assertDatabaseCount('interview_sessions', 0);
- }
-
- public function test_interview_start_recommends_job_interview_for_vague_cleaning_target_under_school_admission(): void
- {
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category(['title' => 'College Admission']);
-
- $this->actingAs($user)
- ->from(route('interview.setup'))
- ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
- 'target_position' => 'Clean',
- ]))
- ->assertRedirect(route('interview.setup'))
- ->assertSessionHasErrors([
- 'target_position' => 'Clean looks related to cleaning work. Recommendation: proceed with Job Interview using a specific target position such as Cleaner, Janitor, Housekeeping Attendant, or Janitorial Services.',
- ]);
-
- $this->assertDatabaseCount('interview_sessions', 0);
- }
-
- public function test_interview_start_rejects_non_school_target_for_school_admission_scenario(): void
- {
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category(['title' => 'College Admission']);
-
- $this->actingAs($user)
- ->from(route('interview.setup'))
- ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
- 'target_position' => 'Better Communication',
- ]))
- ->assertRedirect(route('interview.setup'))
- ->assertSessionHasErrors('target_position');
-
- $this->assertDatabaseCount('interview_sessions', 0);
- }
-
- public function test_interview_start_accepts_school_program_target_for_school_admission_scenario(): void
- {
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category(['title' => 'College Admission']);
-
- $this->actingAs($user)
- ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
- 'target_position' => 'BS Information Technology',
- ]))
- ->assertRedirect(route('interview.session'));
-
- $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
-
- $this->assertSame('BS Information Technology', $session->target_position);
- $this->assertStringContainsString('School Admission', $session->interview_focus);
- }
-
- public function test_interview_start_accepts_agriculture_program_for_school_admission_scenario(): void
- {
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category(['title' => 'College Admission']);
-
- $this->actingAs($user)
- ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
- 'target_position' => 'BS Agriculture',
- ]))
- ->assertRedirect(route('interview.session'));
-
- $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
-
- $this->assertSame('BS Agriculture', $session->target_position);
- $this->assertStringContainsString('School Admission', $session->interview_focus);
- }
-
- public function test_interview_setup_only_uses_job_and_school_admission_categories(): void
+ public function test_interview_setup_only_uses_job_interview_categories(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $jobCategory = $this->category([
@@ -698,22 +612,22 @@ class UserSideHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('name="category_id"', false)
  ->assertSee('value="'.$jobCategory->id.'"', false)
- ->assertSee('value="'.$admissionCategory->id.'"', false)
  ->assertSee('Job Interviews')
- ->assertSee('School Admission Interviews')
+ ->assertDontSee('School Admission Interviews')
+ ->assertDontSee('College Admission')
  ->assertDontSee('BPO / Customer Support Interview')
  ->assertDontSee('IT / Programming Interview')
  ->assertDontSee('Scholarship Interview')
  ->assertDontSee('Game Category');
  }
 
- public function test_interview_setup_renames_target_field_for_school_admission_on_desktop_and_mobile(): void
+ public function test_interview_setup_keeps_target_position_field_when_removed_category_was_old_input(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
  $admissionCategory = $this->category([
  'title' => 'College Admission',
- 'description' => 'School admission practice',
+ 'description' => 'Removed admission practice',
  'sort_order' => 2,
  ]);
  $oldInput = [
@@ -733,23 +647,19 @@ class UserSideHardeningTest extends TestCase
 
  foreach ([$desktopResponse, $mobileResponse] as $response) {
  $response
- ->assertSee('Target Program')
- ->assertSee('Program:')
+ ->assertSee('Target Position')
+ ->assertSee('Position:')
  ->assertSee('<input type="hidden" class="setup-input setup-target-hidden-input" name="target_position" id="valPosition"', false)
  ->assertSee('id="targetPositionDropdownButton"', false)
  ->assertSee('id="targetPositionDropdownMenu"', false)
- ->assertSee('<div class="setup-target-choice-group-title">College Programs - Version 1</div>', false)
- ->assertSee('Choose a target program')
- ->assertSee('data-target-dropdown-choice-value="BS Information Technology"', false)
- ->assertSee('data-target-dropdown-choice-value="BS Nursing"', false)
- ->assertSee('data-target-dropdown-choice-value="Bachelor of Elementary Education"', false)
- ->assertSee('data-target-dropdown-choice-value="Bachelor of Secondary Education"', false)
- ->assertSee('data-target-dropdown-choice-value="BS Civil Engineering"', false)
- ->assertSee('data-target-dropdown-choice-value="BS Agriculture"', false)
- ->assertSee('data-target-dropdown-choice-value="BS Fisheries"', false)
- ->assertSee('data-target-dropdown-choice-value="BS Business Administration"', false)
- ->assertSee('data-target-dropdown-choice-value="BS Accountancy / Accounting Information System"', false)
- ->assertSee('data-target-dropdown-choice-value="BS Hospitality Management"', false)
+ ->assertSee('<div class="setup-target-choice-group-title">Local Government / Office</div>', false)
+ ->assertSee('Choose a target position')
+ ->assertSee('data-target-dropdown-choice-value="Administrative Assistant / LGU Staff"', false)
+ ->assertSee('data-target-dropdown-choice-value="Software Developer"', false)
+ ->assertDontSee('<div class="setup-target-choice-group-title">College Programs - Version 1</div>', false)
+ ->assertDontSee('Choose a target program')
+ ->assertDontSee('data-target-dropdown-choice-value="BS Information Technology"', false)
+ ->assertDontSee('data-target-dropdown-choice-kind="school"', false)
  ->assertDontSee('<select class="oinp setup-input" name="target_position" id="valPosition"', false)
  ->assertDontSee('<option value="BS Information Technology"', false)
  ->assertDontSee('<optgroup label="College Programs - Version 1">', false)
@@ -757,7 +667,7 @@ class UserSideHardeningTest extends TestCase
  ->assertDontSee('TVL - ICT')
  ->assertDontSee('Caregiving')
  ->assertDontSee('Software Engineering')
- ->assertSee('Enter the target program before continuing.');
+ ->assertSee('Enter the target position before continuing.');
  }
  }
 
@@ -778,12 +688,12 @@ class UserSideHardeningTest extends TestCase
 
  foreach ([$desktopResponse, $mobileResponse] as $response) {
  $response
- ->assertSee('Proceed with Job Interview')
- ->assertSee('Recommendation: proceed with Job Interview.')
+ ->assertSee('Use a job target')
+ ->assertSee('Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative.')
+ ->assertSee('Use a specific job target')
  ->assertSee('Clean is too broad for a target position. Recommendation: use a specific job target such as Cleaner, Janitor, Housekeeping Attendant, or Janitorial Services, then proceed with Job Interview.')
- ->assertSee('Clean looks related to cleaning work. Recommendation: proceed with Job Interview using a specific target position such as Cleaner, Janitor, Housekeeping Attendant, or Janitorial Services.')
- ->assertSee('Proceed with School Admission')
- ->assertSee('Recommendation: proceed with School Admission Interviews.');
+ ->assertDontSee('Proceed with School Admission')
+ ->assertDontSee('Recommendation: proceed with School Admission Interviews.');
  }
  }
 
@@ -845,12 +755,12 @@ class UserSideHardeningTest extends TestCase
 
  $content = $response->getContent();
  $this->assertSame(12, substr_count($content, 'data-target-dropdown-choice-kind="job"'));
- $this->assertSame(10, substr_count($content, 'data-target-dropdown-choice-kind="school"'));
+ $this->assertSame(0, substr_count($content, 'data-target-dropdown-choice-kind="school"'));
  }
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=16', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=2', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=3', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)
@@ -1484,11 +1394,11 @@ class UserSideHardeningTest extends TestCase
  public function test_interview_start_uses_category_source_dataset(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category(['title' => 'College Admission']);
+ $category = $this->category(['title' => 'Job Interview']);
 
  $this->actingAs($user)
  ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
- 'target_position' => 'BS Information Technology',
+ 'target_position' => 'Administrative Assistant / LGU Staff',
  'question_types' => ['Situational'],
  ]))
  ->assertRedirect(route('interview.session'));
@@ -1502,7 +1412,7 @@ class UserSideHardeningTest extends TestCase
 
  $this->assertNotContains('competency_source', $sourceTypes->all());
  $this->assertTrue($sourceTypes->contains(fn ($type) => in_array($type, [
- 'official_admission_source',
+ 'career_question_bank',
  'speakready_reliable_question_bank',
  ], true)));
  }

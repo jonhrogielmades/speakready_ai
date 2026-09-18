@@ -3,22 +3,20 @@
     "version": "2026-08-01",
     "description": "Question-only normalized practice dataset for SpeakReady AI, grounded in downloaded official and reputable career-advice question sources. Prompts are adapted for practice and should not be represented as verbatim quotes from sources.",
     "created_at_utc": "2026-08-01T19:39:34+00:00",
-    "records": 60,
+    "records": 51,
     "dataset_keys": [
         "ph_job_interview",
         "general_interview_official",
         "ph_bpo_communication",
         "ph_it_programming",
         "ph_scholarship",
-        "ph_college_admission",
         "candidate_questions"
     ],
     "categories": [
         "Job Interview",
         "BPO / Customer Support",
         "IT/Programming",
-        "Scholarship Interview",
-        "College Admission"
+        "Scholarship Interview"
     ],
     "raw_source_index": {
         "path": "raw/question_sources/2026-08-01/_source_index.json",
@@ -29,8 +27,8 @@
         {
             "path": "normalized/questions/2026-08-01/speakready_reliable_questions.jsonl",
             "format": "jsonl",
-            "sha256": "9d2a2692754462dfbc21b5191288a03c945cfeb0c0d8c9ed289eff01afe37d6f",
-            "bytes": 30827
+            "sha256": "9ba57398d01682b9ab10e1579e54f7fac92b02b3ca579600edb8f73e90e4ce9b",
+            "bytes": 26328
         }
     ],
     "source_count": 9,

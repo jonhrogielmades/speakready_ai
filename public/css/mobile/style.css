@@ -8274,7 +8274,7 @@ body .modal-title {
 :root {
   --sr-mobile-vh: var(--sr-js-vh, 100vh);
   --sr-mobile-vh: var(--sr-js-vh, 100dvh);
-  --sr-mobile-inline: clamp(12px, 4vw, 18px);
+  --sr-mobile-inline: 10px;
   --sr-mobile-radius: 8px;
   --sr-touch-target: 44px;
 }
@@ -8380,8 +8380,8 @@ body.guest-mobile-shell #mbmenu {
 
 body.guest-mobile-shell #pwa-install-prompt {
   bottom: max(16px, env(safe-area-inset-bottom, 0px));
-  left: max(12px, env(safe-area-inset-left, 0px));
-  right: max(12px, env(safe-area-inset-right, 0px));
+  left: max(10px, env(safe-area-inset-left, 0px));
+  right: max(10px, env(safe-area-inset-right, 0px));
 }
 
 @media (hover: none), (pointer: coarse) {
@@ -8414,13 +8414,13 @@ body.guest-mobile-shell #pwa-install-prompt {
 }
 
 body.user-mobile-shell .sr-mobile-confirm-modal .modal-dialog {
-  margin: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  margin: max(10px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
 }
 
 @media (max-width: 767.98px) {
   body.user-mobile-shell {
     --sr-mobile-panel-gap: 12px;
-    --sr-mobile-panel-width: min(100% - 24px, 430px);
+    --sr-mobile-panel-width: min(100% - 20px, 430px);
   }
 
   body.user-mobile-shell .modal {

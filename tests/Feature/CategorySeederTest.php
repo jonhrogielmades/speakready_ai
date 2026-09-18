@@ -12,9 +12,15 @@ class CategorySeederTest extends TestCase
 {
  use RefreshDatabase;
 
- public function test_category_seeder_uses_dataset_manifest_for_core_interview_categories(): void
+ public function test_category_seeder_keeps_only_job_interview_as_core_category(): void
  {
  Storage::fake('datasets');
+ Category::create([
+ 'title' => 'College Admission',
+ 'type' => 'core',
+ 'status' => 'active',
+ ]);
+
  Storage::disk('datasets')->put('manifests/speakready_reliable_questions_2026-08-01.json', json_encode([
  'categories' => [
  'Job Interview',
@@ -27,15 +33,17 @@ class CategorySeederTest extends TestCase
 
  $this->assertSame([
  'Job Interview',
- 'BPO / Customer Support',
- 'College Admission',
- ], Category::where('type', 'core')->orderBy('sort_order')->pluck('title')->all());
+ ], Category::where('type', 'core')->where('status', 'active')->orderBy('sort_order')->pluck('title')->all());
 
- $this->assertDatabaseHas('categories', [
+ $this->assertDatabaseMissing('categories', [
  'title' => 'BPO / Customer Support',
  'type' => 'core',
  'status' => 'active',
- 'sort_order' => 2,
+ ]);
+ $this->assertDatabaseHas('categories', [
+ 'title' => 'College Admission',
+ 'type' => 'core',
+ 'status' => 'inactive',
  ]);
  $this->assertDatabaseMissing('categories', [
  'title' => 'Communication',

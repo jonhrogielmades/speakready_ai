@@ -104,10 +104,7 @@ Route::middleware(['auth', 'user'])->group(function () {
             }
 
             return str_contains($title, 'job interview')
-                || str_contains($title, 'general job')
-                || str_contains($title, 'school admission')
-                || str_contains($title, 'college admission')
-                || str_contains($title, 'admission interview');
+                || str_contains($title, 'general job');
         };
 
         $categories = Schema::hasTable('categories')

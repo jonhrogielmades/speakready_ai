@@ -34,19 +34,4 @@ return [
             'Sales Representative',
         ],
     ],
-
-    'school_programs' => [
-        'College Programs - Version 1' => [
-            'BS Information Technology',
-            'BS Nursing',
-            'Bachelor of Elementary Education',
-            'Bachelor of Secondary Education',
-            'BS Civil Engineering',
-            'BS Agriculture',
-            'BS Fisheries',
-            'BS Business Administration',
-            'BS Accountancy / Accounting Information System',
-            'BS Hospitality Management',
-        ],
-    ],
 ];

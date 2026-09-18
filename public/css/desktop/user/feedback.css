@@ -4134,3 +4134,36 @@ html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-
     line-height: 1 !important;
     white-space: nowrap !important;
 }
+
+/* Final Feedback Center panel spacing. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell > :is(.feedback-hero, .feedback-insight-grid, .feedback-answer-panel, .premium-panel, #feedbackPagination) {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-insight-grid,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-grid,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-layout,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-note-grid,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-metric-grid,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-recommend-list,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-head,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedback-filters,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-actions {
+        gap: 15px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-item,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-top,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-recommend-item,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-insight-head {
+        gap: 15px !important;
+    }
+}

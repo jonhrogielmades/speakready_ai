@@ -2332,15 +2332,18 @@
 
     .sr-section-actions form {
         margin: 0;
+        display: inline-flex;
     }
 
     .sr-section-action {
         width: min(100%, 180px);
+        height: 42px;
         min-height: 42px;
         border-radius: 10px;
         justify-content: center;
         font-size: 0.76rem;
         font-weight: 900;
+        line-height: 1;
     }
 
     .sr-section-action.danger {
@@ -9224,6 +9227,7 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
     }
 
     body.user-desktop-shell:not(.admin-shell) .sr-section-action {
+        height: 42px;
         width: auto !important;
         min-width: 118px;
     }
@@ -9332,11 +9336,14 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
 
     body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-row-actions form {
         margin: 0;
-        line-height: 0;
+        display: inline-flex;
+        line-height: 1;
     }
 
     body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-review-table {
-        min-height: 34px;
+        width: 88px;
+        height: 42px;
+        min-height: 42px;
         padding: 6px 13px;
         border-radius: 8px;
         font-size: 0.74rem;
@@ -9346,10 +9353,10 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
     }
 
     body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-session-delete-table {
-        width: 34px;
-        min-width: 34px;
-        height: 34px;
-        min-height: 34px;
+        width: 42px;
+        min-width: 42px;
+        height: 42px;
+        min-height: 42px;
         padding: 0 !important;
         border-color: rgba(239, 68, 68, 0.36) !important;
         background: rgba(239, 68, 68, 0.04) !important;

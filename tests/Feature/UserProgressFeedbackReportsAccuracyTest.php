@@ -262,40 +262,37 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $job = $this->category('Job Interview');
- $admission = $this->category('College Admission');
 
  $this->completedSessionFor($user, $job, 70, now()->subDays(3), [
  'target_position' => 'Office Associate',
  ]);
- $admissionSession = $this->completedSessionFor($user, $admission, 88, now()->subDay(), [
- 'target_position' => 'Admission Applicant',
- 'interview_focus' => 'college admission program fit',
- ]);
- $this->completedSessionFor($user, $job, 92, now()->subDays(2), [
+ $matchingSession = $this->completedSessionFor($user, $job, 92, now()->subDays(2), [
  'target_position' => 'Customer Success Agent',
  'interview_focus' => 'job interview role fit',
  ]);
+ $this->completedSessionFor($user, $job, 88, now()->subDay(), [
+ 'target_position' => 'Sales Representative',
+ 'interview_focus' => 'job interview sales fit',
+ ]);
 
  $response = $this->actingAs($user)->get(route('user.feedback', [
- 'scenario' => 'School Admission Interviews',
- 'search' => 'admission',
+ 'scenario' => 'Job Interviews',
+ 'search' => 'customer',
  'sort' => 'asc',
  ]));
 
  $response->assertOk()
  ->assertSee('name="scenario"', false)
- ->assertSee('value="School Admission Interviews" selected', false)
+ ->assertSee('value="Job Interviews" selected', false)
  ->assertSee('name="search"', false)
- ->assertSee('value="admission"', false)
+ ->assertSee('value="customer"', false)
  ->assertSee('Oldest First')
- ->assertSee('data-scenario="School Admission Interviews"', false)
- ->assertDontSee('data-scenario="Job Interviews"', false)
+ ->assertSee('data-scenario="Job Interviews"', false)
  ->assertViewHas('sessions', fn ($sessions) => $sessions->total() === 1
- && $sessions->getCollection()->first()?->id === $admissionSession->id)
+ && $sessions->getCollection()->first()?->id === $matchingSession->id)
  ->assertViewHas('feedbackCategories', function ($categories) {
  return $categories->all() === [
  'Job Interviews',
- 'School Admission Interviews',
  ];
  });
  }

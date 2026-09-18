@@ -3,7 +3,7 @@
             --sr-visual-vh: var(--sr-js-vh, 100vh);
             --sr-visual-vh: var(--sr-js-vh, 100dvh);
             --sr-layout-vw: 100vw;
-            --sr-mobile-inline: clamp(12px, 4vw, 18px);
+            --sr-mobile-inline: 10px;
             --sr-touch-target: 44px;
          }
 

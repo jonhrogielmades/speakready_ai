@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=29') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=32') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=2') }}" data-page-style="interview-setup-2">
 @endpush
 
@@ -22,19 +22,6 @@
  ->filter()
  ->unique(fn (string $position) => strtolower($position))
  ->values();
- $schoolProgramOptionGroups = collect($targetScopes['school_programs']?? [])
- ->map(fn ($programs) => collect(is_array($programs)? $programs: [$programs])
- ->map(fn ($program) => trim((string) $program))
- ->filter()
- ->values()
- ->all())
- ->filter(fn (array $programs) => $programs!== []);
- $schoolProgramOptions = collect($targetScopes['school_programs']?? [])
- ->flatMap(fn ($programs) => is_array($programs)? $programs: [$programs])
- ->map(fn ($program) => trim((string) $program))
- ->filter()
- ->unique(fn (string $program) => strtolower($program))
- ->values();
  $interviewCategories = ($categories?? collect())
  ->filter(function ($category): bool {
  $title = strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title))?? ''));
@@ -51,10 +38,7 @@
  }
 
  return str_contains($title, 'job interview')
- || str_contains($title, 'general job')
- || str_contains($title, 'school admission')
- || str_contains($title, 'college admission')
- || str_contains($title, 'admission interview');
+ || str_contains($title, 'general job');
  })
  ->values();
 
@@ -65,10 +49,6 @@
  $knownLabels = [
  'job interview' => 'Job Interviews',
  'general job interview' => 'Job Interviews',
- 'college admission' => 'School Admission Interviews',
- 'college admission interview' => 'School Admission Interviews',
- 'school admission' => 'School Admission Interviews',
- 'school admission interview' => 'School Admission Interviews',
  ];
 
  if (isset($knownLabels[$key])) {
@@ -111,19 +91,14 @@
  'label' => $label,
  'focus' => $focusForCategory($category->title, $label),
  'context_label' => $label,
- 'source_summary' => $sourceSummary?: 'career and education sources',
+ 'source_summary' => $sourceSummary?: 'career sources',
  ];
  })
  ->values();
  $firstScenario = $scenarioOptions->first();
  $selectedCategoryId = (int) old('category_id', $firstScenario['category_id']?? 0);
  $selectedScenario = $scenarioOptions->first(fn ($scenario) => (int) $scenario['category_id'] === $selectedCategoryId)?? $scenarioOptions->first();
- $selectedScenarioText = strtolower(trim((string) (($selectedScenario['focus']?? '').' '.($selectedScenario['context_label']?? '').' '.($selectedScenario['label']?? ''))));
- $targetFieldMode = str_contains($selectedScenarioText, 'school admission')
- || str_contains($selectedScenarioText, 'college admission')
- || str_contains($selectedScenarioText, 'admission interview')
- ? 'school'
- : 'job';
+ $targetFieldMode = 'job';
  $targetFieldCopies = [
  'job' => [
  'label' => 'Target Position',
@@ -131,13 +106,6 @@
  'placeholder' => 'Choose a target position',
  'required_message' => 'Enter the target position before continuing.',
  'calibration_title' => 'Southern Leyte role-calibrated practice',
- ],
- 'school' => [
- 'label' => 'Target Program',
- 'summary_label' => 'Program:',
- 'placeholder' => 'Choose a target program',
- 'required_message' => 'Enter the target program before continuing.',
- 'calibration_title' => 'program-calibrated practice',
  ],
  ];
  $targetFieldCopy = $targetFieldCopies[$targetFieldMode];
@@ -257,7 +225,7 @@
  </select>
  </div>
  <input type="hidden" name="interview_focus" id="valFocus" value="{{ $setupDefaults['interview_focus'] }}" class="setup-input">
- <div class="desc-text" id="scenarioHelp">Choose either job interviews or school admission interviews.</div>
+ <div class="desc-text" id="scenarioHelp">Choose a job interview practice scenario.</div>
  @unless($hasScenarioOptions)
  <div class="setup-inline-error setup-inline-error-visible" id="scenarioEmptyState" role="alert">No active interview scenarios are available. Ask an admin to activate at least one core category before starting.</div>
  @endunless
@@ -275,7 +243,7 @@
  <i class="fa-solid fa-chevron-down setup-target-trigger-icon" aria-hidden="true"></i>
  </button>
  <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="list" aria-labelledby="targetPositionLabelText" hidden>
- @foreach(['job' => $jobPositionOptionGroups, 'school' => $schoolProgramOptionGroups] as $targetKind => $targetGroups)
+ @foreach(['job' => $jobPositionOptionGroups] as $targetKind => $targetGroups)
  @foreach($targetGroups as $groupLabel => $targetChoices)
  <div class="setup-target-choice-group" data-target-dropdown-group-kind="{{ $targetKind }}" {{ $targetFieldMode === $targetKind? '': 'hidden' }}>
  <div class="setup-target-choice-group-title">{{ $groupLabel }}</div>
@@ -301,7 +269,7 @@
  </div>
  <div>
  <h6 id="targetCalibrationTitle">{{ $targetFieldCopy['calibration_title'] }}</h6>
- <p><strong>Sources:</strong> <span id="sourceSummary">{{ $selectedScenario['source_summary']?? 'career and education sources' }}</span></p>
+ <p><strong>Sources:</strong> <span id="sourceSummary">{{ $selectedScenario['source_summary']?? 'career sources' }}</span></p>
  </div>
  </div>
  </div>
@@ -614,19 +582,7 @@
  const setupScenarioMismatchMessages = {
  job: {
  title: 'Use a job target',
- message: 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative, or choose School Admission Interviews for school programs like BS Information Technology.',
- },
- school: {
- title: 'Use a school target',
- message: 'School Admission accepts school-related target programs only. Enter a Version 1 program like BS Information Technology, BS Nursing, or BS Agriculture, or choose Job Interviews for Southern Leyte roles like Administrative Assistant / LGU Staff or Software Developer.',
- },
- recommendJob: {
- title: 'Proceed with Job Interview',
- message: 'This looks like a job-related target position. Recommendation: proceed with Job Interview. School Admission accepts school-related target programs only.',
- },
- recommendSchool: {
- title: 'Proceed with School Admission',
- message: 'This looks like a school-related target program. Recommendation: proceed with School Admission Interviews. Job Interview accepts job-related target positions only.',
+ message: 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative.',
  },
  };
  const setupVagueTargetRecommendations = [
@@ -636,10 +592,6 @@
  jobScenario: {
  title: 'Use a specific job target',
  message: 'Clean is too broad for a target position. Recommendation: use a specific job target such as Cleaner, Janitor, Housekeeping Attendant, or Janitorial Services, then proceed with Job Interview.',
- },
- schoolScenario: {
- title: 'Proceed with Job Interview',
- message: 'Clean looks related to cleaning work. Recommendation: proceed with Job Interview using a specific target position such as Cleaner, Janitor, Housekeeping Attendant, or Janitorial Services.',
  },
  },
  ];
@@ -652,18 +604,9 @@
  requiredMessage: 'Enter the target position before continuing.',
  calibrationTitle: 'Southern Leyte role-calibrated practice',
  },
- school: {
- label: 'Target Program',
- summaryLabel: 'Program:',
- placeholder: 'Choose a target program',
- requiredTitle: 'Target program required',
- requiredMessage: 'Enter the target program before continuing.',
- calibrationTitle: 'program-calibrated practice',
- },
  };
  const setupTargetChoiceGroups = @json([
  'job' => $jobPositionOptionGroups,
- 'school' => $schoolProgramOptionGroups,
  ]);
 
  function setSetupFieldInvalid(field, invalid) {
@@ -742,23 +685,7 @@
  }
 
  function selectedSetupScenarioKind() {
- const scenarioSelect = document.getElementById('valScenario');
- const selectedOption = scenarioSelect?.options?.[scenarioSelect.selectedIndex];
- const scenarioText = normalizeSetupScenarioText([
- selectedOption?.dataset.focus,
- selectedOption?.dataset.contextLabel,
- selectedOption?.text,
- ].filter(Boolean).join(' '));
-
- if (setupTextContainsPhrase(scenarioText, ['school admission', 'college admission', 'admission interview'])) {
- return 'school';
- }
-
- if (setupTextContainsPhrase(scenarioText, ['job interview', 'general job'])) {
  return 'job';
- }
-
- return null;
  }
 
  function targetSetupScenarioKind() {
@@ -783,85 +710,28 @@
  'support', 'teacher', 'technician', 'therapist', 'tourism', 'trainee', 'tutor', 'veterinarian',
  'waiter', 'worker', 'writer',
  ];
- const schoolIndicators = [
- 'abm', 'accountancy', 'admission', 'agriculture', 'architecture', 'bachelor', 'bs agriculture', 'bs accountancy accounting information system', 'bs computer science',
- 'bs computer engineering', 'bs cybersecurity', 'bs data science', 'bs electronics engineering',
- 'bs entrepreneurship', 'bs financial management', 'bs industrial engineering',
- 'bs fisheries', 'bs information systems', 'bs information technology', 'bs marketing management',
- 'bs office administration', 'bs public administration', 'bs social work',
- 'bs software engineering', 'bscpe', 'bscs', 'bsis', 'bsit',
- 'business administration', 'college', 'computer engineering', 'computer science',
- 'course', 'criminology', 'cybersecurity', 'data science', 'degree',
- 'education', 'electrical engineering', 'electronics engineering', 'engineering', 'entrepreneurship', 'fisheries', 'freshman',
- 'gas', 'graduate program', 'hospitality management', 'humss', 'ict', 'industrial engineering', 'accounting information system',
- 'information systems', 'information technology', 'it', 'law school', 'master',
- 'marketing management', 'mechanical engineering', 'medicine', 'nursing', 'program',
- 'psychology', 'public administration', 'school',
- 'senior high', 'software engineering', 'stem', 'strand', 'student',
- 'tourism', 'university',
- ];
- const schoolProgramOverrideIndicators = [
- 'bachelor of elementary education', 'bachelor of secondary education',
- 'bs accountancy', 'bs accountancy accounting information system', 'bs agriculture', 'bs architecture', 'bs biology', 'bs business administration',
- 'bs civil engineering', 'bs computer engineering', 'bs computer science',
- 'bs criminology', 'bs cybersecurity', 'bs data science', 'bs electrical engineering',
- 'bs electronics engineering', 'bs entrepreneurship', 'bs fisheries', 'bs financial management',
- 'bs hospitality management', 'bs industrial engineering', 'bs information systems',
- 'bs information technology', 'bs marketing management', 'bs mechanical engineering',
- 'bs medical technology', 'bs nursing', 'bs office administration', 'bs pharmacy',
- 'bs psychology', 'bs public administration', 'bs social work', 'bs software engineering',
- 'bs tourism management', 'master in information technology', 'master of business administration',
- 'senior high abm strand', 'senior high gas strand', 'senior high humss strand',
- 'senior high ict strand', 'senior high stem strand',
- ];
- const explicitSchoolProgramIndicators = [
- 'admission', 'bachelor', 'bs accountancy', 'bs agriculture', 'bs computer science', 'bs fisheries', 'bs information systems',
- 'bs information technology', 'bscs', 'bsis', 'bsit', 'course', 'degree', 'freshman',
- 'graduate program', 'law school', 'master in', 'master of', 'masters in', 'masters of',
- 'senior high', 'strand',
- ];
- const isJobRelated = setupTextContainsPhrase(target, jobIndicators);
- const isSchoolRelated = setupTextContainsPhrase(target, schoolIndicators);
- const isKnownSchoolProgram = setupTextContainsPhrase(target, schoolProgramOverrideIndicators);
- const isExplicitSchoolProgram = setupTextContainsPhrase(target, explicitSchoolProgramIndicators);
 
- if (isKnownSchoolProgram) return 'school';
- if (isExplicitSchoolProgram && !isJobRelated) return 'school';
- if (isJobRelated) return 'job';
- if (isSchoolRelated && !isJobRelated) return 'school';
-
- return null;
+ return setupTextContainsPhrase(target, jobIndicators)? 'job': null;
  }
 
  function setupScenarioTargetMismatch() {
- const scenarioKind = selectedSetupScenarioKind();
  const vagueRecommendation = vagueSetupTargetRecommendation();
 
- if (vagueRecommendation) {
- if (scenarioKind === 'job' && vagueRecommendation.kind === 'job') {
+ if (vagueRecommendation && vagueRecommendation.kind === 'job') {
  return vagueRecommendation.jobScenario;
- }
-
- if (scenarioKind === 'school' && vagueRecommendation.kind === 'job') {
- return vagueRecommendation.schoolScenario;
- }
  }
 
  const targetKind = targetSetupScenarioKind();
 
- if (scenarioKind === 'job' && targetKind !== 'job') {
- return targetKind === 'school'? setupScenarioMismatchMessages.recommendSchool: setupScenarioMismatchMessages.job;
- }
-
- if (scenarioKind === 'school' && targetKind !== 'school') {
- return targetKind === 'job'? setupScenarioMismatchMessages.recommendJob: setupScenarioMismatchMessages.school;
+ if (targetKind !== 'job') {
+ return setupScenarioMismatchMessages.job;
  }
 
  return null;
  }
 
  function currentSetupTargetFieldCopy() {
- return setupTargetFieldCopies[selectedSetupScenarioKind() === 'school'? 'school': 'job'];
+ return setupTargetFieldCopies.job;
  }
 
  function flattenSetupTargetChoices(choiceGroups) {
@@ -927,7 +797,7 @@
  }
 
  function syncSetupTargetFieldCopy() {
- const targetKind = selectedSetupScenarioKind() === 'school'? 'school': 'job';
+ const targetKind = 'job';
  const targetCopy = currentSetupTargetFieldCopy();
  const labelText = document.getElementById('targetPositionLabelText');
  const summaryLabel = document.getElementById('summaryPositionLabel');
@@ -1097,7 +967,7 @@
  document.getElementById('valFocus').value = selectedOption?.dataset.focus || 'Job Interview';
  const sourceSummary = document.getElementById('sourceSummary');
  if (sourceSummary) {
- sourceSummary.innerText = selectedOption?.dataset.sourceSummary || 'career and education sources';
+ sourceSummary.innerText = selectedOption?.dataset.sourceSummary || 'career sources';
  }
  }
 
@@ -1185,7 +1055,7 @@
  const targetPositionDropdownButton = document.getElementById('targetPositionDropdownButton');
 
  function chooseSetupTargetValue(choice) {
- const targetKind = selectedSetupScenarioKind() === 'school'? 'school': 'job';
+ const targetKind = 'job';
  if (!choice || choice.dataset.targetDropdownChoiceKind !== targetKind) return;
 
  const positionField = document.getElementById('valPosition');
@@ -1589,8 +1459,8 @@
 
  const setupTourSteps = [
  { element: '#setupStepper', popover: { title: 'Setup Roadmap', description: 'Use this stepper to move through details, structure, camera, coaching, and response settings before launching.', side: 'bottom', align: 'center' }},
- { element: '#panel-basic', popover: { title: 'Interview Focus', description: 'Choose whether this session is for job practice or school admission practice, then anchor it to the right scenario.', side: 'top', align: 'center' }},
- { element: '#targetPositionDropdownButton', popover: { title: 'Target Role or Program', description: 'Pick the role, strand, or program you are practicing for so the questions match your goal.', side: 'bottom', align: 'start' }},
+ { element: '#panel-basic', popover: { title: 'Interview Focus', description: 'Choose the job interview scenario, then anchor it to the target role.', side: 'top', align: 'center' }},
+ { element: '#targetPositionDropdownButton', popover: { title: 'Target Role', description: 'Pick the role you are practicing for so the questions match your goal.', side: 'bottom', align: 'start' }},
  { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, number of questions, and timing. Shorter sessions are useful for quick drills; longer ones feel closer to a full interview.', side: 'top', align: 'center' }},
  { element: '#panel-inclusive', popover: { title: 'Camera Detection', description: 'Camera On enables local body-language observations for coaching only. Camera Off keeps the session answer-focused.', side: 'top', align: 'center' }},
  { element: '#valFeedbackMode', popover: { title: 'Coaching Style', description: 'Choose Coaching On for live help, or Real Interview Mode for a quieter practice run.', side: 'bottom', align: 'start' }},

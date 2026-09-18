@@ -76,7 +76,7 @@
 
  @include('shared.partials.progress-live-sections')
 
- <div class="row g-4 mb-4">
+ <div class="row g-4 mb-4 progress-overview-grid">
  <!-- Feature 1: Readiness Score Trend -->
  <div class="col-12 animate-fade-up" id="readiness-trend" style="animation-delay: 0.6s;">
  <div class="premium-panel progress-chart-panel" style="height:100%; --panel-accent:#2563eb;">
@@ -107,7 +107,7 @@
  <div class="progress-panel-icon"><i class="fa-solid fa-crosshairs"></i></div>
  <div>
  <h5 class="progress-panel-title">Scenario Performance</h5>
- <p class="progress-panel-subtitle">Your average scores across job and school interview scenarios.</p>
+ <p class="progress-panel-subtitle">Your average scores across job interview scenarios.</p>
  </div>
  </div>
  <div class="progress-chart-frame scenario">
@@ -126,46 +126,6 @@
  </div>
 
  <div class="row g-4 mb-4">
- <!-- Feature 4: Skill Improvement Tracker -->
- <div class="col-12 animate-fade-up" id="skill-tracker" style="animation-delay: 0.8s;">
- <div class="premium-panel progress-chart-panel" style="height:100%; --panel-accent:#8b5cf6;">
- <div class="progress-panel-heading">
- <div class="progress-panel-icon"><i class="fa-solid fa-chart-simple"></i></div>
- <div>
- <h5 class="progress-panel-title">Skill Improvement Tracker</h5>
- <p class="progress-panel-subtitle">Track your progress in key interview skills.</p>
- </div>
- </div>
- 
- @if(count($skillComparison) > 0)
- @foreach($skillComparison as $metric)
- <div class="skill-metric-row">
- <div class="skill-metric-top">
- <span class="skill-metric-label">{{ $metric['label'] }}</span>
- <span class="skill-metric-value">{{ $metric['previous'] }}% <i class="fa-solid fa-arrow-right mx-1" style="font-size:0.8em"></i> {{ $metric['current'] }}%
- @if($metric['delta'] >= 0)
- <span class="text-success ms-1">(+{{ $metric['delta'] }}%)</span>
- @else
- <span class="text-danger ms-1">({{ $metric['delta'] }}%)</span>
- @endif
- </span>
- </div>
- <div class="skill-metric-bar">
- <div class="skill-metric-fill" role="progressbar" style="width: {{ $metric['bar'] }}%;"></div>
- </div>
- </div>
- @endforeach
- @else
- <div class="skill-empty-state">
- <div>
- <div class="skill-empty-icon"><i class="fa-solid fa-clipboard-check"></i></div>
- <p class="skill-empty-text">Complete multiple practice interviews to track your specific skill improvements.</p>
- </div>
- </div>
- @endif
- </div>
- </div>
-
  <!-- Feature 12: Strengths & Areas for Improvement -->
  <div class="col-12 animate-fade-up" id="strengths-tracker" style="animation-delay: 0.9s;">
  <div class="premium-panel strengths-star-panel" style="height:100%; --panel-accent:#7c3aed;">
@@ -304,7 +264,7 @@
  </div>
  </div>
 
- <div class="row g-4">
+ <div class="row g-4 progress-goals-badges-grid">
  <!-- Feature 10: Goals & Milestones -->
  <div class="col-12" id="goals-milestones">
  <div class="goals-panel" style="--panel-accent:#10b981;">
@@ -602,11 +562,10 @@
  const stepsMobile = [
  { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, learning progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
  { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
- { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'See module work tied to your readiness so lessons and interview practice stay connected.', side: 'top', align: 'start' }},
+ { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
  { element: '#category-performance-summary', popover: { title: 'Category Summary', description: 'Check which scoring categories are currently strongest before drilling into the full chart.', side: 'top', align: 'start' }},
  { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time as you complete more scored sessions.', side: 'bottom', align: 'start' }},
  { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare practice scenarios to find strengths, weak spots, and where your next session should focus.', side: 'top', align: 'start' }},
- { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
  { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, STAR method coverage, and the next coaching suggestion.', side: 'top', align: 'start' }},
  { element: '#historySearch', popover: { title: 'Search History', description: 'Filter your interview history when you want to revisit a scenario, date, rating, or score quickly.', side: 'top', align: 'start' }},
  { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
@@ -617,11 +576,10 @@
  const stepsDesktop = [
  { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, learning progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
  { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
- { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'See module work tied to your readiness so lessons and interview practice stay connected.', side: 'top', align: 'start' }},
+ { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
  { element: '#category-performance-summary', popover: { title: 'Category Summary', description: 'Check which scoring categories are currently strongest before drilling into the full chart.', side: 'top', align: 'start' }},
  { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time as you complete more scored sessions.', side: 'bottom', align: 'start' }},
  { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare practice scenarios to find strengths, weak spots, and where your next session should focus.', side: 'bottom', align: 'start' }},
- { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'right', align: 'start' }},
  { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, STAR method coverage, and the next coaching suggestion.', side: 'left', align: 'start' }},
  { element: '#historySearch', popover: { title: 'Search History', description: 'Filter your interview history when you want to revisit a scenario, date, rating, or score quickly.', side: 'top', align: 'start' }},
  { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},

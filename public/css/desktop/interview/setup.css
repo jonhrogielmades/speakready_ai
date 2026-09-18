@@ -5017,7 +5017,7 @@
         }
     }
 
-    /* Match the shared desktop content width and Bootstrap 8/4 column layout. */
+    /* Match the shared desktop content width and keep setup columns balanced. */
     @media (min-width: 992px) {
         html body #dashboard .db-content #sec-interview-setup,
         html body #sec-interview-setup,
@@ -5039,15 +5039,15 @@
         html body #sec-interview-setup #setupForm > .row > .col-lg-8,
         html body #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-8 {
             flex: 0 0 auto !important;
-            width: 66.66666667% !important;
-            max-width: 66.66666667% !important;
+            width: 60% !important;
+            max-width: 60% !important;
         }
 
         html body #sec-interview-setup #setupForm > .row > .col-lg-4,
         html body #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-4 {
             flex: 0 0 auto !important;
-            width: 33.33333333% !important;
-            max-width: 33.33333333% !important;
+            width: 40% !important;
+            max-width: 40% !important;
         }
     }
 
@@ -5380,7 +5380,7 @@
         html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row,
         html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row.g-4 {
             display: grid !important;
-            grid-template-columns: minmax(0, 1fr) minmax(320px, var(--setup-summary-width)) !important;
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) !important;
             align-items: start !important;
             gap: var(--setup-saas-gap) !important;
             margin: 0 !important;

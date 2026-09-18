@@ -841,14 +841,14 @@
 
  const stepsMobile = [
  { element: '#challengePositionModal.show .modal-content', popover: { title: 'Choose Challenge Focus', description: 'Pick the target position so the challenge path can match the interview you are preparing for.', side: 'bottom', align: 'center' }},
- { element: '#challengePositionModal.show #challengeTargetPositionButton, #challengePositionModal.show #challengeTargetPosition', popover: { title: 'Target Position', description: 'Select the role or program that should guide the challenge levels.', side: 'bottom', align: 'start' }},
+ { element: '#challengePositionModal.show #challengeTargetPositionButton, #challengePositionModal.show #challengeTargetPosition', popover: { title: 'Target Position', description: 'Select the role that should guide the challenge levels.', side: 'bottom', align: 'start' }},
  { element: '#challengePositionModal.show .challenge-position-submit-btn, #challengePositionModal.show .modal-footer .btn-primary', popover: { title: 'View Related Challenges', description: 'Load the challenge journey for this position.', side: 'top', align: 'center' }},
  { element: '#gameResultModal.show .game-result-hero', popover: { title: 'Challenge Result', description: 'After a challenge, this summary shows whether you passed, your score, and the main next step.', side: 'bottom', align: 'center' }},
  { element: '#gameResultModal.show .game-result-stat', popover: { title: 'Attempt Details', description: 'Check the goal, best score, energy spent, and XP reward from the attempt.', side: 'bottom', align: 'center' }},
  { element: '#gameResultModal.show .ai-scorecard-panel', popover: { title: 'Feedback Scorecard', description: 'Use this breakdown to see which answer skills helped or held back the score.', side: 'top', align: 'center' }},
  { element: '#gameResultModal.show .game-result-actions', popover: { title: 'Next Move', description: 'Retry, start the next level, download a certificate, or return to the journey from here.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) .sr-learning-hero', popover: { title: 'Interview Challenges', description: 'Complete focused interview levels, earn XP, and unlock later stages as your answers improve.', side: 'bottom', align: 'center' }},
- { element: 'body:not(.modal-open) .challenge-position-strip', popover: { title: 'Target Position', description: 'Change this when you want challenges for a different role or program.', side: 'bottom', align: 'center' }},
+ { element: 'body:not(.modal-open) .challenge-position-strip', popover: { title: 'Target Position', description: 'Change this when you want challenges for a different role.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) #dashboard-stats', popover: { title: 'Player Stats', description: 'Track level, energy, combo streak, and accuracy while you play.', side: 'top', align: 'start' }},
  { element: 'body:not(.modal-open) .journey-header', popover: { title: 'Challenge Journey', description: 'This header shows the active path, lives, and quick access to the skill tree.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) #btn-skill-tree', popover: { title: 'Skill Tree', description: 'Open the skill tree to spend XP on perks that improve your training loop.', side: 'bottom', align: 'end' }},
@@ -860,14 +860,14 @@
 
  const stepsDesktop = [
  { element: '#challengePositionModal.show .modal-content', popover: { title: 'Choose Challenge Focus', description: 'Pick the target position so the challenge path can match the interview you are preparing for.', side: 'bottom', align: 'center' }},
- { element: '#challengePositionModal.show #challengeTargetPositionButton, #challengePositionModal.show #challengeTargetPosition', popover: { title: 'Target Position', description: 'Select the role or program that should guide the challenge levels.', side: 'bottom', align: 'start' }},
+ { element: '#challengePositionModal.show #challengeTargetPositionButton, #challengePositionModal.show #challengeTargetPosition', popover: { title: 'Target Position', description: 'Select the role that should guide the challenge levels.', side: 'bottom', align: 'start' }},
  { element: '#challengePositionModal.show .challenge-position-submit-btn, #challengePositionModal.show .modal-footer .btn-primary', popover: { title: 'View Related Challenges', description: 'Load the challenge journey for this position.', side: 'top', align: 'center' }},
  { element: '#gameResultModal.show .game-result-hero', popover: { title: 'Challenge Result', description: 'After a challenge, this summary shows whether you passed, your score, and the main next step.', side: 'bottom', align: 'center' }},
  { element: '#gameResultModal.show .game-result-stat', popover: { title: 'Attempt Details', description: 'Check the goal, best score, energy spent, and XP reward from the attempt.', side: 'bottom', align: 'center' }},
  { element: '#gameResultModal.show .ai-scorecard-panel', popover: { title: 'Feedback Scorecard', description: 'Use this breakdown to see which answer skills helped or held back the score.', side: 'top', align: 'center' }},
  { element: '#gameResultModal.show .game-result-actions', popover: { title: 'Next Move', description: 'Retry, start the next level, download a certificate, or return to the journey from here.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) .sr-learning-hero', popover: { title: 'Interview Challenges', description: 'Complete focused interview levels, earn XP, and unlock later stages as your answers improve.', side: 'bottom', align: 'center' }},
- { element: 'body:not(.modal-open) .challenge-position-strip', popover: { title: 'Target Position', description: 'Change this when you want challenges for a different role or program.', side: 'bottom', align: 'center' }},
+ { element: 'body:not(.modal-open) .challenge-position-strip', popover: { title: 'Target Position', description: 'Change this when you want challenges for a different role.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) #dashboard-stats', popover: { title: 'Player Stats', description: 'Track level, energy, combo streak, and accuracy while you play.', side: 'bottom', align: 'start' }},
  { element: 'body:not(.modal-open) .journey-header', popover: { title: 'Challenge Journey', description: 'This header shows the active path, lives, and quick access to the skill tree.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) #btn-skill-tree', popover: { title: 'Skill Tree', description: 'Open the skill tree to spend XP on perks that improve your training loop.', side: 'bottom', align: 'end' }},

@@ -4,6 +4,7 @@
 @supports (height: 100svh) { :root { --sr-mobile-vh:100svh; } }
 body { margin:0;min-height:var(--sr-mobile-vh);background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%; }
 .public-review-header { background:var(--sf);border-bottom:1px solid var(--bd); }
+.public-review-header .container { padding-left:max(10px, env(safe-area-inset-left, 0px)) !important;padding-right:max(10px, env(safe-area-inset-right, 0px)) !important; }
 .public-review-shell { width:100%;max-width:920px;margin:0 auto;padding:16px max(10px, env(safe-area-inset-right, 0px)) max(40px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px)); }
 .db-section { display:block; }
 img, video, canvas, iframe, svg { max-width:100%; }

@@ -8,7 +8,7 @@
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
             <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Manage Interview Categories</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage categories for local job and school admission interviews.</p>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage categories for local job interviews.</p>
         </div>
         <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addCategoryModal"><i class="fa-solid fa-plus me-1"></i> Add Interview Category</button>
     </div>

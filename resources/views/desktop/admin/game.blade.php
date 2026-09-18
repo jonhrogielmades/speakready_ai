@@ -383,7 +383,7 @@
 
                     <div class="mb-3">
                         <label class="olbl">Interview Challenge Focus</label>
-                        <input class="oinp w-100" type="text" name="topic" required placeholder="e.g. job interview salary expectations or school admission program fit">
+                        <input class="oinp w-100" type="text" name="topic" required placeholder="e.g. job interview salary expectations or role fit">
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
@@ -426,7 +426,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="olbl">Interview Goal</label>
-                            <input class="oinp w-100" type="text" name="target_position" required placeholder="e.g. School Admission Interview">
+                            <input class="oinp w-100" type="text" name="target_position" required placeholder="e.g. Customer Service Representative">
                         </div>
                     </div>
 

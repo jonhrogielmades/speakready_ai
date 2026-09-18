@@ -130,7 +130,6 @@
                         </ul>
                         <div class="sr-image-chip-row" aria-label="Practice focus areas">
                             <span class="sr-image-chip"><i class="fa-solid fa-briefcase"></i> Job Interviews</span>
-                            <span class="sr-image-chip"><i class="fa-solid fa-building-columns"></i> School Admission Interviews</span>
                         </div>
                     </div>
                     <div class="sr-image-speech" aria-hidden="true">

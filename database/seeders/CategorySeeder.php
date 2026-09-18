@@ -15,6 +15,8 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
+        $this->deactivateRemovedInterviewCategories();
+
         foreach ($this->interviewCategories() as $index => $category) {
             $record = Category::firstOrNew([
                 'title' => $category['title'],
@@ -69,6 +71,7 @@ class CategorySeeder extends Seeder
         return collect($categories)
             ->map(fn ($category) => trim((string) $category))
             ->filter()
+            ->filter(fn (string $category) => $this->isSeededCoreInterviewCategory($category))
             ->unique(fn (string $category) => mb_strtolower($category))
             ->values()
             ->map(fn (string $category) => [
@@ -77,6 +80,25 @@ class CategorySeeder extends Seeder
                     ?? 'Source-backed interview practice category from the SpeakReady reliable question bank.',
             ])
             ->all();
+    }
+
+    private function isSeededCoreInterviewCategory(string $category): bool
+    {
+        $title = mb_strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', $category)) ?? ''));
+
+        return str_contains($title, 'job interview')
+            || str_contains($title, 'general job');
+    }
+
+    private function deactivateRemovedInterviewCategories(): void
+    {
+        Category::where('type', 'core')
+            ->where(function ($query): void {
+                $query->whereRaw('LOWER(title) LIKE ?', ['%school admission%'])
+                    ->orWhereRaw('LOWER(title) LIKE ?', ['%college admission%'])
+                    ->orWhereRaw('LOWER(title) LIKE ?', ['%admission interview%']);
+            })
+            ->update(['status' => 'inactive']);
     }
 
     private function manifestCategories(): array

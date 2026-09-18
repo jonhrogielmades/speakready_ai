@@ -602,7 +602,7 @@
             if (routeMatches(routeName, ['interview.setup'])) {
                 return withDefaults({
                     heroTitle: 'Mock interview setup',
-                    heroDescription: 'Build a role-focused job or school interview with role, structure, accessibility, assistance, and response-mode choices.',
+                    heroDescription: 'Build a role-focused job interview with role, structure, accessibility, assistance, and response-mode choices.',
                     workspaceTitle: 'Setup panels',
                     workspaceDescription: 'Work through each setup panel to choose the scenario, difficulty, timing, camera option, AI assistance, and answer mode.',
                     metricsTitle: 'Live setup summary',

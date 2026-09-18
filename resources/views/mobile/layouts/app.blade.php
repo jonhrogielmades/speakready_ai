@@ -11,6 +11,34 @@
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
       @stack('styles')
+      <style data-mobile-side-gutter="10px">
+         @media (max-width: 991.98px) {
+            body.user-mobile-shell {
+               --sr-mobile-inline: 10px !important;
+            }
+
+            :is(body.user-mobile-shell > .db-content,
+                body.user-mobile-shell #mob-content > .db-content) {
+               padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
+               padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
+            }
+
+            :is(body.user-mobile-shell > .db-content,
+                body.user-mobile-shell #mob-content > .db-content) > :is(.db-section, .container, .container-fluid, [id]) {
+               padding-left: 0 !important;
+               padding-right: 0 !important;
+               margin-left: 0 !important;
+               margin-right: 0 !important;
+            }
+
+            :is(body.user-mobile-shell > .db-content,
+                body.user-mobile-shell #mob-content > .db-content) > .row {
+               margin-left: 0 !important;
+               margin-right: 0 !important;
+            }
+         }
+      </style>
+      @include('mobile.partials.user-mobile-side-gutter')
    </head>
    <body class="user-mobile-shell mobile-shell @yield('body-class')" data-layout-shell="mobile" data-app-surface="user" data-partial-navigation-response="true">
       <div class="db-content" id="userAppContent" data-layout-shell="mobile" data-user-ajax-content data-page-title="{{ $mobileHeaderPageTitle }}">
@@ -942,7 +970,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 0;
-            padding: 6px max(8px, env(safe-area-inset-left, 0px)) 7px max(8px, env(safe-area-inset-right, 0px));
+            padding: 6px max(10px, env(safe-area-inset-left, 0px)) 7px max(10px, env(safe-area-inset-right, 0px));
          }
          .mob-nav-item {
             position: relative;
@@ -1919,7 +1947,7 @@
 
             .mob-nav-items {
                gap: 4px !important;
-               padding: 7px max(8px, env(safe-area-inset-left, 0px)) 7px max(8px, env(safe-area-inset-right, 0px)) !important;
+               padding: 7px max(10px, env(safe-area-inset-left, 0px)) 7px max(10px, env(safe-area-inset-right, 0px)) !important;
             }
 
             .mob-nav-item {
@@ -1994,8 +2022,8 @@
             .mob-profile-dropdown,
             .mob-notif-dropdown {
                top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px) !important;
-               left: max(8px, env(safe-area-inset-left, 0px)) !important;
-               right: max(8px, env(safe-area-inset-right, 0px)) !important;
+               left: max(10px, env(safe-area-inset-left, 0px)) !important;
+               right: max(10px, env(safe-area-inset-right, 0px)) !important;
                max-width: 430px !important;
                border-radius: var(--mob-chrome-radius) !important;
                border-color: var(--mob-chrome-border) !important;
@@ -3017,8 +3045,36 @@
             }
          }
 
-       </style>
+      </style>
       @stack('styles')
+      <style data-mobile-side-gutter="10px">
+         @media (max-width: 991.98px) {
+            body.user-mobile-shell {
+               --sr-mobile-inline: 10px !important;
+            }
+
+            :is(body.user-mobile-shell > .db-content,
+                body.user-mobile-shell #mob-content > .db-content) {
+               padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
+               padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
+            }
+
+            :is(body.user-mobile-shell > .db-content,
+                body.user-mobile-shell #mob-content > .db-content) > :is(.db-section, .container, .container-fluid, [id]) {
+               padding-left: 0 !important;
+               padding-right: 0 !important;
+               margin-left: 0 !important;
+               margin-right: 0 !important;
+            }
+
+            :is(body.user-mobile-shell > .db-content,
+                body.user-mobile-shell #mob-content > .db-content) > .row {
+               margin-left: 0 !important;
+               margin-right: 0 !important;
+            }
+         }
+      </style>
+      @include('mobile.partials.user-mobile-side-gutter')
    </head>
    <body class="user-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="user">
 

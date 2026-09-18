@@ -8,7 +8,7 @@
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
             <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Interview Question Bank</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage practice questions for local job and school admission interviews.</p>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage practice questions for local job interviews.</p>
         </div>
         <div class="d-flex gap-2">
             <button type="button" class="btn btn-outline-danger py-2" id="btnBulkDelete" style="font-size:.85rem; display:none;" onclick="submitBulkDelete()"><i class="fa-solid fa-trash me-1"></i> Delete Selected</button>
@@ -168,7 +168,7 @@
                             <textarea class="oinp mb-3" name="question_text" rows="2" required>{{ $q->question_text }}</textarea>
 
                             <label class="olbl">Expected Answer Guide (Keeps interview context)</label>
-                            <textarea class="oinp mb-3" name="expected_guide" rows="3" placeholder="e.g. job role fit or school admission program-fit evidence">{{ $q->expected_guide }}</textarea>
+                            <textarea class="oinp mb-3" name="expected_guide" rows="3" placeholder="e.g. job role fit evidence">{{ $q->expected_guide }}</textarea>
 
                             <label class="olbl">Mapped Skills (Comma separated)</label>
                             <input class="oinp mb-3" type="text" name="mapped_skills" value="{{ is_array($q->mapped_skills) ? implode(', ', $q->mapped_skills) : '' }}" placeholder="Communication, Professionalism">
@@ -300,7 +300,7 @@
                             <textarea class="oinp mb-3" name="question_text" id="addQText" rows="2" required></textarea>
 
                             <label class="olbl">Expected Answer Guide (Keeps interview context)</label>
-                            <textarea class="oinp mb-3" name="expected_guide" id="addExpectedGuide" rows="3" placeholder="e.g. job role fit or school admission program-fit evidence"></textarea>
+                            <textarea class="oinp mb-3" name="expected_guide" id="addExpectedGuide" rows="3" placeholder="e.g. job role fit evidence"></textarea>
 
                             <label class="olbl">Mapped Skills (Comma separated)</label>
                             <input class="oinp mb-3" type="text" name="mapped_skills" id="addMappedSkills" placeholder="Communication, Professionalism, Role Fit">
@@ -391,7 +391,7 @@
                     @endforeach
                 </select>
                 <label class="olbl">Target Position/Role in your target context</label>
-                <input type="text" class="oinp mb-3" id="aiPosition" placeholder="e.g. Job Applicant or School Admission Applicant" value="Job Applicant">
+                <input type="text" class="oinp mb-3" id="aiPosition" placeholder="e.g. Job Applicant" value="Job Applicant">
                 <label class="olbl">Difficulty</label>
                 <select class="oinp mb-3" id="aiDiff">
                     <option value="Easy">Easy</option>
@@ -416,7 +416,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
             </div>
             <div class="modal-body">
-                <p style="color:var(--tx3); font-size:.85rem; margin-bottom: 20px;">Import predefined question sets grounded in public career, education, scholarship, and TESDA sources.</p>
+                <p style="color:var(--tx3); font-size:.85rem; margin-bottom: 20px;">Import predefined question sets grounded in public career and TESDA sources.</p>
                 <div class="row">
                     @foreach($questionDatasets ?? [] as $key => $dataset)
                     <div class="col-md-6 mb-3">

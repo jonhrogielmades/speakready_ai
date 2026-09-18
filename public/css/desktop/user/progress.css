@@ -10398,3 +10398,206 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-t
         padding-inline: 12px !important;
     }
 }
+
+/* Final desktop progress rhythm: use one 15px source for every visible panel gap. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking {
+        --progress-panel-group-gap: 15px;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--progress-panel-group-gap) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-hero,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-summary-strip,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4 {
+        display: contents !important;
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 0 !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--progress-panel-group-gap) !important;
+        width: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-goals-badges-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--progress-panel-group-gap) !important;
+        width: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.mb-4, .my-4) {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 auto !important;
+        padding: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > [class*="col-"] {
+        display: block !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        flex: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-goals-badges-grid > [class*="col-"] {
+        display: block !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        flex: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #category-perf),
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #category-perf) > .progress-chart-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        justify-self: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #category-perf) .progress-chart-frame,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #category-perf) canvas {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progress-stats {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: var(--progress-panel-group-gap) !important;
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 0 !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #progress-stats > [class*="col-"] {
+        width: auto !important;
+        max-width: none !important;
+        flex: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--progress-panel-group-gap) !important;
+        width: 100% !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > * {
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > :is(#skill-tracker, #category-performance-summary),
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > :is(#skill-tracker, #category-performance-summary) > :is(.progress-chart-panel, .progress-category-panel) {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        justify-self: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > #skill-tracker .skill-empty-state {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row > #strengths-tracker,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row > #strengths-tracker > .strengths-star-panel {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        justify-self: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row > #strengths-tracker .strengths-lists,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row > #strengths-tracker .star-progress-summary,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row > #strengths-tracker .star-note {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row > #strengths-tracker > .strengths-star-panel {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--progress-panel-group-gap) !important;
+        align-items: start !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row > #strengths-tracker .strengths-overview,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row > #strengths-tracker .star-overview {
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row > #strengths-tracker .star-note {
+        grid-column: 1 / -1 !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-goals-badges-grid > :is(#goals-milestones, #achievements-badges),
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-goals-badges-grid > :is(#goals-milestones, #achievements-badges) > :is(.goals-panel, .badges-panel) {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        justify-self: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(
+        .progress-chart-panel,
+        .strengths-star-panel,
+        .history-panel,
+        .goals-panel,
+        .badges-panel,
+        .learning-panel,
+        .progress-stat-card,
+        .progress-category-panel
+    ) {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(
+        .progress-panel-heading,
+        .learning-heading,
+        .progress-category-heading,
+        .strengths-overview,
+        .star-overview,
+        .history-heading,
+        .goals-heading,
+        .badges-heading
+    ) {
+        margin-top: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > :last-child {
+        margin-bottom: 0 !important;
+    }
+}

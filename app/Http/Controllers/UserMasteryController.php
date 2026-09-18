@@ -144,7 +144,7 @@ class UserMasteryController extends Controller
     private function checklistItems(int $userId)
     {
         $defaults = [
-            ['title' => 'Update target role', 'task' => 'Write the role or program you are preparing for.'],
+            ['title' => 'Update target role', 'task' => 'Write the job role you are preparing for.'],
             ['title' => 'Prepare one proof story', 'task' => 'Save one truthful STAR story with a clear result or lesson.'],
             ['title' => 'Practice aloud', 'task' => 'Record one voice rehearsal and review pacing.'],
             ['title' => 'Review feedback', 'task' => 'Open your latest feedback and pick one next action.'],
@@ -173,7 +173,6 @@ class UserMasteryController extends Controller
         return [
             ['key' => 'job_interview', 'label' => 'Job Interview', 'icon' => 'fa-briefcase', 'best' => (int) ($scores->max('overall_readiness_score') ?? 0), 'attempts' => $scores->count(), 'status' => 'Active', 'href' => route('interview.setup')],
             ['key' => 'customer_service', 'label' => 'Customer Service', 'icon' => 'fa-headset', 'best' => (int) ($scores->max('professionalism_score') ?? 0), 'attempts' => $scores->count(), 'status' => 'Practice', 'href' => route('user.drills.voice')],
-            ['key' => 'school_admission', 'label' => 'School Admission', 'icon' => 'fa-graduation-cap', 'best' => (int) ($scores->max('relevance_score') ?? 0), 'attempts' => $scores->count(), 'status' => 'Optional', 'href' => route('interview.setup')],
         ];
     }
 

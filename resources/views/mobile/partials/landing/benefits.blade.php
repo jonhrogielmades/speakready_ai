@@ -51,9 +51,9 @@
                         </div>
                         <div class="col-sm-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #f59e0b;">
-                              <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-university"></i></div>
-                              <h4 class="fs-5 fw-bold">School Admission Interviews</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Practice program-fit, motivation, strengths, and future plan questions for school admissions.</p>
+                              <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-user-tie"></i></div>
+                              <h4 class="fs-5 fw-bold">Role-Fit Interviews</h4>
+                              <p style="font-size:.85rem;color:var(--tx2)">Practice motivation, strengths, teamwork, and future-plan questions for hiring conversations.</p>
                            </div>
                         </div>
                      </div>
@@ -61,4 +61,3 @@
                </div>
             </div>
          </section>
-

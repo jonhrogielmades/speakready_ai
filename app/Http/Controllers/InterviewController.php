@@ -103,7 +103,7 @@ class InterviewController extends Controller
 
  if (! $category ||! $this->isSupportedInterviewCategory($category)) {
  return back()
- ->withErrors(['category_id' => 'Only job interview and school admission interview practice is available.'])
+ ->withErrors(['category_id' => 'Only job interview practice is available.'])
  ->withInput();
  }
 
@@ -3677,19 +3677,7 @@ class InterviewController extends Controller
 
  private function interviewFocusForCategory(Category $category, ?string $submittedFocus): string
  {
- $scenarioKind = $this->interviewScenarioKind($category);
- $focus = trim((string) $submittedFocus);
- $focusKey = Str::lower($focus);
-
- if ($scenarioKind === 'school' && ($focus === '' || Str::contains($focusKey, 'job'))) {
- return 'School Admission Interviews';
- }
-
- if ($scenarioKind === 'job' && ($focus === '' || Str::contains($focusKey, ['school', 'college', 'admission']))) {
  return 'Job Interview';
- }
-
- return $focus;
  }
 
  private function datasetForSession(InterviewSession $session):?array
@@ -3697,7 +3685,6 @@ class InterviewController extends Controller
  $focus = Str::lower((string) $session->interview_focus);
  $key = match (true) {
  Str::contains($focus, ['bpo', 'customer support', 'contact center']) => 'ph_bpo_communication',
- Str::contains($focus, ['college', 'admission']) => 'ph_college_admission',
  default => null,
  };
 
@@ -3715,20 +3702,11 @@ class InterviewController extends Controller
  return Str::contains($title, [
  'job interview',
  'general job',
- 'school admission',
- 'college admission',
- 'admission interview',
  ]);
  }
 
  private function interviewScenarioKind(Category $category): string
  {
- $title = $this->normalizeScenarioTargetText((string) $category->title);
-
- if ($this->containsScenarioTargetPhrase($title, ['school admission', 'college admission', 'admission interview'])) {
- return 'school';
- }
-
  return 'job';
  }
 
@@ -3761,19 +3739,7 @@ class InterviewController extends Controller
  $targetKind = $this->targetScenarioKind($position);
 
  if ($scenarioKind === 'job' && $targetKind!== 'job') {
- if ($targetKind === 'school') {
- return 'This looks like a school-related target program. Recommendation: proceed with School Admission Interviews. Job Interview accepts job-related target positions only.';
- }
-
- return 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative, or choose School Admission Interviews for school programs like BS Information Technology.';
- }
-
- if ($scenarioKind === 'school' && $targetKind!== 'school') {
- if ($targetKind === 'job') {
- return 'This looks like a job-related target position. Recommendation: proceed with Job Interview. School Admission accepts school-related target programs only.';
- }
-
- return 'School Admission accepts school-related target programs only. Enter a Version 1 program like BS Information Technology, BS Nursing, or BS Agriculture, or choose Job Interviews for Southern Leyte roles like Administrative Assistant / LGU Staff or Software Developer.';
+ return 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative.';
  }
 
  return null;
@@ -3808,10 +3774,6 @@ class InterviewController extends Controller
  private function vagueTargetRecommendationMessage(array $recommendation, string $position, string $scenarioKind): string
  {
  $target = Str::headline($this->normalizeScenarioTargetText($position))?: 'This target';
-
- if (($recommendation['kind']?? null) === 'job' && $scenarioKind === 'school') {
- return "{$target} looks related to {$recommendation['topic']}. Recommendation: proceed with Job Interview using a specific target position such as {$recommendation['examples']}.";
- }
 
  return "{$target} is too broad for a target position. Recommendation: use a specific job target such as {$recommendation['examples']}, then proceed with Job Interview.";
  }
@@ -3933,159 +3895,7 @@ class InterviewController extends Controller
  'worker',
  'writer',
  ];
- $schoolIndicators = [
- 'abm',
- 'accountancy',
- 'admission',
- 'agriculture',
- 'architecture',
- 'bachelor',
- 'bs agriculture',
- 'bs accountancy accounting information system',
- 'bs computer engineering',
- 'bs computer science',
- 'bs cybersecurity',
- 'bs data science',
- 'bs electronics engineering',
- 'bs entrepreneurship',
- 'bs financial management',
- 'bs industrial engineering',
- 'bs information systems',
- 'bs information technology',
- 'bs marketing management',
- 'bs fisheries',
- 'bs office administration',
- 'bs public administration',
- 'bs social work',
- 'bs software engineering',
- 'bscpe',
- 'bscs',
- 'bsis',
- 'bsit',
- 'business administration',
- 'college',
- 'computer engineering',
- 'computer science',
- 'course',
- 'criminology',
- 'cybersecurity',
- 'data science',
- 'degree',
- 'education',
- 'electrical engineering',
- 'electronics engineering',
- 'engineering',
- 'entrepreneurship',
- 'fisheries',
- 'freshman',
- 'gas',
- 'graduate program',
- 'hospitality management',
- 'humss',
- 'ict',
- 'industrial engineering',
- 'accounting information system',
- 'information systems',
- 'information technology',
- 'it',
- 'law school',
- 'master',
- 'marketing management',
- 'mechanical engineering',
- 'medicine',
- 'nursing',
- 'program',
- 'psychology',
- 'public administration',
- 'school',
- 'senior high',
- 'software engineering',
- 'stem',
- 'strand',
- 'student',
- 'tourism',
- 'university',
- ];
- $schoolProgramOverrideIndicators = [
- 'bachelor of elementary education',
- 'bachelor of secondary education',
- 'bs accountancy',
- 'bs accountancy accounting information system',
- 'bs agriculture',
- 'bs architecture',
- 'bs biology',
- 'bs business administration',
- 'bs civil engineering',
- 'bs computer engineering',
- 'bs computer science',
- 'bs criminology',
- 'bs cybersecurity',
- 'bs data science',
- 'bs electrical engineering',
- 'bs electronics engineering',
- 'bs entrepreneurship',
- 'bs fisheries',
- 'bs financial management',
- 'bs hospitality management',
- 'bs industrial engineering',
- 'bs information systems',
- 'bs information technology',
- 'bs marketing management',
- 'bs mechanical engineering',
- 'bs medical technology',
- 'bs nursing',
- 'bs office administration',
- 'bs pharmacy',
- 'bs psychology',
- 'bs public administration',
- 'bs social work',
- 'bs software engineering',
- 'bs tourism management',
- 'master in information technology',
- 'master of business administration',
- 'senior high abm strand',
- 'senior high gas strand',
- 'senior high humss strand',
- 'senior high ict strand',
- 'senior high stem strand',
- ];
- $explicitSchoolProgramIndicators = [
- 'admission',
- 'bachelor',
- 'bs accountancy',
- 'bs agriculture',
- 'bs computer science',
- 'bs fisheries',
- 'bs information systems',
- 'bs information technology',
- 'bscs',
- 'bsis',
- 'bsit',
- 'course',
- 'degree',
- 'freshman',
- 'graduate program',
- 'law school',
- 'master in',
- 'master of',
- 'masters in',
- 'masters of',
- 'senior high',
- 'strand',
- ];
-
- $isJobRelated = $this->containsScenarioTargetPhrase($target, $jobIndicators);
- $isSchoolRelated = $this->containsScenarioTargetPhrase($target, $schoolIndicators);
- $isKnownSchoolProgram = $this->containsScenarioTargetPhrase($target, $schoolProgramOverrideIndicators);
- $isExplicitSchoolProgram = $this->containsScenarioTargetPhrase($target, $explicitSchoolProgramIndicators);
-
- return match (true) {
- $isKnownSchoolProgram => 'school',
- $isExplicitSchoolProgram &&! $isJobRelated => 'school',
- $isJobRelated => 'job',
- $isSchoolRelated &&! $isJobRelated => 'school',
- default => null,
- };
+ return $this->containsScenarioTargetPhrase($target, $jobIndicators)? 'job': null;
  }
 
  private function containsScenarioTargetPhrase(string $normalizedText, array $phrases): bool

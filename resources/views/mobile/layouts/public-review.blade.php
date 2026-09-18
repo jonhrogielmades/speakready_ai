@@ -9,6 +9,13 @@
  <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
  <link href="{{ asset('css/all.min.css') }}" rel="stylesheet">
  <link rel="stylesheet" href="{{ asset('css/mobile/shared/public-review.css?v=3') }}" data-page-style="public-review-mobile">
+ <style data-mobile-side-gutter="10px">
+  .public-review-header .container,
+  .public-review-shell {
+   padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
+   padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
+  }
+ </style>
 </head>
 <body>
  <header class="public-review-header">

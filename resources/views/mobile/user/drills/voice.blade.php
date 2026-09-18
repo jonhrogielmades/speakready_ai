@@ -68,7 +68,6 @@
                                 <option value="Problem Solving">Problem Solving</option>
                                 <option value="Customer Service">Customer Service</option>
                                 <option value="Technical">IT / Technical Interview</option>
-                                <option value="Scholarship">Scholarship / Admission</option>
                             </select>
                             <select id="intentionSelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;">
                                 <option value="Confident">Confident</option>
@@ -407,13 +406,12 @@ document.querySelectorAll('#moduleTabs .nav-link').forEach(link => {
 
 // AI-backed practice prompt bank with a local fallback for provider outages.
 const fallbackPrompts = {
-    "Tell Me About Yourself": ["Walk me through your background and connect it to the Philippines role or program you are preparing for.", "What should a Philippine interviewer remember about you after your first two minutes?", "How would you summarize your strengths, experience, and next career goal in the Philippine context?"],
+    "Tell Me About Yourself": ["Walk me through your background and connect it to the Philippines role you are preparing for.", "What should a Philippine interviewer remember about you after your first two minutes?", "How would you summarize your strengths, experience, and next career goal in the Philippine context?"],
     "Strengths and Weaknesses": ["What is one strength you can prove with a specific school, internship, freelance, or work example?", "Tell me about a weakness you are actively improving and what changed because of that work.", "Describe feedback you received from a teacher, supervisor, client, or team lead and how you used it to improve."],
     "Leadership": ["Tell me about a time you led a team through uncertainty in school, work, internship, or community work.", "Describe a situation where you had to resolve conflict while keeping the work moving.", "Give an example of how you motivated others toward a shared goal in a Philippine team setting."],
     "Problem Solving": ["Tell me about a complex problem you solved with limited information in school, work, or training.", "Describe a time you had competing deadlines and how you chose what to do first.", "How would you handle a Philippine interviewer asking about salary expectations, schedule, or work setup?"],
     "Customer Service": ["Explain a customer concern politely, acknowledge the issue, and offer the next action.", "How would you calm a frustrated customer while still being honest about what you can do?", "Describe a time you handled a service issue and protected the relationship."],
-    "Technical": ["Explain a technical concept from your experience to a non-technical Philippine interviewer.", "Walk me through your debugging process when the cause is unclear.", "Describe a technical tradeoff you made for a class, client, employer, or startup project and how you evaluated it."],
-    "Scholarship": ["Why does this Philippine scholarship or admission program fit your academic and career plan?", "Tell me about a challenge that shaped your goals and how you responded.", "Describe how you will contribute to your school, community, or the Philippines if selected."]
+    "Technical": ["Explain a technical concept from your experience to a non-technical Philippine interviewer.", "Walk me through your debugging process when the cause is unclear.", "Describe a technical tradeoff you made for a class, client, employer, or startup project and how you evaluated it."]
 };
 
 const voiceMissionPreset = {
@@ -430,8 +428,7 @@ function voiceScenarioLabel(category) {
         "Leadership": "Leadership / Teamwork",
         "Problem Solving": "Problem Solving",
         "Customer Service": "Customer Service",
-        "Technical": "IT / Technical Interview",
-        "Scholarship": "Scholarship / Admission"
+        "Technical": "IT / Technical Interview"
     };
 
     return labels[category] || category || 'General Job Interview';
@@ -442,8 +439,7 @@ function categoryValueForPreset(category) {
         "General Job Interview": "Tell Me About Yourself",
         "Strengths & Weaknesses": "Strengths and Weaknesses",
         "Leadership / Teamwork": "Leadership",
-        "IT / Technical Interview": "Technical",
-        "Scholarship / Admission": "Scholarship"
+        "IT / Technical Interview": "Technical"
     };
 
     return labels[category] || category || "Tell Me About Yourself";

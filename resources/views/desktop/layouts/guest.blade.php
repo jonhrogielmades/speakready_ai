@@ -339,7 +339,7 @@
                                      </ul>
                                      <div class="ui-mobile-wire-chips" aria-hidden="true">
                                         <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>Job</span>
-                                        <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>School Admission</span>
+                                        <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>Role Fit</span>
                                      </div>
                                      <div class="ui-mobile-wire-speech" aria-hidden="true">
                                         <span class="ui-mobile-wire-line" style="width:44px"></span>
@@ -483,13 +483,13 @@
                                  </div>
 
                                  <nav class="ui-desktop-wire-nav">
-                                    <span class="ui-desktop-wire-nav-section">Dashboard</span>
+                                    <span class="ui-desktop-wire-nav-section">Home</span>
                                     <span class="ui-desktop-wire-nav-item active"><i class="fa-solid fa-gauge-high"></i>Overview</span>
-                                    <span class="ui-desktop-wire-nav-section">Interview Practice</span>
+                                    <span class="ui-desktop-wire-nav-section">Practice</span>
                                     <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-microphone-lines"></i>Mock Interview</span>
-                                    <span class="ui-desktop-wire-nav-section">Specialized Training</span>
+                                    <span class="ui-desktop-wire-nav-section">Training</span>
                                     <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-book-open-reader"></i>Modules</span>
-                                    <span class="ui-desktop-wire-nav-section">Performance</span>
+                                    <span class="ui-desktop-wire-nav-section">Growth</span>
                                     <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-chart-line"></i>Progress</span>
                                     <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-clipboard-check"></i>Feedback</span>
                                  </nav>
@@ -534,7 +534,7 @@
                                                 </ul>
                                                 <div class="ui-desktop-wire-chips">
                                                    <span class="ui-desktop-wire-chip">Job</span>
-                                                   <span class="ui-desktop-wire-chip">School Admission</span>
+                                                   <span class="ui-desktop-wire-chip">Role Fit</span>
                                                 </div>
                                              </div>
                                              <div class="ui-desktop-wire-welcome-visual" aria-hidden="true">
@@ -684,7 +684,7 @@
                                                 </div>
                                                 <div class="ui-desktop-wire-progress-list">
                                                    <div class="ui-desktop-wire-progress-row"><span>Job Interview</span><strong>88%</strong><div class="ui-desktop-wire-progress-track"><span style="width:88%"></span></div></div>
-                                                   <div class="ui-desktop-wire-progress-row"><span>School Admission</span><strong>82%</strong><div class="ui-desktop-wire-progress-track"><span style="width:82%"></span></div></div>
+                                                   <div class="ui-desktop-wire-progress-row"><span>Role Fit</span><strong>82%</strong><div class="ui-desktop-wire-progress-track"><span style="width:82%"></span></div></div>
                                                 </div>
                                              </section>
 
@@ -746,7 +746,7 @@
                                                 </div>
                                                 <div class="ui-desktop-wire-table-row">
                                                    <span class="ui-desktop-wire-icon"><i class="fa-solid fa-headset"></i></span>
-                                                   <div><strong>School Admission</strong><span>Program-fit scenario</span></div>
+                                                   <div><strong>Role Fit</strong><span>Hiring-fit scenario</span></div>
                                                    <span class="ui-desktop-wire-score">84</span>
                                                 </div>
                                              </div>
@@ -772,15 +772,15 @@
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for local job and school admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
+                     <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for local job interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
 
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
                      <div class="target-users-grid d-flex flex-wrap gap-2 mb-4">
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-user-graduate me-2"></i>Students</span>
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-graduation-cap me-2"></i>Fresh Graduates</span>
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-briefcase me-2"></i>Job Seekers</span>
-                        <span class="ftag px-3 py-2"><i class="fa-solid fa-building-columns me-2"></i>Admission Applicants</span>
-                        <span class="ftag px-3 py-2"><i class="fa-solid fa-university me-2"></i>College Applicants</span>
+                        <span class="ftag px-3 py-2"><i class="fa-solid fa-rotate me-2"></i>Career Shifters</span>
+                        <span class="ftag px-3 py-2"><i class="fa-solid fa-user-check me-2"></i>First-time Applicants</span>
                      </div>
                   </div>
                   <div class="col-lg-6 rv" style="transition-delay:.1s">
@@ -982,8 +982,8 @@
                         <div class="col-md-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #f59e0b;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-university"></i></div>
-                              <h4 class="fs-5 fw-bold">School Admission Interviews</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Practice program-fit, motivation, strengths, and future plan questions for school admissions.</p>
+                              <h4 class="fs-5 fw-bold">Role-Fit Interviews</h4>
+                              <p style="font-size:.85rem;color:var(--tx2)">Practice motivation, strengths, teamwork, and future-plan questions for hiring conversations.</p>
                            </div>
                         </div>
                      </div>
@@ -1059,7 +1059,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4" aria-expanded="false" aria-controls="f4">Can I practice multiple interview types?</button></h2>
                            <div id="f4" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Yes. You can practice Job and School Admission interviews, then adjust difficulty, focus area, timer, resume context, and role or program details.</div>
+                              <div class="accordion-body">Yes. You can practice job interviews, then adjust difficulty, focus area, timer, resume context, and role details.</div>
                            </div>
                         </div>
                         <div class="accordion-item">

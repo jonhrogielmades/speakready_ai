@@ -13,6 +13,12 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=2') }}" data-page-style="auth-mobile">
+      <style data-mobile-side-gutter="10px">
+         body.auth-mobile-shell {
+            padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
+            padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
+         }
+      </style>
    </head>
    <body class="auth-mobile-shell mobile-shell" data-layout-shell="mobile" data-auth-layout="mobile">
       @include('mobile.partials.viewport-mobile-cookie')

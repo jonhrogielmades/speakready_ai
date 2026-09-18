@@ -2007,7 +2007,7 @@ EOT;
  public static function generateGame($topic, $provider = 'openai')
  {
  $prompt = "You are an expert Gamification and Interview Design AI. Create a highly engaging, gamified Interview Learning Game based on the topic: '$topic'.\n";
- $prompt.= "Keep the level grounded in interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate interviews, scholarship/admission interviews, workplace professionalism, communication clarity, salary expectations, and availability/work-setup scenarios when relevant.\n";
+ $prompt.= "Keep the level grounded in job interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate interviews, workplace professionalism, communication clarity, salary expectations, and availability/work-setup scenarios when relevant.\n";
  $prompt.= <<<'EOT'
 Return ONLY a valid JSON object describing the level. Do not include markdown formatting or explanations.
 The JSON structure MUST be exactly like this:
@@ -2083,7 +2083,7 @@ EOT;
 
  $prompt = "You are an expert Gamification and Interview Design AI. Create multiple distinct role-focused Interview Learning Game levels based on the topic: '{$topic}'.\n";
  $prompt.= "Return ONLY a valid JSON object. Do not include markdown formatting or explanations.\n";
- $prompt.= "Keep every level grounded in interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate interviews, scholarship/admission interviews, workplace professionalism, communication clarity, salary expectations, and availability/work-setup scenarios when relevant.\n";
+ $prompt.= "Keep every level grounded in job interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate interviews, workplace professionalism, communication clarity, salary expectations, and availability/work-setup scenarios when relevant.\n";
  $prompt.= "Create exactly one level for each item in this level_specs JSON array:\n";
  $prompt.= json_encode($levelSpecs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n\n";
  $prompt.= <<<'EOT'
@@ -6783,7 +6783,7 @@ PROMPT;
  $credentials = self::providerCredentials('gemini');
  $url = self::geminiGenerateContentEndpoint($credentials['endpoint'], $credentials['model'], $credentials['api_key']);
 
- $sysMsg = $systemPrompt?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on interview preparation. Help users prepare for local HR screening, BPO/customer support, IT, fresh graduate, scholarship/admission, resume, and behavioral interview scenarios. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to role-focused interview preparation.';
+ $sysMsg = $systemPrompt?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on job interview preparation. Help users prepare for local HR screening, BPO/customer support, IT, fresh graduate, resume, and behavioral interview scenarios. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to job interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to role-focused interview preparation.';
 
  $response = self::providerRequest($timeoutSeconds, $attempts)->post($url, [
  'contents' => self::formatHistoryForGemini($message, $history),
@@ -6802,7 +6802,7 @@ PROMPT;
 
  private static function formatHistoryForStandard($message, $history, $systemPrompt = null)
  {
- $sysMsg = $systemPrompt?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on interview preparation. Help users prepare for local HR screening, BPO/customer support, IT, fresh graduate, scholarship/admission, resume, and behavioral interview scenarios. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to role-focused interview preparation.';
+ $sysMsg = $systemPrompt?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on job interview preparation. Help users prepare for local HR screening, BPO/customer support, IT, fresh graduate, resume, and behavioral interview scenarios. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to job interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to role-focused interview preparation.';
  $messages = [
  ['role' => 'system', 'content' => $sysMsg],
  ];

@@ -15,8 +15,6 @@ class QuestionDatasetProvider
  'general_interview_official' => 'ph_job_interview',
  'candidate_questions' => 'ph_job_interview',
  'ph_bpo_communication' => 'ph_bpo_communication',
- 'ph_college_admission' => 'ph_college_admission',
- 'ph_school_admission_expanded' => 'ph_college_admission',
  ];
 
  private static?array $storageQuestionBank = null;
@@ -175,69 +173,6 @@ class QuestionDatasetProvider
  'difficulty' => 'Hard',
  'expected_guide' => 'Discuss audience awareness, plain language, tone, pacing, and cultural sensitivity.',
  'mapped_skills' => ['Audience Awareness', 'Adaptability', 'Cross-Cultural Communication'],
- ],
- ],
- ],
- 'ph_college_admission' => [
- 'key' => 'ph_college_admission',
- 'name' => 'College Admission',
- 'category' => 'College Admission',
- 'country' => 'Philippines',
- 'source_type' => 'official_admission_source',
- 'description' => 'College-admission practice prompts grounded in official admissions information.',
- 'sources' => [
- [
- 'name' => 'UPCAT Official Admissions Bulletin',
- 'url' => 'https://upcat.up.edu.ph/htmls/aboutupcat.html',
- 'note' => 'Official UP admissions process, subtests, forms, and degree-program selection context.',
- ],
- [
- 'name' => 'CHED Scholarship and Program Information',
- 'url' => 'https://legacy.ched.gov.ph/merit-scholarship/',
- 'note' => 'Official CHED context for incoming college students and priority programs.',
- ],
- [
- 'name' => 'PSA Functional Literacy, Education, and Mass Media Survey',
- 'url' => 'https://psa.gov.ph/survey',
- 'note' => 'Official education and literacy survey context.',
- ],
- ],
- 'default_skills' => ['Academic Readiness', 'Program Fit', 'Self Awareness', 'Communication'],
- 'questions' => [
- [
- 'question_text' => 'Why are you interested in this degree program?',
- 'type' => 'Personal',
- 'difficulty' => 'Easy',
- 'expected_guide' => 'Connect interests, strengths, academic preparation, and career direction to the program.',
- 'mapped_skills' => ['Program Fit', 'Academic Motivation', 'Communication'],
- ],
- [
- 'question_text' => 'How have your senior high school experiences prepared you for college?',
- 'type' => 'Behavioral',
- 'difficulty' => 'Medium',
- 'expected_guide' => 'Give examples from classes, projects, leadership, service, or independent learning.',
- 'mapped_skills' => ['Academic Readiness', 'Evidence', 'Self Awareness'],
- ],
- [
- 'question_text' => 'How would you contribute to a diverse university community?',
- 'type' => 'Personal',
- 'difficulty' => 'Medium',
- 'expected_guide' => 'Discuss collaboration, values, background, interests, and concrete contributions.',
- 'mapped_skills' => ['Community Fit', 'Communication', 'Self Awareness'],
- ],
- [
- 'question_text' => 'If your first degree choice is not available, how would you evaluate your alternatives?',
- 'type' => 'Situational',
- 'difficulty' => 'Hard',
- 'expected_guide' => 'Show realistic decision-making based on strengths, interests, career path, and program requirements.',
- 'mapped_skills' => ['Decision Making', 'Adaptability', 'Program Fit'],
- ],
- [
- 'question_text' => 'Describe a challenge that shaped your readiness for university life.',
- 'type' => 'Behavioral',
- 'difficulty' => 'Medium',
- 'expected_guide' => 'Use STAR and focus on resilience, study habits, responsibility, and lessons learned.',
- 'mapped_skills' => ['Resilience', 'Academic Readiness', 'STAR Method'],
  ],
  ],
  ],
@@ -851,7 +786,6 @@ class QuestionDatasetProvider
  $title = strtolower((string) $categoryTitle);
 
  return match (true) {
- str_contains($title, 'college'), str_contains($title, 'admission') => 'ph_college_admission',
  str_contains($title, 'bpo'), str_contains($title, 'customer support'), str_contains($title, 'contact center'), str_contains($title, 'call center') => 'ph_bpo_communication',
  str_contains($title, 'communication'), str_contains($title, 'public speaking'), str_contains($title, 'conflict') => 'ph_bpo_communication',
  default => 'ph_job_interview',

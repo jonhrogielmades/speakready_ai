@@ -122,12 +122,6 @@
         ->filter()
         ->unique(fn (string $position) => strtolower($position))
         ->values();
-    $dashboardSchoolProgramOptions = collect(config('speakready_scope.school_programs', []))
-        ->flatten()
-        ->map(fn ($program) => trim((string) $program))
-        ->filter()
-        ->unique(fn (string $program) => strtolower($program))
-        ->values();
 @endphp
 
 <div class="db-section active sr-dashboard" id="sec-overview">
@@ -178,7 +172,6 @@
                         </ul>
                         <div class="sr-image-chip-row" aria-label="Practice focus areas">
                             <span class="sr-image-chip"><i class="fa-solid fa-briefcase"></i> Job Interviews</span>
-                            <span class="sr-image-chip"><i class="fa-solid fa-building-columns"></i> School Admission Interviews</span>
                         </div>
                     </div>
                     <div class="sr-image-speech" aria-hidden="true">
@@ -763,7 +756,7 @@
 
                     <div class="sr-dashboard-mock-status" id="dashboardMockStatus" role="alert" hidden></div>
                     @unless($dashboardMockHasScenarios)
-                        <div class="sr-dashboard-mock-empty" role="alert">No active interview scenarios are available. Ask an admin to activate a job interview or school admission category.</div>
+                        <div class="sr-dashboard-mock-empty" role="alert">No active interview scenarios are available. Ask an admin to activate a job interview category.</div>
                     @endunless
                 </div>
                 <div class="modal-footer">
@@ -1204,7 +1197,6 @@ document.addEventListener("DOMContentLoaded", function() {
     (function() {
         const dashboardTargetOptions = @json([
             'job' => $dashboardJobPositionOptions,
-            'school' => $dashboardSchoolProgramOptions,
         ]);
 
         function initDashboardMockModal() {
@@ -1233,7 +1225,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 const placeholderOption = document.createElement('option');
                 placeholderOption.value = '';
-                placeholderOption.textContent = targetKind === 'school' ? 'Choose a target program' : 'Choose a target position';
+                placeholderOption.textContent = 'Choose a target position';
                 placeholderOption.disabled = true;
                 positionInput.appendChild(placeholderOption);
 
@@ -1259,9 +1251,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     focusInput.value = selectedOption.dataset.focus || 'Job Interview';
                 }
 
-                const scenarioText = `${selectedOption.dataset.focus || ''} ${selectedOption.text || ''}`.toLowerCase();
-                const isSchoolScenario = scenarioText.includes('school') || scenarioText.includes('college') || scenarioText.includes('admission');
-                syncTargetOptions(isSchoolScenario ? 'school' : 'job');
+                syncTargetOptions('job');
             }
 
             function setStatus(message) {

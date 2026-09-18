@@ -2819,3 +2819,50 @@
         line-height: 1.38 !important;
     }
 }
+
+/* Final Interview Reports panel spacing. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell #portfolioReport {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport > :is(.sr-page-hero, .report-print-identity, .print-card, .row, #report-empty-state) {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport :is(.row, .report-feedback-grid, .report-improvement-grid, .report-export-grid),
+    html body.user-desktop-shell #portfolioReport #report-question-review .report-question-body .row.g-3 {
+        --bs-gutter-x: 15px !important;
+        --bs-gutter-y: 15px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport :is(
+        .report-summary-grid,
+        .report-score-list,
+        .report-question-list,
+        .report-question-card-header,
+        .report-question-main,
+        .report-question-chips,
+        .report-export-choice,
+        .report-empty-inline
+    ) {
+        gap: 15px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport :is(.gap-2, .gap-3, .gap-4) {
+        gap: 15px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport :is(.mb-2, .mb-3, .mb-4) {
+        margin-bottom: 15px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport .report-question-insight-feedback,
+    html body.user-desktop-shell #portfolioReport #report-export .report-print-btn,
+    html body.user-desktop-shell #portfolioReport #report-export .report-export-status {
+        margin-top: 15px !important;
+    }
+}

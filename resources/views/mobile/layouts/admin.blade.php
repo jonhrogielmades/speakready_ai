@@ -815,8 +815,8 @@
             #mob-header .mob-notification-dropdown {
                position: fixed !important;
                top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px) !important;
-               right: max(12px, env(safe-area-inset-right, 0px)) !important;
-               left: max(12px, env(safe-area-inset-left, 0px)) !important;
+               right: max(10px, env(safe-area-inset-right, 0px)) !important;
+               left: max(10px, env(safe-area-inset-left, 0px)) !important;
                width: auto !important;
                max-width: none !important;
                transform: none !important;
@@ -1521,6 +1521,30 @@
          }
       </style>
       @stack('styles')
+      <style data-mobile-side-gutter="10px">
+         @media (max-width: 991.98px) {
+            body.admin-mobile-shell {
+               --sr-mobile-inline: 10px !important;
+            }
+
+            body.admin-mobile-shell #mob-content > .db-content {
+               padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
+               padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
+            }
+
+            body.admin-mobile-shell #mob-content > .db-content > :is(.db-section, .container, .container-fluid, [id]) {
+               padding-left: 0 !important;
+               padding-right: 0 !important;
+               margin-left: 0 !important;
+               margin-right: 0 !important;
+            }
+
+            body.admin-mobile-shell #mob-content > .db-content > .row {
+               margin-left: 0 !important;
+               margin-right: 0 !important;
+            }
+         }
+      </style>
    </head>
    <body class="admin-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="admin">
 

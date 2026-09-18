@@ -39,16 +39,7 @@
  ->inRandomOrder()->limit($num)->get();
  }
  }
- $focusText = strtolower((string) $sessionRecord->interview_focus);
- $categoryText = strtolower((string) ($sessionRecord->category->title?? ''));
- $scenarioLabel = str_contains($focusText, 'college')
- || str_contains($focusText, 'school')
- || str_contains($focusText, 'admission')
- || str_contains($categoryText, 'college')
- || str_contains($categoryText, 'school')
- || str_contains($categoryText, 'admission')
- ? 'School Admission Interviews'
- : 'Job Interviews';
+ $scenarioLabel = 'Job Interviews';
  } else {
  $questions = collect([]);
  }

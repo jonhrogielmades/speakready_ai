@@ -25,7 +25,7 @@
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-microphone-lines fa-4x mb-4" style="color:#34d399"></i>
                                            <h3 class="fs-3 fw-bold">Mock Interview</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Interactive AI avatar asking local job and school admission questions.</p>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Interactive AI avatar asking local job interview questions.</p>
                                        </div>
                                    </div>
                                    <!-- Slide 3: Learning Lab -->
@@ -78,4 +78,3 @@
                </div>
             </div>
          </section>
-

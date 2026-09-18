@@ -120,8 +120,7 @@ class UserVoiceDrillController extends Controller
             'Problem Solving' => 'Tell me about a complex problem you solved with limited information in school, work, or training.',
             'Customer Service' => 'Explain a customer concern politely, acknowledge the issue, and offer the next action.',
             'Technical' => 'Walk me through your debugging process when the cause is unclear.',
-            'Scholarship' => 'Why does this Philippine scholarship or admission program fit your academic and career plan?',
-            default => 'Walk me through your background and connect it to the Philippines role or program you are preparing for.',
+            default => 'Walk me through your background and connect it to the Philippines role you are preparing for.',
         };
     }
 }

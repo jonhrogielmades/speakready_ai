@@ -702,7 +702,7 @@ class AdminController extends Controller
 
  $prompt = "Create an action-focused interview preparation learning module about: ". $request->prompt. ".
  Focus only on what the learner needs to do before and during the interview: what to prepare, what to write, what to rehearse, what to revise, and what to check before marking the module complete.
- Keep every action grounded in hiring and education interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate interviews, scholarship or college admission interviews, professional communication, salary expectations, and availability/work-setup questions when relevant.
+ Keep every action grounded in job interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate interviews, professional communication, salary expectations, and availability/work-setup questions when relevant.
  Avoid broad lectures, history, trivia, generic motivation, feature promotion, or content that does not tell the user a concrete interview-preparation action.
  Return ONLY a JSON object with the following structure:
  {
@@ -787,7 +787,7 @@ class AdminController extends Controller
  $prompt = "Create action-focused interview preparation content for an educational learning module titled: '". $module->title. "'.
  The category is '". $module->category. "' and difficulty is '". $module->difficulty. "'.
  Focus only on what the learner needs to do before and during the interview: what to prepare, what to write, what to rehearse, what to revise, and what to check before marking the module complete.
- Ground every task in hiring and education interview practice, including local HR screening, BPO/customer support, IT roles, fresh graduate interviews, scholarship or college admission interviews, communication clarity, salary expectations, and availability/work-setup questions when relevant.
+ Ground every task in job interview practice, including local HR screening, BPO/customer support, IT roles, fresh graduate interviews, communication clarity, salary expectations, and availability/work-setup questions when relevant.
  Avoid broad lectures, history, trivia, generic motivation, feature promotion, or content that does not tell the user a concrete interview-preparation action.
  Return ONLY a JSON object with the following structure:
  {
@@ -996,7 +996,7 @@ class AdminController extends Controller
  foreach($module->chapters as $chapter) {
  $prompt.= "Chapter '". $chapter->title. "' Content: ". strip_tags($chapter->content). "\n";
  }
- $prompt.= "Keep every question aligned with interview preparation and local hiring or education interview expectations.\n";
+ $prompt.= "Keep every question aligned with job interview preparation and local hiring expectations.\n";
 
  $prompt.= <<<EOT
 Return ONLY a valid JSON object strictly matching this format. Do not include markdown.
@@ -1273,11 +1273,11 @@ EOT;
  'chapters' => [
  [
  'title' => 'Prepare the Proof',
- 'content' => "<h3>Prepare the Proof</h3><p>Write one target role, one interview situation where this topic matters, and one result a local HR, school, or hiring panel should hear.</p><ul><li>Pick a real school, internship, BPO, freelance, or workplace example.</li><li>Name your responsibility in one sentence.</li><li>List the evidence you can honestly explain, such as a result, lesson, metric, or customer impact.</li></ul>",
+ 'content' => "<h3>Prepare the Proof</h3><p>Write one target role, one interview situation where this topic matters, and one result a local HR or hiring panel should hear.</p><ul><li>Pick a real internship, BPO, freelance, or workplace example.</li><li>Name your responsibility in one sentence.</li><li>List the evidence you can honestly explain, such as a result, lesson, metric, or customer impact.</li></ul>",
  ],
  [
  'title' => 'Rehearse and Check',
- 'content' => "<h3>Rehearse and Check</h3><p>Draft a short answer using context, action, result, and reflection, then rehearse it aloud until it sounds natural.</p><ul><li>Keep the answer role-relevant for employers or admissions panels.</li><li>Revise vague phrases into specific actions you personally took.</li><li>Mark the module complete only after the answer includes a clear action, honest evidence, and a confident closing line.</li></ul>",
+ 'content' => "<h3>Rehearse and Check</h3><p>Draft a short answer using context, action, result, and reflection, then rehearse it aloud until it sounds natural.</p><ul><li>Keep the answer role-relevant for employers and hiring panels.</li><li>Revise vague phrases into specific actions you personally took.</li><li>Mark the module complete only after the answer includes a clear action, honest evidence, and a confident closing line.</li></ul>",
  ],
  ],
  ];

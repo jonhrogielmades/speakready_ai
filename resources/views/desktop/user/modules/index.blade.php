@@ -327,7 +327,7 @@
 
  const stepsMobile = [
  { element: '#modulePositionModal.show .modal-content', popover: { title: 'Choose Your Module Focus', description: 'Pick the target position so modules can match the interview path you are preparing for.', side: 'bottom', align: 'center' }},
- { element: '#modulePositionModal.show #moduleTargetPositionButton, #modulePositionModal.show #moduleTargetPosition', popover: { title: 'Target Position', description: 'Select the role or program you want these modules to support.', side: 'bottom', align: 'start' }},
+ { element: '#modulePositionModal.show #moduleTargetPositionButton, #modulePositionModal.show #moduleTargetPosition', popover: { title: 'Target Position', description: 'Select the role you want these modules to support.', side: 'bottom', align: 'start' }},
  { element: '#modulePositionModal.show .module-position-submit-btn, #modulePositionModal.show .modal-footer .btn-primary', popover: { title: 'View Related Modules', description: 'Load modules connected to that target position.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) #interview-modules-page .modules-page-hero, body:not(.modal-open) #interview-modules-page .modules-hero', popover: { title: 'Interview Modules', description: 'Use modules for focused preparation tasks like planning examples, improving structure, and polishing interview answers.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) .module-position-strip', popover: { title: 'Target Position', description: 'This controls which role-specific modules appear. Change it whenever your interview target changes.', side: 'bottom', align: 'center' }},
@@ -339,7 +339,7 @@
 
  const stepsDesktop = [
  { element: '#modulePositionModal.show .modal-content', popover: { title: 'Choose Your Module Focus', description: 'Pick the target position so modules can match the interview path you are preparing for.', side: 'bottom', align: 'center' }},
- { element: '#modulePositionModal.show #moduleTargetPositionButton, #modulePositionModal.show #moduleTargetPosition', popover: { title: 'Target Position', description: 'Select the role or program you want these modules to support.', side: 'bottom', align: 'start' }},
+ { element: '#modulePositionModal.show #moduleTargetPositionButton, #modulePositionModal.show #moduleTargetPosition', popover: { title: 'Target Position', description: 'Select the role you want these modules to support.', side: 'bottom', align: 'start' }},
  { element: '#modulePositionModal.show .module-position-submit-btn, #modulePositionModal.show .modal-footer .btn-primary', popover: { title: 'View Related Modules', description: 'Load modules connected to that target position.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) #interview-modules-page .modules-page-hero, body:not(.modal-open) #interview-modules-page .modules-hero', popover: { title: 'Interview Modules', description: 'Use modules for focused preparation tasks like planning examples, improving structure, and polishing interview answers.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) .module-position-strip', popover: { title: 'Target Position', description: 'This controls which role-specific modules appear. Change it whenever your interview target changes.', side: 'bottom', align: 'center' }},
