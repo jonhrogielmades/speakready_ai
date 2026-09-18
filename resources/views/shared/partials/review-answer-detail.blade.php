@@ -20,6 +20,11 @@
  $items
  ))), 0, $limit);
  };
+ $questionSource = $answer->question ?? $answer;
+ $reviewFeedbackText = static fn ($value): string => review_feedback_without_question_text(is_scalar($value) ? (string) $value : '', $questionSource);
+ $reviewFeedbackItems = static function ($items, int $limit = 2) use ($listItems, $reviewFeedbackText): array {
+ return array_values(array_filter(array_map($reviewFeedbackText, $listItems($items, $limit))));
+ };
  $answerText = trim((string) ($answer->answer_text ?? ''));
  $hasVoiceRecording = trim((string) ($answer->voice_recording_path ?? '')) !== '';
  $hasVoiceEvidence = trim((string) ($answer->delivery_transcript ?? '')) !== '';
@@ -29,32 +34,32 @@
  : ($isVoiceOnlyAnswer && $hasVoiceEvidence
  ? 'Voice answer saved. Feedback is based on the saved voice session.'
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
- $feedbackText = trim((string) ($answer->ai_feedback ?: 'No feedback was generated for this answer.'));
- $whatWorked = trim((string) ($contentAlignment['what_worked'] ?? ''));
- $missingPoints = $listItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
- $nextAttemptSteps = $listItems($contentAlignment['next_attempt_steps'] ?? [], 2);
+ $feedbackText = $reviewFeedbackText($answer->ai_feedback ?: 'No feedback was generated for this answer.');
+ $whatWorked = $reviewFeedbackText($contentAlignment['what_worked'] ?? '');
+ $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
+ $nextAttemptSteps = $reviewFeedbackItems($contentAlignment['next_attempt_steps'] ?? [], 2);
  $supportingExcerpts = $listItems($contentAlignment['evidence_quotes'] ?? ($evidenceMap['supporting_excerpts'] ?? []), 1);
- $improvementFocus = trim((string) ($contentAlignment['improvement_focus'] ?? ''));
+ $improvementFocus = $reviewFeedbackText($contentAlignment['improvement_focus'] ?? '');
  if ($improvementFocus === '' && ! empty($missingPoints)) {
  $improvementFocus = $missingPoints[0];
  }
  if ($improvementFocus === '') {
- $improvementFocus = trim((string) ($starAnalysis['suggestion'] ?? ''));
+ $improvementFocus = $reviewFeedbackText($starAnalysis['suggestion'] ?? '');
  }
  if ($improvementFocus === '') {
  $improvementFocus = 'Add one specific example, action, or result.';
  }
- $nextPractice = trim((string) ($contentAlignment['action'] ?? ''));
+ $nextPractice = $reviewFeedbackText($contentAlignment['action'] ?? '');
  if ($nextPractice === '' && ! empty($nextAttemptSteps)) {
  $nextPractice = $nextAttemptSteps[0];
  }
  if ($nextPractice === '') {
- $nextPractice = trim((string) ($answer->recommendation_text ?? ''));
+ $nextPractice = $reviewFeedbackText($answer->recommendation_text ?? '');
  }
  if ($nextPractice === '') {
  $nextPractice = 'Try again with one clear example and one result.';
  }
- $betterAnswer = trim((string) ($answer->better_sample_answer ?: 'No better example was generated for this response.'));
+ $betterAnswer = review_feedback_without_question_text((string) ($answer->better_sample_answer ?: 'No better example was generated for this response.'), $questionSource);
  $rubricLevel = trim((string) ($answer->rubric_level ?? ''));
  $alignmentStatus = strtolower(str_replace([' ', '-'], '_', trim((string) ($contentAlignment['status'] ?? ''))));
  $scoreUnavailable = in_array($alignmentStatus, ['insufficient_evidence', 'not_evaluated', 'skipped'], true);

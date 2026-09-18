@@ -123,7 +123,7 @@
 
  @endif
 
- <!-- Question Breakdown -->
+ <!-- Answer Breakdown -->
  <h4 class="answer-review-heading" style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Answer Review</h4>
  <div class="accordion" id="answersAccordion">
  @foreach($sessionRecord->answers as $index => $answer)
@@ -159,7 +159,7 @@
  <h2 class="accordion-header">
  <button class="accordion-button collapsed answer-review-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" style="background:transparent;color:var(--tx);box-shadow:none;padding:20px;">
  <div class="d-flex justify-content-between align-items-center w-100 pe-3 flex-wrap gap-3 answer-review-header">
- <span class="answer-review-title" style="font-size:1.1rem;"><strong>Q{{ $index + 1 }}:</strong> {{ $answer->question->question_text?? 'Describe a time you faced a difficult challenge.' }}</span>
+ <span class="answer-review-title" style="font-size:1.1rem;"><strong>Answer {{ $index + 1 }}</strong></span>
  <div class="d-flex gap-2 align-items-center answer-review-score">
  @if($sessionEndedEarly)
  <span class="badge" style="background:rgba(100, 116, 139, 0.12);color:#64748b;font-size:0.9rem;padding:8px 12px;">No feedback</span>
@@ -195,12 +195,12 @@
  <div class="mb-0 p-4 early-ended-response-card">
  <label style="font-size:0.85rem;color:var(--tx3);font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-user me-2"></i>Saved Response</label>
  <div style="color:var(--tx);background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid var(--bd);height:100%;font-size:0.95rem;line-height:1.6;">
- {{ $savedAnswerText!== ''? $savedAnswerText: ($isSavedVoiceOnlyAnswer && $hasSavedVoiceEvidence? 'Voice-only answer saved. Listen to the saved voice answer above.': ($hasSavedVoiceRecording? 'Transcript unavailable. Listen to the saved voice answer above.': 'No response was saved for this question before the session ended.')) }}
+ {{ $savedAnswerText!== ''? $savedAnswerText: ($isSavedVoiceOnlyAnswer && $hasSavedVoiceEvidence? 'Voice-only answer saved. Listen to the saved voice answer above.': ($hasSavedVoiceRecording? 'Transcript unavailable. Listen to the saved voice answer above.': 'No response was saved before the session ended.')) }}
  </div>
  </div>
  @elseif($answer->is_skipped)
  <div class="alert alert-warning border-0" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b;">
- <i class="fa-solid fa-forward-step me-2"></i> {{ $answer->ai_feedback?: 'You skipped this question. No feedback available.' }}
+ <i class="fa-solid fa-forward-step me-2"></i> {{ review_feedback_without_question_text($answer->ai_feedback ?: 'You skipped this prompt. No feedback available.', $answer->question ?? $answer) }}
  </div>
  @else
  @include('shared.partials.review-answer-detail', ['answer' => $answer, 'sessionRecord' => $sessionRecord])
@@ -228,7 +228,7 @@
  </div>
  </div>
  @if($retry->ai_feedback)
- <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">{{ $retry->ai_feedback }}</p>
+ <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">{{ review_feedback_without_question_text($retry->ai_feedback, $retry->question ?? $answer->question ?? $retry) }}</p>
  @endif
  @include('desktop.partials.interview-answer-coaching', ['answer' => $retry, 'sessionRecord' => $sessionRecord])
  </div>
@@ -470,7 +470,7 @@ function retryResultCard(data) {
  <span class="retry-chip">Score ${retryEscape(data.score)}%</span>
  ${retryDeliveryChip(data)}
  </div>
- <p style="margin:0;color:var(--tx2);line-height:1.6;">${retryEscape(data.ai_feedback || 'Feedback is ready for this attempt.')}</p>
+ <p style="margin:0;color:var(--tx2);line-height:1.6;">${retryEscape(data.display_ai_feedback || data.ai_feedback || 'Feedback is ready for this attempt.')}</p>
  ${coachingHtml}
  </div>
  `;
@@ -490,7 +490,7 @@ function retryAttemptHistoryHtml(data) {
  ${retryDeliveryChip(data)}
  </div>
  </div>
- <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">${retryEscape(data.ai_feedback || 'Feedback is ready for this attempt.')}</p>
+ <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">${retryEscape(data.display_ai_feedback || data.ai_feedback || 'Feedback is ready for this attempt.')}</p>
  ${coachingHtml}
  </div>
  `;

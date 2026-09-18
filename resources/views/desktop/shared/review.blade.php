@@ -185,7 +185,7 @@
  @endif
  </div>
 
- <!-- Question Breakdown -->
+ <!-- Answer Breakdown -->
  <h4 class="answer-review-heading" style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Answer Review</h4>
  <div class="accordion" id="answersAccordion">
  @foreach($sessionRecord->answers as $index => $answer)
@@ -221,7 +221,7 @@
  <h2 class="accordion-header">
  <button class="accordion-button collapsed answer-review-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" style="background:transparent;color:var(--tx);box-shadow:none;padding:20px;">
  <div class="d-flex justify-content-between align-items-center w-100 pe-3 flex-wrap gap-3 answer-review-header">
- <span class="answer-review-title" style="font-size:1.1rem;"><strong>Q{{ $index + 1 }}:</strong> {{ $answer->question->question_text?? 'Describe a time you faced a difficult challenge.' }}</span>
+ <span class="answer-review-title" style="font-size:1.1rem;"><strong>Answer {{ $index + 1 }}</strong></span>
  <div class="d-flex gap-2 align-items-center answer-review-score">
  @if($answer->is_skipped)
  <span class="badge" style="background:rgba(245, 158, 11, 0.12);color:#b45309;font-size:0.9rem;padding:8px 12px;">Skipped</span>
@@ -250,7 +250,7 @@
  
  @if($answer->is_skipped)
  <div class="alert alert-warning border-0" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b;">
- <i class="fa-solid fa-forward-step me-2"></i> {{ $answer->ai_feedback?: 'You skipped this question. No feedback available.' }}
+ <i class="fa-solid fa-forward-step me-2"></i> {{ review_feedback_without_question_text($answer->ai_feedback ?: 'You skipped this prompt. No feedback available.', $answer->question ?? $answer) }}
  </div>
  @include('desktop.partials.interview-answer-coaching', ['answer' => $answer])
  @else
@@ -258,7 +258,7 @@
 
  <div class="mb-4 p-4" style="background:rgba(59, 130, 246, 0.05);border:1px solid rgba(59, 130, 246, 0.2);border-radius:12px;">
  <h6 style="color:#3b82f6;font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-comment-medical me-2"></i>Feedback</h6>
- <p style="color:var(--tx);font-size:0.95rem;line-height:1.7;margin:0;">{{ $answer->ai_feedback?: 'No feedback was generated for this answer.' }}</p>
+ <p style="color:var(--tx);font-size:0.95rem;line-height:1.7;margin:0;">{{ review_feedback_without_question_text($answer->ai_feedback ?: 'No feedback was generated for this answer.', $answer->question ?? $answer) }}</p>
  </div>
 
  @php $evidenceMap = is_array($answer->evidence_map)? $answer->evidence_map: []; @endphp
@@ -335,24 +335,12 @@
  <div class="col-md-6">
  <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved me-2"></i>Better Answer Draft</label>
  <div style="color:var(--tx);background:rgba(16, 185, 129, 0.05);padding:16px;border-radius:12px;border:1px solid rgba(16, 185, 129, 0.2);height:100%;font-size:0.95rem;line-height:1.6;">
- {{ $answer->better_sample_answer?: 'No better draft was made for this response.' }}
+ {{ review_feedback_without_question_text($answer->better_sample_answer ?: 'No better draft was made for this response.', $answer->question ?? $answer) }}
  </div>
  <div style="color:var(--tx3);font-size:.78rem;margin-top:8px;">Built only from the candidate's answer. Any placeholder needs true facts.</div>
  </div>
  </div>
 
- <!-- Feature 10: Follow-Up Questions -->
- <div class="mt-4 p-4" style="background:rgba(59, 130, 246, 0.05);border:1px solid rgba(59, 130, 246, 0.2);border-radius:12px;">
- <label style="font-size:0.9rem;color:#3b82f6;font-weight:700;text-transform:uppercase;margin-bottom:12px;"><i class="fa-solid fa-clipboard-question me-2"></i>Follow-Up Questions</label>
- <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:12px;">Think about these questions for deeper practice:</p>
- <ul class="mb-0" style="color:var(--tx);line-height:1.8;">
- @if($answer->follow_up_question)
- <li>{{ $answer->follow_up_question }}</li>
- @else
- <li>No follow-up question was generated for this answer.</li>
- @endif
- </ul>
- </div>
  @endif
 
  @php
@@ -376,7 +364,7 @@
  </div>
  </div>
  @if($retry->ai_feedback)
- <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">{{ $retry->ai_feedback }}</p>
+ <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">{{ review_feedback_without_question_text($retry->ai_feedback, $retry->question ?? $answer->question ?? $retry) }}</p>
  @endif
  @include('desktop.partials.interview-answer-coaching', ['answer' => $retry])
  @endforeach

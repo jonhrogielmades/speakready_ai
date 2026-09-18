@@ -915,7 +915,7 @@ class ReliabilityHardeningTest extends TestCase
  ->get(route('user.review', $session))
  ->assertOk()
  ->assertSee('Answer Match')
- ->assertSee($question->question_text)
+ ->assertDontSee($question->question_text)
  ->assertSee('Feedback Detailed Review')
  ->assertSee('What To Improve')
  ->assertSee('Next Practice')
@@ -925,13 +925,13 @@ class ReliabilityHardeningTest extends TestCase
  $this->get(route('shared.review', 'alignment-review-token'))
  ->assertOk()
  ->assertSee('Answer Match')
- ->assertSee($question->question_text)
+ ->assertDontSee($question->question_text)
  ->assertSee('Good start')
  ->assertSee('Improve')
  ->assertSee('Next try checklist')
  ->assertSee('Done when')
- ->assertSee('Question next steps')
- ->assertSee('Question results')
+ ->assertSee('Answer next steps')
+ ->assertSee('Answer results')
  ->assertDontSee('â€œ', false);
 
  $profileAfterFirstFinish = Profile::where('user_id', $user->id)->firstOrFail();
@@ -1316,7 +1316,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('Feedback Detailed Review')
  ->assertSee('Score Breakdown')
- ->assertSee($question->question_text);
+ ->assertDontSee($question->question_text);
  }
 
  public function test_interview_finish_repairs_missing_report_tables(): void
@@ -1395,7 +1395,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Feedback Detailed Review')
  ->assertSee('Answer Match')
  ->assertSee('What To Improve')
- ->assertSee($question->question_text);
+ ->assertDontSee($question->question_text);
 
  $this->assertSame(
  EvidenceBasedCoachingService::VERSION,
@@ -1542,6 +1542,7 @@ class ReliabilityHardeningTest extends TestCase
  $response->assertOk()
  ->assertJsonStructure([
  'coaching_feedback' => ['content_alignment'],
+ 'display_ai_feedback',
  'coaching_html',
  ]);
  $retry = InterviewAnswer::where('retry_of_answer_id', $answer->id)->firstOrFail();
@@ -1552,7 +1553,8 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertNotEmpty(data_get($retry->coaching_feedback, 'content_alignment.evidence_quotes'));
  $this->assertStringContainsString('Answer Coaching', (string) $response->json('coaching_html'));
  $this->assertStringContainsString('Answer Match', (string) $response->json('coaching_html'));
- $this->assertStringContainsString($question->question_text, (string) $response->json('coaching_html'));
+ $this->assertStringNotContainsString($question->question_text, (string) $response->json('coaching_html'));
+ $this->assertStringNotContainsString($question->question_text, (string) $response->json('display_ai_feedback'));
 
  $this->actingAs($user)
  ->get(route('user.review', $session))

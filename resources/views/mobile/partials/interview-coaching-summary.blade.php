@@ -82,6 +82,7 @@
             default => ucwords(str_replace(['_', '-'], ' ', $area)),
         };
     };
+    $summaryReviewText = static fn ($value, $questionSource = null): string => review_feedback_without_question_text(is_scalar($value) ? (string) $value : '', $questionSource);
 @endphp
 
 @if($hasCoachingSummary)
@@ -91,7 +92,7 @@
                 <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
                     <div>
                         <h5 style="color:var(--tx);font-weight:800;margin:0 0 6px;"><i class="fa-solid fa-magnifying-glass-chart me-2" style="color:#0ea5e9;"></i>Answer Coaching Summary</h5>
-                        <p style="color:var(--tx3);font-size:.88rem;margin:0;">{{ $summaryHeadline !== '' ? $summaryHeadline : 'Built from the notes and measured details available in this session.' }}</p>
+                        <p style="color:var(--tx3);font-size:.88rem;margin:0;">{{ $summaryHeadline !== '' ? $summaryReviewText($summaryHeadline) : 'Built from the notes and measured details available in this session.' }}</p>
                     </div>
                     @if(is_scalar($summaryCoverage) && trim((string) $summaryCoverage) !== '')
                         <span class="badge align-self-start" style="background:rgba(59,130,246,.10);color:#3b82f6;border:1px solid rgba(59,130,246,.22);padding:7px 10px;">Checked: {{ $summaryCoverage }}</span>
@@ -114,7 +115,7 @@
 
                 @if(!empty($summaryContentOverview))
                     <div class="mb-3 p-3" style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;">
-                        <div style="color:var(--tx3);font-size:.76rem;font-weight:800;text-transform:uppercase;margin-bottom:9px;"><i class="fa-solid fa-list-check me-2"></i>Question results</div>
+                        <div style="color:var(--tx3);font-size:.76rem;font-weight:800;text-transform:uppercase;margin-bottom:9px;"><i class="fa-solid fa-list-check me-2"></i>Answer results</div>
                         <div class="d-flex flex-wrap gap-2">
                             @foreach(['directly_answered', 'partially_answered', 'low_relevance', 'insufficient_evidence', 'skipped', 'not_evaluated'] as $overviewStatus)
                                 @php
@@ -139,7 +140,7 @@
                                         @php
                                             $observationArea = is_array($observation) ? trim((string) ($observation['area'] ?? '')) : '';
                                             $observationArea = $observationArea !== '' ? $summaryAreaLabel($observationArea) : '';
-                                            $observationText = is_array($observation) ? trim((string) ($observation['observation'] ?? $observation['text'] ?? '')) : trim((string) $observation);
+                                            $observationText = $summaryReviewText(is_array($observation) ? ($observation['observation'] ?? $observation['text'] ?? '') : $observation);
                                         @endphp
                                         @if($observationText !== '')
                                             <div class="d-flex gap-2">
@@ -165,14 +166,11 @@
                                             $priorityArea = is_array($priority) ? trim((string) ($priority['area'] ?? 'Priority')) : 'Priority';
                                             $priorityArea = $priorityArea !== '' ? $summaryAreaLabel($priorityArea) : 'Priority';
                                             $priorityRank = is_array($priority) && is_numeric($priority['rank'] ?? null) ? max(1, (int) $priority['rank']) : $loop->iteration;
-                                            $priorityObservation = is_array($priority) ? trim((string) ($priority['observation'] ?? '')) : '';
-                                            $priorityAction = is_array($priority) ? trim((string) ($priority['action'] ?? '')) : trim((string) $priority);
-                                            $prioritySuccessCheck = is_array($priority) ? trim((string) ($priority['success_check'] ?? '')) : '';
+                                            $priorityObservation = $summaryReviewText(is_array($priority) ? ($priority['observation'] ?? '') : '');
+                                            $priorityAction = $summaryReviewText(is_array($priority) ? ($priority['action'] ?? '') : $priority);
+                                            $prioritySuccessCheck = $summaryReviewText(is_array($priority) ? ($priority['success_check'] ?? '') : '');
                                             $priorityAffected = is_array($priority) && is_numeric($priority['affected_count'] ?? null) ? max(0, (int) $priority['affected_count']) : null;
                                             $priorityEligible = is_array($priority) && is_numeric($priority['eligible_count'] ?? null) ? max(0, (int) $priority['eligible_count']) : null;
-                                            $priorityQuestions = is_array($priority) && is_array($priority['questions'] ?? null)
-                                                ? array_slice(array_values(array_filter(array_map(fn ($item) => is_scalar($item) ? trim((string) $item) : '', $priority['questions']))), 0, 2)
-                                                : [];
                                         @endphp
                                         @if($priorityAction !== '')
                                             <div class="col-md-{{ count($summaryActions) > 1 ? '6' : '12' }}">
@@ -188,9 +186,6 @@
                                                     </div>
                                                     @if($priorityObservation !== '')
                                                         <p style="color:var(--tx3);font-size:.82rem;line-height:1.48;margin:0 0 6px;">{{ $priorityObservation }}</p>
-                                                    @endif
-                                                    @if(!empty($priorityQuestions))
-                                                        <div style="color:var(--tx3);font-size:.78rem;line-height:1.45;margin:0 0 7px;"><strong>Questions:</strong> {{ implode(' | ', $priorityQuestions) }}</div>
                                                     @endif
                                                     <p style="color:var(--tx);font-size:.88rem;line-height:1.55;margin:0;"><strong style="color:#8b5cf6;">Practice next:</strong> {{ $priorityAction }}</p>
                                                     @if($prioritySuccessCheck !== '')
@@ -208,17 +203,18 @@
 
                 @if(!empty($summaryQuestionImprovements))
                     <div class="mt-3 p-3" style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;">
-                        <div style="color:#0ea5e9;font-size:.78rem;font-weight:800;text-transform:uppercase;margin-bottom:10px;"><i class="fa-solid fa-map me-2"></i>Question next steps</div>
+                        <div style="color:#0ea5e9;font-size:.78rem;font-weight:800;text-transform:uppercase;margin-bottom:10px;"><i class="fa-solid fa-map me-2"></i>Answer next steps</div>
                         <div class="d-flex flex-column gap-2">
                             @foreach($summaryQuestionImprovements as $questionImprovement)
                                 @php
                                     $mapStatus = trim((string) ($questionImprovement['status'] ?? 'not_evaluated'));
                                     $mapColors = $summaryStatusColors($mapStatus);
-                                    $mapQuestion = trim((string) ($questionImprovement['question'] ?? 'Question'));
-                                    $mapWhatWorked = trim((string) ($questionImprovement['what_worked'] ?? ''));
-                                    $mapImprove = trim((string) ($questionImprovement['improvement_focus'] ?? ''));
-                                    $mapNext = trim((string) ($questionImprovement['next_attempt'] ?? ''));
-                                    $mapSuccess = trim((string) ($questionImprovement['success_check'] ?? ''));
+                                    $mapQuestionSource = trim((string) ($questionImprovement['question'] ?? ''));
+                                    $mapAnswerLabel = 'Answer '.($questionImprovement['question_number'] ?? $loop->iteration);
+                                    $mapWhatWorked = $summaryReviewText($questionImprovement['what_worked'] ?? '', $mapQuestionSource);
+                                    $mapImprove = $summaryReviewText($questionImprovement['improvement_focus'] ?? '', $mapQuestionSource);
+                                    $mapNext = $summaryReviewText($questionImprovement['next_attempt'] ?? '', $mapQuestionSource);
+                                    $mapSuccess = $summaryReviewText($questionImprovement['success_check'] ?? '', $mapQuestionSource);
                                     $mapScore = is_numeric($questionImprovement['relevance_score'] ?? null)
                                         && in_array($mapStatus, ['directly_answered', 'partially_answered', 'low_relevance'], true)
                                             ? max(0, min(100, (int) round($questionImprovement['relevance_score'])))
@@ -226,7 +222,7 @@
                                 @endphp
                                 <div class="p-3" style="background:rgba(14,165,233,.025);border:1px solid var(--bd);border-radius:10px;">
                                     <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-2">
-                                        <strong style="color:var(--tx);font-size:.88rem;line-height:1.45;">Q{{ $questionImprovement['question_number'] ?? $loop->iteration }}: {{ $mapQuestion }}</strong>
+                                        <strong style="color:var(--tx);font-size:.88rem;line-height:1.45;">{{ $mapAnswerLabel }}</strong>
                                         <span class="badge align-self-start" style="color:{{ $mapColors[0] }};background:{{ $mapColors[1] }};border:1px solid {{ $mapColors[2] }};white-space:normal;text-align:left;">{{ $summaryStatusLabel($mapStatus) }}{{ $mapScore !== null ? ' · '.$mapScore.'%' : ' · Not scored' }}</span>
                                     </div>
                                     <div class="row g-2">
@@ -250,7 +246,7 @@
                 @endif
 
                 @if($summaryTransparency !== '')
-                    <div class="mt-3 pt-3" style="border-top:1px solid var(--bd);color:var(--tx3);font-size:.8rem;line-height:1.55;"><i class="fa-solid fa-shield-halved me-1"></i>{{ $summaryTransparency }}</div>
+                    <div class="mt-3 pt-3" style="border-top:1px solid var(--bd);color:var(--tx3);font-size:.8rem;line-height:1.55;"><i class="fa-solid fa-shield-halved me-1"></i>{{ $summaryReviewText($summaryTransparency) }}</div>
                 @endif
             </div>
         </div>

@@ -1520,6 +1520,7 @@ class InterviewController extends Controller
  'rubric_level' => $retry->rubric_level,
  'evidence_map' => $retry->evidence_map,
  'ai_feedback' => $retry->ai_feedback?: 'Retry saved. The AI note was not available.',
+ 'display_ai_feedback' => review_feedback_without_question_text($retry->ai_feedback?: 'Retry saved. The AI note was not available.', $answer->question),
  'better_sample_answer' => $retry->better_sample_answer?: '',
  'follow_up_question' => $retry->follow_up_question?: '',
  'coaching_feedback' => $retry->coaching_feedback?? [],

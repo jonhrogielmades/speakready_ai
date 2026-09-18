@@ -19,6 +19,10 @@
  $alignmentMissing = is_array($contentAlignment['missing_points']?? null)? array_values(array_filter(array_map(fn ($item) => is_scalar($item)? trim((string) $item): '', $contentAlignment['missing_points']))): [];
  $alignmentNextSteps = is_array($contentAlignment['next_attempt_steps']?? null)? array_values(array_filter(array_map(fn ($item) => is_scalar($item)? trim((string) $item): '', $contentAlignment['next_attempt_steps']))): [];
  $priorityActions = is_array($coachingFeedback['priority_actions']?? null)? array_values(array_filter($coachingFeedback['priority_actions'], 'is_array')): [];
+ $questionSource = $answer->question ?? $answer;
+ $reviewCoachingText = static fn ($value): string => review_feedback_without_question_text(is_scalar($value)? (string) $value: '', $questionSource);
+ $alignmentMissing = array_values(array_filter(array_map($reviewCoachingText, $alignmentMissing)));
+ $alignmentNextSteps = array_values(array_filter(array_map($reviewCoachingText, $alignmentNextSteps)));
 
  $statusText = static function ($value): string {
  if (is_array($value)) {
@@ -98,8 +102,8 @@
  ]));
 
  $observationItems = [];
- $deliveryObservation = trim((string) ($deliveryCoaching['observation']?? ''));
- $cameraObservation = trim((string) ($cameraCoaching['observation']?? ''));
+ $deliveryObservation = $reviewCoachingText($deliveryCoaching['observation']?? '');
+ $cameraObservation = $reviewCoachingText($cameraCoaching['observation']?? '');
  if ($deliveryObservation!== '') {
  $observationItems[] = ['label' => 'Speaking', 'text' => $deliveryObservation];
  }
@@ -110,7 +114,7 @@
  if (strtolower(trim((string) ($priorityAction['area']?? ''))) === 'answer-to-question relevance') {
  continue;
  }
- $priorityObservation = trim((string) ($priorityAction['observation']?? ''));
+ $priorityObservation = $reviewCoachingText($priorityAction['observation']?? '');
  if ($priorityObservation === '') {
  continue;
  }
@@ -129,7 +133,7 @@
  if (strtolower(trim((string) ($priorityAction['area']?? ''))) === 'answer-to-question relevance') {
  continue;
  }
- $action = trim((string) ($priorityAction['action']?? ''));
+ $action = $reviewCoachingText($priorityAction['action']?? '');
  if ($action!== '') {
  $actionItems[] = [
  'area' => $simpleAreaLabel(trim((string) ($priorityAction['area']?? 'Priority'))?: 'Priority'),
@@ -139,7 +143,7 @@
  }
  if (strtolower(str_replace('-', '_', $deliveryStatus)) === 'measured') {
  foreach ((array) ($deliveryCoaching['tips']?? []) as $tip) {
- $tip = is_scalar($tip)? trim((string) $tip): '';
+ $tip = $reviewCoachingText($tip);
  if ($tip!== '' &&! collect($actionItems)->contains(fn (array $item) => $item['action'] === $tip)) {
  $actionItems[] = ['area' => 'Speaking', 'action' => $tip];
  }
@@ -147,7 +151,7 @@
  }
  if (in_array(strtolower(str_replace('-', '_', $cameraStatus)), ['measured', 'insufficient_data'], true)) {
  foreach ((array) ($cameraCoaching['tips']?? []) as $tip) {
- $tip = is_scalar($tip)? trim((string) $tip): '';
+ $tip = $reviewCoachingText($tip);
  if ($tip!== '' &&! collect($actionItems)->contains(fn (array $item) => $item['action'] === $tip)) {
  $actionItems[] = ['area' => 'Camera setup', 'action' => $tip];
  }
@@ -233,18 +237,14 @@
 
  $framework = is_array($questionCoaching['framework']?? null)? array_values(array_filter(array_map(fn ($item) => is_scalar($item)? trim((string) $item): '', $questionCoaching['framework']))): [];
  $mappedSkills = is_array($questionCoaching['mapped_skills']?? null)? array_values(array_filter(array_map(fn ($item) => is_scalar($item)? trim((string) $item): '', $questionCoaching['mapped_skills']))): [];
- $hasQuestionGuidance = collect([
- 'intent', 'title', 'what_it_tests', 'tip', 'expected_guide',
- ])->contains(fn (string $key) => trim((string) ($questionCoaching[$key]?? ''))!== '')
- ||! empty($framework)
- ||! empty($mappedSkills);
- $alignmentQuestion = trim((string) ($contentAlignment['question']?? ''));
- $alignmentObservation = trim((string) ($contentAlignment['observation']?? ''));
- $alignmentWhatWorked = trim((string) ($contentAlignment['what_worked']?? ''));
- $alignmentImprovementFocus = trim((string) ($contentAlignment['improvement_focus']?? ''));
- $alignmentAction = trim((string) ($contentAlignment['action']?? ''));
- $alignmentSuccessCheck = trim((string) ($contentAlignment['success_check']?? ''));
- $alignmentLimitation = trim((string) ($contentAlignment['limitation']?? ''));
+ $hasQuestionGuidance = false;
+ $alignmentQuestion = '';
+ $alignmentObservation = $reviewCoachingText($contentAlignment['observation']?? '');
+ $alignmentWhatWorked = $reviewCoachingText($contentAlignment['what_worked']?? '');
+ $alignmentImprovementFocus = $reviewCoachingText($contentAlignment['improvement_focus']?? '');
+ $alignmentAction = $reviewCoachingText($contentAlignment['action']?? '');
+ $alignmentSuccessCheck = $reviewCoachingText($contentAlignment['success_check']?? '');
+ $alignmentLimitation = $reviewCoachingText($contentAlignment['limitation']?? '');
  $alignmentStatusLabel = trim((string) ($contentAlignment['status_label']?? ''));
  $alignmentStatusLabel = match (strtolower($alignmentStatusLabel)) {
  'directly answered' => 'Answered directly',
@@ -265,9 +265,9 @@
  ||! empty($alignmentEvidence)
  ||! empty($alignmentMissing)
  ||! empty($alignmentNextSteps);
- $transparencyNote = trim((string) ($coachingFeedback['transparency_note']?? ''));
- $deliveryLimitation = trim((string) ($deliveryCoaching['limitation']?? ''));
- $cameraLimitation = trim((string) ($cameraCoaching['limitation']?? ''));
+ $transparencyNote = $reviewCoachingText($coachingFeedback['transparency_note']?? '');
+ $deliveryLimitation = $reviewCoachingText($deliveryCoaching['limitation']?? '');
+ $cameraLimitation = $reviewCoachingText($cameraCoaching['limitation']?? '');
  $scoringConfidence = strtolower($contentStatus) === 'scored' && is_numeric($answer->scoring_confidence?? null)? (int) round($answer->scoring_confidence): null;
  $feedbackQualityPercent = is_numeric($feedbackQuality['completeness_percent']?? null)? max(0, min(100, (int) round($feedbackQuality['completeness_percent']))): null;
  $feedbackReliabilityPercent = is_numeric($feedbackQuality['reliability_percent']?? null)? max(0, min(100, (int) round($feedbackQuality['reliability_percent']))): null;
@@ -503,7 +503,7 @@
  <div class="mt-3 p-3" style="background:rgba(59,130,246,.055);border:1px solid rgba(59,130,246,.18);border-radius:12px;">
  <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-2">
  <div>
- <div style="color:#3b82f6;font-size:.78rem;font-weight:800;text-transform:uppercase;"><i class="fa-solid fa-clipboard-question me-2"></i>Question Plan</div>
+ <div style="color:#3b82f6;font-size:.78rem;font-weight:800;text-transform:uppercase;"><i class="fa-solid fa-clipboard-question me-2"></i>Answer Plan</div>
  @if(trim((string) ($questionCoaching['title']?? ''))!== '')
  <strong style="display:block;color:var(--tx);margin-top:5px;">{{ $questionCoaching['title'] }}</strong>
  @endif
