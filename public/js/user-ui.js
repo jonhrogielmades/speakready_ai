@@ -810,6 +810,7 @@
         userApp.navigationToken = 0;
         userApp.navigationCache = userApp.navigationCache || Object.create(null);
         userApp.navigationPrefetchInflight = userApp.navigationPrefetchInflight || Object.create(null);
+        userApp.navigationFetchInflight = userApp.navigationFetchInflight || Object.create(null);
         userApp.navigationPrefetchCount = userApp.navigationPrefetchCount || 0;
         userApp.navigationPrefetchTimer = 0;
         userApp.navigationStatusTimer = 0;
@@ -828,6 +829,20 @@
             updateActiveUserNavigation(new URL(anchor.href, window.location.href));
             navigateUserApp(anchor.href, { push: true });
         });
+
+        document.addEventListener('pointerdown', function (event) {
+            if (event.button !== 0) return;
+
+            var target = event.target instanceof Element ? event.target : (event.target ? event.target.parentElement : null);
+            var anchor = target && target.closest ? target.closest('a[href]') : null;
+            scheduleUserNavigationPrefetch(anchor, { immediate: true });
+        }, { passive: true });
+
+        document.addEventListener('touchstart', function (event) {
+            var target = event.target instanceof Element ? event.target : (event.target ? event.target.parentElement : null);
+            var anchor = target && target.closest ? target.closest('a[href]') : null;
+            scheduleUserNavigationPrefetch(anchor, { immediate: true });
+        }, { passive: true });
 
         document.addEventListener('pointerover', function (event) {
             var target = event.target instanceof Element ? event.target : (event.target ? event.target.parentElement : null);
@@ -928,7 +943,7 @@
         return !/^(?:slow-)?2g$/i.test(connection.effectiveType || '');
     }
 
-    function scheduleUserNavigationPrefetch(anchor) {
+    function scheduleUserNavigationPrefetch(anchor, options) {
         window.clearTimeout(userApp.navigationPrefetchTimer || 0);
 
         if (!canPrefetchUserNavigation() || !isUserPartialNavigationAnchor(anchor)) return;
@@ -937,7 +952,7 @@
         var url = new URL(anchor.href, window.location.href).href;
         userApp.navigationPrefetchTimer = window.setTimeout(function () {
             prefetchUserNavigationHtml(url);
-        }, NAVIGATION_PREFETCH_DELAY_MS);
+        }, options && options.immediate ? 0 : NAVIGATION_PREFETCH_DELAY_MS);
     }
 
     async function prefetchUserNavigationHtml(url) {
@@ -950,19 +965,13 @@
         userApp.navigationPrefetchInflight[key] = true;
         userApp.navigationPrefetchCount += 1;
 
-        var controller = new AbortController();
-        var timeout = window.setTimeout(function () {
-            controller.abort();
-        }, NAVIGATION_PREFETCH_TIMEOUT_MS);
-
         try {
-            await fetchUserNavigationHtml(url, controller);
+            await fetchUserNavigationHtml(url, null, { timeoutMs: NAVIGATION_PREFETCH_TIMEOUT_MS });
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.debug('User Side navigation prefetch skipped:', error);
             }
         } finally {
-            window.clearTimeout(timeout);
             delete userApp.navigationPrefetchInflight[key];
         }
     }
@@ -971,7 +980,7 @@
         if (!shouldCacheUserNavigation(url)) return false;
 
         var path = normalizeUserNavigationPath(new URL(url, window.location.href).pathname);
-        var prefetchablePaths = [
+        var prefetchableExactPaths = [
             '/dashboard',
             '/interview/setup',
             '/account',
@@ -989,7 +998,7 @@
             '/reports'
         ];
 
-        return prefetchablePaths.indexOf(path) !== -1;
+        return prefetchableExactPaths.indexOf(path) !== -1;
     }
 
     function userNavigationCacheKey(url) {
@@ -1031,30 +1040,71 @@
         };
     }
 
-    async function fetchUserNavigationHtml(url, controller) {
+    async function fetchUserNavigationHtml(url, controller, options) {
         var cachedHtml = getCachedUserNavigationHtml(url);
         if (cachedHtml) return cachedHtml;
 
-        var response = await fetch(url, {
+        var key = userNavigationCacheKey(url);
+        userApp.navigationFetchInflight = userApp.navigationFetchInflight || Object.create(null);
+
+        var existingRequest = userApp.navigationFetchInflight[key];
+        if (existingRequest) {
+            if (controller && existingRequest.timeout) {
+                window.clearTimeout(existingRequest.timeout);
+                existingRequest.timeout = 0;
+            }
+
+            return existingRequest.promise;
+        }
+
+        var requestController = controller || (typeof AbortController !== 'undefined' ? new AbortController() : null);
+        var timeout = 0;
+
+        if (!controller && requestController && options && options.timeoutMs) {
+            timeout = window.setTimeout(function () {
+                requestController.abort();
+            }, options.timeoutMs);
+        }
+
+        var requestOptions = {
             method: 'GET',
             cache: 'default',
             credentials: 'same-origin',
-            signal: controller.signal,
             headers: {
                 'Accept': 'text/html, application/xhtml+xml',
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-SpeakReady-Partial-Navigation': '1'
             }
-        });
+        };
 
-        if (!response.ok || response.redirected && new URL(response.url).pathname !== new URL(url, window.location.href).pathname) {
-            throw new Error('Navigation response was not usable: ' + response.status);
+        if (requestController) {
+            requestOptions.signal = requestController.signal;
         }
 
-        var html = await response.text();
-        putCachedUserNavigationHtml(url, html);
+        var requestEntry = {
+            timeout: timeout,
+            promise: fetch(url, requestOptions).then(function (response) {
+                if (!response.ok || response.redirected && new URL(response.url).pathname !== new URL(url, window.location.href).pathname) {
+                    throw new Error('Navigation response was not usable: ' + response.status);
+                }
 
-        return html;
+                return response.text();
+            }).then(function (html) {
+                putCachedUserNavigationHtml(url, html);
+                return html;
+            })
+        };
+
+        userApp.navigationFetchInflight[key] = requestEntry;
+
+        try {
+            return await requestEntry.promise;
+        } finally {
+            if (requestEntry.timeout) window.clearTimeout(requestEntry.timeout);
+            if (userApp.navigationFetchInflight[key] === requestEntry) {
+                delete userApp.navigationFetchInflight[key];
+            }
+        }
     }
 
     async function navigateUserApp(url, options) {
@@ -1089,15 +1139,21 @@
 
             var contentScripts = Array.from(nextContent.querySelectorAll('script'));
             var nextPageStyles = collectPageStyles(doc, html);
-            await appendRuntimePageStyles(nextPageStyles, token);
+            var stylePromise = appendRuntimePageStyles(nextPageStyles, token);
             if (token !== userApp.navigationToken) {
                 discardRuntimePageStylesForToken(token);
                 return;
             }
+            stylePromise.then(function () {
+                if (token !== userApp.navigationToken) {
+                    discardRuntimePageStylesForToken(token);
+                }
+            });
 
             cleanupUserPageRuntime({ preserveStyles: true });
             pruneRuntimePageStyles(nextPageStyles.map(getPageStyleKey));
             replaceUserContent(content, nextContent);
+            refreshUserSharedLayout(content);
             updateDocumentMetadata(doc, nextContent, destinationUrl.href, options);
             await runPageScripts(html, contentScripts, { skipStyles: true });
             refreshCommonEnhancements();
@@ -1113,6 +1169,22 @@
                 content.removeAttribute('aria-busy');
                 userApp.navigationController = null;
             }
+        }
+    }
+
+    function refreshUserSharedLayout(root) {
+        if (window.SpeakReadyUserMobileLayout && typeof window.SpeakReadyUserMobileLayout.refresh === 'function') {
+            window.SpeakReadyUserMobileLayout.refresh(root);
+        }
+
+        try {
+            document.dispatchEvent(new CustomEvent('speakready:user-content-updated', {
+                detail: { root: root || null }
+            }));
+        } catch (error) {
+            var event = document.createEvent('CustomEvent');
+            event.initCustomEvent('speakready:user-content-updated', false, false, { root: root || null });
+            document.dispatchEvent(event);
         }
     }
 
@@ -1811,6 +1883,7 @@
 
         closeOpenUserMenus();
         updateFullscreenButtons();
+        refreshUserSharedLayout();
         if (window.SpeakReadyPageSearch && typeof window.SpeakReadyPageSearch.refresh === 'function') {
             window.SpeakReadyPageSearch.refresh();
         }

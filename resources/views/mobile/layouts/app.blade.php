@@ -11,33 +11,6 @@
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
       @stack('styles')
-      <style data-mobile-side-gutter="10px">
-         @media (max-width: 991.98px) {
-            body.user-mobile-shell {
-               --sr-mobile-inline: 10px !important;
-            }
-
-            :is(body.user-mobile-shell > .db-content,
-                body.user-mobile-shell #mob-content > .db-content) {
-               padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
-               padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
-            }
-
-            :is(body.user-mobile-shell > .db-content,
-                body.user-mobile-shell #mob-content > .db-content) > :is(.db-section, .container, .container-fluid, [id]) {
-               padding-left: 0 !important;
-               padding-right: 0 !important;
-               margin-left: 0 !important;
-               margin-right: 0 !important;
-            }
-
-            :is(body.user-mobile-shell > .db-content,
-                body.user-mobile-shell #mob-content > .db-content) > .row {
-               margin-left: 0 !important;
-               margin-right: 0 !important;
-            }
-         }
-      </style>
       @include('mobile.partials.user-mobile-side-gutter')
    </head>
    <body class="user-mobile-shell mobile-shell @yield('body-class')" data-layout-shell="mobile" data-app-surface="user" data-partial-navigation-response="true">
@@ -3047,33 +3020,6 @@
 
       </style>
       @stack('styles')
-      <style data-mobile-side-gutter="10px">
-         @media (max-width: 991.98px) {
-            body.user-mobile-shell {
-               --sr-mobile-inline: 10px !important;
-            }
-
-            :is(body.user-mobile-shell > .db-content,
-                body.user-mobile-shell #mob-content > .db-content) {
-               padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
-               padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
-            }
-
-            :is(body.user-mobile-shell > .db-content,
-                body.user-mobile-shell #mob-content > .db-content) > :is(.db-section, .container, .container-fluid, [id]) {
-               padding-left: 0 !important;
-               padding-right: 0 !important;
-               margin-left: 0 !important;
-               margin-right: 0 !important;
-            }
-
-            :is(body.user-mobile-shell > .db-content,
-                body.user-mobile-shell #mob-content > .db-content) > .row {
-               margin-left: 0 !important;
-               margin-right: 0 !important;
-            }
-         }
-      </style>
       @include('mobile.partials.user-mobile-side-gutter')
    </head>
    <body class="user-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="user">
@@ -3292,7 +3238,7 @@
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=18" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=19" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {
@@ -4453,6 +4399,7 @@
       </style>
 
       @include('mobile.partials.user-theme-contrast')
+      @include('mobile.partials.user-mobile-side-gutter')
       <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')
       @include('mobile.partials.onboarding-fallback-init')

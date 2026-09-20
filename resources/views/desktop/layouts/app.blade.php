@@ -299,7 +299,7 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=8') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=18" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=19" defer></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>

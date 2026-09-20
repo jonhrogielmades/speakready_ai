@@ -14,12 +14,15 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserMasteryController;
 use App\Http\Controllers\UserMissionController;
 use App\Http\Controllers\UserVoiceDrillController;
+use App\Models\Category;
 use App\Services\LandingStatsService;
+use App\Services\QuestionDatasetProvider;
 use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
 use App\Support\QuestionSchema;
 use App\Support\ScoreSchema;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 
@@ -84,10 +87,22 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/interview/setup', function () {
-        InterviewSessionSchema::ensure();
-        QuestionSchema::ensure();
-        InterviewAnswerSchema::ensure();
-        ScoreSchema::ensure();
+        $ensureInterviewSetupSchema = static function (): void {
+            if (! app()->runningUnitTests() && Cache::get('interview_setup.schema_verified.v1')) {
+                return;
+            }
+
+            InterviewSessionSchema::ensure();
+            QuestionSchema::ensure();
+            InterviewAnswerSchema::ensure();
+            ScoreSchema::ensure();
+
+            if (! app()->runningUnitTests()) {
+                Cache::put('interview_setup.schema_verified.v1', true, now()->addHours(6));
+            }
+        };
+
+        $ensureInterviewSetupSchema();
 
         $isSupportedInterviewCategory = function ($category): bool {
             $title = strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title)) ?? ''));
@@ -107,16 +122,21 @@ Route::middleware(['auth', 'user'])->group(function () {
                 || str_contains($title, 'general job');
         };
 
-        $categories = Schema::hasTable('categories')
-            ? \App\Models\Category::where('status', 'active')
+        $loadCategories = static fn () => Category::where('status', 'active')
                 ->where('type', 'core')
+                ->select(['id', 'title', 'status', 'type', 'sort_order'])
                 ->orderBy('sort_order')
                 ->orderBy('title')
                 ->get()
                 ->filter($isSupportedInterviewCategory)
-                ->values()
+                ->values();
+
+        $categories = Schema::hasTable('categories')
+            ? (app()->runningUnitTests()
+                ? $loadCategories()
+                : Cache::remember(Category::INTERVIEW_SETUP_CACHE_KEY, now()->addMinutes(5), $loadCategories))
             : collect();
-        $sourceDatasets = \App\Services\QuestionDatasetProvider::all();
+        $sourceDatasets = QuestionDatasetProvider::all();
         $targetScopes = config('speakready_scope');
 
         return mobile_view('interview.setup', compact('categories', 'sourceDatasets', 'targetScopes'));

@@ -326,7 +326,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('height: var(--sr-visual-vh) !important', false)
             ->assertSee('css/mobile/style.css?v=32', false)
             ->assertSee('js/main.js?v=7', false)
-            ->assertSee('js/user-ui.js?v=18', false);
+            ->assertSee('js/user-ui.js?v=19', false);
     }
 
     public function test_user_mobile_shell_does_not_render_quick_navigation_launcher(): void
