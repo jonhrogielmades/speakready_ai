@@ -3218,18 +3218,28 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 }
 
 .module-position-modal .modal-header {
-    position: relative;
-    padding-right: 58px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42px;
+    align-items: start;
+    gap: 12px;
+    padding-right: 16px;
+}
+
+.module-position-modal .modal-header > div {
+    min-width: 0;
+    max-width: 100%;
 }
 
 .module-position-modal .module-position-close {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    min-height: 38px;
+    position: static;
+    justify-self: end;
+    box-sizing: border-box;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    margin: 0;
+    padding: 0;
     border-radius: 12px;
     background-color: var(--bg3);
     border: 1px solid var(--bd);
@@ -3242,6 +3252,9 @@ body.dm #interview-modules-page .module-search-input::placeholder,
     font-size: 1.1rem;
     font-weight: 950;
     line-height: 1.2;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .module-position-modal .form-label {

@@ -206,6 +206,20 @@
                                  'text' => 'Set details, structure, access, scenario, and response settings before starting a tailored session.',
                               ],
                               [
+                                 'image' => 'img/desktop-preview/desktop-preview-practice-plan.png',
+                                 'alt' => 'SpeakReady AI desktop personalized practice plan preview',
+                                 'kicker' => 'Practice Plan',
+                                 'title' => 'Follow a personalized practice path.',
+                                 'text' => 'Review AI recommendations, next steps, and focused practice actions based on your latest interview activity.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/desktop-preview-practice-calendar.png',
+                                 'alt' => 'SpeakReady AI desktop activity calendar preview',
+                                 'kicker' => 'Activity Calendar',
+                                 'title' => 'Track practice days and streaks.',
+                                 'text' => 'See recent interview activity, active days, weekly progress, and recorded practice sessions in one calendar view.',
+                              ],
+                              [
                                  'image' => 'img/desktop-preview/desktop-preview-modules.png',
                                  'alt' => 'SpeakReady AI desktop interview modules preview',
                                  'kicker' => 'Modules',
@@ -228,7 +242,7 @@
                               ],
                               [
                                  'image' => 'img/desktop-preview/desktop-preview-progress.png',
-                                 'alt' => 'SpeakReady AI desktop progress preview',
+                                 'alt' => 'SpeakReady AI desktop interview progress preview',
                                  'kicker' => 'Progress',
                                  'title' => 'Track growth across practice.',
                                  'text' => 'Review streaks, AI insights, practice plans, and export actions from the progress workspace.',
@@ -835,71 +849,71 @@
                   <div class="col-md-3 col-sm-6 rv">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#2563eb;--feature-icon-bg:rgba(37,99,235,.14);--feature-icon-border:rgba(37,99,235,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-gauge-high fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Dashboard Overview</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Monitor readiness scores, recent sessions, learning progress, and AI feedback summaries from one home base.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Overview Dashboard</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">See readiness, recent sessions, skill radar, trends, and next actions from one workspace.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.05s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#10b981;--feature-icon-bg:rgba(16,185,129,.14);--feature-icon-border:rgba(16,185,129,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">AI Mock Interviews</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Practice with a realistic AI interviewer using role, category, difficulty, focus, and timed question settings.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Interview Practice</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Start AI mock interviews with category, role, scenario, response mode, and timed practice settings.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#f59e0b;--feature-icon-bg:rgba(245,158,11,.14);--feature-icon-border:rgba(245,158,11,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-file-lines fa-lg"></i></div>
-                         <h3 class="fs-6 fw-bold mb-2">Job Evidence Mapping</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Compare your resume and role details to focus practice on the skills a job asks for.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#14b8a6;--feature-icon-bg:rgba(20,184,166,.14);--feature-icon-border:rgba(20,184,166,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-route fa-lg"></i></div>
+                         <h3 class="fs-6 fw-bold mb-2">Practice Plan</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Follow AI recommendations, next steps, and focused practice actions after each session.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ef4444;--feature-icon-bg:rgba(239,68,68,.14);--feature-icon-border:rgba(239,68,68,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-book-open-reader fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Interview Modules</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Study structured modules with chapters, resources, quizzes, and practice activities tied to interview skills.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#f59e0b;--feature-icon-bg:rgba(245,158,11,.14);--feature-icon-border:rgba(245,158,11,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-regular fa-calendar-days fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Activity Calendar</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Track practice days, active streaks, weekly activity, and completed interview sessions.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.25s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ec4899;--feature-icon-bg:rgba(236,72,153,.14);--feature-icon-border:rgba(236,72,153,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-gamepad fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Learning Games</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Complete challenge paths with levels, energy, lives, target tones, banned words, and score goals.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ef4444;--feature-icon-bg:rgba(239,68,68,.14);--feature-icon-border:rgba(239,68,68,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-book-open-reader fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Modules</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Open guided lessons, learning paths, topic filters, resources, quizzes, and practice activities.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#06b6d4;--feature-icon-bg:rgba(6,182,212,.14);--feature-icon-border:rgba(6,182,212,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-robot fa-lg"></i></div>
-                         <h3 class="fs-6 fw-bold mb-2">AI Practice Coach</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Get focused prep guidance, score explanations, and grounded advice without invented achievements.</p>
+                         <h3 class="fs-6 fw-bold mb-2">AI Coach</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Ask for focused prep help, score explanations, resume guidance, and next-step coaching.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.35s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#22c55e;--feature-icon-bg:rgba(34,197,94,.14);--feature-icon-border:rgba(34,197,94,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Feedback Center</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">See evidence-linked rubrics, score confidence, fact-grounded revision templates, and targeted follow-ups.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ec4899;--feature-icon-bg:rgba(236,72,153,.14);--feature-icon-border:rgba(236,72,153,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-trophy fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Challenges</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Build skill through challenge journeys with levels, XP, lives, streaks, and score goals.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.4s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#3b82f6;--feature-icon-bg:rgba(59,130,246,.14);--feature-icon-border:rgba(59,130,246,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-chart-line fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Progress Tracking</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Visualize readiness, STAR structure, skill breakdowns, learning progress, and practice consistency.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Progress</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Review readiness trends, practice streaks, AI insights, and completed interview activity.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.45s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#0ea5e9;--feature-icon-bg:rgba(14,165,233,.14);--feature-icon-border:rgba(14,165,233,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-folder-open fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Reports &amp; Sharing</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Print detailed reviews and create expiring, password-protected links with reviewer permissions.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#22c55e;--feature-icon-bg:rgba(34,197,94,.14);--feature-icon-border:rgba(34,197,94,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Feedback</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Review coaching summaries, answer feedback, priority recommendations, and searchable history.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#6366f1;--feature-icon-bg:rgba(99,102,241,.14);--feature-icon-border:rgba(99,102,241,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-network-wired fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Skill Trees</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Earn leadership, communication, technical, and problem-solving XP, then unlock perks as you improve.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#6366f1;--feature-icon-bg:rgba(99,102,241,.14);--feature-icon-border:rgba(99,102,241,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-file-lines fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Reports</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Open scored interview reports, review summaries, and export or share practice results.</p>
                      </div>
                   </div>
                </div>

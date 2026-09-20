@@ -2988,17 +2988,22 @@
 
          @media (max-width: 420px) {
             body.user-mobile-shell #mob-header #mobFullscreenBtn {
-               display: none !important;
+               display: inline-flex !important;
             }
 
             body.user-mobile-shell #mob-header .mob-header-brand-pill {
-               width: 132px !important;
+               width: clamp(54px, calc(100vw - 261px), 132px) !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
+               overflow: hidden !important;
+               text-overflow: ellipsis !important;
             }
          }
 
          @media (max-width: 380px) {
             body.user-mobile-shell #mob-header .mob-header-brand-pill {
-               width: 132px !important;
+               width: clamp(54px, calc(100vw - 261px), 118px) !important;
             }
 
             body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
@@ -3238,7 +3243,7 @@
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=19" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=20" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {

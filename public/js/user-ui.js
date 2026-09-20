@@ -690,6 +690,10 @@
         return document.fullscreenElement || null;
     }
 
+    function userFullscreenActive() {
+        return Boolean(fullscreenElement()) || Boolean(userApp.fullscreenFallbackActive);
+    }
+
     function setupUserFullscreen() {
         if (userApp.fullscreenInitialized) {
             updateFullscreenButtons();
@@ -698,9 +702,11 @@
 
         userApp.fullscreenInitialized = true;
         userApp.fullscreenBusy = false;
+        userApp.fullscreenFallbackActive = Boolean(userApp.fullscreenFallbackActive);
 
         document.addEventListener('click', function (event) {
-            var button = event.target.closest('[data-user-fullscreen-toggle], #dbFullscreenBtn, #mobFullscreenBtn');
+            var target = event.target instanceof Element ? event.target : (event.target ? event.target.parentElement : null);
+            var button = target && target.closest ? target.closest('[data-user-fullscreen-toggle], #dbFullscreenBtn, #mobFullscreenBtn') : null;
             if (!button) return;
 
             event.preventDefault();
@@ -708,7 +714,10 @@
             toggleUserFullscreen(button);
         });
 
-        document.addEventListener('fullscreenchange', updateFullscreenButtons);
+        document.addEventListener('fullscreenchange', function () {
+            userApp.fullscreenFallbackActive = false;
+            updateFullscreenButtons();
+        });
         updateFullscreenButtons();
     }
 
@@ -743,25 +752,32 @@
         var root = document.documentElement;
         var canEnter = typeof root.requestFullscreen === 'function';
         var canExit = typeof document.exitFullscreen === 'function';
-
-        if (!fullscreenElement() && !canEnter) {
-            console.warn('Fullscreen API is not supported in this browser.');
-            showSafeNavigationStatus('Fullscreen is not supported in this browser.');
-            updateFullscreenButtons();
-            return;
-        }
+        var browserFullscreen = Boolean(fullscreenElement());
+        var fallbackFullscreen = Boolean(userApp.fullscreenFallbackActive);
 
         userApp.fullscreenBusy = true;
         button.setAttribute('aria-busy', 'true');
 
         try {
-            if (fullscreenElement()) {
-                if (canExit) {
+            if (browserFullscreen || fallbackFullscreen) {
+                userApp.fullscreenFallbackActive = false;
+                if (browserFullscreen && canExit) {
                     await document.exitFullscreen();
                 }
                 rememberFullscreenPreference(false);
             } else {
-                await root.requestFullscreen();
+                var browserEntered = false;
+
+                if (canEnter) {
+                    try {
+                        await root.requestFullscreen({ navigationUI: 'hide' });
+                        browserEntered = Boolean(fullscreenElement());
+                    } catch (error) {
+                        console.warn('Browser fullscreen request failed; using app fullscreen mode:', error);
+                    }
+                }
+
+                userApp.fullscreenFallbackActive = !browserEntered;
                 rememberFullscreenPreference(true);
             }
             refreshFullscreenLayouts();
@@ -784,13 +800,14 @@
     }
 
     function updateFullscreenButtons() {
-        var isFullscreen = Boolean(fullscreenElement());
+        var isFullscreen = userFullscreenActive();
         document.body.classList.toggle('user-app-fullscreen', isFullscreen);
         refreshFullscreenLayouts();
 
         document.querySelectorAll('[data-user-fullscreen-toggle], #dbFullscreenBtn, #mobFullscreenBtn').forEach(function (button) {
             button.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen');
             button.setAttribute('title', isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen');
+            button.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
         });
 
         ['dbFullscreenIcon', 'mobFullscreenIcon'].forEach(function (id) {

@@ -420,5 +420,5 @@
         }
     </style>
 
-    <script src="{{ asset('js/user-ui.js') }}?v=19" defer></script>
+    <script src="{{ asset('js/user-ui.js') }}?v=20" defer></script>
 @endonce

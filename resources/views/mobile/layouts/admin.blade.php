@@ -239,6 +239,26 @@
             -webkit-tap-highlight-color: transparent;
          }
 
+         body.admin-mobile-shell.user-app-fullscreen {
+            height: var(--sr-visual-vh);
+            min-height: var(--sr-visual-vh);
+            overflow: hidden !important;
+            overscroll-behavior: none;
+         }
+
+         body.admin-mobile-shell.user-app-fullscreen #dashboard,
+         body.admin-mobile-shell.user-app-fullscreen .db-main,
+         body.admin-mobile-shell.user-app-fullscreen #mob-content {
+            height: var(--sr-visual-vh) !important;
+            min-height: var(--sr-visual-vh) !important;
+         }
+
+         body.admin-mobile-shell.user-app-fullscreen #mob-content {
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+         }
+
          /* ---- Page Content ---- */
          #mob-content {
             padding-top: calc(var(--mob-top-h) + var(--mob-safe-top));
@@ -1587,6 +1607,9 @@
                     </div>
                 </div>
             </div>
+            <button class="mob-icon-btn" id="mobFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" data-user-fullscreen-toggle>
+               <i class="fa-solid fa-expand" id="mobFullscreenIcon"></i>
+            </button>
             <button class="mob-icon-btn" onclick="toggleTheme()" title="Toggle theme">
                <i class="fa-solid fa-sun" id="mobSunI" style="display:none"></i>
                <i class="fa-solid fa-moon" id="mobMoonI"></i>
@@ -2636,6 +2659,7 @@
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <script src="{{ asset('js/main.js?v=7') }}"></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=20" defer></script>
 
       <script>
          function toggleMobileProfile(e, mode = 'pages') {

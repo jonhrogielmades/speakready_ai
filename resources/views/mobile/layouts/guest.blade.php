@@ -217,8 +217,6 @@
                               @php
                                  $mobilePreviewSlides = [
                                     [
-                                       'image' => 'img/mobile-preview-home-shell.png',
-                                       'alt' => 'SpeakReady AI mobile home preview',
                                        'kicker' => 'Dashboard Overview',
                                        'title' => 'See your readiness at a glance.',
                                        'text' => 'Track your interview progress, practice streak, rating, and next goal from one clean mobile dashboard.',
@@ -229,8 +227,6 @@
                                        ],
                                     ],
                                     [
-                                       'image' => 'img/mobile-preview-progress-shell.png',
-                                       'alt' => 'SpeakReady AI mobile progress preview',
                                        'kicker' => 'Progress Tracking',
                                        'title' => 'Know what to improve next.',
                                        'text' => 'Review your streak, exported reports, AI insights, and a simple practice plan made for your interview growth.',
@@ -241,8 +237,6 @@
                                        ],
                                     ],
                                     [
-                                       'image' => 'img/mobile-preview-setup-shell.png',
-                                       'alt' => 'SpeakReady AI mobile interview setup preview',
                                        'kicker' => 'Interview Setup',
                                        'title' => 'Configure a focused mock interview.',
                                        'text' => 'Set your practice scenario, target position, and interview details before starting a tailored session.',
@@ -253,8 +247,6 @@
                                        ],
                                     ],
                                     [
-                                       'image' => 'img/mobile-preview-feedback-center-shell.png',
-                                       'alt' => 'SpeakReady AI mobile feedback center preview',
                                        'kicker' => 'Feedback Center',
                                        'title' => 'Review coaching feedback after practice.',
                                        'text' => 'Browse feedback summaries, priority recommendations, answer coaching, and history from the mobile shell.',
@@ -265,8 +257,6 @@
                                        ],
                                     ],
                                     [
-                                       'image' => 'img/mobile-preview-modules-shell.png',
-                                       'alt' => 'SpeakReady AI mobile interview modules preview',
                                        'kicker' => 'Interview Modules',
                                        'title' => 'Explore guided preparation modules.',
                                        'text' => 'Open learning paths and recommended lessons that keep interview preparation organized by topic.',
@@ -277,8 +267,6 @@
                                        ],
                                     ],
                                     [
-                                       'image' => 'img/mobile-preview-challenges-shell.png',
-                                       'alt' => 'SpeakReady AI mobile interview challenges preview',
                                        'kicker' => 'Interview Challenges',
                                        'title' => 'Build skill through challenge journeys.',
                                        'text' => 'Complete gamified interview challenges with goals, question sets, skill rewards, and progress stats.',
@@ -289,8 +277,6 @@
                                        ],
                                     ],
                                     [
-                                       'image' => 'img/mobile-preview-readiness-coach-shell.png',
-                                       'alt' => 'SpeakReady AI mobile readiness coach preview',
                                        'kicker' => 'AI Coach',
                                        'title' => 'Ask for focused interview help.',
                                        'text' => 'Use the coach chat for interview, resume, certificate, and practice guidance while keeping claims truthful.',
@@ -301,8 +287,6 @@
                                        ],
                                     ],
                                     [
-                                       'image' => 'img/mobile-preview-reports-shell.png',
-                                       'alt' => 'SpeakReady AI mobile interview reports preview',
                                        'kicker' => 'Interview Reports',
                                        'title' => 'Review and export interview reports.',
                                        'text' => 'See report availability, start a scored interview, and access export actions from the mobile report screen.',
@@ -313,8 +297,6 @@
                                        ],
                                     ],
                                     [
-                                       'image' => 'img/mobile-preview-notifications-shell.png',
-                                       'alt' => 'SpeakReady AI mobile notifications preview',
                                        'kicker' => 'Notifications',
                                        'title' => 'Stay current on activity and alerts.',
                                        'text' => 'View notification states and recent account activity in a mobile-friendly timeline.',
@@ -325,8 +307,6 @@
                                        ],
                                     ],
                                     [
-                                       'image' => 'img/mobile-preview-account-shell.png',
-                                       'alt' => 'SpeakReady AI mobile account management preview',
                                        'kicker' => 'Account Management',
                                        'title' => 'Manage profile and security settings.',
                                        'text' => 'Update profile details, target role, profile photo, and password fields from the mobile account screen.',
@@ -340,17 +320,7 @@
                               @endphp
                               <div class="swiper-wrapper">
                                  @foreach($mobilePreviewSlides as $slide)
-                                    @php
-                                       $shouldPreloadPreviewImage = $loop->first || $loop->iteration === 2 || $loop->last;
-                                    @endphp
                                     <div class="swiper-slide mobile-preview-image-slide">
-                                       <img class="mobile-preview-shell-img"
-                                            src="{{ $shouldPreloadPreviewImage ? asset($slide['image']) : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==' }}"
-                                            @unless($shouldPreloadPreviewImage) data-src="{{ asset($slide['image']) }}" @endunless
-                                            data-preview-index="{{ $loop->index }}"
-                                            alt="{{ $slide['alt'] }}"
-                                            loading="{{ $loop->first ? 'eager' : 'lazy' }}"
-                                            decoding="async">
                                        <div class="mobile-preview-copy">
                                           <div class="mobile-preview-copy-kicker"><span>{{ $loop->iteration }}</span> {{ $slide['kicker'] }}</div>
                                           <h3 class="mobile-preview-copy-title">{{ $slide['title'] }}</h3>
@@ -900,71 +870,71 @@
                   <div class="col-md-3 col-sm-6 rv swiper-slide">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#2563eb;--feature-icon-bg:rgba(37,99,235,.14);--feature-icon-border:rgba(37,99,235,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-gauge-high fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Dashboard Overview</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Monitor readiness scores, recent sessions, learning progress, and AI feedback summaries from one home base.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Overview Dashboard</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">See readiness, recent sessions, skill radar, trends, and next actions from one workspace.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.05s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#10b981;--feature-icon-bg:rgba(16,185,129,.14);--feature-icon-border:rgba(16,185,129,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">AI Mock Interviews</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Practice with a realistic AI interviewer using role, category, difficulty, focus, and timed question settings.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Interview Practice</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Start AI mock interviews with category, role, scenario, response mode, and timed practice settings.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#f59e0b;--feature-icon-bg:rgba(245,158,11,.14);--feature-icon-border:rgba(245,158,11,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-file-lines fa-lg"></i></div>
-                         <h3 class="fs-6 fw-bold mb-2">Job Evidence Mapping</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Compare your resume and role details to focus practice on the skills a job asks for.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#14b8a6;--feature-icon-bg:rgba(20,184,166,.14);--feature-icon-border:rgba(20,184,166,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-route fa-lg"></i></div>
+                         <h3 class="fs-6 fw-bold mb-2">Practice Plan</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Follow AI recommendations, next steps, and focused practice actions after each session.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ef4444;--feature-icon-bg:rgba(239,68,68,.14);--feature-icon-border:rgba(239,68,68,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-book-open-reader fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Interview Modules</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Study structured modules with chapters, resources, quizzes, and practice activities tied to interview skills.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#f59e0b;--feature-icon-bg:rgba(245,158,11,.14);--feature-icon-border:rgba(245,158,11,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-regular fa-calendar-days fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Activity Calendar</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Track practice days, active streaks, weekly activity, and completed interview sessions.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.25s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ec4899;--feature-icon-bg:rgba(236,72,153,.14);--feature-icon-border:rgba(236,72,153,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-gamepad fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Learning Games</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Complete challenge paths with levels, energy, lives, target tones, banned words, and score goals.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ef4444;--feature-icon-bg:rgba(239,68,68,.14);--feature-icon-border:rgba(239,68,68,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-book-open-reader fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Modules</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Open guided lessons, learning paths, topic filters, resources, quizzes, and practice activities.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#06b6d4;--feature-icon-bg:rgba(6,182,212,.14);--feature-icon-border:rgba(6,182,212,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-robot fa-lg"></i></div>
-                         <h3 class="fs-6 fw-bold mb-2">AI Practice Coach</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Get focused prep guidance, score explanations, and grounded advice without invented achievements.</p>
+                         <h3 class="fs-6 fw-bold mb-2">AI Coach</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Ask for focused prep help, score explanations, resume guidance, and next-step coaching.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.35s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#22c55e;--feature-icon-bg:rgba(34,197,94,.14);--feature-icon-border:rgba(34,197,94,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Feedback Center</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">See evidence-linked rubrics, score confidence, fact-grounded revision templates, and targeted follow-ups.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ec4899;--feature-icon-bg:rgba(236,72,153,.14);--feature-icon-border:rgba(236,72,153,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-trophy fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Challenges</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Build skill through challenge journeys with levels, XP, lives, streaks, and score goals.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.4s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#3b82f6;--feature-icon-bg:rgba(59,130,246,.14);--feature-icon-border:rgba(59,130,246,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-chart-line fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Progress Tracking</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Visualize readiness, STAR structure, skill breakdowns, learning progress, and practice consistency.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Progress</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Review readiness trends, practice streaks, AI insights, and completed interview activity.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.45s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#0ea5e9;--feature-icon-bg:rgba(14,165,233,.14);--feature-icon-border:rgba(14,165,233,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-folder-open fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Reports &amp; Sharing</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Print detailed reviews and create expiring, password-protected links with reviewer permissions.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#22c55e;--feature-icon-bg:rgba(34,197,94,.14);--feature-icon-border:rgba(34,197,94,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Feedback</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Review coaching summaries, answer feedback, priority recommendations, and searchable history.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#6366f1;--feature-icon-bg:rgba(99,102,241,.14);--feature-icon-border:rgba(99,102,241,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-network-wired fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Skill Trees</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Earn leadership, communication, technical, and problem-solving XP, then unlock perks as you improve.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#6366f1;--feature-icon-bg:rgba(99,102,241,.14);--feature-icon-border:rgba(99,102,241,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-file-lines fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Reports</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Open scored interview reports, review summaries, and export or share practice results.</p>
                      </div>
                   </div>
                   </div>

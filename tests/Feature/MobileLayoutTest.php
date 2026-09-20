@@ -149,6 +149,10 @@ class MobileLayoutTest extends TestCase
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
             ->assertSee('css/mobile/admin/dashboard.css?v=3', false)
+            ->assertSee('id="mobFullscreenBtn"', false)
+            ->assertSee('data-user-fullscreen-toggle', false)
+            ->assertSee('js/user-ui.js?v=20', false)
+            ->assertSee('body.admin-mobile-shell.user-app-fullscreen #mob-content', false)
             ->assertSee('grid-template-columns: repeat(5, minmax(0, 1fr));', false)
             ->assertSee('max-width: min(42vw, 12rem);', false)
             ->assertDontSee('class="db-sidebar"', false);
@@ -324,9 +328,19 @@ class MobileLayoutTest extends TestCase
             ->assertSee('data-user-fullscreen-toggle', false)
             ->assertSee('body.mobile-shell.user-app-fullscreen #mob-content', false)
             ->assertSee('height: var(--sr-visual-vh) !important', false)
-            ->assertSee('css/mobile/style.css?v=32', false)
+            ->assertSee('css/mobile/style.css?v=33', false)
             ->assertSee('js/main.js?v=7', false)
-            ->assertSee('js/user-ui.js?v=19', false);
+            ->assertSee('js/user-ui.js?v=20', false)
+            ->assertSee('body.user-mobile-shell #mob-header #mobFullscreenBtn', false)
+            ->assertSee('display: inline-flex !important;', false)
+            ->assertDontSee('body.user-mobile-shell #mob-header #mobFullscreenBtn {
+               display: none !important;', false);
+
+        $fullscreenScript = file_get_contents(public_path('js/user-ui.js'));
+
+        $this->assertStringContainsString('userApp.fullscreenFallbackActive', $fullscreenScript);
+        $this->assertStringContainsString("root.requestFullscreen({ navigationUI: 'hide' })", $fullscreenScript);
+        $this->assertStringContainsString("button.setAttribute('aria-pressed'", $fullscreenScript);
     }
 
     public function test_user_mobile_shell_does_not_render_quick_navigation_launcher(): void
