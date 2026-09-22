@@ -2415,7 +2415,7 @@
             /* Final SaaSPro topbar and mobile navigation polish. */
             :root {
                --mob-top-h: 64px;
-               --mob-nav-h: 74px;
+               --mob-nav-h: 112px;
                --mob-nav-overlap: 0px;
             }
 
@@ -2538,48 +2538,67 @@
             }
 
             #mob-bottom-nav {
-               --mob-dock-bg: #0f172a;
-               --mob-dock-surface: var(--mob-dock-bg);
-               --mob-dock-border: rgba(148, 163, 184, 0.22);
-               --mob-dock-text: #94a3b8;
-               --mob-dock-active: #dbeafe;
-               --mob-dock-accent: #60a5fa;
-               --mob-dock-active-bg: rgba(37, 99, 235, 0.22);
-               --mob-dock-active-shadow: 0 8px 20px rgba(2, 6, 23, 0.22);
-               --mob-dock-primary: #2563eb;
-               --mob-dock-primary-2: #1d4ed8;
-               height: calc(var(--mob-nav-h) + var(--mob-safe-bottom)) !important;
-               padding: 0 0 var(--mob-safe-bottom) !important;
+               --mob-dock-bg: transparent;
+               --mob-dock-surface: #ffffff;
+               --mob-dock-border: rgba(96, 165, 250, 0.52);
+               --mob-dock-text: #64748b;
+               --mob-dock-active: #076dff;
+               --mob-dock-accent: #0b78ff;
+               --mob-dock-primary: #0066ff;
+               --mob-dock-primary-2: #04a8ff;
+               --mob-dock-fab-ring: rgba(255, 255, 255, 0.96);
+               --mob-dock-height: 98px;
+               --mob-dock-bar-top: 34px;
+               --mob-dock-radius: 34px;
+               --mob-dock-fab-size: 72px;
+               left: max(10px, env(safe-area-inset-left, 0px)) !important;
+               right: max(10px, env(safe-area-inset-right, 0px)) !important;
+               bottom: calc(16px + var(--mob-safe-bottom)) !important;
+               width: auto !important;
+               max-width: 680px !important;
+               height: var(--mob-dock-height) !important;
+               margin: 0 auto !important;
+               padding: 0 !important;
                background: transparent !important;
                border-top: 0 !important;
+               border-radius: 0 !important;
                box-shadow: none !important;
+               backdrop-filter: none !important;
+               -webkit-backdrop-filter: none !important;
                overflow: visible !important;
+               pointer-events: none !important;
             }
 
             .lm #mob-bottom-nav {
-               --mob-dock-bg: #ffffff;
-               --mob-dock-surface: var(--mob-dock-bg);
-               --mob-dock-border: rgba(226, 232, 240, 0.95);
-               --mob-dock-text: #8b96a5;
-               --mob-dock-active: #1f6fff;
-               --mob-dock-accent: #2563eb;
-               --mob-dock-active-bg: #eef7ff;
-               --mob-dock-active-shadow: 0 9px 22px rgba(37, 99, 235, 0.1);
-               --mob-dock-primary: #2563eb;
-               --mob-dock-primary-2: #1d6df2;
+               --mob-dock-bg: transparent;
+               --mob-dock-surface: #ffffff;
+               --mob-dock-border: rgba(96, 165, 250, 0.52);
+               --mob-dock-text: #64748b;
+               --mob-dock-active: #076dff;
+               --mob-dock-accent: #0b78ff;
+               --mob-dock-primary: #0066ff;
+               --mob-dock-primary-2: #04a8ff;
+               --mob-dock-fab-ring: rgba(255, 255, 255, 0.96);
+               background: transparent !important;
+               border-top: 0 !important;
+               box-shadow: none !important;
+               backdrop-filter: none !important;
+               -webkit-backdrop-filter: none !important;
             }
 
             #mob-bottom-nav::before {
-               top: 0 !important;
+               content: "" !important;
+               position: absolute !important;
+               left: 50% !important;
+               top: 2px !important;
+               width: calc(var(--mob-dock-fab-size) + 10px) !important;
+               height: calc(var(--mob-dock-fab-size) + 10px) !important;
+               border-radius: 50% !important;
+               transform: translateX(-50%) !important;
+               background: transparent !important;
+               box-shadow: none !important;
+               pointer-events: none !important;
                z-index: 1 !important;
-               background:
-                  linear-gradient(
-                     90deg,
-                     transparent 0,
-                     var(--mob-dock-border) 12px,
-                     var(--mob-dock-border) calc(100% - 12px),
-                     transparent 100%
-                  ) !important;
             }
 
             #mob-bottom-nav::after {
@@ -2588,10 +2607,14 @@
                left: 0 !important;
                right: 0 !important;
                bottom: 0 !important;
-               height: calc(var(--mob-nav-h) + var(--mob-safe-bottom)) !important;
+               top: var(--mob-dock-bar-top) !important;
+               height: auto !important;
                background: var(--mob-dock-surface) !important;
-               border-top: 0 !important;
-               box-shadow: none !important;
+               border: 1px solid var(--mob-dock-border) !important;
+               border-radius: var(--mob-dock-radius) !important;
+               box-shadow:
+                  0 10px 24px rgba(37, 99, 235, 0.14),
+                  0 18px 20px rgba(14, 165, 233, 0.1) !important;
                backdrop-filter: none !important;
                -webkit-backdrop-filter: none !important;
                pointer-events: none !important;
@@ -2599,22 +2622,27 @@
             }
 
             .lm #mob-bottom-nav::after {
-               box-shadow: none !important;
+               background: var(--mob-dock-surface) !important;
+               box-shadow:
+                  0 10px 24px rgba(37, 99, 235, 0.12),
+                  0 18px 20px rgba(14, 165, 233, 0.08) !important;
             }
 
             .mob-nav-items {
                display: grid !important;
-               grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+               grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 78px minmax(0, 1fr) minmax(0, 1fr) !important;
                width: 100% !important;
-               max-width: 540px !important;
+               max-width: none !important;
                height: 100% !important;
                margin: 0 auto !important;
-               gap: 0 !important;
-               align-items: center !important;
-               padding: 0 max(10px, env(safe-area-inset-left, 0px)) 8px max(10px, env(safe-area-inset-right, 0px)) !important;
+               gap: 2px !important;
+               align-items: end !important;
+               padding: 0 14px 12px !important;
                position: relative !important;
                z-index: 2 !important;
                overflow: visible !important;
+               background: transparent !important;
+               pointer-events: auto !important;
             }
 
             .mob-nav-item:not(.mob-nav-primary) {
@@ -2623,24 +2651,26 @@
 
             .mob-nav-item {
                width: 100% !important;
-               height: 60px !important;
-               min-height: 60px !important;
-               padding: 7px 2px 6px !important;
+               height: 62px !important;
+               min-height: 62px !important;
+               padding: 6px 1px 7px !important;
                border: 0 !important;
-               border-radius: 20px !important;
+               border-radius: 24px !important;
                color: var(--mob-dock-text) !important;
-               font-size: 0.68rem !important;
+               font-size: clamp(0.66rem, 2.45vw, 0.78rem) !important;
                font-weight: 800 !important;
-               line-height: 1.08 !important;
+               line-height: 1.05 !important;
+               text-decoration: none !important;
                background: transparent !important;
-               align-self: center !important;
+               align-self: end !important;
                transform: none !important;
+               pointer-events: auto !important;
             }
 
             .mob-nav-icon {
-               width: 32px !important;
-               height: 32px !important;
-               border-radius: 10px !important;
+               width: 38px !important;
+               height: 30px !important;
+               border-radius: 0 !important;
                background: transparent !important;
                color: currentColor !important;
             }
@@ -2648,36 +2678,38 @@
             .mob-nav-icon i {
                color: inherit !important;
                -webkit-text-fill-color: currentColor !important;
-               font-size: 1.24rem !important;
+               font-size: clamp(1.18rem, 4.9vw, 1.55rem) !important;
             }
 
             .mob-nav-item > span:last-child {
-               max-width: 68px !important;
+               max-width: 76px !important;
                color: inherit !important;
-               font-size: 0.68rem !important;
-               line-height: 1.08 !important;
+               font-size: clamp(0.66rem, 2.45vw, 0.78rem) !important;
+               line-height: 1.05 !important;
                white-space: nowrap !important;
+               text-decoration: none !important;
             }
 
             .mob-nav-item.active {
-               background: var(--mob-dock-active-bg) !important;
+               background: transparent !important;
                color: var(--mob-dock-active) !important;
-               box-shadow: var(--mob-dock-active-shadow) !important;
+               box-shadow: none !important;
             }
 
             .mob-nav-item.active .mob-nav-icon {
                background: transparent !important;
                color: inherit !important;
+               box-shadow: none !important;
             }
 
             .mob-nav-primary {
-               height: 60px !important;
-               min-height: 60px !important;
-               padding: 7px 2px 6px !important;
-               gap: 4px !important;
-               align-self: center !important;
+               height: 98px !important;
+               min-height: 98px !important;
+               padding: 0 0 7px !important;
+               gap: 2px !important;
+               align-self: end !important;
                justify-content: center !important;
-               transform: none !important;
+               transform: translateY(0) !important;
                margin-top: 0 !important;
                color: var(--mob-dock-active) !important;
                background: transparent !important;
@@ -2687,48 +2719,51 @@
             }
 
             .mob-nav-primary-icon {
-               width: 32px !important;
-               height: 32px !important;
-               border: 0 !important;
+               width: var(--mob-dock-fab-size) !important;
+               height: var(--mob-dock-fab-size) !important;
+               border: 6px solid var(--mob-dock-fab-ring) !important;
                border-radius: 50% !important;
                display: flex !important;
                align-items: center !important;
                justify-content: center !important;
-               background: linear-gradient(180deg, var(--mob-dock-primary) 0%, var(--mob-dock-primary-2) 100%) !important;
+               background: radial-gradient(circle at 48% 20%, #1577ff 0%, var(--mob-dock-primary) 48%, var(--mob-dock-primary-2) 100%) !important;
                color: #ffffff !important;
                box-shadow:
-                  0 7px 14px rgba(37, 99, 235, 0.28),
-                  0 0 0 1px rgba(96, 165, 250, 0.2),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
+                  0 0 0 1px rgba(147, 197, 253, 0.72),
+                  inset 0 2px 0 rgba(255, 255, 255, 0.24) !important;
                margin-bottom: 0 !important;
                position: relative !important;
                z-index: 4 !important;
             }
 
+            .lm .mob-nav-primary-icon {
+               border-color: var(--mob-dock-fab-ring) !important;
+            }
+
             .mob-nav-primary-icon i {
                color: #ffffff !important;
                -webkit-text-fill-color: #ffffff !important;
-               font-size: 1.24rem !important;
+               font-size: clamp(1.42rem, 5.7vw, 1.92rem) !important;
             }
 
             .mob-nav-primary > span:last-child {
-               max-width: 78px !important;
+               max-width: 82px !important;
                margin-top: 0 !important;
                color: var(--mob-dock-active) !important;
                -webkit-text-fill-color: var(--mob-dock-active) !important;
-               font-size: 0.68rem !important;
+               font-size: clamp(0.68rem, 2.45vw, 0.8rem) !important;
                font-weight: 900 !important;
-               line-height: 1.08 !important;
-               text-shadow: 0 1px 0 var(--mob-dock-bg), 0 2px 5px rgba(37, 99, 235, 0.16) !important;
+               line-height: 1.05 !important;
+               text-decoration: none !important;
+               text-shadow: none !important;
                position: relative !important;
                z-index: 5 !important;
             }
 
             .mob-nav-primary.active .mob-nav-primary-icon {
                box-shadow:
-                  0 8px 16px rgba(37, 99, 235, 0.34),
-                  0 0 0 1px rgba(96, 165, 250, 0.26),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+                  0 0 0 1px rgba(147, 197, 253, 0.78),
+                  inset 0 2px 0 rgba(255, 255, 255, 0.28) !important;
             }
 
             .mob-nav-primary:active .mob-nav-primary-icon {
@@ -3197,7 +3232,8 @@
             </a>
             <a href="{{ route('interview.setup') }}"
                class="mob-nav-item mob-nav-primary {{ request()->routeIs('interview.*') ? 'active' : '' }}"
-               id="mobnav-interview">
+               id="mobnav-interview"
+               aria-label="Start interview practice">
                <span class="mob-nav-primary-icon"><i class="fa-solid fa-microphone"></i></span>
                <span>Interview</span>
             </a>
