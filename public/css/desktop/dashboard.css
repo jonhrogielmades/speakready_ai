@@ -790,16 +790,23 @@
     .sr-score-top {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         gap: 10px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
     }
 
     .sr-score-layout {
         display: grid;
-        grid-template-columns: minmax(128px, 0.9fr) minmax(128px, 1fr);
-        gap: 14px;
+        grid-template-columns: minmax(132px, 0.95fr) minmax(136px, 1.05fr);
+        gap: 16px;
         align-items: center;
+    }
+
+    .sr-score-primary {
+        min-width: 0;
+        display: grid;
+        justify-items: center;
+        align-content: center;
     }
 
     .sr-readiness-ring {
@@ -6922,6 +6929,7 @@
         }
 
         body.user-desktop-shell .sr-mobile-readiness-row > .sr-score-panel .sr-score-top {
+            flex-wrap: wrap;
             gap: 7px;
             margin-bottom: 10px;
         }
@@ -9223,7 +9231,7 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
     }
 
     body.user-desktop-shell:not(.admin-shell) .sr-section-actions {
-        justify-content: flex-start !important;
+        justify-content: center !important;
     }
 
     body.user-desktop-shell:not(.admin-shell) .sr-section-action {
@@ -9606,5 +9614,113 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
     body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-brief > div {
         min-height: 42px;
         padding: 7px 6px !important;
+    }
+}
+
+/* Desktop-only readiness panel composition. */
+@media (min-width: 992px) {
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel {
+        justify-content: space-between !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-top-desktop {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+        margin: 0 !important;
+        min-width: 0 !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-top-desktop .sr-status-pill,
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-top-desktop .sr-chip {
+        min-height: 28px !important;
+        padding: 6px 8px !important;
+        font-size: 0.62rem !important;
+        line-height: 1 !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-top-desktop .sr-boost-chip {
+        color: #0f766e !important;
+        background: rgba(20, 184, 166, 0.12) !important;
+        border: 1px solid rgba(20, 184, 166, 0.24) !important;
+    }
+
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-top-desktop .sr-boost-chip {
+        color: #5eead4 !important;
+        background: rgba(20, 184, 166, 0.14) !important;
+        border-color: rgba(94, 234, 212, 0.2) !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-layout {
+        width: 100% !important;
+        flex: 0 0 auto !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+        align-items: center !important;
+        align-content: center !important;
+        justify-items: center !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-primary {
+        width: 100% !important;
+        min-width: 0 !important;
+        display: grid !important;
+        justify-items: center !important;
+        gap: 8px !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-readiness-ring {
+        --ring-size: clamp(112px, 8vw, 128px) !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-value {
+        font-size: clamp(2rem, 2.8vw, 2.42rem) !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-ring-label {
+        font-size: 0.54rem !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-goal-card {
+        width: min(100%, 190px) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        min-height: 54px !important;
+        padding: 8px 10px !important;
+        border-radius: 9px !important;
+        background: var(--score-panel-soft, #f3f6ff) !important;
+        border: 1px solid rgba(226, 232, 240, 0.72) !important;
+    }
+
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-goal-card {
+        border-color: rgba(96, 165, 250, 0.14) !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-icon {
+        width: 28px !important;
+        height: 28px !important;
+        flex-basis: 28px !important;
+        border-radius: 9px !important;
+        font-size: 0.7rem !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-brief {
+        width: 100% !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+        margin-top: 0 !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-brief > div {
+        min-height: 42px !important;
+        padding: 7px 6px !important;
+        border-radius: 8px !important;
     }
 }

@@ -59,7 +59,7 @@
  if ($nextPractice === '') {
  $nextPractice = 'Try again with one clear example and one result.';
  }
- $betterAnswer = review_feedback_without_question_text((string) ($answer->better_sample_answer ?: 'No better example was generated for this response.'), $questionSource);
+ $betterAnswer = review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $questionSource);
  $rubricLevel = trim((string) ($answer->rubric_level ?? ''));
  $alignmentStatus = strtolower(str_replace([' ', '-'], '_', trim((string) ($contentAlignment['status'] ?? ''))));
  $scoreUnavailable = in_array($alignmentStatus, ['insufficient_evidence', 'not_evaluated', 'skipped'], true);

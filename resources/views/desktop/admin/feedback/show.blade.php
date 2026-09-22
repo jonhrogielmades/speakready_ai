@@ -91,7 +91,7 @@
                     <div class="mt-4">
                         <strong class="d-block mb-2 text-primary"><i class="fa-solid fa-shield-halved me-2"></i>Fact-Grounded Revision Template</strong>
                         <div class="p-3 rounded" style="background: rgba(59, 130, 246, 0.05); border: 1px dashed rgba(59, 130, 246, 0.3);">
-                            <p class="mb-0 fst-italic" style="color: var(--tx);">{{ $answer->better_sample_answer ?? 'N/A' }}</p>
+                            <p class="mb-0 fst-italic" style="color: var(--tx);">{{ review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $answer->question ?? $answer) }}</p>
                         </div>
                     </div>
                 </div>
@@ -203,4 +203,3 @@
     </div>
 </div>
 @endsection
-

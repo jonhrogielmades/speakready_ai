@@ -148,7 +148,7 @@
  @forelse($answerCoachingHighlights as $answerCoaching)
  <article class="feedback-answer-item">
  <div class="feedback-answer-top">
- <strong>Q{{ $answerCoaching->number }}: {{ $answerCoaching->question }}</strong>
+ <strong>{{ $answerCoaching->label ?? 'Answer '.$answerCoaching->number }}</strong>
  <span class="feedback-answer-score">{{ $answerCoaching->score === null? 'Pending': $answerCoaching->score.'%' }}</span>
  </div>
  <div class="feedback-answer-user">

@@ -385,27 +385,31 @@
 
                                   <div class="ui-mobile-wire-summary">
                                      <section class="ui-mobile-wire-card ui-mobile-wire-score">
-                                        <div class="ui-mobile-wire-card-title"><i class="fa-solid fa-arrow-trend-up"></i> Building Momentum</div>
-                                        <div class="ui-mobile-wire-ring">
-                                           <div>
-                                              <strong>0%</strong>
-                                              <span>Overall Readiness</span>
-                                           </div>
-                                        </div>
-                                        <div class="ui-mobile-wire-mini-list">
-                                           <div class="ui-mobile-wire-mini">
-                                              <div>
-                                                 <span>Average Rating</span>
-                                                 <strong>0/5</strong>
+                                        <div class="ui-mobile-wire-score-layout">
+                                           <div class="ui-mobile-wire-score-main">
+                                              <div class="ui-mobile-wire-card-title"><i class="fa-solid fa-arrow-trend-up"></i> Boost</div>
+                                              <div class="ui-mobile-wire-ring">
+                                                 <div>
+                                                    <strong>0%</strong>
+                                                    <span>Overall Readiness</span>
+                                                 </div>
                                               </div>
-                                              <i class="fa-regular fa-star"></i>
                                            </div>
-                                           <div class="ui-mobile-wire-mini">
-                                              <div>
-                                                 <span>Next Goal</span>
-                                                 <strong>50%</strong>
+                                           <div class="ui-mobile-wire-mini-list">
+                                              <div class="ui-mobile-wire-mini">
+                                                 <div>
+                                                    <span>Average Rating</span>
+                                                    <strong>0/5</strong>
+                                                 </div>
+                                                 <i class="fa-regular fa-star"></i>
                                               </div>
-                                              <i class="fa-solid fa-bullseye"></i>
+                                              <div class="ui-mobile-wire-mini">
+                                                 <div>
+                                                    <span>Next Goal</span>
+                                                    <strong>50%</strong>
+                                                 </div>
+                                                 <i class="fa-solid fa-bullseye"></i>
+                                              </div>
                                            </div>
                                         </div>
                                      </section>

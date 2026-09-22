@@ -790,16 +790,23 @@
     .sr-score-top {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         gap: 10px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
     }
 
     .sr-score-layout {
         display: grid;
-        grid-template-columns: minmax(128px, 0.9fr) minmax(128px, 1fr);
-        gap: 14px;
+        grid-template-columns: minmax(132px, 0.95fr) minmax(136px, 1.05fr);
+        gap: 16px;
         align-items: center;
+    }
+
+    .sr-score-primary {
+        min-width: 0;
+        display: grid;
+        justify-items: center;
+        align-content: center;
     }
 
     .sr-readiness-ring {
@@ -8532,9 +8539,10 @@ body.dm #card-skill-radar .sr-radar-locked-icon {
 
     body.user-mobile-shell #mob-content .sr-dashboard .sr-score-top {
         display: flex !important;
+        flex-wrap: wrap !important;
         justify-content: center !important;
         text-align: center !important;
-        margin-bottom: 14px !important;
+        margin-bottom: 12px !important;
     }
 
     body.user-mobile-shell #mob-content .sr-dashboard .sr-score-top .sr-status-pill,
@@ -8547,13 +8555,13 @@ body.dm #card-skill-radar .sr-radar-locked-icon {
 
     body.user-mobile-shell #mob-content .sr-dashboard .sr-score-layout {
         display: grid !important;
-        grid-template-columns: minmax(118px, 0.88fr) minmax(0, 1.12fr) !important;
-        gap: 14px !important;
+        grid-template-columns: minmax(112px, 0.92fr) minmax(0, 1.08fr) !important;
+        gap: 12px !important;
         align-items: center !important;
     }
 
     body.user-mobile-shell #mob-content .sr-dashboard .sr-readiness-ring {
-        --ring-size: clamp(118px, 35vw, 142px) !important;
+        --ring-size: clamp(108px, 32vw, 134px) !important;
     }
 
     body.user-mobile-shell #mob-content .sr-dashboard .sr-score-value {
@@ -8603,6 +8611,10 @@ body.dm #card-skill-radar .sr-radar-locked-icon {
         margin: 0 !important;
     }
 
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-readiness-card-grid {
+        margin: 0 !important;
+    }
+
     body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-card {
         min-height: 112px !important;
         padding: 12px !important;
@@ -8627,6 +8639,12 @@ body.dm #card-skill-radar .sr-radar-locked-icon {
 
     body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-value {
         font-size: clamp(1.22rem, 5vw, 1.44rem) !important;
+    }
+
+    body.user-mobile-shell #mob-content .sr-dashboard .sr-readiness-card-grid .sr-stat-value span {
+        color: var(--tx3, #64748b) !important;
+        font-size: 0.68rem !important;
+        margin-left: 1px !important;
     }
 
     body.user-mobile-shell #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-label {

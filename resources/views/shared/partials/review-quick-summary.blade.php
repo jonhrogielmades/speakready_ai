@@ -15,7 +15,7 @@
  }
 
  return array_slice(array_values(array_filter(array_map(
- fn ($item) => is_scalar($item) ? $limitText((string) $item, $textLimit) : '',
+ fn ($item) => is_scalar($item) ? $limitText(review_feedback_without_question_text((string) $item), $textLimit) : '',
  $items
  ))), 0, $limit);
  };
@@ -24,7 +24,7 @@
  $weaknessItems = $shortList($report['weakness_items'] ?? [], 3);
  $suggestionItems = $shortList($report['suggestion_items'] ?? [], 2, 150);
  $fallbackSummary = is_scalar($overview['summary'] ?? null)
- ? (string) $overview['summary']
+ ? review_feedback_without_question_text((string) $overview['summary'])
  : 'Feedback is ready. Review one focus area and practice again.';
  $fallbackFocusAdvice = is_scalar($overview['focus_advice'] ?? null)
  ? trim((string) $overview['focus_advice'])
@@ -49,7 +49,7 @@
  $primarySuggestion = $priorityAction
  ? trim((string) ($priorityAction['task'] ?? ''))
  : ($suggestionItems[0] ?? $fallbackFocusAdvice);
- $primarySuggestion = $limitText($primarySuggestion, 170);
+ $primarySuggestion = $limitText(review_feedback_without_question_text($primarySuggestion), 170);
  $primarySuggestionLabel = $priorityAction
  ? $feedbackReportSkillLabel($priorityAction['skill'] ?? null)
  : $fallbackFocusLabel;
@@ -145,11 +145,10 @@
  }
  $exampleAnswer = $answers->first(function ($answer) use ($answerText): bool {
  return ! (bool) ($answer->is_skipped ?? false)
- && trim((string) ($answer->better_sample_answer ?? '')) !== ''
  && $answerText($answer) !== '';
  });
  $exampleOriginal = $exampleAnswer ? $limitText($answerText($exampleAnswer)) : '';
- $exampleBetter = $exampleAnswer ? $limitText((string) ($exampleAnswer->better_sample_answer ?? ''), 260) : '';
+ $exampleBetter = $exampleAnswer ? $limitText(review_better_answer_text((string) ($exampleAnswer->better_sample_answer ?? ''), $exampleAnswer, $exampleAnswer->question ?? $exampleAnswer), 260) : '';
  $overallSummary = $limitText($fallbackSummary, 700);
 @endphp
 

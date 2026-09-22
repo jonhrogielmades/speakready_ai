@@ -694,14 +694,17 @@ class UserController extends Controller
  $question = trim((string) ($answer->question->question_text?? ''));
  $feedback = trim((string) ($answer->ai_feedback?? ''));
  $improvement = trim((string) ($answer->better_sample_answer?? ''));
+ $questionSource = $answer->question?? $question;
 
  if ($feedback === '') {
  $feedback = $this->feedbackCenterAnswerPriorityText($answer)?: 'Open the detailed report to review this answer with the full rubric.';
  }
+ $feedback = review_feedback_without_question_text($feedback, $questionSource);
 
  if ($improvement === '') {
  $improvement = trim((string) ($answer->recommendation_text?? ''));
  }
+ $improvement = review_better_answer_text($improvement, $answer, $questionSource);
 
  $answerText = trim((string) ($answer->answer_text?? ''));
  $hasVoiceRecording = trim((string) ($answer->voice_recording_path?? ''))!== '';
@@ -710,7 +713,7 @@ class UserController extends Controller
 
  return (object) [
  'number' => $index + 1,
- 'question' => Str::limit($question!== ''? $question: 'Interview question '.($index + 1), 96),
+ 'label' => 'Answer '.($index + 1),
  'answer' => Str::limit(
  $isVoiceOnlyAnswer? 'Voice answer recorded for feedback.': ($answerText!== ''? $answerText: ($hasVoiceRecording? 'Voice answer recorded. Open the detailed review to listen.': 'No answer text recorded.')),
  115

@@ -2745,6 +2745,21 @@ html, body {
             padding: 8px 7px;
          }
 
+         .ui-mobile-wire-score-layout {
+            height: 100%;
+            display: grid;
+            grid-template-columns: minmax(72px, 0.92fr) minmax(78px, 1.08fr);
+            gap: 6px;
+            align-items: center;
+         }
+
+         .ui-mobile-wire-score-main {
+            min-width: 0;
+            display: grid;
+            justify-items: center;
+            align-content: center;
+         }
+
          .ui-mobile-wire-card-title,
          .ui-mobile-wire-stat-head {
             display: flex;
@@ -2755,8 +2770,10 @@ html, body {
          }
 
          .ui-mobile-wire-card-title {
+            justify-content: center;
             margin-bottom: 7px;
             font-size: 0.52rem;
+            text-align: center;
          }
 
          .ui-mobile-wire-card-title i {
@@ -2766,7 +2783,7 @@ html, body {
          .ui-mobile-wire-ring {
             width: 68px;
             height: 68px;
-            margin: 0 auto 7px;
+            margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;

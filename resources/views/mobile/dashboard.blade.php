@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=22') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=24') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -9,8 +9,8 @@
     $scoreVal = (int) round($profile->readiness_score ?? $avgScore ?? 0);
     $scoreVal = max(0, min(100, $scoreVal));
     $scoreClass = $scoreVal >= 80 ? 'score-high' : ($scoreVal >= 60 ? 'score-med' : 'score-low');
-    $scoreText = $scoreVal >= 80 ? 'Interview Ready' : ($scoreVal >= 60 ? 'Building Momentum' : 'Practice Mode');
-    $mobileScoreText = $scoreVal >= 80 ? 'Interview Ready' : 'Building Momentum';
+    $scoreText = $scoreVal >= 80 ? 'Interview Ready' : ($scoreVal >= 60 ? 'Boost' : 'Practice Mode');
+    $mobileScoreText = $scoreVal >= 80 ? 'Interview Ready' : 'Boost';
     $scoreIcon = $scoreVal >= 80 ? 'fa-circle-check' : ($scoreVal >= 60 ? 'fa-chart-line' : 'fa-arrow-trend-up');
     $fullName = trim(Auth::user()->name ?? '') ?: 'User';
     $nameParts = preg_split('/\s+/', $fullName);
@@ -211,35 +211,30 @@
         </div>
 
         <div class="sr-mobile-readiness-row">
-            <section class="sr-card sr-score-panel {{ $scoreVal >= 80 ? 'score-high-panel' : ($scoreVal >= 60 ? 'score-med-panel' : 'score-low-panel') }}" aria-label="Readiness score">
-                <div class="sr-score-top">
-                    <span class="sr-status-pill {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $mobileScoreText }}</span>
-                </div>
-                <div class="sr-score-layout">
-                    <div class="sr-readiness-ring" style="--ring-value: {{ $scoreVal }}%;" aria-label="Overall readiness {{ $scoreVal }} percent">
-                        <div class="sr-ring-content">
-                            <div class="sr-score-value">{{ $scoreVal }}<span>%</span></div>
-                            <div class="sr-ring-label">Overall Readiness</div>
-                        </div>
+            <div class="sr-mobile-stat-grid sr-readiness-card-grid" role="group" aria-label="Readiness summary">
+                <div class="sr-stat-card sr-readiness-stat-card" style="--accent:{{ $scoreVal >= 80 ? '#22c55e' : ($scoreVal >= 60 ? '#f59e0b' : '#ef4444') }};--meter-value:{{ $scoreVal }}%;">
+                    <div class="sr-stat-head">
+                        <div class="sr-stat-icon"><i class="fa-solid {{ $scoreIcon }}"></i></div>
+                        <span class="sr-chip">{{ $mobileScoreText }}</span>
                     </div>
-                    <div class="sr-score-meta">
-                        <div class="sr-score-meta-item">
-                            <div>
-                                <div class="sr-meta-label">Average Rating</div>
-                                <div class="sr-meta-value">{{ $rating }}/5</div>
-                            </div>
-                            <div class="sr-score-icon"><i class="fa-regular fa-star"></i></div>
-                        </div>
-                        <div class="sr-score-meta-item">
-                            <div>
-                                <div class="sr-meta-label">Next Goal</div>
-                                <div class="sr-meta-value">{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}%</div>
-                            </div>
-                            <div class="sr-score-icon"><i class="fa-solid fa-bullseye"></i></div>
-                        </div>
+                    <div class="sr-stat-body">
+                        <div class="sr-stat-value">{{ $scoreVal }}<span>%</span></div>
+                        <div class="sr-stat-label">Overall readiness</div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
                     </div>
                 </div>
-                </section>
+                <div class="sr-stat-card sr-readiness-stat-card" style="--accent:#3b82f6;--meter-value:{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}%;">
+                    <div class="sr-stat-head">
+                        <div class="sr-stat-icon"><i class="fa-solid fa-bullseye"></i></div>
+                        <span class="sr-chip">Goal</span>
+                    </div>
+                    <div class="sr-stat-body">
+                        <div class="sr-stat-value">{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}<span>%</span></div>
+                        <div class="sr-stat-label">Next goal</div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-bullseye"></i></div>
+                    </div>
+                </div>
+            </div>
 
             <div class="sr-mobile-stat-grid" role="group" aria-label="Quick statistics">
                 <div class="sr-stat-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;">
@@ -1347,8 +1342,8 @@ document.addEventListener("DOMContentLoaded", function() {
         const stepsMobile = [
             { element: '#mobTutorialBtn', popover: { title: 'Replay Tutorial', description: 'Use this anytime you want a quick walkthrough of the current page.', side: 'bottom', align: 'end' }},
             { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Jump to Home, Progress, Interview, Feedback, or More from the bottom bar.', side: 'top', align: 'center' }},
-            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
-            { element: '.sr-mobile-stat-grid', popover: { title: 'Practice Snapshot', description: 'Track interviews, ratings, XP, and streaks without opening a report.', side: 'top', align: 'start' }},
+            { element: '.sr-readiness-card-grid', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
+            { element: '.sr-mobile-stat-grid:not(.sr-readiness-card-grid)', popover: { title: 'Practice Snapshot', description: 'Track interviews, ratings, XP, and streaks without opening a report.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
             { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused interview task for XP, streak progress, and sharper answer structure.', side: 'top', align: 'start' }},

@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=34') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=41') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -9,8 +9,8 @@
     $scoreVal = (int) round($profile->readiness_score ?? $avgScore ?? 0);
     $scoreVal = max(0, min(100, $scoreVal));
     $scoreClass = $scoreVal >= 80 ? 'score-high' : ($scoreVal >= 60 ? 'score-med' : 'score-low');
-    $scoreText = $scoreVal >= 80 ? 'Interview Ready' : ($scoreVal >= 60 ? 'Building Momentum' : 'Practice Mode');
-    $mobileScoreText = $scoreVal >= 80 ? 'Interview Ready' : 'Building Momentum';
+    $scoreText = $scoreVal >= 80 ? 'Interview Ready' : ($scoreVal >= 60 ? 'Boost' : 'Practice Mode');
+    $mobileScoreText = $scoreVal >= 80 ? 'Interview Ready' : 'Boost';
     $scoreIcon = $scoreVal >= 80 ? 'fa-circle-check' : ($scoreVal >= 60 ? 'fa-chart-line' : 'fa-arrow-trend-up');
     $fullName = trim(Auth::user()->name ?? '') ?: 'User';
     $nameParts = preg_split('/\s+/', $fullName);
@@ -270,26 +270,20 @@
 
         <div class="sr-mobile-readiness-row">
             <section class="sr-card sr-score-panel {{ $scoreVal >= 80 ? 'score-high-panel' : ($scoreVal >= 60 ? 'score-med-panel' : 'score-low-panel') }}" aria-label="Readiness score">
-                <div class="sr-score-top">
+                <div class="sr-score-top sr-score-top-desktop">
                     <span class="sr-status-pill {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
+                    <span class="sr-chip sr-boost-chip"><i class="fa-solid fa-bolt"></i> Boost</span>
                     <span class="sr-chip ph-focus-chip"><i class="fa-solid fa-location-dot"></i> Interview Focus</span>
                 </div>
                 <div class="sr-score-layout">
-                    <div class="sr-readiness-ring" style="--ring-value: {{ $scoreVal }}%;" aria-label="Overall readiness {{ $scoreVal }} percent">
-                        <div class="sr-ring-content">
-                            <div class="sr-score-value">{{ $scoreVal }}<span>%</span></div>
-                            <div class="sr-ring-label">Overall Readiness</div>
-                        </div>
-                    </div>
-                    <div class="sr-score-meta">
-                        <div class="sr-score-meta-item">
-                            <div>
-                                <div class="sr-meta-label">Average Rating</div>
-                                <div class="sr-meta-value">{{ $rating }}/5</div>
+                    <div class="sr-score-primary">
+                        <div class="sr-readiness-ring" style="--ring-value: {{ $scoreVal }}%;" aria-label="Overall readiness {{ $scoreVal }} percent">
+                            <div class="sr-ring-content">
+                                <div class="sr-score-value">{{ $scoreVal }}<span>%</span></div>
+                                <div class="sr-ring-label">Overall Readiness</div>
                             </div>
-                            <div class="sr-score-icon"><i class="fa-regular fa-star"></i></div>
                         </div>
-                        <div class="sr-score-meta-item">
+                        <div class="sr-score-goal-card">
                             <div>
                                 <div class="sr-meta-label">Next Goal</div>
                                 <div class="sr-meta-value">{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}%</div>
@@ -1692,7 +1686,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const stepsDesktop = [
             { element: '#dbSidebar', popover: { title: 'Practice Navigation', description: 'Open Mock Interview, Modules, Challenges, AI Coach, Progress, Feedback, and Reports.', side: 'right', align: 'start' }},
             { element: '#dbTutorialBtn', popover: { title: 'Replay Tutorial', description: 'Restart this walkthrough whenever the page changes or you want a quick orientation.', side: 'bottom', align: 'center' }},
-            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
+            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed interviews, ratings, XP, streaks, and active practice days at a glance.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},

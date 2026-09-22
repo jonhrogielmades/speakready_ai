@@ -164,7 +164,7 @@ class FeedbackReportPresenter
  $parts[] = $answeredCount.' '.($answeredCount === 1? 'answered response': 'answered responses');
  }
  if ($skippedCount > 0) {
- $parts[] = $skippedCount.' '.($skippedCount === 1? 'skipped question': 'skipped questions');
+ $parts[] = $skippedCount.' '.($skippedCount === 1? 'skipped answer': 'skipped answers');
  }
  $unansweredCount = max(0, $answerCount - $answeredCount - $skippedCount);
  if ($unansweredCount > 0) {
@@ -280,8 +280,8 @@ class FeedbackReportPresenter
  }
 
  $area = self::limitText((string) ($priority['area']?? 'Top focus'), 80);
- $observation = rtrim(self::limitText((string) ($priority['observation']?? ''), 150), " \t\n\r\0\x0B.?!;");
- $action = rtrim(self::limitText((string) ($priority['action']?? ''), 170), " \t\n\r\0\x0B.?!;");
+ $observation = rtrim(self::limitText(review_feedback_without_question_text((string) ($priority['observation']?? '')), 150), " \t\n\r\0\x0B.?!;");
+ $action = rtrim(self::limitText(review_feedback_without_question_text((string) ($priority['action']?? '')), 170), " \t\n\r\0\x0B.?!;");
  $parts = [];
  $parts[] = 'Top focus: '.($area!== ''? $area: 'answer practice');
  if ($observation!== '') {
@@ -303,7 +303,7 @@ class FeedbackReportPresenter
  {
  $item = trim((string) (self::bulletItems($text, '', 1, $limit)[0]?? ''));
 
- return self::limitText($item, $limit);
+ return self::limitText(review_feedback_without_question_text($item), $limit);
  }
 
  private static function sentence(string $text): string
@@ -352,7 +352,7 @@ class FeedbackReportPresenter
  [
  'label' => 'Answer Match',
  'score' => $score?->relevance_score,
- 'advice' => 'Answer the exact question first, then add one useful example.',
+ 'advice' => 'Answer directly first, then add one useful example.',
  ],
  [
  'label' => 'Grammar',

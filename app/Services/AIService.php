@@ -1601,7 +1601,7 @@ You MUST return the visible coaching text for every answer. The app will not cre
 For each item, return:
 
 * ai_feedback: 2-3 short sentences tied to the exact question and exact answer evidence.
-* better_sample_answer: 1-3 short first-person sentences that improve the answer using only facts already found in candidate_answer. Do not add invented achievements, employers, tools, numbers, or results. If the answer is skipped, use an empty string.
+* better_sample_answer: 1-3 short first-person sentences that improve the answer using only facts already found in candidate_answer. Write the improved answer itself, not the prompt, question text, or advice about how to answer. Do not add invented achievements, employers, tools, numbers, or results. If the answer is skipped, use an empty string.
 * follow_up_question: one short interviewer question for the same answer that asks for a missing detail or clearer result.
 * coaching: the exact visible text for the compact report sections. These fields replace local wording in the user report, so do not use canned or repeated sentences.
 
@@ -4355,9 +4355,53 @@ PROMPT;
  return $text!== ''
  && self::wordCount($text) >= 5
  && mb_strlen($text) <= 900
+ &&! self::betterSampleAnswerCopiesQuestion($text, trim((string) ($answer['question']?? '')))
  &&! self::feedbackInfersForbiddenTrait($text)
  &&! self::feedbackClaimsPerfectCertainty($text)
  &&! self::feedbackHasUnsupportedNumbers($text, $answerText);
+ }
+
+ private static function betterSampleAnswerCopiesQuestion(string $text, string $questionText): bool
+ {
+ $clean = trim($text);
+ if ($clean === '') {
+ return false;
+ }
+
+ if (preg_match('/^\s*(?:question|prompt|interview\s+prompt|interview\s+question)\s*[:\-]/iu', $clean) === 1) {
+ return true;
+ }
+
+ if (preg_match('/\?\s*$/u', $clean) === 1
+ && preg_match('/\b(?:I|we|my|our)\b/iu', $clean)!== 1) {
+ return true;
+ }
+
+ $questionText = trim($questionText);
+ if ($questionText === '') {
+ return false;
+ }
+
+ $textKey = mb_strtolower(trim((string) preg_replace('/[^\pL\pN]+/u', ' ', $clean)));
+ $questionKey = mb_strtolower(trim((string) preg_replace('/[^\pL\pN]+/u', ' ', $questionText)));
+ if ($textKey === '' || $questionKey === '') {
+ return false;
+ }
+
+ if ($textKey === $questionKey || str_contains($textKey, $questionKey)) {
+ return true;
+ }
+
+ $textWords = self::meaningfulKeywords($clean);
+ $questionWords = self::meaningfulKeywords($questionText);
+ if ($textWords === [] || $questionWords === []) {
+ return false;
+ }
+
+ $overlap = count(array_intersect($textWords, $questionWords));
+
+ return $overlap / max(1, count($textWords)) >= 0.75
+ && self::wordCount($clean) <= self::wordCount($questionText) + 4;
  }
 
  private static function providerFollowUpQuestionIsValid(string $text, array $answer): bool

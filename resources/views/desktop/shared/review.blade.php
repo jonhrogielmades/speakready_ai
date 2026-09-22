@@ -335,7 +335,7 @@
  <div class="col-md-6">
  <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved me-2"></i>Better Answer Draft</label>
  <div style="color:var(--tx);background:rgba(16, 185, 129, 0.05);padding:16px;border-radius:12px;border:1px solid rgba(16, 185, 129, 0.2);height:100%;font-size:0.95rem;line-height:1.6;">
- {{ review_feedback_without_question_text($answer->better_sample_answer ?: 'No better draft was made for this response.', $answer->question ?? $answer) }}
+ {{ review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $answer->question ?? $answer) }}
  </div>
  <div style="color:var(--tx3);font-size:.78rem;margin-top:8px;">Built only from the candidate's answer. Any placeholder needs true facts.</div>
  </div>

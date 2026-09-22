@@ -88,9 +88,24 @@ if (! function_exists('review_feedback_without_question_text')) {
 
         $clean = preg_replace('/\bQuestion focus\b/u', 'Answer focus', $clean) ?? $clean;
         $clean = preg_replace('/\bquestion focus\b/u', 'answer focus', $clean) ?? $clean;
+        $clean = preg_replace('/\bQuestion results\b/u', 'Answer results', $clean) ?? $clean;
+        $clean = preg_replace('/\bquestion results\b/u', 'answer results', $clean) ?? $clean;
+        $clean = preg_replace('/\bquestion match\b/iu', 'answer match', $clean) ?? $clean;
+        $clean = preg_replace('/\bquestion notes?\b/iu', 'answer notes', $clean) ?? $clean;
+        $clean = preg_replace('/\bquestion guide\b/iu', 'answer guide', $clean) ?? $clean;
+        $clean = preg_replace('/\banswer each question\b/iu', 'complete each answer', $clean) ?? $clean;
+        $clean = preg_replace('/\banswer the exact question\b/iu', 'answer directly', $clean) ?? $clean;
+        $clean = preg_replace('/\banswers? the exact question\b/iu', 'answers directly', $clean) ?? $clean;
+        $clean = preg_replace('/\bexact question\b/iu', 'answer focus', $clean) ?? $clean;
+        $clean = preg_replace('/\beach question\b/iu', 'each answer', $clean) ?? $clean;
+        $clean = preg_replace('/\bwhen the question allows\b/iu', 'when the answer supports it', $clean) ?? $clean;
         $clean = preg_replace('/\bper-question\b/iu', 'per-answer', $clean) ?? $clean;
-        $clean = preg_replace('/\bthis question\b/iu', 'this prompt', $clean) ?? $clean;
-        $clean = preg_replace('/\bthe question\b/iu', 'the prompt', $clean) ?? $clean;
+        $clean = preg_replace('/\b(\d+)\s+of\s+(\d+)\s+questions?\s+need\b/iu', '$1 of $2 answers need', $clean) ?? $clean;
+        $clean = preg_replace('/\bskipped questions?\b/iu', 'skipped answers', $clean) ?? $clean;
+        $clean = preg_replace('/\bmarked questions?\b/iu', 'marked answers', $clean) ?? $clean;
+        $clean = preg_replace('/\bthis question\b/iu', 'this answer', $clean) ?? $clean;
+        $clean = preg_replace('/\bthe question\b/iu', 'the answer', $clean) ?? $clean;
+        $clean = preg_replace('/\bquestions\b/iu', 'answers', $clean) ?? $clean;
         $clean = preg_replace('/\s+([,.;:!?])/u', '$1', $clean) ?? $clean;
         $clean = preg_replace('/([({\[])\s+/u', '$1', $clean) ?? $clean;
         $clean = preg_replace('/\s+([)}\]])/u', '$1', $clean) ?? $clean;
@@ -102,5 +117,146 @@ if (! function_exists('review_feedback_without_question_text')) {
         }
 
         return $clean;
+    }
+}
+
+if (! function_exists('review_answer_text')) {
+    function review_answer_text(mixed $source): string
+    {
+        if (is_string($source)) {
+            return trim($source);
+        }
+
+        foreach (['answer_text', 'answer', 'delivery_transcript', 'transcript'] as $key) {
+            $value = data_get($source, $key);
+
+            if (is_scalar($value) && trim((string) $value) !== '') {
+                return trim((string) $value);
+            }
+        }
+
+        return '';
+    }
+}
+
+if (! function_exists('review_text_word_count')) {
+    function review_text_word_count(string $text): int
+    {
+        preg_match_all('/\b[\pL\pN][\pL\pN\'-]*\b/u', $text, $matches);
+
+        return count($matches[0] ?? []);
+    }
+}
+
+if (! function_exists('review_normalized_text_key')) {
+    function review_normalized_text_key(string $text): string
+    {
+        $text = mb_strtolower($text);
+        $text = preg_replace('/[^\pL\pN]+/u', ' ', $text) ?? $text;
+
+        return trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
+    }
+}
+
+if (! function_exists('review_meaningful_words')) {
+    function review_meaningful_words(string $text): array
+    {
+        preg_match_all('/[\pL][\pL\pN\'-]{2,}/u', mb_strtolower($text), $matches);
+        $stopWords = [
+            'about', 'answer', 'because', 'before', 'candidate', 'could', 'describe',
+            'does', 'during', 'explain', 'from', 'have', 'interview', 'question',
+            'prompt', 'that', 'the', 'this', 'what', 'when', 'where', 'which', 'while',
+            'with', 'would', 'you', 'your',
+        ];
+
+        return array_values(array_unique(array_diff($matches[0] ?? [], $stopWords)));
+    }
+}
+
+if (! function_exists('review_text_looks_like_question')) {
+    function review_text_looks_like_question(string $text, mixed $questionSource = null): bool
+    {
+        $clean = trim($text);
+        if ($clean === '') {
+            return true;
+        }
+
+        if (preg_match('/^\s*(?:question|prompt|interview\s+prompt|interview\s+question)\s*[:\-]/iu', $clean) === 1) {
+            return true;
+        }
+
+        $questionText = review_question_text($questionSource);
+        if ($questionText !== '') {
+            $textKey = review_normalized_text_key($clean);
+            $questionKey = review_normalized_text_key($questionText);
+
+            if ($textKey !== '' && $questionKey !== '') {
+                if ($textKey === $questionKey) {
+                    return true;
+                }
+
+                $textWords = review_meaningful_words($clean);
+                $questionWords = review_meaningful_words($questionText);
+                $overlap = count(array_intersect($textWords, $questionWords));
+                if ($textWords !== []
+                    && $questionWords !== []
+                    && $overlap / max(1, count($textWords)) >= 0.75
+                    && review_text_word_count($clean) <= review_text_word_count($questionText) + 4
+                ) {
+                    return true;
+                }
+            }
+        }
+
+        return preg_match('/\?\s*$/u', $clean) === 1
+            && preg_match('/\b(?:I|we|my|our)\b/iu', $clean) !== 1;
+    }
+}
+
+if (! function_exists('review_better_answer_fallback')) {
+    function review_better_answer_fallback(mixed $answerSource = null, mixed $questionSource = null): string
+    {
+        $answerText = review_answer_text($answerSource);
+        if ($answerText === '' || review_text_looks_like_question($answerText, $questionSource)) {
+            return 'No better answer draft is available yet.';
+        }
+
+        $answerText = trim(preg_replace('/\s+/u', ' ', $answerText) ?? $answerText);
+        $answerText = mb_strlen($answerText) > 420
+            ? rtrim(mb_substr($answerText, 0, 417), " \t\n\r\0\x0B.,;:") . '...'
+            : $answerText;
+
+        if ($answerText !== '' && preg_match('/[.!?]$/u', $answerText) !== 1) {
+            $answerText .= '.';
+        }
+
+        $draft = preg_match('/^\s*(?:I|we|my|our)\b/iu', $answerText) === 1
+            ? $answerText
+            : 'I would answer: ' . $answerText;
+
+        if (preg_match('/\b(?:as a result|result(?:ed)?|outcome|resolved|improved|learned|lesson|led to|\d+(?:\.\d+)?%?)\b/iu', $draft) !== 1) {
+            $draft .= ' I would close with [true result, effect, or lesson].';
+        }
+
+        return $draft;
+    }
+}
+
+if (! function_exists('review_better_answer_text')) {
+    function review_better_answer_text(?string $text, mixed $answerSource = null, mixed $questionSource = null): string
+    {
+        $questionSource ??= $answerSource;
+        $clean = review_feedback_without_question_text((string) $text, $questionSource);
+        $clean = preg_replace('/^\s*(?:(?:suggested|sample|better)\s+)?(?:better\s+)?(?:answer|response|example|draft)\s*[:\-]\s*/iu', '', $clean) ?? $clean;
+        $clean = trim($clean);
+
+        if ($clean !== ''
+            && review_text_word_count($clean) >= 5
+            && ! review_text_looks_like_question($clean, $questionSource)
+        ) {
+            return $clean;
+        }
+
+        return review_better_answer_fallback($answerSource, $questionSource);
     }
 }

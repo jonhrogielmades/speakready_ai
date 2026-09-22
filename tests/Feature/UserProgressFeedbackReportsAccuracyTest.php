@@ -410,7 +410,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  'question_id' => $question->id,
  'answer_text' => 'I listened to the customer and helped solve the issue.',
  'ai_feedback' => 'Good empathy, but the answer needs a clearer action and result.',
- 'better_sample_answer' => 'I would acknowledge the concern, verify the issue, explain the next action, and confirm resolution.',
+ 'better_sample_answer' => 'Explain a time you handled an irate customer.',
  'score' => 68,
  ]);
 
@@ -426,7 +426,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('data-sr-confirm-title="Delete interview session"', false)
  ->assertSee('Strong empathy with customers')
  ->assertSee('Use STAR structure')
- ->assertSee('Explain a time you handled an irate customer')
+ ->assertSee('Answer 1')
+ ->assertDontSee('Explain a time you handled an irate customer')
  ->assertSee('I listened to the customer and helped solve the issue.')
  ->assertSee('Good empathy, but the answer needs a clearer action and result.')
  ->assertSee('Rebuild answer structure')
@@ -435,7 +436,10 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  && $summary->overall === 74
  && $summary->focus_metric?->label === 'Fluency & Clarity')
  ->assertViewHas('answerCoachingHighlights', fn ($items) => $items->count() === 1
- && $items->first()->score === 68)
+ && $items->first()->score === 68
+ && $items->first()->label === 'Answer 1'
+ && str_contains($items->first()->improvement, 'I listened to the customer and helped solve the issue')
+ && ! str_contains($items->first()->improvement, 'Explain a time you handled an irate customer'))
  ->assertViewHas('practiceRecommendations', fn ($items) => $items->contains(fn ($item) => $item->title === 'Rebuild answer structure'));
  }
 
@@ -550,7 +554,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  'question_id' => $question->id,
  'answer_text' => 'I improved improved improved the customer process and explained the action clearly.',
  'ai_feedback' => 'The answer gives an action but needs a result.',
- 'better_sample_answer' => 'I improved the process, explained the action, and confirmed the customer result.',
+ 'better_sample_answer' => 'Explain a time you helped a customer.',
  'score' => 68,
  ]);
 
@@ -562,13 +566,14 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('This feedback is based on the 1 saved answer in this session')
  ->assertSee('Answer-match checks show 1 answered partly')
  ->assertSee('Overall readiness is 74%, with Fluency &amp; Clarity as the lowest recorded area at 45% and Grammar as the highest at 88%', false)
- ->assertSee('Top focus: Answer structure; 1 of 1 questions need a clearer opening and result; next practice: Use STAR structure and add one measurable result')
+ ->assertSee('Top focus: Answer structure; 1 of 1 answers need a clearer opening and result; next practice: Use STAR structure and add one measurable result')
  ->assertDontSee('Keep practicing. Answer each question directly and add one real example.')
  ->assertSee('Score Breakdown')
  ->assertSee('What You Did Well')
  ->assertSee('What To Improve')
  ->assertSee('Better Example')
  ->assertSee('Next Practice')
+ ->assertDontSee('Explain a time you helped a customer')
  ->assertSee('Strong empathy with customers')
  ->assertSee('Use STAR structure')
  ->assertDontSee('Category Breakdown')
