@@ -6,14 +6,17 @@ use App\Services\BrevoTransactionalMail;
 use Illuminate\Auth\Notifications\ResetPassword;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+
+    public const TERMS_VERSION = '2026-09-23';
 
     /**
      * The attributes that are mass assignable.
@@ -31,6 +34,9 @@ class User extends Authenticatable
         'profile_photo_path',
         'target_position',
         'preferred_language',
+        'terms_accepted_at',
+        'terms_version',
+        'terms_ip_address',
     ];
 
     /**
@@ -50,8 +56,47 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'terms_accepted_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        return $this->profilePhotoUrl();
+    }
+
+    public function profilePhotoUrl(): ?string
+    {
+        $path = trim((string) $this->profile_photo_path);
+
+        if ($path === '') {
+            return null;
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://', 'data:'])) {
+            return $path;
+        }
+
+        if (Str::startsWith($path, '//')) {
+            return 'https:'.$path;
+        }
+
+        if (Str::startsWith($path, ['/storage/', 'storage/'])) {
+            return asset(ltrim($path, '/'));
+        }
+
+        if (Str::startsWith($path, '/')) {
+            return url($path);
+        }
+
+        return asset('storage/'.ltrim($path, '/'));
+    }
+
+    public function hasAcceptedCurrentTerms(): bool
+    {
+        return $this->terms_accepted_at !== null
+            && $this->terms_version === self::TERMS_VERSION;
+    }
 
     public function interviews()
     {

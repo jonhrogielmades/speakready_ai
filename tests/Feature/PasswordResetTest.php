@@ -33,6 +33,7 @@ class PasswordResetTest extends TestCase
 
     public function test_forgot_password_page_can_send_a_reset_link(): void
     {
+        config(['services.brevo.api_key' => null]);
         Notification::fake();
 
         $user = User::factory()->create();
@@ -41,7 +42,24 @@ class PasswordResetTest extends TestCase
             'email' => $user->email,
         ]);
 
-        $response->assertSessionHas('status');
+        $response->assertSessionHas('status', 'We have emailed your password reset link.');
+        Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_forgot_password_normalizes_email_before_sending_reset_link(): void
+    {
+        config(['services.brevo.api_key' => null]);
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'email' => 'person@example.com',
+        ]);
+
+        $response = $this->post(route('password.email'), [
+            'email' => '  PERSON@EXAMPLE.COM  ',
+        ]);
+
+        $response->assertSessionHas('status', 'We have emailed your password reset link.');
         Notification::assertSentTo($user, ResetPassword::class);
     }
 
@@ -108,7 +126,44 @@ class PasswordResetTest extends TestCase
         ]);
 
         $response->assertRedirect('/');
-        $response->assertSessionHas('success');
+        $response->assertSessionHas('success', 'Your password has been reset.');
+
+        $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
+    }
+
+    public function test_reset_password_normalizes_email_and_consumes_token(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'person@example.com',
+            'password' => Hash::make('old-password'),
+        ]);
+
+        $token = Password::broker()->createToken($user);
+
+        $this->post(route('password.update'), [
+            'token' => $token,
+            'email' => '  PERSON@EXAMPLE.COM  ',
+            'password' => 'new-password-123',
+            'password_confirmation' => 'new-password-123',
+        ])->assertRedirect('/');
+
+        $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
+
+        $response = $this->from(route('password.reset', [
+            'token' => $token,
+            'email' => $user->email,
+        ]))->post(route('password.update'), [
+            'token' => $token,
+            'email' => $user->email,
+            'password' => 'another-password-123',
+            'password_confirmation' => 'another-password-123',
+        ]);
+
+        $response->assertRedirect(route('password.reset', [
+            'token' => $token,
+            'email' => $user->email,
+        ]));
+        $response->assertSessionHasErrors('email');
 
         $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
     }

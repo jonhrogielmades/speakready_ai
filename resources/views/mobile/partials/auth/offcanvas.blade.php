@@ -78,7 +78,7 @@
                <div class="odiv">or sign up with</div>
                <a href="{{ route('auth.google.register') }}" class="oauth" data-auth-transition="google-register" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Sign up with Google</a>
 
-               <p class="text-center mt-3" style="font-size:.76rem;color:var(--tx3)">By signing up, you agree to our <a href="#" style="color:var(--pur)">Terms</a> &amp; <a href="#" style="color:var(--pur)">Privacy Policy</a></p>
+               <p class="text-center mt-3" style="font-size:.76rem;color:var(--tx3)">Before entering your dashboard, you will review and accept our <a href="{{ route('legal.terms') }}" style="color:var(--pur)">Terms</a> &amp; <a href="{{ route('legal.privacy') }}" style="color:var(--pur)">Privacy Policy</a>.</p>
             </div>
             <!-- Close Button at Bottom -->
             <div class="text-center mt-5 mb-3">

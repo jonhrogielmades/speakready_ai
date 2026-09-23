@@ -695,6 +695,11 @@ class UserController extends Controller
  $feedback = trim((string) ($answer->ai_feedback?? ''));
  $improvement = trim((string) ($answer->better_sample_answer?? ''));
  $questionSource = $answer->question?? $question;
+ $coachingFeedback = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
+ $impact = review_feedback_without_question_text(
+ trim((string) data_get($coachingFeedback, 'content_alignment.impact', '')),
+ $questionSource
+ );
 
  if ($feedback === '') {
  $feedback = $this->feedbackCenterAnswerPriorityText($answer)?: 'Open the detailed report to review this answer with the full rubric.';
@@ -719,6 +724,7 @@ class UserController extends Controller
  115
  ),
  'feedback' => Str::limit($feedback, 145),
+ 'impact' => $impact!== ''? Str::limit($impact, 170): '',
  'improvement' => $improvement!== ''? Str::limit($improvement, 145): 'Use a direct opening, one example, and a result.',
  'score' => $score,
  'review_url' => route('user.review', $session->id),
@@ -3663,7 +3669,15 @@ class UserController extends Controller
  {
  AccountNotificationSchema::ensure();
 
- return $this->mobileView('user.account');
+ $lastLoginAt = ActivityLog::where('user_id', Auth::id())
+ ->where('action', 'user_logged_in')
+ ->latest('created_at')
+ ->first()
+ ?->created_at;
+
+ return $this->mobileView('user.account', [
+ 'lastLoginAt' => $lastLoginAt,
+ ]);
  }
 
  public function updateLanguage(Request $request)

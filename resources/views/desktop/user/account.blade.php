@@ -3,13 +3,15 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/account.css?v=2') }}" data-page-style="user-account">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/account-2.css?v=5') }}" data-page-style="user-account-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/account-2.css?v=7') }}" data-page-style="user-account-2">
 @endpush
 
 @section('content')
 @include('desktop.partials.page-hero-styles')
 @php
-    $accountTargetPosition = old('target_position', Auth::user()->target_position);
+    $accountUser = Auth::user();
+    $accountPhotoUrl = $accountUser?->profile_photo_url;
+    $accountTargetPosition = old('target_position', $accountUser?->target_position);
     $accountJobPositionOptions = collect(config('speakready_scope.job_positions', []))
         ->flatten()
         ->map(fn ($position) => trim((string) $position))
@@ -66,18 +68,15 @@
                     @csrf
                     
                     <div class="d-flex align-items-center mb-4 account-photo-row">
-                        @if(Auth::user()->profile_photo_path)
-                            <div class="account-photo-avatar" style="width:80px;height:80px;border-radius:24px;overflow:hidden;margin-right:24px;border:1px solid var(--bd)">
-                                @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
-                                    <img id="profilePhotoPreview" src="{{ Auth::user()->profile_photo_path }}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;">
-                                @else
-                                    <img id="profilePhotoPreview" src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;">
-                                @endif
+                        @if($accountPhotoUrl)
+                            <div class="account-photo-avatar" style="width:80px;height:80px;background:var(--pur);border-radius:24px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:700;margin-right:24px;overflow:hidden;border:1px solid var(--bd)">
+                                <img id="profilePhotoPreview" src="{{ $accountPhotoUrl }}" alt="Profile Photo" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='';">
+                                <span id="profilePhotoInitial" style="display:none;">{{ strtoupper(substr($accountUser->name, 0, 1)) }}</span>
                             </div>
                         @else
                             <div class="account-photo-avatar" style="width:80px;height:80px;background:var(--pur);border-radius:24px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:700;margin-right:24px;overflow:hidden;">
                                 <img id="profilePhotoPreview" src="" alt="Profile Photo preview" style="width:100%;height:100%;object-fit:cover;display:none;">
-                                <span id="profilePhotoInitial">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                <span id="profilePhotoInitial">{{ strtoupper(substr($accountUser->name, 0, 1)) }}</span>
                             </div>
                         @endif
                         <div class="account-photo-actions">
@@ -163,6 +162,11 @@
                     </form>
                 </div>
             </div>
+
+        </div>
+
+        <div class="col-12 animate-fade-up account-record-grid-item" style="animation-delay: 0.3s;">
+            @include('shared.user.account-record-panel')
         </div>
     </div>
 </div>

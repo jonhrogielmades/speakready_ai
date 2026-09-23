@@ -284,6 +284,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertContains('coaching', $item['required']);
         $this->assertContains('keep', $item['properties']['coaching']['required']);
         $this->assertContains('improve', $item['properties']['coaching']['required']);
+        $this->assertContains('impact', $item['properties']['coaching']['required']);
         $this->assertContains('next_try', $item['properties']['coaching']['required']);
         $this->assertContains('next_attempt_steps', $item['properties']['coaching']['required']);
         $this->assertContains('success_check', $item['properties']['coaching']['required']);
@@ -747,6 +748,7 @@ class WeightedReadinessScoringTest extends TestCase
         $feedback['coaching'] = [
             'keep' => 'Keep the checklist detail because it supports the strength assessment.',
             'improve' => 'Add the result so the strength criteria are clearer.',
+            'impact' => 'The missing result makes it harder to judge how the checklist helped the launch.',
             'next_try' => 'Use the checklist example and explain the launch result.',
             'next_attempt_steps' => [
                 'Name organizing as the strength.',
@@ -760,6 +762,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame('ai_evidence_validated', $normalized['evaluation_source']);
         $this->assertSame('Keep the checklist detail because it supports the strength check.', $normalized['provider_coaching']['keep']);
         $this->assertSame('Add the result so the strength points are clearer.', $normalized['provider_coaching']['improve']);
+        $this->assertSame('The missing result makes it harder to judge how the checklist helped the launch.', $normalized['provider_coaching']['impact']);
         $this->assertSame('The retry meets the strength points when the result is clear.', $normalized['provider_coaching']['success_check']);
     }
 
@@ -862,6 +865,7 @@ class WeightedReadinessScoringTest extends TestCase
         return [
             'keep' => 'Keep the '.$term.' detail that already supports "'.$question.'".',
             'improve' => 'Add the missing '.$term.' result or limit for "'.$question.'".',
+            'impact' => 'The '.$term.' detail helps explain the score, and the missing result limits what the interviewer can judge.',
             'next_try' => 'Answer "'.$question.'" by connecting '.$term.' to one clear next detail.',
             'next_attempt_steps' => [
                 'Start by answering "'.$question.'" directly.',

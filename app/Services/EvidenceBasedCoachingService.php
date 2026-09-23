@@ -1107,11 +1107,24 @@ final class EvidenceBasedCoachingService
  'skipped' => 'A complete answer to '.$questionLabel.' is sent with one true detail.',
  default => 'The answer follows the question guide and stays focused on '.$questionLabel.'.',
  };
+ $impact = match ($status) {
+ 'directly_answered' => $gap
+ ? 'The answer is easier to trust because it answers '.$questionLabel.', but the missing point still limits how much value the interviewer can see.'
+ : 'The direct answer helps the interviewer understand your point quickly, so the next gain comes from adding the strongest true result or limit.',
+ 'partially_answered' => 'Answering only part of '.$questionLabel.' can lower the answer-match score because the interviewer still has to guess the missing point.',
+ 'low_relevance' => 'The answer has useful text, but the weak link to '.$questionLabel.' makes it harder for the interviewer to judge the skill being asked.',
+ 'insufficient_evidence' => 'The answer is too short to trust the score well, so the next attempt needs enough detail to show what you mean.',
+ 'skipped' => 'Without an answer, the interviewer cannot check this skill, example, or fit for '.$questionLabel.'.',
+ default => 'A clearer answer link will make the review easier to understand and the next practice step easier to follow.',
+ };
 
  $providerCoaching = $this->providerCoaching($metrics['provider_coaching']?? []);
  if ($providerCoaching!== []) {
  $whatWorked = $providerCoaching['keep'];
  $improvementFocus = $providerCoaching['improve'];
+ if (isset($providerCoaching['impact'])) {
+ $impact = $providerCoaching['impact'];
+ }
  $action = $providerCoaching['next_try'];
  $nextAttemptSteps = $providerCoaching['next_attempt_steps'];
  $successCheck = $providerCoaching['success_check'];
@@ -1136,6 +1149,7 @@ final class EvidenceBasedCoachingService
  'missing_points' => $missingPoints,
  'what_worked' => $whatWorked,
  'improvement_focus' => $improvementFocus,
+ 'impact' => $impact,
  'action' => $action,
  'next_attempt_steps' => $nextAttemptSteps,
  'success_check' => $successCheck,
@@ -1179,6 +1193,10 @@ final class EvidenceBasedCoachingService
  }
 
  $validated['next_attempt_steps'] = $steps;
+ $impact = $this->providerCoachingText($coaching['impact']?? null, 700);
+ if ($impact!== '') {
+ $validated['impact'] = $impact;
+ }
 
  return $validated;
  }
@@ -1218,6 +1236,7 @@ final class EvidenceBasedCoachingService
  'next_attempt_actionable' => trim((string) ($contentAlignment['action']?? ''))!== ''
  &&! empty($contentAlignment['next_attempt_steps']?? [])
  && $hasPriorityAction,
+ 'impact_explained' => trim((string) ($contentAlignment['impact']?? ''))!== '',
  'success_check_present' => trim((string) ($contentAlignment['success_check']?? ''))!== '',
  'limitations_and_trait_boundaries_disclosed' => trim((string) ($contentAlignment['limitation']?? ''))!== '',
  ];

@@ -1785,6 +1785,7 @@ class UserSideHardeningTest extends TestCase
  'coaching' => [
  'keep' => 'Keep the billing issue and follow-up detail for this customer question.',
  'improve' => 'Add the result the customer or team saw after your action.',
+ 'impact' => 'The missing result matters because it shows whether the billing help solved the customer problem.',
  'next_try' => 'Answer the customer question by adding one true result after the follow-up.',
  'next_attempt_steps' => [
  'Start with the customer billing issue.',
@@ -2265,6 +2266,7 @@ class UserSideHardeningTest extends TestCase
  'coaching' => [
  'keep' => 'Keep the deployment checklist detail for "Describe a difficult project.".',
  'improve' => 'Add the final project result for "Describe a difficult project.".',
+ 'impact' => 'The project result matters because it shows how the checklist changed release quality or ownership.',
  'next_try' => 'Answer "Describe a difficult project." by connecting the checklist work to the project result.',
  'next_attempt_steps' => [
  'Start with the difficult project context.',

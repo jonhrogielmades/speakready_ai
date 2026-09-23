@@ -79,6 +79,7 @@ class ReliabilityHardeningTest extends TestCase
  'coaching' => [
  'keep' => 'Keep the query plan and row-estimate detail for "How would you diagnose a slow database query?".',
  'improve' => 'Add the final query result or check for "How would you diagnose a slow database query?".',
+ 'impact' => 'The missing final result limits how well the interviewer can judge whether the database diagnosis worked.',
  'next_try' => 'Answer "How would you diagnose a slow database query?" by linking the diagnostic steps to the verified result.',
  'next_attempt_steps' => [
  'Start with the database symptom you would check first.',
@@ -2186,6 +2187,7 @@ class ReliabilityHardeningTest extends TestCase
  'coaching' => [
  'keep' => $isSkipped? 'For "'.$questionText.'", there is no saved answer detail to keep yet.': 'Keep "'.$quote.'" as the saved detail for "'.$questionText.'".',
  'improve' => 'Add the missing '.$specificTerms.' result or detail for "'.$questionText.'".',
+ 'impact' => 'The '.$specificTerms.' result matters because it shows what the interviewer can judge from this answer.',
  'next_try' => 'Answer "'.$questionText.'" by connecting '.$specificTerms.' to one true result.',
  'next_attempt_steps' => $isSkipped? [
  'Start with a direct answer to "'.$questionText.'".',

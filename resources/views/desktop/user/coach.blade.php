@@ -10,14 +10,7 @@
 @php
     $coachUser = Auth::user();
     $coachUserInitial = $coachUser ? strtoupper(substr((string) $coachUser->name, 0, 1)) : 'U';
-    $coachUserPhotoUrl = null;
-
-    if ($coachUser?->profile_photo_path) {
-        $coachPhotoPath = $coachUser->profile_photo_path;
-        $coachUserPhotoUrl = Str::startsWith($coachPhotoPath, ['http://', 'https://', 'data:'])
-            ? $coachPhotoPath
-            : asset('storage/' . $coachPhotoPath);
-    }
+    $coachUserPhotoUrl = $coachUser?->profile_photo_url;
 @endphp
 @include('desktop.partials.page-hero-styles')
 

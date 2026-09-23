@@ -1,6 +1,8 @@
 @php
    $isUserPartialNavigation = request()->headers->get('X-SpeakReady-Partial-Navigation') === '1';
    $mobileHeaderPageTitle = trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview');
+   $mobileAuthUser = Auth::user();
+   $mobileProfilePhotoUrl = $mobileAuthUser?->profile_photo_url;
 @endphp
 @if($isUserPartialNavigation)
 <!DOCTYPE html>
@@ -3374,14 +3376,11 @@
             </div>
             <div class="mob-profile-wrap" id="mobProfileWrap">
                <button class="mob-avatar" id="mobProfileBtn" type="button" aria-label="Open account menu" aria-controls="mobProfileDropdown" aria-expanded="false" aria-haspopup="true" onclick="toggleMobileProfile(event, 'account')" title="Profile" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
-                  @if(Auth::check() && Auth::user()->profile_photo_path)
-                     @php
-                         $photoPath = Auth::user()->profile_photo_path;
-                         $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
-                     @endphp
-                     <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                  @if($mobileProfilePhotoUrl)
+                     <img src="{{ $mobileProfilePhotoUrl }}" alt="Avatar" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='';">
+                     <span style="display:none;">{{ $mobileAuthUser ? strtoupper(substr($mobileAuthUser->name, 0, 1)) : 'U' }}</span>
                   @else
-                     {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}
+                     {{ $mobileAuthUser ? strtoupper(substr($mobileAuthUser->name, 0, 1)) : 'U' }}
                   @endif
                </button>
             </div>
@@ -3391,10 +3390,11 @@
       <div class="mob-profile-dropdown" id="mobProfileDropdown" aria-hidden="true" role="dialog" aria-modal="false" aria-labelledby="mobProfileBtn" data-mode="pages" data-origin="top">
          <div class="mob-profile-head">
             <div class="mob-profile-head-avatar">
-               @if(Auth::check() && Auth::user()->profile_photo_path)
-                  <img src="{{ $photoUrl }}" alt="Avatar">
+               @if($mobileProfilePhotoUrl)
+                  <img src="{{ $mobileProfilePhotoUrl }}" alt="Avatar" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='';">
+                  <span style="display:none;">{{ $mobileAuthUser ? strtoupper(substr($mobileAuthUser->name, 0, 1)) : 'U' }}</span>
                @else
-                  {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}
+                  {{ $mobileAuthUser ? strtoupper(substr($mobileAuthUser->name, 0, 1)) : 'U' }}
                @endif
             </div>
             <div class="mob-profile-head-meta">

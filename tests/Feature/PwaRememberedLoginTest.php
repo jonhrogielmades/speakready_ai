@@ -6,6 +6,9 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as SocialiteUser;
+use Mockery;
 use Tests\TestCase;
 
 class PwaRememberedLoginTest extends TestCase
@@ -62,6 +65,39 @@ class PwaRememberedLoginTest extends TestCase
         $response->assertCookieMissing(Auth::guard()->getRecallerName());
     }
 
+    public function test_password_login_reports_email_and_password_mismatches(): void
+    {
+        User::factory()->create([
+            'email' => 'known-user@example.com',
+            'password' => Hash::make('correct-password'),
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $this->post(route('login'), [
+            'email' => 'missing-user@example.com',
+            'password' => 'correct-password',
+        ])->assertSessionHasErrors([
+            'email' => 'The email address do not match our records.',
+        ]);
+
+        $this->post(route('login'), [
+            'email' => 'known-user@example.com',
+            'password' => 'wrong-password',
+        ])->assertSessionHasErrors([
+            'password' => 'The password do not match our records.',
+        ]);
+
+        $this->post(route('login'), [
+            'email' => 'missing-user@example.com',
+            'password' => 'not-a-known-password',
+        ])->assertSessionHasErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ]);
+
+        $this->assertGuest();
+    }
+
     public function test_registration_logs_user_in_and_flashes_success_alert(): void
     {
         $response = $this->post(route('register'), [
@@ -71,7 +107,7 @@ class PwaRememberedLoginTest extends TestCase
             'password_confirmation' => 'password123',
         ]);
 
-        $response->assertRedirect(route('dashboard'))
+        $response->assertRedirect(route('terms.acceptance.show'))
             ->assertSessionHas('registration_success', true)
             ->assertSessionHas('success', 'Registration successful. Welcome to SpeakReady AI!');
 
@@ -83,6 +119,20 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertDatabaseHas('profiles', [
             'user_id' => User::where('email', 'new-interview-user@example.com')->value('id'),
         ]);
+
+        $this->get(route('terms.acceptance.show'))
+            ->assertOk()
+            ->assertSee('Review the Terms and Conditions')
+            ->assertSee('id="srTermsSuccessModal"', false)
+            ->assertSee('data-terms-success-modal', false)
+            ->assertSee('Registration successful. Welcome to SpeakReady AI!')
+            ->assertDontSee('terms-flash', false);
+
+        $this->post(route('terms.acceptance.store'), [
+            'terms_accepted' => '1',
+        ])->assertRedirect(route('dashboard'))
+            ->assertSessionHas('registration_success', true)
+            ->assertSessionHas('success', 'Registration successful. Welcome to SpeakReady AI!');
 
         $this->get(route('dashboard'))
             ->assertOk()
@@ -114,5 +164,76 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('data-auth-transition="google"', false)
             ->assertSee('Connecting to Google...', false)
             ->assertSee('border-right-color: rgba(14, 165, 233, 0.78);', false);
+    }
+
+    public function test_google_login_uses_picture_fallback_for_profile_photo(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'google-picture@example.com',
+            'google_id' => 'google-picture-id',
+            'profile_photo_path' => null,
+        ]);
+
+        $avatarUrl = 'https://lh3.googleusercontent.com/a/google-picture-id=s160-c';
+
+        $this->mockGoogleCallback([
+            'id' => 'google-picture-id',
+            'name' => 'Google Picture',
+            'email' => 'google-picture@example.com',
+            'avatar' => null,
+        ], [
+            'picture' => '//lh3.googleusercontent.com/a/google-picture-id=s160-c',
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback'))
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertSame($avatarUrl, $user->fresh()->profile_photo_path);
+
+        $this->actingAs($user->fresh())
+            ->get(route('user.account'))
+            ->assertOk()
+            ->assertSee('src="'.$avatarUrl.'"', false);
+    }
+
+    public function test_google_login_does_not_replace_uploaded_profile_photo(): void
+    {
+        $uploadedPhoto = 'data:image/png;base64,manual-upload';
+
+        $user = User::factory()->create([
+            'email' => 'manual-photo@example.com',
+            'google_id' => 'manual-photo-id',
+            'profile_photo_path' => $uploadedPhoto,
+        ]);
+
+        $this->mockGoogleCallback([
+            'id' => 'manual-photo-id',
+            'name' => 'Manual Photo',
+            'email' => 'manual-photo@example.com',
+            'avatar' => 'https://lh3.googleusercontent.com/a/manual-photo-id=s160-c',
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback'))
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertSame($uploadedPhoto, $user->fresh()->profile_photo_path);
+    }
+
+    private function mockGoogleCallback(array $attributes, array $raw = []): void
+    {
+        $googleUser = SocialiteUser::fake($attributes);
+        $googleUser->setRaw(array_merge($attributes, $raw));
+
+        $provider = Mockery::mock();
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('setHttpClient')->andReturnSelf();
+        $provider->shouldReceive('user')->andReturn($googleUser);
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
     }
 }

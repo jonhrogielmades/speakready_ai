@@ -1,6 +1,8 @@
 @php
    $isUserPartialNavigation = request()->headers->get('X-SpeakReady-Partial-Navigation') === '1';
    $userPartialPageTitle = trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview');
+   $desktopAuthUser = Auth::user();
+   $desktopProfilePhotoUrl = $desktopAuthUser?->profile_photo_url;
 @endphp
 @if($isUserPartialNavigation)
 <!DOCTYPE html>
@@ -215,16 +217,13 @@
                   <div style="position:relative" id="profileWrap">
                      <button class="db-user-pill" id="userPill" type="button" aria-label="Open profile menu" aria-haspopup="true" aria-expanded="false" aria-controls="profileDropdown" onclick="toggleProfile(event)">
                         <span class="user-avatar-presence">
-                    @if(Auth::check() && Auth::user()->profile_photo_path)
-                           @php
-                               $photoPath = Auth::user()->profile_photo_path;
-                               $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
-                           @endphp
+                    @if($desktopProfilePhotoUrl)
                            <span class="db-avatar user-avatar" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
-                              <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                              <img src="{{ $desktopProfilePhotoUrl }}" alt="Avatar" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='';">
+                              <span style="display:none;">{{ $desktopAuthUser ? strtoupper(substr($desktopAuthUser->name, 0, 1)) : 'U' }}</span>
                            </span>
                      @else
-                           <span class="db-avatar user-avatar">{{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}</span>
+                           <span class="db-avatar user-avatar">{{ $desktopAuthUser ? strtoupper(substr($desktopAuthUser->name, 0, 1)) : 'U' }}</span>
                      @endif
                         </span>
                         <span class="d-none d-md-block">

@@ -1407,3 +1407,142 @@
         margin-bottom: 0 !important;
     }
 }
+
+#account-page .account-record-card {
+    display: grid !important;
+    gap: 14px !important;
+}
+
+#account-page .account-record-list {
+    display: grid !important;
+    gap: 10px !important;
+}
+
+#account-page .account-record-item {
+    display: grid !important;
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+    padding: 12px !important;
+    border: 1px solid var(--account-pro-border, var(--account-shell-border, rgba(15, 23, 42, 0.1))) !important;
+    border-radius: 10px !important;
+    background: var(--account-pro-soft, var(--account-shell-field, rgba(248, 250, 252, 0.9))) !important;
+}
+
+#account-page .account-record-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 10px !important;
+    background: rgba(37, 99, 235, 0.1) !important;
+    color: var(--account-pro-accent, var(--account-shell-accent, #2563eb)) !important;
+}
+
+#account-page .account-record-copy {
+    display: grid !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+}
+
+#account-page .account-record-label {
+    color: var(--account-pro-muted, var(--account-shell-muted, #64748b)) !important;
+    font-size: 0.68rem !important;
+    font-weight: 850 !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0 !important;
+}
+
+#account-page .account-record-copy strong {
+    color: var(--account-pro-title, var(--account-shell-title, #0f172a)) !important;
+    font-size: 0.92rem !important;
+    font-weight: 900 !important;
+    line-height: 1.2 !important;
+    overflow-wrap: anywhere !important;
+}
+
+#account-page .account-record-copy small {
+    color: var(--account-pro-muted, var(--account-shell-muted, #64748b)) !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    overflow-wrap: anywhere !important;
+}
+
+#account-page .account-record-status {
+    display: inline-flex !important;
+    align-items: center !important;
+    width: fit-content !important;
+    min-height: 26px !important;
+    padding: 4px 10px !important;
+    border-radius: 999px !important;
+    font-size: 0.75rem !important;
+    line-height: 1 !important;
+}
+
+#account-page .account-record-status.is-verified {
+    background: rgba(5, 150, 105, 0.12) !important;
+    color: var(--account-pro-success, #059669) !important;
+}
+
+#account-page .account-record-status.is-pending {
+    background: rgba(245, 158, 11, 0.14) !important;
+    color: #b45309 !important;
+}
+
+@media (min-width: 992px) {
+    body.user-desktop-shell #account-page .account-record-grid-item {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.user-desktop-shell #account-page .account-record-card {
+        width: 100% !important;
+        margin-bottom: 0 !important;
+    }
+
+    body.user-desktop-shell #account-page .account-record-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        align-items: stretch !important;
+    }
+
+    body.user-desktop-shell #account-page .account-record-item {
+        height: 100% !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    #account-page .account-record-card {
+        gap: 10px !important;
+    }
+
+    #account-page .account-record-list {
+        gap: 8px !important;
+    }
+
+    #account-page .account-record-item {
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        gap: 9px !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+    }
+
+    #account-page .account-record-icon {
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 8px !important;
+        font-size: 0.84rem !important;
+    }
+
+    #account-page .account-record-label,
+    #account-page .account-record-copy small {
+        font-size: 0.62rem !important;
+    }
+
+    #account-page .account-record-copy strong {
+        font-size: 0.82rem !important;
+    }
+}

@@ -4106,10 +4106,19 @@ html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-
 }
 
 html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-feedback strong,
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-impact strong,
 html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-focus strong {
     color: var(--feedback-feature-title, #0f172a) !important;
     -webkit-text-fill-color: var(--feedback-feature-title, #0f172a) !important;
     font-weight: 950 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-impact {
+    margin: 0 !important;
+    padding: 8px 10px 8px 12px !important;
+    border-left: 3px solid #2563eb !important;
+    border-radius: 0 8px 8px 0 !important;
+    background: rgba(37, 99, 235, 0.07) !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-focus {

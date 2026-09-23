@@ -40,6 +40,7 @@
  $nextAttemptSteps = $reviewFeedbackItems($contentAlignment['next_attempt_steps'] ?? [], 2);
  $supportingExcerpts = $listItems($contentAlignment['evidence_quotes'] ?? ($evidenceMap['supporting_excerpts'] ?? []), 1);
  $improvementFocus = $reviewFeedbackText($contentAlignment['improvement_focus'] ?? '');
+ $impactExplanation = $reviewFeedbackText($contentAlignment['impact'] ?? '');
  if ($improvementFocus === '' && ! empty($missingPoints)) {
  $improvementFocus = $missingPoints[0];
  }
@@ -153,6 +154,13 @@
  <div class="review-block-title review-title-warning"><i class="fa-solid fa-bullseye"></i><span>What To Improve</span></div>
  <p>{{ $improvementFocus }}</p>
  </section>
+
+ @if($impactExplanation !== '')
+ <section class="review-answer-section">
+ <div class="review-block-title"><i class="fa-solid fa-chart-line"></i><span>Why It Matters</span></div>
+ <p>{{ $impactExplanation }}</p>
+ </section>
+ @endif
 
  <section class="review-answer-section">
  <div class="review-block-title"><i class="fa-solid fa-location-arrow"></i><span>Next Practice</span></div>

@@ -1057,6 +1057,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  'coaching' => [
  'keep' => 'Keep the part where you listened to the customer and checked the account.',
  'improve' => 'Add the final customer result after you confirmed the next step.',
+ 'impact' => 'The result matters because it shows whether the customer action worked and helps explain the score.',
  'next_try' => 'Answer this customer question by naming the issue, your action, and the result.',
  'next_attempt_steps' => [
  'Name the customer complaint or delay.',

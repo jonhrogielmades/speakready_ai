@@ -493,6 +493,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $providerCoaching = [
             'keep' => 'Only "okay" is available, so keep it only as proof that a reply was started for the introduction question.',
             'improve' => 'Add your name, current location, and the janitor background you want the interviewer to know first.',
+            'impact' => 'Without those introduction details, the interviewer cannot understand who you are or what background supports the janitor role.',
             'next_try' => 'Answer the introduction question with your name and location before adding one relevant janitor experience.',
             'next_attempt_steps' => [
                 'Say your name and where you are based.',
@@ -519,6 +520,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $alignment = data_get($coaching, 'content_alignment');
         $this->assertSame($providerCoaching['keep'], $alignment['what_worked']);
         $this->assertSame($providerCoaching['improve'], $alignment['improvement_focus']);
+        $this->assertSame($providerCoaching['impact'], $alignment['impact']);
         $this->assertSame($providerCoaching['next_try'], $alignment['action']);
         $this->assertSame($providerCoaching['next_attempt_steps'], $alignment['next_attempt_steps']);
         $this->assertSame($providerCoaching['success_check'], $alignment['success_check']);

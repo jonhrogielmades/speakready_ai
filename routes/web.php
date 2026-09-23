@@ -10,6 +10,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\MentorReviewController;
+use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserMasteryController;
 use App\Http\Controllers\UserMissionController;
@@ -84,6 +85,9 @@ Route::get('/cookie-preferences', [LegalPageController::class, 'cookies'])->name
 
 // User Routes
 Route::middleware(['auth', 'user'])->group(function () {
+    Route::get('/terms-and-conditions', [TermsAcceptanceController::class, 'show'])->name('terms.acceptance.show');
+    Route::post('/terms-and-conditions', [TermsAcceptanceController::class, 'store'])->name('terms.acceptance.store');
+
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/interview/setup', function () {

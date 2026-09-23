@@ -128,8 +128,8 @@
                            </div>
                         </div>
                         <div class="form-check auth-check auth-terms">
-                           <input class="form-check-input" type="checkbox" name="terms_accepted" value="1" id="signupTerms" checked required>
-                           <label class="form-check-label" for="signupTerms">I agree to the <a href="{{ route('legal.terms') }}">Terms of Service</a> and <a href="{{ route('legal.privacy') }}">Privacy Policy</a></label>
+                           <input class="form-check-input" type="checkbox" name="terms_accepted" value="1" id="signupTerms" required @checked(old('terms_accepted'))>
+                           <label class="form-check-label" for="signupTerms">I understand I will review and accept the <a href="{{ route('legal.terms') }}">Terms of Service</a> and <a href="{{ route('legal.privacy') }}">Privacy Policy</a> before entering my dashboard.</label>
                         </div>
                         <button type="submit" class="bgrd btn auth-submit w-100 fw-semibold" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm" aria-hidden="true"></i></button>
                      </form>

@@ -1413,7 +1413,7 @@ class AIService
  return [
  'type' => 'json_schema',
  'json_schema' => [
- 'name' => 'interview_feedback_v7',
+ 'name' => 'interview_feedback_v8',
  'description' => 'Question-linked, evidence-linked interview scores and AI-generated coaching feedback.',
  'strict' => true,
  'schema' => [
@@ -1462,6 +1462,7 @@ class AIService
  'properties' => [
  'keep' => ['type' => 'string'],
  'improve' => ['type' => 'string'],
+ 'impact' => ['type' => 'string'],
  'next_try' => ['type' => 'string'],
  'next_attempt_steps' => [
  'type' => 'array',
@@ -1470,7 +1471,7 @@ class AIService
  'success_check' => ['type' => 'string'],
  ],
  'required' => [
- 'keep', 'improve', 'next_try',
+ 'keep', 'improve', 'impact', 'next_try',
  'next_attempt_steps', 'success_check',
  ],
  ],
@@ -1512,7 +1513,7 @@ class AIService
  $prompt = "You are an expert interview coach. Apply the score guide consistently and check only details in each candidate answer.\n";
  $prompt.= self::languageOutputInstruction(
  $sessionData['target_language']?? null,
- 'ai_feedback, better_sample_answer, follow_up_question, and session_feedback text while preserving evidence_quotes, question_focus, and missing_criteria exactly as written in their source text'
+ 'ai_feedback, better_sample_answer, follow_up_question, coaching text, and session_feedback text while preserving evidence_quotes, question_focus, and missing_criteria exactly as written in their source text'
  )."\n";
  $contextText = strtolower(
  (string) ($sessionData['interview_focus']?? '').' '.
@@ -1577,7 +1578,7 @@ You MUST NOT invent information, assumptions, achievements, skills, experiences,
 
 PLAIN LANGUAGE REQUIREMENTS:
 Write all user-facing text in short, simple sentences.
-Keep ai_feedback to 2-3 short sentences. Avoid repeated wording and do not restate the same advice twice.
+Keep ai_feedback to 3-4 short sentences. Avoid repeated wording and do not restate the same advice twice.
 If the report is in English, use simple English words that students and job seekers can understand.
 If another target language is selected, use simple everyday words in that language.
 Avoid hard words or jargon such as "evidence-grounded", "calibrated", "rubric", "infer", "observable", "assessment", "professionalism", "relevance", and "criteria" in ai_feedback, coaching, better_sample_answer, follow_up_question, and session_feedback unless the question, answer, or score label already uses them.
@@ -1589,6 +1590,7 @@ PER-QUESTION MATCHING REQUIREMENTS:
 Each feedback item is an isolated question-answer pair. Check candidate_answer only against the question, expected_answer_guide, and mapped_skills inside the same object and same id.
 Never use details, points, strengths, gaps, or wording from another answer id.
 In ai_feedback, explicitly explain whether that answer answered the question directly, answered part of it, or did not clearly answer that specific question, and why.
+In ai_feedback, include one short impact sentence that explains how the answer detail or missing detail affects the score, interviewer understanding, or next practice priority.
 Every non-skipped item must have distinct commentary tied to its own question focus and exact answer evidence. Do not reuse an identical feedback template across different ids.
 Use the supplied question_intent, star_applicable, requires_personal_action, and requires_result values. Do not require STAR, personal ownership, a result, or a metric when the corresponding supplied value is false.
 
@@ -1600,7 +1602,7 @@ AI-ONLY VISIBLE FEEDBACK REQUIREMENTS:
 You MUST return the visible coaching text for every answer. The app will not create local substitute feedback when your response is missing, generic, duplicated, or unsupported.
 For each item, return:
 
-* ai_feedback: 2-3 short sentences tied to the exact question and exact answer evidence.
+* ai_feedback: 3-4 short sentences tied to the exact question and exact answer evidence. Include what the detail changes for the score or interviewer understanding.
 * better_sample_answer: 1-3 short first-person sentences that improve the answer using only facts already found in candidate_answer. Write the improved answer itself, not the prompt, question text, or advice about how to answer. Do not add invented achievements, employers, tools, numbers, or results. If the answer is skipped, use an empty string.
 * follow_up_question: one short interviewer question for the same answer that asks for a missing detail or clearer result.
 * coaching: the exact visible text for the compact report sections. These fields replace local wording in the user report, so do not use canned or repeated sentences.
@@ -1609,11 +1611,12 @@ For coaching:
 
 * keep: one short sentence naming what can be kept or what limited answer detail was available for this exact question.
 * improve: one short sentence naming the most important missing point for this exact question.
+* impact: 1-2 short sentences explaining why the kept or missing point matters for this exact question, the score, and the user's next interview attempt. If a result, effect, number, or lesson is missing, explain what the interviewer still cannot judge.
 * next_try: one direct instruction for the next attempt, tailored to this question and this answer.
 * next_attempt_steps: 2-4 short checklist items for retrying this exact question. Each item must be different and question-specific.
 * success_check: one short sentence describing how the user will know the retry answered this exact question well.
 
-Do not copy the same coaching.keep, coaching.improve, coaching.next_try, coaching.next_attempt_steps, or coaching.success_check across different answer ids.
+Do not copy the same coaching.keep, coaching.improve, coaching.impact, coaching.next_try, coaching.next_attempt_steps, or coaching.success_check across different answer ids.
 
 FORBIDDEN GENERIC FEEDBACK:
 Do NOT use generic comments such as:
@@ -1628,6 +1631,7 @@ Instead, reference the candidate's exact response and explain:
 * What was mentioned
 * What was missing
 * Why it affected the score
+* What practical impact it has on interviewer understanding or the next attempt
 * One concrete change to make in the next attempt for this exact question
 
 EXAMPLE:
@@ -1802,6 +1806,7 @@ For each feedback item:
 * Do not translate, paraphrase, correct, or combine evidence_quotes.
 * Each excerpt must be useful detail for at least one score or feedback claim.
 * ai_feedback must include at least one of those exact excerpts verbatim and explain what it supports.
+* ai_feedback and coaching.impact must explain the practical impact of the evidence or missing result in plain words.
 * Keep numeric scores only in score fields; do not repeat score values in ai_feedback.
 * If the answer is skipped, return an empty evidence_quotes array.
 * Base every score on those excerpts plus clear missing details. Never score a guessed fact.
@@ -1852,6 +1857,7 @@ OUTPUT SCHEMA:
 "coaching": {
 "keep": "",
 "improve": "",
+"impact": "",
 "next_try": "",
 "next_attempt_steps": [],
 "success_check": ""
@@ -4426,8 +4432,8 @@ PROMPT;
  }
 
  $validated = [];
- foreach (['keep', 'improve', 'next_try', 'success_check'] as $field) {
- $text = self::validatedProviderCoachingText($coaching[$field]?? null, $answer);
+ foreach (['keep', 'improve', 'impact', 'next_try', 'success_check'] as $field) {
+ $text = self::validatedProviderCoachingText($coaching[$field]?? null, $answer, $field === 'impact'? 700: 520);
  if ($text === null) {
  return [];
  }
@@ -4528,7 +4534,7 @@ PROMPT;
  }
 
  $parts = [];
- foreach (['keep', 'improve', 'next_try', 'success_check'] as $field) {
+ foreach (['keep', 'improve', 'impact', 'next_try', 'success_check'] as $field) {
  if (is_scalar($coaching[$field]?? null)) {
  $parts[] = (string) $coaching[$field];
  }
@@ -4998,6 +5004,11 @@ PROMPT;
  'next_attempt_actionable' => trim((string) ($feedback['ai_feedback']?? ''))!== ''
  && trim((string) ($feedback['follow_up_question']?? ''))!== ''
  && ($isSkipped || trim((string) ($feedback['better_sample_answer']?? ''))!== ''),
+ 'impact_explained_in_plain_words' => self::feedbackExplainsImpact(
+ trim((string) ($feedback['ai_feedback']?? '').' '.(string) data_get($feedback, 'provider_coaching.impact', '')),
+ $answerText,
+ $questionText
+ ),
  'personal_trait_inference_excluded' =>! self::feedbackInfersForbiddenTrait((string) ($feedback['ai_feedback']?? '')),
  'perfect_accuracy_not_claimed' =>! self::feedbackClaimsPerfectCertainty((string) ($feedback['ai_feedback']?? '')),
  ];
@@ -5017,6 +5028,29 @@ PROMPT;
  'scope' => 'Checks for answer proof, safe scoring, and useful next steps.',
  'limitation' => '100% checks passed means the required checks passed. It does not mean the review is perfect.',
  ];
+ }
+
+ private static function feedbackExplainsImpact(string $text, string $answerText, string $questionText): bool
+ {
+ $plain = self::normalizeEvidenceText($text);
+ if ($plain === '' || self::wordCount($plain) < 8) {
+ return false;
+ }
+
+ if (preg_match('/\b(?:score|check|judge|interviewer|hiring|readiness|result|effect|impact|matters|shows|helps|hurts|weakens|strengthens|clearer|missing|next attempt|next practice|answer match|tone)\b/i', $plain)!== 1) {
+ return false;
+ }
+
+ $contextKeywords = array_values(array_diff(
+ self::meaningfulKeywords($answerText.' '.$questionText),
+ [
+ 'answer', 'answers', 'candidate', 'clear', 'detail', 'details', 'feedback',
+ 'interview', 'question', 'response', 'score', 'support', 'true',
+ ]
+ ));
+
+ return $contextKeywords === []
+ || array_intersect($contextKeywords, self::meaningfulKeywords($plain))!== [];
  }
 
  private static function aggregateFeedbackQuality(array $feedbackItems): array

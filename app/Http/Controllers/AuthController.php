@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
+use App\Models\Profile;
 use App\Models\Setting;
+use App\Models\User;
 use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
-use App\Models\User;
-use App\Models\Profile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +21,10 @@ use Throwable;
 
 class AuthController extends Controller
 {
+    private const LOGIN_EMAIL_MISMATCH_MESSAGE = 'The email address do not match our records.';
+    private const LOGIN_PASSWORD_MISMATCH_MESSAGE = 'The password do not match our records.';
+    private const LOGIN_CREDENTIALS_MISMATCH_MESSAGE = 'The provided credentials do not match our records.';
+
     public function register(Request $request)
     {
         if (! Setting::enabled('acc_registration')) {
@@ -65,7 +69,7 @@ class AuthController extends Controller
                 ->with('registration_success', true);
         }
 
-        return redirect()->route('dashboard')
+        return redirect()->route('terms.acceptance.show')
             ->with('success', $registrationMessage)
             ->with('registration_success', true);
     }
@@ -88,6 +92,20 @@ class AuthController extends Controller
             'password' => $validated['password'],
         ];
 
+        $user = User::where('email', $validated['email'])->first();
+
+        if (! $user) {
+            $message = $this->passwordMatchesAnyUser($validated['password'])
+                ? self::LOGIN_EMAIL_MISMATCH_MESSAGE
+                : self::LOGIN_CREDENTIALS_MISMATCH_MESSAGE;
+
+            return $this->failedLoginResponse('email', $message);
+        }
+
+        if (! Hash::check($validated['password'], (string) $user->password)) {
+            return $this->failedLoginResponse('password', self::LOGIN_PASSWORD_MISMATCH_MESSAGE);
+        }
+
         if (Auth::attempt($credentials, $rememberDevice)) {
             $request->session()->regenerate();
             $user = Auth::user();
@@ -109,12 +127,11 @@ class AuthController extends Controller
             if ($user->is_admin) {
                 return redirect()->route('admin.dashboard');
             }
+
             return redirect()->route('dashboard');
         }
 
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+        return $this->failedLoginResponse('email', self::LOGIN_CREDENTIALS_MISMATCH_MESSAGE);
     }
 
     public function requestReactivation(Request $request)
@@ -155,6 +172,10 @@ class AuthController extends Controller
 
     public function sendResetLink(Request $request)
     {
+        $request->merge([
+            'email' => $this->normalizeEmail($request->input('email')),
+        ]);
+
         $request->validate([
             'email' => ['required', 'email'],
         ]);
@@ -187,6 +208,10 @@ class AuthController extends Controller
 
     public function resetPassword(Request $request)
     {
+        $request->merge([
+            'email' => $this->normalizeEmail($request->input('email')),
+        ]);
+
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
@@ -205,9 +230,13 @@ class AuthController extends Controller
             }
         );
 
-        return $status === Password::PASSWORD_RESET
-            ? redirect('/')->with('success', __($status))
-            : back()->withErrors(['email' => __($status)])->onlyInput('email');
+        if ($status !== Password::PASSWORD_RESET) {
+            return back()->withErrors(['email' => __($status)])->onlyInput('email');
+        }
+
+        $request->session()->regenerate();
+
+        return redirect('/')->with('success', __($status));
     }
 
     public function logout(Request $request)
@@ -242,6 +271,7 @@ class AuthController extends Controller
             $intent = in_array($intent, ['login', 'register'], true) ? $intent : 'login';
             $driver = $this->googleDriver();
             $googleUser = $driver->user();
+            $googleAvatarUrl = $this->googleAvatarUrl($googleUser);
 
             if (blank($googleUser->email)) {
                 return redirect('/')->withErrors([
@@ -278,6 +308,8 @@ class AuthController extends Controller
                 ])->withInput(['email' => $googleUser->email]);
             }
 
+            $registeredWithGoogle = false;
+
             if (! $user) {
                 if (! Setting::enabled('acc_registration')) {
                     return redirect('/')->withErrors([
@@ -293,8 +325,9 @@ class AuthController extends Controller
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
                     'password' => null,
-                    'profile_photo_path' => $googleUser->avatar,
+                    'profile_photo_path' => $googleAvatarUrl,
                 ]);
+                $registeredWithGoogle = true;
 
                 $this->ensureAuthenticationProfile($user);
 
@@ -307,13 +340,13 @@ class AuthController extends Controller
                 );
             } else {
                 $updates = [];
-                if (!$user->google_id) {
+                if (! $user->google_id) {
                     $updates['google_id'] = $googleUser->id;
                 }
-                if (!$user->profile_photo_path) {
-                    $updates['profile_photo_path'] = $googleUser->avatar;
+                if ($this->shouldSyncGoogleAvatar($user, $googleAvatarUrl)) {
+                    $updates['profile_photo_path'] = $googleAvatarUrl;
                 }
-                if (!empty($updates)) {
+                if (! empty($updates)) {
                     $user->update($updates);
                 }
             }
@@ -332,10 +365,20 @@ class AuthController extends Controller
                 return redirect()->route('admin.dashboard');
             }
 
+            if ($registeredWithGoogle) {
+                return redirect()->route('terms.acceptance.show')
+                    ->with('success', 'Registration successful. Welcome to SpeakReady AI!')
+                    ->with('registration_success', true);
+            }
+
+            if (! $user->hasAcceptedCurrentTerms()) {
+                return redirect()->route('terms.acceptance.show');
+            }
+
             return redirect()->route('dashboard');
 
         } catch (Throwable $e) {
-            Log::error('Google authentication failed: ' . $e->getMessage(), ['exception' => $e]);
+            Log::error('Google authentication failed: '.$e->getMessage(), ['exception' => $e]);
 
             return redirect('/')->withErrors([
                 'email' => 'Google authentication took too long or could not be completed. Please try again.',
@@ -348,6 +391,54 @@ class AuthController extends Controller
         $request->session()->put('google_auth_intent', $intent);
 
         return Socialite::driver('google')->stateless()->redirect();
+    }
+
+    private function googleAvatarUrl($googleUser): ?string
+    {
+        $avatar = trim((string) ($googleUser->avatar
+            ?: data_get($googleUser->user ?? [], 'picture')
+            ?: ($googleUser->avatar_original ?? '')));
+
+        if ($avatar === '') {
+            return null;
+        }
+
+        if (Str::startsWith($avatar, '//')) {
+            $avatar = 'https:'.$avatar;
+        }
+
+        if (! Str::startsWith($avatar, ['http://', 'https://', 'data:'])) {
+            return null;
+        }
+
+        return $avatar;
+    }
+
+    private function shouldSyncGoogleAvatar(User $user, ?string $googleAvatarUrl): bool
+    {
+        if (! $googleAvatarUrl) {
+            return false;
+        }
+
+        $currentPhoto = trim((string) $user->profile_photo_path);
+
+        return $currentPhoto === '' || $this->isGoogleHostedAvatar($currentPhoto);
+    }
+
+    private function isGoogleHostedAvatar(string $photoPath): bool
+    {
+        if (Str::startsWith($photoPath, '//')) {
+            $photoPath = 'https:'.$photoPath;
+        }
+
+        if (! Str::startsWith($photoPath, ['http://', 'https://'])) {
+            return false;
+        }
+
+        $host = parse_url($photoPath, PHP_URL_HOST);
+
+        return is_string($host)
+            && Str::contains(Str::lower($host), ['googleusercontent.com', 'google.com']);
     }
 
     private function googleDriver()
@@ -378,6 +469,29 @@ class AuthController extends Controller
         $driver->setHttpClient(new GuzzleClient($guzzleOptions));
 
         return $driver;
+    }
+
+    private function normalizeEmail(mixed $email): string
+    {
+        return Str::lower(trim((string) $email));
+    }
+
+    private function failedLoginResponse(string $field, string $message)
+    {
+        return back()->withErrors([
+            $field => $message,
+        ])->onlyInput('email');
+    }
+
+    private function passwordMatchesAnyUser(string $password): bool
+    {
+        foreach (User::whereNotNull('password')->select('password')->cursor() as $user) {
+            if (Hash::check($password, (string) $user->password)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function logAuthenticationActivity(User $user, string $action, string $activity, ?string $ipAddress): void

@@ -66,6 +66,10 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ->assertSee('id="accountProfileForm"', false)
  ->assertSee('id="accountPasswordForm"', false)
  ->assertSee('id="accountDeleteForm"', false)
+ ->assertSee('Account &amp; Privacy', false)
+ ->assertSee('Account Created')
+ ->assertSee('Last Login')
+ ->assertSee('Email Status')
  ->assertSee('data-sr-confirm-form', false)
  ->assertDontSee('onsubmit="return confirm', false);
 

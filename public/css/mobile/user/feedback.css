@@ -3745,11 +3745,22 @@ body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badg
 
     html body #mob-content .feedback-shell .feedback-answer-feedback strong,
     html body .feedback-shell .feedback-answer-feedback strong,
+    html body #mob-content .feedback-shell .feedback-answer-impact strong,
+    html body .feedback-shell .feedback-answer-impact strong,
     html body #mob-content .feedback-shell .feedback-answer-focus strong,
     html body .feedback-shell .feedback-answer-focus strong {
         color: var(--feedback-feature-title, #0f172a) !important;
         -webkit-text-fill-color: var(--feedback-feature-title, #0f172a) !important;
         font-weight: 950 !important;
+    }
+
+    html body #mob-content .feedback-shell .feedback-answer-impact,
+    html body .feedback-shell .feedback-answer-impact {
+        margin: 0 !important;
+        padding: 7px 8px 7px 10px !important;
+        border-left: 3px solid #2563eb !important;
+        border-radius: 0 8px 8px 0 !important;
+        background: rgba(37, 99, 235, 0.07) !important;
     }
 
     html body #mob-content .feedback-shell .feedback-answer-focus,

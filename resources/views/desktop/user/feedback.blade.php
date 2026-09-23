@@ -2,7 +2,7 @@
 @section('title', 'Feedback Center')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=12') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=13') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')
@@ -202,6 +202,9 @@
  @endif
  </div>
  <p class="feedback-answer-feedback"><strong>Feedback:</strong> {{ $answerCoaching->feedback }}</p>
+ @if(($answerCoaching->impact ?? '') !== '')
+ <p class="feedback-answer-impact"><strong>Impact:</strong> {{ $answerCoaching->impact }}</p>
+ @endif
  <p class="feedback-answer-focus"><strong>Next practice:</strong> {{ $answerCoaching->improvement }}</p>
  <a href="{{ $answerCoaching->review_url }}" class="feedback-answer-action">
  View details <i class="fa-solid fa-arrow-right"></i>
