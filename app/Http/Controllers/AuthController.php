@@ -279,13 +279,16 @@ class AuthController extends Controller
                 ]);
             }
 
+            $googleEmail = $this->normalizeEmail($googleUser->email);
+            $googleVerifiedAt = now();
+
             $user = User::withTrashed()
                 ->where('google_id', $googleUser->id)
                 ->first();
 
             if (! $user) {
                 $user = User::withTrashed()
-                    ->where('email', $googleUser->email)
+                    ->where('email', $googleEmail)
                     ->first();
             }
 
@@ -298,14 +301,14 @@ class AuthController extends Controller
                     'email' => 'This Google email is already registered. Please log in with Google instead.',
                 ])->withInput([
                     'name' => $googleUser->name ?: 'Google User',
-                    'email' => $googleUser->email,
+                    'email' => $googleEmail,
                 ]);
             }
 
             if (! $user && $intent === 'login') {
                 return redirect('/')->withErrors([
                     'email' => 'No SpeakReady AI account was found for this Google email. Please register first.',
-                ])->withInput(['email' => $googleUser->email]);
+                ])->withInput(['email' => $googleEmail]);
             }
 
             $registeredWithGoogle = false;
@@ -316,17 +319,20 @@ class AuthController extends Controller
                         'email' => 'New account registration is currently disabled by the administrator.',
                     ])->withInput([
                         'name' => $googleUser->name ?: 'Google User',
-                        'email' => $googleUser->email,
+                        'email' => $googleEmail,
                     ]);
                 }
 
                 $user = User::create([
                     'name' => $googleUser->name ?: 'Google User',
-                    'email' => $googleUser->email,
+                    'email' => $googleEmail,
                     'google_id' => $googleUser->id,
-                    'password' => null,
+                    'password' => Hash::make(Str::random(64)),
                     'profile_photo_path' => $googleAvatarUrl,
                 ]);
+                $user->forceFill([
+                    'email_verified_at' => $googleVerifiedAt,
+                ])->save();
                 $registeredWithGoogle = true;
 
                 $this->ensureAuthenticationProfile($user);
@@ -346,8 +352,11 @@ class AuthController extends Controller
                 if ($this->shouldSyncGoogleAvatar($user, $googleAvatarUrl)) {
                     $updates['profile_photo_path'] = $googleAvatarUrl;
                 }
+                if (! $user->email_verified_at && $this->normalizeEmail($user->email) === $googleEmail) {
+                    $updates['email_verified_at'] = $googleVerifiedAt;
+                }
                 if (! empty($updates)) {
-                    $user->update($updates);
+                    $user->forceFill($updates)->save();
                 }
             }
 

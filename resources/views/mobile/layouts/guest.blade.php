@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=16') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=17') }}" />
       <style data-mobile-side-gutter="10px">
          @media (max-width: 767.98px) {
             body.guest-mobile-shell {
@@ -109,7 +109,7 @@
          <nav id="nbar">
             <div class="container">
                <div class="d-flex align-items-center justify-content-between w-100">
-                  <a href="#hero" class="guest-brand d-flex align-items-center gap-2 text-truncate" style="font-size:1.2rem;font-weight:700;color:var(--tx); max-width: calc(100vw - 120px);">
+                  <a href="#hero" class="guest-brand d-flex align-items-center gap-2" style="font-size:1.2rem;font-weight:700;color:var(--tx);">
                      <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0; flex-shrink: 0;">
                      <span class="guest-brand-copy">
                         <span class="guest-brand-name">SpeakReady AI</span>

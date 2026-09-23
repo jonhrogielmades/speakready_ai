@@ -1,13 +1,17 @@
 @php
     $accountUser = Auth::user();
-    $accountCreatedAt = $accountUser?->created_at;
-    $accountLastLoginAt = $lastLoginAt ?? null;
-    $accountEmailVerifiedAt = $accountUser?->email_verified_at;
+    $accountTimezone = 'Asia/Manila';
+    $accountTimezoneLabel = 'PHT';
+    $accountInPhilippineTime = static fn ($timestamp) => $timestamp ? $timestamp->copy()->timezone($accountTimezone) : null;
+
+    $accountCreatedAt = $accountInPhilippineTime($accountUser?->created_at);
+    $accountLastLoginAt = $accountInPhilippineTime($lastLoginAt ?? null);
+    $accountEmailVerifiedAt = $accountInPhilippineTime($accountUser?->email_verified_at);
 
     $accountCreatedDate = $accountCreatedAt?->format('M d, Y') ?? 'Not recorded';
-    $accountCreatedTime = $accountCreatedAt?->format('h:i A') ?? 'Awaiting record';
+    $accountCreatedTime = $accountCreatedAt ? $accountCreatedAt->format('h:i A').' '.$accountTimezoneLabel : 'Awaiting record';
     $accountLastLoginDate = $accountLastLoginAt?->format('M d, Y') ?? 'No login recorded';
-    $accountLastLoginTime = $accountLastLoginAt?->format('h:i A') ?? 'Sign in to update this record';
+    $accountLastLoginTime = $accountLastLoginAt ? $accountLastLoginAt->format('h:i A').' '.$accountTimezoneLabel : 'Sign in to update this record';
     $accountEmailStatus = $accountEmailVerifiedAt ? 'Verified' : 'Pending';
     $accountEmailStatusMeta = $accountEmailVerifiedAt
         ? 'Verified '.$accountEmailVerifiedAt->format('M d, Y')

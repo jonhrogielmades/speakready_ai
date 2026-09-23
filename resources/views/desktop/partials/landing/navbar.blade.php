@@ -2,9 +2,9 @@
          <nav id="nbar">
             <div class="container">
                <div class="d-flex align-items-center justify-content-between w-100">
-                  <a href="#" class="d-flex align-items-center gap-2 text-truncate" style="font-size:1.2rem;font-weight:700;color:var(--tx); max-width: calc(100vw - 120px);">
+                  <a href="#" class="guest-brand d-flex align-items-center gap-2" style="font-size:1.2rem;font-weight:700;color:var(--tx);">
                      <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0; flex-shrink: 0;">
-                     <span class="text-truncate">SpeakReady AI</span>
+                     <span class="guest-brand-name">SpeakReady AI</span>
                   </a>
                   <div class="d-none d-xl-flex align-items-center gap-1 mx-auto">
                      <a href="#" class="nav-link">Home</a>

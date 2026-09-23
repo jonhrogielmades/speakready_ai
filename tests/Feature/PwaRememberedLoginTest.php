@@ -197,6 +197,56 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('src="'.$avatarUrl.'"', false);
     }
 
+    public function test_google_login_marks_matching_email_as_verified(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'email' => 'google-unverified@example.com',
+            'google_id' => 'google-unverified-id',
+            'status' => 'active',
+        ]);
+
+        $this->mockGoogleCallback([
+            'id' => 'google-unverified-id',
+            'name' => 'Google Verified',
+            'email' => 'google-unverified@example.com',
+            'avatar' => null,
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback'))
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
+
+        $this->actingAs($user->fresh())
+            ->get(route('user.account'))
+            ->assertOk()
+            ->assertSee('Email Status')
+            ->assertSee('Verified')
+            ->assertDontSee('Email verification not completed');
+    }
+
+    public function test_google_registration_creates_verified_email_account(): void
+    {
+        $this->mockGoogleCallback([
+            'id' => 'google-register-id',
+            'name' => 'Google Register',
+            'email' => 'google-register@example.com',
+            'avatar' => null,
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'register'])
+            ->get(route('auth.google.callback'))
+            ->assertRedirect(route('terms.acceptance.show'))
+            ->assertSessionHas('registration_success', true);
+
+        $user = User::where('email', 'google-register@example.com')->first();
+
+        $this->assertNotNull($user);
+        $this->assertSame('google-register-id', $user->google_id);
+        $this->assertNotNull($user->email_verified_at);
+    }
+
     public function test_google_login_does_not_replace_uploaded_profile_photo(): void
     {
         $uploadedPhoto = 'data:image/png;base64,manual-upload';

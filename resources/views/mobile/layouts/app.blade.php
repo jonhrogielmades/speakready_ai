@@ -2838,6 +2838,176 @@
             filter: none !important;
          }
 
+         /* Drawer-inspired mobile navbar finish. */
+         @media (max-width: 991px) {
+            body.user-mobile-shell #mob-bottom-nav {
+               --mob-dock-surface: rgba(231, 244, 255, 0.9);
+               --mob-dock-surface-strong: rgba(248, 252, 255, 0.78);
+               --mob-dock-ink: #050b3f;
+               --mob-dock-muted: #516b9d;
+               --mob-dock-line: rgba(255, 255, 255, 0.86);
+               --mob-dock-tile: rgba(248, 252, 255, 0.72);
+               --mob-dock-tile-border: rgba(255, 255, 255, 0.86);
+               --mob-dock-active: #0b57d0;
+               --mob-dock-primary: #2563eb;
+               --mob-dock-primary-2: #06b6d4;
+               --mob-dock-fab-ring: rgba(255, 255, 255, 0.96);
+               --mob-dock-height: 104px;
+               --mob-dock-bar-top: 30px;
+               --mob-dock-radius: 30px;
+               --mob-dock-fab-size: 68px;
+               left: max(12px, env(safe-area-inset-left, 0px)) !important;
+               right: max(12px, env(safe-area-inset-right, 0px)) !important;
+               bottom: 6px !important;
+               max-width: 640px !important;
+               height: var(--mob-dock-height) !important;
+               color: var(--mob-dock-muted) !important;
+               background: transparent !important;
+               isolation: isolate !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav::before {
+               content: "" !important;
+               position: absolute !important;
+               left: 50% !important;
+               top: 0 !important;
+               width: calc(var(--mob-dock-fab-size) + 12px) !important;
+               height: calc(var(--mob-dock-fab-size) + 12px) !important;
+               border-radius: 50% !important;
+               transform: translateX(-50%) !important;
+               background:
+                  radial-gradient(circle, rgba(255, 255, 255, 0.98) 0 58%, rgba(219, 234, 254, 0.78) 59% 100%) !important;
+               box-shadow:
+                  0 12px 28px rgba(37, 99, 235, 0.14),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.94) !important;
+               pointer-events: none !important;
+               z-index: 1 !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav::after {
+               content: "" !important;
+               position: absolute !important;
+               left: 0 !important;
+               right: 0 !important;
+               top: var(--mob-dock-bar-top) !important;
+               bottom: 0 !important;
+               height: auto !important;
+               border: 1px solid rgba(255, 255, 255, 0.72) !important;
+               border-radius: var(--mob-dock-radius) !important;
+               background:
+                  radial-gradient(circle at 82% 0%, rgba(255, 255, 255, 0.88), transparent 34%),
+                  radial-gradient(circle at 8% 100%, rgba(125, 211, 252, 0.24), transparent 38%),
+                  linear-gradient(135deg, rgba(246, 252, 255, 0.94), var(--mob-dock-surface)) !important;
+               box-shadow:
+                  0 0 0 1px rgba(147, 197, 253, 0.28),
+                  0 16px 40px rgba(37, 99, 235, 0.18),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.94) !important;
+               backdrop-filter: blur(22px) saturate(1.16) !important;
+               -webkit-backdrop-filter: blur(22px) saturate(1.16) !important;
+               pointer-events: none !important;
+               z-index: 0 !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-items {
+               grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 74px minmax(0, 1fr) minmax(0, 1fr) !important;
+               gap: clamp(3px, 1.2vw, 7px) !important;
+               padding: 0 clamp(10px, 3vw, 16px) 12px !important;
+               align-items: end !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-item {
+               height: 60px !important;
+               min-height: 60px !important;
+               gap: 3px !important;
+               padding: 7px 2px 8px !important;
+               border: 1px solid transparent !important;
+               border-radius: 19px !important;
+               color: var(--mob-dock-muted) !important;
+               font-size: clamp(0.61rem, 2.3vw, 0.72rem) !important;
+               font-weight: 900 !important;
+               background: transparent !important;
+               transition: transform 0.18s ease, color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-icon {
+               width: 34px !important;
+               height: 34px !important;
+               border-radius: 12px !important;
+               background: transparent !important;
+               color: currentColor !important;
+               box-shadow: none !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-icon i {
+               font-size: clamp(1rem, 4vw, 1.24rem) !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-item > span:last-child {
+               max-width: 74px !important;
+               color: currentColor !important;
+               font-size: inherit !important;
+               line-height: 1 !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-item:not(.mob-nav-primary).active,
+            body.user-mobile-shell #mob-bottom-nav #mobnav-more[aria-expanded="true"] {
+               border-color: var(--mob-dock-tile-border) !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.9), var(--mob-dock-tile)) !important;
+               color: var(--mob-dock-ink) !important;
+               box-shadow:
+                  0 10px 22px rgba(37, 99, 235, 0.08),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-item:not(.mob-nav-primary).active .mob-nav-icon,
+            body.user-mobile-shell #mob-bottom-nav #mobnav-more[aria-expanded="true"] .mob-nav-icon {
+               background: linear-gradient(135deg, var(--mob-dock-primary), #60a5fa) !important;
+               color: #ffffff !important;
+               -webkit-text-fill-color: #ffffff !important;
+               box-shadow:
+                  0 10px 20px rgba(37, 99, 235, 0.18),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.32) !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-primary {
+               height: 100px !important;
+               min-height: 100px !important;
+               padding: 0 0 6px !important;
+               gap: 3px !important;
+               color: var(--mob-dock-active) !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-primary-icon {
+               width: var(--mob-dock-fab-size) !important;
+               height: var(--mob-dock-fab-size) !important;
+               border: 6px solid var(--mob-dock-fab-ring) !important;
+               background:
+                  radial-gradient(circle at 48% 20%, #38bdf8 0%, var(--mob-dock-primary) 46%, var(--mob-dock-primary-2) 100%) !important;
+               box-shadow:
+                  0 16px 30px rgba(37, 99, 235, 0.24),
+                  0 0 0 1px rgba(147, 197, 253, 0.42),
+                  inset 0 2px 0 rgba(255, 255, 255, 0.26) !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-primary.active .mob-nav-primary-icon {
+               box-shadow:
+                  0 18px 34px rgba(37, 99, 235, 0.3),
+                  0 0 0 1px rgba(147, 197, 253, 0.48),
+                  inset 0 2px 0 rgba(255, 255, 255, 0.3) !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-primary > span:last-child {
+               color: var(--mob-dock-active) !important;
+               -webkit-text-fill-color: var(--mob-dock-active) !important;
+               font-size: clamp(0.64rem, 2.35vw, 0.76rem) !important;
+            }
+
+            body.user-mobile-shell #mob-bottom-nav .mob-nav-item:active {
+               transform: scale(0.98) !important;
+            }
+         }
+
          /* --- PWA Install Prompt --- */
          #pwa-install-prompt {
             display: none; position: fixed;
@@ -2877,8 +3047,9 @@
 
             body.user-mobile-shell #mob-header .mob-header-brand-pill {
                flex: 0 0 auto !important;
-               width: clamp(112px, calc(100vw - 282px), 170px) !important;
-               max-width: none !important;
+               width: fit-content !important;
+               min-width: 0 !important;
+               max-width: max-content !important;
                height: 44px !important;
                min-height: 44px !important;
                box-sizing: border-box !important;
@@ -2901,9 +3072,10 @@
          }
 
          body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
-            display: inline-flex !important;
-            align-items: baseline !important;
-            flex: 1 1 auto !important;
+             display: inline-flex !important;
+             align-items: baseline !important;
+             flex: 0 0 auto !important;
+             width: auto !important;
             gap: 2px !important;
             margin: 0 !important;
             min-width: 0 !important;
@@ -2938,7 +3110,9 @@
 
          @media (max-width: 380px) {
             body.user-mobile-shell #mob-header .mob-header-brand-pill {
-               width: 108px !important;
+               width: fit-content !important;
+               min-width: 0 !important;
+               max-width: max-content !important;
                padding-right: 7px !important;
                gap: 5px !important;
             }
@@ -2950,7 +3124,9 @@
 
          @media (max-width: 340px) {
             body.user-mobile-shell #mob-header .mob-header-brand-pill {
-               width: 102px !important;
+               width: fit-content !important;
+               min-width: 0 !important;
+               max-width: max-content !important;
                padding-right: 6px !important;
             }
 
@@ -2983,8 +3159,11 @@
                box-shadow: 0 10px 24px rgba(2, 6, 23, 0.22) !important;
             }
 
-            body.user-mobile-shell #mob-header .mob-header-brand-pill {
-               width: clamp(112px, 34vw, 148px) !important;
+             body.user-mobile-shell #mob-header .mob-header-brand-pill {
+                flex: 0 0 auto !important;
+                width: fit-content !important;
+                min-width: 0 !important;
+                max-width: max-content !important;
                height: 44px !important;
                min-height: 44px !important;
                padding: 5px 9px 5px 5px !important;
@@ -3009,6 +3188,7 @@
                flex: 0 0 auto !important;
                gap: 4px !important;
                min-width: 0 !important;
+               margin-left: 6px !important;
             }
 
             body.user-mobile-shell #mob-header .mob-icon-btn,
@@ -3024,6 +3204,10 @@
                background: rgba(255, 255, 255, 0.94) !important;
                color: #0f172a !important;
                box-shadow: 0 5px 12px rgba(15, 23, 42, 0.08) !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-avatar {
+               border-radius: 50% !important;
             }
 
             html:not(.lm) body.user-mobile-shell #mob-header .mob-icon-btn,
@@ -3049,7 +3233,7 @@
                width: 100% !important;
                height: 100% !important;
                object-fit: cover !important;
-               border-radius: 11px !important;
+               border-radius: 50% !important;
             }
 
             body.user-mobile-shell #mob-header .mob-avatar::after {
@@ -3088,35 +3272,80 @@
                display: inline-flex !important;
             }
 
-            body.user-mobile-shell #mob-header .mob-header-brand-pill {
-               width: clamp(54px, calc(100vw - 261px), 132px) !important;
+             body.user-mobile-shell #mob-header .mob-header-brand-pill {
+                width: fit-content !important;
+                min-width: 0 !important;
+                max-width: max-content !important;
             }
 
             body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
-               overflow: hidden !important;
-               text-overflow: ellipsis !important;
+               overflow: visible !important;
+               text-overflow: clip !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-right {
+               gap: 3px !important;
+               margin-left: 5px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-icon-btn,
+            body.user-mobile-shell #mob-header .mob-avatar {
+               width: 36px !important;
+               min-width: 36px !important;
+               height: 36px !important;
+               min-height: 36px !important;
+               flex-basis: 36px !important;
             }
          }
 
          @media (max-width: 380px) {
-            body.user-mobile-shell #mob-header .mob-header-brand-pill {
-               width: clamp(54px, calc(100vw - 261px), 118px) !important;
+             body.user-mobile-shell #mob-header .mob-header-brand-pill {
+                width: fit-content !important;
+                min-width: 0 !important;
+                max-width: max-content !important;
             }
 
             body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
                font-size: 0.68rem !important;
             }
+
+            body.user-mobile-shell #mob-header .mob-icon-btn,
+            body.user-mobile-shell #mob-header .mob-avatar {
+               width: 34px !important;
+               min-width: 34px !important;
+               height: 34px !important;
+               min-height: 34px !important;
+               flex-basis: 34px !important;
+            }
          }
 
          @media (max-width: 350px) {
-            body.user-mobile-shell #mob-header .mob-header-brand-pill {
-               width: 54px !important;
+             body.user-mobile-shell #mob-header .mob-header-brand-pill {
+                width: fit-content !important;
+                min-width: 0 !important;
+                max-width: max-content !important;
                padding-right: 5px !important;
-               justify-content: center !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-logo-ring {
+               width: 24px !important;
+               height: 24px !important;
+               min-width: 24px !important;
+               flex-basis: 24px !important;
             }
 
             body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
-               display: none !important;
+               display: inline-flex !important;
+               font-size: 0.6rem !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-icon-btn,
+            body.user-mobile-shell #mob-header .mob-avatar {
+               width: 32px !important;
+               min-width: 32px !important;
+               height: 32px !important;
+               min-height: 32px !important;
+               flex-basis: 32px !important;
             }
          }
 
@@ -3127,6 +3356,216 @@
                   rgba(2, 6, 23, 0.32) !important;
                backdrop-filter: blur(12px) saturate(1.08) !important;
                -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] {
+               --mobile-drawer-panel: rgba(231, 244, 255, 0.92);
+               --mobile-drawer-panel-strong: rgba(248, 252, 255, 0.72);
+               --mobile-drawer-ink: #050b3f;
+               --mobile-drawer-muted: #516b9d;
+               --mobile-drawer-line: rgba(255, 255, 255, 0.86);
+               --mobile-drawer-tile: rgba(248, 252, 255, 0.7);
+               --mobile-drawer-tile-border: rgba(255, 255, 255, 0.88);
+               top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px) !important;
+               left: max(12px, env(safe-area-inset-left, 0px)) !important;
+               right: max(12px, env(safe-area-inset-right, 0px)) !important;
+               bottom: auto !important;
+               width: auto !important;
+               max-width: 640px !important;
+               margin: 0 auto !important;
+               padding: clamp(18px, 4.5vw, 28px) !important;
+               border: 1px solid rgba(255, 255, 255, 0.72) !important;
+               border-radius: clamp(26px, 6vw, 38px) !important;
+               background:
+                  radial-gradient(circle at 82% 0%, rgba(255, 255, 255, 0.9), transparent 34%),
+                  radial-gradient(circle at 10% 92%, rgba(125, 211, 252, 0.28), transparent 34%),
+                  linear-gradient(135deg, rgba(246, 252, 255, 0.94), var(--mobile-drawer-panel)) !important;
+               color: var(--mobile-drawer-ink) !important;
+               box-shadow:
+                  0 0 0 1px rgba(147, 197, 253, 0.3),
+                  0 0 24px rgba(125, 211, 252, 0.48),
+                  0 24px 58px rgba(37, 99, 235, 0.2),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.94) !important;
+               backdrop-filter: blur(24px) saturate(1.18) !important;
+               -webkit-backdrop-filter: blur(24px) saturate(1.18) !important;
+               overflow: hidden !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"]::before {
+               content: "";
+               position: absolute;
+               inset: 10px;
+               border: 1px solid rgba(255, 255, 255, 0.62);
+               border-radius: calc(clamp(26px, 6vw, 38px) - 10px);
+               pointer-events: none;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-head,
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-menu {
+               position: relative !important;
+               z-index: 1 !important;
+               background: transparent !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-head {
+               min-height: auto !important;
+               padding: 0 2px clamp(14px, 3vw, 18px) !important;
+               border-bottom: 2px solid var(--mobile-drawer-line) !important;
+               gap: clamp(10px, 2.6vw, 14px) !important;
+               color: var(--mobile-drawer-ink) !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-head-avatar {
+               width: clamp(46px, 12vw, 54px) !important;
+               height: clamp(46px, 12vw, 54px) !important;
+               min-width: clamp(46px, 12vw, 54px) !important;
+               border: 3px solid rgba(255, 255, 255, 0.86) !important;
+               border-radius: 50% !important;
+               background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+               box-shadow:
+                  0 14px 28px rgba(37, 99, 235, 0.18),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-head-avatar img {
+               border-radius: 50% !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-name {
+               color: var(--mobile-drawer-ink) !important;
+               font-size: clamp(0.88rem, 3.4vw, 1rem) !important;
+               font-weight: 900 !important;
+               line-height: 1.1 !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-role {
+               width: fit-content !important;
+               margin-top: 6px !important;
+               padding: 3px 8px !important;
+               border: 1px solid rgba(147, 197, 253, 0.52) !important;
+               border-radius: 999px !important;
+               background: rgba(239, 246, 255, 0.8) !important;
+               color: var(--mobile-drawer-muted) !important;
+               font-size: 0.58rem !important;
+               letter-spacing: 0.02em !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-close {
+               width: clamp(42px, 11vw, 48px) !important;
+               height: clamp(42px, 11vw, 48px) !important;
+               min-width: clamp(42px, 11vw, 48px) !important;
+               border: 1px solid rgba(255, 255, 255, 0.82) !important;
+               border-radius: 50% !important;
+               background:
+                  radial-gradient(circle at 35% 22%, rgba(255, 255, 255, 0.96), rgba(232, 244, 255, 0.82) 68%) !important;
+               color: var(--mobile-drawer-ink) !important;
+               box-shadow:
+                  0 12px 26px rgba(37, 99, 235, 0.12),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-menu {
+               max-height: min(62dvh, 480px) !important;
+               padding: clamp(13px, 3vw, 18px) 0 0 !important;
+               overflow-y: auto !important;
+               overscroll-behavior: contain !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-section-title {
+               padding: 0 2px 10px !important;
+               color: var(--mobile-drawer-muted) !important;
+               font-size: clamp(0.72rem, 3vw, 0.88rem) !important;
+               font-weight: 900 !important;
+               letter-spacing: 0.02em !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-settings-row {
+               display: grid !important;
+               grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+               gap: clamp(10px, 2.8vw, 14px) !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-link,
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-action,
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-language {
+               min-height: clamp(58px, 14vw, 68px) !important;
+               display: grid !important;
+               grid-template-columns: clamp(36px, 9.5vw, 42px) minmax(0, 1fr) !important;
+               align-items: center !important;
+               gap: clamp(8px, 2.2vw, 11px) !important;
+               padding: clamp(9px, 2.4vw, 12px) !important;
+               border: 1px solid var(--mobile-drawer-tile-border) !important;
+               border-radius: clamp(15px, 4vw, 20px) !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.88), var(--mobile-drawer-tile)) !important;
+               color: var(--mobile-drawer-ink) !important;
+               box-shadow:
+                  0 10px 22px rgba(37, 99, 235, 0.08),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+               font-size: clamp(0.68rem, 2.9vw, 0.84rem) !important;
+               font-weight: 900 !important;
+               line-height: 1.08 !important;
+               text-decoration: none !important;
+               -webkit-tap-highlight-color: transparent !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-link.active {
+               border-color: rgba(96, 165, 250, 0.64) !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(219, 234, 254, 0.86)) !important;
+               box-shadow:
+                  0 14px 30px rgba(37, 99, 235, 0.14),
+                  0 0 0 1px rgba(255, 255, 255, 0.92) inset !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-link i,
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-action i,
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-language-trigger {
+               width: clamp(36px, 9.5vw, 42px) !important;
+               height: clamp(36px, 9.5vw, 42px) !important;
+               border-radius: clamp(11px, 3vw, 14px) !important;
+               color: #ffffff !important;
+               -webkit-text-fill-color: #ffffff !important;
+               font-size: clamp(0.8rem, 3vw, 1rem) !important;
+               box-shadow:
+                  0 10px 22px rgba(37, 99, 235, 0.16),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.36) !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-link span,
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-action span,
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-language-text {
+               color: var(--mobile-drawer-ink) !important;
+               min-width: 0 !important;
+               overflow: visible !important;
+               overflow-wrap: normal !important;
+               text-overflow: clip !important;
+               white-space: nowrap !important;
+               line-height: 1 !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-language {
+               position: relative !important;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-language::after {
+               content: "\f078";
+               font-family: "Font Awesome 6 Free";
+               font-weight: 900;
+               position: absolute;
+               right: 12px;
+               top: 50%;
+               transform: translateY(-50%);
+               color: var(--mobile-drawer-muted);
+               font-size: 0.66rem;
+               pointer-events: none;
+            }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-action.danger {
+               border-color: rgba(248, 113, 113, 0.34) !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 247, 247, 0.92), rgba(254, 226, 226, 0.8)) !important;
+               color: #dc2626 !important;
             }
 
             body.user-mobile-shell .mob-profile-dropdown[data-mode="pages"] {
@@ -3336,6 +3775,488 @@
                height: 30px !important;
                border-radius: 10px !important;
                font-size: 0.7rem !important;
+            }
+         }
+
+         /* Drawer-inspired mobile topbar finish. */
+         @media (max-width: 991px) {
+            body.user-mobile-shell #mob-header {
+               --mobile-topbar-panel: rgba(231, 244, 255, 0.92);
+               --mobile-topbar-ink: #050b3f;
+               --mobile-topbar-muted: #516b9d;
+               --mobile-topbar-line: rgba(255, 255, 255, 0.78);
+               --mobile-topbar-tile: rgba(248, 252, 255, 0.72);
+               --mobile-topbar-tile-border: rgba(255, 255, 255, 0.86);
+               --mobile-topbar-accent: #2563eb;
+               --mobile-topbar-accent-2: #06b6d4;
+               height: calc(var(--mob-top-h) + var(--mob-safe-top)) !important;
+               min-height: calc(var(--mob-top-h) + var(--mob-safe-top)) !important;
+               padding: var(--mob-safe-top) max(10px, env(safe-area-inset-left, 0px)) 0 max(10px, env(safe-area-inset-right, 0px)) !important;
+               gap: 7px !important;
+               align-items: center !important;
+               background:
+                  radial-gradient(circle at 84% 0%, rgba(255, 255, 255, 0.9), transparent 38%),
+                  radial-gradient(circle at 8% 100%, rgba(125, 211, 252, 0.2), transparent 38%),
+                  linear-gradient(135deg, rgba(246, 252, 255, 0.94), var(--mobile-topbar-panel)) !important;
+               border-bottom: 1px solid rgba(255, 255, 255, 0.72) !important;
+               box-shadow:
+                  0 0 0 1px rgba(147, 197, 253, 0.18),
+                  0 12px 28px rgba(37, 99, 235, 0.12),
+                  inset 0 -1px 0 rgba(255, 255, 255, 0.78) !important;
+               color: var(--mobile-topbar-ink) !important;
+               backdrop-filter: blur(22px) saturate(1.16) !important;
+               -webkit-backdrop-filter: blur(22px) saturate(1.16) !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               flex: 0 0 auto !important;
+               width: fit-content !important;
+               min-width: 0 !important;
+               max-width: max-content !important;
+               height: 44px !important;
+               min-height: 44px !important;
+               padding: 5px 10px 5px 5px !important;
+               gap: 6px !important;
+               border: 1px solid var(--mobile-topbar-tile-border) !important;
+               border-radius: 18px !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.9), var(--mobile-topbar-tile)) !important;
+               color: var(--mobile-topbar-ink) !important;
+               box-shadow:
+                  0 10px 22px rgba(37, 99, 235, 0.08),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+               overflow: hidden !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-logo-ring {
+               width: 30px !important;
+               height: 30px !important;
+               min-width: 30px !important;
+               flex-basis: 30px !important;
+               border: 2px solid rgba(255, 255, 255, 0.92) !important;
+               border-radius: 11px !important;
+               background: #ffffff !important;
+               box-shadow:
+                  0 8px 18px rgba(37, 99, 235, 0.16),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
+               display: inline-flex !important;
+               align-items: baseline !important;
+               flex: 0 0 auto !important;
+               width: auto !important;
+               max-width: none !important;
+               gap: 2px !important;
+               color: var(--mobile-topbar-ink) !important;
+               -webkit-text-fill-color: var(--mobile-topbar-ink) !important;
+               font-size: clamp(0.68rem, 2.35vw, 0.78rem) !important;
+               font-weight: 900 !important;
+               line-height: 1 !important;
+               text-shadow: none !important;
+               white-space: nowrap !important;
+               overflow: visible !important;
+               text-overflow: clip !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text span {
+               color: var(--mobile-topbar-accent) !important;
+               -webkit-text-fill-color: var(--mobile-topbar-accent) !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-right {
+               flex: 0 0 auto !important;
+               gap: 4px !important;
+               margin-left: 5px !important;
+               min-width: 0 !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-icon-btn,
+            body.user-mobile-shell #mob-header .mob-avatar {
+               width: 42px !important;
+               min-width: 42px !important;
+               height: 42px !important;
+               min-height: 42px !important;
+               flex: 0 0 42px !important;
+               border: 1px solid var(--mobile-topbar-tile-border) !important;
+               border-radius: 16px !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.9), var(--mobile-topbar-tile)) !important;
+               color: var(--mobile-topbar-ink) !important;
+               box-shadow:
+                  0 8px 18px rgba(37, 99, 235, 0.08),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-icon-btn i {
+               color: inherit !important;
+               -webkit-text-fill-color: currentColor !important;
+               font-size: 0.88rem !important;
+            }
+
+            body.user-mobile-shell #mob-header #mobTutorialBtn {
+               color: var(--mobile-topbar-accent) !important;
+               border-color: rgba(147, 197, 253, 0.66) !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-avatar {
+               border-radius: 50% !important;
+               background: linear-gradient(135deg, var(--mobile-topbar-accent), var(--mobile-topbar-accent-2)) !important;
+               color: #ffffff !important;
+               overflow: visible !important;
+               position: relative !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-avatar img {
+               display: block !important;
+               width: 100% !important;
+               height: 100% !important;
+               object-fit: cover !important;
+               border-radius: 50% !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-avatar::after {
+               right: -1px !important;
+               bottom: -1px !important;
+               border-color: #ffffff !important;
+            }
+
+            body.user-mobile-shell #mob-header #mobNotifBadge {
+               top: 8px !important;
+               right: 8px !important;
+               border-color: #ffffff !important;
+            }
+         }
+
+         @media (max-width: 420px) {
+            body.user-mobile-shell #mob-header .mob-icon-btn,
+            body.user-mobile-shell #mob-header .mob-avatar {
+               width: 36px !important;
+               min-width: 36px !important;
+               height: 36px !important;
+               min-height: 36px !important;
+               flex-basis: 36px !important;
+               border-radius: 14px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-avatar {
+               border-radius: 50% !important;
+            }
+         }
+
+         @media (max-width: 350px) {
+            body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               padding-right: 6px !important;
+               gap: 5px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-logo-ring {
+               width: 24px !important;
+               height: 24px !important;
+               min-width: 24px !important;
+               flex-basis: 24px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
+               font-size: 0.6rem !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-icon-btn,
+            body.user-mobile-shell #mob-header .mob-avatar {
+               width: 32px !important;
+               min-width: 32px !important;
+               height: 32px !important;
+               min-height: 32px !important;
+               flex-basis: 32px !important;
+               border-radius: 12px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-avatar {
+               border-radius: 50% !important;
+            }
+         }
+
+         /* Drawer-inspired notifications dropdown finish. */
+         @media (max-width: 991px) {
+            body.user-mobile-shell .mob-notif-dropdown {
+               --mobile-notif-panel: rgba(231, 244, 255, 0.92);
+               --mobile-notif-ink: #050b3f;
+               --mobile-notif-text: #334155;
+               --mobile-notif-muted: #516b9d;
+               --mobile-notif-line: rgba(255, 255, 255, 0.86);
+               --mobile-notif-tile: rgba(248, 252, 255, 0.72);
+               --mobile-notif-tile-border: rgba(255, 255, 255, 0.88);
+               --mobile-notif-accent: #2563eb;
+               --mobile-notif-accent-2: #06b6d4;
+               --mobile-notif-danger: #dc2626;
+               --mobile-notif-danger-bg: rgba(254, 226, 226, 0.82);
+               --mobile-notif-danger-border: rgba(248, 113, 113, 0.34);
+               top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px) !important;
+               left: max(12px, env(safe-area-inset-left, 0px)) !important;
+               right: max(12px, env(safe-area-inset-right, 0px)) !important;
+               width: auto !important;
+               max-width: 640px !important;
+               margin: 0 auto !important;
+               padding: clamp(16px, 4vw, 24px) !important;
+               border: 1px solid rgba(255, 255, 255, 0.72) !important;
+               border-radius: clamp(24px, 5.8vw, 36px) !important;
+               background:
+                  radial-gradient(circle at 82% 0%, rgba(255, 255, 255, 0.9), transparent 34%),
+                  radial-gradient(circle at 10% 92%, rgba(125, 211, 252, 0.26), transparent 34%),
+                  linear-gradient(135deg, rgba(246, 252, 255, 0.94), var(--mobile-notif-panel)) !important;
+               color: var(--mobile-notif-ink) !important;
+               box-shadow:
+                  0 0 0 1px rgba(147, 197, 253, 0.3),
+                  0 0 24px rgba(125, 211, 252, 0.46),
+                  0 24px 58px rgba(37, 99, 235, 0.2),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.94) !important;
+               backdrop-filter: blur(24px) saturate(1.18) !important;
+               -webkit-backdrop-filter: blur(24px) saturate(1.18) !important;
+               overflow: hidden !important;
+            }
+
+            body.user-mobile-shell .mob-notif-dropdown::before {
+               content: "";
+               position: absolute;
+               inset: 10px;
+               border: 1px solid rgba(255, 255, 255, 0.62);
+               border-radius: calc(clamp(24px, 5.8vw, 36px) - 10px);
+               pointer-events: none;
+            }
+
+            body.user-mobile-shell .mob-notif-header,
+            body.user-mobile-shell .mob-notif-list,
+            body.user-mobile-shell .mob-notif-footer {
+               position: relative !important;
+               z-index: 1 !important;
+               background: transparent !important;
+            }
+
+            body.user-mobile-shell .mob-notif-header {
+               min-height: auto !important;
+               padding: 0 2px clamp(13px, 3vw, 18px) !important;
+               border-bottom: 2px solid var(--mobile-notif-line) !important;
+               gap: clamp(8px, 2.4vw, 12px) !important;
+               align-items: center !important;
+            }
+
+            body.user-mobile-shell .mob-notif-title {
+               min-width: 0 !important;
+               gap: 9px !important;
+               color: var(--mobile-notif-ink) !important;
+               font-size: clamp(0.88rem, 3.4vw, 1rem) !important;
+               font-weight: 900 !important;
+               line-height: 1 !important;
+            }
+
+            body.user-mobile-shell .mob-notif-title > i {
+               width: 34px !important;
+               height: 34px !important;
+               min-width: 34px !important;
+               border: 1px solid rgba(147, 197, 253, 0.46) !important;
+               border-radius: 13px !important;
+               display: inline-flex !important;
+               align-items: center !important;
+               justify-content: center !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(219, 234, 254, 0.78)) !important;
+               color: var(--mobile-notif-accent) !important;
+               -webkit-text-fill-color: var(--mobile-notif-accent) !important;
+               box-shadow:
+                  0 10px 20px rgba(37, 99, 235, 0.12),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+               font-size: 0.86rem !important;
+            }
+
+            body.user-mobile-shell .mob-notif-count {
+               border: 1px solid var(--mobile-notif-danger-border) !important;
+               background: var(--mobile-notif-danger-bg) !important;
+               color: var(--mobile-notif-danger) !important;
+               border-radius: 999px !important;
+               padding: 3px 7px !important;
+               font-size: 0.58rem !important;
+               font-weight: 900 !important;
+            }
+
+            body.user-mobile-shell .mob-notif-actions {
+               gap: 6px !important;
+            }
+
+            body.user-mobile-shell .mob-notif-action {
+               min-width: 42px !important;
+               min-height: 42px !important;
+               padding: 9px 11px !important;
+               border: 1px solid var(--mobile-notif-tile-border) !important;
+               border-radius: 14px !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.9), var(--mobile-notif-tile)) !important;
+               color: var(--mobile-notif-ink) !important;
+               box-shadow:
+                  0 8px 18px rgba(37, 99, 235, 0.08),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+               font-size: 0.64rem !important;
+               font-weight: 900 !important;
+               line-height: 1 !important;
+            }
+
+            body.user-mobile-shell .mob-notif-action i {
+               color: inherit !important;
+               -webkit-text-fill-color: currentColor !important;
+               font-size: 0.7rem !important;
+            }
+
+            body.user-mobile-shell .mob-notif-action.danger {
+               border-color: var(--mobile-notif-danger-border) !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 247, 247, 0.92), var(--mobile-notif-danger-bg)) !important;
+               color: var(--mobile-notif-danger) !important;
+            }
+
+            body.user-mobile-shell .mob-notif-list {
+               min-height: 92px !important;
+               max-height: min(56dvh, 400px) !important;
+               padding: clamp(12px, 3vw, 16px) 0 !important;
+               overflow-y: auto !important;
+               overscroll-behavior: contain !important;
+            }
+
+            body.user-mobile-shell .mob-notif-status,
+            body.user-mobile-shell .mob-notif-empty {
+               min-height: 126px !important;
+               display: flex !important;
+               flex-direction: column !important;
+               align-items: center !important;
+               justify-content: center !important;
+               gap: 9px !important;
+               padding: 20px 12px !important;
+               color: var(--mobile-notif-muted) !important;
+               font-size: 0.76rem !important;
+               font-weight: 900 !important;
+               line-height: 1.24 !important;
+               text-align: center !important;
+            }
+
+            body.user-mobile-shell .mob-notif-status i,
+            body.user-mobile-shell .mob-notif-empty i {
+               width: 42px !important;
+               height: 42px !important;
+               display: inline-flex !important;
+               align-items: center !important;
+               justify-content: center !important;
+               border-radius: 15px !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(219, 234, 254, 0.82)) !important;
+               color: var(--mobile-notif-accent) !important;
+               -webkit-text-fill-color: var(--mobile-notif-accent) !important;
+               box-shadow:
+                  0 10px 22px rgba(37, 99, 235, 0.12),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+               font-size: 1rem !important;
+            }
+
+            body.user-mobile-shell .mob-notif-status.is-error,
+            body.user-mobile-shell .mob-notif-status.is-error i {
+               color: var(--mobile-notif-danger) !important;
+               -webkit-text-fill-color: var(--mobile-notif-danger) !important;
+            }
+
+            body.user-mobile-shell .mob-notif-item {
+               display: grid !important;
+               grid-template-columns: 42px minmax(0, 1fr) !important;
+               gap: 10px !important;
+               margin: 0 0 10px !important;
+               padding: 11px !important;
+               border: 1px solid var(--mobile-notif-tile-border) !important;
+               border-radius: 18px !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.9), var(--mobile-notif-tile)) !important;
+               box-shadow:
+                  0 10px 22px rgba(37, 99, 235, 0.08),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+            }
+
+            body.user-mobile-shell .mob-notif-item.unread {
+               border-color: rgba(96, 165, 250, 0.62) !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(219, 234, 254, 0.86)) !important;
+            }
+
+            body.user-mobile-shell .mob-notif-ico {
+               width: 42px !important;
+               height: 42px !important;
+               min-width: 42px !important;
+               min-height: 42px !important;
+               border-radius: 14px !important;
+               background: linear-gradient(135deg, var(--mobile-notif-accent), var(--mobile-notif-accent-2)) !important;
+               color: #ffffff !important;
+               -webkit-text-fill-color: #ffffff !important;
+               box-shadow:
+                  0 10px 22px rgba(37, 99, 235, 0.16),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
+            }
+
+            body.user-mobile-shell .mob-notif-copy strong {
+               color: var(--mobile-notif-ink) !important;
+               font-size: 0.78rem !important;
+               font-weight: 900 !important;
+               line-height: 1.22 !important;
+            }
+
+            body.user-mobile-shell .mob-notif-copy span {
+               color: var(--mobile-notif-text) !important;
+               font-size: 0.7rem !important;
+               font-weight: 700 !important;
+               line-height: 1.34 !important;
+            }
+
+            body.user-mobile-shell .mob-notif-copy small {
+               color: var(--mobile-notif-muted) !important;
+               font-size: 0.6rem !important;
+               font-weight: 800 !important;
+            }
+
+            body.user-mobile-shell .mob-notif-link-btn,
+            body.user-mobile-shell .mob-notif-retry {
+               min-height: 32px !important;
+               border: 1px solid rgba(37, 99, 235, 0.22) !important;
+               border-radius: 10px !important;
+               background: rgba(219, 234, 254, 0.68) !important;
+               color: var(--mobile-notif-accent) !important;
+               font-size: 0.62rem !important;
+               font-weight: 900 !important;
+            }
+
+            body.user-mobile-shell .mob-notif-link-btn.danger,
+            body.user-mobile-shell .mob-notif-retry {
+               border-color: var(--mobile-notif-danger-border) !important;
+               background: var(--mobile-notif-danger-bg) !important;
+               color: var(--mobile-notif-danger) !important;
+            }
+
+            body.user-mobile-shell .mob-notif-footer {
+               padding: 0 !important;
+               border-top: 2px solid var(--mobile-notif-line) !important;
+            }
+
+            body.user-mobile-shell .mob-notif-view-all {
+               min-height: 48px !important;
+               margin-top: clamp(12px, 3vw, 16px) !important;
+               border: 1px solid var(--mobile-notif-tile-border) !important;
+               border-radius: 16px !important;
+               background:
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.9), var(--mobile-notif-tile)) !important;
+               color: var(--mobile-notif-ink) !important;
+               box-shadow:
+                  0 10px 22px rgba(37, 99, 235, 0.08),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+               font-size: 0.74rem !important;
+               font-weight: 900 !important;
+               gap: 8px !important;
+            }
+
+            body.user-mobile-shell .mob-notif-view-all i {
+               color: var(--mobile-notif-accent) !important;
+               -webkit-text-fill-color: var(--mobile-notif-accent) !important;
             }
          }
 

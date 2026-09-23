@@ -9,6 +9,7 @@ use App\Models\LearningModule;
 use App\Models\Score;
 use App\Models\User;
 use App\Notifications\UserActivityNotification;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -74,6 +75,36 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ->assertDontSee('onsubmit="return confirm', false);
 
  $this->assertAccountNotificationSchemaReady();
+ }
+
+ public function test_account_privacy_times_are_displayed_in_philippine_time(): void
+ {
+ $user = User::factory()->create([
+ 'is_admin' => false,
+ 'status' => 'active',
+ 'created_at' => CarbonImmutable::parse('2026-09-22 16:30:00', 'UTC'),
+ 'email_verified_at' => CarbonImmutable::parse('2026-09-22 16:05:00', 'UTC'),
+ ]);
+
+ $loginActivity = ActivityLog::create([
+ 'user_id' => $user->id,
+ 'action' => 'user_logged_in',
+ 'description' => 'Candidate logged in.',
+ ]);
+ $loginActivity->forceFill([
+ 'created_at' => CarbonImmutable::parse('2026-09-22 23:45:00', 'UTC'),
+ 'updated_at' => CarbonImmutable::parse('2026-09-22 23:45:00', 'UTC'),
+ ])->save();
+
+ $this->actingAs($user)
+ ->get(route('user.account'))
+ ->assertOk()
+ ->assertSee('Account Created')
+ ->assertSee('Sep 23, 2026')
+ ->assertSee('12:30 AM PHT')
+ ->assertSee('Last Login')
+ ->assertSee('07:45 AM PHT')
+ ->assertSee('Verified Sep 23, 2026');
  }
 
  public function test_account_updates_repair_missing_tables_and_record_activity_notifications(): void
