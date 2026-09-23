@@ -3010,24 +3010,45 @@
 
          /* --- PWA Install Prompt --- */
          #pwa-install-prompt {
-            display: none; position: fixed;
-            bottom: calc(var(--mob-nav-h) + var(--mob-nav-overlap) + var(--mob-safe-bottom) + 20px);
-            left: 16px; right: 16px; z-index: 1050;
-            background: rgba(8, 8, 15, 0.95);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--bd2, #333); border-radius: 16px;
-            padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: center; animation: mobFadeIn 0.3s ease;
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1070;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: max(18px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) max(18px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+            background: rgba(2, 6, 23, 0.58);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            text-align: center;
+            animation: mobFadeIn 0.24s ease;
          }
-         .lm #pwa-install-prompt { background: rgba(250, 250, 254, 0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-color: #e5e7eb; }
+         #pwa-install-prompt .pwa-install-dialog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: min(calc(100vw - 32px), 390px);
+            max-height: calc(100vh - 36px);
+            max-height: calc(100dvh - 36px);
+            overflow-y: auto;
+            transform: translate(-50%, -50%);
+            background: rgba(8, 8, 15, 0.95);
+            border: 1px solid var(--bd2, #333);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 24px 70px rgba(0,0,0,0.5);
+         }
+         .lm #pwa-install-prompt { background: rgba(15, 23, 42, 0.32); }
+         .lm #pwa-install-prompt .pwa-install-dialog { background: rgba(250, 250, 254, 0.97); box-shadow: 0 24px 70px rgba(15,23,42,0.18); border-color: #e5e7eb; }
          #pwa-install-prompt h5 { color: #fff; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem; }
          .lm #pwa-install-prompt h5 { color: #111; }
-         #pwa-install-prompt p { color: #aaa; font-size: 0.85rem; margin-bottom: 16px; }
+         #pwa-install-prompt p { color: #aaa; font-size: 0.88rem; line-height: 1.5; margin-bottom: 18px; }
          .lm #pwa-install-prompt p { color: #555; }
-         .pwa-btn-wrap { display: flex; gap: 12px; justify-content: center; }
-         .pwa-btn-no { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #444; background: transparent; color: #fff; font-weight: 600; cursor: pointer; }
+         .pwa-btn-wrap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; justify-content: center; }
+         .pwa-btn-no { width: 100%; min-height: 44px; padding: 10px 14px; border-radius: 10px; border: 1px solid #444; background: transparent; color: #fff; font-weight: 600; cursor: pointer; }
          .lm .pwa-btn-no { border-color: #ccc; color: #333; }
-         .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #60a5fa; color: #fff; font-weight: 600; cursor: pointer; }
+         .pwa-btn-yes { width: 100%; min-height: 44px; padding: 10px 14px; border-radius: 10px; border: none; background: #60a5fa; color: #fff; font-weight: 600; cursor: pointer; }
+         #pwa-install-prompt[data-mode="message"] .pwa-btn-no { grid-column: 1 / -1; }
 
          .mob-logo-ring {
             background: #ffffff !important;
@@ -4656,12 +4677,14 @@
 
 
       <!-- ===== PWA INSTALL PROMPT ===== -->
-      <div id="pwa-install-prompt">
-         <h5>Install SpeakReady AI</h5>
-         <p>Do you want to install this app for a better and faster experience?</p>
-         <div class="pwa-btn-wrap">
-            <button id="pwa-btn-no" class="pwa-btn-no">No</button>
-            <button id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
+      <div id="pwa-install-prompt" role="dialog" aria-labelledby="pwaPromptTitle" aria-describedby="pwaPromptCopy">
+         <div class="pwa-install-dialog">
+            <h5 id="pwaPromptTitle">Install SpeakReady AI</h5>
+            <p id="pwaPromptCopy">Do you want to install this app for a better and faster experience?</p>
+            <div class="pwa-btn-wrap">
+               <button id="pwa-btn-no" class="pwa-btn-no">No</button>
+               <button id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
+            </div>
          </div>
       </div>
 

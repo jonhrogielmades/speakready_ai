@@ -24,8 +24,8 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=17') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=18') }}" />
       <style data-mobile-side-gutter="10px">
          @media (max-width: 767.98px) {
             body.guest-mobile-shell {
@@ -1308,12 +1308,14 @@
       @include('shared.auth-modal')
 
       <!-- ===== PWA INSTALL PROMPT ===== -->
-      <div id="pwa-install-prompt">
-         <h5 id="pwaPromptTitle">Install SpeakReady AI</h5>
-         <p id="pwaPromptCopy">Do you want to install this app for a better and faster experience?</p>
-         <div class="pwa-btn-wrap">
-            <button id="pwa-btn-no" class="pwa-btn-no">No</button>
-            <button id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
+      <div id="pwa-install-prompt" role="dialog" aria-labelledby="pwaPromptTitle" aria-describedby="pwaPromptCopy">
+         <div class="pwa-install-dialog">
+            <h5 id="pwaPromptTitle">Install SpeakReady AI</h5>
+            <p id="pwaPromptCopy">Do you want to install this app for a better and faster experience?</p>
+            <div class="pwa-btn-wrap">
+               <button id="pwa-btn-no" class="pwa-btn-no">No</button>
+               <button id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
+            </div>
          </div>
       </div>
 
@@ -1530,17 +1532,18 @@
 
          // PWA Install Prompt Logic
          let deferredPrompt;
+         const PWA_APP_INSTALLED_KEY = 'pwa_app_installed';
+         const PWA_PROMPT_DISMISSED_KEY = 'pwa_prompt_dismissed';
+         const PWA_PROMPT_AUTO_SHOWN_KEY = 'pwa_prompt_auto_shown';
+         const PWA_PROMPT_LAST_SHOWN_KEY = 'pwa_prompt_last_shown_at';
 
          function isPwaAlreadyInstalled() {
             return window.matchMedia('(display-mode: standalone)').matches ||
                window.navigator.standalone === true ||
-               localStorage.getItem('pwa_app_installed') === 'true';
+               localStorage.getItem(PWA_APP_INSTALLED_KEY) === 'true';
          }
 
-         async function updateInstallButtonState() {
-            const installButton = document.getElementById('heroInstallBtn');
-            if (!installButton) return;
-
+         async function detectPwaAlreadyInstalled() {
             let isInstalled = isPwaAlreadyInstalled();
 
             if (!isInstalled && 'getInstalledRelatedApps' in navigator) {
@@ -1551,6 +1554,38 @@
                   isInstalled = isPwaAlreadyInstalled();
                }
             }
+
+            if (isInstalled) {
+               localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
+               document.getElementById('pwa-install-prompt')?.style.setProperty('display', 'none');
+            }
+
+            return isInstalled;
+         }
+
+         function shouldAutoShowPwaInstallPrompt() {
+            if (
+               isPwaAlreadyInstalled() ||
+               localStorage.getItem(PWA_PROMPT_DISMISSED_KEY) ||
+               localStorage.getItem(PWA_PROMPT_AUTO_SHOWN_KEY) ||
+               localStorage.getItem(PWA_PROMPT_LAST_SHOWN_KEY)
+            ) {
+               return false;
+            }
+
+            return true;
+         }
+
+         function rememberPwaInstallPromptShown() {
+            localStorage.setItem(PWA_PROMPT_AUTO_SHOWN_KEY, 'true');
+            localStorage.setItem(PWA_PROMPT_LAST_SHOWN_KEY, String(Date.now()));
+         }
+
+         async function updateInstallButtonState() {
+            const installButton = document.getElementById('heroInstallBtn');
+            if (!installButton) return;
+
+            const isInstalled = await detectPwaAlreadyInstalled();
 
             const icon = installButton.querySelector('i');
             const label = isInstalled ? 'Already Installed' : 'Install App';
@@ -1566,18 +1601,24 @@
             installButton.setAttribute('aria-label', label);
          }
 
-         window.addEventListener('beforeinstallprompt', (e) => {
+         window.addEventListener('beforeinstallprompt', async (e) => {
             e.preventDefault();
+            if (await detectPwaAlreadyInstalled()) {
+               deferredPrompt = null;
+               updateInstallButtonState();
+               return;
+            }
+
             deferredPrompt = e;
-            localStorage.removeItem('pwa_app_installed');
+            localStorage.removeItem(PWA_APP_INSTALLED_KEY);
             updateInstallButtonState();
-            if (!localStorage.getItem('pwa_prompt_dismissed')) {
+            if (shouldAutoShowPwaInstallPrompt()) {
                queuePwaInstallPrompt();
             }
          });
 
          window.addEventListener('appinstalled', () => {
-            localStorage.setItem('pwa_app_installed', 'true');
+            localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
             deferredPrompt = null;
             document.getElementById('pwa-install-prompt')?.style.setProperty('display', 'none');
             updateInstallButtonState();
@@ -1595,15 +1636,20 @@
 
          function queuePwaInstallPrompt() {
             const prompt = document.getElementById('pwa-install-prompt');
-            if (!prompt) return;
+            if (!prompt || !shouldAutoShowPwaInstallPrompt()) return;
+            rememberPwaInstallPromptShown();
 
             window.setTimeout(() => {
                if (document.body.classList.contains('guest-splash-pending')) {
-                  queuePwaInstallPrompt();
+                  window.setTimeout(() => {
+                     if (!isPwaAlreadyInstalled()) {
+                        showPwaInstallMessage('Install SpeakReady AI', 'Do you want to install this app for a better and faster experience?', true);
+                     }
+                  }, 4200);
                   return;
                }
 
-               if (!localStorage.getItem('pwa_prompt_dismissed')) {
+               if (!isPwaAlreadyInstalled()) {
                   showPwaInstallMessage('Install SpeakReady AI', 'Do you want to install this app for a better and faster experience?', true);
                }
             }, 4200);
@@ -1624,7 +1670,7 @@
                const { outcome } = await deferredPrompt.userChoice;
                console.log(`User response to the install prompt: ${outcome}`);
                if (outcome === 'accepted') {
-                  localStorage.setItem('pwa_app_installed', 'true');
+                  localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
                }
                deferredPrompt = null;
                prompt?.style.setProperty('display', 'none');
@@ -1646,6 +1692,7 @@
             const noButton = document.getElementById('pwa-btn-no');
 
             if (!prompt) return;
+            if (allowInstall && isPwaAlreadyInstalled()) return;
 
             if (promptTitle) promptTitle.textContent = title;
             if (promptCopy) promptCopy.textContent = message;
@@ -1662,7 +1709,7 @@
             const prompt = document.getElementById('pwa-install-prompt');
             prompt?.style.setProperty('display', 'none');
             if (prompt?.dataset.mode !== 'message') {
-               localStorage.setItem('pwa_prompt_dismissed', 'true');
+               localStorage.setItem(PWA_PROMPT_DISMISSED_KEY, 'true');
             }
          });
       </script>

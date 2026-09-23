@@ -8379,9 +8379,8 @@ body.guest-mobile-shell #mbmenu {
 }
 
 body.guest-mobile-shell #pwa-install-prompt {
-  bottom: max(16px, env(safe-area-inset-bottom, 0px));
-  left: max(10px, env(safe-area-inset-left, 0px));
-  right: max(10px, env(safe-area-inset-right, 0px));
+  inset: 0;
+  padding: max(18px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(18px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
 }
 
 @media (hover: none), (pointer: coarse) {

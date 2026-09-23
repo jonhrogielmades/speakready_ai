@@ -24,24 +24,51 @@ html, body {
 
          /* --- PWA Install Prompt --- */
          #pwa-install-prompt {
-            display: none; position: fixed;
-            bottom: 20px;
-            left: 16px; right: 16px; z-index: 9999;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid #e5e7eb; border-radius: 16px;
-            padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center; animation: mobFadeIn 0.3s ease;
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: max(18px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(18px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+            background: rgba(15, 23, 42, 0.32);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            text-align: center;
+            animation: mobFadeIn 0.24s ease;
          }
-         html:not(.lm) #pwa-install-prompt { background: rgba(8, 8, 15, 0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-color: #333; }
-         #pwa-install-prompt h5 { color: #111; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem; }
+         html:not(.lm) #pwa-install-prompt {
+            background: rgba(2, 6, 23, 0.58);
+         }
+         #pwa-install-prompt .pwa-install-dialog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: min(calc(100vw - 32px), 420px);
+            max-height: calc(100vh - 36px);
+            max-height: calc(100dvh - 36px);
+            overflow-y: auto;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+         }
+         html:not(.lm) #pwa-install-prompt .pwa-install-dialog {
+            background: rgba(8, 8, 15, 0.95);
+            box-shadow: 0 24px 70px rgba(0,0,0,0.5);
+            border-color: #333;
+         }
+         #pwa-install-prompt h5 { color: #111; font-weight: 700; margin-bottom: 8px; font-size: 1.15rem; }
          html:not(.lm) #pwa-install-prompt h5 { color: #fff; }
-         #pwa-install-prompt p { color: #555; font-size: 0.85rem; margin-bottom: 16px; }
+         #pwa-install-prompt p { color: #555; font-size: 0.9rem; line-height: 1.5; margin-bottom: 18px; }
          html:not(.lm) #pwa-install-prompt p { color: #aaa; }
-         .pwa-btn-wrap { display: flex; gap: 12px; justify-content: center; }
-         .pwa-btn-no { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ccc; background: transparent; color: #333; font-weight: 600; cursor: pointer; }
+         .pwa-btn-wrap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; justify-content: center; }
+         .pwa-btn-no { width: 100%; min-height: 44px; padding: 10px 14px; border-radius: 10px; border: 1px solid #ccc; background: transparent; color: #333; font-weight: 600; cursor: pointer; }
          html:not(.lm) .pwa-btn-no { border-color: #444; color: #fff; }
-         .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--pur, #8b5cf6); color: #fff; font-weight: 600; cursor: pointer; }
+         .pwa-btn-yes { width: 100%; min-height: 44px; padding: 10px 14px; border-radius: 10px; border: none; background: var(--pur, #8b5cf6); color: #fff; font-weight: 600; cursor: pointer; }
+         #pwa-install-prompt[data-mode="message"] .pwa-btn-no { grid-column: 1 / -1; }
          #heroInstallBtn.is-disabled {
             cursor: not-allowed;
             opacity: 0.72;
@@ -5577,13 +5604,13 @@ html, body {
             background: var(--bg) !important;
          }
 
-         #pwa-install-prompt {
+         #pwa-install-prompt .pwa-install-dialog {
             background: color-mix(in srgb, var(--sf) 94%, transparent) !important;
             border-color: var(--bd) !important;
          }
 
          @supports not (background: color-mix(in srgb, #fff 50%, transparent)) {
-            #pwa-install-prompt {
+            #pwa-install-prompt .pwa-install-dialog {
                background: var(--sf) !important;
             }
          }

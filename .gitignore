@@ -29,5 +29,6 @@ _static_backup/
 .codex_tmp_git_push_*/
 .codex_tmp_chrome_*/
 .codex_tmp_ui_audit/
+.codex_work/
 codex_*_preview.cjs
 /public/__codex_*_preview.html
