@@ -74,6 +74,7 @@ mkdir -p \
     bootstrap/cache
 
 touch storage/logs/laravel.log || true
+touch storage/framework/sr-maintenance.flag || true
 
 if command -v chown >/dev/null 2>&1; then
     chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
@@ -112,56 +113,65 @@ run_migrations() {
     php artisan migrate --force
 }
 
-echo "Running container startup maintenance." >&2
+run_startup_maintenance() {
+    echo "Running container startup maintenance." >&2
 
-# Remove stale cache files before Laravel reads production environment values.
-# packages.php/services.php can contain dev-only providers from a local build;
-# production installs use --no-dev, so those stale manifests can crash boot.
-rm -f \
-    bootstrap/cache/config.php \
-    bootstrap/cache/events.php \
-    bootstrap/cache/packages.php \
-    bootstrap/cache/routes-*.php \
-    bootstrap/cache/services.php \
-    bootstrap/cache/views.php
+    # Remove stale cache files before Laravel reads production environment values.
+    # packages.php/services.php can contain dev-only providers from a local build;
+    # production installs use --no-dev, so those stale manifests can crash boot.
+    rm -f \
+        bootstrap/cache/config.php \
+        bootstrap/cache/events.php \
+        bootstrap/cache/packages.php \
+        bootstrap/cache/routes-*.php \
+        bootstrap/cache/services.php \
+        bootstrap/cache/views.php
 
-# Run skipped composer scripts and clear stale framework state before schema work.
-run_required php artisan package:discover --ansi
-run_required php artisan config:clear
-run_optional php artisan cache:clear
-run_required php artisan view:clear
-run_required php artisan route:clear
-
-if ! run_migrations; then
-    echo "Initial migration failed; running schema repair fallback before retrying migrations." >&2
-    run_schema_repairs
+    # Run skipped composer scripts and clear stale framework state before schema work.
+    run_required php artisan package:discover --ansi
+    run_required php artisan config:clear
+    run_optional php artisan cache:clear
+    run_required php artisan view:clear
+    run_required php artisan route:clear
 
     if ! run_migrations; then
-        echo "Migration retry failed after schema repair. Continuing only after required runtime schemas are repaired." >&2
+        echo "Initial migration failed; running schema repair fallback before retrying migrations." >&2
+        run_schema_repairs
+
+        if ! run_migrations; then
+            echo "Migration retry failed after schema repair. Continuing only after required runtime schemas are repaired." >&2
+        fi
     fi
-fi
 
-run_schema_repairs
+    run_schema_repairs
 
-# Create storage symlink for public uploads.
-run_optional php artisan storage:link --force
+    # Create storage symlink for public uploads.
+    run_optional php artisan storage:link --force
 
-if [ "${REPAIR_FEEDBACK_ON_START:-false}" = "true" ]; then
-    run_optional php artisan app:repair-feedback-coaching --limit="${REPAIR_FEEDBACK_LIMIT:-250}"
-else
-    echo "Skipping optional feedback coaching repair on startup." >&2
-fi
+    if [ "${REPAIR_FEEDBACK_ON_START:-false}" = "true" ]; then
+        run_optional php artisan app:repair-feedback-coaching --limit="${REPAIR_FEEDBACK_LIMIT:-250}"
+    else
+        echo "Skipping optional feedback coaching repair on startup." >&2
+    fi
 
-# Seed the database automatically. Seeders use idempotent writes where needed.
-run_optional php artisan db:seed --force
+    # Seed the database automatically. Seeders use idempotent writes where needed.
+    run_optional php artisan db:seed --force
 
-# Rebuild optimized caches after schema and environment repairs complete.
-run_required php artisan config:cache
-run_optional php artisan route:cache
-run_optional php artisan view:cache
+    # Rebuild optimized caches after schema and environment repairs complete.
+    run_required php artisan config:cache
+    run_optional php artisan route:cache
+    run_optional php artisan view:cache
 
-echo "Container startup maintenance complete." >&2
+    rm -f storage/framework/sr-maintenance.flag
+    echo "Container startup maintenance complete." >&2
+}
 
-# Start PHP-FPM in the background, then Nginx in the foreground to keep the container running.
+# Start PHP-FPM and Nginx quickly so Render can connect to the service while
+# Laravel startup maintenance runs behind a static maintenance gate.
 php-fpm -D
-nginx -g "daemon off;"
+(
+    trap 'status=$?; if [ "$status" -ne 0 ]; then echo "Container startup maintenance failed with status ${status}; keeping maintenance gate enabled." >&2; touch storage/framework/sr-maintenance.flag || true; fi' EXIT
+    run_startup_maintenance
+) &
+
+exec nginx -g "daemon off;"

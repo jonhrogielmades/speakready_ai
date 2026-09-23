@@ -9895,9 +9895,17 @@ body.dm #sec-progress-tracking :is(#strengths-tracker .strengths-icon, #strength
     body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats,
     html body #mob-content #sec-progress-tracking #progress-stats,
     html body #sec-progress-tracking #progress-stats {
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 0 !important;
         gap: var(--progress-dashboard-gap) !important;
         row-gap: var(--progress-dashboard-gap) !important;
         column-gap: var(--progress-dashboard-gap) !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats > [class*="col-"],
+    html body #mob-content #sec-progress-tracking #progress-stats > [class*="col-"],
+    html body #sec-progress-tracking #progress-stats > [class*="col-"] {
+        margin: 0 !important;
     }
 
     body.user-mobile-shell #mob-content #sec-progress-tracking > .progress-summary-strip,
