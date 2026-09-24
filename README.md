@@ -596,7 +596,7 @@ This repository includes `Dockerfile`, `nginx.conf`, and `docker-start.sh`.
 Recommended container settings:
 
 - Start command: handled by the Docker `CMD` when using the included Dockerfile
-- Public port: `$PORT`, defaulting to `10000`
+- Public port: `$PORT`, defaulting to `80`
 - Database: configure `DATABASE_URL` or the standard `DB_*` variables
 - `APP_URL` set to your production domain
 - `APP_ENV=production`

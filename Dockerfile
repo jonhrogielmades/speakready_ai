@@ -2,7 +2,7 @@ FROM php:8.2-fpm
 
 ARG NODE_MAJOR=22
 ARG INSTALL_PYTHON_ML_DEPS=true
-ENV PORT=10000
+ENV PORT=80
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV SPEAKREADY_PYTHON=/opt/speakready-python/bin/python
@@ -124,7 +124,7 @@ RUN mkdir -p \
     && chmod -R ug+rwX /var/www/storage /var/www/bootstrap/cache
 
 # Container platforms can override PORT at runtime.
-EXPOSE 10000
+EXPOSE 80
 
 # Make the start script executable and fix line endings
 RUN dos2unix /var/www/docker-start.sh && chmod +x /var/www/docker-start.sh

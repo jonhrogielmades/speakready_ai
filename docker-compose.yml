@@ -10,9 +10,9 @@ services:
       db:
         condition: service_healthy
     expose:
-      - "10000"
+      - "80"
     environment:
-      PORT: "${PORT:-10000}"
+      PORT: "${PORT:-80}"
       APP_NAME: "${APP_NAME:-SpeakReady AI}"
       APP_ENV: "${APP_ENV:-production}"
       APP_KEY: "${APP_KEY:?Set APP_KEY with php artisan key:generate --show}"
@@ -187,7 +187,7 @@ services:
     volumes:
       - speakready_storage:/var/www/storage
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:$${PORT:-10000}/up || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:$${PORT:-80}/up || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -199,7 +199,7 @@ services:
       - "traefik.http.routers.speakreadyai.entrypoints=websecure"
       - "traefik.http.routers.speakreadyai.tls.certresolver=letsencrypt"
       - "traefik.http.routers.speakreadyai.service=speakreadyai"
-      - "traefik.http.services.speakreadyai.loadbalancer.server.port=10000"
+      - "traefik.http.services.speakreadyai.loadbalancer.server.port=80"
     networks:
       - dokploy-network
       - speakready-internal
