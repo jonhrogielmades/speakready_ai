@@ -4,7 +4,7 @@ set -eu
 
 cd /var/www
 
-export PORT="${PORT:-80}"
+export PORT=80
 export LOG_CHANNEL="${LOG_CHANNEL:-stderr}"
 export LOG_EMERGENCY_PATH="${LOG_EMERGENCY_PATH:-php://stderr}"
 

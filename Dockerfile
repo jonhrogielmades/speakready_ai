@@ -123,7 +123,7 @@ RUN mkdir -p \
     && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
     && chmod -R ug+rwX /var/www/storage /var/www/bootstrap/cache
 
-# Container platforms can override PORT at runtime.
+# Dokploy/Traefik should route to the container's HTTP port 80.
 EXPOSE 80
 
 # Make the start script executable and fix line endings

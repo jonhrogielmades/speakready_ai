@@ -12,7 +12,7 @@ services:
     expose:
       - "80"
     environment:
-      PORT: "${PORT:-80}"
+      PORT: "80"
       APP_NAME: "${APP_NAME:-SpeakReady AI}"
       APP_ENV: "${APP_ENV:-production}"
       APP_KEY: "${APP_KEY:?Set APP_KEY with php artisan key:generate --show}"
@@ -187,7 +187,7 @@ services:
     volumes:
       - speakready_storage:/var/www/storage
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:$${PORT:-80}/up || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:80/up || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
