@@ -256,17 +256,17 @@ php artisan key:generate
 php artisan migrate --seed
 ```
 
-`DatabaseSeeder` seeds the admin account only. By default it creates:
+`DatabaseSeeder` seeds the admin account only. By default, local development creates:
 
 ```text
-Email: admin@speakreadyai.com
+Email: admin@speakreadyai.online
 Password: password
 ```
 
-For a safer seeded admin account, set these before seeding:
+For production, set these before seeding. `ADMIN_PASSWORD` is required before the production admin account can be created:
 
 ```env
-ADMIN_EMAIL=admin@example.com
+ADMIN_EMAIL=admin@speakreadyai.online
 ADMIN_NAME="System Admin"
 ADMIN_PASSWORD=change-this-password
 ```

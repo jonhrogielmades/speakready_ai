@@ -4,10 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use RuntimeException;
 
 class AdminAccountSeeder extends Seeder
 {
-    private const DEFAULT_EMAIL = 'admin@speakreadyai.com';
+    private const DEFAULT_EMAIL = 'admin@speakreadyai.online';
     private const DEFAULT_NAME = 'System Admin';
     private const DEFAULT_PASSWORD = 'password';
 
@@ -19,13 +20,19 @@ class AdminAccountSeeder extends Seeder
         $email = strtolower(trim((string) env('ADMIN_EMAIL', self::DEFAULT_EMAIL))) ?: self::DEFAULT_EMAIL;
         $name = trim((string) env('ADMIN_NAME', self::DEFAULT_NAME)) ?: self::DEFAULT_NAME;
         $configuredPassword = env('ADMIN_PASSWORD');
-        $seedPassword = filled($configuredPassword) ? (string) $configuredPassword : self::DEFAULT_PASSWORD;
+        $hasConfiguredPassword = filled($configuredPassword);
+        $seedPassword = $hasConfiguredPassword ? (string) $configuredPassword : self::DEFAULT_PASSWORD;
 
         $admin = User::withTrashed()
             ->whereRaw('LOWER(email) = ?', [$email])
             ->first();
 
         $isNewAdmin = ! $admin;
+
+        if (app()->environment('production') && ! $hasConfiguredPassword && ($isNewAdmin || blank($admin->password))) {
+            throw new RuntimeException('ADMIN_PASSWORD must be set before seeding the production admin account.');
+        }
+
         $admin ??= new User(['email' => $email]);
 
         $admin->forceFill([
@@ -37,7 +44,7 @@ class AdminAccountSeeder extends Seeder
             'deleted_at' => null,
         ]);
 
-        if ($isNewAdmin || filled($configuredPassword) || blank($admin->password)) {
+        if ($isNewAdmin || $hasConfiguredPassword || blank($admin->password)) {
             $admin->password = $seedPassword;
         }
 
