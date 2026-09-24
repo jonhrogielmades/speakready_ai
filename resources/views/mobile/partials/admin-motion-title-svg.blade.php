@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
         { key: 'question', words: ['question', 'bank', 'quiz'], main: '#0891b2', soft: 'rgba(207, 250, 254, .82)', glow: 'rgba(6, 182, 212, .2)', icon: 'book', art: 'cards' },
         { key: 'module', words: ['module', 'learning lab'], main: '#16a34a', soft: 'rgba(220, 252, 231, .8)', glow: 'rgba(34, 197, 94, .2)', icon: 'layers', art: 'stack' },
         { key: 'game', words: ['game'], main: '#ea580c', soft: 'rgba(255, 237, 213, .82)', glow: 'rgba(249, 115, 22, .22)', icon: 'spark', art: 'game' },
-        { key: 'feedback', words: ['feedback', 'complaint', 'audit'], main: '#db2777', soft: 'rgba(252, 231, 243, .82)', glow: 'rgba(236, 72, 153, .2)', icon: 'chat', art: 'messages' },
+        { key: 'feedback', words: ['feedback', 'audit'], main: '#db2777', soft: 'rgba(252, 231, 243, .82)', glow: 'rgba(236, 72, 153, .2)', icon: 'chat', art: 'messages' },
         { key: 'session', words: ['session', 'monitoring', 'archive'], main: '#2563eb', soft: 'rgba(219, 234, 254, .82)', glow: 'rgba(59, 130, 246, .2)', icon: 'pulse', art: 'chart' },
         { key: 'notification', words: ['notification'], main: '#4f46e5', soft: 'rgba(224, 231, 255, .84)', glow: 'rgba(99, 102, 241, .2)', icon: 'bell', art: 'bell' },
         { key: 'provider', words: ['provider', 'ai'], main: '#0d9488', soft: 'rgba(204, 251, 241, .82)', glow: 'rgba(20, 184, 166, .2)', icon: 'cpu', art: 'network' },

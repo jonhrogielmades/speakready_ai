@@ -11,7 +11,7 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="csrf-token" content="{{ csrf_token() }}">
-      <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
+      <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
       @stack('styles')
       @include('mobile.partials.user-mobile-side-gutter')
    </head>
@@ -34,9 +34,9 @@
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
       <meta name="csrf-token" content="{{ csrf_token() }}">
-      <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
+      <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
-      <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
+      <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,6 +49,12 @@
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=33') }}" />
       @include('mobile.partials.onboarding-styles')
       <style>
+         :root,
+         .lm {
+             --pur: {{ $systemPrimaryColor ?? '#3b82f6' }};
+             --blu: {{ $systemPrimaryColor ?? '#3b82f6' }};
+             --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#3b82f6' }}, {{ $systemSecondaryColor ?? '#34d399' }});
+         }
          /* Global Mobile Responsiveness for Premium UI Updates */
          .premium-panel:not(.p-0):not(.accordion-item),
          .panel:not(.p-0):not(.accordion-item),
@@ -2576,7 +2582,7 @@
                --mob-dock-fab-size: 72px;
                left: max(10px, env(safe-area-inset-left, 0px)) !important;
                right: max(10px, env(safe-area-inset-right, 0px)) !important;
-               bottom: 2px !important;
+               bottom: calc(16px + var(--mob-safe-bottom)) !important;
                width: auto !important;
                max-width: 680px !important;
                height: var(--mob-dock-height) !important;
@@ -2633,9 +2639,9 @@
                top: var(--mob-dock-bar-top) !important;
                height: auto !important;
                background: var(--mob-dock-surface) !important;
-               border: 1px solid rgba(96, 165, 250, 0.72) !important;
+               border: 1px solid var(--mob-dock-border) !important;
                border-radius: var(--mob-dock-radius) !important;
-               box-shadow: none !important;
+               box-shadow: 0 18px 20px rgba(14, 165, 233, 0.1) !important;
                backdrop-filter: none !important;
                -webkit-backdrop-filter: none !important;
                pointer-events: none !important;
@@ -2748,7 +2754,7 @@
                background: radial-gradient(circle at 48% 20%, #1577ff 0%, var(--mob-dock-primary) 48%, var(--mob-dock-primary-2) 100%) !important;
                color: #ffffff !important;
                box-shadow:
-                  0 0 0 1px rgba(226, 232, 240, 0.95),
+                  0 0 0 1px rgba(147, 197, 253, 0.72),
                   inset 0 2px 0 rgba(255, 255, 255, 0.24) !important;
                margin-bottom: 0 !important;
                position: relative !important;
@@ -2798,7 +2804,7 @@
 
             .mob-nav-primary.active .mob-nav-primary-icon {
                box-shadow:
-                  0 0 0 1px rgba(226, 232, 240, 0.95),
+                  0 0 0 1px rgba(147, 197, 253, 0.72),
                   inset 0 2px 0 rgba(255, 255, 255, 0.28) !important;
             }
 
@@ -2833,7 +2839,7 @@
          .lm #mob-bottom-nav .mob-nav-primary-icon,
          .lm #mob-bottom-nav .mob-nav-primary.active .mob-nav-primary-icon {
             box-shadow:
-               0 0 0 1px rgba(226, 232, 240, 0.95),
+               0 0 0 1px rgba(147, 197, 253, 0.72),
                inset 0 2px 0 rgba(255, 255, 255, 0.24) !important;
             filter: none !important;
          }
@@ -4491,9 +4497,9 @@
       <header id="mob-header">
          <a href="{{ route('dashboard') }}" class="mob-header-logo mob-header-brand-pill" aria-label="Go to dashboard">
             <span class="mob-logo-ring">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+               <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}">
             </span>
-            <h6 class="mob-header-brand-text">SpeakReady <span>AI</span></h6>
+            <h6 class="mob-header-brand-text">{{ $systemName ?? 'SpeakReady AI' }}</h6>
          </a>
          <div class="mob-header-right">
             <button class="mob-icon-btn" id="mobTutorialBtn" type="button" aria-label="Start tutorial" onclick="triggerMobTutorial()" title="Start Tutorial" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);">

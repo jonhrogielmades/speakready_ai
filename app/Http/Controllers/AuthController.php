@@ -6,10 +6,12 @@ use App\Helpers\ActivityLogger;
 use App\Models\Profile;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\SystemSettings;
 use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
@@ -40,13 +42,14 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => $this->newPasswordRules(['confirmed']),
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'email_verified_at' => SystemSettings::enabled('acc_verify_email', false) ? null : now(),
         ]);
 
         $this->ensureAuthenticationProfile($user);
@@ -92,6 +95,10 @@ class AuthController extends Controller
             'password' => $validated['password'],
         ];
 
+        if ($lockoutMessage = $this->loginLockoutMessage($request, $validated['email'])) {
+            return $this->failedLoginResponse('email', $lockoutMessage);
+        }
+
         $user = User::where('email', $validated['email'])->first();
 
         if (! $user) {
@@ -99,16 +106,21 @@ class AuthController extends Controller
                 ? self::LOGIN_EMAIL_MISMATCH_MESSAGE
                 : self::LOGIN_CREDENTIALS_MISMATCH_MESSAGE;
 
+            $this->recordFailedLoginAttempt($request, $validated['email']);
+
             return $this->failedLoginResponse('email', $message);
         }
 
         if (! Hash::check($validated['password'], (string) $user->password)) {
+            $this->recordFailedLoginAttempt($request, $validated['email']);
+
             return $this->failedLoginResponse('password', self::LOGIN_PASSWORD_MISMATCH_MESSAGE);
         }
 
         if (Auth::attempt($credentials, $rememberDevice)) {
             $request->session()->regenerate();
             $user = Auth::user();
+            $this->clearFailedLoginAttempts($request, $validated['email']);
 
             if (in_array($user->status, ['inactive', 'suspended'])) {
                 Auth::logout();
@@ -117,6 +129,18 @@ class AuthController extends Controller
 
                 return back()->withErrors([
                     'account_inactive' => 'Your account was inactivated please contact to the admin for request.',
+                ])->withInput([
+                    'email' => $validated['email'],
+                ]);
+            }
+
+            if (! $user->is_admin && SystemSettings::enabled('acc_verify_email', false) && ! $user->email_verified_at) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Email verification is required before you can sign in.',
                 ])->withInput([
                     'email' => $validated['email'],
                 ]);
@@ -215,7 +239,7 @@ class AuthController extends Controller
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', PasswordRule::min(8)],
+            'password' => $this->newPasswordRules(['confirmed']),
         ]);
 
         $status = Password::reset(
@@ -490,6 +514,57 @@ class AuthController extends Controller
         return back()->withErrors([
             $field => $message,
         ])->onlyInput('email');
+    }
+
+    private function newPasswordRules(array $extra = []): array
+    {
+        $rule = PasswordRule::min(8);
+
+        if (SystemSettings::enabled('sec_strong_pass', false)) {
+            $rule = $rule->mixedCase()->numbers()->symbols();
+        }
+
+        return array_merge(['required', 'string', $rule], $extra);
+    }
+
+    private function loginLockoutMessage(Request $request, string $email): ?string
+    {
+        $seconds = Cache::get($this->loginLockoutCacheKey($request, $email));
+        if (! $seconds) {
+            return null;
+        }
+
+        return 'Too many login attempts. Please try again in a few minutes.';
+    }
+
+    private function recordFailedLoginAttempt(Request $request, string $email): void
+    {
+        $limit = max(1, (int) SystemSettings::value('sec_login_limit', 5));
+        $lockoutMinutes = max(1, (int) SystemSettings::value('sec_lockout', 15));
+        $attemptKey = $this->loginAttemptCacheKey($request, $email);
+        $attempts = (int) Cache::get($attemptKey, 0) + 1;
+
+        Cache::put($attemptKey, $attempts, now()->addMinutes($lockoutMinutes));
+
+        if ($attempts >= $limit) {
+            Cache::put($this->loginLockoutCacheKey($request, $email), $lockoutMinutes * 60, now()->addMinutes($lockoutMinutes));
+        }
+    }
+
+    private function clearFailedLoginAttempts(Request $request, string $email): void
+    {
+        Cache::forget($this->loginAttemptCacheKey($request, $email));
+        Cache::forget($this->loginLockoutCacheKey($request, $email));
+    }
+
+    private function loginAttemptCacheKey(Request $request, string $email): string
+    {
+        return 'login_attempts:'.sha1(Str::lower($email).'|'.$request->ip());
+    }
+
+    private function loginLockoutCacheKey(Request $request, string $email): string
+    {
+        return 'login_lockout:'.sha1(Str::lower($email).'|'.$request->ip());
     }
 
     private function passwordMatchesAnyUser(string $password): bool

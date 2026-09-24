@@ -11,6 +11,9 @@
     $coachUser = Auth::user();
     $coachUserInitial = $coachUser ? strtoupper(substr((string) $coachUser->name, 0, 1)) : 'U';
     $coachUserPhotoUrl = $coachUser?->profile_photo_url;
+    $coachAllowedExtensions = \App\Support\SystemSettings::allowedUploadExtensions();
+    $coachAllowedAccept = collect($coachAllowedExtensions)->map(fn ($extension) => '.'.$extension)->implode(',');
+    $coachMaxFileBytes = \App\Support\SystemSettings::uploadMaxKilobytes() * 1024;
 @endphp
 @include('mobile.partials.page-hero-styles')
 
@@ -159,7 +162,7 @@
             <div class="chat-input-area" id="coach-input-area">
                 <div class="chat-attachment-preview" id="chatAttachmentPreview" aria-live="polite"></div>
                 <div class="chat-input-wrapper">
-                    <input class="chat-file-input" id="coachFiles" type="file" multiple accept=".pdf,.doc,.docx,.odt,.txt,.rtf,.csv,.md,.json,.html,.htm,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tif,.tiff,.heic,.heif">
+                    <input class="chat-file-input" id="coachFiles" type="file" multiple accept="{{ $coachAllowedAccept }}">
                     <button class="chat-attachment-btn" type="button" id="coachAttachBtn" aria-label="Attach interview file" title="Attach resume, certificate, PDF, DOCX, or image" onclick="document.getElementById('coachFiles').click()">
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
@@ -190,9 +193,9 @@
         let coachVoiceFinalText = '';
         let coachVoiceStopRequested = false;
         const CoachSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const coachAllowedExtensions = ['pdf', 'doc', 'docx', 'odt', 'txt', 'rtf', 'csv', 'md', 'json', 'html', 'htm', 'ppt', 'pptx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tif', 'tiff', 'heic', 'heif'];
+        const coachAllowedExtensions = @json($coachAllowedExtensions);
         const coachMaxFiles = 3;
-        const coachMaxFileBytes = 5 * 1024 * 1024;
+        const coachMaxFileBytes = @json($coachMaxFileBytes);
         const coachUserPhotoUrl = @json($coachUserPhotoUrl);
         const coachUserInitial = @json($coachUserInitial);
         const coachEmptyRecentText = 'No recent conversations';

@@ -321,16 +321,6 @@ class AIService
  'log_modules' => ['feedback_generation'],
  ],
  [
- 'key' => 'feedback_complaint_resolution',
- 'label' => 'Feedback Complaint Resolution',
- 'group' => 'Review',
- 'connection' => 'Mapped with admin review workflow',
- 'status' => 'mapped',
- 'icon' => 'fa-solid fa-triangle-exclamation',
- 'description' => 'Feedback disputes and complaint-review records connected to provider evidence.',
- 'log_modules' => ['feedback_generation'],
- ],
- [
  'key' => 'mentor_review_commenting',
  'label' => 'Mentor Review Commenting',
  'group' => 'Review',

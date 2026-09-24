@@ -19,7 +19,7 @@
     }
     #sec-admin-modules .modules-filters {
         display: grid;
-        grid-template-columns: minmax(180px, 260px) minmax(150px, 190px) minmax(130px, 170px);
+        grid-template-columns: minmax(220px, 300px) minmax(230px, 280px) minmax(150px, 190px);
         gap: 10px;
         align-items: center;
     }
@@ -43,7 +43,7 @@
     }
     #modulesTable th:nth-child(1),
     #modulesTable td:nth-child(1) {
-        width: 36%;
+        width: 32%;
         white-space: normal !important;
     }
     #modulesTable th:nth-child(2),
@@ -64,7 +64,7 @@
     }
     #modulesTable th:nth-child(6),
     #modulesTable td:nth-child(6) {
-        width: 16%;
+        width: 20%;
     }
     #modulesTable th,
     #modulesTable td {
@@ -91,6 +91,7 @@
         flex-wrap: nowrap;
         align-items: center;
         justify-content: flex-start;
+        white-space: nowrap;
     }
     #sec-admin-modules .module-actions form {
         display: inline-flex;
@@ -117,6 +118,45 @@
         width: fit-content;
         margin-left: 0 !important;
         margin-top: 4px;
+    }
+    #sec-admin-modules .admin-modules-pagination {
+        align-items: center;
+        border-top: 1px solid var(--bd);
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding: 14px 20px;
+    }
+    #sec-admin-modules .admin-modules-pagination__count {
+        color: var(--tx3);
+        font-size: 0.84rem;
+        font-weight: 600;
+    }
+    #sec-admin-modules .admin-modules-pagination__actions {
+        display: flex;
+        gap: 10px;
+    }
+    #sec-admin-modules .admin-modules-page-btn {
+        align-items: center;
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        color: var(--tx);
+        display: inline-flex;
+        font-size: 0.82rem;
+        font-weight: 700;
+        gap: 8px;
+        min-height: 38px;
+        padding: 0 14px;
+    }
+    #sec-admin-modules .admin-modules-page-btn:not(:disabled):hover,
+    #sec-admin-modules .admin-modules-page-btn:not(:disabled):focus {
+        border-color: #2563eb;
+        color: #2563eb;
+    }
+    #sec-admin-modules .admin-modules-page-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
     }
     #addModuleModal .form-switch {
         display: flex;
@@ -277,6 +317,18 @@
         #modulesTable tbody td:nth-child(1)::before { content: none; }
         #sec-admin-modules .modules-filters {
             grid-template-columns: 1fr;
+        }
+        #sec-admin-modules .admin-modules-pagination {
+            align-items: stretch;
+            flex-direction: column;
+            padding: 12px;
+        }
+        #sec-admin-modules .admin-modules-pagination__actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+        #sec-admin-modules .admin-modules-page-btn {
+            justify-content: center;
         }
         #modulesTable {
             table-layout: auto;

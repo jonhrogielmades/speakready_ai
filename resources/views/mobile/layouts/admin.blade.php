@@ -6,9 +6,9 @@
       <meta name="theme-color" content="#1a0a0a">
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-      <title>SpeakReady AI Interview Admin Portal</title>
+      <title>{{ $systemName ?? 'SpeakReady AI' }} Interview Admin Portal</title>
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
-      <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
+      <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,6 +20,12 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}" />
       <style>
+         :root,
+         .lm {
+            --pur: {{ $systemPrimaryColor ?? '#3b82f6' }};
+            --blu: {{ $systemPrimaryColor ?? '#3b82f6' }};
+            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#3b82f6' }}, {{ $systemSecondaryColor ?? '#34d399' }});
+         }
          /* ===== ADMIN MOBILE LAYOUT SHELL ===== */
          html, body {
             overflow-x: hidden;
@@ -1593,9 +1599,9 @@
       <header id="mob-header">
          <a href="{{ route('admin.dashboard') }}" class="mob-header-brand">
             <span class="mob-admin-logo-ring">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+               <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}">
             </span>
-            <span>SpeakReady Admin</span>
+            <span>{{ $systemName ?? 'SpeakReady AI' }} Admin</span>
          </a>
          <div class="mob-header-right">
             <div class="dropdown mob-notification-wrap">
@@ -1895,7 +1901,7 @@
                color: #f43f5e !important;
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers, #sec-admin-settings) > :is(.d-flex.justify-content-between, .d-flex.flex-column.flex-md-row, .mb-4.d-flex) {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers, #sec-admin-settings) > :is(.d-flex.justify-content-between, .d-flex.flex-column.flex-md-row, .mb-4.d-flex) {
                flex-direction: column !important;
                align-items: center !important;
                justify-content: center !important;
@@ -1903,7 +1909,7 @@
                text-align: center !important;
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers, #sec-admin-settings) > :is(.d-flex.justify-content-between, .d-flex.flex-column.flex-md-row, .mb-4.d-flex) h4 {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers, #sec-admin-settings) > :is(.d-flex.justify-content-between, .d-flex.flex-column.flex-md-row, .mb-4.d-flex) h4 {
                max-width: 22rem;
                margin-inline: auto !important;
                font-size: clamp(1.08rem, 5.2vw, 1.28rem) !important;
@@ -1929,14 +1935,14 @@
                flex: 0 0 auto;
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers, #sec-admin-settings) > :is(.d-flex.justify-content-between, .d-flex.flex-column.flex-md-row, .mb-4.d-flex) p {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers, #sec-admin-settings) > :is(.d-flex.justify-content-between, .d-flex.flex-column.flex-md-row, .mb-4.d-flex) p {
                max-width: 23rem;
                margin-inline: auto !important;
                font-size: 0.8rem !important;
                line-height: 1.4 !important;
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers, #sec-admin-settings) > :is(.d-flex.justify-content-between, .d-flex.flex-column.flex-md-row, .mb-4.d-flex) :is(a, button) {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers, #sec-admin-settings) > :is(.d-flex.justify-content-between, .d-flex.flex-column.flex-md-row, .mb-4.d-flex) :is(a, button) {
                min-height: 42px;
                border-radius: 11px !important;
                display: inline-flex;
@@ -1955,7 +1961,7 @@
                background: var(--sf);
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.premium-card, .complaints-panel, .card) {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.premium-card, .card) {
                border-radius: 14px !important;
                padding: 14px !important;
                border: 1px solid var(--bd) !important;
@@ -1985,12 +1991,12 @@
                overflow-wrap: anywhere;
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody tr {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody tr {
                border-radius: 14px !important;
                padding: 13px !important;
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody td:last-child {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody td:last-child {
                display: grid !important;
                grid-template-columns: repeat(2, minmax(0, 1fr));
                gap: 8px !important;
@@ -2002,21 +2008,21 @@
                padding: 10px !important;
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody td:last-child::before {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody td:last-child::before {
                display: none !important;
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody td:last-child > .d-flex {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody td:last-child > .d-flex {
                display: contents !important;
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody td:last-child form {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody td:last-child form {
                display: flex !important;
                width: 100%;
                margin: 0 !important;
             }
 
-            #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody td:last-child :is(a, button) {
+            #mob-content :is(#sec-admin-archive, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers) :is(.table, .custom-table) tbody td:last-child :is(a, button) {
                width: 100%;
                min-height: 38px;
                border-radius: 10px !important;
@@ -2031,20 +2037,17 @@
                font-weight: 700;
             }
 
-            #mob-content #sec-admin-complaints #mainComplaintsTable tbody td:last-child,
             #mob-content #sec-admin-notifications .custom-table tbody td:last-child {
                grid-template-columns: 1fr !important;
             }
 
-            #mob-content #sec-admin-contacts .table tbody td:nth-child(2),
-            #mob-content #sec-admin-complaints #mainComplaintsTable tbody td:nth-child(2) {
+            #mob-content #sec-admin-contacts .table tbody td:nth-child(2) {
                align-items: center !important;
                justify-content: center !important;
                text-align: center !important;
             }
 
-            #mob-content #sec-admin-contacts .table tbody td:nth-child(2) .d-flex,
-            #mob-content #sec-admin-complaints #mainComplaintsTable tbody td:nth-child(2) .d-flex {
+            #mob-content #sec-admin-contacts .table tbody td:nth-child(2) .d-flex {
                justify-content: center !important;
                text-align: left;
             }
@@ -2509,7 +2512,6 @@
                #mainArchiveTable,
                #mainAuditLogsTable,
                #mainFeedbackTable,
-               #mainComplaintsTable,
                #mainCategoriesTable,
                #modulesTable,
                #mainProvidersTable,
@@ -2567,7 +2569,7 @@
                <i class="fa-solid fa-clipboard-check"></i>
                <span>Audit</span>
             </a>
-            <button class="mob-nav-item {{ request()->routeIs('admin.account', 'admin.categories', 'admin.questions', 'admin.modules*', 'admin.game*', 'admin.sessions.archive', 'admin.feedback.complaints', 'admin.contacts.*', 'admin.ai.*', 'admin.settings.*') ? 'active' : '' }}"
+            <button class="mob-nav-item {{ request()->routeIs('admin.account', 'admin.categories', 'admin.questions', 'admin.modules*', 'admin.game*', 'admin.sessions.archive', 'admin.contacts.*', 'admin.ai.*', 'admin.settings.*') ? 'active' : '' }}"
                     id="mobnav-more"
                     type="button"
                     aria-controls="mobProfileDropdown"
@@ -2621,16 +2623,14 @@
                <div class="mob-profile-grid">
                   <a href="{{ route('admin.sessions.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('admin.sessions.index') || request()->routeIs('admin.sessions.show') || request()->routeIs('admin.sessions.review') ? 'active' : '' }}"><i class="fa-solid fa-video"></i><span>Sessions</span></a>
                   <a href="{{ route('admin.sessions.archive') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.sessions.archive') ? 'active' : '' }}"><i class="fa-solid fa-box-archive"></i><span>Archive</span></a>
-                  <a href="{{ route('admin.feedback.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.feedback.index') || request()->routeIs('admin.feedback.show') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i><span>Feedback</span></a>
-                  <a href="{{ route('admin.feedback.complaints') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-list"></i><span>Complaints</span></a>
+                  <a href="{{ route('admin.feedback.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.feedback.*') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i><span>Feedback</span></a>
                   <a href="{{ route('admin.contacts.index') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i><span>Contacts</span></a>
                   <a href="{{ route('admin.notifications.index') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
                </div>
 
                <div class="mob-profile-section-title">System</div>
                <div class="mob-profile-grid mb-2">
-                  <a href="{{ route('admin.ai.providers') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.ai.providers*') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i><span>AI Providers</span></a>
-                  <a href="{{ route('admin.ai.evaluation') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.ai.evaluation*') ? 'active' : '' }}"><i class="fa-solid fa-chart-simple"></i><span>AI Evaluation</span></a>
+                  <a href="{{ route('admin.ai.providers') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.ai.providers*') || request()->routeIs('admin.ai.evaluation*') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i><span>AI Providers</span></a>
                   <a href="{{ route('admin.settings.index') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
                </div>
             </div>

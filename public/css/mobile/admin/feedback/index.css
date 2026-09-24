@@ -137,63 +137,76 @@
     .feedback-filter-form .form-select {
         min-width: 0;
         max-width: 100%;
-        min-height: 40px;
-        padding: 8px 12px;
-        font-size: .84rem;
+        min-height: 46px;
+        padding: 10px 14px;
+        font-size: .9rem;
+        border-radius: 8px !important;
         background: var(--bg3);
         border: 1px solid var(--bd);
         color: var(--tx);
     }
     .feedback-filter-btn {
-        min-height: 40px;
-        padding: 8px 10px;
-        font-size: .84rem;
+        min-height: 46px;
+        padding: 10px 14px;
+        font-size: .9rem;
+        font-weight: 800;
         white-space: nowrap;
+        border-radius: 8px !important;
     }
     #mainFeedbackTableWrapper {
         width: 100%;
         max-width: 100%;
+        overflow-x: auto;
+        border: 1px solid var(--bd);
+        border-radius: 8px;
     }
     #mainFeedbackTable {
         width: 100%;
-        min-width: 0;
+        min-width: 840px;
         table-layout: fixed;
-        font-size: .78rem;
+        font-size: .84rem;
+        margin-bottom: 0;
     }
     #mainFeedbackTable th,
     #mainFeedbackTable td {
         min-width: 0;
         vertical-align: middle;
-        padding: 10px 8px !important;
-        overflow-wrap: anywhere;
+        padding: 12px 10px !important;
+        overflow-wrap: normal;
     }
     #mainFeedbackTable th:nth-child(1),
     #mainFeedbackTable td:nth-child(1) {
-        width: 62px;
+        width: 10%;
+    }
+    #mainFeedbackTable th:nth-child(2),
+    #mainFeedbackTable td:nth-child(2) {
+        width: 37%;
     }
     #mainFeedbackTable th:nth-child(3),
     #mainFeedbackTable td:nth-child(3) {
-        width: 64px;
+        width: 10%;
     }
     #mainFeedbackTable th:nth-child(4),
     #mainFeedbackTable td:nth-child(4) {
-        width: 106px;
+        width: 16%;
     }
     #mainFeedbackTable th:nth-child(5),
     #mainFeedbackTable td:nth-child(5) {
-        width: 116px;
+        width: 16%;
     }
     #mainFeedbackTable th:nth-child(6),
     #mainFeedbackTable td:nth-child(6) {
-        width: 92px;
+        width: 11%;
     }
     #mainFeedbackTable th {
-        font-size: .68rem;
+        font-size: .74rem;
         line-height: 1.15;
         white-space: normal;
+        text-transform: uppercase;
+        background: var(--bg2, rgba(148, 163, 184, 0.1));
     }
     #mainFeedbackTable td {
-        font-size: .78rem;
+        font-size: .84rem;
         line-height: 1.25;
     }
     #mainFeedbackTable .text-truncate {
@@ -214,6 +227,48 @@
         padding: 6px 8px !important;
         font-size: .72rem;
         white-space: nowrap;
+    }
+    .admin-feedback-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 14px;
+    }
+    .admin-feedback-page-count {
+        color: var(--tx3);
+        font-size: .84rem;
+        font-weight: 700;
+    }
+    .admin-feedback-page-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .admin-feedback-page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 38px;
+        padding: 8px 13px;
+        border-radius: 8px;
+        border: 1px solid var(--bd);
+        background: var(--sf);
+        color: var(--tx);
+        font-weight: 800;
+        font-size: .84rem;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .admin-feedback-page-btn:hover {
+        border-color: #2563eb;
+        color: #2563eb;
+    }
+    .admin-feedback-page-btn.disabled {
+        opacity: .5;
+        pointer-events: none;
+        cursor: not-allowed;
     }
 
     /* Mobile Card-based Table Layout for Main Feedback Table */
@@ -366,6 +421,8 @@
         #mainFeedbackTableWrapper {
             overflow-x: visible !important;
             -webkit-overflow-scrolling: auto !important;
+            border: 0;
+            border-radius: 0;
         }
         #mainFeedbackTable {
             min-width: 0 !important;
@@ -451,19 +508,21 @@
             font-size: 0.74rem !important;
             font-weight: 700;
         }
-        .pagination {
-            flex-wrap: wrap;
-            gap: 5px;
-            justify-content: center;
+        .admin-feedback-pagination {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 10px;
         }
-        .page-link {
-            min-width: 34px;
-            min-height: 34px;
-            border-radius: 9px !important;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.78rem;
+        .admin-feedback-page-count {
+            text-align: center;
+        }
+        .admin-feedback-page-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .admin-feedback-page-btn {
+            width: 100%;
+            min-height: 40px;
         }
     }
 

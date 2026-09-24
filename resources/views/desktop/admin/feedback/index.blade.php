@@ -1,7 +1,7 @@
 @extends('desktop.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/feedback/index.css?v=5') }}" data-page-style="admin-feedback-index">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/feedback/index.css?v=6') }}" data-page-style="admin-feedback-index">
 @endpush
 
 @section('content')
@@ -170,8 +170,35 @@
                         </table>
                     </div>
                     
-                    <div class="mt-3">
-                        {{ $feedbacks->links('pagination::bootstrap-5') }}
+                    <div class="admin-feedback-pagination" aria-label="Feedback audit pagination">
+                        <div class="admin-feedback-page-count">
+                            @if($feedbacks->total())
+                                Showing {{ $feedbacks->firstItem() }}-{{ $feedbacks->lastItem() }} of {{ $feedbacks->total() }}
+                            @else
+                                Showing 0 of 0
+                            @endif
+                        </div>
+                        <div class="admin-feedback-page-actions">
+                            @if($feedbacks->onFirstPage())
+                                <span class="admin-feedback-page-btn disabled" aria-disabled="true">
+                                    <i class="fa-solid fa-chevron-left"></i> Previous
+                                </span>
+                            @else
+                                <a href="{{ $feedbacks->previousPageUrl() }}" class="admin-feedback-page-btn">
+                                    <i class="fa-solid fa-chevron-left"></i> Previous
+                                </a>
+                            @endif
+
+                            @if($feedbacks->hasMorePages())
+                                <a href="{{ $feedbacks->nextPageUrl() }}" class="admin-feedback-page-btn">
+                                    Next <i class="fa-solid fa-chevron-right"></i>
+                                </a>
+                            @else
+                                <span class="admin-feedback-page-btn disabled" aria-disabled="true">
+                                    Next <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                            @endif
+                        </div>
                     </div>
 
                 </div>

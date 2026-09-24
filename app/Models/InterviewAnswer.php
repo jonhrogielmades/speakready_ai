@@ -124,11 +124,6 @@ class InterviewAnswer extends Model
         return $this->hasMany(FeedbackAuditLog::class);
     }
 
-    public function complaints()
-    {
-        return $this->hasMany(FeedbackComplaint::class);
-    }
-
     public function scopeFlagged($query)
     {
         return $query->where('audit_status', 'flagged');

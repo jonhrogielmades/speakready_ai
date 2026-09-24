@@ -32,6 +32,7 @@ use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
 use App\Support\QuestionSchema;
 use App\Support\ScoreSchema;
+use App\Support\SystemSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -58,6 +59,10 @@ class InterviewController extends Controller
  {
  if (! Auth::check()) {
  abort(403);
+ }
+
+ if (! SystemSettings::userCan('take_interview')) {
+ return back()->with('error', 'Starting interviews is currently disabled by the administrator.');
  }
 
  $this->ensureInterviewRuntimeSchema();
@@ -98,6 +103,21 @@ class InterviewController extends Controller
  ]);
 
  $validated['response_mode'] = $this->normalizeResponseMode($validated['response_mode']?? 'voice');
+ $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
+ $maxQuestions = (int) SystemSettings::value('int_max_questions', 20);
+ $maxQuestions = $questionOptions->contains($maxQuestions)? $maxQuestions: 20;
+ $defaultQuestions = (int) SystemSettings::value('int_default_questions', 10);
+ if (! $questionOptions->contains($defaultQuestions) || $defaultQuestions > $maxQuestions) {
+ $defaultQuestions = (int) ($questionOptions->filter(fn (int $count): bool => $count <= $maxQuestions)->last()?: 10);
+ }
+ $requestedQuestionCount = (int) ($validated['num_questions']?? $defaultQuestions);
+ if ($requestedQuestionCount > $maxQuestions) {
+ return back()
+ ->withErrors(['num_questions' => "The maximum questions allowed by the administrator is {$maxQuestions}."])
+ ->withInput();
+ }
+ $validated['num_questions'] = $requestedQuestionCount;
+ $validated['time_limit'] = (int) ($validated['time_limit']?? SystemSettings::value('int_time_limit', 0));
 
  $category = $this->resolveInterviewCategory($validated['category_id']?? null);
 
@@ -153,11 +173,11 @@ class InterviewController extends Controller
  'target_position' => $position,
  'resume_text' => $validated['resume_text']?? null,
  'job_description' => $validated['job_description']?? null,
- 'num_questions' => $validated['num_questions']?? 5,
+ 'num_questions' => $validated['num_questions'],
  'coach_focus_mode' => $validated['coach_focus_mode']?? 'balanced',
  'response_mode' => $validated['response_mode']?? 'text',
  'interview_focus' => $validated['interview_focus']?? 'Job Interview',
- 'time_limit' => $validated['time_limit']?? 0,
+ 'time_limit' => $validated['time_limit'],
  'question_types' =>! empty($questionTypes)? json_encode($questionTypes): null,
  'ai_assistance_level' => $validated['ai_assistance_level']?? 'standard',
  'live_feedback_mode' => $validated['live_feedback_mode']?? 'coaching',
@@ -4568,6 +4588,10 @@ class InterviewController extends Controller
  array $sessionData,
  array $answersData,?string $feedbackProvider = null
  ): array {
+ if (! $gameLevel && ! SystemSettings::enabled('int_ai_eval', true)) {
+ return AIService::generateLocalFeedback($sessionData, $answersData);
+ }
+
  try {
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  } catch (AiFeedbackProviderFailureException $error) {

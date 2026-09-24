@@ -22,6 +22,31 @@
         min-height: 40px;
         white-space: nowrap;
     }
+    #sec-admin-ai-providers .ai-providers-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        flex: 0 0 auto;
+    }
+    #sec-admin-ai-providers .ai-providers-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 42px;
+        border-radius: 8px;
+        font-weight: 800;
+    }
+    #sec-admin-ai-providers .ai-evaluation-btn {
+        background: var(--sf);
+        border-color: #2563eb;
+        color: #2563eb;
+    }
+    #sec-admin-ai-providers .ai-evaluation-btn:hover {
+        background: #2563eb;
+        color: #ffffff;
+    }
     #sec-admin-ai-providers :is(.ai-overview-grid, .ai-main-grid, .ai-provider-role-grid, .ai-provider-stats-grid) {
         width: 100%;
         max-width: 100%;
@@ -104,29 +129,46 @@
     #sec-admin-ai-providers .ai-process-panel-title {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
         gap: 16px;
-        margin-bottom: 18px;
+        margin-bottom: 16px;
     }
     #sec-admin-ai-providers .ai-process-panel-title > div {
         min-width: 0;
     }
+    #sec-admin-ai-providers .ai-process-panel-title h6 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px !important;
+        font-size: 1rem;
+        line-height: 1.25;
+    }
     #sec-admin-ai-providers .ai-process-panel-title p {
         color: var(--tx2);
-        font-size: .9rem;
-        line-height: 1.45;
+        max-width: 940px;
+        font-size: .86rem;
+        line-height: 1.4;
+    }
+    #sec-admin-ai-providers .ai-process-panel-title .stat-badge {
+        flex: 0 0 auto;
+        min-width: 110px;
+        justify-content: center;
+        text-align: center;
+        border-radius: 999px;
     }
     #sec-admin-ai-providers .ai-process-summary {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 12px;
-        margin-bottom: 18px;
+        margin-bottom: 16px;
     }
     #sec-admin-ai-providers .ai-process-summary > div {
         min-width: 0;
-        padding: 12px;
+        min-height: 74px;
+        padding: 12px 14px;
         border: 1px solid var(--bd);
-        border-radius: 12px;
+        border-radius: 8px;
         background: var(--bg3, rgba(255,255,255,.03));
     }
     #sec-admin-ai-providers .ai-process-summary strong {
@@ -137,7 +179,7 @@
     #sec-admin-ai-providers .ai-process-summary span {
         display: block;
         color: var(--tx2);
-        font-size: .78rem;
+        font-size: .82rem;
         line-height: 1.25;
         margin-top: 4px;
     }
@@ -153,14 +195,20 @@
         color: #34d399;
     }
     #sec-admin-ai-providers .ai-process-name span {
-        overflow-wrap: anywhere;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     #sec-admin-ai-providers #openAiProcessTable small {
         display: block;
         color: var(--tx3);
-        font-size: .78rem;
+        font-size: .8rem;
         line-height: 1.35;
         margin-top: 5px;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     #sec-admin-ai-providers .ai-provider-stats-grid .position-absolute.badge {
         top: 12px !important;
@@ -192,12 +240,21 @@
         width: 100%;
         max-width: 100%;
     }
+    #openAiProcessTableWrapper {
+        overflow-x: auto;
+        border: 1px solid var(--bd);
+        border-radius: 8px;
+    }
     #moduleUsageTable,
     #openAiProcessTable,
     #mainProvidersTable {
         width: 100%;
         min-width: 0;
         table-layout: fixed;
+    }
+    #openAiProcessTable {
+        min-width: 980px;
+        margin-bottom: 0;
     }
     #moduleUsageTable th,
     #moduleUsageTable td,
@@ -207,18 +264,85 @@
     #mainProvidersTable td {
         min-width: 0;
         vertical-align: middle;
-        overflow-wrap: anywhere;
+        overflow-wrap: normal;
+    }
+    #openAiProcessTable th,
+    #openAiProcessTable td {
+        padding: 12px 20px !important;
+    }
+    #openAiProcessTable th {
+        color: var(--tx3);
+        font-size: .78rem;
+        text-transform: uppercase;
+        background: var(--bg2, rgba(148, 163, 184, 0.1));
     }
     #openAiProcessTable th:nth-child(1),
-    #openAiProcessTable td:nth-child(1) { width: 34%; }
+    #openAiProcessTable td:nth-child(1) { width: 35%; }
     #openAiProcessTable th:nth-child(2),
     #openAiProcessTable td:nth-child(2) { width: 14%; }
     #openAiProcessTable th:nth-child(3),
     #openAiProcessTable td:nth-child(3) { width: 25%; }
     #openAiProcessTable th:nth-child(4),
-    #openAiProcessTable td:nth-child(4) { width: 15%; }
+    #openAiProcessTable td:nth-child(4) { width: 14%; }
     #openAiProcessTable th:nth-child(5),
     #openAiProcessTable td:nth-child(5) { width: 12%; }
+    #openAiProcessTable td:nth-child(2),
+    #openAiProcessTable td:nth-child(3) {
+        color: var(--tx2);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    #openAiProcessTable .stat-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        white-space: nowrap;
+        text-align: center;
+    }
+    #sec-admin-ai-providers .ai-process-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 14px;
+    }
+    #sec-admin-ai-providers .ai-process-page-count {
+        color: var(--tx3);
+        font-size: .84rem;
+        font-weight: 700;
+    }
+    #sec-admin-ai-providers .ai-process-page-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    #sec-admin-ai-providers .ai-process-page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 38px;
+        padding: 8px 13px;
+        border-radius: 8px;
+        border: 1px solid var(--bd);
+        background: var(--sf);
+        color: var(--tx);
+        font-weight: 800;
+        font-size: .84rem;
+        white-space: nowrap;
+    }
+    #sec-admin-ai-providers .ai-process-page-btn:hover:not(:disabled) {
+        border-color: #2563eb;
+        color: #2563eb;
+    }
+    #sec-admin-ai-providers .ai-process-page-btn:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
     #mainProvidersTable th:nth-child(1),
     #mainProvidersTable td:nth-child(1) { width: 24%; }
     #mainProvidersTable th:nth-child(2),
@@ -248,6 +372,10 @@
         #sec-admin-ai-providers .ai-process-panel-title {
             flex-direction: column;
             gap: 10px;
+            align-items: stretch;
+        }
+        #sec-admin-ai-providers .ai-process-panel-title .stat-badge {
+            width: fit-content;
         }
         #sec-admin-ai-providers .ai-process-summary {
             grid-template-columns: 1fr;
@@ -255,6 +383,8 @@
         #openAiProcessTableWrapper {
             overflow-x: visible !important;
             -webkit-overflow-scrolling: auto !important;
+            border: 0;
+            border-radius: 0;
         }
         #openAiProcessTable thead {
             display: none;
@@ -276,6 +406,11 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
             border-top: none !important;
             text-align: right;
+        }
+        #openAiProcessTable tbody td:nth-child(3) {
+            white-space: normal;
+            text-overflow: unset;
+            overflow: visible;
         }
         #openAiProcessTable tbody td:last-child {
             border-bottom: none !important;
@@ -302,6 +437,28 @@
             text-align: left;
             flex-direction: column;
             align-items: flex-start;
+        }
+        #sec-admin-ai-providers .ai-process-name span,
+        #sec-admin-ai-providers #openAiProcessTable small {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+        }
+        #sec-admin-ai-providers .ai-process-pagination {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #sec-admin-ai-providers .ai-process-page-count {
+            text-align: center;
+        }
+        #sec-admin-ai-providers .ai-process-page-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        #sec-admin-ai-providers .ai-process-page-btn {
+            width: 100%;
+            min-height: 40px;
         }
         #moduleUsageTableWrapper {
             overflow-x: visible !important;
@@ -451,6 +608,13 @@
         #sec-admin-ai-providers .ai-providers-header .btn {
             width: 100%;
         }
+        #sec-admin-ai-providers .ai-providers-actions {
+            width: 100%;
+            justify-content: stretch;
+        }
+        #sec-admin-ai-providers .ai-providers-actions .btn {
+            flex: 1 1 0;
+        }
         #sec-admin-ai-providers :is(.ai-main-grid, .ai-provider-role-grid, .ai-provider-stats-grid) > [class*="col-"] {
             width: 100% !important;
             max-width: 100% !important;
@@ -461,6 +625,11 @@
             display: grid !important;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 12px !important;
+        }
+        #sec-admin-ai-providers .ai-providers-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
         }
         #sec-admin-ai-providers .ai-overview-grid > [class*="col-"] {
             width: 100% !important;

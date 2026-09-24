@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
 use App\Support\AccountNotificationSchema;
+use App\Support\SystemSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AdminAccountController extends Controller
 {
@@ -67,7 +69,7 @@ class AdminAccountController extends Controller
 
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
-            'new_password' => ['required', 'string', 'min:8'],
+            'new_password' => $this->newPasswordRules(),
             'confirm_password' => ['required', 'same:new_password'],
         ]);
 
@@ -90,5 +92,16 @@ class AdminAccountController extends Controller
         );
 
         return redirect()->route('admin.account')->with('success', 'Admin password updated successfully.');
+    }
+
+    private function newPasswordRules(): array
+    {
+        $rule = PasswordRule::min(8);
+
+        if (SystemSettings::enabled('sec_strong_pass', false)) {
+            $rule = $rule->mixedCase()->numbers()->symbols();
+        }
+
+        return ['required', 'string', $rule];
     }
 }

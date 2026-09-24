@@ -15,6 +15,7 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\SystemSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
@@ -232,10 +233,9 @@ class AdminReliabilityTest extends TestCase
         ]);
     }
 
-    public function test_module_edit_exposes_resources_quizzes_and_linked_games_controls(): void
+    public function test_module_edit_hides_resources_quizzes_and_linked_games_controls(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
-        $gameCategory = $this->category(['title' => 'Communication Games', 'type' => 'game']);
         $module = LearningModule::create([
             'title' => 'STAR Method',
             'category' => 'Interview Skills',
@@ -244,28 +244,16 @@ class AdminReliabilityTest extends TestCase
             'status' => 'draft',
         ]);
 
-        GameLevel::create([
-            'category_id' => $gameCategory->id,
-            'level_number' => 1,
-            'title' => 'Confidence Sprint',
-            'description' => 'Practice clear responses.',
-            'mission_text' => '1. Introduce yourself.',
-            'target_position' => 'Better Communication',
-            'difficulty' => 'beginner',
-            'required_score' => 60,
-            'xp_reward' => 100,
-            'energy_cost' => 1,
-        ]);
-
         $this->actingAs($admin)
             ->get(route('admin.modules.edit', $module))
             ->assertOk()
-            ->assertSee('Resources')
-            ->assertSee('Quizzes')
-            ->assertSee('Linked Games')
-            ->assertSee('Upload')
-            ->assertSee('AI Generate Quiz')
-            ->assertSee('Confidence Sprint');
+            ->assertSee('Interview Module Info')
+            ->assertSee('Interview Lessons')
+            ->assertDontSee('Resources')
+            ->assertDontSee('Quizzes')
+            ->assertDontSee('Linked Interview Games')
+            ->assertDontSee('Upload')
+            ->assertDontSee('AI Generate Quiz');
     }
 
     public function test_ai_module_generation_fallback_is_action_focused_when_providers_are_unavailable(): void
@@ -401,6 +389,73 @@ class AdminReliabilityTest extends TestCase
             ->assertOk()
             ->assertSee('lang="ceb"', false)
             ->assertSee('data-speech-locale="ceb-PH"', false);
+    }
+
+    public function test_admin_settings_apply_to_branding_reports_and_coach_file_limits(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $enabledSwitches = collect(SystemSettings::booleanKeys())
+            ->mapWithKeys(fn (string $key): array => [$key => 'true'])
+            ->all();
+
+        $this->actingAs($admin)
+            ->post(route('admin.settings.update'), array_merge($enabledSwitches, [
+                'sys_name' => 'Custom Ready',
+                'sys_contact_email' => 'coach@example.com',
+                'sys_contact_number' => '+63 917 123 4567',
+                'sys_desc' => 'Custom public description for interviews.',
+                'sys_footer' => 'Custom Ready footer text.',
+                'sys_language' => 'en',
+                'acc_session_timeout' => 45,
+                'int_default_questions' => 3,
+                'int_max_questions' => 5,
+                'int_time_limit' => 2,
+                'mail_host' => 'smtp.example.com',
+                'mail_port' => 2525,
+                'backup_schedule' => 'weekly',
+                'file_max_size' => 2,
+                'file_types' => 'PDF, TXT',
+                'color_primary' => '#123456',
+                'color_secondary' => '#abcdef',
+                'retention_interview' => 180,
+                'retention_feedback' => 181,
+                'retention_archive' => 365,
+                'rep_header' => 'Custom Ready Official Report',
+                'rep_footer' => 'Custom report footer.',
+                'rep_logo' => 'no',
+                'rep_signature' => 'Reviewed By',
+            ]))
+            ->assertRedirect(route('admin.settings.index'));
+
+        $this->assertSame('Custom Ready', Setting::getVal('sys_name'));
+        $this->assertSame(45, (int) Setting::getVal('acc_session_timeout'));
+        $this->assertSame('PDF, TXT', Setting::getVal('file_types'));
+        $this->assertSame('#123456', Setting::getVal('color_primary'));
+
+        auth()->logout();
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Custom Ready')
+            ->assertSee('Custom public description for interviews.')
+            ->assertSee('Custom Ready footer text.')
+            ->assertSee('--pur: #123456', false)
+            ->assertSee('mailto:coach@example.com', false)
+            ->assertSee('tel:+639171234567', false);
+
+        $this->actingAs($user)
+            ->get(route('user.coach'))
+            ->assertOk()
+            ->assertSee('const coachAllowedExtensions = ["pdf","txt"];', false)
+            ->assertSee('const coachMaxFileBytes = 2097152;', false);
+
+        $this->actingAs($user)
+            ->get(route('user.reports'))
+            ->assertOk()
+            ->assertSee('Custom Ready Official Report')
+            ->assertSee('Custom Ready Interview Report');
     }
 
     public function test_admin_dashboard_online_today_uses_current_online_sessions(): void
@@ -576,6 +631,57 @@ class AdminReliabilityTest extends TestCase
             ->assertDontSee("editUser({$user->id},", false);
     }
 
+    public function test_users_page_paginates_four_entries_with_previous_and_next_controls(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'Admin Pagination User',
+            'is_admin' => true,
+            'status' => 'active',
+            'created_at' => now()->subDays(10),
+        ]);
+
+        User::factory()->create([
+            'name' => 'Newest Paged User',
+            'is_admin' => false,
+            'status' => 'active',
+            'created_at' => now(),
+        ]);
+        User::factory()->create([
+            'name' => 'Second Paged User',
+            'is_admin' => false,
+            'status' => 'active',
+            'created_at' => now()->subDay(),
+        ]);
+        User::factory()->create([
+            'name' => 'Third Paged User',
+            'is_admin' => false,
+            'status' => 'active',
+            'created_at' => now()->subDays(2),
+        ]);
+        User::factory()->create([
+            'name' => 'Fourth Paged User',
+            'is_admin' => false,
+            'status' => 'active',
+            'created_at' => now()->subDays(3),
+        ]);
+        User::factory()->create([
+            'name' => 'Fifth Paged User',
+            'is_admin' => false,
+            'status' => 'active',
+            'created_at' => now()->subDays(4),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('Showing 1-4 of 6 users')
+            ->assertSee('Previous')
+            ->assertSee('Next')
+            ->assertSee('Newest Paged User')
+            ->assertSee('Fourth Paged User')
+            ->assertDontSee('Fifth Paged User');
+    }
+
     public function test_questions_page_uses_stable_table_layout_classes(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
@@ -594,18 +700,6 @@ class AdminReliabilityTest extends TestCase
             ->assertSee('class="fw-bold question-title"', false)
             ->assertSee('class="question-category"', false)
             ->assertSee('class="question-actions"', false);
-    }
-
-    public function test_feedback_complaints_page_uses_desktop_table_layout(): void
-    {
-        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
-
-        $this->actingAs($admin)
-            ->get(route('admin.feedback.complaints'))
-            ->assertOk()
-            ->assertSee('id="sec-admin-complaints"', false)
-            ->assertSee('class="complaints-panel"', false)
-            ->assertSee('class="text-center py-5 complaints-empty"', false);
     }
 
     public function test_modules_page_uses_desktop_table_panel_layout(): void

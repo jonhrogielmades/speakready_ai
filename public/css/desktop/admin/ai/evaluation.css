@@ -51,6 +51,21 @@
     white-space: nowrap;
 }
 
+#sec-admin-ai-evaluation .ai-eval-actions .ai-eval-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tx);
+    background: var(--sf);
+    border: 1px solid var(--bd);
+}
+
+#sec-admin-ai-evaluation .ai-eval-actions .ai-eval-back-btn:hover,
+#sec-admin-ai-evaluation .ai-eval-actions .ai-eval-back-btn:focus-visible {
+    color: #2563eb;
+    border-color: #2563eb;
+}
+
 #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn {
     display: inline-flex;
     align-items: center;

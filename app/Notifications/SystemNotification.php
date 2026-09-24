@@ -2,7 +2,9 @@
 
 namespace App\Notifications;
 
+use App\Support\SystemSettings;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class SystemNotification extends Notification
@@ -30,7 +32,13 @@ class SystemNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+
+        if (SystemSettings::enabled('notif_email', false)) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     /**
@@ -51,5 +59,12 @@ class SystemNotification extends Notification
             'type' => $this->type,
             'icon' => $icon
         ];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject($this->title)
+            ->line($this->message);
     }
 }

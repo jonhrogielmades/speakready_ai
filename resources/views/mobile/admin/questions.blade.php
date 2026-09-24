@@ -1,6 +1,6 @@
 @extends('mobile.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/questions.css?v=1') }}" data-page-style="admin-questions">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/questions.css?v=6') }}" data-page-style="admin-questions">
 @endpush
 
 @section('content')
@@ -11,7 +11,6 @@
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage practice questions for local job interviews.</p>
         </div>
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-danger py-2" id="btnBulkDelete" style="font-size:.85rem; display:none;" onclick="submitBulkDelete()"><i class="fa-solid fa-trash me-1"></i> Delete Selected</button>
             <button class="btn btn-outline-info py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#aiGenerateModal"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Question</button>
             <a href="{{ route('admin.questions.export') }}" class="btn btn-outline-secondary py-2" style="font-size:.85rem"><i class="fa-solid fa-download me-1"></i> Export</a>
             <button class="btn btn-outline-secondary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#importQuestionsModal"><i class="fa-solid fa-upload me-1"></i> Import</button>
@@ -29,16 +28,19 @@
 
 
     <!-- Category Filter -->
-    <div class="category-filter-mobile mb-4">
-        <label class="olbl" for="categoryFilterSelect" style="margin-bottom:8px;">Category</label>
+    <div class="question-table-controls">
+        <div class="category-filter-select">
         <select id="categoryFilterSelect" aria-label="Filter questions by category" onchange="filterCategory(this.value)">
             <option value="all">All Interview Categories ({{ $totalQuestions }} Questions)</option>
             @foreach($categories as $c)
                 <option value="{{ $c->id }}">{{ $c->title }} ({{ $c->questions_count }} Questions)</option>
             @endforeach
         </select>
+        </div>
+        <div class="question-bulk-action-bar">
+            <button type="button" class="btn btn-outline-danger py-2" id="btnBulkDelete" disabled onclick="submitBulkDelete()"><i class="fa-solid fa-trash me-1"></i> Delete Selected</button>
+        </div>
     </div>
-
 
     <div id="mainTableWrapper" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
         <div class="d-md-none mb-3 pb-2 question-select-all-wrap" style="border-bottom: 1px solid var(--bd);">
@@ -55,7 +57,6 @@
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600;width:40px;">
                         <input class="form-check-input" type="checkbox" id="selectAllQuestions" onclick="toggleAllQuestions(this)">
                     </th>
-                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">ID</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Question</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Category</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Type / Diff</th>
@@ -69,7 +70,6 @@
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         <input class="form-check-input question-checkbox" type="checkbox" value="{{ $q->id }}" onchange="toggleBulkDeleteBtn()">
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $q->id }}</td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px;">
                         <div class="fw-bold question-title" title="{{ $q->question_text }}">{{ $q->question_text }}</div>
                         @if($q->mapped_skills)
@@ -111,7 +111,6 @@
                             <button class="btn btn-sm btn-outline-info" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#previewQuestionModal{{ $q->id }}" title="Preview"><i class="fa-solid fa-eye"></i></button>
                             <button class="btn btn-sm btn-outline-success" style="font-size:.7rem" onclick="openAnalytics({{ $q->id }})" title="Analytics"><i class="fa-solid fa-chart-line"></i></button>
                             <button class="btn btn-sm btn-outline-primary" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#editQuestionModal{{ $q->id }}" title="Edit"><i class="fa-solid fa-pen me-1"></i>Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal{{ $q->id }}" title="Delete"><i class="fa-solid fa-trash me-1"></i>Delete</button>
                         </div>
                     </td>
                 </tr>
@@ -186,28 +185,6 @@
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="bgrd btn px-4">Update</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Question Modal -->
-<div class="modal fade" id="deleteQuestionModal{{ $q->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
-    <div class="modal-dialog">
-        <div class="modal-content" style="border:1px solid var(--bd)">
-            <form action="{{ route('admin.questions.destroy', $q->id) }}" method="POST">
-                @csrf @method('DELETE')
-                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Delete Question</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
-                </div>
-                <div class="modal-body">
-                    <p style="color:var(--tx)">Are you sure you want to delete this question?</p>
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--bd)">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger px-4">Delete</button>
                 </div>
             </form>
         </div>
@@ -452,13 +429,9 @@
 function filterCategory(categoryId) {
     const selectedCategory = String(categoryId);
 
-    document.querySelectorAll('.category-card').forEach(card => {
-        card.classList.toggle('active', card.dataset.categoryFilter === selectedCategory);
-    });
-
-    const mobileSelect = document.getElementById('categoryFilterSelect');
-    if (mobileSelect && mobileSelect.value !== selectedCategory) {
-        mobileSelect.value = selectedCategory;
+    const categorySelect = document.getElementById('categoryFilterSelect');
+    if (categorySelect && categorySelect.value !== selectedCategory) {
+        categorySelect.value = selectedCategory;
     }
 
     let rows = document.querySelectorAll('.question-row');
@@ -480,10 +453,8 @@ function toggleAllQuestions(source) {
 function toggleBulkDeleteBtn() {
     let checked = document.querySelectorAll('.question-checkbox:checked').length;
     let btn = document.getElementById('btnBulkDelete');
-    if(checked > 0) {
-        btn.style.display = 'inline-block';
-    } else {
-        btn.style.display = 'none';
+    btn.disabled = checked === 0;
+    if(checked === 0) {
         document.getElementById('selectAllQuestions').checked = false;
         let mobileSelect = document.getElementById('selectAllMobile');
         if (mobileSelect) mobileSelect.checked = false;

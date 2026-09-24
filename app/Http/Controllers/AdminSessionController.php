@@ -75,7 +75,7 @@ class AdminSessionController extends Controller
             $query->orderBy($sort, $direction);
         }
 
-        $sessions = $query->paginate(10)->withQueryString();
+        $sessions = $query->paginate(5)->withQueryString();
 
         return $this->mobileView('admin.sessions.index', compact(
             'totalSessions', 'activeSessionsToday', 'completedSessions', 'avgScore', 'avgDuration',

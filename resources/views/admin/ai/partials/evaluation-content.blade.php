@@ -47,6 +47,9 @@
             <p class="mb-0">Evidence for question generation, feedback generation, reliability, and review readiness.</p>
         </div>
         <div class="ai-eval-actions">
+            <a href="{{ route('admin.ai.providers') }}" class="btn ai-eval-back-btn">
+                <i class="fa-solid fa-arrow-left me-2"></i>Back to AI Providers
+            </a>
             <form action="{{ route('admin.ai.evaluation.run') }}" method="POST">
                 @csrf
                 <button type="submit"

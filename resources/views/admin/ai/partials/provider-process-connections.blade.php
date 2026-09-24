@@ -57,7 +57,7 @@
                             default => ucfirst($status),
                         };
                     @endphp
-                    <tr>
+                    <tr class="ai-process-row">
                         <td>
                             <div class="ai-process-name">
                                 <i class="{{ $process['icon'] ?? 'fa-solid fa-microchip' }}"></i>
@@ -74,4 +74,69 @@
             </tbody>
         </table>
     </div>
+
+    <div class="ai-process-pagination" data-ai-process-pagination aria-label="OpenAI process pagination">
+        <div class="ai-process-page-count" data-ai-process-page-count>
+            Showing 0 of {{ $openAiProcessConnections->count() }}
+        </div>
+        <div class="ai-process-page-actions">
+            <button type="button" class="ai-process-page-btn" data-ai-process-prev>
+                <i class="fa-solid fa-chevron-left"></i> Previous
+            </button>
+            <button type="button" class="ai-process-page-btn" data-ai-process-next>
+                Next <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const panel = document.querySelector('.ai-process-connection-card');
+    if (!panel) return;
+
+    const rows = Array.from(panel.querySelectorAll('.ai-process-row'));
+    const pagination = panel.querySelector('[data-ai-process-pagination]');
+    const count = panel.querySelector('[data-ai-process-page-count]');
+    const prev = panel.querySelector('[data-ai-process-prev]');
+    const next = panel.querySelector('[data-ai-process-next]');
+    const perPage = 5;
+    let currentPage = 1;
+
+    if (!pagination || !count || !prev || !next) return;
+
+    function renderProcesses() {
+        const total = rows.length;
+        const totalPages = Math.max(1, Math.ceil(total / perPage));
+        currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+
+        rows.forEach((row, index) => {
+            row.style.display = index >= start && index < end ? '' : 'none';
+        });
+
+        if (total === 0) {
+            count.textContent = 'Showing 0 of 0';
+        } else {
+            count.textContent = `Showing ${start + 1}-${Math.min(end, total)} of ${total}`;
+        }
+
+        prev.disabled = currentPage === 1;
+        next.disabled = currentPage === totalPages;
+        pagination.style.display = total > perPage ? 'flex' : 'none';
+    }
+
+    prev.addEventListener('click', function () {
+        currentPage -= 1;
+        renderProcesses();
+    });
+
+    next.addEventListener('click', function () {
+        currentPage += 1;
+        renderProcesses();
+    });
+
+    renderProcesses();
+});
+</script>

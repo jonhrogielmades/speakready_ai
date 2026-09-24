@@ -4,9 +4,9 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#f7fbff">
-      <title>@yield('title', 'SpeakReady AI - Practice Smarter. Interview Better.')</title>
+      <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - Practice Smarter. Interview Better.')</title>
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
-      <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
+      <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,9 +24,16 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}" />
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=18') }}" />
       <style data-mobile-side-gutter="10px">
+         :root,
+         .lm {
+            --pur: {{ $systemPrimaryColor ?? '#3b82f6' }};
+            --blu: {{ $systemPrimaryColor ?? '#3b82f6' }};
+            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#3b82f6' }}, {{ $systemSecondaryColor ?? '#34d399' }});
+         }
+
          @media (max-width: 767.98px) {
             body.guest-mobile-shell {
                --sr-mobile-inline: 10px !important;
@@ -47,13 +54,13 @@
    <body class="guest-shell guest-mobile-shell @if(!$errors->any()) guest-splash-pending @endif" data-layout-shell="mobile" data-guest-layout="mobile">
       @include('mobile.partials.viewport-mobile-cookie')
       @if(!$errors->any())
-      <div id="srLaunchScreen" class="sr-launch-screen" role="status" aria-live="polite" aria-label="Opening SpeakReady AI">
+      <div id="srLaunchScreen" class="sr-launch-screen" role="status" aria-live="polite" aria-label="Opening {{ $systemName ?? 'SpeakReady AI' }}">
          <div class="sr-launch-content">
             <div class="sr-launch-mark">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+               <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}">
             </div>
             <p class="sr-launch-kicker">AI Interview Coach</p>
-            <h1 class="sr-launch-title">SpeakReady AI</h1>
+            <h1 class="sr-launch-title">{{ $systemName ?? 'SpeakReady AI' }}</h1>
             <p class="sr-launch-copy">Practice. Improve. Speak with confidence.</p>
             <div class="sr-launch-progress" aria-hidden="true"><span></span></div>
             <div class="sr-launch-status">Preparing your practice space</div>
@@ -110,9 +117,9 @@
             <div class="container">
                <div class="d-flex align-items-center justify-content-between w-100">
                   <a href="#hero" class="guest-brand d-flex align-items-center gap-2" style="font-size:1.2rem;font-weight:700;color:var(--tx);">
-                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0; flex-shrink: 0;">
+                     <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}" class="logo-i" style="background: #ffffff; padding: 0; flex-shrink: 0;">
                      <span class="guest-brand-copy">
-                        <span class="guest-brand-name">SpeakReady AI</span>
+                        <span class="guest-brand-name">{{ $systemName ?? 'SpeakReady AI' }}</span>
                         @php
                            $guestHeaderNow = now();
                         @endphp
@@ -1228,10 +1235,10 @@
                <div class="footer-panel">
                   <div class="footer-brand">
                      <a class="footer-brand-link" href="#hero">
-                        <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i footer-logo">
-                        <span>SpeakReady AI</span>
+                        <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}" class="logo-i footer-logo">
+                        <span>{{ $systemName ?? 'SpeakReady AI' }}</span>
                      </a>
-                     <p class="footer-copy">Your interview practice system for AI mock interviews, learning modules, progress reports, and private feedback sharing.</p>
+                     <p class="footer-copy">{{ $systemDescription ?? 'Your interview practice system for AI mock interviews, learning modules, progress reports, and private feedback sharing.' }}</p>
                   </div>
                   <nav class="footer-nav-grid" aria-label="Footer navigation">
                      <div>
@@ -1277,14 +1284,14 @@
                          <button type="submit" class="btn footer-newsletter-btn fw-semibold px-3" aria-label="Subscribe to updates"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
                      </form>
                      <div class="footer-socials" aria-label="Contact links">
-                         <a href="mailto:admin@speakready.ai" class="footer-social-link" title="Email SpeakReady AI" aria-label="Email SpeakReady AI"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
-                         <a href="tel:09066544727" class="footer-social-link" title="Call SpeakReady AI" aria-label="Call SpeakReady AI"><i class="fa-solid fa-phone" aria-hidden="true"></i></a>
+                         <a href="mailto:{{ $systemContactEmail ?? 'support@speakready.ai' }}" class="footer-social-link" title="Email {{ $systemName ?? 'SpeakReady AI' }}" aria-label="Email {{ $systemName ?? 'SpeakReady AI' }}"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
+                         <a href="tel:{{ preg_replace('/[^0-9+]/', '', $systemContactNumber ?? '') ?: '09066544727' }}" class="footer-social-link" title="Call {{ $systemName ?? 'SpeakReady AI' }}" aria-label="Call {{ $systemName ?? 'SpeakReady AI' }}"><i class="fa-solid fa-phone" aria-hidden="true"></i></a>
                          <a href="https://www.google.com/maps/search/?api=1&query=Pinut-an%2C%20San%20Ricardo%2C%20Southern%20Leyte" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="View location" aria-label="View location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></a>
                      </div>
                   </div>
                </div>
                <div class="footer-bottom">
-                  <p>&copy; {{ date('Y') }} SpeakReady AI. All rights reserved.</p>
+                  <p>{{ html_entity_decode($systemFooter ?? '&copy; '.date('Y').' SpeakReady AI. All rights reserved.') }}</p>
                   <div class="footer-legal">
                       <a href="{{ route('legal.security') }}" class="footer-legal-link">Security</a>
                       <span class="footer-dot" aria-hidden="true"></span>

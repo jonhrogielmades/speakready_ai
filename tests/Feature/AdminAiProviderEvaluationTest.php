@@ -127,7 +127,6 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSee('Answer Integrity Detection')
  ->assertSee('Learning Game Answer Scoring')
  ->assertSee('Document/PDF Text Extraction')
- ->assertSee('Feedback Complaint Resolution')
  ->assertSee('Mentor Review Commenting')
  ->assertSee('Full Module Provider Evaluation')
  ->assertSee('Safeguarded');

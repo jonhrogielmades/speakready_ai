@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\GameProgress;
 use App\Models\GameLevel;
+use App\Models\InterviewSession;
 use App\Models\LearningModule;
 use App\Models\Profile;
 use App\Models\Setting;
@@ -51,6 +52,39 @@ class AdminNewFeatureConnectionTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.modules.index'))
             ->assertRedirect(route('dashboard'));
+
+        Setting::setVal('role_user_perm_0', false, 'roles', 'boolean');
+        $this->actingAs($user)
+            ->get(route('interview.setup'))
+            ->assertRedirect(route('dashboard'));
+
+        Setting::setVal('role_user_perm_0', true, 'roles', 'boolean');
+        Setting::setVal('role_user_perm_3', false, 'roles', 'boolean');
+        $category = $this->category();
+        $session = InterviewSession::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'target_position' => 'Developer',
+            'num_questions' => 1,
+            'coach_focus_mode' => 'balanced',
+            'response_mode' => 'text',
+            'status' => 'completed',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.sessions.export', $session))
+            ->assertForbidden();
+
+        Setting::setVal('role_user_perm_2', false, 'roles', 'boolean');
+        $this->actingAs($user)
+            ->post(route('user.account.delete'))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'deleted_at' => null,
+        ]);
 
         Setting::setVal('acc_registration', false, 'general', 'boolean');
         $this->post(route('register'), [

@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=53') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=41') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -4302,14 +4302,14 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  showSessionNotice(isVoiceOnlyMode()? `${message} Voice Mode needs microphone recording.`: `${message} You can type your answer instead.`, 'warning');
  } else if (transcriptionEngine === 'server') {
  setVoiceControlsEnabled(true);
- setTranscriptionStatus('');
+ setTranscriptionStatus('Recording ready - live transcript will appear in the answer box');
  } else if (isVoiceOnlyMode()) {
  setVoiceControlsEnabled(true);
  setTranscriptionStatus('Voice-only mode. Text transcription is off.');
  } else {
  setVoiceControlsEnabled(true);
  if (isHybridTranscriptionMode()) {
- setTranscriptionStatus('');
+ setTranscriptionStatus('Recording ready - live transcript will appear in the answer box');
  }
  }
  } else {
@@ -4790,10 +4790,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const startedAtMs = Number(startedAt) || recordingTimerNow();
  recTimerStartedAt = startedAtMs;
  runRecordingTimerTick(true);
- recTimerInterval = setInterval(runRecordingTimerTick, 250);
+ recTimerInterval = setInterval(() => syncRecordingTimerDisplay(), 250);
  recTimerWatchdogInterval = setInterval(() => {
  if (!isRecording) return;
- if (!recTimerInterval) recTimerInterval = setInterval(runRecordingTimerTick, 250);
+ if (!recTimerInterval) recTimerInterval = setInterval(() => syncRecordingTimerDisplay(), 250);
  runRecordingTimerTick();
  }, 1000);
  }

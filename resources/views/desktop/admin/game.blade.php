@@ -1,6 +1,6 @@
 @extends('desktop.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/game.css?v=2') }}" data-page-style="admin-game">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/game.css?v=5') }}" data-page-style="admin-game">
 @endpush
 
 @section('content')
@@ -102,7 +102,7 @@
                     </thead>
                     <tbody>
                         @forelse($catLevels as $level)
-                        <tr style="border-bottom:1px solid var(--bd); {{ $level->is_hidden ? 'opacity: 0.6;' : '' }}">
+                        <tr class="game-level-row" style="border-bottom:1px solid var(--bd); {{ $level->is_hidden ? 'opacity: 0.6;' : '' }}">
                             <td style="padding:16px;vertical-align:middle;">
                                 <span class="badge bg-primary rounded-pill mb-1">Lvl {{ $level->level_number }}</span>
                                 @if($level->is_hidden) <br><span class="badge bg-dark" style="font-size:0.6rem">Hidden</span> @endif
@@ -177,6 +177,13 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+        <div class="admin-game-pagination" data-game-pagination>
+            <div class="admin-game-pagination__count" data-game-pagination-count>Showing 0-0 of 0</div>
+            <div class="admin-game-pagination__actions">
+                <button type="button" class="admin-game-page-btn" data-game-prev><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                <button type="button" class="admin-game-page-btn" data-game-next>Next <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
         </div>
     </div>
     </div>
@@ -558,6 +565,44 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const gameCategorySelect = document.getElementById('gameCategorySelect');
+    const perPage = 5;
+
+    document.querySelectorAll('.admin-game-panel').forEach(panel => {
+        const rows = Array.from(panel.querySelectorAll('.game-level-row'));
+        const countLabel = panel.querySelector('[data-game-pagination-count]');
+        const prevButton = panel.querySelector('[data-game-prev]');
+        const nextButton = panel.querySelector('[data-game-next]');
+        let currentPage = 1;
+
+        function renderPage() {
+            const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+            currentPage = Math.min(currentPage, totalPages);
+            const start = (currentPage - 1) * perPage;
+            const visibleRows = rows.slice(start, start + perPage);
+
+            rows.forEach(row => row.style.display = 'none');
+            visibleRows.forEach(row => row.style.display = '');
+
+            const first = rows.length === 0 ? 0 : start + 1;
+            const last = start + visibleRows.length;
+            countLabel.textContent = `Showing ${first}-${last} of ${rows.length}`;
+            prevButton.disabled = currentPage <= 1;
+            nextButton.disabled = currentPage >= totalPages || rows.length === 0;
+        }
+
+        prevButton.addEventListener('click', () => {
+            currentPage = Math.max(1, currentPage - 1);
+            renderPage();
+        });
+
+        nextButton.addEventListener('click', () => {
+            currentPage += 1;
+            renderPage();
+        });
+
+        renderPage();
+    });
+
     if (!gameCategorySelect) return;
 
     gameCategorySelect.addEventListener('change', function () {

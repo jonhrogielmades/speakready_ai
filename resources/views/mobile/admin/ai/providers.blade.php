@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/ai/providers.css?v=4') }}" data-page-style="admin-ai-providers">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/ai/providers.css?v=6') }}" data-page-style="admin-ai-providers">
 @endpush
 
 @section('content')
@@ -25,7 +25,10 @@
             <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-microchip me-2"></i>AI Providers Dashboard</h4>
             <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Manage AI Providers and view system metrics.</p>
         </div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProviderModal"><i class="fa-solid fa-plus me-2"></i>Add AI Provider</button>
+        <div class="ai-providers-actions">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProviderModal"><i class="fa-solid fa-plus me-2"></i>Add AI Provider</button>
+            <a href="{{ route('admin.ai.evaluation') }}" class="btn btn-outline-primary ai-evaluation-btn"><i class="fa-solid fa-chart-line me-2"></i>AI Evaluation</a>
+        </div>
     </div>
 
     <!-- Feature 1: Overview Cards -->

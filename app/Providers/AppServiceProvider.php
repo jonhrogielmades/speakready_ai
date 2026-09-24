@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Setting;
 use App\Support\DatabaseIdSequences;
+use App\Support\SystemSettings;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -33,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->resetEmptyIdSequencesAfterDeletes();
+        $this->applyRuntimeSystemSettings();
 
         View::composer('*', function ($view) {
             $request = request();
@@ -57,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
                 }
 
                 $languageConfig = Setting::languageConfig($languageCode);
+                $systemSettings = SystemSettings::forView();
 
                 $request->attributes->set('languageViewData', [
                     'supportedLanguages' => Setting::supportedLanguages(),
@@ -65,6 +68,16 @@ class AppServiceProvider extends ServiceProvider
                     'currentLanguageAiLabel' => $languageConfig['ai_label'],
                     'systemHtmlLocale' => $languageConfig['html_locale'],
                     'systemSpeechLocale' => $languageConfig['speech_locale'],
+                    'systemSettings' => $systemSettings,
+                    'systemName' => $systemSettings['sys_name'] ?? config('app.name', 'SpeakReady AI'),
+                    'systemLogo' => $systemSettings['system_logo'] ?? 'img/logo.png',
+                    'systemFavicon' => $systemSettings['system_favicon'] ?? 'favicon.ico',
+                    'systemPrimaryColor' => $systemSettings['color_primary'] ?? '#3b82f6',
+                    'systemSecondaryColor' => $systemSettings['color_secondary'] ?? '#34d399',
+                    'systemContactEmail' => $systemSettings['sys_contact_email'] ?? 'support@speakready.ai',
+                    'systemContactNumber' => $systemSettings['sys_contact_number'] ?? '',
+                    'systemDescription' => $systemSettings['sys_desc'] ?? 'SpeakReady AI helps users master communication skills.',
+                    'systemFooter' => $systemSettings['sys_footer'] ?? '&copy; 2026 SpeakReady AI. All Rights Reserved.',
                 ]);
             }
 
@@ -93,5 +106,50 @@ class AppServiceProvider extends ServiceProvider
 
             $reset();
         });
+    }
+
+    private function applyRuntimeSystemSettings(): void
+    {
+        try {
+            if (! Schema::hasTable('settings')) {
+                return;
+            }
+
+            $appName = (string) SystemSettings::value('sys_name', config('app.name'));
+            if ($appName !== '') {
+                config(['app.name' => $appName]);
+                config(['mail.from.name' => $appName]);
+            }
+
+            $contactEmail = (string) SystemSettings::value('sys_contact_email', config('mail.from.address'));
+            if ($contactEmail !== '') {
+                config(['mail.from.address' => $contactEmail]);
+            }
+
+            $sessionLifetime = max(5, min(1440, (int) SystemSettings::value('acc_session_timeout', config('session.lifetime', 120))));
+            config(['session.lifetime' => $sessionLifetime]);
+
+            $mailHost = (string) SystemSettings::value('mail_host', '');
+            if ($mailHost !== '') {
+                config(['mail.mailers.smtp.host' => $mailHost]);
+            }
+
+            $mailPort = (string) SystemSettings::value('mail_port', '');
+            if ($mailPort !== '') {
+                config(['mail.mailers.smtp.port' => (int) $mailPort]);
+            }
+
+            $mailUser = (string) SystemSettings::value('mail_user', '');
+            if ($mailUser !== '') {
+                config(['mail.mailers.smtp.username' => $mailUser]);
+            }
+
+            $mailPass = (string) SystemSettings::value('mail_pass', '');
+            if ($mailPass !== '') {
+                config(['mail.mailers.smtp.password' => $mailPass]);
+            }
+        } catch (\Throwable) {
+            // Keep boot resilient during installation, migration, and test setup.
+        }
     }
 }

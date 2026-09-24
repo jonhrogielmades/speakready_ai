@@ -9724,3 +9724,77 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
         border-radius: 8px !important;
     }
 }
+
+body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-recent-session-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-recent-page-btn {
+    min-width: 132px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(37, 99, 235, 0.24);
+    background: #ffffff;
+    color: #2563eb;
+    font-size: .94rem;
+    font-weight: 850;
+    text-decoration: none;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-recent-page-btn:not(.disabled):hover {
+    transform: translateY(-1px);
+    border-color: rgba(37, 99, 235, 0.42);
+    box-shadow: 0 16px 30px rgba(37, 99, 235, 0.12);
+}
+
+body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-recent-page-btn.disabled {
+    pointer-events: none;
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.24);
+    background: rgba(248, 250, 252, 0.82);
+    box-shadow: none;
+}
+
+body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-recent-page-status {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.08);
+    color: #334155;
+    font-size: .88rem;
+    font-weight: 800;
+}
+
+:root:not(.lm) body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-recent-page-btn {
+    background: rgba(15, 23, 42, 0.84);
+    color: #93c5fd;
+    border-color: rgba(147, 197, 253, 0.22);
+}
+
+:root:not(.lm) body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-recent-page-btn.disabled {
+    color: rgba(148, 163, 184, 0.64);
+    background: rgba(15, 23, 42, 0.42);
+    border-color: rgba(148, 163, 184, 0.12);
+}
+
+:root:not(.lm) body.user-desktop-shell:not(.admin-shell) #card-recent-sessions .sr-recent-page-status {
+    color: #cbd5e1;
+    background: rgba(59, 130, 246, 0.12);
+}

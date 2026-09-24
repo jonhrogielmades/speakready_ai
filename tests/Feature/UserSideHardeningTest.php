@@ -2664,7 +2664,6 @@ class UserSideHardeningTest extends TestCase
  try {
  foreach ([
  'feedback_audit_logs',
- 'feedback_complaints',
  'mentor_review_comments',
  'feedback',
  'scores',

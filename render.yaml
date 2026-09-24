@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: speakready-ai
-    runtime: docker
-    autoDeployTrigger: commit
-    healthCheckPath: /up

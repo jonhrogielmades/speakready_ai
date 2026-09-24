@@ -6071,7 +6071,6 @@ body.admin-shell textarea.oinp {
     #mainSessionsTable,
     #mainArchiveTable,
     #mainFeedbackTable,
-    #mainComplaintsTable,
     #mainProvidersTable,
     #moduleUsageTable,
     #mainAuditLogsTable,
@@ -6090,7 +6089,6 @@ body.admin-shell textarea.oinp {
     #mainSessionsTable,
     #mainArchiveTable,
     #mainFeedbackTable,
-    #mainComplaintsTable,
     #mainProvidersTable,
     #moduleUsageTable,
     #mainAuditLogsTable,
@@ -6108,7 +6106,6 @@ body.admin-shell textarea.oinp {
     #mainSessionsTable,
     #mainArchiveTable,
     #mainFeedbackTable,
-    #mainComplaintsTable,
     #mainProvidersTable,
     #moduleUsageTable,
     #mainAuditLogsTable,
@@ -6126,7 +6123,6 @@ body.admin-shell textarea.oinp {
     #mainSessionsTable,
     #mainArchiveTable,
     #mainFeedbackTable,
-    #mainComplaintsTable,
     #mainProvidersTable,
     #moduleUsageTable,
     #mainAuditLogsTable,
@@ -6146,7 +6142,6 @@ body.admin-shell textarea.oinp {
     #mainSessionsTable,
     #mainArchiveTable,
     #mainFeedbackTable,
-    #mainComplaintsTable,
     #mainProvidersTable,
     #moduleUsageTable,
     #mainAuditLogsTable,
@@ -6164,7 +6159,6 @@ body.admin-shell textarea.oinp {
     #mainSessionsTableWrapper,
     #mainArchiveTableWrapper,
     #mainFeedbackTableWrapper,
-    #mainComplaintsTableWrapper,
     #mainProvidersTableWrapper,
     #moduleUsageTableWrapper,
     #mainAuditLogsTableWrapper,
@@ -7096,18 +7090,6 @@ body.admin-shell #dashboard .db-content #sec-admin-questions :where(#mainTable, 
   padding: 0 !important;
   border-radius: 4px !important;
   flex: 0 0 16px !important;
-}
-
-body.admin-shell #dashboard .db-content #sec-admin-complaints #mainComplaintsTable {
-  min-width: 0 !important;
-}
-
-body.admin-shell #dashboard .db-content #sec-admin-complaints #mainComplaintsTableWrapper {
-  overflow-x: hidden !important;
-}
-
-body.admin-shell #dashboard .db-content #sec-admin-complaints #mainComplaintsTable .complaints-empty {
-  white-space: normal !important;
 }
 
 body.admin-shell #dashboard .db-content #sec-admin-modules #modulesTable {
@@ -8843,7 +8825,6 @@ body .modal-title {
     #mainSessionsTableWrapper,
     #mainArchiveTableWrapper,
     #mainFeedbackTableWrapper,
-    #mainComplaintsTableWrapper,
     #mainModulesTableWrapper,
     #mainProvidersTableWrapper,
     #mainCategoriesTableWrapper,

@@ -1,4 +1,153 @@
 /* Page styles extracted from resources/views/admin/categories.blade.php. */
+#mainCategoriesTableWrapper {
+    max-width: 100%;
+}
+
+#mainCategoriesTable {
+    table-layout: fixed;
+    min-width: 1260px;
+}
+
+#mainCategoriesTable th,
+#mainCategoriesTable td {
+    vertical-align: middle;
+}
+
+#mainCategoriesTable th:nth-child(1),
+#mainCategoriesTable td:nth-child(1) {
+    width: 390px;
+}
+
+#mainCategoriesTable th:nth-child(2),
+#mainCategoriesTable td:nth-child(2) {
+    width: 360px;
+}
+
+#mainCategoriesTable th:nth-child(3),
+#mainCategoriesTable td:nth-child(3) {
+    width: 110px;
+}
+
+#mainCategoriesTable th:nth-child(4),
+#mainCategoriesTable td:nth-child(4) {
+    width: 110px;
+}
+
+#mainCategoriesTable th:nth-child(5),
+#mainCategoriesTable td:nth-child(5) {
+    width: 120px;
+}
+
+#mainCategoriesTable th:nth-child(6),
+#mainCategoriesTable td:nth-child(6) {
+    width: 290px;
+}
+
+#mainCategoriesTable td:nth-child(1),
+#mainCategoriesTable td:nth-child(2) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#mainCategoriesTable td:nth-child(1) a {
+    display: inline;
+    color: var(--tx);
+}
+
+#mainCategoriesTable td:nth-child(6) {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+#mainCategoriesTable td:nth-child(6) form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.admin-category-action {
+    align-items: center;
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 700;
+    gap: 2px;
+    line-height: 1.1;
+    min-height: 34px;
+}
+
+.admin-category-action-status {
+    background: #fff7ed;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+}
+
+.admin-category-action-status:hover,
+.admin-category-action-status:focus {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #111827;
+}
+
+.admin-category-action-delete {
+    background: #fff1f2;
+    border: 1px solid #e11d48;
+    color: #9f1239;
+}
+
+.admin-category-action-delete:hover,
+.admin-category-action-delete:focus {
+    background: #e11d48;
+    border-color: #e11d48;
+    color: #ffffff;
+}
+
+.admin-categories-pagination {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.admin-categories-pagination__count {
+    color: var(--tx3);
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
+.admin-categories-pagination__actions {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-categories-page-btn {
+    align-items: center;
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 10px;
+    color: var(--tx);
+    display: inline-flex;
+    font-size: 0.82rem;
+    font-weight: 700;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 14px;
+    text-decoration: none;
+}
+
+.admin-categories-page-btn:hover,
+.admin-categories-page-btn:focus {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.admin-categories-page-btn.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 #addCategoryModal .form-check-input,
     [id^="editCategoryModal"] .form-check-input {
         position: absolute !important;
@@ -153,13 +302,12 @@
             flex-shrink: 0;
             text-align: left;
         }
-        #mainCategoriesTable tbody td:nth-child(1)::before { content: "ID"; }
-        #mainCategoriesTable tbody td:nth-child(3)::before { content: "Description"; }
-        #mainCategoriesTable tbody td:nth-child(4)::before { content: "Type"; }
-        #mainCategoriesTable tbody td:nth-child(5)::before { content: "Questions"; }
-        #mainCategoriesTable tbody td:nth-child(6)::before { content: "Status"; }
+        #mainCategoriesTable tbody td:nth-child(2)::before { content: "Description"; }
+        #mainCategoriesTable tbody td:nth-child(3)::before { content: "Type"; }
+        #mainCategoriesTable tbody td:nth-child(4)::before { content: "Questions"; }
+        #mainCategoriesTable tbody td:nth-child(5)::before { content: "Status"; }
         
-        #mainCategoriesTable tbody td:nth-child(2) {
+        #mainCategoriesTable tbody td:nth-child(1) {
             order: -1;
             justify-content: flex-start;
             border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
@@ -167,5 +315,5 @@
             margin-bottom: 4px;
             text-align: left;
         }
-        #mainCategoriesTable tbody td:nth-child(2)::before { content: none; }
+        #mainCategoriesTable tbody td:nth-child(1)::before { content: none; }
     }

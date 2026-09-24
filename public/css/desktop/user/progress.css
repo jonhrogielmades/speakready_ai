@@ -11020,7 +11020,7 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-t
 
     html body.user-desktop-shell:not(.admin-shell) #practice-plan-page .practice-ai-list {
         display: grid !important;
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: minmax(0, 1fr) !important;
         gap: 14px !important;
     }
 

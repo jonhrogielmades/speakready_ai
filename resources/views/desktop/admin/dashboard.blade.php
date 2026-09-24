@@ -5,11 +5,6 @@
 @endpush
 
 @section('content')
-@php
-    $readinessAlgorithms = $readinessAlgorithms ?? null;
-    $algorithmChecks = collect($readinessAlgorithms?->algorithms ?? []);
-@endphp
-
 <div class="db-section active admin-dashboard-shell" id="sec-overview">
     @if(session('message'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399">
@@ -103,35 +98,6 @@
         </div>
     </div>
 
-    <div class="premium-card dashboard-panel admin-algorithm-panel mb-4">
-        <div class="admin-algorithm-header">
-            <div class="admin-algorithm-title-wrap">
-                <div class="admin-algorithm-main-icon"><i class="fa-solid fa-microchip"></i></div>
-                <div>
-                    <h6 class="fw-bold m-0">Algorithm Checks</h6>
-                    <p>Secondary readiness and recommendation checks from multiple algorithms.</p>
-                </div>
-            </div>
-            <span class="admin-algorithm-badge">{{ $readinessAlgorithms?->available_count ?? 0 }}/{{ $readinessAlgorithms?->algorithm_count ?? 7 }} active</span>
-        </div>
-        <div class="admin-algorithm-grid">
-            @foreach($algorithmChecks as $algorithm)
-                <div class="admin-algorithm-item {{ $algorithm->available ? 'is-active' : 'is-pending' }}">
-                    <div class="admin-algorithm-icon"><i class="fa-solid {{ $algorithm->icon }}"></i></div>
-                    <div class="admin-algorithm-body">
-                        <div class="admin-algorithm-name">{{ $algorithm->name }}</div>
-                        <div class="admin-algorithm-value">{{ $algorithm->available ? $algorithm->prediction : $algorithm->message }}</div>
-                    </div>
-                    @if($algorithm->available)
-                        <span class="admin-algorithm-score">{{ $algorithm->confidence }}%</span>
-                    @else
-                        <span class="admin-algorithm-score is-muted">--</span>
-                    @endif
-                </div>
-            @endforeach
-        </div>
-    </div>
-
     <div class="row g-4 dashboard-work-grid">
         <!-- LEFT COLUMN (Main Content) -->
         <div class="col-lg-8 dashboard-primary-column">
@@ -176,44 +142,6 @@
                             @endforelse
                         </tbody>
                     </table>
-                </div>
-            </div>
-
-            <!-- Feature 14: Activity Logs & Feature 10: Top Users -->
-            <div class="row g-4 mb-4 dashboard-mini-grid">
-                <div class="col-md-6">
-                    <div class="premium-card dashboard-panel h-100">
-                        <h6 class="fw-bold mb-4">Activity Logs</h6>
-                        <div class="activity-timeline">
-                            @forelse($recentActivities as $activity)
-                            <div class="activity-item">
-                                <div style="font-size:0.85rem;color:var(--tx);"><strong>{{ $activity['text'] }}</strong></div>
-                                <div style="font-size:0.75rem;color:var(--tx3);">{{ $activity['time'] }}</div>
-                            </div>
-                            @empty
-                            <div class="activity-item">
-                                <div style="font-size:0.85rem;color:var(--tx3);">No recent activity</div>
-                            </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="premium-card dashboard-panel h-100">
-                        <h6 class="fw-bold mb-1"><i class="fa-solid fa-scale-balanced me-2 text-warning"></i>Assessment Quality</h6>
-                        <p class="small mb-3" style="color:var(--tx3);">Anonymous readiness-band distribution from score-eligible and legacy assessments.</p>
-                        @forelse($readinessBandSummary as $band)
-                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
-                            <div>
-                                <span style="font-size:0.9rem;font-weight:700;">{{ $band->band }}</span>
-                                <div style="font-size:.72rem;color:var(--tx3);">Average score confidence {{ $band->scoring_confidence }}%</div>
-                            </div>
-                            <span class="fw-bold text-primary">{{ $band->count }} assessments</span>
-                        </div>
-                        @empty
-                        <div class="text-center text-muted mt-4">No eligible assessments available yet.</div>
-                        @endforelse
-                    </div>
                 </div>
             </div>
 
@@ -331,6 +259,23 @@
                 </div>
             </div>
 
+            <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-updates mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold m-0"><i class="fa-solid fa-arrows-rotate me-2 text-success"></i>User Updates</h6>
+                    <a href="{{ route('admin.notifications.index') }}" class="btn btn-sm admin-dashboard-mini-action" style="border-radius:8px;border:1px solid var(--bd);color:var(--tx2);background:var(--bg3);">View All</a>
+                </div>
+                @forelse($recentUserUpdates as $activity)
+                    <div class="p-3 mb-2 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
+                        <div style="color:var(--tx);font-weight:700;font-size:0.86rem;">{{ $activity->description ?: ucwords(str_replace('_', ' ', $activity->action)) }}</div>
+                        <div style="color:var(--tx3);font-size:0.74rem;margin-top:4px;">
+                            {{ $activity->user?->name ?? 'System' }} &bull; {{ optional($activity->created_at)->diffForHumans() }}
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-3 rounded text-center" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx3);font-size:0.85rem;">No user updates yet.</div>
+                @endforelse
+            </div>
+
             <!-- Feature 15: System Monitoring -->
             <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-health mb-4">
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-server me-2 text-info"></i>System Health</h6>
@@ -364,35 +309,6 @@
                     <span class="badge" style="background:var(--bg3);color:var(--tx);border:1px solid var(--bd);">Technical: 180</span>
                     <span class="badge" style="background:var(--bg3);color:var(--tx);border:1px solid var(--bd);">Situational: 100</span>
                     <span class="badge" style="background:var(--bg3);color:var(--tx);border:1px solid var(--bd);">Personal: 70</span>
-                </div>
-            </div>
-
-            <!-- Feature 9: Learning Lab Analytics -->
-            <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-compact mb-4">
-                <h6 class="fw-bold mb-3">Interview Learning Stats</h6>
-                <div class="p-2 mb-2 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
-                    <div style="font-size:0.75rem;color:var(--tx3);">Most Viewed & Completed</div>
-                    <div class="fw-bold" style="color:var(--tx);font-size:0.9rem;">Interview Communication</div>
-                </div>
-                <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
-                    <div style="font-size:0.85rem;color:var(--tx2);">Avg Completion Rate</div>
-                    <div class="fw-bold text-success">95%</div>
-                </div>
-            </div>
-
-            <!-- Feature 17: Reports & Exports -->
-            <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-reports mb-4">
-                <h6 class="fw-bold mb-3"><i class="fa-solid fa-file-export me-2 text-primary"></i>Generate Reports</h6>
-                <select class="form-select mb-3" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);">
-                    <option>User Reports</option>
-                    <option>Interview Reports</option>
-                    <option>AI Usage Reports</option>
-                    <option>Analytics Reports</option>
-                </select>
-                <div class="d-flex gap-2">
-                    <button class="btn w-100 btn-sm" style="background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.2);">PDF</button>
-                    <button class="btn w-100 btn-sm" style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.2);">Excel</button>
-                    <button class="btn w-100 btn-sm" style="background:rgba(96,165,250,0.1);color:#60a5fa;border:1px solid rgba(96,165,250,0.2);">CSV</button>
                 </div>
             </div>
 

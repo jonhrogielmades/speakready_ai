@@ -372,3 +372,143 @@
         color: var(--settings-muted) !important;
         -webkit-text-fill-color: var(--settings-muted) !important;
     }
+
+    #sec-admin-settings .settings-save-top {
+        border-radius: 8px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    #sec-admin-settings .settings-jump {
+        min-height: 108px;
+        padding: 12px 10px;
+        border-radius: 8px;
+        background: var(--settings-card-bg);
+        border: 1px solid var(--settings-card-border);
+        box-shadow: var(--settings-card-shadow);
+        color: var(--settings-page-title);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 7px;
+        transition: transform .18s ease, border-color .18s ease;
+    }
+
+    #sec-admin-settings .settings-jump:hover,
+    #sec-admin-settings .settings-jump:focus-visible {
+        transform: translateY(-1px);
+        border-color: var(--settings-card-hover-border);
+    }
+
+    #sec-admin-settings .settings-jump-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(59, 130, 246, .13);
+        color: var(--settings-accent);
+    }
+
+    #sec-admin-settings .settings-jump-label {
+        color: var(--settings-page-title);
+        font-size: .86rem;
+        font-weight: 800;
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    #sec-admin-settings .settings-jump-kicker {
+        color: var(--settings-muted);
+        font-size: .56rem;
+        letter-spacing: .08em;
+        line-height: 1.1;
+        text-transform: uppercase;
+        font-weight: 800;
+    }
+
+    #sec-admin-settings .settings-panel {
+        background: var(--settings-card-bg);
+        border: 1px solid var(--settings-card-border);
+        border-radius: 8px;
+        box-shadow: var(--settings-card-shadow);
+        color: var(--settings-page-title);
+        margin-bottom: 16px;
+        padding: 16px;
+        scroll-margin-top: 18px;
+    }
+
+    #sec-admin-settings .settings-panel-head {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-bottom: 1px solid var(--settings-card-border);
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+    }
+
+    #sec-admin-settings .settings-panel-head h5 {
+        color: var(--settings-page-title);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    #sec-admin-settings .settings-panel-head p {
+        color: var(--settings-muted);
+        font-size: .84rem;
+        margin: 0;
+    }
+
+    #sec-admin-settings .settings-mini-title {
+        color: var(--settings-page-title);
+        font-size: .88rem;
+        font-weight: 800;
+    }
+
+    #sec-admin-settings .settings-check-row {
+        background: var(--settings-control-bg);
+        border: 1px solid var(--settings-control-border);
+        border-radius: 8px;
+        padding: 11px 12px 11px 36px;
+    }
+
+    #sec-admin-settings .settings-logo-preview {
+        max-height: 44px;
+        max-width: 220px;
+        object-fit: contain;
+    }
+
+    #sec-admin-settings #mainAuditLogsTable {
+        color: var(--settings-page-title);
+        border-color: var(--settings-card-border);
+    }
+
+    #sec-admin-settings #mainAuditLogsTable :is(th, td) {
+        background: transparent;
+        border-color: var(--settings-card-border);
+        color: var(--settings-page-title);
+    }
+
+    @media (max-width: 767.98px) {
+        #sec-admin-settings > .d-flex.justify-content-between {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+
+        #sec-admin-settings .settings-save-top {
+            width: 100%;
+            margin-top: 14px;
+        }
+
+        #sec-admin-settings .btn-save-fixed {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 12px;
+        }
+    }

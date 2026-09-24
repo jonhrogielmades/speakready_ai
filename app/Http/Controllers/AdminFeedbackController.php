@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\FeedbackAuditLog;
-use App\Models\FeedbackComplaint;
 use App\Models\InterviewAnswer;
 use App\Services\CsvExportService;
 use Illuminate\Http\Request;
@@ -25,7 +24,7 @@ class AdminFeedbackController extends Controller
             'avg_relevance' => InterviewAnswer::whereNotNull('ai_feedback')->avg('relevance_score') ?? 0,
         ];
 
-        $feedbacks = $query->latest()->paginate(15);
+        $feedbacks = $query->latest()->paginate(5)->withQueryString();
 
         return $this->mobileView('admin.feedback.index', compact('feedbacks', 'stats'));
     }
@@ -72,7 +71,7 @@ class AdminFeedbackController extends Controller
 
     public function show(InterviewAnswer $answer)
     {
-        $answer->load(['question', 'auditLogs.admin', 'complaints.user']);
+        $answer->load(['question', 'auditLogs.admin']);
 
         return $this->mobileView('admin.feedback.show', compact('answer'));
     }
@@ -168,13 +167,6 @@ class AdminFeedbackController extends Controller
         ]);
 
         return back()->with('success', 'Note added successfully.');
-    }
-
-    public function complaints()
-    {
-        $complaints = FeedbackComplaint::with(['user', 'interviewAnswer.question'])->latest()->paginate(15);
-
-        return $this->mobileView('admin.feedback.complaints', compact('complaints'));
     }
 
     private function filteredFeedbackQuery(Request $request)

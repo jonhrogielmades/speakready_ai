@@ -62,25 +62,6 @@
  $currentSearch = $search?? request('search', '');
  $hasModuleFilters = trim((string) $currentCategory)!== '' || trim((string) $currentSearch)!== '';
  @endphp
- <form id="moduleFiltersForm" class="module-filter-bar" action="{{ route('user.modules.index') }}" method="GET" role="search">
- <div class="module-search-shell">
- <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
- <input id="moduleSearchInput" class="module-search-input" type="search" name="search" value="{{ $currentSearch }}" placeholder="Search modules, skills, or topics" autocomplete="off" aria-label="Search interview modules">
- </div>
- <div class="module-topic-select-shell">
- <select id="moduleTopicSelect" name="category" class="module-topic-select" aria-label="Select module topic">
- <option value="" {{ $currentCategory === ''? 'selected': '' }}>All Topics</option>
- @foreach($categories as $category)
- <option value="{{ $category }}" {{ $currentCategory === $category? 'selected': '' }}>{{ $category }}</option>
- @endforeach
- </select>
- </div>
- <button type="submit" class="module-filter-submit"><i class="fa-solid fa-filter" aria-hidden="true"></i><span>Search</span></button>
- @if($hasModuleFilters)
- <a id="moduleClearFilters" href="{{ route('user.modules.index') }}" class="module-filter-clear">Clear</a>
- @endif
- </form>
-
  @if((isset($moduleRecommendations) && $moduleRecommendations->count() > 0) || (isset($learningPaths) && $learningPaths->count() > 0))
  <div class="module-smart-row">
  @if(isset($moduleRecommendations) && $moduleRecommendations->count() > 0)
@@ -131,6 +112,25 @@
  @endif
  </div>
  @endif
+
+ <form id="moduleFiltersForm" class="module-filter-bar" action="{{ route('user.modules.index') }}" method="GET" role="search">
+ <div class="module-search-shell">
+ <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+ <input id="moduleSearchInput" class="module-search-input" type="search" name="search" value="{{ $currentSearch }}" placeholder="Search modules, skills, or topics" autocomplete="off" aria-label="Search interview modules">
+ </div>
+ <button type="submit" class="module-filter-submit"><i class="fa-solid fa-filter" aria-hidden="true"></i><span>Search</span></button>
+ <div class="module-topic-select-shell">
+ <select id="moduleTopicSelect" name="category" class="module-topic-select" aria-label="Select module topic">
+ <option value="" {{ $currentCategory === ''? 'selected': '' }}>All Topics</option>
+ @foreach($categories as $category)
+ <option value="{{ $category }}" {{ $currentCategory === $category? 'selected': '' }}>{{ $category }}</option>
+ @endforeach
+ </select>
+ </div>
+ @if($hasModuleFilters)
+ <a id="moduleClearFilters" href="{{ route('user.modules.index') }}" class="module-filter-clear">Clear</a>
+ @endif
+ </form>
 
  <div class="row g-4 mb-4 modules-card-grid">
  @forelse($modules as $index => $module)

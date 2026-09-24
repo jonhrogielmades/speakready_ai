@@ -2,7 +2,7 @@
 @section('title', 'Feedback Center')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=14') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=15') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')
@@ -287,9 +287,26 @@
  @endif
  
  @if($sessions->hasPages())
- <!-- Pagination UI -->
- <div class="mt-4 d-flex justify-content-end" id="feedbackPagination">
- {{ $sessions->links('pagination::bootstrap-5') }}
+ <div class="feedback-history-pager" id="feedbackPagination" aria-label="Practice history pagination">
+ <a
+ href="{{ $sessions->previousPageUrl() ?: '#' }}"
+ class="feedback-page-btn {{ $sessions->onFirstPage()? 'disabled': '' }}"
+ aria-disabled="{{ $sessions->onFirstPage()? 'true': 'false' }}"
+ @if($sessions->onFirstPage()) tabindex="-1" @endif
+ >
+ <i class="fa-solid fa-arrow-left"></i>
+ Previous
+ </a>
+ <span class="feedback-page-status">Page {{ $sessions->currentPage() }} of {{ $sessions->lastPage() }}</span>
+ <a
+ href="{{ $sessions->nextPageUrl() ?: '#' }}"
+ class="feedback-page-btn {{ $sessions->hasMorePages()? '': 'disabled' }}"
+ aria-disabled="{{ $sessions->hasMorePages()? 'false': 'true' }}"
+ @unless($sessions->hasMorePages()) tabindex="-1" @endunless
+ >
+ Next
+ <i class="fa-solid fa-arrow-right"></i>
+ </a>
  </div>
  @endif
  </div>

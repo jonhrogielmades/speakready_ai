@@ -63,6 +63,46 @@
         border-color: #60a5fa !important;
         box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18) !important;
     }
+    .admin-categories-pagination {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .admin-categories-pagination__count {
+        color: var(--tx3);
+        font-size: 0.84rem;
+        font-weight: 600;
+    }
+
+    .admin-categories-pagination__actions {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .admin-categories-page-btn {
+        align-items: center;
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        color: var(--tx);
+        display: inline-flex;
+        font-size: 0.82rem;
+        font-weight: 700;
+        gap: 8px;
+        justify-content: center;
+        min-height: 40px;
+        padding: 0 12px;
+        text-decoration: none;
+    }
+
+    .admin-categories-page-btn.is-disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
     /* Mobile Card-based Table Layout for Main Categories Table */
     @media (max-width: 767px) {
         #addCategoryModal .modal-dialog,
@@ -153,13 +193,12 @@
             flex-shrink: 0;
             text-align: left;
         }
-        #mainCategoriesTable tbody td:nth-child(1)::before { content: "ID"; }
-        #mainCategoriesTable tbody td:nth-child(3)::before { content: "Description"; }
-        #mainCategoriesTable tbody td:nth-child(4)::before { content: "Type"; }
-        #mainCategoriesTable tbody td:nth-child(5)::before { content: "Questions"; }
-        #mainCategoriesTable tbody td:nth-child(6)::before { content: "Status"; }
+        #mainCategoriesTable tbody td:nth-child(2)::before { content: "Description"; }
+        #mainCategoriesTable tbody td:nth-child(3)::before { content: "Type"; }
+        #mainCategoriesTable tbody td:nth-child(4)::before { content: "Questions"; }
+        #mainCategoriesTable tbody td:nth-child(5)::before { content: "Status"; }
         
-        #mainCategoriesTable tbody td:nth-child(2) {
+        #mainCategoriesTable tbody td:nth-child(1) {
             order: -1;
             justify-content: flex-start;
             border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
@@ -167,5 +206,5 @@
             margin-bottom: 4px;
             text-align: left;
         }
-        #mainCategoriesTable tbody td:nth-child(2)::before { content: none; }
+        #mainCategoriesTable tbody td:nth-child(1)::before { content: none; }
     }

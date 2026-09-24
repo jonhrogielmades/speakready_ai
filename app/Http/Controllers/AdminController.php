@@ -12,10 +12,10 @@ use App\Models\LearningModule;
 use App\Services\AIService;
 use App\Services\CsvExportService;
 use App\Services\QuestionDatasetProvider;
-use App\Services\ReadinessAlgorithmSuite;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Schema;
 
@@ -23,32 +23,58 @@ class AdminController extends Controller
 {
  public function dashboard()
  {
- $registeredUsersCount = \App\Models\User::count();
- $onlineTodayCount = $this->onlineUserIds()->count();
- $mockInterviewsCount = \App\Models\InterviewSession::count();
- $aiFeedbacksCount = \App\Models\Feedback::count();
- $modulesCompletedCount = \App\Models\LearningProgress::where('status', 'completed')->count();
- $userUpdatesCount = \App\Models\ActivityLog::count();
+ $registeredUsersCount = $this->dashboardValue('registered_users', fn () => Schema::hasTable('users') ? \App\Models\User::count() : 0, 0);
+ $onlineTodayCount = $this->dashboardValue('online_today', fn () => $this->onlineUserIds()->count(), 0);
+ $mockInterviewsCount = $this->dashboardValue('mock_interviews', fn () => Schema::hasTable('interview_sessions') ? \App\Models\InterviewSession::count() : 0, 0);
+ $aiFeedbacksCount = $this->dashboardValue('ai_feedbacks', fn () => Schema::hasTable('feedback') ? \App\Models\Feedback::count() : 0, 0);
+ $modulesCompletedCount = $this->dashboardValue('modules_completed', function () {
+ if (! $this->hasTableColumns('learning_progress', ['status'])) {
+ return 0;
+ }
 
- $recentSessions = \App\Models\InterviewSession::with(['user', 'category', 'score'])
- ->orderBy('created_at', 'desc')
+ return \App\Models\LearningProgress::where('status', 'completed')->count();
+ }, 0);
+ $userUpdatesCount = $this->dashboardValue('user_updates', fn () => Schema::hasTable('activity_logs') ? \App\Models\ActivityLog::count() : 0, 0);
+ $recentUserUpdates = $this->dashboardValue('recent_user_updates', function () {
+ if (! Schema::hasTable('activity_logs')) {
+ return collect();
+ }
+
+ return \App\Models\ActivityLog::with(Schema::hasTable('users') ? 'user' : [])
+ ->latest('id')
  ->take(5)
  ->get();
+ }, collect());
 
- $eligibleScoresQuery = \App\Models\Score::readinessEligible();
- $readinessBandExpression = "COALESCE(NULLIF(readiness_band, ''), 'Legacy')";
- $readinessBandSummary = (clone $eligibleScoresQuery)
- ->selectRaw("{$readinessBandExpression} as band, COUNT(*) as count, AVG(scoring_confidence) as scoring_confidence")
- ->groupBy(DB::raw($readinessBandExpression))
- ->get()
- ->map(fn ($score) => (object) [
- 'band' => $score->band?: 'Legacy',
- 'count' => (int) $score->count,
- 'scoring_confidence' => (int) round($score->scoring_confidence?? 0),
- ])->values();
+ $recentSessions = $this->dashboardValue('recent_sessions', function () {
+ if (
+ ! $this->hasTableColumns('interview_sessions', ['id', 'user_id', 'category_id'])
+ || ! Schema::hasTable('users')
+ || ! Schema::hasTable('categories')
+ || ! Schema::hasTable('scores')
+ ) {
+ return collect();
+ }
 
- // Users needing support (< 60 score)
- $usersNeedingSupport = \App\Models\Score::select('scores.*', 'users.name as user_name', 'users.id as user_id')
+ $query = \App\Models\InterviewSession::with(['user', 'category', 'score']);
+ $orderColumn = Schema::hasColumn('interview_sessions', 'created_at') ? 'created_at' : 'id';
+
+ return $query
+ ->orderBy($orderColumn, 'desc')
+ ->take(5)
+ ->get();
+ }, collect());
+
+ $usersNeedingSupport = $this->dashboardValue('users_needing_support', function () {
+ if (
+ ! $this->hasTableColumns('scores', ['interview_session_id', 'overall_readiness_score'])
+ || ! $this->hasTableColumns('interview_sessions', ['id', 'user_id'])
+ || ! $this->hasTableColumns('users', ['id', 'name'])
+ ) {
+ return collect();
+ }
+
+ return \App\Models\Score::select('scores.*', 'users.name as user_name', 'users.id as user_id')
  ->join('interview_sessions', 'scores.interview_session_id', '=', 'interview_sessions.id')
  ->join('users', 'interview_sessions.user_id', '=', 'users.id')
  ->where('scores.overall_readiness_score', '<', 60)
@@ -56,58 +82,75 @@ class AdminController extends Controller
  ->orderBy('scores.overall_readiness_score', 'asc')
  ->take(3)
  ->get();
+ }, collect());
 
- // Avg performance metrics
- $averageMetrics = (clone $eligibleScoresQuery)
+ $averageMetrics = $this->dashboardValue('average_metrics', function () {
+ if (! $this->hasTableColumns('scores', ['clarity_score', 'relevance_score', 'grammar_score', 'professionalism_score'])) {
+ return null;
+ }
+
+ return \App\Models\Score::readinessEligible()
  ->selectRaw('AVG(clarity_score) as clarity_score, AVG(relevance_score) as relevance_score, AVG(grammar_score) as grammar_score, AVG(professionalism_score) as professionalism_score')
  ->first();
+ }, null);
  $avgClarity = round($averageMetrics->clarity_score?? 0);
  $avgRelevance = round($averageMetrics->relevance_score?? 0);
  $avgGrammar = round($averageMetrics->grammar_score?? 0);
  $avgProfessionalism = round($averageMetrics->professionalism_score?? 0);
 
- $recentActivities = \App\Models\ActivityLog::orderBy('created_at', 'desc')->take(15)->get()->map(function($activity) {
- return [
- 'text' => $activity->description?: $activity->action,
- 'time' => $activity->created_at->diffForHumans(),
- ];
- });
+ $categoriesDonut = $this->dashboardValue('categories_donut', function () {
+ if (
+ ! $this->hasTableColumns('interview_sessions', ['category_id'])
+ || ! $this->hasTableColumns('categories', ['id', 'title'])
+ ) {
+ return collect();
+ }
 
- // Analytics for charts
- $categoriesDonut = \App\Models\InterviewSession::join('categories', 'interview_sessions.category_id', '=', 'categories.id')
+ return \App\Models\InterviewSession::join('categories', 'interview_sessions.category_id', '=', 'categories.id')
  ->selectRaw('categories.title as label, count(*) as count')
  ->groupBy('categories.title')
  ->get();
+ }, collect());
 
  $chartLabels = $categoriesDonut->pluck('label');
  $chartData = $categoriesDonut->pluck('count');
 
- // Readiness Distribution
+ $readinessData = $this->dashboardValue('readiness_distribution', function () {
+ if (! $this->hasTableColumns('scores', ['overall_readiness_score'])) {
+ return [0, 0, 0, 0];
+ }
+
  $readinessDistribution = \App\Models\Score::query()
  ->selectRaw('SUM(CASE WHEN overall_readiness_score >= 90 THEN 1 ELSE 0 END) as highly_accurate, SUM(CASE WHEN overall_readiness_score BETWEEN 70 AND 89 THEN 1 ELSE 0 END) as acceptable, SUM(CASE WHEN overall_readiness_score BETWEEN 50 AND 69 THEN 1 ELSE 0 END) as needs_improvement, SUM(CASE WHEN overall_readiness_score < 50 THEN 1 ELSE 0 END) as poor')
  ->first();
- $readinessData = [
+
+ return [
  (int) ($readinessDistribution->highly_accurate?? 0),
  (int) ($readinessDistribution->acceptable?? 0),
  (int) ($readinessDistribution->needs_improvement?? 0),
  (int) ($readinessDistribution->poor?? 0),
  ];
+ }, [0, 0, 0, 0]);
 
  // User Growth (Last 6 months)
  $userGrowthLabels = [];
  $userGrowthData = [];
  $growthStart = now()->subMonths(5)->startOfMonth();
- $growthCounts = \App\Models\User::where('created_at', '>=', $growthStart)
+ $growthCounts = $this->dashboardValue('user_growth', function () use ($growthStart) {
+ if (! $this->hasTableColumns('users', ['created_at'])) {
+ return collect();
+ }
+
+ return \App\Models\User::where('created_at', '>=', $growthStart)
  ->get(['created_at'])
  ->groupBy(fn ($user) => $user->created_at?->format('Y-m'))
  ->map->count();
+ }, collect());
  for ($i = 5; $i >= 0; $i--) {
  $date = now()->subMonths($i);
  $userGrowthLabels[] = $date->format('M');
  $userGrowthData[] = (int) ($growthCounts[$date->format('Y-m')]?? 0);
  }
-
- $readinessAlgorithms = app(ReadinessAlgorithmSuite::class)->forAdminOverview();
 
  return $this->mobileView('admin.dashboard', compact(
  'registeredUsersCount',
@@ -116,8 +159,8 @@ class AdminController extends Controller
  'aiFeedbacksCount',
  'modulesCompletedCount',
  'userUpdatesCount',
+ 'recentUserUpdates',
  'recentSessions',
- 'readinessBandSummary',
  'usersNeedingSupport',
  'avgClarity',
  'avgRelevance',
@@ -127,10 +170,37 @@ class AdminController extends Controller
  'chartData',
  'readinessData',
  'userGrowthLabels',
- 'userGrowthData',
- 'recentActivities',
- 'readinessAlgorithms'
+ 'userGrowthData'
  ));
+ }
+
+ private function dashboardValue(string $section, callable $callback, mixed $fallback): mixed
+ {
+ try {
+ return $callback();
+ } catch (\Throwable $e) {
+ Log::warning('Admin dashboard data unavailable.', [
+ 'section' => $section,
+ 'error' => $e->getMessage(),
+ ]);
+
+ return $fallback;
+ }
+ }
+
+ private function hasTableColumns(string $table, array $columns): bool
+ {
+ if (! Schema::hasTable($table)) {
+ return false;
+ }
+
+ foreach ($columns as $column) {
+ if (! Schema::hasColumn($table, $column)) {
+ return false;
+ }
+ }
+
+ return true;
  }
 
  private function onlineUserIds(): \Illuminate\Support\Collection
@@ -862,20 +932,18 @@ class AdminController extends Controller
  $totalModules = $modules->count();
  $publishedModules = $modules->where('status', 'published')->count();
  $draftModules = $modules->where('status', 'draft')->count();
- $totalResources = \App\Models\ModuleResource::count();
  $mostViewedModule = LearningModule::orderBy('views', 'desc')->first();
 
  $categories = $this->learningCategoryNames();
 
- return $this->mobileView('admin.modules', compact('modules', 'totalModules', 'publishedModules', 'draftModules', 'totalResources', 'mostViewedModule', 'categories'));
+ return $this->mobileView('admin.modules', compact('modules', 'totalModules', 'publishedModules', 'draftModules', 'mostViewedModule', 'categories'));
  }
 
  public function editModule(LearningModule $module)
  {
- $module->load(['chapters', 'resources', 'quizzes.questions', 'activities', 'gameLevels']);
- $allGameLevels = \App\Models\GameLevel::orderBy('level_number', 'asc')->get();
+ $module->load(['chapters', 'activities']);
  $categories = $this->learningCategoryNames();
- return $this->mobileView('admin.module_edit', compact('module', 'allGameLevels', 'categories'));
+ return $this->mobileView('admin.module_edit', compact('module', 'categories'));
  }
 
  public function updateModule(Request $request, LearningModule $module)
@@ -987,153 +1055,6 @@ class AdminController extends Controller
  return redirect()->back()->with('success', 'Chapter deleted successfully');
  }
 
- // Quizzes
- public function generateModuleQuiz(Request $request, LearningModule $module)
- {
- $prompt = "Create a 5-question multiple choice quiz based on the following role-focused interview preparation learning module content.\n";
- $prompt.= "Module Title: ". $module->title. "\n";
- $prompt.= "Module Description: ". $module->description. "\n";
- foreach($module->chapters as $chapter) {
- $prompt.= "Chapter '". $chapter->title. "' Content: ". strip_tags($chapter->content). "\n";
- }
- $prompt.= "Keep every question aligned with job interview preparation and local hiring expectations.\n";
-
- $prompt.= <<<EOT
-Return ONLY a valid JSON object strictly matching this format. Do not include markdown.
-{
- "title": "Module Assessment Quiz",
- "passing_score": 80,
- "questions": [
- {
- "question_text": "What is the main topic?",
- "options": "Option A, Option B, Option C, Option D",
- "correct_answer": "Option A"
- }
- ]
-}
-EOT;
-
- try {
- $jsonResponse = \App\Services\AIService::generateJson($prompt);
- $data = json_decode($jsonResponse, true);
-
- if (!$data ||!isset($data['questions']) ||!is_array($data['questions'])) {
- $data = $this->fallbackModuleQuizData($module);
- }
-
- $quiz = $module->quizzes()->create([
- 'title' => $data['title']?? 'AI Generated Quiz',
- 'passing_score' => $data['passing_score']?? 75,
- ]);
-
- foreach ($data['questions'] as $q) {
- $quiz->questions()->create([
- 'type' => 'multiple_choice',
- 'question_text' => $q['question_text']?? 'Review the module content and select the best answer.',
- 'options' => $this->normalizeQuizOptions($q['options']?? []),
- 'correct_answer' => $q['correct_answer']?? 'Review the module',
- ]);
- }
-
- return redirect()->back()->with('success', 'AI generated the quiz successfully!');
-
- } catch (\Exception $e) {
- \Illuminate\Support\Facades\Log::error('AI Quiz Gen Error: '. $e->getMessage());
-
- $data = $this->fallbackModuleQuizData($module);
- $quiz = $module->quizzes()->create([
- 'title' => $data['title'],
- 'passing_score' => $data['passing_score'],
- ]);
-
- foreach ($data['questions'] as $q) {
- $quiz->questions()->create([
- 'type' => 'multiple_choice',
- 'question_text' => $q['question_text'],
- 'options' => $this->normalizeQuizOptions($q['options']),
- 'correct_answer' => $q['correct_answer'],
- ]);
- }
-
- return redirect()->back()->with('success', 'Quiz generated with reliable fallback content.');
- }
- }
-
- public function storeModuleQuiz(Request $request, LearningModule $module)
- {
- $request->validate([
- 'title' => 'required|string|max:255',
- 'passing_score' => 'required|integer|min:0|max:100',
- ]);
-
- $module->quizzes()->create([
- 'title' => $request->title,
- 'passing_score' => $request->passing_score,
- ]);
-
- return redirect()->back()->with('success', 'Quiz created successfully');
- }
-
- public function destroyModuleQuiz(\App\Models\ModuleQuiz $quiz)
- {
- $quiz->delete();
- return redirect()->back()->with('success', 'Quiz deleted successfully');
- }
-
- public function storeModuleQuizQuestion(Request $request, \App\Models\ModuleQuiz $quiz)
- {
- $request->validate([
- 'type' => 'required|string',
- 'question_text' => 'required|string',
- 'correct_answer' => 'required|string',
- ]);
-
- $options = $request->options? array_map('trim', explode(',', $request->options)): null;
-
- $quiz->questions()->create([
- 'type' => $request->type,
- 'question_text' => $request->question_text,
- 'options' => $options,
- 'correct_answer' => $request->correct_answer,
- ]);
-
- return redirect()->back()->with('success', 'Question added to quiz');
- }
-
- public function destroyModuleQuizQuestion(\App\Models\ModuleQuizQuestion $question)
- {
- $question->delete();
- return redirect()->back()->with('success', 'Question deleted successfully');
- }
-
- // Resources
- public function storeModuleResource(Request $request, LearningModule $module)
- {
- $request->validate([
- 'title' => 'required|string|max:255',
- 'file' => 'required|file|mimes:pdf,docx,pptx|max:10240',
- ]);
-
- if ($request->hasFile('file')) {
- $path = $request->file('file')->store('module_resources', 'public');
-
- $module->resources()->create([
- 'title' => $request->title,
- 'file_path' => $path,
- 'file_type' => $request->file('file')->getClientOriginalExtension(),
- ]);
- }
-
- return redirect()->back()->with('success', 'Resource uploaded successfully');
- }
-
- public function destroyModuleResource(\App\Models\ModuleResource $resource)
- {
- \Illuminate\Support\Facades\Storage::disk('public')->delete($resource->file_path);
- $resource->delete();
- return redirect()->back()->with('success', 'Resource deleted successfully');
- }
-
  public function fetchLatestActivities(Request $request)
  {
  $activitiesQuery = \App\Models\ActivityLog::with('user')->orderBy('id', 'desc');
@@ -1217,26 +1138,6 @@ EOT;
  return response()->json(['success' => true]);
  }
 
- public function attachGameLevel(Request $request, LearningModule $module)
- {
- $request->validate([
- 'game_level_id' => 'required|exists:game_levels,id',
- ]);
-
- if (!$module->gameLevels->contains($request->game_level_id)) {
- $module->gameLevels()->attach($request->game_level_id);
- return redirect()->back()->with('success', 'interview learning game attached successfully.');
- }
-
- return redirect()->back()->with('warning', 'interview learning game is already attached.');
- }
-
- public function detachGameLevel(LearningModule $module, \App\Models\GameLevel $gameLevel)
- {
- $module->gameLevels()->detach($gameLevel->id);
- return redirect()->back()->with('success', 'interview learning game detached successfully.');
- }
-
  private function learningCategoryNames()
  {
  return Category::where('type', 'learning')
@@ -1311,51 +1212,6 @@ EOT;
  'title' => "Chapter {$next}: local Interview Practice Checkpoint",
  'content' => "<h3>local Interview Practice Checkpoint</h3><p>Review the key idea from {$title}, then write a short answer for a HR, school, BPO, IT, or fresh graduate interview that explains the situation, your action, and the result.</p><ul><li>Use one concrete local example.</li><li>Name your personal contribution.</li><li>End with a lesson, measurable result, or reason you are ready for the role.</li></ul>",
  ];
- }
-
- private function fallbackModuleQuizData(LearningModule $module): array
- {
- $title = $this->cleanFallbackText($module->title, 'the module');
-
- return [
- 'title' => 'Interview Module Assessment Quiz',
- 'passing_score' => 80,
- 'questions' => [
- [
- 'question_text' => "What should a strong interview answer about {$title} include?",
- 'options' => ['A specific example', 'Only a job title', 'A memorized slogan', 'No result or reflection'],
- 'correct_answer' => 'A specific example',
- ],
- [
- 'question_text' => 'Which structure best supports a local interview answer?',
- 'options' => ['Context, action, result', 'Greeting only', 'A list of unrelated skills', 'A long apology'],
- 'correct_answer' => 'Context, action, result',
- ],
- [
- 'question_text' => 'Why should an answer include measurable impact when available?',
- 'options' => ['It makes evidence clearer', 'It makes the answer longer', 'It avoids the question', 'It replaces preparation'],
- 'correct_answer' => 'It makes evidence clearer',
- ],
- ],
- ];
- }
-
- private function normalizeQuizOptions($options): array
- {
- if (is_string($options)) {
- $options = explode(',', $options);
- }
-
- if (!is_array($options)) {
- $options = [];
- }
-
- $options = array_values(array_filter(array_map(
- fn ($option) => trim((string) $option),
- $options
- )));
-
- return $options?: ['Review the module', 'Skip the lesson', 'Ignore examples', 'Avoid structure'];
  }
 
  private function cleanFallbackText(?string $value, string $fallback): string

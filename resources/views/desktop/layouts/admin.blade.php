@@ -4,9 +4,9 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#ffffff">
-      <title>SpeakReady AI Interview Admin Portal</title>
+      <title>{{ $systemName ?? 'SpeakReady AI' }} Interview Admin Portal</title>
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
-      <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
+      <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,6 +24,12 @@
       <!-- Shared app CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=35') }}" />
       <style>
+          :root,
+          .lm {
+             --pur: {{ $systemPrimaryColor ?? '#3b82f6' }};
+             --blu: {{ $systemPrimaryColor ?? '#3b82f6' }};
+             --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#3b82f6' }}, {{ $systemSecondaryColor ?? '#34d399' }});
+          }
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
           .db-nl[aria-expanded="true"] .toggle-icon { transform: rotate(180deg); }
@@ -145,9 +151,9 @@
          <div class="db-sidebar" id="dbSidebar">
             <div class="db-logo d-flex justify-content-between align-items-center">
                 <div class="db-brand d-flex align-items-center gap-2">
-                   <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0;">
+                   <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}" class="logo-i" style="background: #ffffff; padding: 0;">
                    <div class="db-brand-copy">
-                      <span class="admin-brand db-brand-text">SpeakReady AI</span>
+                      <span class="admin-brand db-brand-text">{{ $systemName ?? 'SpeakReady AI' }}</span>
                       <span class="db-brand-subtitle">Admin Control Portal</span>
                    </div>
                 </div>
@@ -166,14 +172,12 @@
                
                <div class="db-nav-section">Interview Monitoring</div>
                <a href="{{ route('admin.sessions.index') }}" class="db-nl db-nav-indigo {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}" title="Session Monitoring"><i class="fa-solid fa-video"></i><span class="db-nav-label">Session Monitoring</span></a>
-               <a href="{{ route('admin.feedback.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.feedback.*') && !request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}" title="Feedback Audit"><i class="fa-solid fa-clipboard-check"></i><span class="db-nav-label">Feedback Audit</span></a>
-               <a href="{{ route('admin.feedback.complaints') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}" title="User Complaints"><i class="fa-solid fa-clipboard-list"></i><span class="db-nav-label">User Complaints</span></a>
+               <a href="{{ route('admin.feedback.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.feedback.*') ? 'active' : '' }}" title="Feedback Audit"><i class="fa-solid fa-clipboard-check"></i><span class="db-nav-label">Feedback Audit</span></a>
                <a href="{{ route('admin.contacts.index') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}" title="Contact Messages"><i class="fa-solid fa-envelope"></i><span class="db-nav-label">Contact Messages</span></a>
                
                <div class="db-nav-section">System</div>
                
-               <a href="{{ route('admin.ai.providers') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.ai.providers*') ? 'active' : '' }}" title="AI Providers"><i class="fa-solid fa-microchip"></i><span class="db-nav-label">AI Providers</span></a>
-               <a href="{{ route('admin.ai.evaluation') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.ai.evaluation*') ? 'active' : '' }}" title="AI Evaluation"><i class="fa-solid fa-chart-simple"></i><span class="db-nav-label">AI Evaluation</span></a>
+               <a href="{{ route('admin.ai.providers') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.ai.providers*') || request()->routeIs('admin.ai.evaluation*') ? 'active' : '' }}" title="AI Providers"><i class="fa-solid fa-microchip"></i><span class="db-nav-label">AI Providers</span></a>
                
                <a href="{{ route('admin.settings.index') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" title="System Settings"><i class="fa-solid fa-gear"></i><span class="db-nav-label">System Settings</span></a>
             </div>

@@ -17,6 +17,7 @@ use App\Services\LearningGameCertificateService;
 use App\Services\LocalSpeechAssessmentService;
 use App\Services\TranscriptService;
 use App\Support\GameSchema;
+use App\Support\SystemSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +35,10 @@ class GameController extends Controller
 
  public function downloadCertificate(Category $category, LearningGameCertificateService $certificates)
  {
+ if (! SystemSettings::enabled('ll_certs', true)) {
+ abort(403, 'Certificates are currently disabled by the administrator.');
+ }
+
  if ($category->type!== 'game') {
  abort(404);
  }

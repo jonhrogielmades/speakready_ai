@@ -2606,7 +2606,7 @@
         #interview-modules-page .module-rec-grid,
         #interview-modules-page .module-path-grid {
             display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            grid-template-columns: minmax(0, 1fr) !important;
             gap: 8px !important;
             margin: 0 !important;
         }
@@ -3019,6 +3019,56 @@
     margin: 0 0 14px !important;
 }
 
+/* User modules filter bar placement and sizing. */
+#interview-modules-page .module-filter-bar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(112px, 136px) !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 0 0 14px !important;
+}
+
+#interview-modules-page .module-smart-row + .module-filter-bar {
+    margin-top: 0 !important;
+}
+
+#interview-modules-page .module-filter-bar .module-topic-select-shell,
+#interview-modules-page .module-filter-bar .module-filter-clear {
+    grid-column: 1 / -1;
+}
+
+#interview-modules-page .module-filter-bar .module-search-shell,
+#interview-modules-page .module-filter-bar .module-topic-select-shell,
+#interview-modules-page .module-filter-bar .module-filter-submit,
+#interview-modules-page .module-filter-bar .module-filter-clear {
+    min-height: 50px !important;
+}
+
+#interview-modules-page .module-filter-bar .module-search-input,
+#interview-modules-page .module-filter-bar .module-topic-select {
+    min-height: 50px !important;
+    border-radius: 12px !important;
+    font-size: 0.92rem !important;
+}
+
+#interview-modules-page .module-filter-bar .module-filter-submit,
+#interview-modules-page .module-filter-bar .module-filter-clear {
+    width: 100% !important;
+    border-radius: 12px !important;
+    font-size: 0.92rem !important;
+}
+
+@media (max-width: 380px) {
+    #interview-modules-page .module-filter-bar {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    #interview-modules-page .module-filter-bar .module-filter-submit {
+        grid-column: 1 / -1;
+    }
+}
+
 #interview-modules-page .module-search-shell,
 #interview-modules-page .module-filter-bar .module-topic-select-shell {
     position: relative !important;
@@ -3360,4 +3410,47 @@ body.dm #interview-modules-page .module-search-input::placeholder,
     html body #mob-content #interview-modules-page :is(.module-smart-panel, .module-card) {
         padding: var(--modules-progress-panel-pad) !important;
     }
+}
+
+/* Final user modules filter alignment. */
+body.user-mobile-shell #mob-content #interview-modules-page .module-filter-bar,
+html body #mob-content #interview-modules-page .module-filter-bar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(112px, 136px) !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 0 0 14px !important;
+}
+
+body.user-mobile-shell #mob-content #interview-modules-page .module-filter-bar .module-topic-select-shell,
+html body #mob-content #interview-modules-page .module-filter-bar .module-topic-select-shell,
+body.user-mobile-shell #mob-content #interview-modules-page .module-filter-bar .module-filter-clear,
+html body #mob-content #interview-modules-page .module-filter-bar .module-filter-clear {
+    grid-column: 1 / -1;
+}
+
+body.user-mobile-shell #mob-content #interview-modules-page .module-filter-bar .module-search-input,
+html body #mob-content #interview-modules-page .module-filter-bar .module-search-input,
+body.user-mobile-shell #mob-content #interview-modules-page .module-filter-bar .module-topic-select,
+html body #mob-content #interview-modules-page .module-filter-bar .module-topic-select,
+body.user-mobile-shell #mob-content #interview-modules-page .module-filter-bar .module-filter-submit,
+html body #mob-content #interview-modules-page .module-filter-bar .module-filter-submit,
+body.user-mobile-shell #mob-content #interview-modules-page .module-filter-bar .module-filter-clear,
+html body #mob-content #interview-modules-page .module-filter-bar .module-filter-clear {
+    min-height: 50px !important;
+    border-radius: 12px !important;
+    font-size: 0.92rem !important;
+}
+
+@media (max-width: 380px) {
+    body.user-mobile-shell #mob-content #interview-modules-page .module-filter-bar,
+    html body #mob-content #interview-modules-page .module-filter-bar {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+body.user-mobile-shell #mob-content #interview-modules-page .module-smart-panel .module-rec-grid,
+html body #mob-content #interview-modules-page .module-smart-panel .module-rec-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
 }

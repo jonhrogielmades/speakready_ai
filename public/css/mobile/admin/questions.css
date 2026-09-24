@@ -1,33 +1,16 @@
 /* Page styles extracted from resources/views/admin/questions.blade.php. */
-.category-card:hover {
-            border-color: var(--tx3) !important;
+#sec-admin-questions .question-table-controls {
+            align-items: stretch;
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
         }
-        .category-card.active {
-            background: rgba(255,255,255,0.05) !important;
-            border-color: #0dcaf0 !important;
+        #sec-admin-questions .category-filter-select {
+            display: block;
+            flex: 1 1 auto;
+            min-width: 0;
         }
-        .category-card {
-            cursor: pointer; 
-            min-width: 160px; 
-            background: var(--sf); 
-            border: 1px solid var(--bd); 
-            border-radius: 14px; 
-            padding: 16px; 
-            text-align: center; 
-            transition: 0.2s;
-        }
-        #sec-admin-questions .category-filter-cards {
-            overflow-x: auto;
-            padding-bottom: 8px;
-        }
-        #sec-admin-questions .category-filter-mobile {
-            display: none;
-            background: var(--sf);
-            border: 1px solid var(--bd);
-            border-radius: 14px;
-            padding: 14px;
-        }
-        #sec-admin-questions .category-filter-mobile select {
+        #sec-admin-questions .category-filter-select select {
             width: 100%;
             min-height: 46px;
             background: var(--bg);
@@ -39,7 +22,7 @@
             font-weight: 600;
             outline: none;
         }
-        #sec-admin-questions .category-filter-mobile select:focus {
+        #sec-admin-questions .category-filter-select select:focus {
             border-color: #0dcaf0;
             box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.12);
         }
@@ -59,29 +42,25 @@
         }
         #sec-admin-questions #mainTable th:nth-child(2),
         #sec-admin-questions #mainTable td:nth-child(2) {
-            width: 5%;
-        }
-        #sec-admin-questions #mainTable th:nth-child(3),
-        #sec-admin-questions #mainTable td:nth-child(3) {
-            width: 31%;
+            width: 36%;
             min-width: 0;
             max-width: none;
             white-space: normal !important;
         }
+        #sec-admin-questions #mainTable th:nth-child(3),
+        #sec-admin-questions #mainTable td:nth-child(3) {
+            width: 13%;
+        }
         #sec-admin-questions #mainTable th:nth-child(4),
         #sec-admin-questions #mainTable td:nth-child(4) {
-            width: 13%;
+            width: 12%;
         }
         #sec-admin-questions #mainTable th:nth-child(5),
         #sec-admin-questions #mainTable td:nth-child(5) {
-            width: 12%;
+            width: 10%;
         }
         #sec-admin-questions #mainTable th:nth-child(6),
         #sec-admin-questions #mainTable td:nth-child(6) {
-            width: 10%;
-        }
-        #sec-admin-questions #mainTable th:nth-child(7),
-        #sec-admin-questions #mainTable td:nth-child(7) {
             width: 25.5%;
         }
         #sec-admin-questions .question-title {
@@ -162,6 +141,34 @@
         #sec-admin-questions #mainTableWrapper {
             overflow-x: hidden !important;
         }
+        #sec-admin-questions .question-bulk-action-bar {
+            display: flex;
+            flex: 0 0 auto;
+            justify-content: stretch;
+            margin: 0;
+        }
+        #sec-admin-questions #btnBulkDelete {
+            border-color: #e11d48;
+            border-radius: 10px;
+            color: #be123c;
+            font-size: 0.9rem;
+            font-weight: 700;
+            min-height: 42px;
+            padding-inline: 16px;
+            width: 100%;
+        }
+        #sec-admin-questions #btnBulkDelete:not(:disabled):hover,
+        #sec-admin-questions #btnBulkDelete:not(:disabled):focus {
+            background: #e11d48;
+            color: #ffffff;
+        }
+        #sec-admin-questions #btnBulkDelete:disabled {
+            background: var(--sf);
+            border-color: var(--bd);
+            color: var(--tx3);
+            cursor: not-allowed;
+            opacity: 0.65;
+        }
 
         @media (max-width: 1199.98px) {
             #sec-admin-questions #mainTable {
@@ -185,25 +192,23 @@
 
         /* Mobile Card-based Table Layout for Main Questions Table */
         @media (max-width: 767px) {
-            #sec-admin-questions .category-filter-cards {
-                display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: hidden !important;
-            }
-            #sec-admin-questions .category-filter-mobile {
+            #sec-admin-questions .category-filter-select {
                 display: block !important;
                 visibility: visible !important;
-                width: 100% !important;
-                max-width: 100% !important;
+                width: auto !important;
+                max-width: none !important;
             }
-            #sec-admin-questions .category-filter-mobile select {
+            #sec-admin-questions .category-filter-select select {
                 display: block !important;
                 width: 100% !important;
                 max-width: 100% !important;
                 min-width: 0 !important;
+            }
+            #sec-admin-questions .question-table-controls {
+                flex-direction: column;
+            }
+            #sec-admin-questions .question-bulk-action-bar {
+                justify-content: stretch;
             }
             #mainTableWrapper {
                 overflow-x: visible !important;
@@ -252,12 +257,11 @@
             }
             #mainTable tbody td:nth-child(1) { order: -2; justify-content: center; padding-bottom: 4px !important; border-bottom: none !important; }
             #mainTable tbody td:nth-child(1)::before { content: "Select:"; margin-right: 10px; }
-            #mainTable tbody td:nth-child(2)::before { content: "ID"; }
-            #mainTable tbody td:nth-child(4)::before { content: "Category"; }
-            #mainTable tbody td:nth-child(5)::before { content: "Type/Diff"; }
-            #mainTable tbody td:nth-child(6)::before { content: "Status"; }
+            #mainTable tbody td:nth-child(3)::before { content: "Category"; }
+            #mainTable tbody td:nth-child(4)::before { content: "Type/Diff"; }
+            #mainTable tbody td:nth-child(5)::before { content: "Status"; }
             
-            #mainTable tbody td:nth-child(3) {
+            #mainTable tbody td:nth-child(2) {
                 order: -1;
                 justify-content: center;
                 border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
@@ -267,8 +271,8 @@
                 flex-direction: column;
                 align-items: center;
             }
-            #mainTable tbody td:nth-child(3)::before { content: none; }
-            #mainTable tbody td:nth-child(3) .fw-bold {
+            #mainTable tbody td:nth-child(2)::before { content: none; }
+            #mainTable tbody td:nth-child(2) .fw-bold {
                 max-width: min(100%, 24rem) !important;
                 margin-inline: auto;
                 white-space: normal;

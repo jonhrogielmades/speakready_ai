@@ -104,10 +104,10 @@
         <div class="col-lg-6">
             <div class="premium-card h-100">
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-trophy me-2 text-warning"></i>Top Performing Users</h6>
-                @forelse($topUsers as $index => $tUser)
-                <div class="d-flex justify-content-between p-2 mb-2 rounded user-summary-card-row" style="background:{{ $index === 0 ? 'rgba(251,191,36,0.1)' : 'var(--bg3)' }};border:{{ $index === 0 ? '1px solid rgba(251,191,36,0.3)' : 'none' }};">
+                @forelse($topUsers as $tUser)
+                <div class="d-flex justify-content-between p-2 mb-2 rounded user-summary-card-row" style="background:{{ $loop->first ? 'rgba(251,191,36,0.1)' : 'var(--bg3)' }};border:{{ $loop->first ? '1px solid rgba(251,191,36,0.3)' : 'none' }};">
                     <div class="d-flex align-items-center gap-2 user-summary-card-identity">
-                        <span class="fw-bold {{ $index === 0 ? 'text-warning' : 'text-secondary' }}" style="width:20px;">{{ $index + 1 }}</span>
+                        <span class="fw-bold {{ $loop->first ? 'text-warning' : 'text-secondary' }}" style="min-width:44px;">Top {{ $loop->iteration }}</span>
                         @if($tUser->profile_photo_path)
                             @php
                                 $photoPath = $tUser->profile_photo_path;
@@ -347,10 +347,24 @@
             </table>
         </div>
         
-        <!-- Pagination Mock -->
-        <div class="d-flex justify-content-between align-items-center mt-3 pt-3" style="border-top:1px solid var(--bd);">
-            <div class="w-100">
-                {{ $users->links('pagination::bootstrap-5') }}
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3 pt-3" style="border-top:1px solid var(--bd);">
+            <div style="color:var(--tx2);font-size:0.9rem;">
+                Showing {{ $users->firstItem() ?? 0 }}-{{ $users->lastItem() ?? 0 }} of {{ $users->total() }} users
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                @if($users->onFirstPage())
+                    <span class="btn btn-outline-secondary disabled" aria-disabled="true">Previous</span>
+                @else
+                    <a class="btn btn-outline-primary" href="{{ $users->previousPageUrl() }}" rel="prev">Previous</a>
+                @endif
+
+                <span class="px-2" style="color:var(--tx2);font-size:0.9rem;">Page {{ $users->currentPage() }} of {{ $users->lastPage() }}</span>
+
+                @if($users->hasMorePages())
+                    <a class="btn btn-outline-primary" href="{{ $users->nextPageUrl() }}" rel="next">Next</a>
+                @else
+                    <span class="btn btn-outline-secondary disabled" aria-disabled="true">Next</span>
+                @endif
             </div>
         </div>
     </div>

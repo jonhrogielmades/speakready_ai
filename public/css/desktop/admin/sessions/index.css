@@ -76,6 +76,107 @@
         background: rgba(251, 191, 36, 0.14);
         color: #fbbf24;
     }
+    .session-filter-form {
+        align-items: stretch;
+    }
+    .session-filter-form .form-control,
+    .session-filter-form .form-select,
+    .session-filter-btn {
+        min-height: 46px;
+        border-radius: 10px !important;
+        font-size: 0.92rem;
+    }
+    #mainSessionsTableWrapper {
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        overflow-x: auto;
+    }
+    #mainSessionsTable {
+        table-layout: fixed;
+        min-width: 1120px;
+    }
+    #mainSessionsTable th,
+    #mainSessionsTable td {
+        vertical-align: middle;
+    }
+    #mainSessionsTable th:nth-child(1),
+    #mainSessionsTable td:nth-child(1) {
+        width: 7%;
+    }
+    #mainSessionsTable th:nth-child(2),
+    #mainSessionsTable td:nth-child(2) {
+        width: 19%;
+    }
+    #mainSessionsTable th:nth-child(3),
+    #mainSessionsTable td:nth-child(3) {
+        width: 17%;
+    }
+    #mainSessionsTable th:nth-child(4),
+    #mainSessionsTable td:nth-child(4) {
+        width: 13%;
+    }
+    #mainSessionsTable th:nth-child(5),
+    #mainSessionsTable td:nth-child(5) {
+        width: 10%;
+    }
+    #mainSessionsTable th:nth-child(6),
+    #mainSessionsTable td:nth-child(6) {
+        width: 10%;
+    }
+    #mainSessionsTable th:nth-child(7),
+    #mainSessionsTable td:nth-child(7) {
+        width: 16%;
+    }
+    #mainSessionsTable th:nth-child(8),
+    #mainSessionsTable td:nth-child(8) {
+        width: 8%;
+    }
+    #mainSessionsTable td:nth-child(2),
+    #mainSessionsTable td:nth-child(3),
+    #mainSessionsTable td:nth-child(7) {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .admin-sessions-pagination {
+        align-items: center;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        margin-top: 16px;
+    }
+    .admin-sessions-pagination__count {
+        color: var(--tx3);
+        font-size: 0.84rem;
+        font-weight: 600;
+    }
+    .admin-sessions-pagination__actions {
+        display: flex;
+        gap: 10px;
+    }
+    .admin-sessions-page-btn {
+        align-items: center;
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        color: var(--tx);
+        display: inline-flex;
+        font-size: 0.82rem;
+        font-weight: 700;
+        gap: 8px;
+        min-height: 38px;
+        padding: 0 14px;
+        text-decoration: none;
+    }
+    .admin-sessions-page-btn:hover,
+    .admin-sessions-page-btn:focus {
+        border-color: #2563eb;
+        color: #2563eb;
+    }
+    .admin-sessions-page-btn.is-disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
 
     /* Mobile Card-based Table Layout for Main Sessions Table */
     @media (max-width: 767px) {

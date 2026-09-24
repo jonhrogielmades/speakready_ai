@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/sessions/index.css?v=1') }}" data-page-style="admin-sessions-index">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/sessions/index.css?v=2') }}" data-page-style="admin-sessions-index">
 @endpush
 
 @section('content')
@@ -226,9 +226,26 @@
                 </tbody>
             </table>
         </div>
-        <div class="mt-4">
-            {{ $sessions->links('pagination::bootstrap-5') }}
-        </div>
+        @if($sessions->hasPages())
+            <div class="admin-sessions-pagination">
+                <div class="admin-sessions-pagination__count">
+                    Showing {{ $sessions->firstItem() }}-{{ $sessions->lastItem() }} of {{ $sessions->total() }}
+                </div>
+                <div class="admin-sessions-pagination__actions">
+                    @if($sessions->onFirstPage())
+                        <span class="admin-sessions-page-btn is-disabled"><i class="fa-solid fa-chevron-left"></i> Previous</span>
+                    @else
+                        <a class="admin-sessions-page-btn" href="{{ $sessions->previousPageUrl() }}"><i class="fa-solid fa-chevron-left"></i> Previous</a>
+                    @endif
+
+                    @if($sessions->hasMorePages())
+                        <a class="admin-sessions-page-btn" href="{{ $sessions->nextPageUrl() }}">Next <i class="fa-solid fa-chevron-right"></i></a>
+                    @else
+                        <span class="admin-sessions-page-btn is-disabled">Next <i class="fa-solid fa-chevron-right"></i></span>
+                    @endif
+                </div>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -423,4 +440,3 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 @endsection
-

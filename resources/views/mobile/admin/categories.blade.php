@@ -1,6 +1,6 @@
 @extends('mobile.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/categories.css?v=1') }}" data-page-style="admin-categories">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/categories.css?v=3') }}" data-page-style="admin-categories">
 @endpush
 
 @section('content')
@@ -24,7 +24,6 @@
         <table id="mainCategoriesTable" class="table table-dark table-hover mb-0" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
             <thead>
                 <tr>
-                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">ID</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Title</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Description</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Type</th>
@@ -36,7 +35,6 @@
             <tbody>
                 @foreach($categories as $c)
                 <tr>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $c->id }}</td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($c->is_featured) <i class="fa-solid fa-star text-warning me-1"></i> @endif
                         @if($c->icon) <i class="{{ $c->icon }} me-1"></i> @endif
@@ -52,7 +50,7 @@
                             <span class="badge bg-primary">Core</span>
                         @endif
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $c->questions()->count() }}</td>
+                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $c->questions_count ?? $c->questions()->count() }}</td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($c->status == 'active')
                             <span class="badge bg-success"><i class="fa-solid fa-circle me-1"></i>Active</span>
@@ -74,6 +72,30 @@
             </tbody>
         </table>
     </div>
+
+    @if($categories instanceof \Illuminate\Contracts\Pagination\Paginator && $categories->hasPages())
+        <div class="admin-categories-pagination">
+            <div class="admin-categories-pagination__count">
+                Showing {{ $categories->firstItem() }}-{{ $categories->lastItem() }}
+                @if(method_exists($categories, 'total'))
+                    of {{ $categories->total() }}
+                @endif
+            </div>
+            <div class="admin-categories-pagination__actions">
+                @if($categories->onFirstPage())
+                    <span class="admin-categories-page-btn is-disabled"><i class="fa-solid fa-chevron-left"></i> Previous</span>
+                @else
+                    <a class="admin-categories-page-btn" href="{{ $categories->previousPageUrl() }}"><i class="fa-solid fa-chevron-left"></i> Previous</a>
+                @endif
+
+                @if($categories->hasMorePages())
+                    <a class="admin-categories-page-btn" href="{{ $categories->nextPageUrl() }}">Next <i class="fa-solid fa-chevron-right"></i></a>
+                @else
+                    <span class="admin-categories-page-btn is-disabled">Next <i class="fa-solid fa-chevron-right"></i></span>
+                @endif
+            </div>
+        </div>
+    @endif
 </div>
 
 @foreach($categories as $c)
@@ -136,15 +158,15 @@
                 </div>
                 <div class="modal-body">
                     <p style="color:var(--tx)">Are you sure you want to delete "{{ $c->title }}"?</p>
-                    @if($c->questions()->count() > 0)
+                    @if(($c->questions_count ?? $c->questions()->count()) > 0)
                         <div class="alert alert-warning">
-                            <i class="fa-solid fa-triangle-exclamation"></i> Warning: This category has {{ $c->questions()->count() }} questions. You cannot delete it unless you transfer or delete the questions first.
+                            <i class="fa-solid fa-triangle-exclamation"></i> Warning: This category has {{ $c->questions_count ?? $c->questions()->count() }} questions. You cannot delete it unless you transfer or delete the questions first.
                         </div>
                     @endif
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger px-4" {{ $c->questions()->count() > 0 ? 'disabled' : '' }}>Delete</button>
+                    <button type="submit" class="btn btn-danger px-4" {{ ($c->questions_count ?? $c->questions()->count()) > 0 ? 'disabled' : '' }}>Delete</button>
                 </div>
             </form>
         </div>

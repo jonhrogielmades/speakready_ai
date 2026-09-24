@@ -113,10 +113,19 @@
  'target_position',
  ''
  );
+ $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
+ $maxQuestionSetting = (int) \App\Support\SystemSettings::value('int_max_questions', 20);
+ $maxQuestionSetting = $questionOptions->contains($maxQuestionSetting) ? $maxQuestionSetting : 20;
+ $questionOptions = $questionOptions->filter(fn (int $count): bool => $count <= $maxQuestionSetting)->values();
+ $defaultQuestionSetting = (int) \App\Support\SystemSettings::value('int_default_questions', 10);
+ if (!$questionOptions->contains($defaultQuestionSetting)) {
+     $defaultQuestionSetting = (int) ($questionOptions->last() ?: 10);
+ }
+ $defaultTimeLimitSetting = (int) \App\Support\SystemSettings::value('int_time_limit', 0);
  $setupDefaults = [
  'difficulty' => old('difficulty', 'medium'),
- 'num_questions' => (string) old('num_questions', 10),
- 'time_limit' => (string) old('time_limit', 0),
+ 'num_questions' => (string) old('num_questions', $defaultQuestionSetting),
+ 'time_limit' => (string) old('time_limit', $defaultTimeLimitSetting),
  'interview_focus' => old('interview_focus', $selectedScenario['focus']?? 'Job Interview'),
  'ai_assistance_level' => old('ai_assistance_level', 'standard'),
  'live_feedback_mode' => old('live_feedback_mode', 'coaching'),
@@ -318,14 +327,9 @@
  <label class="olbl" for="valNumQuestions">Number of Questions</label>
  <div class="structure-select-wrap">
  <select class="oinp setup-input" name="num_questions" id="valNumQuestions">
- <option value="1" {{ $setupDefaults['num_questions'] === '1'? 'selected': '' }}>1 Question</option>
- <option value="3" {{ $setupDefaults['num_questions'] === '3'? 'selected': '' }}>3 Questions</option>
- <option value="5" {{ $setupDefaults['num_questions'] === '5'? 'selected': '' }}>5 Questions</option>
- <option value="10" {{ $setupDefaults['num_questions'] === '10'? 'selected': '' }}>10 Questions</option>
- <option value="15" {{ $setupDefaults['num_questions'] === '15'? 'selected': '' }}>15 Questions</option>
- <option value="20" {{ $setupDefaults['num_questions'] === '20'? 'selected': '' }}>20 Questions</option>
- <option value="25" {{ $setupDefaults['num_questions'] === '25'? 'selected': '' }}>25 Questions</option>
- <option value="30" {{ $setupDefaults['num_questions'] === '30'? 'selected': '' }}>30 Questions</option>
+ @foreach($questionOptions as $questionCount)
+ <option value="{{ $questionCount }}" {{ $setupDefaults['num_questions'] === (string) $questionCount ? 'selected': '' }}>{{ $questionCount }} {{ $questionCount === 1 ? 'Question' : 'Questions' }}</option>
+ @endforeach
  </select>
  </div>
  </div>

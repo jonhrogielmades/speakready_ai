@@ -14,7 +14,7 @@ class AdminAlgorithmDashboardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_dashboard_shows_algorithm_checks(): void
+    public function test_admin_dashboard_hides_algorithm_checks(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
         $targetUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -83,28 +83,15 @@ class AdminAlgorithmDashboardTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.dashboard'));
 
         $response->assertOk()
-            ->assertSee('Algorithm Checks')
-            ->assertSee('Weighted Scoring')
-            ->assertSee('Decision Tree')
-            ->assertSee('Naive Bayes')
-            ->assertSee('Logistic Regression')
-            ->assertSee('K-Means Clustering')
-            ->assertSee('Random Forest')
-            ->assertSee('TF-IDF Cosine Similarity')
-            ->assertViewHas('readinessAlgorithms', function ($suite) {
-                return $suite
-                    && $suite->algorithm_count === 7
-                    && $suite->available_count === 7
-                    && $suite->algorithms->pluck('key')->all() === [
-                        'weighted_scoring',
-                        'decision_tree',
-                        'naive_bayes',
-                        'logistic_regression',
-                        'k_means',
-                        'random_forest',
-                        'tfidf_cosine',
-                    ];
-            });
+            ->assertDontSee('Algorithm Checks')
+            ->assertDontSee('Weighted Scoring')
+            ->assertDontSee('Decision Tree')
+            ->assertDontSee('Naive Bayes')
+            ->assertDontSee('Logistic Regression')
+            ->assertDontSee('K-Means Clustering')
+            ->assertDontSee('Random Forest')
+            ->assertDontSee('TF-IDF Cosine Similarity')
+            ->assertViewMissing('readinessAlgorithms');
     }
 
     private function category(array $overrides = []): Category

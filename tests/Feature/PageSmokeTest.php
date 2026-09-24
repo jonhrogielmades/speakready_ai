@@ -334,7 +334,6 @@ class PageSmokeTest extends TestCase
  route('admin.notifications.index'),
  route('admin.contacts.index'),
  route('admin.feedback.index'),
- route('admin.feedback.complaints'),
  route('admin.feedback.show', $answer),
  route('admin.ai.providers'),
  route('admin.categories.details', $category),

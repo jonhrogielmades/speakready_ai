@@ -22,6 +22,7 @@ use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
 use App\Support\QuestionSchema;
 use App\Support\ScoreSchema;
+use App\Support\SystemSettings;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
@@ -91,6 +92,10 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/interview/setup', function () {
+        if (! SystemSettings::userCan('view_interview_content')) {
+            return redirect()->route('dashboard')->with('error', 'Interview content is currently disabled by the administrator.');
+        }
+
         $ensureInterviewSetupSchema = static function (): void {
             if (! app()->runningUnitTests() && Cache::get('interview_setup.schema_verified.v1')) {
                 return;
@@ -273,6 +278,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // System Settings
     Route::get('/admin/settings', [AdminSettingController::class, 'index'])->name('admin.settings.index');
     Route::post('/admin/settings', [AdminSettingController::class, 'update'])->name('admin.settings.update');
+    Route::post('/admin/settings/backup', [AdminSettingController::class, 'downloadBackup'])->name('admin.settings.backup');
+    Route::post('/admin/settings/restore', [AdminSettingController::class, 'restoreBackup'])->name('admin.settings.restore');
 
     Route::prefix('admin/users')->name('admin.users.')->group(function () {
         Route::get('/', [AdminUserController::class, 'index'])->name('index');
@@ -285,7 +292,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     });
 
     Route::get('/admin/categories', function () {
-        return mobile_view('admin.categories', ['categories' => \App\Models\Category::all()]);
+        $categories = \App\Models\Category::withCount('questions')
+            ->orderBy('sort_order')
+            ->orderBy('title')
+            ->paginate(5);
+
+        return mobile_view('admin.categories', ['categories' => $categories]);
     })->name('admin.categories');
 
     // Admin Routes - Categories
@@ -318,9 +330,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/modules', [AdminController::class, 'storeModule'])->name('admin.modules.store');
     Route::put('/admin/modules/{module}', [AdminController::class, 'updateModule'])->name('admin.modules.update');
     Route::delete('/admin/modules/{module}', [AdminController::class, 'destroyModule'])->name('admin.modules.destroy');
-    Route::post('/admin/modules/{module}/arena-levels', [AdminController::class, 'attachGameLevel'])->name('admin.modules.arena-levels.store');
-    Route::delete('/admin/modules/{module}/arena-levels/{gameLevel}', [AdminController::class, 'detachGameLevel'])->name('admin.modules.arena-levels.destroy');
-
     // Admin Routes - Learning Games
     Route::get('/admin/game', [\App\Http\Controllers\AdminGameController::class, 'index'])->name('admin.game');
     Route::post('/admin/game', [\App\Http\Controllers\AdminGameController::class, 'store'])->name('admin.game.store');
@@ -333,19 +342,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/modules/{module}/chapters', [AdminController::class, 'storeModuleChapter'])->name('admin.modules.chapters.store');
     Route::put('/admin/modules/chapters/{chapter}', [AdminController::class, 'updateModuleChapter'])->name('admin.modules.chapters.update');
     Route::delete('/admin/modules/chapters/{chapter}', [AdminController::class, 'destroyModuleChapter'])->name('admin.modules.chapters.destroy');
-
-    // Admin Routes - Module Resources
-    Route::post('/admin/modules/{module}/resources', [AdminController::class, 'storeModuleResource'])->name('admin.modules.resources.store');
-    Route::delete('/admin/modules/resources/{resource}', [AdminController::class, 'destroyModuleResource'])->name('admin.modules.resources.destroy');
-
-    // Admin Routes - Module Quizzes
-    Route::post('/admin/modules/{module}/quizzes/generate', [AdminController::class, 'generateModuleQuiz'])->name('admin.modules.quizzes.generate');
-    Route::post('/admin/modules/{module}/quizzes', [AdminController::class, 'storeModuleQuiz'])->name('admin.modules.quizzes.store');
-    Route::delete('/admin/modules/quizzes/{quiz}', [AdminController::class, 'destroyModuleQuiz'])->name('admin.modules.quizzes.destroy');
-
-    // Admin Routes - Module Quiz Questions
-    Route::post('/admin/modules/quizzes/{quiz}/questions', [AdminController::class, 'storeModuleQuizQuestion'])->name('admin.modules.quizzes.questions.store');
-    Route::delete('/admin/modules/quizzes/questions/{question}', [AdminController::class, 'destroyModuleQuizQuestion'])->name('admin.modules.quizzes.questions.destroy');
 
     // Admin Session Monitoring
     Route::get('/admin/sessions', [AdminSessionController::class, 'index'])->name('admin.sessions.index');
@@ -366,7 +362,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Admin Feedback Audit Features
     Route::get('/admin/feedback', [App\Http\Controllers\AdminFeedbackController::class, 'index'])->name('admin.feedback.index');
-    Route::get('/admin/feedback/complaints', [App\Http\Controllers\AdminFeedbackController::class, 'complaints'])->name('admin.feedback.complaints');
     Route::get('/admin/feedback/export', [App\Http\Controllers\AdminFeedbackController::class, 'export'])->name('admin.feedback.export');
     Route::get('/admin/feedback/{answer}', [App\Http\Controllers\AdminFeedbackController::class, 'show'])->name('admin.feedback.show');
     Route::post('/admin/feedback/{answer}/verify', [App\Http\Controllers\AdminFeedbackController::class, 'verify'])->name('admin.feedback.verify');

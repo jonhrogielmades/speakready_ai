@@ -1,6 +1,6 @@
 @extends('mobile.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/modules.css?v=1') }}" data-page-style="admin-modules">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/modules.css?v=3') }}" data-page-style="admin-modules">
 @endpush
 
 @section('content')
@@ -35,28 +35,22 @@
 
     <!-- Overview Cards -->
     <div class="row g-3 mb-4 modules-stats-row">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h6 style="color:var(--tx3);font-size:0.85rem">Total Modules</h6>
                 <h2 style="font-weight:700;margin:0">{{ $totalModules }}</h2>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h6 style="color:var(--tx3);font-size:0.85rem">Published Modules</h6>
                 <h2 style="font-weight:700;margin:0;color:#10b981;">{{ $publishedModules }}</h2>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h6 style="color:var(--tx3);font-size:0.85rem">Draft Modules</h6>
                 <h2 style="font-weight:700;margin:0;color:#f59e0b;">{{ $draftModules }}</h2>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
-                <h6 style="color:var(--tx3);font-size:0.85rem">Total Resources</h6>
-                <h2 style="font-weight:700;margin:0">{{ $totalResources }}</h2>
             </div>
         </div>
     </div>
@@ -129,6 +123,13 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
+        <div class="admin-modules-pagination" id="modulesPagination">
+            <div class="admin-modules-pagination__count" id="modulesPaginationCount">Showing 0-0 of 0</div>
+            <div class="admin-modules-pagination__actions">
+                <button type="button" class="admin-modules-page-btn" id="modulesPrevPage"><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                <button type="button" class="admin-modules-page-btn" id="modulesNextPage">Next <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
         </div>
     </div>
 </div>
@@ -235,33 +236,62 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterSelect = document.getElementById('moduleFilter');
     const categorySelect = document.getElementById('categoryFilter');
     const table = document.getElementById('modulesTable');
-    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    const rows = Array.from(table.getElementsByTagName('tbody')[0].getElementsByTagName('tr'));
+    const prevButton = document.getElementById('modulesPrevPage');
+    const nextButton = document.getElementById('modulesNextPage');
+    const countLabel = document.getElementById('modulesPaginationCount');
+    const perPage = 5;
+    let currentPage = 1;
 
-    function filterTable() {
+    function matchingRows() {
         const query = searchInput.value.toLowerCase();
         const status = filterSelect.value.toLowerCase();
         const category = categorySelect.value.toLowerCase();
 
-        for (let i = 0; i < rows.length; i++) {
-            const title = rows[i].cells[0].innerText.toLowerCase();
-            const rowStatus = rows[i].getAttribute('data-status').toLowerCase();
-            const rowCategory = rows[i].getAttribute('data-category').toLowerCase();
+        return rows.filter(row => {
+            const title = row.cells[0].innerText.toLowerCase();
+            const rowStatus = row.getAttribute('data-status').toLowerCase();
+            const rowCategory = row.getAttribute('data-category').toLowerCase();
             
             const matchSearch = title.includes(query);
             const matchStatus = status === "" || rowStatus === status;
             const matchCategory = category === "" || rowCategory === category;
 
-            if (matchSearch && matchStatus && matchCategory) {
-                rows[i].style.display = '';
-            } else {
-                rows[i].style.display = 'none';
-            }
-        }
+            return matchSearch && matchStatus && matchCategory;
+        });
     }
 
-    searchInput.addEventListener('keyup', filterTable);
-    filterSelect.addEventListener('change', filterTable);
-    categorySelect.addEventListener('change', filterTable);
+    function renderTable(resetPage = false) {
+        if (resetPage) currentPage = 1;
+
+        const matches = matchingRows();
+        const totalPages = Math.max(1, Math.ceil(matches.length / perPage));
+        currentPage = Math.min(currentPage, totalPages);
+        const start = (currentPage - 1) * perPage;
+        const visibleRows = matches.slice(start, start + perPage);
+
+        rows.forEach(row => row.style.display = 'none');
+        visibleRows.forEach(row => row.style.display = '');
+
+        const first = matches.length === 0 ? 0 : start + 1;
+        const last = start + visibleRows.length;
+        countLabel.textContent = `Showing ${first}-${last} of ${matches.length}`;
+        prevButton.disabled = currentPage <= 1;
+        nextButton.disabled = currentPage >= totalPages || matches.length === 0;
+    }
+
+    searchInput.addEventListener('keyup', () => renderTable(true));
+    filterSelect.addEventListener('change', () => renderTable(true));
+    categorySelect.addEventListener('change', () => renderTable(true));
+    prevButton.addEventListener('click', () => {
+        currentPage = Math.max(1, currentPage - 1);
+        renderTable();
+    });
+    nextButton.addEventListener('click', () => {
+        currentPage += 1;
+        renderTable();
+    });
+    renderTable(true);
 });
 </script>
 @endsection

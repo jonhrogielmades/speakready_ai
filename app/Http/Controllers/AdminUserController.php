@@ -16,9 +16,11 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\CsvExportService;
+use App\Support\SystemSettings;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AdminUserController extends Controller
 {
@@ -26,7 +28,7 @@ class AdminUserController extends Controller
     {
         $query = $this->filteredUsers($request);
 
-        $users = $query->latest()->paginate(10)->withQueryString();
+        $users = $query->latest()->paginate(4)->withQueryString();
         $lastActiveByUserId = $this->lastActiveByUserId();
         $onlineUserIds = $this->onlineUserIds($lastActiveByUserId);
 
@@ -42,7 +44,11 @@ class AdminUserController extends Controller
             ->select('users.*', 'user_scores.avg_score', 'user_scores.last_interview_at')
             ->get();
 
-        $topUsers = $statsUsers->whereNotNull('avg_score')->sortByDesc('avg_score')->take(2);
+        $topUsers = $statsUsers
+            ->whereNotNull('avg_score')
+            ->sortByDesc(fn ($user) => (float) $user->avg_score)
+            ->take(3)
+            ->values();
 
         $needingImprovement = collect();
         $lowScorers = $statsUsers->whereNotNull('avg_score')->where('avg_score', '<', 70)->sortBy('avg_score');
@@ -110,7 +116,7 @@ class AdminUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => $this->newPasswordRules(),
             'role' => 'required|in:admin,user',
             'status' => 'required|in:active,inactive,suspended',
         ]);
@@ -121,6 +127,7 @@ class AdminUserController extends Controller
             'password' => Hash::make($request->password),
             'is_admin' => $request->role === 'admin',
             'status' => $request->status,
+            'email_verified_at' => now(),
         ]);
 
         return redirect()->back()->with('success', 'User created successfully');
@@ -131,7 +138,7 @@ class AdminUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:8',
+            'password' => $this->newPasswordRules(false),
             'role' => 'required|in:admin,user',
             'status' => 'required|in:active,inactive,suspended',
         ]);
@@ -479,5 +486,16 @@ class AdminUserController extends Controller
         return str_starts_with($user->profile_photo_path, 'http') || str_starts_with($user->profile_photo_path, 'data:')
             ? $user->profile_photo_path
             : asset('storage/' . $user->profile_photo_path);
+    }
+
+    private function newPasswordRules(bool $required = true): array
+    {
+        $rule = PasswordRule::min(8);
+
+        if (SystemSettings::enabled('sec_strong_pass', false)) {
+            $rule = $rule->mixedCase()->numbers()->symbols();
+        }
+
+        return [$required ? 'required' : 'nullable', 'string', $rule];
     }
 }

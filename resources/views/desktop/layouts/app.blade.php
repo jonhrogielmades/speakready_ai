@@ -11,7 +11,7 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="csrf-token" content="{{ csrf_token() }}">
-      <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
+      <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
       @stack('styles')
    </head>
    <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user" data-partial-navigation-response="true">
@@ -31,9 +31,9 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#ffffff">
       <meta name="csrf-token" content="{{ csrf_token() }}">
-      <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
+      <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
-      <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
+      <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,6 +51,12 @@
       <!-- Shared app CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=35') }}" />
       <style>
+          :root,
+          .lm {
+              --pur: {{ $systemPrimaryColor ?? '#3b82f6' }};
+              --blu: {{ $systemPrimaryColor ?? '#3b82f6' }};
+              --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#3b82f6' }}, {{ $systemSecondaryColor ?? '#34d399' }});
+          }
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
           /* Global Mobile Responsiveness for Premium UI Updates */
@@ -107,9 +113,9 @@
          <div class="db-sidebar" id="dbSidebar">
             <div class="db-logo d-flex justify-content-between align-items-center">
                <div class="db-brand d-flex align-items-center gap-2">
-                  <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0;">
+                  <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}" class="logo-i" style="background: #ffffff; padding: 0;">
                   <div class="db-brand-copy">
-                     <span class="db-brand-text">SpeakReady AI</span>
+                     <span class="db-brand-text">{{ $systemName ?? 'SpeakReady AI' }}</span>
                      <span class="db-brand-subtitle">AI-Based Interview Practice</span>
                   </div>
                </div>
@@ -133,7 +139,7 @@
 
                <div class="db-nav-section">Growth</div>
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>
-               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
+               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback', 'user.review') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
             </div>
             <div class="db-bottom">

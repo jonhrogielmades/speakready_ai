@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=24') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=25') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -429,6 +429,20 @@
                         </div>
                     @endforelse
                 </div>
+
+                @if(isset($recentSessions) && method_exists($recentSessions, 'hasPages') && $recentSessions->hasPages())
+                    <div class="sr-recent-session-pager" aria-label="Recent sessions pagination">
+                        <a href="{{ $recentSessions->previousPageUrl() ?: '#' }}" class="sr-recent-page-btn {{ $recentSessions->onFirstPage() ? 'disabled' : '' }}" aria-disabled="{{ $recentSessions->onFirstPage() ? 'true' : 'false' }}" @if($recentSessions->onFirstPage()) tabindex="-1" @endif>
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Previous
+                        </a>
+                        <span class="sr-recent-page-status">Page {{ $recentSessions->currentPage() }} of {{ $recentSessions->lastPage() }}</span>
+                        <a href="{{ $recentSessions->nextPageUrl() ?: '#' }}" class="sr-recent-page-btn {{ $recentSessions->hasMorePages() ? '' : 'disabled' }}" aria-disabled="{{ $recentSessions->hasMorePages() ? 'false' : 'true' }}" @unless($recentSessions->hasMorePages()) tabindex="-1" @endunless>
+                            Next
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                @endif
             </section>
         </main>
 

@@ -5,6 +5,7 @@ namespace App\Helpers;
 use App\Models\ActivityLog;
 use App\Notifications\UserActivityNotification;
 use App\Support\AccountNotificationSchema;
+use App\Support\SystemSettings;
 use Illuminate\Support\Facades\Log;
 
 class ActivityLogger
@@ -31,7 +32,7 @@ class ActivityLogger
             'ip_address' => $ipAddress,
         ]);
 
-        if ($notify) {
+        if ($notify && self::notificationsEnabledFor($action)) {
             $title = $notificationOptions['title'] ?? ucfirst(str_replace('_', ' ', $action));
             $message = $notificationOptions['message'] ?? $description;
             $icon = $notificationOptions['icon'] ?? 'fa-info-circle';
@@ -50,5 +51,22 @@ class ActivityLogger
         }
 
         return $log;
+    }
+
+    private static function notificationsEnabledFor(string $action): bool
+    {
+        if (! SystemSettings::enabled('notif_sys', true)) {
+            return false;
+        }
+
+        if (str_contains($action, 'achievement') || str_contains($action, 'certificate') || str_contains($action, 'perk')) {
+            return SystemSettings::enabled('notif_achieve', true);
+        }
+
+        if (str_contains($action, 'reminder')) {
+            return SystemSettings::enabled('notif_reminders', true);
+        }
+
+        return true;
     }
 }

@@ -1001,6 +1001,7 @@
     html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
     #practice-plan-page #practice-ai-recommendations .practice-ai-list {
         display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
         gap: 8px !important;
         width: 100% !important;
     }
@@ -1044,7 +1045,7 @@
         html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
         html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
         #practice-plan-page #practice-ai-recommendations .practice-ai-list {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            grid-template-columns: minmax(0, 1fr) !important;
             grid-auto-rows: 1fr !important;
         }
 
@@ -1059,7 +1060,7 @@
         html body #dashboard .db-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
         html body #mob-content #practice-plan-page #practice-ai-recommendations .practice-ai-list,
         #practice-plan-page #practice-ai-recommendations .practice-ai-list {
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            grid-template-columns: minmax(0, 1fr) !important;
         }
     }
 

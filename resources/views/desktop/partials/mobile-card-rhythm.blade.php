@@ -128,7 +128,6 @@
             #mainArchiveTable,
             #mainAuditLogsTable,
             #mainFeedbackTable,
-            #mainComplaintsTable,
             #mainCategoriesTable,
             #modulesTable,
             #mainProvidersTable,
