@@ -612,6 +612,57 @@ class AdminReliabilityTest extends TestCase
         ]);
     }
 
+    public function test_default_admin_account_is_hidden_from_user_management(): void
+    {
+        $viewer = User::factory()->create([
+            'email' => 'manager@example.com',
+            'is_admin' => true,
+            'status' => 'active',
+        ]);
+        $defaultAdmin = User::factory()->create([
+            'name' => 'System Admin',
+            'email' => 'admin@speakreadyai.online',
+            'is_admin' => true,
+            'status' => 'active',
+        ]);
+        $candidate = User::factory()->create([
+            'name' => 'Visible Candidate',
+            'email' => 'visible@example.com',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('Visible Candidate')
+            ->assertSee('visible@example.com')
+            ->assertDontSee('System Admin')
+            ->assertDontSee('admin@speakreadyai.online')
+            ->assertDontSee(route('admin.users.update', $defaultAdmin), false)
+            ->assertDontSee(route('admin.users.destroy', $defaultAdmin), false);
+
+        $this->actingAs($viewer)
+            ->get(route('admin.users.index', ['search' => 'admin@speakreadyai.online']))
+            ->assertOk()
+            ->assertSee('No users found.')
+            ->assertDontSee('System Admin')
+            ->assertDontSee(route('admin.users.update', $defaultAdmin), false)
+            ->assertDontSee(route('admin.users.destroy', $defaultAdmin), false);
+
+        $response = $this->actingAs($viewer)
+            ->get(route('admin.users.export'));
+
+        $csv = $response->assertOk()->streamedContent();
+        $this->assertStringNotContainsString('System Admin', $csv);
+        $this->assertStringNotContainsString('admin@speakreadyai.online', $csv);
+        $this->assertStringContainsString($candidate->email, $csv);
+
+        $this->actingAs($viewer)
+            ->getJson(route('admin.users.show', $defaultAdmin))
+            ->assertNotFound();
+    }
+
     public function test_users_page_uses_safe_action_buttons_for_special_character_names(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);

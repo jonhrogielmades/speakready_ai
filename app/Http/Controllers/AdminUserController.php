@@ -17,6 +17,8 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\CsvExportService;
 use App\Support\SystemSettings;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
@@ -135,6 +137,10 @@ class AdminUserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        if ($this->isDefaultAdminAccount($user)) {
+            return redirect()->back()->with('error', 'The default administrator account is hidden from user management.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
@@ -165,6 +171,10 @@ class AdminUserController extends Controller
 
     public function approveReactivation(User $user)
     {
+        if ($this->isDefaultAdminAccount($user)) {
+            return redirect()->back()->with('error', 'The default administrator account is hidden from user management.');
+        }
+
         $user->update([
             'status' => 'active',
             'reactivation_requested_at' => null
@@ -175,6 +185,10 @@ class AdminUserController extends Controller
 
     public function destroy(Request $request, User $user)
     {
+        if ($this->isDefaultAdminAccount($user)) {
+            return redirect()->back()->with('error', 'The default administrator account is hidden from user management.');
+        }
+
         $request->validate([
             'delete_type' => 'required|in:soft,permanent'
         ]);
@@ -198,6 +212,8 @@ class AdminUserController extends Controller
 
     public function show(User $user)
     {
+        abort_if($this->isDefaultAdminAccount($user), 404);
+
         $scoreQuery = Score::join('interview_sessions', 'scores.interview_session_id', '=', 'interview_sessions.id')
             ->where('interview_sessions.user_id', $user->id);
 
@@ -417,6 +433,7 @@ class AdminUserController extends Controller
     private function filteredUsers(Request $request)
     {
         $query = User::query();
+        $this->withoutDefaultAdminAccount($query);
 
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
@@ -439,6 +456,37 @@ class AdminUserController extends Controller
         }
 
         return $query;
+    }
+
+    private function withoutDefaultAdminAccount(Builder $query): Builder
+    {
+        $defaultAdminEmails = $this->defaultAdminEmails();
+
+        return $query->where(function (Builder $visible) use ($defaultAdminEmails) {
+            $visible
+                ->where('is_admin', false)
+                ->orWhereNotIn(DB::raw('LOWER(email)'), $defaultAdminEmails);
+        });
+    }
+
+    private function isDefaultAdminAccount(User $user): bool
+    {
+        return (bool) $user->is_admin
+            && in_array(strtolower((string) $user->email), $this->defaultAdminEmails(), true);
+    }
+
+    private function defaultAdminEmails(): array
+    {
+        return collect([
+            env('ADMIN_EMAIL', 'admin@speakreadyai.online'),
+            'admin@speakreadyai.online',
+            'admin@speakreadyai.com',
+        ])
+            ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function onlineUserIds(?\Illuminate\Support\Collection $lastActiveByUserId = null): \Illuminate\Support\Collection
