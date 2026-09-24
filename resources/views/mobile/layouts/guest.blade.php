@@ -229,11 +229,11 @@
                                     [
                                        'kicker' => 'Progress Tracking',
                                        'title' => 'Know what to improve next.',
-                                       'text' => 'Review your streak, exported reports, AI insights, and a simple practice plan made for your interview growth.',
+                                       'text' => 'Review your streak, exported reports, AI insights, and learning progress made for your interview growth.',
                                        'points' => [
                                           'Monitor streaks and total practice days',
                                           'Export progress as PDF or Excel',
-                                          'Follow a personalized practice plan',
+                                          'Follow your recommended practice focus',
                                        ],
                                     ],
                                     [
@@ -691,8 +691,8 @@
                                              <div class="ui-desktop-wire-plan-head">
                                                 <span class="ui-desktop-wire-icon"><i class="fa-solid fa-calendar-check"></i></span>
                                                 <div>
-                                                   <h3 class="ui-desktop-wire-card-title">Personalized Practice Plan</h3>
-                                                   <p class="ui-desktop-wire-card-subtitle">A plan built from latest scores, voice work, and learning progress.</p>
+                                                   <h3 class="ui-desktop-wire-card-title">Practice Focus</h3>
+                                                   <p class="ui-desktop-wire-card-subtitle">Next actions built from latest scores, voice work, and learning progress.</p>
                                                 </div>
                                              </div>
                                              <div class="ui-desktop-wire-plan-list">
@@ -883,13 +883,6 @@
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#10b981;--feature-icon-bg:rgba(16,185,129,.14);--feature-icon-border:rgba(16,185,129,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Interview Practice</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Start AI mock interviews with category, role, scenario, response mode, and timed practice settings.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.1s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#14b8a6;--feature-icon-bg:rgba(20,184,166,.14);--feature-icon-border:rgba(20,184,166,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-route fa-lg"></i></div>
-                         <h3 class="fs-6 fw-bold mb-2">Practice Plan</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Follow AI recommendations, next steps, and focused practice actions after each session.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.2s">

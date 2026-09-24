@@ -2866,3 +2866,353 @@
         margin-top: 15px !important;
     }
 }
+
+/* Medium desktop readability pass for Interview Reports panels. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport :is(
+        #report-readiness,
+        #report-score-breakdown,
+        #report-comparison,
+        #report-feedback,
+        #report-question-review,
+        #report-improvements,
+        #report-export,
+        .print-card
+    ) {
+        padding: 26px !important;
+        border-radius: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-section-kicker,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-panel-kicker,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-summary-label,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness h6,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-score-breakdown small {
+        font-size: 0.82rem !important;
+        line-height: 1.25 !important;
+        letter-spacing: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-panel-title,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness h5,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-score-breakdown h5 {
+        font-size: 1.16rem !important;
+        line-height: 1.25 !important;
+        margin-bottom: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-panel-title i,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness h5 i,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-score-breakdown h5 i {
+        font-size: 1.05rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-chip,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        min-height: 32px !important;
+        padding: 0 12px !important;
+        border-radius: 999px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-chip i,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .badge i {
+        font-size: 0.9rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-final-score {
+        font-size: 3.15rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-score-percent {
+        font-size: 1.35rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-previous-score {
+        font-size: 2rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-readiness-delta {
+        font-size: 2.15rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .fs-1 {
+        font-size: 2rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-readiness-message,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-summary-value,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-score-breakdown .report-score-meta-value,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-score-breakdown .report-score-name,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-score-breakdown .report-score-value {
+        font-size: 0.95rem !important;
+        line-height: 1.45 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-summary-grid,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-score-breakdown .report-score-list,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-feedback-grid,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-improvement-grid,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-export-grid {
+        gap: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-summary-item,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-feedback-box,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-improvements .report-improvement-card,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-export-choice {
+        min-height: 0 !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-feedback .report-feedback-box-title,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-improvements .report-improvement-title,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-export-choice-title {
+        font-size: 0.98rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-feedback .report-feedback-box-title i,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-improvements .report-improvement-title i,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-export-choice-title i {
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-feedback .report-feedback-list,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-feedback .report-feedback-list li,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-improvements .report-improvement-evidence,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-improvements .report-improvement-fix,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-export-choice-copy,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-export-status {
+        font-size: 0.92rem !important;
+        line-height: 1.5 !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-improvements .report-improvement-icon {
+        width: 46px !important;
+        height: 46px !important;
+        flex: 0 0 46px !important;
+        border-radius: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-improvements .report-improvement-icon i {
+        font-size: 1.05rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-open-full-btn,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-export-action,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-print-btn {
+        min-height: 40px !important;
+        padding: 0 15px !important;
+        border-radius: 10px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-open-full-btn i,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-export-action i,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-print-btn i {
+        font-size: 0.94rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-card {
+        border-radius: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-toggle {
+        min-height: 68px !important;
+        padding: 18px 20px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-toggle::after {
+        width: 18px !important;
+        height: 18px !important;
+        background-size: 18px 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-card-header {
+        gap: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-title {
+        font-size: 1rem !important;
+        line-height: 1.35 !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-chips {
+        gap: 9px !important;
+        max-width: 360px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-body {
+        padding: 20px 22px 22px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-answer,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-insight {
+        padding: 15px !important;
+        border-radius: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-answer,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-insight-copy {
+        font-size: 0.94rem !important;
+        line-height: 1.55 !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-insight-title {
+        gap: 7px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-insight-title i {
+        font-size: 0.9rem !important;
+    }
+}
+
+/* Keep Feedback Summary Report boxes in one desktop row. */
+@media (min-width: 768px) {
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-feedback .report-feedback-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 16px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-feedback .report-feedback-grid > [class*="col-"] {
+        width: auto !important;
+        max-width: none !important;
+        flex: initial !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-feedback .report-feedback-box {
+        height: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+/* Keep Mistakes & Improvement Areas as a 2-column desktop grid. */
+@media (min-width: 768px) {
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-improvements .report-improvement-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 18px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-improvements .report-improvement-grid > [class*="col-"] {
+        display: block !important;
+        width: auto !important;
+        max-width: none !important;
+        flex: initial !important;
+        flex-basis: auto !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-improvements .report-improvement-card {
+        height: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+/* Keep Download / Export Report options in one desktop row. */
+@media (min-width: 768px) {
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-export-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 18px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-export-grid > [class*="col-"] {
+        display: block !important;
+        width: auto !important;
+        max-width: none !important;
+        flex: initial !important;
+        flex-basis: auto !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-export .report-export-choice {
+        height: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+/* Clean desktop layout for Question-by-Question Analysis cards. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-body .row.g-3 {
+        display: grid !important;
+        grid-template-columns: minmax(280px, 1.15fr) repeat(2, minmax(220px, 1fr)) !important;
+        gap: 18px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-body .row.g-3 > [class*="col-"] {
+        width: auto !important;
+        max-width: none !important;
+        flex: initial !important;
+        flex-basis: auto !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-body .row.g-3 > :is(.col-md-5, .col-lg-5) {
+        grid-column: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-body .row.g-3 > :is(.col-md-7, .col-lg-7) {
+        grid-column: 2 / 4 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-body .row.g-3 > .col-12 {
+        grid-column: 1 / -1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-body .row.g-3 > :is(.col-md-7, .col-lg-7) > .row.g-3 {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 18px !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-body .row.g-3 > :is(.col-md-7, .col-lg-7) > .row.g-3 > [class*="col-"] {
+        width: auto !important;
+        max-width: none !important;
+        flex: initial !important;
+        flex-basis: auto !important;
+        padding: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-insight-feedback {
+        grid-column: 1 / -1 !important;
+        margin-top: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-answer,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-question-review .report-question-insight {
+        height: 100% !important;
+    }
+}

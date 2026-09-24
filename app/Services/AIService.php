@@ -181,16 +181,6 @@ class AIService
  'log_modules' => ['structured_json'],
  ],
  [
- 'key' => 'personalized_practice_plan_generation',
- 'label' => 'Personalized Practice Plan Generation',
- 'group' => 'Coaching',
- 'connection' => 'Mapped with local safeguards',
- 'status' => 'mapped',
- 'icon' => 'fa-solid fa-list-check',
- 'description' => 'Practice-plan items based on recent scores, weak areas, and recommended next steps.',
- 'log_modules' => ['chat', 'feedback_generation'],
- ],
- [
  'key' => 'learning_recommendations',
  'label' => 'Learning Recommendations',
  'group' => 'Coaching',

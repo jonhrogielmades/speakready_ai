@@ -4176,3 +4176,302 @@ html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-
         gap: 15px !important;
     }
 }
+
+/* Medium desktop readability pass for Feedback Center panels. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-insight-panel,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell > .premium-panel {
+        padding: 22px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-insight-icon,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-recommend-icon {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        border-radius: 14px !important;
+        font-size: 1.15rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-insight-title,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-title {
+        font-size: 1.12rem !important;
+        line-height: 1.24 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-insight-subtitle,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-headline,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-feature-empty,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-empty-copy,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedbackTable tbody td {
+        font-size: 0.95rem !important;
+        line-height: 1.5 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-section-label,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-score small,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-note b,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-user b,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedbackTable thead th {
+        font-size: 0.82rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-score {
+        min-height: 190px !important;
+        padding: 22px 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-score strong {
+        font-size: 2.05rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-score span {
+        font-size: 0.98rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-metric-chip,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-note,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-user {
+        padding: 13px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-metric-chip i {
+        font-size: 1.05rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-metric-chip span,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-recommend-copy span,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-note p,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-item p {
+        font-size: 0.9rem !important;
+        line-height: 1.5 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-metric-chip strong,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-recommend-copy strong,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-top strong {
+        font-size: 0.98rem !important;
+        line-height: 1.35 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-recommend-item,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-item {
+        padding: 16px !important;
+        border-radius: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-recommend-cta,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-score,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedbackTable .feedback-score-badge {
+        min-height: 30px !important;
+        padding: 0 11px !important;
+        border-radius: 999px !important;
+        font-size: 0.78rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-action,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-action,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-actions .btn,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedback-filters .btn,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedback-filters .form-select,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedback-filters .form-control,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedback-filters .input-group-text {
+        min-height: 42px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-action i,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-action i,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-actions .btn i,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedback-filters i {
+        font-size: 0.95rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-actions .btn {
+        max-width: 156px !important;
+    }
+}
+
+/* Feedback Summary readability correction after medium sizing. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-layout {
+        grid-template-columns: minmax(150px, 168px) minmax(0, 1fr) !important;
+        align-items: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-metric-chip {
+        grid-template-columns: 28px minmax(92px, 1fr) minmax(42px, auto) !important;
+        align-items: center !important;
+        min-height: 66px !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-metric-chip span {
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        hyphens: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-metric-chip strong {
+        justify-self: end !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-note-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-note p {
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+        hyphens: none !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1320px) {
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-summary-note-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+/* Desktop Answer Review and Practice History fit correction. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-insight-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        width: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedbackAiSummary {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-insight-head {
+        grid-template-columns: 48px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-panel {
+        padding: 26px 28px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-grid {
+        grid-template-columns: repeat(2, minmax(360px, 1fr)) !important;
+        gap: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-item {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+        min-height: 0 !important;
+        padding: 20px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-top strong {
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-user {
+        padding: 14px 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-user b {
+        display: block !important;
+        margin-bottom: 7px !important;
+        font-size: 0.8rem !important;
+        letter-spacing: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-item p {
+        margin-bottom: 0 !important;
+        font-size: 0.92rem !important;
+        line-height: 1.45 !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-feedback,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-focus,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-impact {
+        max-width: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-focus,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-impact {
+        padding: 12px 14px !important;
+        border-radius: 0 10px 10px 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-action {
+        margin-top: auto !important;
+        min-height: 36px !important;
+        font-size: 0.9rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-head {
+        grid-template-columns: minmax(190px, 0.55fr) minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedback-filters {
+        grid-template-columns: minmax(220px, 0.8fr) minmax(156px, auto) minmax(280px, 1.2fr) !important;
+        gap: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-table-wrap {
+        overflow-x: auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedbackTable {
+        min-width: 900px !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedbackTable thead th {
+        padding: 11px 14px !important;
+        font-size: 0.82rem !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedbackTable tbody td {
+        padding: 13px 14px !important;
+        font-size: 0.92rem !important;
+        line-height: 1.25 !important;
+        vertical-align: middle !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell #feedbackTable .feedback-score-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 118px !important;
+        min-height: 28px !important;
+        font-size: 0.78rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-actions .btn-primary,
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-history-actions .btn-primary i {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-answer-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

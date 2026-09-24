@@ -118,7 +118,6 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSee('Resume/CV Evaluation')
  ->assertSee('Job Fit Match Scoring')
  ->assertSee('Standalone Improved Answer Generation')
- ->assertSee('Personalized Practice Plan Generation')
  ->assertSee('Learning Recommendations')
  ->assertSee('Question Recommendation / RAG Selection')
  ->assertSee('Readiness Score Calculation')

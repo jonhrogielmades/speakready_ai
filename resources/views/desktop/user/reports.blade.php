@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/reports.css?v=2') }}" data-page-style="user-reports">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=12') }}" data-page-style="user-reports-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=15') }}" data-page-style="user-reports-2">
 @endpush
 
 @section('content')
@@ -334,7 +334,9 @@
  </div>
  </div>
  </div>
- <div class="mt-3 report-question-insight report-question-insight-feedback" style="padding:12px;border-radius:10px;background:rgba(59,130,246,.055);border:1px solid rgba(59,130,246,.16);">
+ </div>
+ <div class="col-12">
+ <div class="report-question-insight report-question-insight-feedback" style="padding:12px;border-radius:10px;background:rgba(59,130,246,.055);border:1px solid rgba(59,130,246,.16);">
  <div class="report-question-insight-title" style="color:#3b82f6;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:7px;"><i class="fa-solid fa-comment-dots me-1"></i>AI Feedback</div>
  <p class="report-question-insight-copy" style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;">{{ $review->feedback }}</p>
  </div>

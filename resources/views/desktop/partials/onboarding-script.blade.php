@@ -636,15 +636,15 @@
             if (routeMatches(routeName, ['user.feedback'])) {
                 return withDefaults({
                     heroTitle: 'Feedback center',
-                    heroDescription: 'Review recent AI summaries, answer-by-answer coaching, practice recommendations, and searchable interview history.',
+                    heroDescription: 'Review recent AI summaries, answer-by-answer coaching, and searchable interview history.',
                     workspaceTitle: 'Coaching panels',
-                    workspaceDescription: 'Use answer coaching and next-practice recommendations to turn scored feedback into focused practice.',
+                    workspaceDescription: 'Use answer coaching to turn scored feedback into focused practice.',
                     metricsTitle: 'Feedback history',
                     metricsDescription: 'Filter and scan previous sessions by scenario, score, rating, feedback, and available follow-up actions.',
                     actionsTitle: 'Filters and actions',
                     actionsDescription: 'Search, filter, open details, retry answers, clear history, or continue practice from the controls here.',
                     heroSelectors: ['#feedbackModulesLikeHero', '#feedbackAiSummary'],
-                    workspaceSelectors: ['#feedbackAnswerCoaching', '#feedbackPracticeRecommendations'],
+                    workspaceSelectors: ['#feedbackAnswerCoaching'],
                     metricsSelectors: ['#feedbackTable', '#feedbackPagination', '#feedback-empty-state'],
                     actionSelectors: ['#feedback-filters', '#feedbackSearch', '#scenarioFilter'],
                 });
@@ -664,23 +664,6 @@
                     workspaceSelectors: ['#readiness-trend', '#history-table'],
                     metricsSelectors: ['#category-perf', '#skill-tracker', '#strengths-tracker', '#goals-milestones', '#achievements-badges'],
                     actionSelectors: ['#learning-progress', '.progress-actions'],
-                });
-            }
-
-            if (routeMatches(routeName, ['user.practice.plan'])) {
-                return withDefaults({
-                    heroTitle: 'Personalized practice plan',
-                    heroDescription: 'Follow the next recommended practice steps generated from your latest readiness data.',
-                    workspaceTitle: 'Practice steps',
-                    workspaceDescription: 'Each row shows the focus, action, time estimate, and best next place to continue.',
-                    metricsTitle: 'Plan detail',
-                    metricsDescription: 'Use the focus labels, task checklist, and timing chips to choose a useful practice block.',
-                    actionsTitle: 'Continue practice',
-                    actionsDescription: 'Open a recommended step, return to progress analytics, or start a fresh mock interview.',
-                    heroSelectors: ['#practicePlanHero'],
-                    workspaceSelectors: ['#personalized-practice-plan'],
-                    metricsSelectors: ['.practice-plan-row', '.practice-plan-pill'],
-                    actionSelectors: ['#practicePlanActions', '.practice-plan-link'],
                 });
             }
 

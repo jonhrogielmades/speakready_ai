@@ -4549,10 +4549,9 @@
                </div>
                 <div class="mob-profile-section-title">Pages</div>
                 <div class="mob-profile-grid">
-                <a href="{{ route('user.modules.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i><span>Modules</span></a>
+               <a href="{{ route('user.modules.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i><span>Modules</span></a>
                <a href="{{ route('user.learning') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.learning*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Challenges</span></a>
                <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>Coach</span></a>
-               <a href="{{ route('user.practice.plan') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.practice.plan') ? 'active' : '' }}"><i class="fa-solid fa-route"></i><span>Practice Plan</span></a>
                <a href="{{ route('user.practice.calendar') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}"><i class="fa-regular fa-calendar-days"></i><span>Calendar</span></a>
                <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>Reports</span></a>
                </div>

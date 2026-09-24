@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=32') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=2') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=7') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -183,13 +183,6 @@
  <div class="col-lg-8" id="setup-left-col">
  <div class="setup-stepper" id="setupStepper" aria-label="Interview setup steps">
  <div class="setup-stepper-track" id="setupStepperTrack"></div>
- <div class="setup-stepper-actions">
- <button type="button" class="setup-step-btn" id="setupStepPrev"><i class="fa-solid fa-arrow-left"></i> Back</button>
- <button type="submit" id="btn-start-interview" class="setup-step-btn setup-start-button btn-shine" aria-label="Start Interview" title="Start Interview" data-default-label='Start <i class="fa-solid fa-play ms-2"></i>' data-loading-label='Starting <i class="fa-solid fa-spinner fa-spin ms-2"></i>' hidden>
- Start <i class="fa-solid fa-play ms-2"></i>
- </button>
- <button type="button" class="setup-step-btn primary" id="setupStepNext">Next <i class="fa-solid fa-arrow-right"></i></button>
- </div>
  </div>
 
  <!-- Basic Info -->
@@ -273,6 +266,14 @@
  </div>
  </div>
  </div>
+ </div>
+
+ <div class="setup-stepper-actions setup-details-actions" aria-label="Interview setup navigation">
+ <button type="button" class="setup-step-btn" id="setupStepPrev"><i class="fa-solid fa-arrow-left"></i> Back</button>
+ <button type="submit" id="btn-start-interview" class="setup-step-btn setup-start-button btn-shine" aria-label="Start Interview" title="Start Interview" data-default-label='Start <i class="fa-solid fa-play ms-2"></i>' data-loading-label='Starting <i class="fa-solid fa-spinner fa-spin ms-2"></i>' hidden>
+ Start <i class="fa-solid fa-play ms-2"></i>
+ </button>
+ <button type="button" class="setup-step-btn primary" id="setupStepNext">Next <i class="fa-solid fa-arrow-right"></i></button>
  </div>
 
  <!-- Interview Structure -->
@@ -1193,6 +1194,7 @@
  const stepper = document.getElementById('setupStepper');
  const prevButton = document.getElementById('setupStepPrev');
  const nextButton = document.getElementById('setupStepNext');
+ const actions = document.querySelector('.setup-stepper-actions');
  const isDesktop = setupStepState.desktopQuery.matches;
  const steps = getSetupSteps();
 
@@ -1217,6 +1219,9 @@
  if (isActivePanel) {
  void panel.offsetWidth;
  panel.classList.add('setup-step-transition-in');
+ if (actions) {
+ panel.appendChild(actions);
+ }
  }
  }
 
@@ -1423,6 +1428,162 @@
  html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard.db-nav::-webkit-scrollbar-thumb {
  border-radius: 999px!important;
  background: rgba(125, 211, 252, 0.26)!important;
+ }
+
+ @media (min-width: 992px) {
+ body.interview-setup-page #sec-interview-setup .setup-summary-wrap {
+ min-height: 0!important;
+ height: auto!important;
+ padding: 0!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-summary.setup-summary-panel {
+ min-height: 0!important;
+ height: auto!important;
+ padding: 18px!important;
+ border-radius: 14px!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-summary .setup-summary-title {
+ min-height: 42px!important;
+ display: flex!important;
+ align-items: center!important;
+ gap: 10px!important;
+ padding-bottom: 12px!important;
+ margin: 0 0 4px!important;
+ border-bottom: 1px solid rgba(148, 163, 184, 0.22)!important;
+ font-size: 1.12rem!important;
+ line-height: 1.2!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-summary .setup-summary-title i {
+ width: 36px!important;
+ height: 36px!important;
+ min-width: 36px!important;
+ display: inline-flex!important;
+ align-items: center!important;
+ justify-content: center!important;
+ border-radius: 10px!important;
+ font-size: .95rem!important;
+ margin-right: 0!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-summary .summary-row {
+ display: grid!important;
+ grid-template-columns: 34px minmax(120px, 0.8fr) minmax(140px, 1.2fr)!important;
+ align-items: center!important;
+ column-gap: 8px!important;
+ min-height: 42px!important;
+ padding: 5px 0!important;
+ border-bottom: 1px solid rgba(148, 163, 184, 0.16)!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-summary .summary-icon {
+ width: 30px!important;
+ height: 30px!important;
+ min-width: 30px!important;
+ border-radius: 9px!important;
+ font-size: .78rem!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-summary .summary-icon i {
+ font-size: .78rem!important;
+ line-height: 1!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-summary .summary-label,
+ body.interview-setup-page #sec-interview-setup #panel-summary .summary-val {
+ min-width: 0!important;
+ font-size: .9rem!important;
+ line-height: 1.25!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-summary .summary-label {
+ font-weight: 800!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-summary .summary-val {
+ justify-self: end!important;
+ max-width: 100%!important;
+ text-align: right!important;
+ font-weight: 850!important;
+ overflow-wrap: anywhere!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup .setup-details-actions {
+ display: flex!important;
+ justify-content: center!important;
+ align-items: center!important;
+ gap: 12px!important;
+ width: 100%!important;
+ padding: 0!important;
+ margin: 22px auto 0!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup .setup-details-actions .setup-step-btn {
+ min-width: 118px!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-basic.setup-details-card {
+ padding: 24px 26px!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-basic .setup-card-fields {
+ display: grid!important;
+ grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)!important;
+ column-gap: 18px!important;
+ row-gap: 12px!important;
+ align-items: start!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-basic .setup-card-field {
+ min-width: 0!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-basic .setup-target-dropdown,
+ body.interview-setup-page #sec-interview-setup #panel-basic .setup-select-wrap {
+ width: 100%!important;
+ min-width: 0!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-basic .setup-target-trigger {
+ display: grid!important;
+ grid-template-columns: minmax(0, 1fr) 24px!important;
+ align-items: center!important;
+ gap: 10px!important;
+ width: 100%!important;
+ min-height: 56px!important;
+ padding: 10px 14px 10px 18px!important;
+ overflow: hidden!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-basic .setup-target-trigger-text {
+ display: block!important;
+ min-width: 0!important;
+ max-width: 100%!important;
+ overflow: hidden!important;
+ text-overflow: ellipsis!important;
+ white-space: nowrap!important;
+ line-height: 1.25!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-basic .setup-target-trigger-icon {
+ justify-self: center!important;
+ margin-left: 0!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-basic #scenarioHelp {
+ grid-column: 1 / -1!important;
+ margin: 2px 0 0!important;
+ text-align: center!important;
+ font-size: .92rem!important;
+ line-height: 1.35!important;
+ }
+
+ body.interview-setup-page #sec-interview-setup #panel-basic .setup-calibrated-simple {
+ grid-column: 1 / -1!important;
+ margin-top: 2px!important;
+ }
  }
  `;
 

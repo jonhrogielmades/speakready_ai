@@ -1426,3 +1426,214 @@ html body.user-desktop-shell:not(.admin-shell) .retry-panel .btn {
         width: 100% !important;
     }
 }
+
+/* Medium desktop readability pass for Detailed Review panels. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-panel {
+        padding: 26px !important;
+        border-radius: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-head {
+        gap: 20px !important;
+        margin-bottom: 20px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-kicker {
+        font-size: 0.82rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-head h5,
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-heading {
+        font-size: 1.18rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-overall-score {
+        min-width: 136px !important;
+        min-height: 82px !important;
+        padding: 14px 18px !important;
+        border-radius: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-overall-score strong {
+        font-size: 1.9rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-overall-score span {
+        font-size: 0.9rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-grid,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-summary-grid,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid {
+        gap: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-block,
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-block-wide,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-section,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-section-wide,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid > section,
+    html body.user-desktop-shell:not(.admin-shell) .early-ended-response-card,
+    html body.user-desktop-shell:not(.admin-shell) .retry-panel,
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-body > .mt-4.p-4 {
+        gap: 12px !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-block-title,
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-body .review-block-title,
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-body > .mt-4.p-4 h6 {
+        gap: 9px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-block-title i,
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-body .review-block-title i,
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-body > .mt-4.p-4 h6 i {
+        font-size: 0.95rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-quick-block p,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-section p,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid p,
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-body > .mt-4.p-4 p,
+    html body.user-desktop-shell:not(.admin-shell) .review-retry-row span,
+    html body.user-desktop-shell:not(.admin-shell) .early-ended-response-card {
+        font-size: 0.94rem !important;
+        line-height: 1.55 !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-short-list,
+    html body.user-desktop-shell:not(.admin-shell) .review-short-list li {
+        font-size: 0.94rem !important;
+        line-height: 1.5 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-short-list li::before {
+        width: 7px !important;
+        height: 7px !important;
+        top: 0.62em !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-score-grid {
+        gap: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-score-item {
+        min-height: 62px !important;
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-score-item span,
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid span {
+        font-size: 0.78rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-score-item strong {
+        font-size: 1rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-practice-btn,
+    html body.user-desktop-shell:not(.admin-shell) .answer-retry-action > .btn,
+    html body.user-desktop-shell:not(.admin-shell) .retry-panel .btn {
+        min-height: 42px !important;
+        padding: 0 16px !important;
+        border-radius: 10px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-practice-btn i,
+    html body.user-desktop-shell:not(.admin-shell) .answer-retry-action > .btn i,
+    html body.user-desktop-shell:not(.admin-shell) .retry-panel .btn i {
+        font-size: 0.95rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-card {
+        margin-bottom: 18px !important;
+        border-radius: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-toggle {
+        min-height: 68px !important;
+        padding: 20px 22px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-toggle::after {
+        width: 18px !important;
+        height: 18px !important;
+        background-size: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-header {
+        gap: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-title {
+        font-size: 1.05rem !important;
+        line-height: 1.3 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-score {
+        gap: 9px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-score .badge,
+    html body.user-desktop-shell:not(.admin-shell) .retry-chip {
+        min-height: 30px !important;
+        padding: 0 12px !important;
+        border-radius: 999px !important;
+        font-size: 0.8rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-body {
+        gap: 16px !important;
+        padding: 20px 22px 22px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-simple {
+        gap: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-status-row,
+    html body.user-desktop-shell:not(.admin-shell) .retry-meta {
+        gap: 9px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .review-answer-proof {
+        gap: 9px 12px !important;
+        padding-top: 12px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.45 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .early-ended-answer-note,
+    html body.user-desktop-shell:not(.admin-shell) .answer-review-body .alert {
+        gap: 10px !important;
+        padding: 13px 15px !important;
+        border-radius: 10px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.45 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) .retry-textarea {
+        min-height: 150px !important;
+        padding: 14px !important;
+        border-radius: 10px !important;
+        font-size: 0.94rem !important;
+        line-height: 1.5 !important;
+    }
+}

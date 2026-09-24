@@ -1670,3 +1670,180 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
         transform: scale(1.04);
     }
 }
+
+/* Desktop AI Coach medium readability pass. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page {
+        font-size: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-container {
+        min-height: calc(100vh - 300px) !important;
+        border-radius: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-chat-header {
+        min-height: 70px !important;
+        padding: 16px 22px !important;
+        align-items: center !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-chat-title {
+        display: block !important;
+        font-size: 1.14rem !important;
+        line-height: 1.25 !important;
+        font-weight: 800 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-status {
+        font-size: 0.94rem !important;
+        line-height: 1.35 !important;
+        font-weight: 700 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-actions-toggle {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 12px !important;
+        font-size: 1.05rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-actions-menu {
+        width: min(390px, calc(100vw - 48px)) !important;
+        padding: 12px !important;
+        border-radius: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-actions-heading {
+        font-size: 0.82rem !important;
+        letter-spacing: 0 !important;
+        margin: 10px 8px 6px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-actions-item,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-actions-history {
+        min-height: 44px !important;
+        padding: 10px 12px !important;
+        border-radius: 12px !important;
+        gap: 10px !important;
+        font-size: 0.96rem !important;
+        line-height: 1.3 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-actions-item i,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-actions-history i {
+        width: 22px !important;
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-messages {
+        padding: 24px 28px !important;
+        gap: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-msg-row,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .dynamic-msg {
+        gap: 14px !important;
+        margin-bottom: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-avatar,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-user-avatar {
+        width: 46px !important;
+        height: 46px !important;
+        min-width: 46px !important;
+        flex: 0 0 46px !important;
+        border-radius: 14px !important;
+        font-size: 1.08rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-avatar i,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-user-avatar i {
+        font-size: 1.08rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-bubble {
+        max-width: min(860px, 76%) !important;
+        padding: 16px 18px !important;
+        border-radius: 16px !important;
+        font-size: 1rem !important;
+        line-height: 1.58 !important;
+        letter-spacing: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .ai-response,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .ai-response :is(p, li) {
+        font-size: 1rem !important;
+        line-height: 1.58 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .ai-response .ai-section-title {
+        font-size: 1.04rem !important;
+        line-height: 1.35 !important;
+        margin: 14px 0 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-bubble,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-bubble-item,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-chip {
+        font-size: 0.94rem !important;
+        line-height: 1.35 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-area {
+        padding: 14px 18px 16px !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper {
+        min-height: 58px !important;
+        padding: 8px !important;
+        gap: 10px !important;
+        border-radius: 16px !important;
+        align-items: center !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-btn,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-voice-btn,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        min-height: 42px !important;
+        flex: 0 0 42px !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-btn i,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-voice-btn i,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn i {
+        font-size: 1rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea {
+        min-height: 42px !important;
+        height: 42px !important;
+        max-height: 130px !important;
+        padding: 9px 2px !important;
+        font-size: 1rem !important;
+        line-height: 1.45 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea::placeholder {
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-disclaimer {
+        font-size: 0.9rem !important;
+        line-height: 1.45 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-disclaimer i {
+        font-size: 0.96rem !important;
+    }
+}

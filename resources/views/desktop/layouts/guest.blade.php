@@ -206,13 +206,6 @@
                                  'text' => 'Set details, structure, access, scenario, and response settings before starting a tailored session.',
                               ],
                               [
-                                 'image' => 'img/desktop-preview/desktop-preview-practice-plan.png',
-                                 'alt' => 'SpeakReady AI desktop personalized practice plan preview',
-                                 'kicker' => 'Practice Plan',
-                                 'title' => 'Follow a personalized practice path.',
-                                 'text' => 'Review AI recommendations, next steps, and focused practice actions based on your latest interview activity.',
-                              ],
-                              [
                                  'image' => 'img/desktop-preview/desktop-preview-practice-calendar.png',
                                  'alt' => 'SpeakReady AI desktop activity calendar preview',
                                  'kicker' => 'Activity Calendar',
@@ -245,7 +238,7 @@
                                  'alt' => 'SpeakReady AI desktop interview progress preview',
                                  'kicker' => 'Progress',
                                  'title' => 'Track growth across practice.',
-                                 'text' => 'Review streaks, AI insights, practice plans, and export actions from the progress workspace.',
+                                 'text' => 'Review streaks, AI insights, learning progress, and export actions from the progress workspace.',
                               ],
                               [
                                  'image' => 'img/desktop-preview/desktop-preview-feedback.png',
@@ -673,8 +666,8 @@
                                              <div class="ui-desktop-wire-plan-head">
                                                 <span class="ui-desktop-wire-icon"><i class="fa-solid fa-calendar-check"></i></span>
                                                 <div>
-                                                   <h3 class="ui-desktop-wire-card-title">Personalized Practice Plan</h3>
-                                                   <p class="ui-desktop-wire-card-subtitle">A plan built from latest scores, voice work, and learning progress.</p>
+                                                   <h3 class="ui-desktop-wire-card-title">Practice Focus</h3>
+                                                   <p class="ui-desktop-wire-card-subtitle">Next actions built from latest scores, voice work, and learning progress.</p>
                                                 </div>
                                              </div>
                                              <div class="ui-desktop-wire-plan-list">
@@ -862,13 +855,6 @@
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#10b981;--feature-icon-bg:rgba(16,185,129,.14);--feature-icon-border:rgba(16,185,129,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Interview Practice</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Start AI mock interviews with category, role, scenario, response mode, and timed practice settings.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.1s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#14b8a6;--feature-icon-bg:rgba(20,184,166,.14);--feature-icon-border:rgba(20,184,166,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-route fa-lg"></i></div>
-                         <h3 class="fs-6 fw-bold mb-2">Practice Plan</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Follow AI recommendations, next steps, and focused practice actions after each session.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">

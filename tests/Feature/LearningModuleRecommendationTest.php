@@ -8,10 +8,8 @@ use App\Models\InterviewSession;
 use App\Models\LearningModule;
 use App\Models\LearningProgress;
 use App\Models\Score;
-use App\Models\Setting;
 use App\Models\User;
 use App\Services\LearningRecommendationService;
-use App\Services\PersonalizedPracticePlanService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -155,33 +153,6 @@ class LearningModuleRecommendationTest extends TestCase
         ]);
     }
 
-    public function test_personalized_practice_plan_prioritizes_weak_scores(): void
-    {
-        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        $category = $this->category('Communication');
-        $clarityModule = $this->module('Clear Answer Structure', 'Build clarity with concise, organized interview answers.', ['clarity']);
-
-        $session = $this->completedSessionFor($user, $category);
-        Score::create([
-            'interview_session_id' => $session->id,
-            'clarity_score' => 46,
-            'relevance_score' => 88,
-            'grammar_score' => 84,
-            'professionalism_score' => 82,
-            'confidence_score' => 79,
-            'overall_readiness_score' => 70,
-        ]);
-
-        $plan = app(PersonalizedPracticePlanService::class)->forUser($user->id, 4);
-
-        $this->assertCount(4, $plan);
-        $this->assertSame('Today', $plan->first()->day);
-        $this->assertSame('Clarity', $plan->first()->focus);
-        $this->assertStringContainsString($clarityModule->title, $plan->first()->action);
-        $this->assertTrue($plan->contains(fn ($item) => $item->cta === 'Ask Coach'));
-        $this->assertTrue($plan->contains(fn ($item) => $item->cta === 'Start Interview'));
-    }
-
     public function test_dashboard_hides_personalized_practice_plan_and_ai_recommendation_cards(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -239,43 +210,6 @@ class LearningModuleRecommendationTest extends TestCase
             ->assertSee(url('/coach/conversation'), false)
             ->assertSee('initDashboardCoachModal', false);
 
-        $this->actingAs($user)
-            ->get(route('user.practice.plan'))
-            ->assertOk()
-            ->assertSee('Personalized Practice Plan')
-            ->assertSee('AI Recommendations')
-            ->assertSee('id="practice-ai-recommendations"', false)
-            ->assertSee('Clear Answer Structure');
-    }
-
-    public function test_personalized_practice_plan_avoids_disabled_feature_links(): void
-    {
-        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        $category = $this->category('Communication');
-        $this->module('Clear Answer Structure', 'Build clarity with concise, organized interview answers.', ['clarity']);
-
-        Setting::setVal('ll_modules', false, 'general', 'boolean');
-        Setting::setVal('aic_enable', false, 'general', 'boolean');
-
-        $session = $this->completedSessionFor($user, $category);
-        Score::create([
-            'interview_session_id' => $session->id,
-            'clarity_score' => 48,
-            'relevance_score' => 82,
-            'grammar_score' => 78,
-            'professionalism_score' => 80,
-            'confidence_score' => 75,
-            'overall_readiness_score' => 68,
-        ]);
-
-        $plan = app(PersonalizedPracticePlanService::class)->forUser($user->id, 4);
-        $urls = $plan->pluck('url');
-
-        $this->assertFalse($urls->contains(route('user.coach')));
-        $this->assertTrue($urls->contains(route('interview.setup')));
-        $this->assertSame('Drill Clarity', $plan->first()->title);
-        $this->assertSame('Start Interview', $plan->first()->cta);
-        $this->assertSame(route('interview.setup'), $plan->first()->url);
     }
 
     private function category(string $title): Category

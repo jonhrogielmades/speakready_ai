@@ -24,7 +24,6 @@ use App\Services\CsvExportService;
 use App\Services\LearningChallengeGenerationService;
 use App\Services\LearningModuleGenerationService;
 use App\Services\LearningRecommendationService;
-use App\Services\PersonalizedPracticePlanService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\AccountNotificationSchema;
@@ -360,11 +359,6 @@ class UserController extends Controller
  return $this->mobileView('user.progress', $this->progressViewData(Auth::id()));
  }
 
- public function practicePlan()
- {
- return $this->mobileView('user.practice-plan', $this->progressViewData(Auth::id()));
- }
-
  public function practiceActivityCalendar()
  {
  return $this->mobileView('user.practice-calendar', $this->progressViewData(Auth::id()));
@@ -407,7 +401,6 @@ class UserController extends Controller
  ->orderBy('updated_at', 'desc')
  ->get();
  $moduleRecommendations = app(LearningRecommendationService::class)->forUser($userId, 3);
- $practicePlan = app(PersonalizedPracticePlanService::class)->forUser((int) $userId, 4);
 
  $currentStreak = (int) ($activityCalendar->current_streak?? 0);
  $longestStreak = max(
@@ -471,7 +464,6 @@ class UserController extends Controller
  'starProgress',
  'learningProgress',
  'moduleRecommendations',
- 'practicePlan',
  'currentStreak',
  'longestStreak',
  'totalPracticeDays',
@@ -586,7 +578,6 @@ class UserController extends Controller
 
  $feedbackSummary = $this->feedbackCenterSummary($latestFeedbackSession);
  $answerCoachingHighlights = $this->feedbackCenterAnswerCoaching($latestFeedbackSession);
- $practiceRecommendations = $this->feedbackCenterPracticeRecommendations($latestFeedbackSession, $feedbackSummary);
 
  $feedbackFilters = [
  'scenario' => $selectedScenario,
@@ -602,8 +593,7 @@ class UserController extends Controller
  'hasFeedbackRecords',
  'latestFeedbackSession',
  'feedbackSummary',
- 'answerCoachingHighlights',
- 'practiceRecommendations'
+ 'answerCoachingHighlights'
  ));
  }
 
@@ -748,101 +738,6 @@ class UserController extends Controller
  }
 
  return '';
- }
-
- private function feedbackCenterPracticeRecommendations(?InterviewSession $session,?object $summary)
- {
- if (! $session) {
- return collect([
- (object) [
- 'title' => 'Start a mock interview',
- 'description' => 'Complete one practice session to unlock feedback.',
- 'url' => route('interview.setup'),
- 'cta' => 'Start Practice',
- 'icon' => 'fa-robot',
- 'color' => '#2563eb',
- ],
- ]);
- }
-
- $focusLabel = Str::lower((string) ($summary?->focus_metric->label?? ''));
- $summaryText = Str::lower(trim(implode(' ', array_filter([
- $summary?->headline?? '',
- $summary?->weaknesses?? '',
- $summary?->suggestions?? '',
- ]))));
- $scenario = Str::lower((string) ($summary?->scenario?? $this->practiceScenarioLabel($session)));
- $modulesEnabled = Setting::enabled('ll_modules');
- $coachEnabled = Setting::enabled('aic_enable');
- $recommendations = collect();
-
- $needsStructure = str_contains($focusLabel, 'clarity')
- || str_contains($focusLabel, 'relevance')
- || Str::contains($summaryText, ['structure', 'star', 'direct', 'opening', 'organize', 'relevance']);
- $needsDelivery = str_contains($focusLabel, 'grammar')
- || str_contains($focusLabel, 'confidence')
- || str_contains($focusLabel, 'delivery')
- || Str::contains($summaryText, ['grammar', 'confidence', 'pacing', 'filler', 'speaking', 'voice']);
- $needsEvidence = str_contains($focusLabel, 'evidence')
- || str_contains($scenario, 'technical')
- || str_contains($scenario, 'bpo')
- || Str::contains($summaryText, ['evidence', 'proof', 'result', 'measurable', 'metric', 'example']);
-
- if ($needsStructure && $modulesEnabled) {
- $recommendations->push((object) [
- 'title' => 'Rebuild answer structure',
- 'description' => 'Practice STAR and direct answer framing.',
- 'url' => route('user.modules.index', ['search' => 'STAR answer structure role fit']),
- 'cta' => 'Open Modules',
- 'icon' => 'fa-layer-group',
- 'color' => '#2563eb',
- ]);
- }
-
- if ($needsDelivery && $coachEnabled) {
- $recommendations->push((object) [
- 'title' => 'Practice delivery',
- 'description' => 'Improve pacing, fillers, and clarity with the coach.',
- 'url' => route('user.coach', ['ask' => 'Help me practice interview delivery. Focus on pacing, filler words, and clearer sentence endings without inventing details.']),
- 'cta' => 'Ask Coach',
- 'icon' => 'fa-robot',
- 'color' => '#10b981',
- ]);
- }
-
- if ($needsEvidence && $modulesEnabled) {
- $recommendations->push((object) [
- 'title' => 'Strengthen role proof',
- 'description' => 'Add stronger examples and results.',
- 'url' => route('user.modules.index', ['search' => str_contains($scenario, 'bpo')? 'BPO customer support evidence': 'project evidence role proof']),
- 'cta' => 'Review Proof',
- 'icon' => 'fa-briefcase',
- 'color' => '#8b5cf6',
- ]);
- }
-
- $recommendations->push((object) [
- 'title' => 'Retake a coached mock',
- 'description' => 'Try again after one focused fix.',
- 'url' => route('interview.setup'),
- 'cta' => 'Start Mock',
- 'icon' => 'fa-rotate-right',
- 'color' => '#f59e0b',
- ]);
-
- $recommendations->push((object) [
- 'title' => 'Review detailed coaching',
- 'description' => 'Open the full report and retry answers.',
- 'url' => route('user.review', $session->id),
- 'cta' => 'View Details',
- 'icon' => 'fa-chart-simple',
- 'color' => '#0ea5e9',
- ]);
-
- return $recommendations
- ->unique('title')
- ->take(3)
- ->values();
  }
 
  private function feedbackCenterSnippet(?string $text, string $fallback): string
@@ -4002,7 +3897,7 @@ class UserController extends Controller
  ->orderBy('career_path')
  ->limit(200)
  ->get();
- $modules = (clone $query)->orderBy('created_at', 'desc')->paginate(12);
+ $modules = (clone $query)->orderBy('created_at', 'desc')->paginate(6)->withQueryString();
  $moduleRecommendations = app(LearningRecommendationService::class)->forUser(Auth::id(), 3, $recommendationModules);
  $learningPaths = app(LearningRecommendationService::class)->learningPathsForUser(Auth::id(), $pathModules);
  $modulePositionOptions = $this->modulePositionOptions(

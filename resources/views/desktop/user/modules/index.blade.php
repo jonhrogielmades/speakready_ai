@@ -2,7 +2,7 @@
 @section('title', 'Interview Modules')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=10') }}" data-page-style="user-modules-index">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=14') }}" data-page-style="user-modules-index">
 @endpush
 
 @section('content')
@@ -183,9 +183,17 @@
  </div>
 
  @if($modules->hasPages())
- <div class="d-flex justify-content-center mt-4">
- {{ $modules->appends(request()->query())->links() }}
- </div>
+ <nav class="module-entry-pager" aria-label="Module entries pagination">
+ <a class="module-entry-page-btn {{ $modules->onFirstPage()? 'is-disabled': '' }}" href="{{ $modules->previousPageUrl()?? '#' }}" aria-disabled="{{ $modules->onFirstPage()? 'true': 'false' }}">
+ <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+ <span>Previous</span>
+ </a>
+ <span class="module-entry-page-status">Page {{ $modules->currentPage() }} of {{ $modules->lastPage() }}</span>
+ <a class="module-entry-page-btn {{ $modules->hasMorePages()? '': 'is-disabled' }}" href="{{ $modules->nextPageUrl()?? '#' }}" aria-disabled="{{ $modules->hasMorePages()? 'false': 'true' }}">
+ <span>Next</span>
+ <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+ </a>
+ </nav>
  @endif
 </div>
 

@@ -286,7 +286,6 @@
                 '/modules',
                 '/game/match',
                 '/progress',
-                '/practice-plan',
                 '/practice-activity-calendar',
                 '/session/',
                 '/reports'

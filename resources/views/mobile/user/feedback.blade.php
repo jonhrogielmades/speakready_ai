@@ -111,29 +111,6 @@
  @endif
  </section>
 
- <section class="feedback-insight-panel" id="feedbackPracticeRecommendations" aria-labelledby="feedback-practice-recommendations-title">
- <div class="feedback-insight-head">
- <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></span>
- <div>
- <h5 class="feedback-insight-title" id="feedback-practice-recommendations-title">Suggested Next Practice</h5>
- <p class="feedback-insight-subtitle">Choose one focused step.</p>
- </div>
- </div>
- <div class="feedback-recommend-list">
- @forelse($practiceRecommendations as $recommendation)
- <a href="{{ $recommendation->url }}" class="feedback-recommend-item" style="--recommend-color: {{ $recommendation->color }};">
- <span class="feedback-recommend-icon" aria-hidden="true"><i class="fa-solid {{ $recommendation->icon }}"></i></span>
- <span class="feedback-recommend-copy">
- <strong>{{ $recommendation->title }}</strong>
- <span>{{ $recommendation->description }}</span>
- </span>
- <span class="feedback-recommend-cta">{{ $recommendation->cta }}</span>
- </a>
- @empty
- <div class="feedback-feature-empty">No recommendations yet.</div>
- @endforelse
- </div>
- </section>
  </div>
 
  <section class="feedback-insight-panel feedback-answer-panel" id="feedbackAnswerCoaching" aria-labelledby="feedback-answer-coaching-title">
@@ -334,13 +311,11 @@
 
  const stepsMobile = [
  { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to turn completed interviews into strengths, focus areas, and next practice actions.', side: 'bottom', align: 'start' }},
- { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, focus area, and suggested next practice.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, and focus area.', side: 'bottom', align: 'start' }},
  { element: '.feedback-metric-grid', popover: { title: 'Category Breakdown', description: 'Scan the latest category scores to spot which interview skills are strongest or need attention.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-note-grid', popover: { title: 'Strengths And Focus', description: 'Use these notes to understand what worked, what needs work, and what to practice next.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
- { element: '#feedbackPracticeRecommendations', popover: { title: 'Suggested Next Practice', description: 'Choose a module, drill, challenge, or interview action based on the feedback patterns.', side: 'bottom', align: 'start' }},
- { element: '.feedback-recommend-item', popover: { title: 'Recommended Action', description: 'Open a focused next step directly from the recommendation list.', side: 'top', align: 'start' }},
  { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review latest answers with the answer text, score, feedback, and next practice cue.', side: 'bottom', align: 'start' }},
  { element: '.feedback-answer-item', popover: { title: 'Answer Coaching Card', description: 'Each card pairs your answer with short coaching and a shortcut to deeper review.', side: 'top', align: 'start' }},
  { element: '.feedback-answer-voice', popover: { title: 'Voice Answer Playback', description: 'When an answer used audio, listen here and review coaching against the spoken response.', side: 'top', align: 'start' }},
@@ -357,13 +332,11 @@
 
  const stepsDesktop = [
  { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to turn completed interviews into strengths, focus areas, and next practice actions.', side: 'bottom', align: 'start' }},
- { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, focus area, and suggested next practice.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, and focus area.', side: 'bottom', align: 'start' }},
  { element: '.feedback-metric-grid', popover: { title: 'Category Breakdown', description: 'Scan the latest category scores to spot which interview skills are strongest or need attention.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-note-grid', popover: { title: 'Strengths And Focus', description: 'Use these notes to understand what worked, what needs work, and what to practice next.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
- { element: '#feedbackPracticeRecommendations', popover: { title: 'Suggested Next Practice', description: 'Choose a module, drill, challenge, or interview action based on the feedback patterns.', side: 'bottom', align: 'end' }},
- { element: '.feedback-recommend-item', popover: { title: 'Recommended Action', description: 'Open a focused next step directly from the recommendation list.', side: 'top', align: 'start' }},
  { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review latest answers with the answer text, score, feedback, and next practice cue.', side: 'bottom', align: 'start' }},
  { element: '.feedback-answer-item', popover: { title: 'Answer Coaching Card', description: 'Each card pairs your answer with short coaching and a shortcut to deeper review.', side: 'top', align: 'start' }},
  { element: '.feedback-answer-voice', popover: { title: 'Voice Answer Playback', description: 'When an answer used audio, listen here and review coaching against the spoken response.', side: 'top', align: 'start' }},

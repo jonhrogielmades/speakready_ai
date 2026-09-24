@@ -146,7 +146,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertViewHas('goalNote', fn ($note) => $note && $note->title === 'First milestone waiting');
  }
 
- public function test_progress_page_moves_plan_and_activity_to_dedicated_pages(): void
+ public function test_progress_page_keeps_activity_on_dedicated_page(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('Behavioral');
@@ -183,27 +183,6 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  && $calendar->active_days === 2
  && $calendar->current_streak === 2
  && $calendar->total_interviews === 2);
-
- $this->actingAs($user)
- ->get(route('user.practice.plan'))
- ->assertOk()
- ->assertSee('Personalized Practice Plan')
- ->assertSee('class="setup-hero-art practice-hero-art practice-plan-art"', false)
- ->assertSee('practiceHeroArtFloat', false)
- ->assertSee('Standalone practice pages should fill the same content lane', false)
- ->assertSee('Compact practice page action buttons', false)
- ->assertSee('Final night theme visibility', false)
- ->assertSee('color: #f8fafc !important', false)
- ->assertSee('min-height: 28px !important', false)
- ->assertSee('font-size: 0.62rem !important', false)
- ->assertSee('Final practice plan panel polish', false)
- ->assertSee('flex: 0 0 38px', false)
- ->assertSee('grid-template-columns: 34px minmax(0, 1fr)', false)
- ->assertSee('width: 100% !important', false)
- ->assertSee('grid-template-columns: repeat(2, minmax(0, 1fr))', false)
- ->assertSee('Answer Clarity Sprint')
- ->assertSee('Start Practice')
- ->assertViewHas('practicePlan', fn ($plan) => $plan && $plan->count() === 4);
 
  $this->actingAs($user)
  ->get(route('user.practice.calendar'))

@@ -38,11 +38,6 @@
         </svg>
     </div>
 
-    <div class="sr-page-actions" id="practiceCalendarActions">
-        <a href="{{ route('user.progress') }}" class="btn btn-outline-primary history-feedback-btn"><i class="fa-solid fa-chart-line"></i> Interview Progress</a>
-        <a href="{{ route('interview.setup') }}" class="btn btn-outline-primary history-feedback-btn"><i class="fa-solid fa-play"></i> Practice Again</a>
-    </div>
-
     @include('shared.partials.practice-activity-calendar')
 </div>
 
@@ -53,7 +48,6 @@
 
         const stepsMobile = [
             { element: '#practiceCalendarHero', popover: { title: 'Activity Calendar', description: 'Use this page to see how consistently you have practiced over the last 28 days.', side: 'bottom', align: 'start' }},
-            { element: '#practiceCalendarActions', popover: { title: 'Quick Actions', description: 'Return to Interview Progress for full analytics or start another practice session from here.', side: 'bottom', align: 'start' }},
             { element: '#activity-calendar', popover: { title: 'Calendar Panel', description: 'This panel summarizes recent practice activity, streaks, and daily interview completions.', side: 'top', align: 'start' }},
             { element: '.activity-summary-grid', popover: { title: 'Activity Summary', description: 'Check active days, this week, current streak, and the latest practice timing at a glance.', side: 'top', align: 'start' }},
             { element: '.activity-grid', popover: { title: '28-Day Grid', description: 'Each day tile shows whether practice was recorded and how active that day was.', side: 'top', align: 'start' }},
@@ -63,7 +57,6 @@
 
         const stepsDesktop = [
             { element: '#practiceCalendarHero', popover: { title: 'Activity Calendar', description: 'Use this page to see how consistently you have practiced over the last 28 days.', side: 'bottom', align: 'start' }},
-            { element: '#practiceCalendarActions', popover: { title: 'Quick Actions', description: 'Return to Interview Progress for full analytics or start another practice session from here.', side: 'bottom', align: 'start' }},
             { element: '#activity-calendar', popover: { title: 'Calendar Panel', description: 'This panel summarizes recent practice activity, streaks, and daily interview completions.', side: 'top', align: 'start' }},
             { element: '.activity-summary-grid', popover: { title: 'Activity Summary', description: 'Check active days, this week, current streak, and the latest practice timing at a glance.', side: 'top', align: 'start' }},
             { element: '.activity-grid', popover: { title: '28-Day Grid', description: 'Each day tile shows whether practice was recorded and how active that day was.', side: 'top', align: 'start' }},

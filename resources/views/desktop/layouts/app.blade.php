@@ -124,7 +124,6 @@
 
                 <div class="db-nav-section">Practice</div>
                 <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}" title="Interview Practice"><i class="fa-solid fa-microphone-lines"></i><span class="db-nav-label">Interview Practice</span></a>
-               <a href="{{ route('user.practice.plan') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.practice.plan') ? 'active' : '' }}" title="Practice Plan"><i class="fa-solid fa-route"></i><span class="db-nav-label">Practice Plan</span></a>
                <a href="{{ route('user.practice.calendar') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}" title="Practice Activity Calendar"><i class="fa-regular fa-calendar-days"></i><span class="db-nav-label">Activity Calendar</span></a>
 
                <div class="db-nav-section">Training</div>

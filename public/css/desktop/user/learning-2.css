@@ -2990,3 +2990,477 @@
         min-height: 42px;
     }
 }
+
+/* Desktop Interview Challenges medium readability pass. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page {
+        font-size: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-position-strip {
+        min-height: 74px !important;
+        padding: 16px 20px !important;
+        border-radius: 18px !important;
+        gap: 16px !important;
+        margin-bottom: 20px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-position-icon {
+        width: 50px !important;
+        height: 50px !important;
+        flex: 0 0 50px !important;
+        border-radius: 15px !important;
+        font-size: 1.14rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-position-label {
+        font-size: 0.86rem !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-position-summary strong {
+        font-size: 1.12rem !important;
+        line-height: 1.28 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-position-change-btn {
+        min-height: 46px !important;
+        padding: 0 18px !important;
+        border-radius: 13px !important;
+        gap: 9px !important;
+        font-size: 0.98rem !important;
+        font-weight: 850 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-position-change-btn i {
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-position-note {
+        min-height: 48px !important;
+        padding: 12px 15px !important;
+        border-radius: 14px !important;
+        font-size: 0.96rem !important;
+        line-height: 1.45 !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats {
+        --bs-gutter-x: 18px !important;
+        --bs-gutter-y: 18px !important;
+        margin-bottom: 24px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats .ll-stat-card {
+        min-height: 96px !important;
+        padding: 16px 20px !important;
+        border-radius: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats .ll-stat-card :is(span, div, strong) {
+        letter-spacing: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between > span:first-child {
+        font-size: 1.04rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between > span:last-child,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats .ll-stat-card [style*="font-size:0.75rem"] {
+        font-size: 0.88rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ll-progress-bar {
+        height: 14px !important;
+        border-radius: 999px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .sr-page-actions.learning-actions {
+        gap: 14px !important;
+        margin-bottom: 20px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #tour-search {
+        min-height: 50px !important;
+        border-radius: 14px !important;
+        padding: 0 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #tour-search input {
+        min-height: 48px !important;
+        font-size: 1rem !important;
+        line-height: 1.4 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #tour-search i {
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #nav-pills-container {
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ll-nav-pill {
+        min-height: 44px !important;
+        padding: 0 16px !important;
+        border-radius: 13px !important;
+        font-size: 0.96rem !important;
+        font-weight: 850 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header-actions #btn-skill-tree,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header-actions .journey-lives {
+        min-height: 44px !important;
+        padding: 0 15px !important;
+        border-radius: 13px !important;
+        font-size: 0.96rem !important;
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header-actions :is(i, svg) {
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header-actions .journey-lives {
+        min-height: 46px !important;
+        height: 46px !important;
+        padding: 0 14px !important;
+        border-radius: 13px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        font-size: 0.98rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header-actions .journey-lives i {
+        margin: 0 !important;
+        font-size: 0.96rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header-actions #btn-skill-tree {
+        min-height: 46px !important;
+        height: 46px !important;
+        padding: 0 18px !important;
+        border-radius: 13px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        font-size: 0.98rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-path-container {
+        gap: 18px !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .level-node {
+        margin-bottom: 18px !important;
+        position: relative !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .level-node[class*="col-lg-4"],
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .level-node[class*="col-md-"] {
+        display: flex !important;
+        align-items: stretch !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-card {
+        padding: 72px 22px 18px !important;
+        border-radius: 18px !important;
+        min-height: 0 !important;
+        height: auto !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        gap: 10px !important;
+        position: relative !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-card > div:first-child {
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-icon-wrapper,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-icon {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        border-radius: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-icon-wrapper {
+        position: absolute !important;
+        top: 16px !important;
+        left: 50% !important;
+        z-index: 3 !important;
+        transform: translateX(-50%) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        pointer-events: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-icon :is(i, svg),
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-icon-wrapper :is(i, svg) {
+        font-size: 1.18rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-card h5 {
+        max-width: 100% !important;
+        font-size: 1.02rem !important;
+        line-height: 1.24 !important;
+        margin: 0 0 7px !important;
+        text-wrap: balance !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-card p,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-card [style*="font-size:0.84rem"],
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-card [style*="font-size:0.85rem"],
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-card [style*="font-size:0.9rem"] {
+        font-size: 0.94rem !important;
+        line-height: 1.36 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list :is(.requirement-badge, .score-badge, .badge) {
+        min-height: 26px !important;
+        padding: 4px 8px !important;
+        border-radius: 999px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .learning-badge-row {
+        justify-content: center !important;
+        gap: 7px !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .active-challenge-panel {
+        padding: 14px !important;
+        border-radius: 16px !important;
+        margin: 12px 0 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .active-challenge-panel :is(div, span, li) {
+        font-size: 0.92rem !important;
+        line-height: 1.34 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .active-challenge-panel :is(i, svg) {
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .start-challenge-btn,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .level-card .btn,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .game-result-actions .btn {
+        min-height: 46px !important;
+        padding: 0 18px !important;
+        border-radius: 13px !important;
+        font-size: 0.94rem !important;
+        font-weight: 850 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .start-challenge-btn i,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .level-card .btn i,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .game-result-actions .btn i {
+        font-size: 1rem !important;
+    }
+
+    .challenge-position-modal .modal-content {
+        border-radius: 18px !important;
+    }
+
+    .challenge-position-modal .modal-header {
+        min-height: 88px !important;
+        padding: 20px 66px 18px 22px !important;
+    }
+
+    .challenge-position-modal .challenge-position-title-icon {
+        width: 46px !important;
+        height: 46px !important;
+        flex: 0 0 46px !important;
+        border-radius: 14px !important;
+        font-size: 1.1rem !important;
+    }
+
+    .challenge-position-modal .modal-title {
+        font-size: 1.22rem !important;
+        line-height: 1.25 !important;
+    }
+
+    .challenge-position-modal .challenge-position-kicker,
+    .challenge-position-modal .form-label {
+        font-size: 0.9rem !important;
+        letter-spacing: 0 !important;
+    }
+
+    .challenge-position-modal .modal-body {
+        padding: 20px 22px !important;
+    }
+
+    .challenge-position-modal .challenge-position-field {
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+
+    .challenge-position-modal .challenge-position-select-button {
+        min-height: 50px !important;
+        padding: 0 14px 0 16px !important;
+        border-radius: 13px !important;
+        font-size: 1rem !important;
+    }
+
+    .challenge-position-modal .challenge-position-option {
+        min-height: 40px !important;
+        font-size: 0.96rem !important;
+        padding: 9px 10px !important;
+    }
+
+    .challenge-position-modal .challenge-position-actions .btn {
+        min-height: 46px !important;
+        padding-inline: 18px !important;
+        border-radius: 13px !important;
+        font-size: 0.98rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .game-result-modal .modal-content,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .game-result-hero,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ai-scorecard-panel {
+        border-radius: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .game-result-stat,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ai-scorecard-metric,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ai-scorecard-question {
+        padding: 15px !important;
+        border-radius: 15px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .game-result-stat-label,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ai-scorecard-kicker {
+        font-size: 0.86rem !important;
+        letter-spacing: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .game-result-stat-value,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ai-scorecard-title {
+        font-size: 1.08rem !important;
+        line-height: 1.3 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ai-scorecard-summary,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ai-scorecard-note,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ai-scorecard-actions-list,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .game-result-checklist {
+        font-size: 0.98rem !important;
+        line-height: 1.5 !important;
+    }
+}
+
+/* Final desktop Interview Challenges right-edge alignment. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page {
+        --challenge-edge-gap: 16px;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page > .row,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-path-container {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page > .row > [class*="col-"],
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats > [class*="col-"],
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .level-node {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: var(--challenge-edge-gap) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats > [class*="col-"] {
+        width: 100% !important;
+        max-width: none !important;
+        flex: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-path-container,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-card {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header-actions {
+        margin-left: auto !important;
+        display: inline-flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-path-container {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: var(--challenge-edge-gap) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .level-node,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .level-node[class*="col-"] {
+        width: 100% !important;
+        max-width: none !important;
+        flex: none !important;
+        grid-column: auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .learning-notice,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .text-center.py-5 {
+        grid-column: 1 / -1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .level-node.active {
+        grid-column: auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .level-node {
+        min-height: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list > .level-node .level-card {
+        height: 100% !important;
+        min-height: 420px !important;
+    }
+}
