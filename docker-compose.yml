@@ -1,0 +1,235 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        INSTALL_PYTHON_ML_DEPS: "${INSTALL_PYTHON_ML_DEPS:-true}"
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "10000"
+    environment:
+      PORT: "${PORT:-10000}"
+      APP_NAME: "${APP_NAME:-SpeakReady AI}"
+      APP_ENV: "${APP_ENV:-production}"
+      APP_KEY: "${APP_KEY:?Set APP_KEY with php artisan key:generate --show}"
+      APP_DEBUG: "${APP_DEBUG:-false}"
+      APP_URL: "${APP_URL:-https://speakreadyai.online}"
+      ASSET_URL: "${ASSET_URL:-}"
+      LOG_CHANNEL: "${LOG_CHANNEL:-stderr}"
+      LOG_EMERGENCY_PATH: "${LOG_EMERGENCY_PATH:-php://stderr}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      DB_CONNECTION: "${DB_CONNECTION:-mysql}"
+      DB_HOST: "${DB_HOST:-db}"
+      DB_PORT: "${DB_PORT:-3306}"
+      DB_DATABASE: "${DB_DATABASE:-speakready_ai}"
+      DB_USERNAME: "${DB_USERNAME:-speakready}"
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD}"
+      DATABASE_URL: "${DATABASE_URL:-}"
+      DB_SSLMODE: "${DB_SSLMODE:-prefer}"
+      MYSQL_ATTR_SSL_CA: "${MYSQL_ATTR_SSL_CA:-}"
+      CACHE_DRIVER: "${CACHE_DRIVER:-file}"
+      SESSION_DRIVER: "${SESSION_DRIVER:-file}"
+      SESSION_LIFETIME: "${SESSION_LIFETIME:-120}"
+      SESSION_DOMAIN: "${SESSION_DOMAIN:-speakreadyai.online}"
+      SESSION_SECURE_COOKIE: "${SESSION_SECURE_COOKIE:-true}"
+      SANCTUM_STATEFUL_DOMAINS: "${SANCTUM_STATEFUL_DOMAINS:-speakreadyai.online}"
+      QUEUE_CONNECTION: "${QUEUE_CONNECTION:-sync}"
+      FILESYSTEM_DISK: "${FILESYSTEM_DISK:-local}"
+      RUN_MIGRATIONS_ON_START: "${RUN_MIGRATIONS_ON_START:-true}"
+      RUN_SCHEMA_REPAIRS_ON_START: "${RUN_SCHEMA_REPAIRS_ON_START:-true}"
+      RUN_DATABASE_SEEDERS: "${RUN_DATABASE_SEEDERS:-false}"
+      REPAIR_FEEDBACK_ON_START: "${REPAIR_FEEDBACK_ON_START:-false}"
+      REPAIR_FEEDBACK_LIMIT: "${REPAIR_FEEDBACK_LIMIT:-250}"
+      ADMIN_NAME: "${ADMIN_NAME:-System Admin}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@speakreadyai.online}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
+      MAIL_MAILER: "${MAIL_MAILER:-smtp}"
+      MAIL_HOST: "${MAIL_HOST:-}"
+      MAIL_PORT: "${MAIL_PORT:-587}"
+      MAIL_USERNAME: "${MAIL_USERNAME:-}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD:-}"
+      MAIL_ENCRYPTION: "${MAIL_ENCRYPTION:-tls}"
+      MAIL_FROM_ADDRESS: "${MAIL_FROM_ADDRESS:-hello@speakreadyai.online}"
+      MAIL_FROM_NAME: "${MAIL_FROM_NAME:-SpeakReady AI}"
+      BREVO_API_KEY: "${BREVO_API_KEY:-}"
+      BREVO_API_URL: "${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}"
+      BREVO_API_TIMEOUT: "${BREVO_API_TIMEOUT:-15}"
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+      GOOGLE_REDIRECT_URI: "${GOOGLE_REDIRECT_URI:-https://speakreadyai.online/auth/google/callback}"
+      GOOGLE_HTTP_CONNECT_TIMEOUT: "${GOOGLE_HTTP_CONNECT_TIMEOUT:-3}"
+      GOOGLE_HTTP_TIMEOUT: "${GOOGLE_HTTP_TIMEOUT:-8}"
+      AI_PROVIDER: "${AI_PROVIDER:-openai}"
+      AI_DEFAULT_PROVIDER_PRIORITY: "${AI_DEFAULT_PROVIDER_PRIORITY:-openai,gemini,groq,cohere}"
+      INTERVIEW_CHATBOT_DEFAULT_PROVIDER: "${INTERVIEW_CHATBOT_DEFAULT_PROVIDER:-openai}"
+      INTERVIEW_CHATBOT_PROVIDER_PRIORITY: "${INTERVIEW_CHATBOT_PROVIDER_PRIORITY:-openai,gemini,groq,cohere}"
+      AI_FEEDBACK_PROVIDER_PRIORITY: "${AI_FEEDBACK_PROVIDER_PRIORITY:-openai,gemini,groq,cohere}"
+      AI_ATTACHMENT_EXTRACTION_PROVIDER_PRIORITY: "${AI_ATTACHMENT_EXTRACTION_PROVIDER_PRIORITY:-openai,gemini}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OPENAI_API_URL: "${OPENAI_API_URL:-https://api.openai.com/v1}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-gpt-4o-mini}"
+      OPENAI_FEEDBACK_MODEL: "${OPENAI_FEEDBACK_MODEL:-gpt-4o-mini}"
+      OPENAI_JSON_MODE_FALLBACK: "${OPENAI_JSON_MODE_FALLBACK:-true}"
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      GEMINI_API_URL: "${GEMINI_API_URL:-https://generativelanguage.googleapis.com/v1beta}"
+      GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.6-flash}"
+      GROQ_API_KEY: "${GROQ_API_KEY:-}"
+      GROQ_API_URL: "${GROQ_API_URL:-https://api.groq.com/openai/v1}"
+      GROQ_MODEL: "${GROQ_MODEL:-openai/gpt-oss-20b}"
+      COHERE_API_KEY: "${COHERE_API_KEY:-}"
+      COHERE_API_URL: "${COHERE_API_URL:-https://api.cohere.com/v2/chat}"
+      COHERE_MODEL: "${COHERE_MODEL:-command-r7b-12-2024}"
+      ELEVENLABS_API_KEY: "${ELEVENLABS_API_KEY:-}"
+      AI_TTS_ENABLED: "${AI_TTS_ENABLED:-false}"
+      AI_TTS_PROVIDER: "${AI_TTS_PROVIDER:-openai}"
+      AI_TTS_TIMEOUT: "${AI_TTS_TIMEOUT:-30}"
+      GEMINI_TTS_MODEL: "${GEMINI_TTS_MODEL:-gemini-3.1-flash-tts-preview}"
+      GEMINI_TTS_VOICE: "${GEMINI_TTS_VOICE:-Kore}"
+      GEMINI_TTS_STYLE: "${GEMINI_TTS_STYLE:-Say in a warm, clear, professional interviewer voice with natural English pronunciation and steady pacing}"
+      OPENAI_TTS_MODEL: "${OPENAI_TTS_MODEL:-gpt-4o-mini-tts}"
+      OPENAI_TTS_VOICE: "${OPENAI_TTS_VOICE:-alloy}"
+      OPENAI_TTS_SPEED: "${OPENAI_TTS_SPEED:-0.95}"
+      ELEVENLABS_API_URL: "${ELEVENLABS_API_URL:-https://api.elevenlabs.io/v1}"
+      ELEVENLABS_TTS_MODEL: "${ELEVENLABS_TTS_MODEL:-eleven_multilingual_v2}"
+      ELEVENLABS_TTS_VOICE_ID: "${ELEVENLABS_TTS_VOICE_ID:-XrExE9yKIg1WjnnlVkGX}"
+      ELEVENLABS_TTS_OUTPUT_FORMAT: "${ELEVENLABS_TTS_OUTPUT_FORMAT:-mp3_44100_128}"
+      ELEVENLABS_TTS_LANGUAGE_CODE: "${ELEVENLABS_TTS_LANGUAGE_CODE:-}"
+      ELEVENLABS_TTS_STABILITY: "${ELEVENLABS_TTS_STABILITY:-0.45}"
+      ELEVENLABS_TTS_SIMILARITY_BOOST: "${ELEVENLABS_TTS_SIMILARITY_BOOST:-0.75}"
+      ELEVENLABS_TTS_STYLE: "${ELEVENLABS_TTS_STYLE:-0.15}"
+      ELEVENLABS_TTS_SPEAKER_BOOST: "${ELEVENLABS_TTS_SPEAKER_BOOST:-true}"
+      AI_TRANSCRIPTION_PROVIDER_PRIORITY: "${AI_TRANSCRIPTION_PROVIDER_PRIORITY:-openai,gemini}"
+      OPENAI_TRANSCRIPTION_MODEL: "${OPENAI_TRANSCRIPTION_MODEL:-gpt-transcribe}"
+      GEMINI_TRANSCRIPTION_MODEL: "${GEMINI_TRANSCRIPTION_MODEL:-gemini-3.6-flash}"
+      AI_TRANSCRIPTION_TIMEOUT: "${AI_TRANSCRIPTION_TIMEOUT:-45}"
+      AI_TRANSCRIPTION_CHUNK_MS: "${AI_TRANSCRIPTION_CHUNK_MS:-1200}"
+      AI_TRANSCRIPTION_MOBILE_CHUNK_MS: "${AI_TRANSCRIPTION_MOBILE_CHUNK_MS:-1500}"
+      AI_TRANSCRIPTION_DRAIN_TIMEOUT_MS: "${AI_TRANSCRIPTION_DRAIN_TIMEOUT_MS:-20000}"
+      AI_TRANSCRIPTION_REQUEST_TIMEOUT_MS: "${AI_TRANSCRIPTION_REQUEST_TIMEOUT_MS:-30000}"
+      AI_TRANSCRIPTION_MAX_IN_FLIGHT: "${AI_TRANSCRIPTION_MAX_IN_FLIGHT:-2}"
+      AI_TRANSCRIPTION_RATE_LIMIT_COOLDOWN_SECONDS: "${AI_TRANSCRIPTION_RATE_LIMIT_COOLDOWN_SECONDS:-90}"
+      LOCAL_SPEECH_ENABLED: "${LOCAL_SPEECH_ENABLED:-false}"
+      QUESTION_RECOMMENDER_PYTHON: "${QUESTION_RECOMMENDER_PYTHON:-/opt/speakready-python/bin/python}"
+      LOCAL_SPEECH_PYTHON: "${LOCAL_SPEECH_PYTHON:-/opt/speakready-python/bin/python}"
+      LOCAL_FEEDBACK_MODEL_PYTHON: "${LOCAL_FEEDBACK_MODEL_PYTHON:-/opt/speakready-python/bin/python}"
+      LOCAL_SPEECH_SCRIPT: "${LOCAL_SPEECH_SCRIPT:-scripts/local_speech_assess.py}"
+      LOCAL_SPEECH_TIMEOUT: "${LOCAL_SPEECH_TIMEOUT:-90}"
+      LOCAL_ASR_BACKEND: "${LOCAL_ASR_BACKEND:-whisper}"
+      LOCAL_ASR_MODEL: "${LOCAL_ASR_MODEL:-base}"
+      LOCAL_ASR_DEVICE: "${LOCAL_ASR_DEVICE:-auto}"
+      LOCAL_PRONUNCIATION_BACKEND: "${LOCAL_PRONUNCIATION_BACKEND:-ctc}"
+      LOCAL_PRONUNCIATION_MODEL: "${LOCAL_PRONUNCIATION_MODEL:-facebook/wav2vec2-base-960h}"
+      LOCAL_ALIGNMENT_BACKEND: "${LOCAL_ALIGNMENT_BACKEND:-mfa}"
+      MFA_COMMAND: "${MFA_COMMAND:-mfa}"
+      MFA_DICTIONARY: "${MFA_DICTIONARY:-}"
+      MFA_ACOUSTIC_MODEL: "${MFA_ACOUSTIC_MODEL:-}"
+      FFMPEG_COMMAND: "${FFMPEG_COMMAND:-ffmpeg}"
+      LOCAL_GOP_BACKEND: "${LOCAL_GOP_BACKEND:-mfa}"
+      LOCAL_GOP_COMMAND: "${LOCAL_GOP_COMMAND:-}"
+      LOCAL_FEEDBACK_MODEL_ENABLED: "${LOCAL_FEEDBACK_MODEL_ENABLED:-false}"
+      LOCAL_FEEDBACK_MODEL_TRAIN_SCRIPT: "${LOCAL_FEEDBACK_MODEL_TRAIN_SCRIPT:-scripts/train_feedback_model.py}"
+      LOCAL_FEEDBACK_MODEL_PREDICT_SCRIPT: "${LOCAL_FEEDBACK_MODEL_PREDICT_SCRIPT:-scripts/predict_feedback.py}"
+      LOCAL_FEEDBACK_MODEL_PATH: "${LOCAL_FEEDBACK_MODEL_PATH:-storage/app/private/models/feedback/latest/model.json}"
+      LOCAL_FEEDBACK_MODEL_TIMEOUT: "${LOCAL_FEEDBACK_MODEL_TIMEOUT:-20}"
+      LOCAL_FEEDBACK_MODEL_TRAINING_TIMEOUT: "${LOCAL_FEEDBACK_MODEL_TRAINING_TIMEOUT:-300}"
+      LOCAL_FEEDBACK_MODEL_AUTO_TRAIN: "${LOCAL_FEEDBACK_MODEL_AUTO_TRAIN:-false}"
+      LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_TIME: "${LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_TIME:-02:30}"
+      LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_DATASET: "${LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_DATASET:-normalized/training/feedback_train.jsonl}"
+      LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_STATUSES: "${LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_STATUSES:-approved,archived}"
+      LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_MIN_EXAMPLES: "${LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_MIN_EXAMPLES:-100}"
+      LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_EPOCHS: "${LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_EPOCHS:-80}"
+      QUESTION_RECOMMENDER_ENABLED: "${QUESTION_RECOMMENDER_ENABLED:-true}"
+      QUESTION_RECOMMENDER_SCRIPT: "${QUESTION_RECOMMENDER_SCRIPT:-scripts/recommend_interview_question.py}"
+      QUESTION_RERANK_SCRIPT: "${QUESTION_RERANK_SCRIPT:-scripts/rerank_question_candidates.py}"
+      QUESTION_RERANK_SERVER_SCRIPT: "${QUESTION_RERANK_SERVER_SCRIPT:-scripts/serve_question_reranker.py}"
+      QUESTION_RERANK_SERVER_ENABLED: "${QUESTION_RERANK_SERVER_ENABLED:-true}"
+      QUESTION_RERANK_ENDPOINT: "${QUESTION_RERANK_ENDPOINT:-http://127.0.0.1:8765/rerank}"
+      QUESTION_RERANK_SERVER_HOST: "${QUESTION_RERANK_SERVER_HOST:-127.0.0.1}"
+      QUESTION_RERANK_SERVER_PORT: "${QUESTION_RERANK_SERVER_PORT:-8765}"
+      QUESTION_RERANK_SERVER_TIMEOUT: "${QUESTION_RERANK_SERVER_TIMEOUT:-3}"
+      QUESTION_EMBEDDING_INDEX_PATH: "${QUESTION_EMBEDDING_INDEX_PATH:-storage/app/private/datasets/embeddings/questions/latest/question_embeddings.json}"
+      QUESTION_EMBEDDING_BACKEND: "${QUESTION_EMBEDDING_BACKEND:-sentence-bert}"
+      QUESTION_EMBEDDING_BUILD_TIMEOUT: "${QUESTION_EMBEDDING_BUILD_TIMEOUT:-3600}"
+      QUESTION_RECOMMENDER_TIMEOUT: "${QUESTION_RECOMMENDER_TIMEOUT:-120}"
+      QUESTION_TRAINED_MODEL_ENABLED: "${QUESTION_TRAINED_MODEL_ENABLED:-true}"
+      QUESTION_TRAINED_MODEL_PATH: "${QUESTION_TRAINED_MODEL_PATH:-storage/app/private/models/questions/latest/trained_model}"
+      QUESTION_TRAINED_MODEL_LABEL_MAP_PATH: "${QUESTION_TRAINED_MODEL_LABEL_MAP_PATH:-storage/app/private/models/questions/latest/trained_model/speakready_question_labels.json}"
+      QUESTION_TRAINED_MODEL_TIMEOUT: "${QUESTION_TRAINED_MODEL_TIMEOUT:-120}"
+      QUESTION_TRAINED_MODEL_PROCESS_FALLBACK: "${QUESTION_TRAINED_MODEL_PROCESS_FALLBACK:-false}"
+      QUESTION_AI_PROVIDER_RERANK_ENABLED: "${QUESTION_AI_PROVIDER_RERANK_ENABLED:-true}"
+      QUESTION_AI_PROVIDER_RERANK_TIMEOUT: "${QUESTION_AI_PROVIDER_RERANK_TIMEOUT:-8}"
+      QUESTION_AI_PROVIDER_RERANK_ATTEMPTS: "${QUESTION_AI_PROVIDER_RERANK_ATTEMPTS:-1}"
+      QUESTION_AI_PROVIDER_RERANK_CANDIDATE_LIMIT: "${QUESTION_AI_PROVIDER_RERANK_CANDIDATE_LIMIT:-18}"
+      QUESTION_AI_PROVIDER_RERANK_PRIORITY: "${QUESTION_AI_PROVIDER_RERANK_PRIORITY:-openai,gemini,groq,cohere}"
+      QUESTION_RECOMMENDER_CANDIDATE_POOL_LIMIT: "${QUESTION_RECOMMENDER_CANDIDATE_POOL_LIMIT:-120}"
+      QUESTION_RECOMMENDER_CANDIDATE_POOL_MULTIPLIER: "${QUESTION_RECOMMENDER_CANDIDATE_POOL_MULTIPLIER:-8}"
+      QUESTION_GENERATION_RAG_ENABLED: "${QUESTION_GENERATION_RAG_ENABLED:-true}"
+      QUESTION_GENERATION_RAG_EXAMPLE_LIMIT: "${QUESTION_GENERATION_RAG_EXAMPLE_LIMIT:-6}"
+      AI_FEEDBACK_TIMEOUT: "${AI_FEEDBACK_TIMEOUT:-6}"
+      AI_FEEDBACK_DEADLINE_SECONDS: "${AI_FEEDBACK_DEADLINE_SECONDS:-10}"
+      AI_FEEDBACK_MAX_PROVIDERS: "${AI_FEEDBACK_MAX_PROVIDERS:-2}"
+      AI_FEEDBACK_ATTEMPTS: "${AI_FEEDBACK_ATTEMPTS:-1}"
+      AI_FEEDBACK_HTTP_ATTEMPTS: "${AI_FEEDBACK_HTTP_ATTEMPTS:-1}"
+      AI_FEEDBACK_RETRY_DELAY_MS: "${AI_FEEDBACK_RETRY_DELAY_MS:-100}"
+      AI_VOICE_ANALYSIS_TIMEOUT: "${AI_VOICE_ANALYSIS_TIMEOUT:-12}"
+      AI_VOICE_ANALYSIS_MAX_PROVIDERS: "${AI_VOICE_ANALYSIS_MAX_PROVIDERS:-2}"
+      AI_VOICE_ANALYSIS_HTTP_ATTEMPTS: "${AI_VOICE_ANALYSIS_HTTP_ATTEMPTS:-1}"
+      AI_PROVIDER_TIMEOUT: "${AI_PROVIDER_TIMEOUT:-45}"
+      AI_PROVIDER_CONNECT_TIMEOUT: "${AI_PROVIDER_CONNECT_TIMEOUT:-5}"
+      AI_PROVIDER_RETRIES: "${AI_PROVIDER_RETRIES:-2}"
+      AI_PROVIDER_RETRY_DELAY_MS: "${AI_PROVIDER_RETRY_DELAY_MS:-250}"
+      AI_JSON_MAX_TOKENS: "${AI_JSON_MAX_TOKENS:-4096}"
+      AI_CHAT_MAX_TOKENS: "${AI_CHAT_MAX_TOKENS:-1000}"
+    volumes:
+      - speakready_storage:/var/www/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:$${PORT:-10000}/up || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      - "traefik.http.routers.speakreadyai.rule=Host(`speakreadyai.online`)"
+      - "traefik.http.routers.speakreadyai.entrypoints=websecure"
+      - "traefik.http.routers.speakreadyai.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.speakreadyai.service=speakreadyai"
+      - "traefik.http.services.speakreadyai.loadbalancer.server.port=10000"
+    networks:
+      - dokploy-network
+      - speakready-internal
+
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: "${DB_DATABASE:-speakready_ai}"
+      MYSQL_USER: "${DB_USERNAME:-speakready}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - speakready_database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - speakready-internal
+
+volumes:
+  speakready_storage:
+  speakready_database:
+
+networks:
+  dokploy-network:
+    external: true
+  speakready-internal:
+    internal: true

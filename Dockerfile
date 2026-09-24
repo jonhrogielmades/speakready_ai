@@ -1,13 +1,24 @@
 FROM php:8.2-fpm
 
 ARG NODE_MAJOR=22
+ARG INSTALL_PYTHON_ML_DEPS=true
 ENV PORT=10000
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV SPEAKREADY_PYTHON=/opt/speakready-python/bin/python
+ENV LOCAL_SPEECH_PYTHON=/opt/speakready-python/bin/python
+ENV LOCAL_FEEDBACK_MODEL_PYTHON=/opt/speakready-python/bin/python
+ENV QUESTION_RECOMMENDER_PYTHON=/opt/speakready-python/bin/python
+ENV PATH="/opt/speakready-python/bin:${PATH}"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    build-essential \
     git \
     curl \
     ca-certificates \
+    ffmpeg \
+    libgomp1 \
     libcurl4-openssl-dev \
     libpng-dev \
     libonig-dev \
@@ -18,6 +29,9 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nginx \
     dos2unix \
+    python3 \
+    python3-pip \
+    python3-venv \
     && curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -60,9 +74,19 @@ COPY composer.json composer.lock ./
 # Fix any Windows line ending issues safely
 RUN dos2unix composer.json composer.lock || true
 
-# Install dependencies without memory limits and ignore platform reqs (failsafe)
+# Install production PHP dependencies without memory limits.
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN php -d memory_limit=-1 /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts --ignore-platform-reqs
+RUN php -d memory_limit=-1 /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts
+
+# Install the optional local Python runtime used by question recommendation and
+# local model helpers. Keep it in a venv so Laravel can reference a stable path.
+COPY requirements-question-recommender.txt ./
+RUN python3 -m venv /opt/speakready-python \
+    && /opt/speakready-python/bin/python -m pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && if [ "$INSTALL_PYTHON_ML_DEPS" = "true" ]; then \
+        /opt/speakready-python/bin/python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch; \
+        /opt/speakready-python/bin/python -m pip install --no-cache-dir -r requirements-question-recommender.txt; \
+    fi
 
 # Install frontend dependencies separately so Docker can cache them between app code changes.
 COPY package.json package-lock.json ./
@@ -74,6 +98,11 @@ ENV LOG_EMERGENCY_PATH=php://stderr
 
 # Copy existing application directory contents
 COPY . /var/www
+
+# Preserve bundled private datasets/models for first-run persistent volume seeding.
+# A named volume mounted at /var/www/storage starts empty and hides image files.
+RUN mkdir -p /var/www/storage-seed \
+    && cp -a /var/www/storage/. /var/www/storage-seed/
 
 # Build production frontend assets inside the image. public/build is intentionally
 # ignored by Git/Docker context, so the image build needs this step.
