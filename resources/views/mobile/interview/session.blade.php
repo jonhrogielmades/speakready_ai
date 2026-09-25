@@ -118,8 +118,8 @@
  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150 interview-panel-actions" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
  <!-- Left: Navigation / Secondary -->
  <div class="d-flex gap-2 w-100 flex-fill">
- <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question">Repeat</button>
- <button type="button" class="btn btn-outline-danger flex-fill" onclick="requestAbortInterviewSession()" style="border-radius:12px;" aria-label="End session" title="End session">End Session</button>
+ <button type="button" class="btn btn-outline-info flex-fill session-action-btn session-repeat-btn" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question">Repeat</button>
+ <button type="button" class="btn btn-outline-danger flex-fill session-action-btn session-end-btn" onclick="requestAbortInterviewSession()" style="border-radius:12px;" aria-label="End session" title="End session">End Session</button>
  </div>
  
  </div>
@@ -128,8 +128,8 @@
  <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
  <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
  <div class="d-flex gap-2">
- <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i></button>
- <button type="button" id="micStopBtn" class="btn btn-secondary" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
+ <button type="button" id="micPauseBtn" class="btn btn-warning voice-action-btn voice-start-pause-btn" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i><span class="voice-action-label">Pause</span></button>
+ <button type="button" id="micStopBtn" class="btn btn-secondary voice-action-btn voice-stop-btn" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i><span class="voice-action-label">Stop</span></button>
  </div>
  </div>
  <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
@@ -4446,7 +4446,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  if (pauseBtn) {
  pauseBtn.style.display = 'inline-flex';
- pauseBtn.innerHTML = isIdle? '<i class="fa-solid fa-microphone"></i>': (isPaused? '<i class="fa-solid fa-play"></i>': '<i class="fa-solid fa-pause"></i>');
+ const pauseIcon = isIdle? 'fa-microphone': (isPaused? 'fa-play': 'fa-pause');
+ const pauseText = isIdle? 'Start': (isPaused? 'Resume': 'Pause');
+ pauseBtn.innerHTML = `<i class="fa-solid ${pauseIcon}"></i><span class="voice-action-label">${pauseText}</span>`;
  const pauseLabel = isIdle? 'Start recording': (isPaused? 'Resume recording': 'Pause recording');
  pauseBtn.setAttribute('aria-label', pauseLabel);
  pauseBtn.setAttribute('title', pauseLabel);
@@ -4458,6 +4460,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  stopBtn.classList.toggle('voice-control-disabled', isIdle);
  stopBtn.setAttribute('aria-label', 'Stop recording');
  stopBtn.setAttribute('title', 'Stop recording');
+ stopBtn.innerHTML = '<i class="fa-solid fa-stop"></i><span class="voice-action-label">Stop</span>';
  }
  if (timer) timer.style.display = 'block';
  }
