@@ -4774,67 +4774,92 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
 html body #sec-interview-session .ai-avatar-panel #interviewControls .session-action-btn {
     flex: 0 0 auto !important;
     width: auto !important;
-    min-width: 112px !important;
+    min-width: 106px !important;
     max-width: none !important;
-    height: 50px !important;
-    min-height: 50px !important;
-    max-height: 50px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
     padding: 0 18px !important;
-    border-radius: 12px !important;
+    border: none !important;
+    border-radius: 10px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
-    font-size: 0.9rem !important;
+    font-size: 0.84rem !important;
     font-weight: 800 !important;
-    line-height: 1 !important;
+    line-height: 1.1 !important;
     white-space: nowrap !important;
+    box-shadow: 0 4px 15px rgba(96, 165, 250, 0.28) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #sec-interview-session .ai-avatar-panel #interviewControls .session-repeat-btn {
+    background: var(--dash-primary, #2563eb) !important;
 }
 
 html body #sec-interview-session .ai-avatar-panel #interviewControls .session-end-btn {
-    min-width: 136px !important;
+    min-width: 126px !important;
+    background: #e11d48 !important;
+    box-shadow: 0 4px 15px rgba(225, 29, 72, 0.28) !important;
 }
 
 @media (max-width: 575.98px) {
     html body #sec-interview-session .ai-avatar-panel #interviewControls .session-action-btn {
-        min-width: 94px !important;
-        height: 42px !important;
-        min-height: 42px !important;
-        max-height: 42px !important;
-        padding: 0 12px !important;
-        border-radius: 10px !important;
-        font-size: 0.76rem !important;
+        min-width: 88px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+        padding: 0 11px !important;
+        font-size: 0.72rem !important;
     }
 
     html body #sec-interview-session .ai-avatar-panel #interviewControls .session-end-btn {
-        min-width: 112px !important;
+        min-width: 104px !important;
     }
 }
 
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-action-btn {
     flex: 0 0 auto !important;
     width: auto !important;
-    min-width: 106px !important;
+    min-width: 102px !important;
     max-width: none !important;
-    height: 50px !important;
-    min-height: 50px !important;
-    max-height: 50px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
     padding: 0 16px !important;
-    border-radius: 12px !important;
+    border: none !important;
+    border-radius: 10px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 8px !important;
     box-sizing: border-box !important;
-    font-size: 0.88rem !important;
+    font-size: 0.84rem !important;
     font-weight: 800 !important;
-    line-height: 1 !important;
+    line-height: 1.1 !important;
     white-space: nowrap !important;
+    box-shadow: 0 4px 15px rgba(96, 165, 250, 0.28) !important;
+}
+
+html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-start-pause-btn {
+    background: #facc15 !important;
+    color: #111827 !important;
+    -webkit-text-fill-color: #111827 !important;
+    box-shadow: 0 4px 15px rgba(250, 204, 21, 0.26) !important;
+}
+
+html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-stop-btn {
+    background: #64748b !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.28) !important;
 }
 
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-action-btn i {
     margin: 0 !important;
-    font-size: 0.92rem !important;
+    font-size: 0.88rem !important;
 }
 
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-action-label {
@@ -4843,13 +4868,12 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
 
 @media (max-width: 575.98px) {
     html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-action-btn {
-        min-width: 88px !important;
-        height: 42px !important;
-        min-height: 42px !important;
-        max-height: 42px !important;
-        padding: 0 12px !important;
-        border-radius: 10px !important;
+        min-width: 78px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+        padding: 0 10px !important;
         gap: 6px !important;
-        font-size: 0.76rem !important;
+        font-size: 0.72rem !important;
     }
 }
