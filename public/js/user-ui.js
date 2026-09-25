@@ -1157,15 +1157,11 @@
             var contentScripts = Array.from(nextContent.querySelectorAll('script'));
             var nextPageStyles = collectPageStyles(doc, html);
             var stylePromise = appendRuntimePageStyles(nextPageStyles, token);
+            await stylePromise;
             if (token !== userApp.navigationToken) {
                 discardRuntimePageStylesForToken(token);
                 return;
             }
-            stylePromise.then(function () {
-                if (token !== userApp.navigationToken) {
-                    discardRuntimePageStylesForToken(token);
-                }
-            });
 
             cleanupUserPageRuntime({ preserveStyles: true });
             pruneRuntimePageStyles(nextPageStyles.map(getPageStyleKey));

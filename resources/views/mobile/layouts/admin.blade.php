@@ -2682,7 +2682,7 @@
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <script src="{{ asset('js/main.js?v=7') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=20" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=21" defer></script>
 
       <script>
          function toggleMobileProfile(e, mode = 'pages') {
