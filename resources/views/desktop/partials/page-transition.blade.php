@@ -281,7 +281,6 @@
                 '/learning',
                 '/skills',
                 '/missions',
-                '/drills/voice',
                 '/personal-mastery',
                 '/modules',
                 '/game/match',

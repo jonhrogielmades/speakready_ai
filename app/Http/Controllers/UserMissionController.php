@@ -2,27 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\VoiceSession;
-use App\Support\VoiceSessionSchema;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 
 class UserMissionController extends Controller
 {
     public function index()
     {
-        VoiceSessionSchema::ensure(createIfMissing: true);
-
-        $recentVoiceSessions = VoiceSession::where('user_id', Auth::id())
-            ->latest()
-            ->take(5)
-            ->get();
-        $practiceSessionCount = VoiceSession::where('user_id', Auth::id())->count();
         $missions = $this->missionsForGoal();
 
-        return $this->mobileView('user.missions', compact('missions', 'recentVoiceSessions', 'practiceSessionCount'));
+        return $this->mobileView('user.missions', compact('missions'));
     }
 
     public function generate(Request $request): JsonResponse

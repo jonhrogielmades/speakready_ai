@@ -97,9 +97,9 @@
                     <p class="mastery-kicker">Weakness to drill</p>
                     <h6>Recommended practice</h6>
                 </div>
-                <a class="mastery-mini-link" href="{{ route('user.drills.voice') }}">
-                    <i class="fa-solid fa-ear-listen"></i>
-                    <span>Voice</span>
+                <a class="mastery-mini-link" href="{{ route('user.missions') }}">
+                    <i class="fa-solid fa-route"></i>
+                    <span>Missions</span>
                 </a>
             </div>
             <div class="mastery-list">
@@ -238,7 +238,7 @@
                 <div class="mastery-review-grid">
                     @foreach([
                         ['Assessments', $weeklyReview['assessments']],
-                        ['Voice drills', $weeklyReview['voice_drills']],
+                        ['Practice tasks', $weeklyReview['practice_tasks']],
                         ['Stories saved', $weeklyReview['stories']],
                         ['Prep done', $weeklyReview['completed_prep']],
                     ] as [$label, $value])

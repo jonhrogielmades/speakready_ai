@@ -621,6 +621,8 @@
             let voiceActive = false;
             let voiceBaseText = '';
             let voiceFinalText = '';
+            let voiceLastFinalText = '';
+            let voiceLastFinalAt = 0;
             let voiceStopRequested = false;
             const chatHistory = [];
 
@@ -667,7 +669,120 @@
             }
 
             function voiceText(...segments) {
-                return segments.map(voiceSegment).filter(Boolean).join(' ');
+                let merged = '';
+                segments.forEach(segment => {
+                    const clean = voiceSegment(segment);
+                    if (clean) merged = appendVoiceWithoutOverlap(merged, clean);
+                });
+                return collapseRepeatedVoice(merged);
+            }
+
+            function voiceWords(value) {
+                const clean = voiceSegment(value);
+                return clean ? clean.split(/\s+/).filter(Boolean) : [];
+            }
+
+            function normalizeVoiceWord(value) {
+                return String(value || '').toLocaleLowerCase().replace(/^[.,!?;:"'`()[\]{}<>]+|[.,!?;:"'`()[\]{}<>]+$/g, '');
+            }
+
+            function normalizedVoiceWords(value) {
+                return voiceWords(value).map(normalizeVoiceWord).filter(Boolean);
+            }
+
+            function voiceWordsEqualAt(words, start, comparison) {
+                for (let offset = 0; offset < comparison.length; offset += 1) {
+                    if (words[start + offset] !== comparison[offset]) return false;
+                }
+                return true;
+            }
+
+            function isRecentVoiceDuplicate(existingNormalized, additionNormalized) {
+                if (!additionNormalized.length || additionNormalized.length > existingNormalized.length) return false;
+
+                const additionChars = additionNormalized.join('').length;
+                if (additionNormalized.length < 2 && additionChars < 8) return false;
+
+                const scanSize = Math.min(existingNormalized.length, Math.max(64, additionNormalized.length + 24));
+                const scanStart = Math.max(0, existingNormalized.length - scanSize);
+
+                for (let start = scanStart; start <= existingNormalized.length - additionNormalized.length; start += 1) {
+                    if (voiceWordsEqualAt(existingNormalized, start, additionNormalized)) return true;
+                }
+
+                return false;
+            }
+
+            function appendVoiceWithoutOverlap(existing, addition) {
+                const existingClean = voiceSegment(existing);
+                const additionClean = voiceSegment(addition);
+                if (!existingClean) return additionClean;
+                if (!additionClean) return existingClean;
+
+                const additionWords = voiceWords(additionClean);
+                const existingNormalized = normalizedVoiceWords(existingClean);
+                const additionNormalized = normalizedVoiceWords(additionClean);
+
+                if (isRecentVoiceDuplicate(existingNormalized, additionNormalized)) {
+                    return existingClean;
+                }
+
+                const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, 24);
+                let overlap = 0;
+
+                for (let size = maxOverlap; size > 0; size -= 1) {
+                    const existingTail = existingNormalized.slice(existingNormalized.length - size).join(' ');
+                    const additionHead = additionNormalized.slice(0, size).join(' ');
+                    if (existingTail && existingTail === additionHead) {
+                        overlap = size;
+                        break;
+                    }
+                }
+
+                const remainder = additionWords.slice(overlap).join(' ');
+                return voiceSegment(existingClean + (remainder ? ' ' + remainder : ''));
+            }
+
+            function collapseRepeatedVoice(text) {
+                const words = voiceWords(text);
+                if (words.length < 2) return voiceSegment(text);
+
+                let index = 0;
+                while (index < words.length) {
+                    let collapsed = false;
+                    const maxWindow = Math.min(8, Math.floor((words.length - index) / 2));
+
+                    for (let size = maxWindow; size >= 1; size -= 1) {
+                        const first = words.slice(index, index + size).map(normalizeVoiceWord).join(' ');
+                        const second = words.slice(index + size, index + (size * 2)).map(normalizeVoiceWord).join(' ');
+
+                        if (first && first === second && (size > 1 || first.length > 2)) {
+                            words.splice(index + size, size);
+                            index = Math.max(0, index - size);
+                            collapsed = true;
+                            break;
+                        }
+                    }
+
+                    if (!collapsed) index += 1;
+                }
+
+                return voiceSegment(words.join(' '));
+            }
+
+            function appendFinalVoiceTranscript(transcript) {
+                const cleanTranscript = collapseRepeatedVoice(transcript);
+                if (!cleanTranscript) return;
+
+                const normalized = normalizedVoiceWords(cleanTranscript).join(' ');
+                const now = Date.now();
+                if (normalized && normalized === voiceLastFinalText && (now - voiceLastFinalAt) < 5000) {
+                    return;
+                }
+
+                voiceFinalText = appendVoiceWithoutOverlap(voiceFinalText, cleanTranscript);
+                voiceLastFinalText = normalized;
+                voiceLastFinalAt = now;
             }
 
             function setVoiceState(isActive) {
@@ -714,7 +829,7 @@
                         const transcript = result?.[0]?.transcript || '';
 
                         if (result.isFinal) {
-                            voiceFinalText = voiceText(voiceFinalText, transcript);
+                            appendFinalVoiceTranscript(transcript);
                         } else {
                             interimText = voiceText(interimText, transcript);
                         }
@@ -763,6 +878,8 @@
                 const recognition = ensureVoiceRecognition();
                 voiceBaseText = textarea?.value.trim() || '';
                 voiceFinalText = '';
+                voiceLastFinalText = '';
+                voiceLastFinalAt = 0;
                 voiceStopRequested = false;
                 recognition.lang = voiceLocale();
 

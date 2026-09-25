@@ -348,7 +348,7 @@
             font-weight: 900 !important;
         }
 
-        #mission-mode-page :is(.mission-kicker, .mission-generator-status, .mission-card-copy, .mission-recent-meta) {
+        #mission-mode-page :is(.mission-kicker, .mission-generator-status, .mission-card-copy) {
             font-size: 0.7rem !important;
             line-height: 1.34 !important;
         }
@@ -538,16 +538,6 @@
             margin: 0 !important;
         }
 
-        #mission-mode-page .mission-recent-list {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 8px !important;
-        }
-
-        #mission-mode-page .mission-recent-item {
-            padding: 9px 10px !important;
-            border-radius: 10px !important;
-        }
     }
 
     @media (min-width: 992px) and (max-width: 1320px) {
@@ -567,8 +557,7 @@
             min-height: 112px !important;
         }
 
-        #mission-mode-page .mission-feedback-list,
-        #mission-mode-page .mission-recent-list {
+        #mission-mode-page .mission-feedback-list {
             grid-template-columns: minmax(0, 1fr) !important;
         }
     }

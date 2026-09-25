@@ -43,7 +43,7 @@
                         <div class="mission-kicker">Generate tasks from what you want to practice, then measure how ready your answer sounds.</div>
                     </div>
                 </div>
-                <span class="mission-pill" style="--pill-color:#16a34a"><i class="fa-solid fa-microphone-lines"></i>{{ $practiceSessionCount }} saved sessions</span>
+                <span class="mission-pill" style="--pill-color:#16a34a"><i class="fa-solid fa-route"></i>{{ $missions->count() }} task types</span>
             </div>
 
             <div class="mission-generator">
@@ -78,7 +78,6 @@
             <div class="mission-actions">
                 <button type="button" class="mission-btn" id="missionTimerBtn"><i class="fa-regular fa-clock"></i><span id="missionTimerText">Start 0:00</span></button>
                 <button type="button" class="mission-btn mission-btn-primary" id="scoreMissionBtn"><i class="fa-solid fa-chart-simple"></i>Score Answer</button>
-                <button type="button" class="mission-btn" id="voiceMissionBtn"><i class="fa-solid fa-microphone-lines"></i>Practice With Voice</button>
                 <button type="button" class="mission-btn" id="clearMissionBtn"><i class="fa-solid fa-eraser"></i>Clear</button>
             </div>
         </aside>
@@ -104,61 +103,6 @@
         </div>
     </section>
 
-    @if($recentVoiceSessions->isNotEmpty())
-        <section class="mission-panel">
-            <div class="mission-panel-head">
-                <div>
-                    <h5 class="mission-title"><i class="fa-solid fa-clock-rotate-left me-2" style="color:#f59e0b;"></i>Recent Voice Practice</h5>
-                    <div class="mission-kicker">Latest saved rehearsals that can support mission progress.</div>
-                </div>
-                <a href="{{ route('user.drills.voice') }}" class="mission-btn" style="min-height:36px;padding:7px 11px;"><i class="fa-solid fa-arrow-right"></i>Open Voice</a>
-            </div>
-            <div class="mission-recent-list">
-                @foreach($recentVoiceSessions as $session)
-                    <div class="mission-recent-item">
-                        <div>
-                            <div class="mission-recent-title">{{ $session->practice_scenario }}</div>
-                            <div class="mission-recent-meta">{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }} · {{ $session->wpm ?? 0 }} WPM · {{ $session->filler_words ?? 0 }} fillers</div>
-                        </div>
-                        <span class="mission-pill" style="--pill-color:#16a34a">{{ $session->clarity_score ?? 0 }}%</span>
-                    </div>
-                @endforeach
-            </div>
-        </section>
-    @endif
-</div>
-
-<div class="modal fade mission-voice-modal" id="missionVoiceModal" tabindex="-1" aria-labelledby="missionVoiceModalTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <h5 class="modal-title" id="missionVoiceModalTitle">Mission Voice Practice</h5>
-                    <div class="mission-voice-status" id="missionVoiceStatus">Listen to the mission, then record your spoken answer.</div>
-                </div>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <div class="mission-kicker mb-2">Mission Question</div>
-                    <div class="mission-voice-prompt" id="missionVoicePrompt">Generate or select a mission first.</div>
-                </div>
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <button type="button" class="mission-btn mission-btn-primary" id="speakMissionBtn" style="min-height:38px;padding:8px 12px;"><i class="fa-solid fa-volume-high"></i>AI Speak Mission</button>
-                    <button type="button" class="mission-btn" id="startMissionVoiceBtn" style="min-height:38px;padding:8px 12px;"><i class="fa-solid fa-microphone"></i>Start Voice</button>
-                    <button type="button" class="mission-btn" id="stopMissionVoiceBtn" style="min-height:38px;padding:8px 12px;"><i class="fa-solid fa-stop"></i>Stop</button>
-                    <button type="button" class="mission-btn" id="clearMissionVoiceBtn" style="min-height:38px;padding:8px 12px;"><i class="fa-solid fa-eraser"></i>Clear Transcript</button>
-                </div>
-                <div>
-                    <div class="mission-kicker mb-2">Voice Transcript</div>
-                    <div class="mission-voice-transcript" id="missionVoiceTranscript" contenteditable="true">Your spoken answer will appear here...</div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="useMissionVoiceTranscriptBtn"><i class="fa-solid fa-check me-1"></i>Use Transcript</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -167,21 +111,6 @@ const missionGenerateUrl = document.getElementById('generateMissionBtn')?.datase
 let activeMission = missionData[0] || null;
 let missionTimer = null;
 let remainingSeconds = activeMission ? Number(activeMission.duration) || 60 : 60;
-const MissionSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const missionSpeechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
-const missionTranscriptPlaceholder = 'Your spoken answer will appear here...';
-const missionDuplicateSafeWordSet = new Set([
-    'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
-    'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
-]);
-let missionRecognition = null;
-let missionRecognitionActive = false;
-let missionShouldAutoRestart = false;
-let missionRecognitionToken = 0;
-let missionVoiceTranscript = '';
-let missionVoiceInterim = '';
-let missionLastCommittedSpeech = '';
-let missionLastCommittedAt = 0;
 
 function escapeMissionHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -200,104 +129,6 @@ function normalizeMissionText(value) {
 function missionWordCount(value) {
     const clean = normalizeMissionText(value);
     return clean ? clean.split(/\s+/).length : 0;
-}
-
-function cleanMissionTranscriptText(value) {
-    return String(value || '').replace(/\s+/gu, ' ').trim();
-}
-
-function normalizeMissionTranscriptForMatch(value) {
-    return cleanMissionTranscriptText(value)
-        .toLocaleLowerCase(missionSpeechLocale)
-        .replace(/[^\p{L}\p{N}'\u2019\s]/gu, '')
-        .replace(/\s+/gu, ' ')
-        .trim();
-}
-
-function missionWordsForTranscript(value) {
-    return cleanMissionTranscriptText(value).split(/\s+/u).filter(Boolean);
-}
-
-function appendMissionTranscriptWithoutOverlap(existing, addition) {
-    const existingClean = cleanMissionTranscriptText(existing);
-    const additionClean = cleanMissionTranscriptText(addition);
-    if (!existingClean) return additionClean;
-    if (!additionClean) return existingClean;
-
-    const existingWords = missionWordsForTranscript(existingClean);
-    const additionWords = missionWordsForTranscript(additionClean);
-    const existingNormalized = existingWords.map(normalizeMissionTranscriptForMatch);
-    const additionNormalized = additionWords.map(normalizeMissionTranscriptForMatch);
-    const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, 24);
-    let overlap = 0;
-
-    for (let size = maxOverlap; size > 0; size--) {
-        const existingTail = existingNormalized.slice(existingNormalized.length - size).join(' ');
-        const additionHead = additionNormalized.slice(0, size).join(' ');
-        if (existingTail && existingTail === additionHead) {
-            overlap = size;
-            break;
-        }
-    }
-
-    const remainder = additionWords.slice(overlap).join(' ');
-    return cleanMissionTranscriptText(existingClean + (remainder ? ' ' + remainder : ''));
-}
-
-function shouldCollapseMissionDuplicateWindow(size, normalizedPhrase) {
-    if (!normalizedPhrase) return false;
-    if (size >= 2) return true;
-    return Array.from(normalizedPhrase).length > 2 || missionDuplicateSafeWordSet.has(normalizedPhrase);
-}
-
-function collapseRepeatedMissionSpeech(text) {
-    const words = missionWordsForTranscript(text);
-    if (words.length < 2) return cleanMissionTranscriptText(text);
-
-    let index = 0;
-    while (index < words.length) {
-        let collapsed = false;
-        const maxWindow = Math.min(12, Math.floor((words.length - index) / 2));
-
-        for (let size = maxWindow; size >= 1; size--) {
-            const first = words.slice(index, index + size).map(normalizeMissionTranscriptForMatch).join(' ');
-            const second = words.slice(index + size, index + (size * 2)).map(normalizeMissionTranscriptForMatch).join(' ');
-
-            if (first && first === second && shouldCollapseMissionDuplicateWindow(size, first)) {
-                words.splice(index + size, size);
-                index = Math.max(0, index - size);
-                collapsed = true;
-                break;
-            }
-        }
-
-        if (!collapsed) index++;
-    }
-
-    return cleanMissionTranscriptText(words.join(' '));
-}
-
-function mergeMissionTranscriptParts(...parts) {
-    let merged = '';
-    parts.forEach(part => {
-        const clean = cleanMissionTranscriptText(part);
-        if (clean) merged = appendMissionTranscriptWithoutOverlap(merged, clean);
-    });
-    return collapseRepeatedMissionSpeech(merged);
-}
-
-function missionTranscriptEditorText() {
-    const box = document.getElementById('missionVoiceTranscript');
-    const text = cleanMissionTranscriptText(box ? (box.innerText || box.textContent || '') : '');
-    return text === missionTranscriptPlaceholder ? '' : text;
-}
-
-function bestMissionSpeechAlternative(result) {
-    let best = result[0] || null;
-    for (let i = 1; i < result.length; i++) {
-        if ((result[i].confidence || 0) > (best?.confidence || 0)) best = result[i];
-    }
-    return best ? best.transcript : '';
 }
 
 function hasAny(text, terms) {
@@ -452,218 +283,6 @@ function selectMission(id) {
     scoreMission(false);
 }
 
-function setMissionVoiceStatus(message, color = 'var(--tx3)') {
-    const status = document.getElementById('missionVoiceStatus');
-    if (!status) return;
-    status.textContent = message;
-    status.style.color = color;
-}
-
-function missionVoiceText() {
-    if (!activeMission) return '';
-    return `${activeMission.title}. ${activeMission.prompt}`;
-}
-
-function openMissionVoiceModal() {
-    if (!activeMission) {
-        setMissionGeneratorStatus('Generate or select a mission before using voice practice.', '#f59e0b');
-        return;
-    }
-
-    document.getElementById('missionVoiceModalTitle').textContent = `${activeMission.title} Voice Practice`;
-    document.getElementById('missionVoicePrompt').textContent = activeMission.prompt;
-    setMissionVoiceStatus('Listen to the mission, then record your spoken answer.');
-
-    const modalElement = document.getElementById('missionVoiceModal');
-    if (window.bootstrap?.Modal) {
-        bootstrap.Modal.getOrCreateInstance(modalElement).show();
-    } else {
-        modalElement.classList.add('show');
-        modalElement.style.display = 'block';
-        modalElement.removeAttribute('aria-hidden');
-    }
-}
-
-function speakMissionPrompt() {
-    if (!('speechSynthesis' in window)) {
-        setMissionVoiceStatus('Text-to-speech is not supported in this browser.', '#f59e0b');
-        return;
-    }
-
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(missionVoiceText());
-    utterance.lang = 'en-PH';
-    utterance.rate = 0.92;
-    utterance.pitch = 1;
-    utterance.onstart = () => setMissionVoiceStatus('AI is speaking the mission...');
-    utterance.onend = () => setMissionVoiceStatus('Now answer the mission using Start Voice.');
-    utterance.onerror = () => setMissionVoiceStatus('Could not speak the mission in this browser.', '#f59e0b');
-    window.speechSynthesis.speak(utterance);
-}
-
-function commitMissionSpeechSegment(segment) {
-    const cleanSegment = collapseRepeatedMissionSpeech(cleanMissionTranscriptText(segment));
-    if (!cleanSegment) return;
-
-    const normalized = normalizeMissionTranscriptForMatch(cleanSegment);
-    const now = Date.now();
-    if (normalized && normalized === missionLastCommittedSpeech && (now - missionLastCommittedAt) < 5000) return;
-
-    missionVoiceTranscript = collapseRepeatedMissionSpeech(
-        appendMissionTranscriptWithoutOverlap(missionVoiceTranscript, cleanSegment)
-    );
-    missionLastCommittedSpeech = normalized;
-    missionLastCommittedAt = now;
-}
-
-function updateMissionVoiceTranscript() {
-    const box = document.getElementById('missionVoiceTranscript');
-    const text = mergeMissionTranscriptParts(missionVoiceTranscript, missionVoiceInterim);
-    box.textContent = text || missionTranscriptPlaceholder;
-}
-
-function finalizeMissionVoiceInterim() {
-    if (!missionVoiceInterim) return;
-    commitMissionSpeechSegment(missionVoiceInterim);
-    missionVoiceInterim = '';
-    updateMissionVoiceTranscript();
-}
-
-function startMissionVoiceEngine(token = missionRecognitionToken) {
-    if (token !== missionRecognitionToken) return false;
-    if (!missionRecognition || missionRecognitionActive || !missionShouldAutoRestart) return false;
-
-    try {
-        missionRecognition.start();
-        missionRecognitionActive = true;
-        return true;
-    } catch (error) {
-        if (!error || error.name !== 'InvalidStateError') {
-            console.error('Mission voice recognition failed to start:', error);
-            setMissionVoiceStatus('Voice transcription could not start. You can type directly in the transcript box.', '#ef4444');
-        }
-        missionShouldAutoRestart = false;
-        return false;
-    }
-}
-
-function startMissionVoice() {
-    if (!MissionSpeechRecognition) {
-        setMissionVoiceStatus('Voice transcription is not supported in this browser. You can type directly in the transcript box.', '#f59e0b');
-        return;
-    }
-
-    missionRecognitionToken++;
-    const token = missionRecognitionToken;
-
-    if (missionRecognition) {
-        missionShouldAutoRestart = false;
-        try { missionRecognition.stop(); } catch (error) {}
-    }
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-
-    missionVoiceTranscript = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
-    missionVoiceInterim = '';
-    missionLastCommittedSpeech = '';
-    missionLastCommittedAt = 0;
-    missionShouldAutoRestart = true;
-
-    missionRecognition = new MissionSpeechRecognition();
-    missionRecognition.lang = missionSpeechLocale;
-    missionRecognition.continuous = true;
-    missionRecognition.interimResults = true;
-    missionRecognition.maxAlternatives = 3;
-
-    missionRecognition.onstart = () => {
-        if (token !== missionRecognitionToken) return;
-        missionRecognitionActive = true;
-        setMissionVoiceStatus('Listening. Speak your answer clearly...', '#16a34a');
-    };
-    missionRecognition.onerror = event => {
-        if (token !== missionRecognitionToken) return;
-        const reason = event.error === 'not-allowed'
-            ? 'Microphone permission was blocked. Allow microphone access, then try again.'
-            : 'Voice transcription stopped. You can try again or type directly.';
-        if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(event.error)) {
-            missionShouldAutoRestart = false;
-        }
-        setMissionVoiceStatus(reason, '#ef4444');
-    };
-    missionRecognition.onend = () => {
-        if (token !== missionRecognitionToken) return;
-        missionRecognitionActive = false;
-        if (missionShouldAutoRestart) {
-            setMissionVoiceStatus('Reconnecting voice transcription...', '#f59e0b');
-            setTimeout(() => startMissionVoiceEngine(token), 300);
-            return;
-        }
-
-        setMissionVoiceStatus('Voice capture stopped. Review or edit the transcript.');
-    };
-    missionRecognition.onresult = event => {
-        if (token !== missionRecognitionToken) return;
-        const interimParts = [];
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = bestMissionSpeechAlternative(event.results[i]);
-            if (!transcript) continue;
-
-            if (event.results[i].isFinal) {
-                commitMissionSpeechSegment(transcript);
-            } else {
-                interimParts.push(transcript);
-            }
-        }
-
-        missionVoiceInterim = cleanMissionTranscriptText(interimParts.join(' '));
-        updateMissionVoiceTranscript();
-    };
-
-    startMissionVoiceEngine(token);
-}
-
-function stopMissionVoice() {
-    missionShouldAutoRestart = false;
-    finalizeMissionVoiceInterim();
-    missionRecognitionToken++;
-    missionRecognitionActive = false;
-    if (missionRecognition) {
-        try { missionRecognition.stop(); } catch (error) {}
-    }
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    setMissionVoiceStatus('Voice capture stopped. Review or edit the transcript.');
-}
-
-function clearMissionVoiceTranscript() {
-    missionVoiceTranscript = '';
-    missionVoiceInterim = '';
-    missionLastCommittedSpeech = '';
-    missionLastCommittedAt = 0;
-    document.getElementById('missionVoiceTranscript').textContent = missionTranscriptPlaceholder;
-    setMissionVoiceStatus('Transcript cleared. Start voice again when ready.');
-}
-
-function useMissionVoiceTranscript() {
-    finalizeMissionVoiceInterim();
-    const box = document.getElementById('missionVoiceTranscript');
-    const text = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
-    if (!text) {
-        setMissionVoiceStatus('Record or type a transcript before using it.', '#f59e0b');
-        return;
-    }
-
-    missionVoiceTranscript = text;
-    missionVoiceInterim = '';
-    box.textContent = text;
-    document.getElementById('missionAnswer').value = text;
-    scoreMission(false);
-    setMissionVoiceStatus('Transcript added to your mission answer.', '#16a34a');
-
-    const modalElement = document.getElementById('missionVoiceModal');
-    if (window.bootstrap?.Modal) {
-        bootstrap.Modal.getOrCreateInstance(modalElement).hide();
-    }
-}
-
 function missionToneSignal(mission, normalizedText) {
     const intent = String(mission.intent || '').toLowerCase();
     if (intent === 'confident') {
@@ -757,35 +376,12 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreMission(false);
     });
     document.getElementById('missionTimerBtn').addEventListener('click', toggleMissionTimer);
-    document.getElementById('voiceMissionBtn').addEventListener('click', openMissionVoiceModal);
-    document.getElementById('speakMissionBtn').addEventListener('click', speakMissionPrompt);
-    document.getElementById('startMissionVoiceBtn').addEventListener('click', startMissionVoice);
-    document.getElementById('stopMissionVoiceBtn').addEventListener('click', stopMissionVoice);
-    document.getElementById('clearMissionVoiceBtn').addEventListener('click', clearMissionVoiceTranscript);
-    document.getElementById('useMissionVoiceTranscriptBtn').addEventListener('click', useMissionVoiceTranscript);
-    document.getElementById('missionVoiceModal').addEventListener('shown.bs.modal', () => {
-        document.querySelector('.modal-backdrop:last-of-type')?.classList.add('mission-voice-backdrop');
-    });
-    document.getElementById('missionVoiceModal').addEventListener('hidden.bs.modal', stopMissionVoice);
     document.getElementById('generateMissionBtn').addEventListener('click', generateMissionTasks);
     document.getElementById('missionGoalInput').addEventListener('keydown', event => {
         if (event.key === 'Enter') {
             event.preventDefault();
             generateMissionTasks();
         }
-    });
-    const missionTranscriptBox = document.getElementById('missionVoiceTranscript');
-    missionTranscriptBox.addEventListener('focus', () => {
-        if (!missionTranscriptEditorText()) missionTranscriptBox.textContent = '';
-    });
-    missionTranscriptBox.addEventListener('input', () => {
-        missionVoiceTranscript = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
-        missionVoiceInterim = '';
-    });
-    missionTranscriptBox.addEventListener('blur', () => {
-        missionVoiceTranscript = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
-        missionVoiceInterim = '';
-        updateMissionVoiceTranscript();
     });
     selectMission(activeMission?.id);
 });

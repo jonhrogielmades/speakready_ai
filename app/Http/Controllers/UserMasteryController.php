@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PracticePlanItem;
 use App\Models\Profile;
 use App\Models\Score;
-use App\Models\VoiceSession;
 use App\Support\CareerPlanningSchema;
-use App\Support\VoiceSessionSchema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,7 +14,6 @@ class UserMasteryController extends Controller
     public function index()
     {
         CareerPlanningSchema::ensure();
-        VoiceSessionSchema::ensure(createIfMissing: true);
 
         $userId = (int) Auth::id();
         $profile = Profile::firstOrCreate(['user_id' => $userId]);
@@ -34,7 +31,6 @@ class UserMasteryController extends Controller
             ->get();
         $storyCount = PracticePlanItem::where('user_id', $userId)->where('type', 'star_story')->count();
         $checklistItems = $this->checklistItems($userId);
-        $voiceCount = VoiceSession::where('user_id', $userId)->count();
         $completedPrep = $checklistItems->whereNotNull('completed_at')->count();
         $careerTracks = $this->careerTracks($scores);
         $weaknessDrills = $this->weaknessDrills();
@@ -50,8 +46,8 @@ class UserMasteryController extends Controller
             'label' => 'This Week',
             'focus_href' => route('user.progress'),
             'assessments' => $scores->count(),
-            'voice_drills' => $voiceCount,
             'stories' => $storyCount,
+            'practice_tasks' => $checklistItems->count(),
             'completed_prep' => $completedPrep,
             'focus' => 'Clarity and answer evidence',
         ];
@@ -63,7 +59,7 @@ class UserMasteryController extends Controller
         $masteryBadges = [
             ['label' => 'First Baseline', 'icon' => 'fa-flag-checkered', 'earned' => $scores->isNotEmpty()],
             ['label' => 'Story Bank', 'icon' => 'fa-book-bookmark', 'earned' => $storyCount > 0],
-            ['label' => 'Voice Practice', 'icon' => 'fa-microphone-lines', 'earned' => $voiceCount > 0],
+            ['label' => 'Mission Practice', 'icon' => 'fa-route', 'earned' => $completedPrep > 0],
             ['label' => '80+ Readiness', 'icon' => 'fa-trophy', 'earned' => $personalBest >= 80],
         ];
 
@@ -146,7 +142,7 @@ class UserMasteryController extends Controller
         $defaults = [
             ['title' => 'Update target role', 'task' => 'Write the job role you are preparing for.'],
             ['title' => 'Prepare one proof story', 'task' => 'Save one truthful STAR story with a clear result or lesson.'],
-            ['title' => 'Practice aloud', 'task' => 'Record one voice rehearsal and review pacing.'],
+            ['title' => 'Practice one mission', 'task' => 'Complete one typed mission answer and review its score.'],
             ['title' => 'Review feedback', 'task' => 'Open your latest feedback and pick one next action.'],
         ];
 
@@ -172,14 +168,14 @@ class UserMasteryController extends Controller
     {
         return [
             ['key' => 'job_interview', 'label' => 'Job Interview', 'icon' => 'fa-briefcase', 'best' => (int) ($scores->max('overall_readiness_score') ?? 0), 'attempts' => $scores->count(), 'status' => 'Active', 'href' => route('interview.setup')],
-            ['key' => 'customer_service', 'label' => 'Customer Service', 'icon' => 'fa-headset', 'best' => (int) ($scores->max('professionalism_score') ?? 0), 'attempts' => $scores->count(), 'status' => 'Practice', 'href' => route('user.drills.voice')],
+            ['key' => 'customer_service', 'label' => 'Customer Service', 'icon' => 'fa-headset', 'best' => (int) ($scores->max('professionalism_score') ?? 0), 'attempts' => $scores->count(), 'status' => 'Practice', 'href' => route('user.missions')],
         ];
     }
 
     private function weaknessDrills(): array
     {
         return [
-            ['title' => 'Clarity drill', 'reason' => 'Give a direct answer, then support it with one proof point.', 'href' => route('user.drills.voice'), 'cta' => 'Voice', 'icon' => 'fa-comment-dots'],
+            ['title' => 'Clarity drill', 'reason' => 'Give a direct answer, then support it with one proof point.', 'href' => route('user.missions'), 'cta' => 'Mission', 'icon' => 'fa-comment-dots'],
             ['title' => 'Evidence drill', 'reason' => 'Add one true action and one result or lesson to your answer.', 'href' => route('interview.setup'), 'cta' => 'Interview', 'icon' => 'fa-clipboard-check'],
         ];
     }

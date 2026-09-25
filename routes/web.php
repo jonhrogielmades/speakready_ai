@@ -14,7 +14,6 @@ use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserMasteryController;
 use App\Http\Controllers\UserMissionController;
-use App\Http\Controllers\UserVoiceDrillController;
 use App\Models\Category;
 use App\Services\LandingStatsService;
 use App\Services\QuestionDatasetProvider;
@@ -223,12 +222,6 @@ Route::middleware(['auth', 'user'])->group(function () {
 
     Route::get('/missions', [UserMissionController::class, 'index'])->name('user.missions');
     Route::post('/missions/generate', [UserMissionController::class, 'generate'])->name('user.missions.generate');
-
-    Route::get('/drills/voice', [UserVoiceDrillController::class, 'index'])->name('user.drills.voice');
-    Route::post('/drills/voice/prompt', [UserVoiceDrillController::class, 'prompt'])->name('user.drills.voice.prompt');
-    Route::post('/drills/voice/analyze', [UserVoiceDrillController::class, 'analyze'])->name('user.drills.voice.analyze');
-    Route::post('/drills/voice/save', [UserVoiceDrillController::class, 'save'])->name('user.drills.voice.save');
-    Route::post('/drills/voice/clear', [UserVoiceDrillController::class, 'clear'])->name('user.drills.voice.clear');
 
     Route::get('/personal-mastery', [UserMasteryController::class, 'index'])->name('user.mastery');
     Route::post('/personal-mastery/stories', [UserMasteryController::class, 'storeStory'])->name('user.mastery.stories.store');

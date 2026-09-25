@@ -454,78 +454,6 @@
         flex: 0 0 auto;
         margin-top: 3px;
     }
-    .mission-voice-modal .modal-content {
-        background: var(--sf);
-        color: var(--tx);
-        border: 1px solid var(--bd);
-        border-radius: 18px;
-        box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
-    }
-    .modal-backdrop.mission-voice-backdrop {
-        background: rgba(15, 23, 42, 0.42);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        opacity: 1 !important;
-    }
-    .mission-voice-modal .modal-header,
-    .mission-voice-modal .modal-footer {
-        border-color: var(--bd);
-    }
-    .mission-voice-modal .modal-footer {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-    }
-    .mission-voice-modal .modal-footer .btn {
-        width: 100%;
-        min-height: 42px;
-    }
-    .mission-voice-prompt,
-    .mission-voice-transcript {
-        color: var(--tx);
-        background: var(--bg3);
-        border: 1px solid var(--bd);
-        border-radius: 14px;
-        padding: 14px;
-        line-height: 1.5;
-    }
-    .mission-voice-transcript {
-        min-height: 140px;
-        white-space: pre-wrap;
-    }
-    .mission-voice-status {
-        color: var(--tx3);
-        font-size: 0.8rem;
-        line-height: 1.4;
-    }
-    .mission-recent-list {
-        display: grid;
-        gap: 9px;
-    }
-    .mission-recent-item {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 10px;
-        align-items: center;
-        padding: 11px;
-        border: 1px solid var(--bd);
-        border-radius: 14px;
-        background: var(--bg3);
-    }
-    .mission-recent-title {
-        color: var(--tx);
-        font-size: 0.84rem;
-        font-weight: 850;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
-    .mission-recent-meta {
-        color: var(--tx3);
-        font-size: 0.72rem;
-        margin-top: 2px;
-    }
-
     /* Theme readability guard: keep Mission Mode surfaces legible in day and night mode. */
     #mission-mode-page input::placeholder,
     #mission-mode-page textarea::placeholder {
@@ -533,19 +461,19 @@
         font-weight: 400 !important;
         opacity: 1;
     }
-    #mission-mode-page :is(.mission-panel, .mission-card, .mission-generator input, .mission-answer, .mission-prompt, .mission-btn, .mission-meta, .mission-pill, .mission-detail-icon, .mission-board-icon, .mission-recent-item, .mission-empty-state) {
+    #mission-mode-page :is(.mission-panel, .mission-card, .mission-generator input, .mission-answer, .mission-prompt, .mission-btn, .mission-meta, .mission-pill, .mission-detail-icon, .mission-board-icon, .mission-empty-state) {
         color-scheme: light dark;
     }
-    #mission-mode-page :is(.mission-title, .mission-card-name, .mission-prompt, .mission-answer, .mission-generator input, .mission-recent-title) {
+    #mission-mode-page :is(.mission-title, .mission-card-name, .mission-prompt, .mission-answer, .mission-generator input) {
         color: var(--tx) !important;
     }
-    #mission-mode-page :is(.mission-kicker, .mission-card-copy, .mission-generator-status, .mission-recent-meta, .mission-voice-status) {
+    #mission-mode-page :is(.mission-kicker, .mission-card-copy, .mission-generator-status) {
         color: var(--tx3) !important;
     }
     #mission-mode-page :is(.mission-criteria li, .mission-feedback-list li) {
         color: var(--tx2) !important;
     }
-    .lm #mission-mode-page :is(.mission-panel, .mission-card, .mission-generator input, .mission-answer, .mission-prompt, .mission-btn, .mission-recent-item, .mission-empty-state) {
+    .lm #mission-mode-page :is(.mission-panel, .mission-card, .mission-generator input, .mission-answer, .mission-prompt, .mission-btn, .mission-empty-state) {
         border-color: rgba(191, 219, 254, 0.72);
     }
     :root:not(.lm) #mission-mode-page .mission-panel,
@@ -554,8 +482,8 @@
         border-color: rgba(148, 163, 184, 0.24) !important;
         box-shadow: 0 14px 36px rgba(0, 0, 0, 0.25);
     }
-    :root:not(.lm) #mission-mode-page :is(.mission-card, .mission-recent-item, .mission-empty-state, .mission-voice-prompt, .mission-voice-transcript),
-    .dm #mission-mode-page :is(.mission-card, .mission-recent-item, .mission-empty-state, .mission-voice-prompt, .mission-voice-transcript) {
+    :root:not(.lm) #mission-mode-page :is(.mission-card, .mission-empty-state),
+    .dm #mission-mode-page :is(.mission-card, .mission-empty-state) {
         background: rgba(15, 23, 42, 0.62) !important;
         border-color: rgba(148, 163, 184, 0.22) !important;
     }
@@ -1041,92 +969,12 @@
             gap: 5px !important;
             margin: 0 !important;
         }
-        #mission-mode-page .mission-recent-list {
-            gap: 6px !important;
-        }
-        #mission-mode-page .mission-recent-item {
-            grid-template-columns: minmax(0, 1fr) auto !important;
-            gap: 6px !important;
-            padding: 9px !important;
-            border-radius: 10px !important;
-            border-color: var(--mission-saas-border) !important;
-            background: var(--mission-saas-card) !important;
-        }
-        #mission-mode-page .mission-recent-title,
-        #mission-mode-page .mission-recent-meta {
-            overflow-wrap: anywhere;
-        }
         #mission-mode-page .mission-empty-state {
             padding: 12px !important;
             border-radius: 10px !important;
             border-color: var(--mission-saas-border) !important;
             background: var(--mission-saas-card) !important;
             font-size: 0.7rem !important;
-        }
-        .mission-voice-modal {
-            --mission-saas-border: rgba(37, 99, 235, 0.14);
-            --mission-saas-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-            --mission-saas-card: rgba(248, 250, 252, 0.76);
-        }
-        html[data-theme="dark"] .mission-voice-modal,
-        :root:not(.lm) .mission-voice-modal,
-        .dm .mission-voice-modal {
-            --mission-saas-border: rgba(147, 197, 253, 0.18);
-            --mission-saas-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
-            --mission-saas-card: rgba(255, 255, 255, 0.045);
-        }
-        .mission-voice-modal .modal-dialog {
-            margin: 10px !important;
-        }
-        .mission-voice-modal .modal-content {
-            border-radius: 14px !important;
-            border-color: var(--mission-saas-border) !important;
-            box-shadow: var(--mission-saas-shadow) !important;
-        }
-        .mission-voice-modal .modal-header,
-        .mission-voice-modal .modal-footer {
-            padding: 10px 12px !important;
-        }
-        .mission-voice-modal .modal-body {
-            padding: 12px !important;
-        }
-        .mission-voice-modal .modal-body > .d-flex {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px !important;
-        }
-        .mission-voice-modal .modal-body > .d-flex .mission-btn {
-            width: 100% !important;
-            min-height: 36px !important;
-            padding: 7px 8px !important;
-            border-radius: 9px !important;
-            font-size: 0.64rem !important;
-            font-weight: 900 !important;
-            white-space: normal !important;
-        }
-        .mission-voice-prompt,
-        .mission-voice-transcript {
-            padding: 10px !important;
-            border-radius: 10px !important;
-            border-color: var(--mission-saas-border) !important;
-            background: var(--mission-saas-card) !important;
-            font-size: 0.72rem !important;
-            line-height: 1.36 !important;
-        }
-        .mission-voice-transcript {
-            min-height: 130px !important;
-        }
-        .mission-voice-modal .modal-footer {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px !important;
-        }
-        .mission-voice-modal .modal-footer .btn {
-            width: 100% !important;
-            min-height: 36px !important;
-            border-radius: 9px !important;
-            font-size: 0.64rem !important;
-            font-weight: 900 !important;
         }
     }
     /* Final compact hero override shared across user pages. */
@@ -1407,7 +1255,7 @@
             margin-right: 0 !important;
         }
 
-        #mission-mode-page :is(.mission-kicker, .mission-generator-status, .mission-card-copy, .mission-recent-meta, .mission-voice-status) {
+        #mission-mode-page :is(.mission-kicker, .mission-generator-status, .mission-card-copy) {
             color: var(--mission-pro-muted) !important;
             -webkit-text-fill-color: var(--mission-pro-muted) !important;
             font-size: 0.66rem !important;
@@ -1455,8 +1303,7 @@
         }
 
         #mission-mode-page .mission-generator input,
-        #mission-mode-page .mission-answer,
-        .mission-voice-modal :is(.mission-voice-prompt, .mission-voice-transcript) {
+        #mission-mode-page .mission-answer {
             width: 100% !important;
             border: 1px solid var(--mission-pro-border) !important;
             border-radius: 8px !important;
@@ -1623,9 +1470,7 @@
             margin-top: 8px !important;
         }
 
-        #mission-mode-page .mission-btn,
-        .mission-voice-modal .mission-btn,
-        .mission-voice-modal .modal-footer .btn {
+        #mission-mode-page .mission-btn {
             min-width: 0 !important;
             min-height: 34px !important;
             padding: 0 9px !important;
@@ -1646,18 +1491,14 @@
             box-shadow: none !important;
         }
 
-        #mission-mode-page .mission-btn i,
-        .mission-voice-modal .mission-btn i,
-        .mission-voice-modal .modal-footer .btn i {
+        #mission-mode-page .mission-btn i {
             color: currentColor !important;
             -webkit-text-fill-color: currentColor !important;
             font-size: 0.72rem !important;
             margin: 0 !important;
         }
 
-        #mission-mode-page .mission-btn-primary,
-        .mission-voice-modal .mission-btn-primary,
-        .mission-voice-modal .modal-footer .btn-primary {
+        #mission-mode-page .mission-btn-primary {
             border-color: transparent !important;
             background: linear-gradient(135deg, #2563eb, #0891b2) !important;
             color: #ffffff !important;
@@ -1665,13 +1506,7 @@
             box-shadow: 0 8px 18px rgba(37, 99, 235, 0.16) !important;
         }
 
-        #mission-mode-page #voiceMissionBtn {
-            color: var(--mission-pro-accent) !important;
-            -webkit-text-fill-color: var(--mission-pro-accent) !important;
-        }
-
-        #mission-mode-page #clearMissionBtn,
-        .mission-voice-modal #clearMissionVoiceBtn {
+        #mission-mode-page #clearMissionBtn {
             color: var(--mission-pro-danger) !important;
             -webkit-text-fill-color: var(--mission-pro-danger) !important;
         }
@@ -1721,33 +1556,6 @@
             margin: 0 !important;
         }
 
-        #mission-mode-page .mission-recent-list {
-            display: grid !important;
-            gap: 8px !important;
-        }
-
-        #mission-mode-page .mission-recent-item {
-            display: grid !important;
-            grid-template-columns: minmax(0, 1fr) auto !important;
-            align-items: center !important;
-            gap: 8px !important;
-            padding: 9px !important;
-            border: 1px solid var(--mission-pro-border) !important;
-            border-radius: 8px !important;
-            background: var(--mission-pro-field) !important;
-        }
-
-        #mission-mode-page .mission-recent-title {
-            color: var(--mission-pro-title) !important;
-            -webkit-text-fill-color: var(--mission-pro-title) !important;
-            font-size: 0.74rem !important;
-            font-weight: 900 !important;
-            line-height: 1.18 !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-
         #mission-mode-page .mission-empty-state {
             padding: 14px !important;
             border: 1px dashed var(--mission-pro-border) !important;
@@ -1759,95 +1567,6 @@
             font-weight: 700 !important;
         }
 
-        .mission-voice-modal {
-            --mission-pro-card: rgba(255, 255, 255, 0.98);
-            --mission-pro-field: rgba(255, 255, 255, 0.96);
-            --mission-pro-soft: #f8fafc;
-            --mission-pro-border: rgba(15, 23, 42, 0.1);
-            --mission-pro-title: #0f172a;
-            --mission-pro-muted: #64748b;
-            --mission-pro-accent: #2563eb;
-            --mission-pro-danger: #dc2626;
-            --mission-pro-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
-        }
-
-        html[data-theme="dark"] .mission-voice-modal,
-        :root:not(.lm) .mission-voice-modal,
-        body.dm .mission-voice-modal,
-        .dm .mission-voice-modal {
-            --mission-pro-card: rgba(15, 23, 42, 0.98);
-            --mission-pro-field: rgba(15, 23, 42, 0.94);
-            --mission-pro-soft: rgba(30, 41, 59, 0.96);
-            --mission-pro-border: rgba(148, 163, 184, 0.24);
-            --mission-pro-title: #f8fafc;
-            --mission-pro-muted: #cbd5e1;
-            --mission-pro-accent: #93c5fd;
-            --mission-pro-danger: #fca5a5;
-            --mission-pro-shadow: 0 22px 46px rgba(0, 0, 0, 0.35);
-        }
-
-        .mission-voice-modal .modal-dialog {
-            margin: 10px !important;
-        }
-
-        .mission-voice-modal .modal-content {
-            border: 1px solid var(--mission-pro-border) !important;
-            border-radius: 8px !important;
-            background: var(--mission-pro-card) !important;
-            color: var(--mission-pro-title) !important;
-            box-shadow: var(--mission-pro-shadow) !important;
-            overflow: hidden !important;
-        }
-
-        .mission-voice-modal .modal-header,
-        .mission-voice-modal .modal-footer {
-            padding: 10px !important;
-            border-color: var(--mission-pro-border) !important;
-        }
-
-        .mission-voice-modal .modal-title {
-            color: var(--mission-pro-title) !important;
-            -webkit-text-fill-color: var(--mission-pro-title) !important;
-            font-size: 0.9rem !important;
-            font-weight: 900 !important;
-            line-height: 1.2 !important;
-        }
-
-        .mission-voice-modal .modal-body {
-            padding: 10px !important;
-        }
-
-        .mission-voice-modal .modal-body > .d-flex {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 7px !important;
-            margin-bottom: 10px !important;
-        }
-
-        .mission-voice-modal :is(.mission-kicker, .mission-voice-status) {
-            color: var(--mission-pro-muted) !important;
-            -webkit-text-fill-color: var(--mission-pro-muted) !important;
-            font-size: 0.66rem !important;
-            font-weight: 750 !important;
-            line-height: 1.28 !important;
-        }
-
-        .mission-voice-modal :is(.mission-voice-prompt, .mission-voice-transcript) {
-            padding: 9px !important;
-            font-size: 0.72rem !important;
-            font-weight: 650 !important;
-            line-height: 1.38 !important;
-        }
-
-        .mission-voice-modal .mission-voice-transcript {
-            min-height: 130px !important;
-        }
-
-        .mission-voice-modal .modal-footer {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 7px !important;
-        }
     }
 
     @media (max-width: 390px) {
@@ -1919,9 +1638,7 @@
             width: 62px !important;
         }
 
-        #mission-mode-page .mission-actions,
-        .mission-voice-modal .modal-body > .d-flex,
-        .mission-voice-modal .modal-footer {
+        #mission-mode-page .mission-actions {
             grid-template-columns: minmax(0, 1fr) !important;
         }
     }

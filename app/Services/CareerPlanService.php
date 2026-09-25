@@ -76,9 +76,9 @@ class CareerPlanService
             ],
             [
                 'day' => 3,
-                'type' => 'voice',
-                'title' => 'Voice Rehearsal',
-                'task' => 'Record a 90-second answer and reduce filler words while keeping pace between 100 and 150 WPM.',
+                'type' => 'mission',
+                'title' => 'Mission Answer Drill',
+                'task' => 'Write a concise mission answer, then tighten it around one proof point and one clear result.',
             ],
             [
                 'day' => 4,
