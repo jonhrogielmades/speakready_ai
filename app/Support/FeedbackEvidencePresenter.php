@@ -42,13 +42,13 @@ final class FeedbackEvidencePresenter
         $statusLabel = self::statusLabel($status, data_get($alignment, 'status_label'));
         $confidence = self::scoreValue(data_get($alignment, 'scoring_confidence', $answer->scoring_confidence));
         $qualityPercent = self::scoreValue(data_get($coaching, 'feedback_quality.completeness_percent'));
-        $evidenceQuotes = self::textList(data_get($alignment, 'evidence_quotes', data_get($evidenceMap, 'supporting_excerpts', [])), 3, 240);
+        $evidenceQuotes = self::feedbackTextList(data_get($alignment, 'evidence_quotes', data_get($evidenceMap, 'supporting_excerpts', [])), $question, 3, 240);
         if ($evidenceQuotes === [] && $answerText !== '' && ! (bool) ($answer->is_skipped ?? false)) {
             $evidenceQuotes[] = self::limitText($answerText, 220);
         }
 
-        $missingPoints = self::textList(data_get($alignment, 'missing_points', data_get($evidenceMap, 'missing_evidence', [])), 3, 180);
-        $nextSteps = self::textList(data_get($alignment, 'next_attempt_steps', []), 4, 190);
+        $missingPoints = self::feedbackTextList(data_get($alignment, 'missing_points', data_get($evidenceMap, 'missing_evidence', [])), $question, 3, 180);
+        $nextSteps = self::feedbackTextList(data_get($alignment, 'next_attempt_steps', []), $question, 4, 190);
         $nextPractice = self::cleanFeedback(data_get($alignment, 'action', $answer->recommendation_text ?? ''), $question);
         if ($nextPractice === '' && $nextSteps !== []) {
             $nextPractice = $nextSteps[0];
@@ -165,16 +165,16 @@ final class FeedbackEvidencePresenter
                 continue;
             }
 
-            $action = self::cleanText((string) ($priority['action'] ?? ''));
+            $action = self::cleanFeedback($priority['action'] ?? '');
             if ($action === '') {
                 continue;
             }
 
             return (object) [
-                'area' => self::cleanText((string) ($priority['area'] ?? 'Top practice focus')) ?: 'Top practice focus',
+                'area' => self::cleanFeedback($priority['area'] ?? 'Top practice focus') ?: 'Top practice focus',
                 'action' => self::limitText($action, 210),
-                'evidence' => self::limitText(self::cleanText((string) ($priority['observation'] ?? '')), 210),
-                'success_check' => self::limitText(self::cleanText((string) ($priority['success_check'] ?? '')), 210),
+                'evidence' => self::limitText(self::cleanFeedback($priority['observation'] ?? ''), 210),
+                'success_check' => self::limitText(self::cleanFeedback($priority['success_check'] ?? ''), 210),
                 'question_number' => null,
                 'review_url' => route('user.review', $session->id),
             ];
@@ -213,8 +213,8 @@ final class FeedbackEvidencePresenter
                 continue;
             }
 
-            $area = self::cleanText((string) ($priority['area'] ?? ''));
-            $action = self::cleanText((string) ($priority['action'] ?? ''));
+            $area = self::cleanFeedback($priority['area'] ?? '');
+            $action = self::cleanFeedback($priority['action'] ?? '');
             if ($area === '' && $action === '') {
                 continue;
             }
@@ -423,6 +423,24 @@ final class FeedbackEvidencePresenter
         $results = [];
         foreach ($items as $item) {
             $text = is_scalar($item) ? self::limitText((string) $item, $characterLimit) : '';
+            if ($text === '' || in_array($text, $results, true)) {
+                continue;
+            }
+
+            $results[] = $text;
+            if (count($results) >= $limit) {
+                break;
+            }
+        }
+
+        return $results;
+    }
+
+    private static function feedbackTextList(mixed $items, mixed $questionSource = null, int $limit = 3, int $characterLimit = 180): array
+    {
+        $results = [];
+        foreach (self::textList($items, $limit, $characterLimit) as $item) {
+            $text = self::cleanFeedback($item, $questionSource);
             if ($text === '' || in_array($text, $results, true)) {
                 continue;
             }

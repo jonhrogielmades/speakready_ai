@@ -275,13 +275,13 @@
  @if(!empty($evidenceMap['supporting_excerpts']))
  <strong style="color:var(--tx);font-size:.85rem;">Proof found</strong>
  <ul style="color:var(--tx);line-height:1.6;margin-top:8px;">
- @foreach($evidenceMap['supporting_excerpts'] as $excerpt)<li>{{ $excerpt }}</li>@endforeach
+ @foreach($evidenceMap['supporting_excerpts'] as $excerpt)<li>{{ review_feedback_without_question_text(is_scalar($excerpt) ? (string) $excerpt : '', $answer->question ?? $answer) }}</li>@endforeach
  </ul>
  @endif
  @if(!empty($evidenceMap['missing_evidence']))
  <strong style="color:var(--tx);font-size:.85rem;">Details to add</strong>
  <ul style="color:var(--tx);line-height:1.6;margin:8px 0 0;">
- @foreach($evidenceMap['missing_evidence'] as $missing)<li>{{ $missing }}</li>@endforeach
+ @foreach($evidenceMap['missing_evidence'] as $missing)<li>{{ review_feedback_without_question_text(is_scalar($missing) ? (string) $missing : '', $answer->question ?? $answer) }}</li>@endforeach
  </ul>
  @endif
  </div>

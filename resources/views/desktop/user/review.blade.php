@@ -384,7 +384,7 @@ function retryResultCard(data) {
  <span class="retry-chip">Score ${retryEscape(data.score)}%</span>
  ${retryDeliveryChip(data)}
  </div>
- <p style="margin:0;color:var(--tx2);line-height:1.6;">${retryEscape(data.display_ai_feedback || data.ai_feedback || 'Feedback is ready for this attempt.')}</p>
+ <p style="margin:0;color:var(--tx2);line-height:1.6;">${retryEscape(data.display_ai_feedback || 'Feedback is ready for this attempt.')}</p>
  ${coachingHtml}
  </div>
  `;
@@ -404,7 +404,7 @@ function retryAttemptHistoryHtml(data) {
  ${retryDeliveryChip(data)}
  </div>
  </div>
- <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">${retryEscape(data.display_ai_feedback || data.ai_feedback || 'Feedback is ready for this attempt.')}</p>
+ <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">${retryEscape(data.display_ai_feedback || 'Feedback is ready for this attempt.')}</p>
  ${coachingHtml}
  </div>
  `;

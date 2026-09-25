@@ -67,6 +67,30 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame('The answer needs more detail.', $promptOnly);
     }
 
+    public function test_review_feedback_removes_prompt_reference_variants(): void
+    {
+        $prompt = 'Please introduce yourself, including your name, where you currently reside, and one reason you are ready for this role.';
+        $cases = [
+            'For the question "'.$prompt.'", the answer needs one true work-ready detail.',
+            'Regarding the prompt "'.$prompt.'": the answer needs a clearer opening.',
+            'In response to the interview prompt "'.$prompt.'", the answer was too short.',
+            'About the response "'.$prompt.'", add one specific example.',
+            'For "'.$prompt.'", the answer needs more detail.',
+            'The weak link to "'.$prompt.'" is the missing role-ready detail.',
+            'Answer draft based on your facts for "'.$prompt.'": add your name and location clearly.',
+        ];
+
+        foreach ($cases as $feedback) {
+            $clean = review_feedback_without_question_text($feedback, ['question_text' => $prompt]);
+
+            $this->assertStringNotContainsString($prompt, $clean);
+            $this->assertStringNotContainsString('For the question', $clean);
+            $this->assertStringNotContainsString('Regarding the prompt', $clean);
+            $this->assertStringNotContainsString('interview prompt', mb_strtolower($clean));
+            $this->assertNotSame('', $clean);
+        }
+    }
+
     public function test_it_uses_the_versioned_readiness_weights_for_relevance(): void
     {
         $score = AIService::calculateWeightedReadinessScore(
