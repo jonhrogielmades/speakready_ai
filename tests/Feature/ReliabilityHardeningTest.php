@@ -1783,7 +1783,6 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('>Professional Tone</span>', false)
  ->assertDontSee('>Confidence</span>', false)
  ->assertDontSee('>Pacing</span>', false)
- ->assertDontSee('Camera Feedback')
  ->assertDontSee('Speaking Pace')
  ->assertDontSee('135 WPM')
  ->assertDontSee('STAR Framework Analysis');
@@ -1935,13 +1934,13 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Camera Feedback')
- ->assertSee('Face in frame')
- ->assertSee('>67%</span>', false)
- ->assertSee('Eye contact')
- ->assertSee('>50%</span>', false)
+ ->assertSee('Camera Coaching Note')
  ->assertSee('Browser estimate only. Not part of readiness score.')
  ->assertDontSee('Camera Score')
+ ->assertDontSee('Face in frame')
+ ->assertDontSee('>67%</span>', false)
+ ->assertDontSee('Eye contact')
+ ->assertDontSee('>50%</span>', false)
  ->assertDontSee('Hands visible')
  ->assertDontSee('Camera-facing');
  }

@@ -398,28 +398,27 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $response->assertOk()
  ->assertSee('Feedback Summary')
  ->assertSee('Answer Review')
- ->assertSee('Suggested Next Practice')
+ ->assertSee('Proof &amp; Next Action', false)
  ->assertSee('Category Breakdown')
  ->assertSee('Practice again')
  ->assertDontSee('feedback-clear-form', false)
  ->assertDontSee('data-sr-confirm-title="Delete interview session"', false)
- ->assertSee('Strong empathy with customers')
- ->assertSee('Use STAR structure')
+ ->assertDontSee('Strong empathy with customers')
+ ->assertDontSee('Use STAR structure')
  ->assertSee('Answer 1')
  ->assertDontSee('Explain a time you handled an irate customer')
  ->assertSee('I listened to the customer and helped solve the issue.')
  ->assertSee('Good empathy, but the answer needs a clearer action and result.')
- ->assertSee('Rebuild answer structure')
- ->assertSee(route('user.modules.index', ['search' => 'STAR answer structure role fit']), false)
+ ->assertSee('Evidence used')
  ->assertViewHas('feedbackSummary', fn ($summary) => $summary
  && $summary->overall === 74
  && $summary->focus_metric?->label === 'Fluency & Clarity')
- ->assertViewHas('answerCoachingHighlights', fn ($items) => $items->count() === 1
- && $items->first()->score === 68
- && $items->first()->label === 'Answer 1'
- && str_contains($items->first()->improvement, 'I listened to the customer and helped solve the issue')
- && ! str_contains($items->first()->improvement, 'Explain a time you handled an irate customer'))
- ->assertViewHas('practiceRecommendations', fn ($items) => $items->contains(fn ($item) => $item->title === 'Rebuild answer structure'));
+ ->assertViewHas('feedbackEvidence', fn ($evidence) => $evidence
+ && $evidence->answers->count() === 1
+ && $evidence->answers->first()->score === 68
+ && $evidence->answers->first()->label === 'Answer 1'
+ && str_contains($evidence->answers->first()->evidence_quote, 'I listened to the customer')
+ && ! str_contains($evidence->answers->first()->evidence_quote, 'Explain a time you handled an irate customer'));
  }
 
  public function test_feedback_center_answer_review_hides_prompt_text_inside_answer_feedback(): void
@@ -463,15 +462,14 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $response = $this->actingAs($user)->get(route('user.feedback'));
 
  $response->assertOk()
- ->assertSee('Feedback on your answer and the next attempt.')
+ ->assertSee('Each answer shows score confidence, source evidence, missing points, and a retry target.')
  ->assertDontSee($leakedPrompt)
- ->assertViewHas('answerCoachingHighlights', fn ($items) => $items->count() === 1
- && str_contains($items->first()->feedback, 'This report uses only what you wrote in the answer')
- && str_contains($items->first()->impact, 'weak link in this answer')
- && str_contains($items->first()->improvement, 'Answer draft based on your facts')
- && ! str_contains($items->first()->feedback, $leakedPrompt)
- && ! str_contains($items->first()->impact, $leakedPrompt)
- && ! str_contains($items->first()->improvement, $leakedPrompt));
+ ->assertViewHas('feedbackEvidence', fn ($evidence) => $evidence
+ && $evidence->answers->count() === 1
+ && str_contains($evidence->answers->first()->feedback, 'This report uses only what you wrote in the answer')
+ && ! str_contains($evidence->answers->first()->feedback, $leakedPrompt)
+ && ! str_contains($evidence->answers->first()->impact, $leakedPrompt)
+ && ! str_contains($evidence->answers->first()->better_answer, $leakedPrompt));
  }
 
  public function test_feedback_center_recommendations_remain_useful_when_score_is_pending(): void
@@ -491,12 +489,13 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
 
  $response->assertOk()
  ->assertSee('Pending')
- ->assertSee('Practice delivery')
- ->assertSee('Rebuild answer structure')
- ->assertSee('Strengthen role proof')
+ ->assertSee('Proof &amp; Next Action', false)
+ ->assertSee('Start with one complete answer')
+ ->assertSee('Complete a scored practice interview')
  ->assertViewHas('feedbackSummary', fn ($summary) => $summary && $summary->overall === null)
- ->assertViewHas('practiceRecommendations', fn ($items) => $items->contains(fn ($item) => $item->title === 'Practice delivery')
- && $items->contains(fn ($item) => $item->title === 'Rebuild answer structure'));
+ ->assertViewHas('feedbackEvidence', fn ($evidence) => $evidence
+ && $evidence->next_action->area === 'Start with one complete answer'
+ && $evidence->proof_stats->answers === 0);
  }
 
  public function test_feedback_center_recommendations_respect_disabled_practice_features(): void
@@ -520,12 +519,10 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('Practice delivery')
  ->assertDontSee('Rebuild answer structure')
  ->assertDontSee('Strengthen role proof')
- ->assertSee('Retake a coached mock')
- ->assertSee('Review detailed coaching')
- ->assertViewHas('practiceRecommendations', fn ($items) => $items->pluck('title')->all() === [
- 'Retake a coached mock',
- 'Review detailed coaching',
- ]);
+ ->assertSee('Start with one complete answer')
+ ->assertSee('Complete a scored practice interview')
+ ->assertViewHas('feedbackEvidence', fn ($evidence) => $evidence
+ && $evidence->next_action->area === 'Start with one complete answer');
  }
 
  public function test_detailed_feedback_report_uses_concise_non_repeated_sections(): void
@@ -677,13 +674,10 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
 
  $response->assertOk()
  ->assertSee('Complete a mock interview to unlock your summary.')
- ->assertSee('Start a mock interview')
  ->assertSee('Answer coaching appears after a completed interview.')
  ->assertSee('Complete a practice interview to generate feedback.')
  ->assertViewHas('feedbackSummary', null)
- ->assertViewHas('answerCoachingHighlights', fn ($items) => $items->isEmpty())
- ->assertViewHas('practiceRecommendations', fn ($items) => $items->count() === 1
- && $items->first()->title === 'Start a mock interview');
+ ->assertViewHas('feedbackEvidence', null);
  }
 
  public function test_feedback_center_uses_day_night_visible_and_wrapping_styles(): void
@@ -693,14 +687,14 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/desktop/user/feedback.css?v=11', false)
+ ->assertSee('css/desktop/user/feedback.css?v=16', false)
  ->assertSee('data-page-style="user-feedback"', false);
 
  $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/mobile/user/feedback.css?v=8', false)
+ ->assertSee('css/mobile/user/feedback.css?v=14', false)
  ->assertSee('serverDetectedMobile: true', false);
 
  foreach (['desktop', 'mobile'] as $device) {

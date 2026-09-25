@@ -3894,3 +3894,188 @@ body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badg
         margin: 0 !important;
     }
 }
+
+/* Evidence-first rebuild */
+.feedback-proof-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 2px 0 6px;
+}
+
+.feedback-proof-strip span,
+.feedback-answer-status,
+.feedback-reliability-tags span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--proof-color, #2563eb) 24%, transparent);
+    background: color-mix(in srgb, var(--proof-color, #2563eb) 10%, transparent);
+    color: var(--proof-color, #2563eb);
+    font-size: .68rem;
+    font-weight: 850;
+    line-height: 1.2;
+    padding: 5px 8px;
+}
+
+.feedback-proof-panel {
+    display: grid;
+    gap: 10px;
+}
+
+.feedback-reliability-card,
+.feedback-next-action-card {
+    display: grid;
+    gap: 7px;
+    border: 1px solid color-mix(in srgb, var(--reliability-color, #2563eb) 22%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--reliability-color, #2563eb) 7%, var(--sf, #fff));
+    padding: 12px;
+}
+
+.feedback-reliability-card > div:first-child {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.feedback-reliability-card strong {
+    color: var(--reliability-color, #2563eb);
+    font-size: 1.45rem;
+    line-height: 1;
+}
+
+.feedback-reliability-card p,
+.feedback-next-action-card p,
+.feedback-next-action-card small,
+.feedback-focus-list p,
+.feedback-answer-question,
+.feedback-answer-evidence,
+.feedback-answer-missing {
+    color: var(--tx2);
+    font-size: .76rem;
+    line-height: 1.45;
+    margin: 0;
+}
+
+.feedback-reliability-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.feedback-reliability-tags span {
+    --proof-color: var(--reliability-color, #2563eb);
+}
+
+.feedback-proof-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.feedback-proof-stat-grid > div {
+    min-width: 0;
+    border: 1px solid rgba(148, 163, 184, .18);
+    border-radius: 10px;
+    background: rgba(148, 163, 184, .06);
+    padding: 9px;
+}
+
+.feedback-proof-stat-grid span,
+.feedback-next-action-card > span,
+.feedback-focus-list span {
+    display: block;
+    color: var(--tx3);
+    font-size: .58rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.feedback-proof-stat-grid strong,
+.feedback-next-action-card strong,
+.feedback-focus-list strong {
+    color: var(--tx);
+    font-size: .84rem;
+    line-height: 1.25;
+}
+
+.feedback-next-action-card {
+    --reliability-color: #2563eb;
+}
+
+.feedback-next-action-card a {
+    color: #2563eb;
+    font-size: .72rem;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+.feedback-focus-list {
+    display: grid;
+    gap: 6px;
+}
+
+.feedback-focus-list > div {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    border: 1px solid rgba(148, 163, 184, .16);
+    border-radius: 10px;
+    padding: 8px;
+}
+
+.feedback-focus-list span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 26px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, .12);
+    color: #b45309;
+}
+
+.feedback-answer-top {
+    align-items: flex-start;
+}
+
+.feedback-answer-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 5px;
+}
+
+.feedback-answer-status {
+    --proof-color: var(--status-color, #64748b);
+}
+
+.feedback-answer-question {
+    font-weight: 750;
+}
+
+.feedback-answer-evidence {
+    border-left: 3px solid rgba(37, 99, 235, .35);
+    padding-left: 9px;
+}
+
+.feedback-answer-missing {
+    display: grid;
+    gap: 6px;
+}
+
+.feedback-answer-missing strong {
+    color: var(--tx);
+}
+
+.feedback-answer-missing span {
+    display: block;
+    border-radius: 9px;
+    background: rgba(245, 158, 11, .08);
+    color: #92400e;
+    padding: 7px 9px;
+}

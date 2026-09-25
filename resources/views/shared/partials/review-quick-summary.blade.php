@@ -59,28 +59,6 @@
  ? preg_replace('/^Interview\s+/i', '', (string) $recommendedPath['label'])
  : 'Practice again';
  $answers = $sessionRecord->relationLoaded('answers') ? $sessionRecord->answers : collect();
- $answerText = static function ($answer): string {
- $text = trim((string) ($answer->answer_text ?? ''));
- if ($text !== '') {
- return $text;
- }
-
- return trim((string) ($answer->delivery_transcript ?? ''));
- };
- $formatCameraPercent = static function ($value): ?string {
- if (! is_numeric($value)) {
- return null;
- }
-
- return max(0, min(100, (int) round((float) $value))) . '%';
- };
- $formatCameraScore = static function ($value): ?string {
- if (! is_numeric($value)) {
- return null;
- }
-
- return max(0, min(100, (int) round((float) $value))) . '/100';
- };
  $removeHandFeedback = static function (string $text): string {
  $clean = preg_replace('/(?:^|\s+)[^.!?]*(?:hand|hands|gesture|gestures)[^.!?]*[.!?]/iu', ' ', $text) ?? $text;
 
@@ -97,22 +75,6 @@
  $cameraSummary = null;
  if ($cameraFeedbackItems->isNotEmpty()) {
  $camera = $cameraFeedbackItems->first(fn (array $item): bool => ($item['status'] ?? '') === 'measured') ?? $cameraFeedbackItems->first();
- $cameraEvidence = is_array($camera['evidence'] ?? null) ? $camera['evidence'] : [];
- $cameraMetrics = [];
- foreach ([
- ['Face in frame', $formatCameraPercent($cameraEvidence['face_visibility_percent'] ?? null)],
- ['Eye contact', $formatCameraPercent($cameraEvidence['camera_facing_percent'] ?? null)],
- ['Shoulders', $formatCameraPercent($cameraEvidence['shoulders_level_percent'] ?? null)],
- ['Posture', $formatCameraPercent($cameraEvidence['upright_posture_percent'] ?? null)],
- ['Movement', $formatCameraScore($cameraEvidence['average_movement_score'] ?? null)],
- ] as $metric) {
- if ($metric[1] !== null) {
- $cameraMetrics[] = ['label' => $metric[0], 'value' => $metric[1]];
- }
- }
- if (empty($cameraMetrics) && (int) ($cameraEvidence['sample_count'] ?? 0) > 0) {
- $cameraMetrics[] = ['label' => 'Samples', 'value' => (string) (int) $cameraEvidence['sample_count']];
- }
  $cameraObservation = is_scalar($camera['observation'] ?? null)
  ? trim((string) $camera['observation'])
  : 'Camera feedback was attempted, but there was not enough camera data for a full note.';
@@ -140,15 +102,8 @@
  $cameraSummary = [
  'observation' => $limitText($cameraObservation, 240),
  'tip' => $limitText($cameraTip, 160),
- 'metrics' => $cameraMetrics,
  ];
  }
- $exampleAnswer = $answers->first(function ($answer) use ($answerText): bool {
- return ! (bool) ($answer->is_skipped ?? false)
- && $answerText($answer) !== '';
- });
- $exampleOriginal = $exampleAnswer ? $limitText($answerText($exampleAnswer)) : '';
- $exampleBetter = $exampleAnswer ? $limitText(review_better_answer_text((string) ($exampleAnswer->better_sample_answer ?? ''), $exampleAnswer, $exampleAnswer->question ?? $exampleAnswer), 260) : '';
  $overallSummary = $limitText($fallbackSummary, 700);
 @endphp
 
@@ -222,33 +177,11 @@
 
  @if($cameraSummary)
  <section class="review-quick-block review-quick-block-wide review-camera-card">
- <div class="review-block-title"><i class="fa-solid fa-video"></i><span>Camera Feedback</span></div>
+ <div class="review-block-title"><i class="fa-solid fa-video"></i><span>Camera Coaching Note</span></div>
  <p>{{ $cameraSummary['observation'] }}</p>
- @if(!empty($cameraSummary['metrics']))
- <div class="review-camera-chips">
- @foreach($cameraSummary['metrics'] as $metric)
- <span class="review-camera-chip"><strong>{{ $metric['label'] }}</strong><span>{{ $metric['value'] }}</span></span>
- @endforeach
- </div>
- @endif
  <p class="review-camera-note">{{ $cameraSummary['tip'] }} Browser estimate only. Not part of readiness score.</p>
  </section>
  @endif
 
- @if($exampleAnswer)
- <section class="review-quick-block review-quick-block-wide">
- <div class="review-block-title review-title-success"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Better Example</span></div>
- <div class="review-example-grid">
- <div>
- <span>Your Answer</span>
- <p>{{ $exampleOriginal }}</p>
- </div>
- <div class="review-better-example">
- <span>Better Answer</span>
- <p>{{ $exampleBetter }}</p>
- </div>
- </div>
- </section>
- @endif
  </div>
 </section>

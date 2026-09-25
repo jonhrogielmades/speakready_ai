@@ -2,7 +2,7 @@
 @section('title', 'Detailed Review')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/review.css?v=9') }}" data-page-style="user-review">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/review.css?v=10') }}" data-page-style="user-review">
 @endpush
 
 @section('content')
@@ -12,6 +12,7 @@
  $sessionEndedEarly = isset($sessionEndedEarly)? (bool) $sessionEndedEarly: ($sessionRecord->status === 'ended' || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false));
  $feedback = $sessionRecord->feedback;
  $report = \App\Support\FeedbackReportPresenter::forSession($sessionRecord);
+ $reviewEvidence = $reviewEvidence ?? \App\Support\FeedbackEvidencePresenter::forSession($sessionRecord);
  $strengthItems = $report['strength_items'];
  $weaknessItems = $report['weakness_items'];
  $comparisonRows = $comparisonRows?? [];
@@ -58,26 +59,7 @@
  <span><i class="fa-regular fa-clock me-1"></i> {{ floor(($sessionRecord->duration_seconds?? 0) / 60) }}m {{ ($sessionRecord->duration_seconds?? 0) % 60 }}s</span>
  </div>
  </div>
- <div class="text-md-end d-flex gap-4 align-items-center flex-wrap mt-3 mt-md-0 feedback-report-score-actions">
- <!-- Feature 3: Overall Performance Score & Rating -->
- <div class="text-start feedback-report-score">
- @if($sessionEndedEarly)
- <div class="d-flex align-items-center gap-2 d-md-block">
- <div style="font-size:2rem;font-weight:800;color:var(--tx);line-height:1">No score</div>
- <div style="font-size:0.9rem;font-weight:700;color:#b45309">Ended early</div>
- </div>
- @else
- @php
- $overall = $sessionRecord->score->overall_readiness_score?? 0;
- $rating = $sessionRecord->score?->readiness_band?: ($overall >= 80? 'Ready for Simulation': ($overall >= 60? 'Nearly Ready': 'Developing'));
- $color = $overall >= 80? '#10b981': ($overall >= 60? '#3b82f6': '#f59e0b');
- @endphp
- <div class="d-flex align-items-center gap-2 d-md-block">
- <div style="font-size:2.5rem;font-weight:800;color:{{ $color }};line-height:1">{{ $overall }}<span style="font-size:1.2rem;color:var(--tx3)">%</span></div>
- <div style="font-size:0.9rem;font-weight:600;color:{{ $color }}">{{ $rating }}</div>
- </div>
- @endif
- </div>
+ <div class="text-md-end d-flex gap-4 align-items-center flex-wrap mt-3 mt-md-0 feedback-report-header-actions">
  <div class="dropdown mt-2 mt-md-0 d-flex w-100 w-md-auto feedback-report-actions">
  <button class="btn btn-outline-secondary dropdown-toggle flex-grow-1 flex-md-grow-0 btn-shine" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color:var(--bd);color:var(--tx);border-radius:12px;font-weight:600;">
  <i class="fa-solid fa-download me-2"></i>Export
@@ -108,6 +90,27 @@
  </div>
  @endif
 
+ @if($reviewEvidence)
+ <section class="review-session-reliability mb-4" style="--reliability-color: {{ $reviewEvidence->reliability->color }};">
+ <div class="review-session-reliability-main">
+ <span><i class="fa-solid fa-shield-check"></i> Review reliability</span>
+ <strong>{{ $reviewEvidence->reliability->score === null ? 'Pending' : $reviewEvidence->reliability->score.'%' }} - {{ $reviewEvidence->reliability->label }}</strong>
+ <p>{{ $reviewEvidence->reliability->description }}</p>
+ </div>
+ <div class="review-session-proof-grid">
+ <div><span>Answers</span><strong>{{ $reviewEvidence->proof_stats->answers }}</strong></div>
+ <div><span>Evidence Quotes</span><strong>{{ $reviewEvidence->proof_stats->with_evidence }}</strong></div>
+ <div><span>Missing Points</span><strong>{{ $reviewEvidence->proof_stats->missing_points }}</strong></div>
+ <div><span>Practice Targets</span><strong>{{ $reviewEvidence->proof_stats->needs_practice }}</strong></div>
+ </div>
+ <div class="review-session-next-action">
+ <span>Next action</span>
+ <strong>{{ $reviewEvidence->next_action->area }}</strong>
+ <p>{{ $reviewEvidence->next_action->action }}</p>
+ </div>
+ </section>
+ @endif
+
  @include('shared.partials.review-quick-summary', [
  'report' => $report,
  'sessionRecord' => $sessionRecord,
@@ -123,6 +126,7 @@
  <div class="accordion" id="answersAccordion">
  @foreach($sessionRecord->answers as $index => $answer)
  @php
+ $answerEvidenceCard = ($reviewEvidence?->answers ?? collect())->firstWhere('number', $index + 1);
  $headerAlignmentStatus = trim((string) data_get($answer->coaching_feedback?? [], 'content_alignment.status', ''));
  $headerAlignmentLabel = trim((string) data_get($answer->coaching_feedback?? [], 'content_alignment.status_label', ''));
  $headerAlignmentLabel = $headerAlignmentLabel!== ''? $headerAlignmentLabel: match ($headerAlignmentStatus) {
@@ -169,8 +173,14 @@
  @if($headerHasEvaluatedScore)
  <span class="badge" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6;font-size:0.9rem;padding:8px 12px;">Score: {{ $answer->score?? 0 }}</span>
  @endif
+ @if($answerEvidenceCard)
+ <span class="badge" style="background:color-mix(in srgb, {{ $answerEvidenceCard->confidence_color }} 12%, transparent);color:{{ $answerEvidenceCard->confidence_color }};border:1px solid color-mix(in srgb, {{ $answerEvidenceCard->confidence_color }} 28%, transparent);font-size:.82rem;padding:8px 12px;">{{ $answerEvidenceCard->confidence_label }}</span>
+ @endif
  @else
  <span class="badge" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6;font-size:0.9rem;padding:8px 12px;">Score: {{ $answer->score?? 0 }}</span>
+ @if($answerEvidenceCard)
+ <span class="badge" style="background:color-mix(in srgb, {{ $answerEvidenceCard->confidence_color }} 12%, transparent);color:{{ $answerEvidenceCard->confidence_color }};border:1px solid color-mix(in srgb, {{ $answerEvidenceCard->confidence_color }} 28%, transparent);font-size:.82rem;padding:8px 12px;">{{ $answerEvidenceCard->confidence_label }}</span>
+ @endif
  @endif
  </div>
  </div>

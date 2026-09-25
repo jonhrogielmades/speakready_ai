@@ -71,41 +71,11 @@
  $cameraStatus = strtolower(trim((string) ($cameraFeedback['status'] ?? '')));
  $cameraVisible = in_array($cameraStatus, ['measured', 'insufficient_data'], true)
  || ($cameraDetectionOn && $cameraStatus === 'not_measured' && trim((string) ($cameraFeedback['observation'] ?? '')) !== '');
- $formatCameraPercent = static function ($value): ?string {
- if (! is_numeric($value)) {
- return null;
- }
-
- return max(0, min(100, (int) round((float) $value))) . '%';
- };
- $formatCameraScore = static function ($value): ?string {
- if (! is_numeric($value)) {
- return null;
- }
-
- return max(0, min(100, (int) round((float) $value))) . '/100';
- };
  $removeHandFeedback = static function (string $text): string {
  $clean = preg_replace('/(?:^|\s+)[^.!?]*(?:hand|hands|gesture|gestures)[^.!?]*[.!?]/iu', ' ', $text) ?? $text;
 
  return trim(preg_replace('/\s+/u', ' ', $clean) ?? $clean);
  };
- $cameraEvidence = is_array($cameraFeedback['evidence'] ?? null) ? $cameraFeedback['evidence'] : [];
- $cameraMetrics = [];
- foreach ([
- ['Face in frame', $formatCameraPercent($cameraEvidence['face_visibility_percent'] ?? null)],
- ['Eye contact', $formatCameraPercent($cameraEvidence['camera_facing_percent'] ?? null)],
- ['Shoulders', $formatCameraPercent($cameraEvidence['shoulders_level_percent'] ?? null)],
- ['Posture', $formatCameraPercent($cameraEvidence['upright_posture_percent'] ?? null)],
- ['Movement', $formatCameraScore($cameraEvidence['average_movement_score'] ?? null)],
- ] as $metric) {
- if ($metric[1] !== null) {
- $cameraMetrics[] = ['label' => $metric[0], 'value' => $metric[1]];
- }
- }
- if (empty($cameraMetrics) && (int) ($cameraEvidence['sample_count'] ?? 0) > 0) {
- $cameraMetrics[] = ['label' => 'Samples', 'value' => (string) (int) $cameraEvidence['sample_count']];
- }
  $cameraObservation = trim((string) ($cameraFeedback['observation'] ?? ''));
  if ($cameraObservation === '') {
  $cameraObservation = $cameraStatus === 'insufficient_data'
@@ -128,6 +98,49 @@
  if (preg_match('/\b(?:hand|hands|gesture|gestures)\b/iu', $cameraTip) === 1) {
  $cameraTip = 'Use steady front light and keep your face and shoulders in the preview when possible.';
  }
+ $scoringConfidence = is_numeric(data_get($contentAlignment, 'scoring_confidence'))
+ ? max(0, min(100, (int) round((float) data_get($contentAlignment, 'scoring_confidence'))))
+ : (is_numeric($answer->scoring_confidence ?? null) ? max(0, min(100, (int) round((float) $answer->scoring_confidence))) : null);
+ $confidenceLabel = match (true) {
+ $scoreUnavailable && $scoringConfidence === null => 'Not enough evidence',
+ $scoringConfidence === null => 'Confidence pending',
+ $scoringConfidence >= 80 => 'High confidence',
+ $scoringConfidence >= 55 => 'Medium confidence',
+ default => 'Low confidence',
+ };
+ $confidenceColor = match (true) {
+ $scoreUnavailable && $scoringConfidence === null => '#64748b',
+ $scoringConfidence === null => '#64748b',
+ $scoringConfidence >= 80 => '#10b981',
+ $scoringConfidence >= 55 => '#2563eb',
+ default => '#f59e0b',
+ };
+ $confidenceNote = match (true) {
+ $scoreUnavailable => 'This answer needs more usable detail before the score should be trusted strongly.',
+ $scoringConfidence === null => 'The app did not store a confidence value for this answer.',
+ $scoringConfidence >= 80 => 'Enough answer detail was available for a stable review.',
+ $scoringConfidence >= 55 => 'The review is useful, but one or more details were limited.',
+ default => 'Treat this as a coaching hint and retry with more complete detail.',
+ };
+ $feedbackQuality = is_numeric(data_get($coachingFeedback, 'feedback_quality.completeness_percent'))
+ ? max(0, min(100, (int) round((float) data_get($coachingFeedback, 'feedback_quality.completeness_percent'))))
+ : null;
+ $evaluationSource = trim((string) data_get($contentAlignment, 'evaluation_source', ''));
+ $evaluationSourceLabel = match ($evaluationSource) {
+ 'local_evidence' => 'Local evidence check',
+ 'local_fallback' => 'Fallback evidence check',
+ 'provider' => 'AI provider check',
+ '' => 'Saved review',
+ default => \Illuminate\Support\Str::headline(str_replace('_', ' ', $evaluationSource)),
+ };
+ $successCheck = $reviewFeedbackText($contentAlignment['success_check'] ?? '');
+ if ($successCheck === '') {
+ $successCheck = 'A reviewer can find the direct answer, the supporting detail, and the result or lesson.';
+ }
+ $limitationNote = $reviewFeedbackText($contentAlignment['limitation'] ?? '');
+ if ($limitationNote === '') {
+ $limitationNote = 'This review uses only the saved answer, question, and measurable practice data.';
+ }
 @endphp
 
 <div class="review-answer-simple">
@@ -136,6 +149,52 @@
  <span class="retry-chip">Not scored</span>
  </div>
  @endif
+
+ <section class="review-evidence-card" style="--confidence-color: {{ $confidenceColor }};">
+ <div class="review-evidence-head">
+ <div>
+ <span class="review-evidence-kicker">Evidence & reliability</span>
+ <strong>{{ $confidenceLabel }}</strong>
+ </div>
+ <div class="review-evidence-badges">
+ @if($scoringConfidence !== null)
+ <span>{{ $scoringConfidence }}% confidence</span>
+ @endif
+ @if($feedbackQuality !== null)
+ <span>{{ $feedbackQuality }}% checked</span>
+ @endif
+ <span>{{ $evaluationSourceLabel }}</span>
+ </div>
+ </div>
+ <p class="review-evidence-note">{{ $confidenceNote }}</p>
+ <div class="review-evidence-grid">
+ <div>
+ <span>Evidence used</span>
+ @if(!empty($supportingExcerpts))
+ <p>"{{ $supportingExcerpts[0] }}"</p>
+ @else
+ <p>No direct quote was saved for this answer. Use the full answer below as the review source.</p>
+ @endif
+ </div>
+ <div>
+ <span>Missing or weak</span>
+ @if(!empty($missingPoints))
+ <ul>
+ @foreach($missingPoints as $item)
+ <li>{{ $item }}</li>
+ @endforeach
+ </ul>
+ @else
+ <p>No major missing point was stored. Keep the answer focused and add stronger proof if you retry.</p>
+ @endif
+ </div>
+ <div>
+ <span>Success check</span>
+ <p>{{ $successCheck }}</p>
+ </div>
+ </div>
+ <p class="review-evidence-limitation">{{ $limitationNote }}</p>
+ </section>
 
  <div class="review-answer-summary-grid">
  <section class="review-answer-section review-answer-section-wide">
@@ -169,15 +228,8 @@
 
  @if($cameraVisible)
  <section class="review-answer-section review-answer-section-wide review-camera-card">
- <div class="review-block-title"><i class="fa-solid fa-video"></i><span>Camera Feedback</span></div>
+ <div class="review-block-title"><i class="fa-solid fa-video"></i><span>Camera Coaching Note</span></div>
  <p>{{ $cameraObservation }}</p>
- @if(!empty($cameraMetrics))
- <div class="review-camera-chips">
- @foreach($cameraMetrics as $metric)
- <span class="review-camera-chip"><strong>{{ $metric['label'] }}</strong><span>{{ $metric['value'] }}</span></span>
- @endforeach
- </div>
- @endif
  <p class="review-camera-note">{{ $cameraTip }} Browser estimate only. Not part of readiness score.</p>
  </section>
  @endif

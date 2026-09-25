@@ -2,12 +2,14 @@
 @section('title', 'Feedback Center')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/feedback.css?v=13') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/feedback.css?v=14') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')
 @php
  $hasActiveFeedbackFilters = filled($feedbackFilters['scenario']?? '') || filled($feedbackFilters['search']?? '');
+ $feedbackEvidence = $feedbackEvidence ?? null;
+ $feedbackAnswerCards = $feedbackEvidence?->answers ?? collect();
 @endphp
 
 <div class="db-section active animate-fade-up feedback-shell">
@@ -20,7 +22,7 @@
  </svg>
  <div>
  <h4 class="feedback-title">Feedback Center</h4>
- <p class="feedback-subtitle">See what worked, what to improve, and what to practice next.</p>
+ <p class="feedback-subtitle">See the evidence behind each score, how reliable it is, and what to practice next.</p>
  </div>
  </div>
  <svg class="feedback-hero-art" viewBox="0 0 270 190" aria-hidden="true">
@@ -43,8 +45,8 @@
  <div class="feedback-insight-head">
  <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
  <div>
- <h5 class="feedback-insight-title" id="feedback-ai-summary-title">Feedback Summary</h5>
- <p class="feedback-insight-subtitle">Score, strengths, focus area, and next practice.</p>
+ <h5 class="feedback-insight-title" id="feedback-ai-summary-title">Evidence-Based Feedback Summary</h5>
+ <p class="feedback-insight-subtitle">Score, confidence, proof, and next practice.</p>
  </div>
  </div>
  @if($feedbackSummary)
@@ -64,6 +66,13 @@
  </div>
  <div class="feedback-summary-copy">
  <p class="feedback-summary-headline">{{ $feedbackSummary->headline }}</p>
+ @if($feedbackEvidence)
+ <div class="feedback-proof-strip">
+ <span style="--proof-color: {{ $feedbackEvidence->reliability->color }};"><i class="fa-solid fa-shield-check"></i>{{ $feedbackEvidence->reliability->label }}</span>
+ <span><i class="fa-solid fa-quote-left"></i>{{ $feedbackEvidence->proof_stats->with_evidence }}/{{ $feedbackEvidence->proof_stats->answers }} answers with proof</span>
+ <span><i class="fa-solid fa-triangle-exclamation"></i>{{ $feedbackEvidence->proof_stats->needs_practice }} need practice</span>
+ </div>
+ @endif
  @if($feedbackSummary->metrics->count() > 0)
  <div class="feedback-section-label">Category Breakdown</div>
  <div class="feedback-metric-grid" aria-label="Latest score metrics">
@@ -76,20 +85,6 @@
  @endforeach
  </div>
  @endif
- <div class="feedback-summary-note-grid">
- <div class="feedback-summary-note">
- <b>Strengths</b>
- <p>{{ $feedbackSummary->strengths }}</p>
- </div>
- <div class="feedback-summary-note">
- <b>Focus Area</b>
- <p>{{ $feedbackSummary->weaknesses }}</p>
- </div>
- <div class="feedback-summary-note">
- <b>Next Practice</b>
- <p>{{ $feedbackSummary->suggestions }}</p>
- </div>
- </div>
  <div class="feedback-summary-actions {{ $latestFeedbackSession ? 'feedback-summary-actions-pair' : 'feedback-summary-actions-single' }}">
  <a href="{{ route('interview.setup') }}" class="feedback-summary-action feedback-summary-action-primary">
  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
@@ -111,23 +106,76 @@
  @endif
  </section>
 
+ @if($feedbackEvidence)
+ <section class="feedback-insight-panel feedback-proof-panel" id="feedbackReliability" aria-labelledby="feedback-reliability-title">
+ <div class="feedback-insight-head">
+ <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-fingerprint"></i></span>
+ <div>
+ <h5 class="feedback-insight-title" id="feedback-reliability-title">Proof & Next Action</h5>
+ <p class="feedback-insight-subtitle">What the review can prove, where it is uncertain, and the next move.</p>
+ </div>
+ </div>
+ <div class="feedback-reliability-card" style="--reliability-color: {{ $feedbackEvidence->reliability->color }};">
+ <div>
+ <span class="feedback-section-label">Reliability</span>
+ <strong>{{ $feedbackEvidence->reliability->score === null ? 'Pending' : $feedbackEvidence->reliability->score.'%' }}</strong>
+ </div>
+ <p>{{ $feedbackEvidence->reliability->description }}</p>
+ <div class="feedback-reliability-tags">
+ <span>{{ $feedbackEvidence->reliability->version_label }}</span>
+ <span>{{ $feedbackEvidence->reliability->quality_label }}</span>
+ </div>
+ </div>
+ <div class="feedback-proof-stat-grid">
+ <div><span>Answers</span><strong>{{ $feedbackEvidence->proof_stats->answers }}</strong></div>
+ <div><span>Evidence Quotes</span><strong>{{ $feedbackEvidence->proof_stats->with_evidence }}</strong></div>
+ <div><span>Missing Points</span><strong>{{ $feedbackEvidence->proof_stats->missing_points }}</strong></div>
+ <div><span>Practice Targets</span><strong>{{ $feedbackEvidence->proof_stats->needs_practice }}</strong></div>
+ </div>
+ <div class="feedback-next-action-card">
+ <span class="feedback-section-label">Recommended next action</span>
+ <strong>{{ $feedbackEvidence->next_action->area }}</strong>
+ <p>{{ $feedbackEvidence->next_action->action }}</p>
+ @if($feedbackEvidence->next_action->evidence !== '')
+ <small>{{ $feedbackEvidence->next_action->evidence }}</small>
+ @endif
+ <a href="{{ $feedbackEvidence->next_action->review_url }}">Open evidence <i class="fa-solid fa-arrow-right"></i></a>
+ </div>
+ @if($feedbackEvidence->recurring_focus->isNotEmpty())
+ <div class="feedback-focus-list">
+ @foreach($feedbackEvidence->recurring_focus as $focus)
+ <div>
+ <span>{{ $focus->count }}x</span>
+ <p><strong>{{ $focus->area }}</strong>{{ $focus->action !== '' ? ' - '.$focus->action : '' }}</p>
+ </div>
+ @endforeach
+ </div>
+ @endif
+ </section>
+ @endif
+
  </div>
 
  <section class="feedback-insight-panel feedback-answer-panel" id="feedbackAnswerCoaching" aria-labelledby="feedback-answer-coaching-title">
  <div class="feedback-insight-head">
  <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
  <div>
- <h5 class="feedback-insight-title" id="feedback-answer-coaching-title">Answer Review</h5>
- <p class="feedback-insight-subtitle">Feedback on your answer and the next attempt.</p>
+ <h5 class="feedback-insight-title" id="feedback-answer-coaching-title">Evidence-Based Answer Review</h5>
+ <p class="feedback-insight-subtitle">Each answer shows score confidence, source evidence, missing points, and a retry target.</p>
  </div>
  </div>
  <div class="feedback-answer-grid">
- @forelse($answerCoachingHighlights as $answerCoaching)
+ @forelse($feedbackAnswerCards as $answerCoaching)
  <article class="feedback-answer-item">
  <div class="feedback-answer-top">
  <strong>{{ $answerCoaching->label ?? 'Answer '.$answerCoaching->number }}</strong>
- <span class="feedback-answer-score">{{ $answerCoaching->score === null? 'Pending': $answerCoaching->score.'%' }}</span>
+ <div class="feedback-answer-badges">
+ <span class="feedback-answer-score">{{ $answerCoaching->score_label ?? ($answerCoaching->score === null? 'Pending': $answerCoaching->score.'%') }}</span>
+ <span class="feedback-answer-status" style="--status-color: {{ $answerCoaching->status_color ?? '#64748b' }}">{{ $answerCoaching->status_label ?? 'Reviewed' }}</span>
+ <span class="feedback-answer-status" style="--status-color: {{ $answerCoaching->confidence_color ?? '#64748b' }}">{{ $answerCoaching->confidence_label ?? 'Confidence pending' }}</span>
  </div>
+ </div>
+ <div class="feedback-answer-question">{{ $answerCoaching->question ?? 'Question text unavailable.' }}</div>
  <div class="feedback-answer-user">
  <b>Your answer</b>
  <p>{{ $answerCoaching->answer }}</p>
@@ -141,13 +189,24 @@
  </div>
  @endif
  </div>
- <p class="feedback-answer-feedback"><strong>Feedback:</strong> {{ $answerCoaching->feedback }}</p>
- @if(($answerCoaching->impact ?? '') !== '')
- <p class="feedback-answer-impact"><strong>Impact:</strong> {{ $answerCoaching->impact }}</p>
+ @if(($answerCoaching->evidence_quote ?? '') !== '')
+ <p class="feedback-answer-evidence"><strong>Evidence used:</strong> "{{ $answerCoaching->evidence_quote }}"</p>
  @endif
- <p class="feedback-answer-focus"><strong>Next practice:</strong> {{ $answerCoaching->improvement }}</p>
+ @if(!empty($answerCoaching->missing_points ?? []))
+ <div class="feedback-answer-missing">
+ <strong>Missing or weak:</strong>
+ @foreach($answerCoaching->missing_points as $missingPoint)
+ <span>{{ $missingPoint }}</span>
+ @endforeach
+ </div>
+ @endif
+ <p class="feedback-answer-feedback"><strong>Feedback:</strong> {{ $answerCoaching->feedback }}</p>
+ <p class="feedback-answer-focus"><strong>Next practice:</strong> {{ $answerCoaching->next_practice ?? $answerCoaching->improvement }}</p>
+ @if(($answerCoaching->success_check ?? '') !== '')
+ <p class="feedback-answer-impact"><strong>Success check:</strong> {{ $answerCoaching->success_check }}</p>
+ @endif
  <a href="{{ $answerCoaching->review_url }}" class="feedback-answer-action">
- View details <i class="fa-solid fa-arrow-right"></i>
+ View full evidence <i class="fa-solid fa-arrow-right"></i>
  </a>
  </article>
  @empty
@@ -320,7 +379,7 @@
  { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to turn completed interviews into strengths, focus areas, and next practice actions.', side: 'bottom', align: 'start' }},
  { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, and focus area.', side: 'bottom', align: 'start' }},
  { element: '.feedback-metric-grid', popover: { title: 'Category Breakdown', description: 'Scan the latest category scores to spot which interview skills are strongest or need attention.', side: 'top', align: 'start' }},
- { element: '.feedback-summary-note-grid', popover: { title: 'Strengths And Focus', description: 'Use these notes to understand what worked, what needs work, and what to practice next.', side: 'top', align: 'start' }},
+ { element: '#feedbackReliability', popover: { title: 'Proof And Next Action', description: 'Use this section to check reliability, evidence coverage, missing points, and the next recommended action.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
  { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review answer feedback, score, and the next practice cue.', side: 'bottom', align: 'start' }},
@@ -341,7 +400,7 @@
  { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to turn completed interviews into strengths, focus areas, and next practice actions.', side: 'bottom', align: 'start' }},
  { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, and focus area.', side: 'bottom', align: 'start' }},
  { element: '.feedback-metric-grid', popover: { title: 'Category Breakdown', description: 'Scan the latest category scores to spot which interview skills are strongest or need attention.', side: 'top', align: 'start' }},
- { element: '.feedback-summary-note-grid', popover: { title: 'Strengths And Focus', description: 'Use these notes to understand what worked, what needs work, and what to practice next.', side: 'top', align: 'start' }},
+ { element: '#feedbackReliability', popover: { title: 'Proof And Next Action', description: 'Use this section to check reliability, evidence coverage, missing points, and the next recommended action.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
  { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review answer feedback, score, and the next practice cue.', side: 'bottom', align: 'start' }},

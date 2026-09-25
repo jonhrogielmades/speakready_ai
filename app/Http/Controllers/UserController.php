@@ -28,6 +28,7 @@ use App\Services\QuestionDatasetProvider;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\AccountNotificationSchema;
 use App\Support\ChatbotSchema;
+use App\Support\FeedbackEvidencePresenter;
 use App\Support\GameSchema;
 use App\Support\LearningModuleSchema;
 use App\Support\ScoreSchema;
@@ -618,7 +619,7 @@ class UserController extends Controller
  }
 
  $feedbackSummary = $this->feedbackCenterSummary($latestFeedbackSession);
- $answerCoachingHighlights = $this->feedbackCenterAnswerCoaching($latestFeedbackSession);
+ $feedbackEvidence = FeedbackEvidencePresenter::forSession($latestFeedbackSession);
 
  $feedbackFilters = [
  'scenario' => $selectedScenario,
@@ -634,7 +635,7 @@ class UserController extends Controller
  'hasFeedbackRecords',
  'latestFeedbackSession',
  'feedbackSummary',
- 'answerCoachingHighlights'
+ 'feedbackEvidence'
  ));
  }
 
@@ -645,7 +646,6 @@ class UserController extends Controller
  }
 
  $score = $session->score;
- $feedback = $session->feedback;
  $overall = is_numeric($score?->overall_readiness_score?? null)? max(0, min(100, (int) round($score->overall_readiness_score))): null;
  $metricRows = $this->feedbackCenterMetricRows($score);
  $focusMetric = $metricRows->sortBy('value')->first();
@@ -665,9 +665,6 @@ class UserController extends Controller
  'overall' => $overall,
  'rating' => $rating,
  'headline' => $headline,
- 'strengths' => $this->feedbackCenterSnippet($feedback?->strengths, 'No strength summary was generated yet.'),
- 'weaknesses' => $this->feedbackCenterSnippet($feedback?->weaknesses, 'No focus area summary was generated yet.'),
- 'suggestions' => $this->feedbackCenterSnippet($feedback?->improvement_suggestions, 'Retry one answer with a clearer structure.'),
  'metrics' => $metricRows,
  'focus_metric' => $focusMetric,
  'strongest_metric' => $strongestMetric,
@@ -711,61 +708,6 @@ class UserController extends Controller
  ->values();
  }
 
- private function feedbackCenterAnswerCoaching(?InterviewSession $session)
- {
- if (! $session ||! $session->relationLoaded('answers')) {
- return collect();
- }
-
- return $session->answers
- ->values()
- ->take(5)
- ->map(function ($answer, int $index) use ($session) {
- $score = is_numeric($answer->score?? null)? max(0, min(100, (int) round($answer->score))): null;
- $question = trim((string) ($answer->question->question_text?? ''));
- $feedback = trim((string) ($answer->ai_feedback?? ''));
- $improvement = trim((string) ($answer->better_sample_answer?? ''));
- $questionSource = $answer->question?? $question;
- $coachingFeedback = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
- $impact = review_feedback_without_question_text(
- trim((string) data_get($coachingFeedback, 'content_alignment.impact', '')),
- $questionSource
- );
-
- if ($feedback === '') {
- $feedback = $this->feedbackCenterAnswerPriorityText($answer)?: 'Open the detailed report to review this answer with the full rubric.';
- }
- $feedback = review_feedback_without_question_text($feedback, $questionSource);
-
- if ($improvement === '') {
- $improvement = trim((string) ($answer->recommendation_text?? ''));
- }
- $improvement = review_better_answer_text($improvement, $answer, $questionSource);
-
- $answerText = trim((string) ($answer->answer_text?? ''));
- $hasVoiceRecording = trim((string) ($answer->voice_recording_path?? ''))!== '';
- $responseMode = strtolower((string) ($answer->response_mode?? ''));
- $isVoiceOnlyAnswer = $hasVoiceRecording && $responseMode === 'voice';
-
- return (object) [
- 'number' => $index + 1,
- 'label' => 'Answer '.($index + 1),
- 'answer' => Str::limit(
- $isVoiceOnlyAnswer? 'Voice answer recorded for feedback.': ($answerText!== ''? $answerText: ($hasVoiceRecording? 'Voice answer recorded. Open the detailed review to listen.': 'No answer text recorded.')),
- 115
- ),
- 'feedback' => Str::limit($feedback, 145),
- 'impact' => $impact!== ''? Str::limit($impact, 170): '',
- 'improvement' => $improvement!== ''? Str::limit($improvement, 145): 'Use a direct opening, one example, and a result.',
- 'score' => $score,
- 'review_url' => route('user.review', $session->id),
- 'has_voice_recording' => $hasVoiceRecording,
- 'is_voice_only_answer' => $isVoiceOnlyAnswer,
- 'voice_recording_url' => $hasVoiceRecording? route('interview.answer.voiceRecording', $answer): null,
- ];
- });
- }
-
  private function feedbackCenterAnswerPriorityText($answer): string
  {
  $coachingFeedback = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
@@ -779,13 +721,6 @@ class UserController extends Controller
  }
 
  return '';
- }
-
- private function feedbackCenterSnippet(?string $text, string $fallback): string
- {
- $clean = trim(preg_replace('/\s+/', ' ', (string) $text)?? '');
-
- return $clean!== ''? Str::limit($clean, 145): $fallback;
  }
 
  private function escapedFeedbackSearchPattern(string $search): string
@@ -855,8 +790,9 @@ class UserController extends Controller
  }
 
  $comparisonRows = $this->comparisonRowsFor($sessionRecord);
+ $reviewEvidence = FeedbackEvidencePresenter::forSession($sessionRecord);
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence'));
  }
 
  public function exportSession(InterviewSession $session)
