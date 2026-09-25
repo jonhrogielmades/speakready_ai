@@ -91,7 +91,12 @@ mkdir -p \
     bootstrap/cache
 
 touch storage/logs/laravel.log || true
-touch storage/framework/sr-maintenance.flag || true
+
+startup_maintenance_flag="storage/framework/sr-maintenance.flag"
+startup_maintenance_failure="storage/framework/sr-maintenance.failed"
+
+touch "$startup_maintenance_flag" || true
+rm -f "$startup_maintenance_failure" || true
 
 if command -v chown >/dev/null 2>&1; then
     chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
@@ -113,6 +118,20 @@ run_optional() {
     if ! "$@"; then
         echo "Optional startup command failed: $*" >&2
     fi
+}
+
+clear_startup_gate() {
+    rm -f "$startup_maintenance_flag" || true
+}
+
+record_startup_failure() {
+    status="$1"
+
+    {
+        echo "Container startup maintenance failed with status ${status}."
+        echo "Time: $(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date)"
+        echo "Set STARTUP_MAINTENANCE_FAIL_OPEN=false to keep the public startup page on maintenance failure."
+    } > "$startup_maintenance_failure" 2>/dev/null || true
 }
 
 env_bool() {
@@ -214,15 +233,33 @@ run_startup_maintenance() {
     run_optional php artisan route:cache
     run_optional php artisan view:cache
 
-    rm -f storage/framework/sr-maintenance.flag
+    clear_startup_gate
     echo "Container startup maintenance complete." >&2
+}
+
+handle_startup_maintenance_exit() {
+    status="$1"
+
+    if [ "$status" -eq 0 ]; then
+        return 0
+    fi
+
+    record_startup_failure "$status"
+
+    if env_bool STARTUP_MAINTENANCE_FAIL_OPEN true; then
+        echo "Container startup maintenance failed with status ${status}; clearing startup gate so Laravel can serve the best available response." >&2
+        clear_startup_gate
+    else
+        echo "Container startup maintenance failed with status ${status}; keeping maintenance gate enabled." >&2
+        touch "$startup_maintenance_flag" || true
+    fi
 }
 
 # Start PHP-FPM and Nginx quickly while Laravel startup maintenance runs behind
 # a static maintenance gate.
 php-fpm -D
 (
-    trap 'status=$?; if [ "$status" -ne 0 ]; then echo "Container startup maintenance failed with status ${status}; keeping maintenance gate enabled." >&2; touch storage/framework/sr-maintenance.flag || true; fi' EXIT
+    trap 'status=$?; handle_startup_maintenance_exit "$status"' EXIT
     run_startup_maintenance
 ) &
 
