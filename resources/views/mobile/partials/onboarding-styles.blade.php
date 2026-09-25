@@ -85,7 +85,7 @@
         font-weight: 800;
         letter-spacing: 0;
         margin: 0;
-        padding-right: 34px;
+        padding-right: 70px;
     }
 
     .driver-popover.sr-driver-popover .driver-popover-description {
@@ -154,13 +154,20 @@
     }
 
     .driver-popover.sr-driver-popover .driver-popover-close-btn {
-        width: 30px;
-        height: 30px;
-        min-height: 30px;
-        padding: 0;
+        width: auto;
+        min-width: 58px;
+        height: 32px;
+        min-height: 32px;
+        padding: 0 12px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        font-size: 0;
+    }
+
+    .driver-popover.sr-driver-popover .driver-popover-close-btn::after {
+        content: "Skip";
+        font-size: 0.78rem;
     }
 
     .driver-popover.sr-driver-popover.driverjs-theme-dark .driver-popover-arrow {

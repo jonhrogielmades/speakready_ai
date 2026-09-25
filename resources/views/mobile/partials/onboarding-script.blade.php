@@ -569,7 +569,7 @@
 
                         const isLast = !api.hasNextStep();
                         popover.innerHTML = `
-                            <button type="button" class="sr-native-tour-close driver-popover-close-btn" aria-label="Close tutorial">&times;</button>
+                            <button type="button" class="sr-native-tour-close driver-popover-close-btn" aria-label="Skip tutorial" title="Skip tutorial">Skip</button>
                             <h3 class="driver-popover-title">${escapeTourHtml(popoverConfig.title || 'Tutorial')}</h3>
                             <p class="driver-popover-description">${escapeTourHtml(popoverConfig.description || '')}</p>
                             <footer class="driver-popover-footer">

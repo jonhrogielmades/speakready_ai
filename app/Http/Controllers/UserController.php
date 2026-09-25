@@ -273,13 +273,52 @@ class UserController extends Controller
  'score' => (int) round($session->score->overall_readiness_score?? 0),
  ];
  });
+ $dashboardScoreVal = max(0, min(100, (int) round($profile->readiness_score?? $avgScore?? 0)));
+ $dashboardScoreText = $dashboardScoreVal >= 80 ? 'Interview Ready' : ($dashboardScoreVal >= 60 ? 'Boost' : 'Practice Mode');
+ $dashboardTrendScores = $scoreTrend->pluck('score')->filter(fn ($score) => is_numeric($score))->values();
+ $dashboardTrendFirst = $dashboardTrendScores->first();
+ $dashboardTrendLast = $dashboardTrendScores->last();
+ $dashboardTrendImprovement = ($dashboardTrendFirst!== null && $dashboardTrendFirst > 0 && $dashboardTrendLast!== null)
+ ? (int) round((($dashboardTrendLast - $dashboardTrendFirst) / $dashboardTrendFirst) * 100)
+ : 0;
+ $dashboardTrendText = $dashboardTrendScores->isEmpty()
+ ? 'No scores yet'
+ : ($dashboardTrendImprovement > 0
+ ? 'Trending up'
+ : ($dashboardTrendImprovement < 0 ? 'Needs focus' : 'Stable'));
+ $dashboardBubbleMessages = $this->dashboardBubbleMessages([
+ 'readiness_score' => $dashboardScoreVal,
+ 'readiness_label' => $dashboardScoreText,
+ 'trend' => $dashboardTrendText,
+ 'target_percent' => (int) ($upcomingGoal->target?? 100),
+ 'completed_sessions' => $totalSessions,
+ 'current_streak' => $currentStreak,
+ ]);
 
  return $this->mobileView('dashboard', compact(
  'profile', 'totalSessions', 'avgScore', 'recentSessions', 'scoreTrend',
  'radarData', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
  'learningLabProgress', 'recentNotifications', 'upcomingGoal',
- 'dashboardMockScenarios'
+ 'dashboardMockScenarios', 'dashboardBubbleMessages'
  ));
+ }
+
+ private function dashboardBubbleMessages(array $context): array
+ {
+ if (! Setting::enabled('aic_enable')) {
+ return AIService::fallbackDashboardBubbleMessages();
+ }
+
+ $provider = AIService::defaultProviderKey();
+ $cacheKey = 'dashboard-bubble-messages:v1:'.implode(':', [
+ $provider,
+ (int) floor(((int) ($context['readiness_score']?? 0)) / 20),
+ Str::slug((string) ($context['readiness_label']?? 'unknown')),
+ Str::slug((string) ($context['trend']?? 'unknown')),
+ (int) floor(((int) ($context['completed_sessions']?? 0)) / 5),
+ ]);
+
+ return Cache::remember($cacheKey, now()->addHours(6), fn (): array => AIService::generateDashboardBubbleMessages($context, $provider));
  }
 
  private function dashboardMockScenarios()

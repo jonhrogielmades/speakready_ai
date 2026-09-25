@@ -132,10 +132,10 @@
                             <span class="sr-image-chip"><i class="fa-solid fa-briefcase"></i> Job Interviews</span>
                         </div>
                     </div>
-                    <div class="sr-image-speech" aria-hidden="true">
+                    <div class="sr-image-speech" aria-hidden="true" data-sr-dashboard-bubble>
                         <strong>Hi! {{ $welcomeName }}</strong>
-                        <span>You're <span class="sr-image-speech-accent">ready</span> to practice and <span class="sr-image-speech-accent is-success">succeed</span> today!</span>
-                        <span class="sr-image-speech-action">Click the robot for AI Coach.</span>
+                        <span data-sr-dashboard-bubble-line>You're <span class="sr-image-speech-accent">ready</span> to practice and <span class="sr-image-speech-accent is-success">succeed</span> today!</span>
+                        <span class="sr-image-speech-action" data-sr-dashboard-bubble-action>Click the robot for AI Coach.</span>
                     </div>
                     <div class="sr-image-head-icons" aria-hidden="true">
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-microphone"></i></span></span>
@@ -1459,6 +1459,71 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     };
 });
+</script>
+@endpush
+
+@push('scripts')
+<script>
+    (function() {
+        const providerDashboardBubbleMessages = @json($dashboardBubbleMessages ?? []);
+        const fallbackDashboardBubbleMessages = [
+            {
+                line: 'You\'re ready to practice and succeed today!',
+                action: 'Click the robot for AI Coach.',
+            },
+            {
+                line: 'Warm up with one focused mock interview today.',
+                action: 'Ask the coach for a prep plan.',
+            },
+            {
+                line: 'Turn practice into progress one answer at a time.',
+                action: 'Review feedback after each session.',
+            },
+            {
+                line: 'Build confidence before the real interview.',
+                action: 'Tap the robot when you need help.',
+            },
+        ];
+        let dashboardBubbleMessages = (Array.isArray(providerDashboardBubbleMessages) && providerDashboardBubbleMessages.length
+            ? providerDashboardBubbleMessages
+            : fallbackDashboardBubbleMessages
+        ).map((message) => ({
+            line: String(message?.line || '').trim(),
+            action: String(message?.action || '').trim(),
+        })).filter((message) => message.line && message.action);
+
+        if (dashboardBubbleMessages.length < 2) {
+            dashboardBubbleMessages = fallbackDashboardBubbleMessages;
+        }
+
+        function initDashboardBubbleMessages() {
+            document.querySelectorAll('[data-sr-dashboard-bubble]').forEach((bubble) => {
+                const line = bubble.querySelector('[data-sr-dashboard-bubble-line]');
+                const action = bubble.querySelector('[data-sr-dashboard-bubble-action]');
+
+                if (!line || !action || dashboardBubbleMessages.length < 2) return;
+
+                let messageIndex = 0;
+                const applyMessage = () => {
+                    line.textContent = dashboardBubbleMessages[messageIndex].line;
+                    action.textContent = dashboardBubbleMessages[messageIndex].action;
+                };
+
+                applyMessage();
+
+                window.setInterval(() => {
+                    messageIndex = (messageIndex + 1) % dashboardBubbleMessages.length;
+                    applyMessage();
+                }, 30000);
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDashboardBubbleMessages);
+        } else {
+            initDashboardBubbleMessages();
+        }
+    })();
 </script>
 @endpush
 
