@@ -114,6 +114,7 @@
 
             try {
                 window.__speakReadyForceDestroy = true;
+                stopTourVoiceover();
                 driverObj.destroy();
             } catch (error) {
                 console.warn('Unable to destroy duplicate tutorial:', error);
@@ -217,6 +218,151 @@
         function getSteps(config) {
             const sourceSteps = isMobileTour(config.serverDetectedMobile) ? config.stepsMobile : config.stepsDesktop;
             return (sourceSteps || []).filter(isVisibleStep);
+        }
+
+        function supportsTourVoiceover() {
+            return 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+        }
+
+        function getTourSpeechLocale(config) {
+            return config?.speechLocale ||
+                document.documentElement.dataset.speechLocale ||
+                navigator.language ||
+                'en-PH';
+        }
+
+        function tourSpeechLocalePriority(config) {
+            const locale = getTourSpeechLocale(config);
+            const language = String(locale || '').split('-')[0];
+            const priority = [locale, language, 'en-PH', 'en-US', 'en'];
+
+            return priority.filter((value, index, list) => value && list.indexOf(value) === index);
+        }
+
+        function tourVoiceMatchesLanguage(voice, language) {
+            const voiceLang = String(voice?.lang || '').toLowerCase();
+            const target = String(language || '').toLowerCase();
+
+            return voiceLang === target || voiceLang.startsWith(`${target}-`) || target.startsWith(`${voiceLang}-`);
+        }
+
+        function tourVoiceLooksNatural(voice) {
+            return /google|premium|natural|siri|microsoft|enhanced|neural/i.test(voice?.name || '');
+        }
+
+        function tourVoiceLooksMale(voice) {
+            return /\b(male|man|boy|david|mark|george|daniel|alex|fred|tom|ralph|bruce|arthur|albert|jorge|diego|carlos|miguel|juan|paul|ryan|liam|brian|guy|aaron|eric|nathan|christopher|jacob|justin|matthew|joey|onyx|echo)\b/i.test(voice?.name || '');
+        }
+
+        let preferredTourVoice = null;
+
+        function loadTourVoices(config) {
+            if (!supportsTourVoiceover()) return null;
+
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices.length) return preferredTourVoice;
+
+            const languagePriority = tourSpeechLocalePriority(config);
+            preferredTourVoice = languagePriority.map(language =>
+                voices.find(voice => tourVoiceMatchesLanguage(voice, language) && tourVoiceLooksNatural(voice) && !tourVoiceLooksMale(voice)) ||
+                voices.find(voice => tourVoiceMatchesLanguage(voice, language) && !tourVoiceLooksMale(voice)) ||
+                voices.find(voice => tourVoiceMatchesLanguage(voice, language))
+            ).find(Boolean) ||
+                voices.find(voice => tourVoiceLooksNatural(voice) && !tourVoiceLooksMale(voice)) ||
+                voices.find(voice => !tourVoiceLooksMale(voice)) ||
+                voices[0] ||
+                null;
+
+            return preferredTourVoice;
+        }
+
+        if (supportsTourVoiceover()) {
+            loadTourVoices();
+
+            if (typeof window.speechSynthesis.addEventListener === 'function') {
+                window.speechSynthesis.addEventListener('voiceschanged', () => loadTourVoices());
+            } else {
+                const previousVoicesChanged = window.speechSynthesis.onvoiceschanged;
+                window.speechSynthesis.onvoiceschanged = function(event) {
+                    if (typeof previousVoicesChanged === 'function') {
+                        previousVoicesChanged.call(this, event);
+                    }
+
+                    loadTourVoices();
+                };
+            }
+        }
+
+        let tourVoiceoverToken = 0;
+
+        function textFromTourHtml(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+
+            const template = document.createElement('template');
+            template.innerHTML = raw;
+
+            return (template.content.textContent || raw)
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function getTourStepVoiceText(step) {
+            const popover = step?.popover || {};
+            const customText = popover.voiceoverText || popover.speechText || step?.voiceoverText || step?.speechText;
+
+            if (customText) return textFromTourHtml(customText);
+
+            return [
+                textFromTourHtml(popover.title || step?.title || ''),
+                textFromTourHtml(popover.description || step?.description || ''),
+            ].filter(Boolean).join('. ');
+        }
+
+        function stopTourVoiceover() {
+            tourVoiceoverToken += 1;
+
+            if (supportsTourVoiceover()) {
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function speakTourStep(step, config) {
+            if (config.voiceover === false || config.aiVoiceover === false || !supportsTourVoiceover()) return;
+
+            const text = getTourStepVoiceText(step);
+            if (!text) return;
+
+            const token = ++tourVoiceoverToken;
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = getTourSpeechLocale(config);
+
+            const voice = loadTourVoices(config);
+            if (voice) {
+                utterance.voice = voice;
+            }
+
+            utterance.rate = Number.isFinite(Number(config.voiceoverRate)) ? Number(config.voiceoverRate) : 0.94;
+            utterance.pitch = Number.isFinite(Number(config.voiceoverPitch)) ? Number(config.voiceoverPitch) : 1;
+            utterance.volume = Number.isFinite(Number(config.voiceoverVolume)) ? Number(config.voiceoverVolume) : 1;
+            utterance.onend = () => {
+                if (token === tourVoiceoverToken) {
+                    tourVoiceoverToken += 1;
+                }
+            };
+            utterance.onerror = () => {
+                if (token === tourVoiceoverToken) {
+                    tourVoiceoverToken += 1;
+                }
+            };
+
+            try {
+                window.speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.warn('Tutorial voiceover failed:', error);
+            }
         }
 
         function escapeTourHtml(value) {
@@ -395,7 +541,7 @@
                     ensureDom();
 
                     if (emitHighlightCallbacks && typeof options.onHighlightStarted === 'function') {
-                        options.onHighlightStarted(element);
+                        options.onHighlightStarted(element, step, options);
                     }
 
                     window.setTimeout(() => {
@@ -458,7 +604,7 @@
                         popover.style.visibility = 'visible';
 
                         if (emitHighlightCallbacks && typeof options.onHighlighted === 'function') {
-                            options.onHighlighted(latestElement);
+                            options.onHighlighted(latestElement, getCurrentStep(), options);
                         }
 
                         window.setTimeout(() => {
@@ -1196,6 +1342,7 @@
                     },
                     onHighlighted: (element, step, options) => {
                         setTourHighlightedElement(element);
+                        speakTourStep(step, config);
 
                         if (typeof config.onHighlighted === 'function') {
                             config.onHighlighted(element, driverObj, step, options);
@@ -1216,6 +1363,7 @@
                                 config.onBeforeDestroy(driverObj);
                             }
 
+                            stopTourVoiceover();
                             driverObj.destroy();
                         }
                     },
@@ -1229,6 +1377,7 @@
                         }
 
                         clearTourHighlightedElement();
+                        stopTourVoiceover();
 
                         if (typeof config.onDestroyed === 'function') {
                             config.onDestroyed(driverObj);
