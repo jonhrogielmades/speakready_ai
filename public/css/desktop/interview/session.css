@@ -4774,19 +4774,19 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
 html body #sec-interview-session .ai-avatar-panel #interviewControls .session-action-btn {
     flex: 0 0 auto !important;
     width: auto !important;
-    min-width: 106px !important;
+    min-width: 82px !important;
     max-width: none !important;
-    height: 42px !important;
-    min-height: 42px !important;
-    max-height: 42px !important;
-    padding: 0 18px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    padding: 0 12px !important;
     border: none !important;
     border-radius: 10px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
-    font-size: 0.84rem !important;
+    font-size: 0.74rem !important;
     font-weight: 800 !important;
     line-height: 1.1 !important;
     white-space: nowrap !important;
@@ -4800,43 +4800,43 @@ html body #sec-interview-session .ai-avatar-panel #interviewControls .session-re
 }
 
 html body #sec-interview-session .ai-avatar-panel #interviewControls .session-end-btn {
-    min-width: 126px !important;
+    min-width: 104px !important;
     background: #e11d48 !important;
     box-shadow: 0 4px 15px rgba(225, 29, 72, 0.28) !important;
 }
 
 @media (max-width: 575.98px) {
     html body #sec-interview-session .ai-avatar-panel #interviewControls .session-action-btn {
-        min-width: 88px !important;
-        height: 40px !important;
-        min-height: 40px !important;
-        max-height: 40px !important;
-        padding: 0 11px !important;
-        font-size: 0.72rem !important;
+        min-width: 74px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+        padding: 0 9px !important;
+        font-size: 0.66rem !important;
     }
 
     html body #sec-interview-session .ai-avatar-panel #interviewControls .session-end-btn {
-        min-width: 104px !important;
+        min-width: 92px !important;
     }
 }
 
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-action-btn {
     flex: 0 0 auto !important;
     width: auto !important;
-    min-width: 102px !important;
+    min-width: 78px !important;
     max-width: none !important;
-    height: 42px !important;
-    min-height: 42px !important;
-    max-height: 42px !important;
-    padding: 0 16px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    padding: 0 12px !important;
     border: none !important;
     border-radius: 10px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
+    gap: 6px !important;
     box-sizing: border-box !important;
-    font-size: 0.84rem !important;
+    font-size: 0.74rem !important;
     font-weight: 800 !important;
     line-height: 1.1 !important;
     white-space: nowrap !important;
@@ -4859,7 +4859,7 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
 
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-action-btn i {
     margin: 0 !important;
-    font-size: 0.88rem !important;
+    font-size: 0.78rem !important;
 }
 
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-action-label {
@@ -4868,12 +4868,12 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
 
 @media (max-width: 575.98px) {
     html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-action-btn {
-        min-width: 78px !important;
-        height: 40px !important;
-        min-height: 40px !important;
-        max-height: 40px !important;
-        padding: 0 10px !important;
-        gap: 6px !important;
-        font-size: 0.72rem !important;
+        min-width: 68px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+        padding: 0 8px !important;
+        gap: 5px !important;
+        font-size: 0.66rem !important;
     }
 }
