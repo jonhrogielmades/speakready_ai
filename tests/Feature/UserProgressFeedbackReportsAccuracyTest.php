@@ -428,7 +428,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $session = $this->completedSessionFor($user, $category, 65, now(), [
  'target_position' => 'Customer Service Representative',
  ]);
- $leakedPrompt = "Good morning! I'm Karyl, and I'd like to start by having you introduce yourself. Please share your name.";
+ $leakedPrompt = 'Good morning! Thank you for joining me today. I would like to start by asking you to introduce yourself, including your name, where you currently reside, and a bit about your background.';
 
  Feedback::create([
  'interview_session_id' => $session->id,
@@ -448,8 +448,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  InterviewAnswer::create([
  'interview_session_id' => $session->id,
  'question_id' => $question->id,
- 'answer_text' => "I'm Jonh Rogiel Tumanda from Pinut-an San Ricardo Southern Leyte.",
- 'ai_feedback' => 'For the answer "'.$leakedPrompt.'", this report uses only what you wrote in the answer.',
+ 'answer_text' => 'ok',
+ 'ai_feedback' => 'The answer was too short to check your speaking and writing, knowledge, and how ready you are for the interview. For the answer "'.$leakedPrompt.'", The answer text was "ok", but it did not give enough clear detail to show how well it answered the question. Next attempt: give a full direct answer, then add one true detail.',
  'better_sample_answer' => 'Answer draft based on your facts for "'.$leakedPrompt.'": I am Jonh Rogiel Tumanda from Pinut-an San Ricardo Southern Leyte, and I can introduce myself clearly.',
  'coaching_feedback' => [
  'content_alignment' => [
@@ -466,8 +466,11 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee($leakedPrompt)
  ->assertViewHas('feedbackEvidence', fn ($evidence) => $evidence
  && $evidence->answers->count() === 1
- && str_contains($evidence->answers->first()->feedback, 'This report uses only what you wrote in the answer')
+ && str_contains($evidence->answers->first()->feedback, 'The answer was too short')
+ && str_contains($evidence->answers->first()->feedback, 'The answer did not give enough clear detail')
  && ! str_contains($evidence->answers->first()->feedback, $leakedPrompt)
+ && ! str_contains($evidence->answers->first()->feedback, 'For the answer')
+ && ! str_contains($evidence->answers->first()->feedback, 'The answer text was')
  && ! str_contains($evidence->answers->first()->impact, $leakedPrompt)
  && ! str_contains($evidence->answers->first()->better_answer, $leakedPrompt));
  }
@@ -623,7 +626,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $session = $this->completedSessionFor($user, $category, 63, now(), [
  'target_position' => 'Customer Service Representative',
  ]);
- $leakedPrompt = "Good morning! I'm Karyl, and I'd like to start by having you introduce yourself. Please share your name.";
+ $leakedPrompt = 'Good morning! Thank you for joining me today. I would like to start by asking you to introduce yourself, including your name, where you currently reside, and a bit about your background.';
 
  Feedback::create([
  'interview_session_id' => $session->id,
@@ -644,7 +647,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  'interview_session_id' => $session->id,
  'question_id' => $question->id,
  'answer_text' => "I'm Jonh Rogiel Tumanda from Pinut-an San Ricardo Southern Leyte.",
- 'ai_feedback' => 'For the answer "'.$leakedPrompt.'", this report uses only what you wrote in the answer.',
+ 'ai_feedback' => 'The answer was too short to check your speaking and writing, knowledge, and how ready you are for the interview. For the answer "'.$leakedPrompt.'", The answer text was "ok", but it did not give enough clear detail to show how well it answered the question. Next attempt: give a full direct answer, then add one true detail.',
  'better_sample_answer' => 'Answer draft based on your facts for "'.$leakedPrompt.'": I am Jonh Rogiel Tumanda from Pinut-an San Ricardo Southern Leyte.',
  'coaching_feedback' => [
  'content_alignment' => [
@@ -661,8 +664,11 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('Answer Review')
  ->assertSee('Question 1')
  ->assertSee('Please introduce yourself.')
- ->assertSee('This report uses only what you wrote in the answer')
+ ->assertSee('The answer was too short')
+ ->assertSee('The answer did not give enough clear detail')
  ->assertSee('weak link in this answer')
+ ->assertDontSee('For the answer')
+ ->assertDontSee('The answer text was')
  ->assertDontSee($leakedPrompt);
  }
 

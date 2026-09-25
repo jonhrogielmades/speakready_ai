@@ -4967,14 +4967,15 @@ PROMPT;
  }
 
  $aiFeedback = $providerFeedback;
- $questionExcerpt = self::excerpt($questionText!== ''? $questionText: 'this interview question', 160);
  if ($isSkipped &&! $hasProviderScores) {
- $aiFeedback = 'The question "'.$questionExcerpt.'" was skipped, so there is no answer to check for that question. Skipping makes it hard for the interviewer to judge the skill or experience. Next attempt: answer the question first, then add one true detail.';
+ $aiFeedback = 'No answer was submitted, so there is no response to check. Skipping makes it hard for the interviewer to judge the skill or experience. Next attempt: give a direct answer, then add one true detail.';
  } elseif ($isTooShort &&! $hasProviderScores) {
  $required = 'The answer was too short to check your communication skills, knowledge, and interview readiness.';
- $shortEvidence = $evidenceQuotes[0]?? self::excerpt($answerText, 220);
- $evidenceExplanation = $shortEvidence!== ''? ' The answer text was "'.$shortEvidence.'", but it did not give enough clear detail to show how well it answered the question.': ' The answer did not give enough clear detail to show how well it answered the question.';
- $aiFeedback = $required.' For the question "'.$questionExcerpt.'",'.$evidenceExplanation.' Next attempt: give a full direct answer, then add one true detail.';
+ $shortEvidence = trim((string) ($evidenceQuotes[0]?? self::excerpt($answerText, 80)));
+ $evidenceExplanation = $shortEvidence!== ''
+ ? ' The saved answer was very short, so it did not give enough clear detail to evaluate the response.'
+ : ' The answer did not give enough clear detail to evaluate the response.';
+ $aiFeedback = $required.$evidenceExplanation.' Next attempt: give a full direct answer, then add one true detail.';
  } elseif (! $hasProviderScores
  || $aiFeedback === ''
  || self::isGenericFeedback($aiFeedback)
@@ -5898,11 +5899,10 @@ PROMPT;
  private static function evidenceGroundedFeedback(string $answerText, string $questionText, array $profile, bool $hadProviderScores): string
  {
  $excerpt = self::excerpt((string) ($profile['supporting_excerpt']?: $answerText), 180);
- $questionExcerpt = self::excerpt($questionText!== ''? $questionText: 'this interview question', 160);
  $parts = [];
  $prefix = $hadProviderScores? 'The AI note was changed because it did not clearly match the answer.': 'This report uses only what you wrote in the answer.';
 
- $parts[] = "{$prefix} For the question \"{$questionExcerpt}\", the best proof in this answer was: \"{$excerpt}\".";
+ $parts[] = "{$prefix} The best proof in this answer was: \"{$excerpt}\".";
  $parts[] = self::answerSignalFeedbackDetail($profile);
  $parts[] = self::questionSpecificFeedbackDetail($profile, $questionText);
 
@@ -5983,10 +5983,10 @@ PROMPT;
  $missingFocusTerms = array_slice(array_values(array_diff($questionKeywords, $answerKeywords)), 0, 3);
 
  if ($focusTerms === []) {
- return "Question focus: this {$intentLabel} question was checked against the exact words of the question, not a general answer pattern.";
+ return "Answer focus: this {$intentLabel} answer was checked against the expected interview topic, not a general answer pattern.";
  }
 
- $detail = "Question focus: this {$intentLabel} question is about ".self::readableList($focusTerms).'. ';
+ $detail = "Answer focus: this {$intentLabel} answer should cover ".self::readableList($focusTerms).'. ';
  if ($matchedTerms!== []) {
  return $detail.'The answer matched it most clearly through '.self::readableList($matchedTerms).'.';
  }

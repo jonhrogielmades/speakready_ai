@@ -126,16 +126,32 @@ if (! function_exists('review_remove_prompt_quote_references')) {
     function review_remove_prompt_quote_references(string $text): string
     {
         $quotedText = '(?:"[^"]{12,}"|\x{201C}[^\x{201D}]{12,}\x{201D}|\'[^\']{12,}\'|\x{2018}[^\x{2019}]{12,}\x{2019})';
+        $anyQuotedText = '(?:"[^"]*"|\x{201C}[^\x{201D}]*\x{201D}|\'[^\']*\'|\x{2018}[^\x{2019}]*\x{2019})';
+
+        $clean = preg_replace('/\b(?:the\s+)?(?:answer|response|reply)\s+text\s+was\s+' . $anyQuotedText . '\s*,?\s+but\s+it\s+/iu', 'The answer ', $text) ?? $text;
+        $clean = preg_replace('/\b(?:the\s+)?(?:answer|response|reply)\s+text\s+was\s+' . $anyQuotedText . '\s*,?\s+but\s+/iu', 'The answer ', $clean) ?? $clean;
+        $clean = preg_replace('/\b(?:the\s+)?(?:answer|response|reply)\s+text\s+was\s+' . $anyQuotedText . '\s*[.;:]?\s*/iu', '', $clean) ?? $clean;
+        $clean = preg_replace('/\s+to\s+show\s+how\s+well\s+it\s+answered\s+the\s+question\b/iu', '', $clean) ?? $clean;
 
         $clean = preg_replace_callback(
-            '/(^|[.!?]\s+)\s*(?:For|Regarding|About|On|In response to)\s+(?:the\s+)?(?:answer|response|reply)\s+(' . $quotedText . ')\s*[:,\-]?\s*/iu',
+            '/(^|[.!?:]\s+)\s*(?:For|Regarding|About|On|In response to)\s+(?:the\s+)?(?:answer|response|reply|question|prompt|interview\s+question|interview\s+prompt)\s+(' . $quotedText . ')\s*[:,\-]?\s*/iu',
             static function (array $matches): string {
                 $quoted = review_unquote_feedback_text($matches[2] ?? '');
 
                 return review_quoted_text_looks_like_prompt($quoted) ? ($matches[1] ?? '') : ($matches[0] ?? '');
             },
-            $text
-        ) ?? $text;
+            $clean
+        ) ?? $clean;
+
+        $clean = preg_replace_callback(
+            '/(^|[.!?:]\s+)\s*(?:For|Regarding|About|On|In response to)\s+(' . $quotedText . ')\s*[:,\-]?\s*/iu',
+            static function (array $matches): string {
+                $quoted = review_unquote_feedback_text($matches[2] ?? '');
+
+                return review_quoted_text_looks_like_prompt($quoted) ? ($matches[1] ?? '') : ($matches[0] ?? '');
+            },
+            $clean
+        ) ?? $clean;
 
         $clean = preg_replace_callback(
             '/\b(weak\s+link|connection|match|link|tie)\s+to\s+(' . $quotedText . ')/iu',

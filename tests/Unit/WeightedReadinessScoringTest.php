@@ -48,6 +48,25 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame(80, $score);
     }
 
+    public function test_review_feedback_removes_prompt_and_answer_text_scaffold_from_short_answer_feedback(): void
+    {
+        $leakedPrompt = 'Good morning! Thank you for joining me today. I would like to start by asking you to introduce yourself, including your name, where you currently reside, and a bit about your background.';
+        $feedback = 'The answer was too short to check your speaking and writing, knowledge, and how ready you are for the interview. For the answer "'.$leakedPrompt.'", The answer text was "ok", but it did not give enough clear detail to show how well it answered the question. Next attempt: give a full direct answer, then add one true detail.';
+
+        $clean = review_feedback_without_question_text($feedback, ['question_text' => 'Please introduce yourself.']);
+
+        $this->assertStringContainsString('The answer was too short', $clean);
+        $this->assertStringContainsString('The answer did not give enough clear detail', $clean);
+        $this->assertStringContainsString('Next attempt: give a full direct answer', $clean);
+        $this->assertStringNotContainsString($leakedPrompt, $clean);
+        $this->assertStringNotContainsString('For the answer', $clean);
+        $this->assertStringNotContainsString('The answer text was', $clean);
+        $this->assertStringNotContainsString('question', mb_strtolower($clean));
+
+        $promptOnly = review_feedback_without_question_text('For "'.$leakedPrompt.'", the answer needs more detail.');
+        $this->assertSame('The answer needs more detail.', $promptOnly);
+    }
+
     public function test_it_uses_the_versioned_readiness_weights_for_relevance(): void
     {
         $score = AIService::calculateWeightedReadinessScore(
@@ -160,8 +179,10 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame(10, $normalized['score']);
         $this->assertSame(10, $normalized['star_method_score']);
         $this->assertLessThanOrEqual(10, $normalized['relevance_score']);
-        $this->assertStringContainsString($answer['question'], $normalized['ai_feedback']);
-        $this->assertStringContainsString($answer['answer'], $normalized['ai_feedback']);
+        $this->assertStringContainsString('The answer was too short', $normalized['ai_feedback']);
+        $this->assertStringContainsString('The saved answer was very short', $normalized['ai_feedback']);
+        $this->assertStringNotContainsString($answer['question'], $normalized['ai_feedback']);
+        $this->assertStringNotContainsString('For the question', $normalized['ai_feedback']);
         $this->assertStringContainsString('Next attempt:', $normalized['ai_feedback']);
     }
 
@@ -390,8 +411,12 @@ class WeightedReadinessScoringTest extends TestCase
 
         $this->assertNotSame($first['ai_feedback'], $second['ai_feedback']);
         $this->assertNotSame($first['follow_up_question'], $second['follow_up_question']);
-        $this->assertStringContainsString($answers[0]['question'], $first['ai_feedback']);
-        $this->assertStringContainsString($answers[1]['question'], $second['ai_feedback']);
+        $this->assertStringContainsString('Answer focus: this strength answer', $first['ai_feedback']);
+        $this->assertStringContainsString('greatest and strength', $first['ai_feedback']);
+        $this->assertStringContainsString('Answer focus: this salary answer', $second['ai_feedback']);
+        $this->assertStringContainsString('salary', $second['ai_feedback']);
+        $this->assertStringNotContainsString($answers[0]['question'], $first['ai_feedback']);
+        $this->assertStringNotContainsString($answers[1]['question'], $second['ai_feedback']);
         $this->assertSame(61, $first['id']);
         $this->assertSame(62, $second['id']);
     }
@@ -506,8 +531,8 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame('local_evidence', $first['evaluation_source']);
         $this->assertSame('local_evidence', $second['evaluation_source']);
         $this->assertNotSame($first['ai_feedback'], $second['ai_feedback']);
-        $this->assertStringContainsString('Question focus: this strength question', $first['ai_feedback']);
-        $this->assertStringContainsString('Question focus: this salary question', $second['ai_feedback']);
+        $this->assertStringContainsString('Answer focus: this strength answer', $first['ai_feedback']);
+        $this->assertStringContainsString('Answer focus: this salary answer', $second['ai_feedback']);
     }
 
     public function test_valid_items_are_preserved_when_another_question_item_is_invalid(): void

@@ -254,7 +254,7 @@
  
  @if($answer->is_skipped)
  <div class="alert alert-warning border-0" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b;">
- <i class="fa-solid fa-forward-step me-2"></i> {{ review_feedback_without_question_text($answer->ai_feedback ?: 'You skipped this prompt. No feedback available.', $answer->question ?? $answer) }}
+ <i class="fa-solid fa-forward-step me-2"></i> {{ review_feedback_without_question_text($answer->ai_feedback ?: 'No answer was submitted, so there is no response to check.', $answer->question ?? $answer) }}
  </div>
  @include('mobile.partials.interview-answer-coaching', ['answer' => $answer])
  @else
