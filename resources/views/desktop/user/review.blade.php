@@ -79,11 +79,6 @@
  @endif
  </div>
  <div class="dropdown mt-2 mt-md-0 d-flex w-100 w-md-auto feedback-report-actions">
- @if(!$sessionEndedEarly)
- <button class="btn btn-outline-primary me-2 flex-grow-1 flex-md-grow-0 btn-shine" id="btnShareSession" type="button" style="border-radius:12px;font-weight:600;" onclick="toggleShare()">
- <i class="fa-solid fa-share-nodes me-2"></i>{{ $sessionRecord->is_public? 'Shared Link': 'Share Session' }}
- </button>
- @endif
  <button class="btn btn-outline-secondary dropdown-toggle flex-grow-1 flex-md-grow-0 btn-shine" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color:var(--bd);color:var(--tx);border-radius:12px;font-weight:600;">
  <i class="fa-solid fa-download me-2"></i>Export
  </button>
@@ -282,102 +277,7 @@
 
 </div>
 
-<div class="modal fade" id="secureShareModal" tabindex="-1" aria-labelledby="secureShareLabel" aria-hidden="true">
- <div class="modal-dialog modal-dialog-centered secure-share-dialog">
- <div class="modal-content secure-share-content" style="background:var(--sf);border:1px solid var(--bd);color:var(--tx);border-radius:18px;">
- <div class="modal-header" style="border-color:var(--bd);">
- <div>
- <h5 class="modal-title" id="secureShareLabel" style="font-weight:800;"><i class="fa-solid fa-shield-halved me-2 text-primary"></i>Review Link</h5>
- <div style="color:var(--tx3);font-size:.82rem;">Set when the link ends, add a password, and choose if people can comment.</div>
- </div>
- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
- </div>
- <div class="modal-body">
- <label class="form-label fw-bold">Link ends after</label>
- <select class="form-select mb-3" id="shareExpiry" style="background:var(--bg);border-color:var(--bd);color:var(--tx);">
- <option value="1">1 day</option>
- <option value="7" selected>7 days</option>
- <option value="30">30 days</option>
- </select>
- <label class="form-label fw-bold">Password <span style="color:var(--tx3);font-weight:400;">(optional, at least 6 characters)</span></label>
- <input class="form-control mb-3" id="sharePassword" type="password" minlength="6" autocomplete="new-password" placeholder="Leave blank for no password" style="background:var(--bg);border-color:var(--bd);color:var(--tx);">
- <div class="form-check mb-2">
- <input class="form-check-input" type="checkbox" id="shareComments" checked>
- <label class="form-check-label" for="shareComments">Allow mentor or peer comments</label>
- </div>
- <div class="form-check">
- <input class="form-check-input" type="checkbox" id="shareHideSensitive" checked>
- <label class="form-check-label" for="shareHideSensitive">Hide name and private details</label>
- </div>
- <div class="alert alert-danger mt-3 mb-0" id="shareError" style="display:none;"></div>
- </div>
- <div class="modal-footer" style="border-color:var(--bd);">
- @if($sessionRecord->is_public)
- <button class="btn btn-outline-danger me-auto" type="button" onclick="saveShare(false)">Turn off current link</button>
- @endif
- <button class="btn btn-primary" type="button" id="saveShareButton" onclick="saveShare(true)"><i class="fa-solid fa-link me-1"></i>Create or Update Link</button>
- </div>
- </div>
- </div>
-</div>
-
 <script>
-function toggleShare() {
- bootstrap.Modal.getOrCreateInstance(document.getElementById('secureShareModal')).show();
-}
-
-function saveShare(enabled) {
- const errorBox = document.getElementById('shareError');
- const button = document.getElementById('saveShareButton');
- errorBox.style.display = 'none';
- if (enabled) {
- const password = document.getElementById('sharePassword').value;
- if (password && password.length < 6) {
- errorBox.textContent = 'The optional password must contain at least 6 characters.';
- errorBox.style.display = 'block';
- return;
- }
- }
- button.disabled = true;
- fetch('{{ route('interview.toggleShare', $sessionRecord->id) }}', {
- method: 'POST',
- headers: {
- 'Content-Type': 'application/json',
- 'X-CSRF-TOKEN': '{{ csrf_token() }}'
- },
- body: JSON.stringify({
- enabled,
- expires_in_days: Number(document.getElementById('shareExpiry').value),
- password: document.getElementById('sharePassword').value || null,
- allow_comments: document.getElementById('shareComments').checked,
- hide_sensitive: document.getElementById('shareHideSensitive').checked
- })
- }).then(async res => {
- const data = await res.json();
- if (!res.ok) throw new Error(data.message || Object.values(data.errors || {}).flat()[0] || 'Unable to update the link.');
- return data;
- }).then(data => {
- if (data.success) {
- if (data.is_public) {
- const expiry = data.expires_at? new Date(data.expires_at).toLocaleString(): 'the selected time';
- if (navigator.clipboard?.writeText) {
- navigator.clipboard.writeText(data.share_url).then(() => alert(`Secure link copied. It expires ${expiry}.`));
- } else {
- prompt(`Copy this secure link. It expires ${expiry}:`, data.share_url);
- }
- document.getElementById('btnShareSession').innerHTML = '<i class="fa-solid fa-share-nodes me-2"></i>Shared Link';
- } else {
- alert('Session is now private. The previous link is disabled.');
- document.getElementById('btnShareSession').innerHTML = '<i class="fa-solid fa-share-nodes me-2"></i>Share Session';
- }
- bootstrap.Modal.getInstance(document.getElementById('secureShareModal'))?.hide();
- }
- }).catch(error => {
- errorBox.textContent = error.message || 'Unable to update the secure link.';
- errorBox.style.display = 'block';
- }).finally(() => { button.disabled = false; });
-}
-
 const retryTimers = {};
 
 function retryEscape(value) {
