@@ -216,12 +216,16 @@
  default => '#64748b',
  };
  $headerHasEvaluatedScore = in_array($headerAlignmentStatus, ['directly_answered', 'partially_answered', 'low_relevance'], true);
+ $headerQuestionText = trim((string) ($answer->question->question_text?? ''));
  @endphp
  <div class="accordion-item answer-review-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;margin-bottom:20px;overflow:hidden;box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
  <h2 class="accordion-header">
  <button class="accordion-button collapsed answer-review-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" style="background:transparent;color:var(--tx);box-shadow:none;padding:20px;">
  <div class="d-flex justify-content-between align-items-center w-100 pe-3 flex-wrap gap-3 answer-review-header">
- <span class="answer-review-title" style="font-size:1.1rem;"><strong>Answer {{ $index + 1 }}</strong></span>
+ <span class="answer-review-title" style="font-size:1.1rem;">
+ <strong>Question {{ $index + 1 }}</strong>
+ <small class="answer-review-question-text" style="display:block;color:var(--tx3);font-size:.85rem;font-weight:500;line-height:1.45;margin-top:4px;">{{ $headerQuestionText!== ''? $headerQuestionText: 'Question text unavailable.' }}</small>
+ </span>
  <div class="d-flex gap-2 align-items-center answer-review-score">
  @if($answer->is_skipped)
  <span class="badge" style="background:rgba(245, 158, 11, 0.12);color:#b45309;font-size:0.9rem;padding:8px 12px;">Skipped</span>

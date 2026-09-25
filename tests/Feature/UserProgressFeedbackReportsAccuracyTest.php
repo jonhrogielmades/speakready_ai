@@ -422,6 +422,58 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertViewHas('practiceRecommendations', fn ($items) => $items->contains(fn ($item) => $item->title === 'Rebuild answer structure'));
  }
 
+ public function test_feedback_center_answer_review_hides_prompt_text_inside_answer_feedback(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('Personal');
+ $session = $this->completedSessionFor($user, $category, 65, now(), [
+ 'target_position' => 'Customer Service Representative',
+ ]);
+ $leakedPrompt = "Good morning! I'm Karyl, and I'd like to start by having you introduce yourself. Please share your name.";
+
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'The answer includes basic personal information.',
+ 'weaknesses' => 'The answer needs a clearer introduction.',
+ 'improvement_suggestions' => 'Add a direct greeting and one role-ready detail.',
+ ]);
+
+ $question = Question::create([
+ 'category_id' => $category->id,
+ 'question_text' => 'Please introduce yourself.',
+ 'difficulty' => 'easy',
+ 'type' => 'Personal',
+ 'status' => 'active',
+ ]);
+
+ InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => "I'm Jonh Rogiel Tumanda from Pinut-an San Ricardo Southern Leyte.",
+ 'ai_feedback' => 'For the answer "'.$leakedPrompt.'", this report uses only what you wrote in the answer.',
+ 'better_sample_answer' => 'Answer draft based on your facts for "'.$leakedPrompt.'": I am Jonh Rogiel Tumanda from Pinut-an San Ricardo Southern Leyte, and I can introduce myself clearly.',
+ 'coaching_feedback' => [
+ 'content_alignment' => [
+ 'impact' => 'The answer has useful text, but the weak link to "'.$leakedPrompt.'" is missing from the response.',
+ ],
+ ],
+ 'score' => 35,
+ ]);
+
+ $response = $this->actingAs($user)->get(route('user.feedback'));
+
+ $response->assertOk()
+ ->assertSee('Feedback on your answer and the next attempt.')
+ ->assertDontSee($leakedPrompt)
+ ->assertViewHas('answerCoachingHighlights', fn ($items) => $items->count() === 1
+ && str_contains($items->first()->feedback, 'This report uses only what you wrote in the answer')
+ && str_contains($items->first()->impact, 'weak link in this answer')
+ && str_contains($items->first()->improvement, 'Answer draft based on your facts')
+ && ! str_contains($items->first()->feedback, $leakedPrompt)
+ && ! str_contains($items->first()->impact, $leakedPrompt)
+ && ! str_contains($items->first()->improvement, $leakedPrompt));
+ }
+
  public function test_feedback_center_recommendations_remain_useful_when_score_is_pending(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -552,7 +604,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('What To Improve')
  ->assertSee('Better Example')
  ->assertSee('Next Practice')
- ->assertDontSee('Explain a time you helped a customer')
+ ->assertSee('Question 1')
+ ->assertSee('Explain a time you helped a customer')
  ->assertSee('Strong empathy with customers')
  ->assertSee('Use STAR structure')
  ->assertDontSee('Category Breakdown')
@@ -564,6 +617,56 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('Feedback checks', false)
  ->assertDontSee('Answer Check Notes', false)
  ->assertDontSee('AI Feedback', false);
+ }
+
+ public function test_detailed_review_cleans_short_review_feedback_but_shows_answer_review_question(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('Personal');
+ $session = $this->completedSessionFor($user, $category, 63, now(), [
+ 'target_position' => 'Customer Service Representative',
+ ]);
+ $leakedPrompt = "Good morning! I'm Karyl, and I'd like to start by having you introduce yourself. Please share your name.";
+
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'For the answer "'.$leakedPrompt.'", the saved answer includes useful identity details.',
+ 'weaknesses' => 'The answer has useful text, but the weak link to "'.$leakedPrompt.'" is the missing role-ready opening.',
+ 'improvement_suggestions' => 'Answer draft based on your facts for "'.$leakedPrompt.'": add your name and location clearly.',
+ ]);
+
+ $question = Question::create([
+ 'category_id' => $category->id,
+ 'question_text' => 'Please introduce yourself.',
+ 'difficulty' => 'easy',
+ 'type' => 'Personal',
+ 'status' => 'active',
+ ]);
+
+ InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => "I'm Jonh Rogiel Tumanda from Pinut-an San Ricardo Southern Leyte.",
+ 'ai_feedback' => 'For the answer "'.$leakedPrompt.'", this report uses only what you wrote in the answer.',
+ 'better_sample_answer' => 'Answer draft based on your facts for "'.$leakedPrompt.'": I am Jonh Rogiel Tumanda from Pinut-an San Ricardo Southern Leyte.',
+ 'coaching_feedback' => [
+ 'content_alignment' => [
+ 'impact' => 'The answer has useful text, but the weak link to "'.$leakedPrompt.'" is missing from the response.',
+ ],
+ ],
+ 'score' => 35,
+ ]);
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('Short Review')
+ ->assertSee('Answer Review')
+ ->assertSee('Question 1')
+ ->assertSee('Please introduce yourself.')
+ ->assertSee('This report uses only what you wrote in the answer')
+ ->assertSee('weak link in this answer')
+ ->assertDontSee($leakedPrompt);
  }
 
  public function test_feedback_center_guides_first_time_users_without_history(): void

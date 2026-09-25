@@ -77,6 +77,7 @@ if (! function_exists('review_feedback_without_question_text')) {
             return '';
         }
 
+        $clean = review_remove_prompt_quote_references($clean);
         $questionText = review_question_text($questionSource);
 
         if ($questionText !== '') {
@@ -86,6 +87,7 @@ if (! function_exists('review_feedback_without_question_text')) {
             $clean = preg_replace('/' . $quotedQuestion . '/iu', '', $clean) ?? $clean;
         }
 
+        $clean = review_remove_prompt_quote_references($clean);
         $clean = preg_replace('/\bQuestion focus\b/u', 'Answer focus', $clean) ?? $clean;
         $clean = preg_replace('/\bquestion focus\b/u', 'answer focus', $clean) ?? $clean;
         $clean = preg_replace('/\bQuestion results\b/u', 'Answer results', $clean) ?? $clean;
@@ -117,6 +119,76 @@ if (! function_exists('review_feedback_without_question_text')) {
         }
 
         return $clean;
+    }
+}
+
+if (! function_exists('review_remove_prompt_quote_references')) {
+    function review_remove_prompt_quote_references(string $text): string
+    {
+        $quotedText = '(?:"[^"]{12,}"|\x{201C}[^\x{201D}]{12,}\x{201D}|\'[^\']{12,}\'|\x{2018}[^\x{2019}]{12,}\x{2019})';
+
+        $clean = preg_replace_callback(
+            '/(^|[.!?]\s+)\s*(?:For|Regarding|About|On|In response to)\s+(?:the\s+)?(?:answer|response|reply)\s+(' . $quotedText . ')\s*[:,\-]?\s*/iu',
+            static function (array $matches): string {
+                $quoted = review_unquote_feedback_text($matches[2] ?? '');
+
+                return review_quoted_text_looks_like_prompt($quoted) ? ($matches[1] ?? '') : ($matches[0] ?? '');
+            },
+            $text
+        ) ?? $text;
+
+        $clean = preg_replace_callback(
+            '/\b(weak\s+link|connection|match|link|tie)\s+to\s+(' . $quotedText . ')/iu',
+            static function (array $matches): string {
+                $quoted = review_unquote_feedback_text($matches[2] ?? '');
+
+                return review_quoted_text_looks_like_prompt($quoted)
+                    ? trim((string) ($matches[1] ?? 'link')) . ' in this answer'
+                    : ($matches[0] ?? '');
+            },
+            $clean
+        ) ?? $clean;
+
+        $clean = preg_replace_callback(
+            '/\b((?:answer\s+)?draft\s+based\s+on\s+your\s+facts|based\s+on\s+your\s+facts)\s+for\s+(' . $quotedText . ')/iu',
+            static function (array $matches): string {
+                $quoted = review_unquote_feedback_text($matches[2] ?? '');
+
+                return review_quoted_text_looks_like_prompt($quoted)
+                    ? trim((string) ($matches[1] ?? ''))
+                    : ($matches[0] ?? '');
+            },
+            $clean
+        ) ?? $clean;
+
+        return $clean;
+    }
+}
+
+if (! function_exists('review_unquote_feedback_text')) {
+    function review_unquote_feedback_text(string $text): string
+    {
+        $clean = trim($text);
+        $clean = preg_replace('/^(?:[\'"]|\x{201C}|\x{2018})|(?:[\'"]|\x{201D}|\x{2019})$/u', '', $clean) ?? $clean;
+
+        return trim($clean);
+    }
+}
+
+if (! function_exists('review_quoted_text_looks_like_prompt')) {
+    function review_quoted_text_looks_like_prompt(string $text): bool
+    {
+        $clean = trim($text);
+
+        if ($clean === '') {
+            return false;
+        }
+
+        if (review_text_looks_like_question($clean)) {
+            return true;
+        }
+
+        return preg_match('/\b(?:good\s+(?:morning|afternoon|evening)|interview\s+(?:question|prompt)|question|prompt|tell\s+me|describe|explain|walk\s+me\s+through|introduce\s+yourself|please\s+share|what\s+(?:is|are|would|did|do|does|can|could)|how\s+(?:do|did|would|can|could)|why\s+(?:do|did|are|would)|when\s+(?:did|would|can|could)|where\s+(?:did|would|can|could))\b/iu', $clean) === 1;
     }
 }
 

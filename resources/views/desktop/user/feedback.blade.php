@@ -155,7 +155,7 @@
  <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
  <div>
  <h5 class="feedback-insight-title" id="feedback-answer-coaching-title">Answer Review</h5>
- <p class="feedback-insight-subtitle">Your answer, short feedback, and the next attempt.</p>
+ <p class="feedback-insight-subtitle">Feedback on your answer and the next attempt.</p>
  </div>
  </div>
  <div class="feedback-answer-grid">
@@ -364,7 +364,7 @@
  { element: '.feedback-summary-note-grid', popover: { title: 'Strengths And Focus', description: 'Use these notes to understand what worked, what needs work, and what to practice next.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
- { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review latest answers with the answer text, score, feedback, and next practice cue.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review answer feedback, score, and the next practice cue.', side: 'bottom', align: 'start' }},
  { element: '.feedback-answer-item', popover: { title: 'Answer Coaching Card', description: 'Each card pairs your answer with short coaching and a shortcut to deeper review.', side: 'top', align: 'start' }},
  { element: '.feedback-answer-voice', popover: { title: 'Voice Answer Playback', description: 'When an answer used audio, listen here and review coaching against the spoken response.', side: 'top', align: 'start' }},
  { element: '#feedbackAnswerCoaching .feedback-feature-empty', popover: { title: 'Unlock Answer Coaching', description: 'Answer coaching appears after a completed interview with saved responses.', side: 'top', align: 'start' }},
@@ -385,7 +385,7 @@
  { element: '.feedback-summary-note-grid', popover: { title: 'Strengths And Focus', description: 'Use these notes to understand what worked, what needs work, and what to practice next.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
- { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review latest answers with the answer text, score, feedback, and next practice cue.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review answer feedback, score, and the next practice cue.', side: 'bottom', align: 'start' }},
  { element: '.feedback-answer-item', popover: { title: 'Answer Coaching Card', description: 'Each card pairs your answer with short coaching and a shortcut to deeper review.', side: 'top', align: 'start' }},
  { element: '.feedback-answer-voice', popover: { title: 'Voice Answer Playback', description: 'When an answer used audio, listen here and review coaching against the spoken response.', side: 'top', align: 'start' }},
  { element: '#feedbackAnswerCoaching .feedback-feature-empty', popover: { title: 'Unlock Answer Coaching', description: 'Answer coaching appears after a completed interview with saved responses.', side: 'top', align: 'start' }},
