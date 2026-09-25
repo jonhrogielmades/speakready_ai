@@ -3811,19 +3811,20 @@ html body #sec-interview-session .answer-transcript-stage #responseCountBar.resp
 
     html body #sec-interview-session .ai-avatar-panel #interviewControls.interview-panel-actions .btn {
         display: inline-flex !important;
-        flex: 0 0 38px !important;
+        flex: 1 1 0 !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 38px !important;
-        min-width: 38px !important;
-        max-width: 38px !important;
+        width: auto !important;
+        min-width: 88px !important;
+        max-width: none !important;
         height: 38px !important;
         min-height: 38px !important;
         max-height: 38px !important;
         margin: 0 !important;
-        padding: 0 !important;
+        padding: 0 12px !important;
         border-radius: 10px !important;
-        font-size: 0 !important;
+        font-size: 0.75rem !important;
+        font-weight: 800 !important;
         line-height: 1 !important;
         border-color: transparent !important;
         box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22) !important;
@@ -3873,10 +3874,10 @@ html body #sec-interview-session .answer-transcript-stage #responseCountBar.resp
     }
 
     html body #sec-interview-session .ai-avatar-panel #interviewControls.interview-panel-actions .btn {
-        flex-basis: 36px !important;
-        width: 36px !important;
-        min-width: 36px !important;
-        max-width: 36px !important;
+        flex-basis: 0 !important;
+        width: auto !important;
+        min-width: 78px !important;
+        max-width: none !important;
         height: 36px !important;
         min-height: 36px !important;
         max-height: 36px !important;
@@ -3998,8 +3999,8 @@ html body #sec-interview-session .answer-transcript-stage #responseCountBar.resp
     }
 
     html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls.interview-panel-voice-actions #micStopBtn {
-        border-color: #d7828d !important;
-        background: #d7828d !important;
+        border-color: #64748b !important;
+        background: #64748b !important;
         color: #ffffff !important;
     }
 

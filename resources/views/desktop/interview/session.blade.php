@@ -112,8 +112,8 @@
  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
  <!-- Left: Navigation / Secondary -->
  <div class="d-flex gap-2 w-100 flex-fill">
- <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question"><i class="fa-solid fa-volume-high" aria-hidden="true"></i></button>
- <button type="button" class="btn btn-outline-danger flex-fill" onclick="requestAbortInterviewSession()" style="border-radius:12px;" aria-label="End session" title="End session"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i></button>
+ <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question">Repeat</button>
+ <button type="button" class="btn btn-outline-danger flex-fill" onclick="requestAbortInterviewSession()" style="border-radius:12px;" aria-label="End session" title="End session">End Session</button>
  </div>
  
  </div>
@@ -122,7 +122,7 @@
  <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
  <div class="d-flex gap-2">
  <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i></button>
- <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
+ <button type="button" id="micStopBtn" class="btn btn-secondary" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
  </div>
  </div>
  <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>

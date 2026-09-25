@@ -4496,8 +4496,8 @@ html body #sec-interview-session .ai-avatar-panel #interviewControls .btn-outlin
 
 html body #sec-interview-session .ai-avatar-panel #interviewControls .btn-outline-danger,
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls #micStopBtn.btn {
-    border-color: rgba(251, 113, 133, 0.58) !important;
-    background: rgba(225, 29, 72, 0.94) !important;
+    border-color: rgba(148, 163, 184, 0.62) !important;
+    background: rgba(100, 116, 139, 0.94) !important;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
 }
@@ -4544,8 +4544,8 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
 
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls #micStopBtn.btn.voice-control-disabled,
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls #micStopBtn.btn:disabled {
-    border-color: rgba(251, 113, 133, 0.58) !important;
-    background: rgba(225, 29, 72, 0.94) !important;
+    border-color: rgba(148, 163, 184, 0.62) !important;
+    background: rgba(100, 116, 139, 0.94) !important;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
 }
