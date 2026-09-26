@@ -1,12 +1,12 @@
 @extends('mobile.layouts.admin')
 @push('styles')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/module_edit.css?v=1') }}" data-page-style="admin-module_edit">
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/module_edit-2.css?v=1') }}" data-page-style="admin-module_edit-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/module_edit.css?v=2') }}" data-page-style="admin-module_edit">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/module_edit-2.css?v=2') }}" data-page-style="admin-module_edit-2">
 @endpush
 
 @section('content')
-<div class="db-section active" id="sec-admin-module-edit">
+<div class="db-section active admin-module-edit-shell" id="sec-admin-module-edit">
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(16, 185, 129, 0.1); color:#10b981; border:1px solid rgba(16, 185, 129, 0.3); border-radius:12px;">
             <i class="fa-solid fa-circle-check me-2"></i> {{ session('success') }}
@@ -26,13 +26,13 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="filter: invert(1) grayscale(100%) brightness(200%);"></button>
         </div>
     @endif
-    <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3 admin-module-edit-header">
         <div>
-            <a href="{{ route('admin.modules') }}" class="btn btn-sm btn-outline-secondary mb-2"><i class="fa-solid fa-arrow-left me-1"></i> Back to Interview Modules</a>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Edit Interview Module: {{ $module->title }}</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage interview action steps and lessons.</p>
+            <a href="{{ route('admin.modules') }}" class="btn btn-sm btn-outline-secondary mb-2 admin-module-edit-back-btn"><i class="fa-solid fa-arrow-left me-1"></i> Back to Interview Modules</a>
+            <h4 class="admin-module-edit-title" style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Edit Interview Module: {{ $module->title }}</h4>
+            <p class="admin-module-edit-subtitle" style="font-size:.875rem;color:var(--tx3);margin:0">Manage interview action steps and lessons.</p>
         </div>
-        <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="d-flex align-items-center gap-2 flex-wrap admin-module-edit-status">
             <span class="badge bg-primary px-3 py-2" style="font-size:0.9rem">Status: {{ ucfirst($module->status) }}</span>
         </div>
     </div>
@@ -51,7 +51,7 @@
         
         <!-- Basic Info Tab -->
         <div class="tab-pane fade show active" id="basic" role="tabpanel">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+            <div class="admin-module-basic-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <form action="{{ route('admin.modules.update', $module->id) }}" method="POST">
                     @csrf @method('PUT')
                     <div class="row mb-3">
@@ -111,8 +111,8 @@
 
         <!-- Chapters Tab -->
         <div class="tab-pane fade" id="chapters" role="tabpanel">
-            <div class="mb-3 d-flex justify-content-end gap-2 flex-wrap">
-                <form action="{{ route('admin.modules.chapters.generate', $module->id) }}" method="POST" style="margin:0;">
+            <div class="mb-3 d-flex justify-content-end gap-2 flex-wrap admin-module-chapter-toolbar">
+                <form action="{{ route('admin.modules.chapters.generate', $module->id) }}" method="POST" class="admin-module-chapter-generate-form" style="margin:0;">
                     @csrf
                     <button type="submit" class="btn btn-sm" style="background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" onclick="this.innerHTML='<i class=\'fa-solid fa-circle-notch fa-spin me-1\'></i> Generating...'; this.style.pointerEvents='none';">
                         <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Chapter
@@ -122,13 +122,13 @@
             </div>
             
             @if($module->chapters->isEmpty())
-                <div class="text-center py-5" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;">
+                <div class="text-center py-5 admin-module-empty-chapters" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;">
                     <p style="color:var(--tx3)">No interview chapters added yet.</p>
                 </div>
             @else
                 <div class="accordion" id="chaptersAccordion">
                     @foreach($module->chapters as $index => $chapter)
-                    <div class="accordion-item mb-2" style="background:var(--sf);border:1px solid var(--bd);border-radius:8px;overflow:hidden;">
+                    <div class="accordion-item mb-2 admin-module-chapter-item" style="background:var(--sf);border:1px solid var(--bd);border-radius:8px;overflow:hidden;">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChapter{{ $chapter->id }}" style="background:var(--sf);color:var(--tx);box-shadow:none;">
                                 <strong>Chapter {{ $chapter->order }}:</strong>&nbsp; {{ $chapter->title }}
@@ -148,9 +148,9 @@
                                         {!! $chapter->content ?? '<em>No text content provided.</em>' !!}
                                     </div>
                                 </div>
-                                <div class="d-flex justify-content-end gap-2 mt-3 flex-wrap">
+                                <div class="d-flex justify-content-end gap-2 mt-3 flex-wrap admin-module-chapter-actions">
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editChapterModal{{ $chapter->id }}">Edit Chapter</button>
-                                    <form action="{{ route('admin.modules.chapters.destroy', $chapter->id) }}" method="POST" onsubmit="return confirm('Delete this chapter?');">
+                                    <form action="{{ route('admin.modules.chapters.destroy', $chapter->id) }}" method="POST" class="admin-module-chapter-delete-form" onsubmit="return confirm('Delete this chapter?');">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Delete Chapter</button>
                                     </form>

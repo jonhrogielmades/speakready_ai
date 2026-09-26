@@ -10,7 +10,7 @@
     }
 @endphp
 
-<div class="db-section active animate-fade-up" id="account-page">
+<div class="db-section active animate-fade-up admin-account-page-shell" id="account-page">
     <div class="sr-page-hero">
         <div class="sr-page-hero-inner">
             <div class="sr-page-hero-copy">
@@ -48,15 +48,15 @@
         </div>
     @endif
 
-    <div class="row g-4 account-grid">
+    <div class="row g-4 account-grid admin-account-grid">
         <div class="col-lg-7 animate-fade-up" style="animation-delay: 0.1s;">
-            <div class="premium-panel account-card" style="padding:32px;margin-bottom:24px">
+            <div class="premium-panel account-card admin-account-profile-card" style="padding:32px;margin-bottom:24px">
                 <h5 class="account-card-title"><span class="account-title-icon"><i class="fa-solid fa-user-shield"></i></span>Profile Details</h5>
 
                 <form action="{{ route('admin.account.profile') }}" method="POST" enctype="multipart/form-data" id="adminAccountProfileForm">
                     @csrf
 
-                    <div class="d-flex align-items-center mb-4 account-photo-row">
+                    <div class="d-flex align-items-center mb-4 account-photo-row admin-account-photo-row">
                         <div class="account-photo-avatar" style="width:80px;height:80px;border-radius:24px;overflow:hidden;margin-right:24px;border:1px solid var(--bd);background:#f87171;color:#fff;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;">
                             @if($photoUrl)
                                 <img id="profilePhotoPreview" src="{{ $photoUrl }}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;">
@@ -73,7 +73,7 @@
                         </div>
                     </div>
 
-                    <div class="row g-3 mb-3">
+                    <div class="row g-3 mb-3 admin-account-field-grid">
                         <div class="col-md-6">
                             <label class="account-field-label" for="adminAccountName"><span class="account-label-icon"><i class="fa-regular fa-user"></i></span>Full Name</label>
                             <input type="text" class="oinp" name="name" id="adminAccountName" value="{{ old('name', $admin->name) }}" autocomplete="name" required>
@@ -87,7 +87,7 @@
                         <label class="account-field-label" for="adminAccountFocus"><span class="account-label-icon"><i class="fa-solid fa-id-badge"></i></span>Admin Role / Focus</label>
                         <input type="text" class="oinp" name="target_position" id="adminAccountFocus" value="{{ old('target_position', $admin->target_position) }}" placeholder="e.g., System Administrator" autocomplete="organization-title">
                     </div>
-                    <div class="text-end">
+                    <div class="text-end admin-account-profile-actions">
                         <button type="submit" class="btn account-submit-btn btn-shine"><i class="fa-regular fa-floppy-disk"></i>Save Changes</button>
                     </div>
                 </form>
@@ -95,7 +95,7 @@
         </div>
 
         <div class="col-lg-5 animate-fade-up admin-account-side-stack" style="animation-delay: 0.2s;">
-            <div class="premium-panel account-card" style="padding:32px;margin-bottom:24px">
+            <div class="premium-panel account-card admin-account-security-card" style="padding:32px;margin-bottom:24px">
                 <h5 class="account-card-title"><span class="account-title-icon"><i class="fa-solid fa-lock"></i></span>Security & Password</h5>
                 <form action="{{ route('admin.account.password') }}" method="POST" id="adminAccountPasswordForm">
                     @csrf

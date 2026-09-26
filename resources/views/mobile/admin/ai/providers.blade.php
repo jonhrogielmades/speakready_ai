@@ -1,12 +1,12 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/ai/providers.css?v=6') }}" data-page-style="admin-ai-providers">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/ai/providers.css?v=7') }}" data-page-style="admin-ai-providers">
 @endpush
 
 @section('content')
 
-<div class="db-section active" id="sec-admin-ai-providers">
+<div class="db-section active admin-ai-providers-shell" id="sec-admin-ai-providers">
     @if(session('message'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399">
         {{ session('message') }}
@@ -21,7 +21,7 @@
     @endif
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3 ai-providers-header">
-        <div>
+        <div class="ai-providers-heading">
             <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-microchip me-2"></i>AI Providers Dashboard</h4>
             <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Manage AI Providers and view system metrics.</p>
         </div>
@@ -34,42 +34,42 @@
     <!-- Feature 1: Overview Cards -->
     <div class="row g-3 mb-4 ai-overview-grid">
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card text-center p-3 h-100 ai-overview-card">
                 <div style="font-size:1.5rem;margin-bottom:8px;" class="text-primary"><i class="fa-solid fa-robot"></i></div>
                 <div style="font-size:1.2rem;font-weight:700;" class="text-primary">{{ $activeProvider ? $activeProvider->name : 'None' }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Active Provider</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card text-center p-3 h-100 ai-overview-card">
                 <div style="font-size:1.5rem;margin-bottom:8px;" class="text-info"><i class="fa-solid fa-bolt"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($totalRequests) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Requests Today</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card text-center p-3 h-100 ai-overview-card">
                 <div style="font-size:1.5rem;margin-bottom:8px;" class="text-warning"><i class="fa-solid fa-clock"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($avgResponseTime) }}ms</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Avg Response</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card text-center p-3 h-100 ai-overview-card">
                 <div style="font-size:1.5rem;margin-bottom:8px;" class="text-success"><i class="fa-solid fa-check-circle"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($successfulRequests) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Successful Req</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card text-center p-3 h-100 ai-overview-card">
                 <div style="font-size:1.5rem;margin-bottom:8px;" class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($failedRequests) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Failed Req</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card text-center p-3 h-100 ai-overview-card">
                 <div style="font-size:1.5rem;margin-bottom:8px;" class="text-success"><i class="fa-solid fa-percent"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;" class="text-success">{{ $successRate }}%</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Success Rate</div>
@@ -83,7 +83,7 @@
         <!-- Main Column -->
         <div class="col-lg-8">
             <!-- Feature 7: Module Requests Breakdown -->
-            <div class="premium-card h-100">
+            <div class="premium-card h-100 ai-module-usage-card">
                 <h6 class="fw-bold mb-4">Requests by Module</h6>
                 <div class="table-responsive" id="moduleUsageTableWrapper">
                     <table class="table custom-table mb-0 w-100" id="moduleUsageTable">
@@ -96,12 +96,12 @@
                         <tbody>
                             @forelse($moduleUsage as $usage)
                             <tr>
-                                <td><span class="stat-badge primary">{{ ucfirst(str_replace('_', ' ', $usage->module)) }}</span></td>
-                                <td class="text-end fw-bold">{{ number_format($usage->count) }}</td>
+                                <td data-label="Module"><span class="stat-badge primary">{{ ucfirst(str_replace('_', ' ', $usage->module)) }}</span></td>
+                                <td data-label="Requests" class="text-end fw-bold">{{ number_format($usage->count) }}</td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="2" class="text-center text-muted">No usage data available today.</td>
+                                <td colspan="2" class="text-center text-muted ai-provider-empty-cell">No usage data available today.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -237,7 +237,7 @@
     </div>
 
     <!-- Providers Table -->
-    <div class="premium-card mb-4">
+    <div class="premium-card mb-4 ai-providers-table-card">
         <div class="table-responsive" id="mainProvidersTableWrapper">
             <table class="table custom-table mb-0 w-100" id="mainProvidersTable">
                 <thead>
@@ -252,21 +252,21 @@
                 <tbody>
                     @forelse($providers as $provider)
                     <tr>
-                        <td class="fw-bold">{{ $provider->name }}</td>
-                        <td>
+                        <td data-label="Provider Name" class="fw-bold">{{ $provider->name }}</td>
+                        <td data-label="Status">
                             @if($provider->status == 'active')
                                 <span class="stat-badge success">Active</span>
                             @else
                                 <span class="stat-badge danger">Inactive</span>
                             @endif
                         </td>
-                        <td>
+                        <td data-label="API Key">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="key-hidden">sk-********************************</span>
                                 <button class="btn btn-sm text-info p-0 test-conn-btn" title="Test Connection"><i class="fa-solid fa-plug-circle-check"></i></button>
                             </div>
                         </td>
-                        <td>
+                        <td data-label="Role">
                             @if($provider->is_primary)
                                 <span class="badge bg-primary">Primary</span>
                             @endif
@@ -277,7 +277,7 @@
                                 <span class="badge bg-secondary">Standby</span>
                             @endif
                         </td>
-                        <td class="text-end">
+                        <td data-label="Actions" class="text-end ai-provider-action-cell">
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Actions
@@ -290,7 +290,7 @@
                                     </li>
                                     @if(!$provider->is_primary)
                                     <li>
-                                        <form action="{{ route('admin.ai.providers.primary', $provider->id) }}" method="POST">
+                                        <form action="{{ route('admin.ai.providers.primary', $provider->id) }}" method="POST" class="ai-provider-menu-form">
                                             @csrf
                                             <button class="dropdown-item" type="submit" style="color:var(--tx);"><i class="fa-solid fa-star me-2 text-primary"></i>Set as Primary</button>
                                         </form>
@@ -298,7 +298,7 @@
                                     @endif
                                     @if(!$provider->is_fallback)
                                     <li>
-                                        <form action="{{ route('admin.ai.providers.fallback', $provider->id) }}" method="POST">
+                                        <form action="{{ route('admin.ai.providers.fallback', $provider->id) }}" method="POST" class="ai-provider-menu-form">
                                             @csrf
                                             <button class="dropdown-item" type="submit" style="color:var(--tx);"><i class="fa-solid fa-life-ring me-2 text-warning"></i>Set as Fallback</button>
                                         </form>
@@ -306,7 +306,7 @@
                                     @endif
                                     <li><hr class="dropdown-divider" style="border-color:var(--bd);"></li>
                                     <li>
-                                        <form action="{{ route('admin.ai.providers.destroy', $provider->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this AI Provider?');">
+                                        <form action="{{ route('admin.ai.providers.destroy', $provider->id) }}" method="POST" class="ai-provider-menu-form" onsubmit="return confirm('Are you sure you want to delete this AI Provider?');">
                                             @csrf
                                             @method('DELETE')
                                             <button class="dropdown-item text-danger" type="submit"><i class="fa-solid fa-trash me-2 text-danger"></i>Delete Provider</button>
@@ -318,7 +318,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center text-muted">No providers registered yet.</td>
+                        <td colspan="5" class="text-center text-muted ai-provider-empty-cell">No providers registered yet.</td>
                     </tr>
                     @endforelse
                 </tbody>

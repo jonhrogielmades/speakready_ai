@@ -1,0 +1,341 @@
+/* Mobile admin contact messages and detail pages. */
+body.admin-mobile-shell #mob-content #sec-admin-contacts.admin-contacts-shell,
+body.admin-mobile-shell #mob-content #sec-admin-contacts.admin-contacts-shell *,
+body.admin-mobile-shell #mob-content #sec-admin-contact-detail.admin-contact-detail-shell,
+body.admin-mobile-shell #mob-content #sec-admin-contact-detail.admin-contact-detail-shell * {
+    box-sizing: border-box;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-contacts.admin-contacts-shell,
+body.admin-mobile-shell #mob-content #sec-admin-contact-detail.admin-contact-detail-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-contacts.admin-contacts-shell > *,
+body.admin-mobile-shell #mob-content #sec-admin-contact-detail.admin-contact-detail-shell > * {
+    max-width: 100% !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-contacts .admin-contacts-card,
+body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTableWrapper,
+body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-card {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-value,
+body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-value a,
+body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-subject,
+body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-message-body {
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+}
+
+@media (max-width: 767px) {
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .admin-contacts-header,
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-header {
+        display: flex !important;
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        min-width: 0 !important;
+        margin-bottom: 14px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .admin-contacts-header > div:first-child,
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-header > div:first-child {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .admin-contacts-title,
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-title {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        font-size: 1.08rem !important;
+        line-height: 1.18 !important;
+        letter-spacing: 0 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-title {
+        align-items: flex-start !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-back-link {
+        flex: 0 0 auto !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .admin-contacts-title i {
+        flex: 0 0 auto !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .admin-contacts-subtitle {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        font-size: 0.82rem !important;
+        line-height: 1.4 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .alert {
+        margin-bottom: 12px !important;
+        border-radius: 10px !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .admin-contacts-card {
+        border-radius: 10px !important;
+        overflow: hidden !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTableWrapper {
+        overflow-x: hidden !important;
+        padding: 12px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        table-layout: auto !important;
+        border-collapse: separate !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable thead {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody {
+        display: grid !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody tr {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 12px !important;
+        border: 1px solid var(--bd, rgba(148, 163, 184, 0.22)) !important;
+        border-radius: 10px !important;
+        background: var(--bg3, rgba(148, 163, 184, 0.08)) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody td {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        padding: 8px 0 !important;
+        border-top: 0 !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important;
+        text-align: right !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody td::before {
+        content: attr(data-label) !important;
+        flex: 0 0 auto !important;
+        max-width: 46% !important;
+        color: var(--tx3, #64748b) !important;
+        font-size: 0.68rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0 !important;
+        line-height: 1.2 !important;
+        text-align: left !important;
+        text-transform: uppercase !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody td[data-label="Name"] {
+        order: -1 !important;
+        display: block !important;
+        padding-bottom: 11px !important;
+        margin-bottom: 2px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody td[data-label="Name"]::before,
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody td[data-label="Actions"]::before,
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody td.contacts-empty-cell::before {
+        content: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable .badge {
+        max-width: 100% !important;
+        min-height: 26px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+        padding: 5px 8px !important;
+        font-size: 0.7rem !important;
+        line-height: 1.15 !important;
+        letter-spacing: 0 !important;
+        white-space: normal !important;
+        text-align: right !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody td[data-label="Actions"] {
+        display: block !important;
+        border-bottom: 0 !important;
+        padding-top: 12px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .contact-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .contact-row-action-form {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .contact-action-cell .btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 38px !important;
+        border-radius: 10px !important;
+        padding: 7px 8px !important;
+        font-size: 0.76rem !important;
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody td.contacts-empty-cell {
+        display: block !important;
+        border-bottom: 0 !important;
+        text-align: center !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .admin-contacts-pagination {
+        padding: 12px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .admin-contacts-pagination .pagination {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        margin-bottom: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-card {
+        padding: 14px !important;
+        border-radius: 10px !important;
+        overflow: hidden !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 12px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: 14px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-grid > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-label {
+        font-size: 0.68rem !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-value {
+        font-size: 0.96rem !important;
+        line-height: 1.3 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-subject {
+        font-size: 1rem !important;
+        line-height: 1.3 !important;
+        margin-bottom: 14px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-message-body {
+        max-height: 42vh !important;
+        overflow-y: auto !important;
+        padding: 12px !important;
+        border-radius: 10px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.5 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-actions {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+        align-items: stretch !important;
+        padding-top: 12px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-delete-form {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contact-detail .admin-contact-detail-actions .btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 40px !important;
+        border-radius: 10px !important;
+        padding: 8px 10px !important;
+        font-size: 0.82rem !important;
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody td {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+        gap: 5px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable tbody td::before {
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts #mainContactsTable .badge {
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-contacts .contact-actions {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

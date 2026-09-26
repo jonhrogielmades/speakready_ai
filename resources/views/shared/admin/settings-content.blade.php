@@ -20,7 +20,7 @@
     ];
 @endphp
 
-<div class="db-section active" id="sec-admin-settings">
+<div class="db-section active admin-settings-shell" id="sec-admin-settings">
     @if(session('message'))
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
             {{ session('message') }}
@@ -41,17 +41,17 @@
         </div>
     @endif
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
+    <div class="d-flex justify-content-between align-items-center mb-4 admin-settings-header">
+        <div class="admin-settings-heading">
             <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-sliders me-2"></i>System Settings</h4>
             <p style="font-size:0.95rem;margin:0;">Configure platform behavior, access, learning tools, notifications, and appearance.</p>
         </div>
-        <button type="submit" form="systemSettingsForm" class="btn btn-primary settings-save-top">
+        <button type="submit" form="systemSettingsForm" class="btn btn-primary settings-save-top admin-settings-save-top">
             <i class="fa-solid fa-floppy-disk me-2"></i>Save All
         </button>
     </div>
 
-    <div class="row g-3 settings-grid mb-4">
+    <div class="row g-3 settings-grid admin-settings-jump-grid mb-4">
         @foreach($cards as $card)
             <div class="col-6 col-md-4 col-lg-3">
                 <a href="#{{ $card['id'] }}" class="settings-jump">
@@ -63,7 +63,7 @@
         @endforeach
     </div>
 
-    <form id="systemSettingsForm" action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
+    <form id="systemSettingsForm" class="admin-settings-form" action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <section class="settings-panel" id="settings-general">
@@ -71,7 +71,7 @@
                 <h5><i class="fa-solid fa-globe"></i>General</h5>
                 <p>Branding, contact details, public copy, and default language.</p>
             </div>
-            <div class="row g-3">
+            <div class="row g-3 admin-settings-fields-grid">
                 <div class="col-md-6">
                     <label class="form-label">System Name</label>
                     <input type="text" class="form-control" name="sys_name" value="{{ $value('sys_name', 'SpeakReady AI') }}">
@@ -126,7 +126,7 @@
                     <input class="form-check-input" type="checkbox" name="acc_verify_email" value="true" {{ $checked('acc_verify_email') }}>
                 </div>
             </div>
-            <div class="row g-3 mt-1">
+            <div class="row g-3 mt-1 admin-settings-fields-grid">
                 <div class="col-md-6">
                     <label class="form-label">Session Timeout (Minutes)</label>
                     <input type="number" class="form-control" name="acc_session_timeout" min="5" max="1440" value="{{ $value('acc_session_timeout', 120) }}">
@@ -140,7 +140,7 @@
                 <p>Administrator access stays always on. Candidate permissions are enforced in user routes.</p>
             </div>
             <h6 class="settings-mini-title">Administrator Permissions</h6>
-            <div class="row g-2 mb-4">
+            <div class="row g-2 mb-4 admin-settings-check-grid">
                 @foreach(['View', 'Create', 'Edit', 'Delete', 'Export'] as $perm)
                     <div class="col-md-4">
                         <div class="form-check settings-check-row">
@@ -151,7 +151,7 @@
                 @endforeach
             </div>
             <h6 class="settings-mini-title">User/Candidate Permissions</h6>
-            <div class="row g-2">
+            <div class="row g-2 admin-settings-check-grid">
                 @foreach(['View Interview Content', 'Take Interview', 'Delete Own Account', 'Export Reports'] as $i => $perm)
                     <div class="col-md-6">
                         <div class="form-check settings-check-row">
@@ -168,7 +168,7 @@
                 <h5><i class="fa-solid fa-microphone-lines"></i>Interview</h5>
                 <p>Question counts, time limits, follow-up behavior, and AI evaluation.</p>
             </div>
-            <div class="row g-3 mb-3">
+            <div class="row g-3 mb-3 admin-settings-fields-grid">
                 <div class="col-md-4">
                     <label class="form-label">Default Number of Questions</label>
                     <select class="form-select" name="int_default_questions">
@@ -272,7 +272,7 @@
                 <div><h6 class="mb-1">Two-Factor Authentication Flag</h6><small>Stores the platform preference for future or connected 2FA flows.</small></div>
                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="sec_2fa" value="true" {{ $checked('sec_2fa') }}></div>
             </div>
-            <div class="row g-3 mt-1">
+            <div class="row g-3 mt-1 admin-settings-fields-grid">
                 <div class="col-md-6">
                     <label class="form-label">Login Attempt Limit</label>
                     <input type="number" class="form-control" name="sec_login_limit" min="1" max="20" value="{{ $value('sec_login_limit', 5) }}">
@@ -289,7 +289,7 @@
                 <h5><i class="fa-solid fa-database"></i>Backup</h5>
                 <p>Export or restore a settings backup and choose the saved backup schedule preference.</p>
             </div>
-            <div class="row g-3 align-items-end">
+            <div class="row g-3 align-items-end admin-settings-fields-grid admin-settings-backup-grid">
                 <div class="col-md-4">
                     <label class="form-label">Automatic Backup Schedule</label>
                     <select class="form-select" name="backup_schedule">
@@ -302,11 +302,11 @@
                     <label class="form-label">Restore Settings Backup</label>
                     <input type="file" class="form-control" name="settings_backup_file" accept=".json,application/json">
                 </div>
-                <div class="col-md-4 d-flex gap-2 flex-wrap">
-                    <button type="submit" class="btn btn-outline-light" formaction="{{ route('admin.settings.backup') }}">
+                <div class="col-md-4 d-flex gap-2 flex-wrap admin-settings-backup-actions">
+                    <button type="submit" class="btn btn-outline-light admin-settings-backup-btn" formaction="{{ route('admin.settings.backup') }}">
                         <i class="fa-solid fa-download me-2"></i>Download
                     </button>
-                    <button type="submit" class="btn btn-outline-warning" formaction="{{ route('admin.settings.restore') }}">
+                    <button type="submit" class="btn btn-outline-warning admin-settings-backup-btn" formaction="{{ route('admin.settings.restore') }}">
                         <i class="fa-solid fa-upload me-2"></i>Restore
                     </button>
                 </div>
@@ -318,7 +318,7 @@
                 <h5><i class="fa-solid fa-folder-open"></i>Files</h5>
                 <p>File limits applied to user coach attachments and uploads that use system settings.</p>
             </div>
-            <div class="row g-3">
+            <div class="row g-3 admin-settings-fields-grid">
                 <div class="col-md-4">
                     <label class="form-label">Maximum Upload Size (MB)</label>
                     <input type="number" class="form-control" name="file_max_size" min="1" max="100" value="{{ $value('file_max_size', 10) }}">
@@ -336,7 +336,7 @@
                 <h5><i class="fa-solid fa-palette"></i>Appearance</h5>
                 <p>Logo, favicon, and accent colors shared with layouts.</p>
             </div>
-            <div class="row g-3">
+            <div class="row g-3 admin-settings-fields-grid">
                 <div class="col-md-6">
                     <label class="form-label">Upload System Logo</label>
                     <input type="file" class="form-control" name="system_logo" accept="image/*">
@@ -364,7 +364,7 @@
                 <h5><i class="fa-solid fa-clock-rotate-left"></i>Retention</h5>
                 <p>Retention values are saved for cleanup jobs and reporting policy display.</p>
             </div>
-            <div class="row g-3">
+            <div class="row g-3 admin-settings-fields-grid">
                 <div class="col-md-4">
                     <label class="form-label">Interview Data Retention (Days)</label>
                     <input type="number" class="form-control" name="retention_interview" min="1" max="3650" value="{{ $value('retention_interview', 365) }}">
@@ -385,7 +385,7 @@
                 <h5><i class="fa-solid fa-chart-pie"></i>Reports</h5>
                 <p>Report header, footer, logo preference, and approval label.</p>
             </div>
-            <div class="row g-3">
+            <div class="row g-3 admin-settings-fields-grid">
                 <div class="col-md-6">
                     <label class="form-label">Report Header Text</label>
                     <input type="text" class="form-control" name="rep_header" value="{{ $value('rep_header', 'SpeakReady AI Official Report') }}">
@@ -408,9 +408,9 @@
             </div>
         </section>
 
-        <div class="btn-save-fixed mt-4">
+        <div class="btn-save-fixed admin-settings-save-bar mt-4">
             <span>Save all functional settings changes.</span>
-            <button type="submit" class="btn btn-primary px-4"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+            <button type="submit" class="btn btn-primary px-4 admin-settings-save-bottom"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
         </div>
     </form>
 
@@ -431,12 +431,12 @@
                 <tbody>
                     @forelse($auditLogs as $activity)
                         <tr>
-                            <td>{{ optional($activity->created_at)->format('Y-m-d H:i') }}</td>
-                            <td>{{ $activity->description ?: ucwords(str_replace('_', ' ', $activity->action)) }}</td>
-                            <td>{{ $activity->user?->name ?? 'System' }}</td>
+                            <td data-label="Date">{{ optional($activity->created_at)->format('Y-m-d H:i') }}</td>
+                            <td data-label="Action">{{ $activity->description ?: ucwords(str_replace('_', ' ', $activity->action)) }}</td>
+                            <td data-label="User">{{ $activity->user?->name ?? 'System' }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" class="text-center text-muted">No audit activity yet.</td></tr>
+                        <tr><td colspan="3" class="text-center text-muted admin-settings-empty-cell">No audit activity yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -448,9 +448,9 @@
             <h5><i class="fa-solid fa-circle-info"></i>System Info</h5>
             <p>Runtime details detected from the current application environment.</p>
         </div>
-        <ul class="list-group list-group-flush rounded">
+        <ul class="list-group list-group-flush rounded admin-settings-info-list">
             @foreach($systemInfo as $label => $info)
-                <li class="list-group-item d-flex justify-content-between align-items-center">
+                <li class="list-group-item d-flex justify-content-between align-items-center admin-settings-info-item">
                     <span>{{ $label }}</span>
                     <span class="{{ $label === 'Server Status' ? 'text-success' : 'text-muted' }}">{{ $info }}</span>
                 </li>

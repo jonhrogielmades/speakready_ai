@@ -1,16 +1,16 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/sessions/archive.css?v=1') }}" data-page-style="admin-sessions-archive">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/sessions/archive.css?v=2') }}" data-page-style="admin-sessions-archive">
 @endpush
 
 @section('content')
 
-<div class="db-section active" id="sec-admin-archive">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="db-section active admin-archive-shell" id="sec-admin-archive">
+    <div class="d-flex justify-content-between align-items-center mb-4 admin-archive-header">
         <div>
             <h4 class="archive-page-title fw-bold mb-1 mt-2"><i class="fa-solid fa-box-archive text-warning me-2"></i>Archived Interview Sessions</h4>
-            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Historical records of interview practice sessions.</p>
+            <p class="archive-page-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">Historical records of interview practice sessions.</p>
         </div>
     </div>
 
@@ -21,8 +21,8 @@
     </div>
     @endif
 
-    <div class="premium-card mb-4">
-        <form method="GET" action="{{ route('admin.sessions.archive') }}" class="row g-2 mb-4">
+    <div class="premium-card mb-4 admin-archive-panel">
+        <form method="GET" action="{{ route('admin.sessions.archive') }}" class="row g-2 mb-4 archive-filter-form">
             <div class="col-md-4">
                 <input type="text" name="search" class="form-control" placeholder="Search user or interview session ID..." value="{{ request('search') }}" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);">
             </div>
@@ -45,18 +45,18 @@
                 <tbody>
                     @forelse($sessions as $session)
                     <tr>
-                        <td>#{{ $session->id }}</td>
-                        <td>{{ $session->user ? $session->user->name : 'Deleted User' }}</td>
-                        <td>{{ $session->category ? $session->category->title : 'N/A' }}</td>
-                        <td style="color:var(--tx2);">{{ $session->updated_at->format('M d, Y') }}</td>
-                        <td class="text-end">
-                            <form action="{{ route('admin.sessions.restore', $session->id) }}" method="POST" class="d-inline" id="restoreArchiveForm{{ $session->id }}">
+                        <td data-label="ID">#{{ $session->id }}</td>
+                        <td data-label="User" class="archive-user-cell">{{ $session->user ? $session->user->name : 'Deleted User' }}</td>
+                        <td data-label="Category">{{ $session->category ? $session->category->title : 'N/A' }}</td>
+                        <td data-label="Archived" style="color:var(--tx2);">{{ $session->updated_at->format('M d, Y') }}</td>
+                        <td data-label="Actions" class="text-end archive-action-cell">
+                            <form action="{{ route('admin.sessions.restore', $session->id) }}" method="POST" class="d-inline archive-row-action-form" id="restoreArchiveForm{{ $session->id }}">
                                 @csrf
                                 <button type="button" class="btn btn-sm btn-outline-success" style="border-radius:8px;" title="Restore" data-archive-restore-trigger data-archive-restore-form="restoreArchiveForm{{ $session->id }}" data-archive-restore-title="Restore archived interview session #{{ $session->id }}?" data-archive-restore-message="This interview session will return to Interview Session Monitoring.">
                                     <i class="fa-solid fa-clock-rotate-left me-1"></i> Restore
                                 </button>
                             </form>
-                            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" class="d-inline" id="deleteArchiveForm{{ $session->id }}">
+                            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" class="d-inline archive-row-action-form" id="deleteArchiveForm{{ $session->id }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="button" class="btn btn-sm btn-outline-danger" style="border-radius:8px;" title="Delete" data-archive-delete-trigger data-archive-delete-form="deleteArchiveForm{{ $session->id }}" data-archive-delete-title="Delete archived session #{{ $session->id }}?" data-archive-delete-message="This archived session and its related records will be permanently deleted. This cannot be undone.">
@@ -67,13 +67,13 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">No archived sessions found.</td>
+                        <td colspan="5" class="text-center py-4 text-muted archive-empty-cell">No archived sessions found.</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        <div class="mt-4">
+        <div class="mt-4 admin-archive-pagination">
             {{ $sessions->links('pagination::bootstrap-5') }}
         </div>
     </div>
@@ -190,4 +190,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endsection
-

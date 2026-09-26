@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/dashboard.css?v=3') }}" data-page-style="admin-dashboard">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/dashboard.css?v=5') }}" data-page-style="admin-dashboard">
 @endpush
 
 @section('content')
@@ -324,6 +324,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     Chart.defaults.color = '#808090';
     Chart.defaults.font.family = "'Inter', sans-serif";
+    const dashboardMobileChart = window.matchMedia('(max-width: 767.98px)').matches;
 
     // Feature 2: User Analytics (Line Chart)
     const userCanvas = document.getElementById('userGrowthChart');
@@ -387,7 +388,14 @@ document.addEventListener("DOMContentLoaded", function() {
             maintainAspectRatio: false,
             cutout: '70%',
             plugins: {
-                legend: { position: 'right', labels: { boxWidth: 10, font: {size:10} } }
+                legend: {
+                    position: dashboardMobileChart ? 'bottom' : 'right',
+                    labels: {
+                        boxWidth: dashboardMobileChart ? 8 : 10,
+                        padding: dashboardMobileChart ? 8 : 10,
+                        font: {size: dashboardMobileChart ? 9 : 10}
+                    }
+                }
             }
         }
     });

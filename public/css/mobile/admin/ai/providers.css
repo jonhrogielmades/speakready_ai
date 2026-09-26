@@ -682,3 +682,288 @@
             width: 100%;
         }
     }
+
+/* Final mobile layout layer for AI provider administration. */
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell,
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell * {
+    box-sizing: border-box;
+    letter-spacing: 0 !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-providers-heading,
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-providers-heading h4,
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-providers-heading p {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .premium-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .stat-badge,
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    border-radius: 999px;
+    line-height: 1.2;
+    white-space: normal;
+    text-align: center;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTableWrapper, #openAiProcessTableWrapper, #mainProvidersTableWrapper) {
+    width: 100%;
+    max-width: 100%;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTable, #openAiProcessTable, #mainProvidersTable) {
+    width: 100%;
+    min-width: 0;
+    table-layout: auto;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-provider-empty-cell {
+    padding: 18px 10px !important;
+    text-align: center !important;
+}
+
+@media (max-width: 767.98px) {
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-providers-header {
+        align-items: stretch !important;
+        gap: 12px !important;
+        margin-bottom: 16px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-providers-header h4 {
+        font-size: 1.25rem !important;
+        line-height: 1.25;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-providers-actions {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        width: 100%;
+        gap: 10px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-providers-actions .btn {
+        width: 100%;
+        min-height: 42px;
+        border-radius: 8px;
+        white-space: normal;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-overview-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-overview-grid > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-overview-card {
+        min-height: 118px !important;
+        padding: 14px 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-overview-card > div:nth-child(2) {
+        font-size: 1.15rem !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(.ai-process-connection-card, .ai-module-usage-card, .ai-monitoring-card, .ai-providers-table-card) {
+        padding: 14px !important;
+        overflow: visible;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(.ai-main-grid, .ai-provider-role-grid, .ai-provider-stats-grid) {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(.ai-main-grid, .ai-provider-role-grid, .ai-provider-stats-grid) > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-process-panel-title {
+        align-items: stretch !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-process-panel-title h6 {
+        align-items: flex-start;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-process-panel-title .stat-badge {
+        width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-process-summary {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTableWrapper, #openAiProcessTableWrapper, #mainProvidersTableWrapper) {
+        overflow-x: visible !important;
+        -webkit-overflow-scrolling: auto !important;
+        border: 0;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTable, #openAiProcessTable, #mainProvidersTable),
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTable, #openAiProcessTable, #mainProvidersTable) tbody,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTable, #openAiProcessTable, #mainProvidersTable) tr,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTable, #openAiProcessTable, #mainProvidersTable) td {
+        display: block;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTable, #openAiProcessTable, #mainProvidersTable) thead {
+        display: none;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTable, #openAiProcessTable, #mainProvidersTable) tr {
+        margin-bottom: 12px;
+        padding: 12px;
+        border: 1px solid var(--bd, rgba(255, 255, 255, 0.1));
+        border-radius: 8px;
+        background: var(--bg3, rgba(255, 255, 255, 0.03));
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTable, #openAiProcessTable, #mainProvidersTable) td {
+        min-width: 0;
+        padding: 9px 0 !important;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+        color: var(--tx);
+        text-align: left !important;
+        white-space: normal !important;
+        text-overflow: clip !important;
+        overflow: visible !important;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTable, #openAiProcessTable, #mainProvidersTable) td:last-child {
+        border-bottom: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell :is(#moduleUsageTable, #openAiProcessTable, #mainProvidersTable) td[data-label]::before {
+        content: attr(data-label) !important;
+        display: block;
+        margin-bottom: 5px;
+        color: var(--tx3, #94a3b8);
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell #openAiProcessTable .ai-process-name {
+        align-items: flex-start;
+        white-space: normal;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell #openAiProcessTable .ai-process-name span,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell #openAiProcessTable small {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell #mainProvidersTable td[data-label="API Key"] .d-flex {
+        justify-content: flex-start;
+        max-width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell #mainProvidersTable .key-hidden {
+        max-width: calc(100% - 34px);
+        letter-spacing: 0 !important;
+        white-space: nowrap;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-provider-action-cell {
+        padding-top: 12px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-provider-action-cell::before {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-provider-action-cell .dropdown,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-provider-action-cell .dropdown-toggle {
+        width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-provider-action-cell .dropdown-toggle {
+        min-height: 38px;
+        border-radius: 8px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .dropdown-menu {
+        max-width: min(280px, calc(100vw - 32px));
+        white-space: normal;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .dropdown-item {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-provider-empty-cell::before {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-process-pagination {
+        align-items: stretch;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-process-page-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-provider-stats-grid .premium-card > .d-flex:first-of-type {
+        gap: 10px;
+        padding-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-provider-stats-grid h5 {
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell :is(#addProviderModal, #editProviderModal) .modal-content {
+        border-radius: 8px !important;
+        overflow: hidden;
+    }
+}
+
+@media (max-width: 380px) {
+    body.admin-mobile-shell #mob-content #sec-admin-ai-providers.admin-ai-providers-shell .ai-overview-grid {
+        grid-template-columns: 1fr;
+    }
+}

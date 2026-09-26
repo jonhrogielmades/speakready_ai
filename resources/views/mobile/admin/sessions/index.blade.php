@@ -1,12 +1,12 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/sessions/index.css?v=2') }}" data-page-style="admin-sessions-index">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/sessions/index.css?v=3') }}" data-page-style="admin-sessions-index">
 @endpush
 
 @section('content')
 
-<div class="db-section active">
+<div class="db-section active" id="sec-admin-sessions">
     @if(session('message'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399">
         {{ session('message') }}
@@ -14,7 +14,7 @@
     </div>
     @endif
 
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div class="admin-sessions-header d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
             <h4 class="session-page-title fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-video"></i> Interview Session Monitoring</h4>
             <p class="session-page-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">Track and analyze interview practice performance and activity.</p>
@@ -85,7 +85,7 @@
     </div>
 
     <!-- Analytics Row -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 session-analytics-grid">
         <div class="col-lg-6">
             <div class="premium-card h-100">
                 <h6 class="fw-bold mb-4">Daily Interview Trend</h6>
@@ -119,8 +119,8 @@
     </div>
 
     <!-- Session List -->
-    <div class="premium-card mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="premium-card mb-4 session-list-card">
+        <div class="session-list-heading d-flex justify-content-between align-items-center mb-4">
             <h6 class="fw-bold m-0">All Interview Sessions</h6>
         </div>
         
@@ -165,8 +165,8 @@
                 <tbody>
                     @forelse($sessions as $session)
                     <tr>
-                        <td>#{{ $session->id }}</td>
-                        <td>
+                        <td data-label="ID">#{{ $session->id }}</td>
+                        <td data-label="User">
                             @if($session->user)
                                 <div class="d-flex align-items-center gap-2">
                                     <div style="width:32px;height:32px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.8rem;">
@@ -178,8 +178,8 @@
                                 <span class="text-muted">Deleted User</span>
                             @endif
                         </td>
-                        <td>{{ $session->category ? $session->category->title : 'N/A' }}</td>
-                        <td>
+                        <td data-label="Category">{{ $session->category ? $session->category->title : 'N/A' }}</td>
+                        <td data-label="Status">
                             @if($session->status == 'completed')
                                 <span class="stat-badge success">Completed</span>
                             @elseif($session->status == 'pending')
@@ -194,7 +194,7 @@
                                 <i class="fa-solid fa-flag text-danger ms-1" title="Flagged: {{ $session->flag_reason }}"></i>
                             @endif
                         </td>
-                        <td>
+                        <td data-label="Score">
                             @if($session->score)
                                 <span class="fw-bold {{ $session->score->overall_readiness_score >= 80 ? 'text-success' : ($session->score->overall_readiness_score >= 60 ? 'text-warning' : 'text-danger') }}">
                                     {{ $session->score->overall_readiness_score }}%
@@ -203,15 +203,15 @@
                                 -
                             @endif
                         </td>
-                        <td>{{ gmdate("i:s", $session->duration_seconds) }}</td>
-                        <td style="color:var(--tx2);">{{ $session->created_at->format('M d, Y h:i A') }}</td>
-                        <td class="text-end">
+                        <td data-label="Duration">{{ gmdate("i:s", $session->duration_seconds) }}</td>
+                        <td data-label="Date" style="color:var(--tx2);">{{ $session->created_at->format('M d, Y h:i A') }}</td>
+                        <td data-label="Actions" class="text-end session-action-cell">
                             <a href="{{ route('admin.sessions.show', $session->id) }}" class="btn btn-sm session-row-action" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="View Details" aria-label="View Details"><i class="fa-solid fa-eye"></i></a>
-                            <form action="{{ route('admin.sessions.doArchive', $session->id) }}" method="POST" class="d-inline" id="archiveSessionForm{{ $session->id }}">
+                            <form action="{{ route('admin.sessions.doArchive', $session->id) }}" method="POST" class="d-inline session-row-action-form" id="archiveSessionForm{{ $session->id }}">
                                 @csrf
                                 <button type="button" class="btn btn-sm session-row-action" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="Archive" aria-label="Archive" data-session-archive-trigger data-session-archive-form="archiveSessionForm{{ $session->id }}" data-session-archive-title="Archive interview session #{{ $session->id }}?" data-session-archive-message="This interview session will move to the archive and can be restored later."><i class="fa-solid fa-box-archive text-warning"></i></button>
                             </form>
-                            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" class="d-inline" id="deleteSessionForm{{ $session->id }}">
+                            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" class="d-inline session-row-action-form" id="deleteSessionForm{{ $session->id }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="button" class="btn btn-sm session-row-action" style="background:var(--bg3);color:#f87171;border:1px solid rgba(248,113,113,0.35);" title="Delete" aria-label="Delete" data-session-delete-trigger data-session-delete-form="deleteSessionForm{{ $session->id }}" data-session-delete-title="Delete interview session #{{ $session->id }}?" data-session-delete-message="This interview session and its related records will be permanently deleted. This cannot be undone."><i class="fa-solid fa-trash-can"></i></button>

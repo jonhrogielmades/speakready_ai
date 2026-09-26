@@ -1,10 +1,10 @@
 @extends('mobile.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/modules.css?v=3') }}" data-page-style="admin-modules">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/modules.css?v=4') }}" data-page-style="admin-modules">
 @endpush
 
 @section('content')
-<div class="db-section active" id="sec-admin-modules">
+<div class="db-section active admin-modules-shell" id="sec-admin-modules">
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(16, 185, 129, 0.1); color:#10b981; border:1px solid rgba(16, 185, 129, 0.3); border-radius:12px;">
             <i class="fa-solid fa-circle-check me-2"></i> {{ session('success') }}
@@ -18,12 +18,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="filter: invert(1) grayscale(100%) brightness(200%);"></button>
         </div>
     @endif
-    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 admin-modules-header">
         <div>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Interview Learning Modules</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage action modules for what learners need to prepare, rehearse, revise, and check before interviews.</p>
+            <h4 class="admin-modules-title" style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Interview Learning Modules</h4>
+            <p class="admin-modules-subtitle" style="font-size:.875rem;color:var(--tx3);margin:0">Manage action modules for what learners need to prepare, rehearse, revise, and check before interviews.</p>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2 flex-wrap admin-modules-header-actions">
             <button class="btn px-3 py-2" style="font-size:.85rem; background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" data-bs-toggle="modal" data-bs-target="#aiGenerateModuleModal">
                 <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Module
             </button>
@@ -36,19 +36,19 @@
     <!-- Overview Cards -->
     <div class="row g-3 mb-4 modules-stats-row">
         <div class="col-md-4">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+            <div class="modules-stat-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h6 style="color:var(--tx3);font-size:0.85rem">Total Modules</h6>
                 <h2 style="font-weight:700;margin:0">{{ $totalModules }}</h2>
             </div>
         </div>
         <div class="col-md-4">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+            <div class="modules-stat-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h6 style="color:var(--tx3);font-size:0.85rem">Published Modules</h6>
                 <h2 style="font-weight:700;margin:0;color:#10b981;">{{ $publishedModules }}</h2>
             </div>
         </div>
         <div class="col-md-4">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+            <div class="modules-stat-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h6 style="color:var(--tx3);font-size:0.85rem">Draft Modules</h6>
                 <h2 style="font-weight:700;margin:0;color:#f59e0b;">{{ $draftModules }}</h2>
             </div>
@@ -83,37 +83,37 @@
             <thead>
                 <tr>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Module Title</th>
-                    <th class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Category</th>
-                    <th class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Difficulty</th>
+                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Category</th>
+                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Difficulty</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Status</th>
-                    <th class="d-none d-lg-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Views</th>
+                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Views</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($modules as $m)
                 <tr data-status="{{ $m->status }}" data-category="{{ strtolower($m->category ?? '') }}">
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td data-label="Module" class="admin-module-title-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         <span class="module-title-text">{{ $m->title }}</span>
                         @if($m->is_featured) <span class="badge bg-warning ms-1 text-dark" style="font-size:0.6rem"><i class="fa-solid fa-star me-1"></i>Featured</span> @endif
                     </td>
-                    <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px"><span class="module-category-text" title="{{ $m->category ?? 'None' }}">{{ $m->category ?? 'None' }}</span></td>
-                    <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td data-label="Category" style="border-bottom:1px solid var(--bd);padding:12px 8px"><span class="module-category-text" title="{{ $m->category ?? 'None' }}">{{ $m->category ?? 'None' }}</span></td>
+                    <td data-label="Difficulty" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($m->difficulty == 'Beginner') <span class="badge bg-success">Beginner</span>
                         @elseif($m->difficulty == 'Intermediate') <span class="badge bg-warning text-dark">Intermediate</span>
                         @elseif($m->difficulty == 'Advanced') <span class="badge bg-danger">Advanced</span>
                         @else <span class="badge bg-secondary">Unknown</span> @endif
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td data-label="Status" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($m->status == 'published') <span class="badge bg-success"><i class="fa-solid fa-circle me-1"></i>Published</span>
                         @elseif($m->status == 'draft') <span class="badge bg-warning text-dark"><i class="fa-solid fa-circle me-1"></i>Draft</span>
                         @else <span class="badge bg-secondary"><i class="fa-solid fa-circle me-1"></i>Archived</span> @endif
                     </td>
-                    <td class="d-none d-lg-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->views }}</td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px;">
+                    <td data-label="Views" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->views }}</td>
+                    <td data-label="Actions" class="admin-module-action-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px;">
                         <div class="module-actions">
                         <a href="{{ route('admin.modules.edit', $m->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:.7rem"><i class="fa-solid fa-sliders me-1"></i>Manage</a>
-                        <form action="{{ route('admin.modules.destroy', $m->id) }}" method="POST" onsubmit="return confirm('Delete this module?');">
+                        <form action="{{ route('admin.modules.destroy', $m->id) }}" method="POST" class="admin-module-row-action-form" onsubmit="return confirm('Delete this module?');">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:.7rem"><i class="fa-solid fa-trash me-1"></i>Delete</button>
                         </form>

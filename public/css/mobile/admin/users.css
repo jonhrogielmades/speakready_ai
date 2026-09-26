@@ -556,3 +556,739 @@
             width: 100%;
         }
     }
+
+/* Final mobile user-management guard: page header, filters, cards, tables, pagination, and modals. */
+@media (max-width: 767.98px) {
+    body.admin-mobile-shell #mob-content #sec-admin-users {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: clip !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users > * {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-header {
+        align-items: stretch !important;
+        gap: 12px !important;
+        margin-bottom: 0 !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        max-width: 100%;
+        margin: 0 0 5px !important;
+        color: var(--tx) !important;
+        font-size: 1.12rem !important;
+        line-height: 1.18 !important;
+        letter-spacing: 0 !important;
+        text-align: left !important;
+        overflow-wrap: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-title i {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        margin-right: 0 !important;
+        border-radius: 9px;
+        background: rgba(59, 130, 246, 0.14);
+        font-size: 0.9rem;
+        flex: 0 0 32px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-subtitle {
+        max-width: 31rem;
+        color: var(--tx2) !important;
+        font-size: 0.8rem !important;
+        line-height: 1.42 !important;
+        overflow-wrap: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-header-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px !important;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-header-actions > :is(button, .dropdown) {
+        width: 100%;
+        min-width: 0;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-header-actions :is(.btn, .dropdown-toggle) {
+        width: 100%;
+        min-width: 0;
+        min-height: 42px;
+        padding: 9px 10px !important;
+        border-radius: 11px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        font-size: 0.78rem !important;
+        font-weight: 800;
+        line-height: 1.15;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-header-actions .dropdown {
+        grid-column: 1 / -1;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-header-actions .dropdown-menu {
+        width: min(100%, 240px);
+        max-width: calc(100vw - 28px);
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users :is(.premium-card, .admin-users-table-card, .alert) {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden;
+        border-radius: 12px !important;
+        padding: 13px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-summary-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-summary-grid > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .user-summary-card-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        padding: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .user-summary-card-identity {
+        justify-content: flex-start !important;
+        min-width: 0;
+        max-width: 100%;
+        gap: 8px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .user-summary-card-identity .admin-user-avatar-wrap {
+        order: 1;
+        margin-left: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .user-summary-card-identity > .fw-bold:first-child {
+        order: 2;
+        min-width: 40px !important;
+        font-size: 0.72rem;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .user-summary-card-name {
+        order: 3;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.82rem !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .user-summary-card-meta {
+        max-width: 8.25rem;
+        min-width: 0;
+        justify-self: end;
+        text-align: right;
+        white-space: normal;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-filter-form {
+        --bs-gutter-x: 0;
+        --bs-gutter-y: 8px;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px !important;
+        width: 100%;
+        max-width: 100%;
+        margin: 0 0 12px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-filter-form > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-filter-form :is(.input-group, .form-control, .form-select, .btn) {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-filter-form :is(.form-control, .form-select, .btn, .input-group-text) {
+        min-height: 42px;
+        font-size: 0.82rem !important;
+        border-radius: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-filter-form .input-group .input-group-text {
+        width: 42px;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        justify-content: center;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-filter-form .input-group .form-control {
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTableWrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        table-layout: auto !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable thead {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody,
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody tr,
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td {
+        display: block;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody tr {
+        padding: 11px !important;
+        margin-bottom: 10px !important;
+        border: 1px solid var(--bd) !important;
+        border-radius: 12px !important;
+        background: var(--bg3) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td {
+        display: grid !important;
+        grid-template-columns: minmax(82px, 34%) minmax(0, 1fr);
+        align-items: center !important;
+        gap: 9px !important;
+        padding: 7px 0 !important;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+        color: var(--tx) !important;
+        text-align: right !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td::before {
+        content: attr(data-label);
+        color: var(--tx3);
+        font-size: 0.64rem;
+        font-weight: 900;
+        letter-spacing: 0;
+        line-height: 1.15;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td:first-child {
+        display: block !important;
+        padding-bottom: 11px !important;
+        margin-bottom: 3px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td:first-child::before,
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td:last-child::before,
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td[colspan]::before {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td:first-child > .d-flex {
+        display: grid !important;
+        grid-template-columns: 42px minmax(0, 1fr);
+        align-items: center !important;
+        gap: 10px !important;
+        width: 100%;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td:first-child .admin-user-avatar-wrap {
+        grid-column: 1;
+        grid-row: 1;
+        margin: 0 !important;
+        justify-self: start;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td:first-child .d-flex > div:last-child {
+        grid-column: 2;
+        min-width: 0;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td:first-child .fw-bold {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.9rem;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td > :not(.user-action-cell) {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        justify-self: end;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td:last-child {
+        border-bottom: 0 !important;
+        padding-top: 10px !important;
+        background: rgba(255, 255, 255, 0.025) !important;
+        border-radius: 10px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable .user-action-cell {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        justify-content: stretch !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable .user-action-cell form {
+        display: flex !important;
+        width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable .action-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        border-radius: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .stat-badge {
+        max-width: 100%;
+        min-height: 28px;
+        padding: 5px 8px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.67rem;
+        line-height: 1.15;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-pagination {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: stretch;
+        gap: 10px !important;
+        margin-top: 12px !important;
+        padding-top: 12px !important;
+        text-align: center;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-pagination-count {
+        width: 100%;
+        font-size: 0.78rem !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-pagination-controls {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        gap: 8px !important;
+        width: 100%;
+        align-items: center;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-pagination-controls :is(a, .btn, span.btn) {
+        width: 100%;
+        min-width: 0;
+        min-height: 38px;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+        font-size: 0.74rem !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-pagination-controls > span:not(.btn) {
+        min-width: 5.4rem;
+        padding: 0 !important;
+        font-size: 0.72rem !important;
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal, #deleteUserModal, #broadcastModal, #userDetailModal) {
+        padding-inline: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal, #broadcastModal, #userDetailModal) .modal-dialog,
+    body.admin-mobile-shell #mob-content #deleteUserModal .modal-dialog {
+        width: min(calc(100vw - 20px), 440px) !important;
+        max-width: min(calc(100vw - 20px), 440px) !important;
+        margin: auto !important;
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal, #deleteUserModal, #broadcastModal, #userDetailModal) .modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: min(82dvh, 720px) !important;
+        overflow: hidden !important;
+        border-radius: 16px !important;
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal, #deleteUserModal, #broadcastModal, #userDetailModal) .modal-body {
+        max-width: 100%;
+        overflow-x: hidden !important;
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal, #broadcastModal) .modal-body {
+        padding: 14px !important;
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal, #broadcastModal) :is(.form-control, .form-select, textarea) {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        min-height: 42px;
+        border-radius: 10px !important;
+        font-size: 0.84rem;
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal) .row {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal) .row > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal, #broadcastModal) .modal-footer {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal, #broadcastModal) .modal-footer :is(.btn, button) {
+        min-width: 0 !important;
+        width: 100% !important;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #deleteUserModal .modal-body {
+        padding: 18px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #deleteUserModal .d-grid {
+        gap: 8px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .modal-dialog {
+        width: min(calc(100vw - 20px), 480px) !important;
+        max-width: min(calc(100vw - 20px), 480px) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .modal-header {
+        padding: 12px 14px !important;
+        min-width: 0;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .user-detail-heading {
+        display: grid !important;
+        grid-template-columns: 54px minmax(0, 1fr);
+        align-items: center !important;
+        justify-content: stretch !important;
+        gap: 10px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        padding-inline: 0 !important;
+        margin-bottom: 0 !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .user-detail-heading .admin-user-avatar-wrap {
+        grid-column: 1;
+        margin: 0 !important;
+        justify-self: start;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .user-detail-heading > div:last-child {
+        grid-column: 2;
+        min-width: 0;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal #userDetailName {
+        max-width: 100%;
+        font-size: 0.98rem !important;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal #userTabs {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 5px !important;
+        width: 100%;
+        max-width: 100%;
+        overflow: visible !important;
+        border-bottom: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal #userTabs .nav-item,
+    body.admin-mobile-shell #mob-content #userDetailModal #userTabs .nav-link {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal #userTabs .nav-link {
+        min-height: 38px;
+        padding: 7px 5px !important;
+        border: 1px solid var(--bd) !important;
+        border-radius: 9px !important;
+        font-size: 0.7rem !important;
+        line-height: 1.15;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal #userTabs .nav-link.active {
+        background: rgba(59, 130, 246, 0.14) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .modal-body {
+        max-height: calc(min(82dvh, 720px) - 162px) !important;
+        padding: 12px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .tab-content,
+    body.admin-mobile-shell #mob-content #userDetailModal .tab-pane,
+    body.admin-mobile-shell #mob-content #userDetailModal .row {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .tab-pane > .row,
+    body.admin-mobile-shell #mob-content #userDetailModal .tab-pane .row.g-4 {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .row > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .premium-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 12px !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .table-responsive {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal table {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal table thead {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal table tbody tr {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 10px !important;
+        margin-bottom: 10px !important;
+        border: 1px solid var(--bd) !important;
+        border-radius: 11px !important;
+        background: var(--bg3) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal table tbody td {
+        display: grid !important;
+        grid-template-columns: minmax(78px, 34%) minmax(0, 1fr);
+        align-items: center;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 7px 0 !important;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+        text-align: right !important;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal table tbody td::before {
+        content: attr(data-label);
+        color: var(--tx3);
+        font-size: 0.63rem;
+        font-weight: 900;
+        line-height: 1.15;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal table tbody td[colspan] {
+        display: block !important;
+        text-align: center !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal table tbody td[colspan]::before,
+    body.admin-mobile-shell #mob-content #userDetailModal table tbody td:last-child::before {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal table tbody td:last-child {
+        border-bottom: 0 !important;
+        padding-top: 9px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal table tbody td.text-end .btn,
+    body.admin-mobile-shell #mob-content #userDetailModal table tbody td.text-end a {
+        width: 100% !important;
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px !important;
+        font-size: 0.72rem !important;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .timeline {
+        padding-left: 16px;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell #mob-content #userDetailModal .timeline-item {
+        margin-bottom: 14px;
+        min-width: 0;
+        max-width: 100%;
+    }
+}
+
+@media (min-width: 560px) and (max-width: 767.98px) {
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-filter-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-filter-form > .col-md-4,
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-filter-form > .col-md-2 {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 380px) {
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-header-actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .admin-users-header-actions .dropdown {
+        grid-column: auto;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .user-summary-card-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users .user-summary-card-meta {
+        justify-self: start;
+        text-align: left;
+        max-width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable tbody td {
+        grid-template-columns: minmax(74px, 32%) minmax(0, 1fr);
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-users #mainUsersTable .user-action-cell {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.admin-mobile-shell #mob-content :is(#addUserModal, #editUserModal) .row,
+    body.admin-mobile-shell #mob-content #userDetailModal #userTabs,
+    body.admin-mobile-shell #mob-content #userDetailModal table tbody td {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

@@ -58,17 +58,17 @@
                         };
                     @endphp
                     <tr class="ai-process-row">
-                        <td>
+                        <td data-label="Process">
                             <div class="ai-process-name">
                                 <i class="{{ $process['icon'] ?? 'fa-solid fa-microchip' }}"></i>
                                 <span>{{ $process['label'] ?? $process['key'] ?? 'OpenAI Process' }}</span>
                             </div>
                             <small>{{ $process['description'] ?? '' }}</small>
                         </td>
-                        <td>{{ $process['group'] ?? 'OpenAI' }}</td>
-                        <td>{{ $process['connection'] ?? 'OpenAI' }}</td>
-                        <td><span class="stat-badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
-                        <td class="text-end fw-bold">{{ number_format((int) ($process['request_count'] ?? 0)) }}</td>
+                        <td data-label="Area">{{ $process['group'] ?? 'OpenAI' }}</td>
+                        <td data-label="Connection">{{ $process['connection'] ?? 'OpenAI' }}</td>
+                        <td data-label="Status"><span class="stat-badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
+                        <td data-label="Logs" class="text-end fw-bold">{{ number_format((int) ($process['request_count'] ?? 0)) }}</td>
                     </tr>
                 @endforeach
             </tbody>

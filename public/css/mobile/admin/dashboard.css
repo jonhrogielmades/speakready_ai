@@ -901,28 +901,46 @@
 
     body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card,
     #sec-overview.admin-dashboard-shell .overview-card {
-        min-height: 76px;
-        grid-template-columns: 34px minmax(0, 1fr);
-        column-gap: 9px;
-        padding: 10px !important;
+        min-height: 104px;
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 10px 8px !important;
+        text-align: center !important;
     }
 
     body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(1),
     #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(1) {
-        width: 34px !important;
-        height: 34px !important;
+        width: 32px !important;
+        height: 32px !important;
+        flex: 0 0 32px;
         font-size: 0.9rem !important;
+        margin: 0 !important;
     }
 
     body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(2),
     #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(2) {
         font-size: 1.04rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        text-align: center !important;
+        width: 100%;
     }
 
     body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(3),
     #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(3) {
+        width: 100%;
+        max-width: 7.5rem;
         font-size: 0.58rem !important;
-        line-height: 1.16;
+        line-height: 1.18;
+        text-align: center !important;
+        letter-spacing: 0 !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        text-wrap: balance;
+        white-space: normal !important;
     }
 
     body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-analytics-grid,
@@ -983,16 +1001,453 @@
     }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 480px) {
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-overview-grid,
+    #sec-overview.admin-dashboard-shell .dashboard-overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
     body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card,
     #sec-overview.admin-dashboard-shell .overview-card {
-        min-height: 74px;
-        grid-template-columns: 32px minmax(0, 1fr);
-        padding: 9px !important;
+        width: 100% !important;
+        min-height: 82px;
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        align-items: center;
+        justify-content: stretch;
+        column-gap: 8px;
+        row-gap: 2px;
+        padding: 10px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(1),
+    #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(1) {
+        grid-row: 1 / span 2;
+        width: 34px !important;
+        height: 34px !important;
+        flex: 0 0 34px;
+        font-size: 0.9rem !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(2),
+    #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(2) {
+        align-self: end;
+        width: 100%;
+        min-width: 0;
+        font-size: 1.08rem !important;
+        line-height: 1 !important;
+        text-align: left !important;
     }
 
     body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(3),
     #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(3) {
-        font-size: 0.55rem !important;
+        align-self: start;
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        font-size: 0.58rem !important;
+        line-height: 1.12;
+        text-align: left !important;
+        text-transform: none !important;
+        overflow-wrap: normal !important;
+        word-break: keep-all !important;
+        hyphens: none !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card,
+    #sec-overview.admin-dashboard-shell .overview-card {
+        min-height: 80px;
+        grid-template-columns: 32px minmax(0, 1fr);
+        column-gap: 7px;
+        padding: 9px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(1),
+    #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(1) {
+        width: 32px !important;
+        height: 32px !important;
+        flex-basis: 32px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(3),
+    #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(3) {
+        font-size: 0.54rem !important;
+    }
+}
+
+/* Final mobile dashboard guard: keeps cards, panels, and cardified tables inside the phone viewport. */
+@media (max-width: 767.98px) {
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: clip !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell > * {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .admin-dashboard-header {
+        align-items: flex-start !important;
+        gap: 8px !important;
+        padding: 0 1px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .admin-dashboard-title {
+        width: 100%;
+        max-width: 100%;
+        align-items: center;
+        font-size: 1.12rem !important;
+        line-height: 1.18 !important;
+        letter-spacing: 0 !important;
+        text-align: left !important;
+        overflow-wrap: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .admin-dashboard-title i {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 8px !important;
+        font-size: 0.9rem !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .admin-dashboard-title-text,
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .admin-dashboard-subtitle {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .admin-dashboard-subtitle {
+        font-size: 0.8rem !important;
+        line-height: 1.4 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell :is(
+        .dashboard-overview-grid,
+        .dashboard-analytics-grid,
+        .dashboard-work-grid,
+        .dashboard-primary-column,
+        .dashboard-side-column
+    ) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell :is(
+        .dashboard-overview-grid,
+        .dashboard-analytics-grid,
+        .dashboard-work-grid
+    ) > [class*="col-"] {
+        display: block !important;
+        width: auto !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        flex: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell :is(.premium-card, .dashboard-panel) {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden;
+        border-radius: 10px !important;
+        padding: 12px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card {
+        min-height: 86px !important;
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        align-items: center !important;
+        justify-content: stretch !important;
+        column-gap: 8px !important;
+        row-gap: 2px !important;
+        padding: 10px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(1) {
+        grid-row: 1 / span 2;
+        width: 34px !important;
+        height: 34px !important;
+        margin: 0 !important;
+        border-radius: 8px !important;
+        font-size: 0.9rem !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(2) {
+        align-self: end;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        font-size: 1.06rem !important;
+        line-height: 1 !important;
+        text-align: left !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(3) {
+        align-self: start;
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        font-size: 0.58rem !important;
+        font-weight: 800;
+        line-height: 1.14 !important;
+        letter-spacing: 0 !important;
+        text-align: left !important;
+        text-transform: none !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-analytics-grid .premium-card {
+        min-height: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .chart-container,
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .chart-container canvas {
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-analytics-grid .chart-container {
+        height: 176px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-analytics-grid .chart-container[style*="height: 200px"] {
+        height: 168px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-panel > .d-flex:first-child {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-wrap: wrap;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-panel > .d-flex:first-child h6 {
+        min-width: 0;
+        flex: 1 1 9rem;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .admin-dashboard-mini-action {
+        min-height: 34px !important;
+        padding: 7px 10px !important;
+        font-size: 0.72rem !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+        flex: 0 0 auto;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .table-responsive {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .custom-table {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .custom-table tbody tr {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .custom-table tbody td {
+        display: grid !important;
+        grid-template-columns: minmax(78px, 34%) minmax(0, 1fr);
+        align-items: center !important;
+        gap: 9px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 7px 0 !important;
+        text-align: right !important;
+        white-space: normal !important;
+        overflow: visible !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .custom-table tbody td[data-label]::before {
+        content: attr(data-label);
+        max-width: 100%;
+        color: var(--tx3);
+        font-size: 0.64rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        line-height: 1.15;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .custom-table tbody td > * {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        justify-self: end;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .custom-table tbody td .d-flex {
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .custom-table tbody td[colspan] {
+        display: block !important;
+        text-align: center !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .custom-table tbody td[colspan]::before {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .admin-dashboard-icon-action {
+        width: 34px !important;
+        min-width: 34px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell #commsTabs {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px !important;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell #commsTabs :is(.nav-item, .nav-link) {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell #announcements > .d-flex {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100%;
+        max-width: 100%;
+        padding: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell #announcements > .d-flex > div {
+        min-width: 0;
+        line-height: 1.3;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-panel-updates .p-3,
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-panel-featured .p-3,
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-panel-health .p-2 {
+        max-width: 100%;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (min-width: 560px) and (max-width: 767.98px) {
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-overview-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card {
+        min-height: 106px !important;
+        display: flex !important;
+        flex-direction: column;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        text-align: center !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(1) {
+        grid-row: auto;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(2),
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(3) {
+        text-align: center !important;
+    }
+}
+
+@media (max-width: 360px) {
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .dashboard-overview-grid {
+        gap: 8px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card {
+        min-height: 98px !important;
+        display: flex !important;
+        flex-direction: column;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        padding: 9px 7px !important;
+        text-align: center !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(1) {
+        grid-row: auto;
+        width: 30px !important;
+        height: 30px !important;
+        flex-basis: 30px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(2) {
+        font-size: 1rem !important;
+        text-align: center !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .overview-card > div:nth-child(3) {
+        font-size: 0.56rem !important;
+        line-height: 1.15 !important;
+        text-align: center !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell .custom-table tbody td {
+        grid-template-columns: minmax(72px, 32%) minmax(0, 1fr);
+        gap: 8px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-overview.admin-dashboard-shell #announcements > .d-flex {
+        grid-template-columns: minmax(0, 1fr);
     }
 }

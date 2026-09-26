@@ -1,16 +1,16 @@
 @extends('mobile.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/categories.css?v=3') }}" data-page-style="admin-categories">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/categories.css?v=4') }}" data-page-style="admin-categories">
 @endpush
 
 @section('content')
-<div class="db-section active" id="sec-admin-categories">
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+<div class="db-section active admin-categories-shell" id="sec-admin-categories">
+    <div class="mb-4 d-flex justify-content-between align-items-center admin-categories-header">
         <div>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Manage Interview Categories</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage categories for local job interviews.</p>
+            <h4 class="admin-categories-title" style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Manage Interview Categories</h4>
+            <p class="admin-categories-subtitle" style="font-size:.875rem;color:var(--tx3);margin:0">Manage categories for local job interviews.</p>
         </div>
-        <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addCategoryModal"><i class="fa-solid fa-plus me-1"></i> Add Interview Category</button>
+        <button class="bgrd btn px-3 py-2 admin-categories-add-btn" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addCategoryModal"><i class="fa-solid fa-plus me-1"></i> Add Interview Category</button>
     </div>
     
     @if(session('success'))
@@ -20,7 +20,7 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <div id="mainCategoriesTableWrapper" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
+    <div id="mainCategoriesTableWrapper" class="admin-categories-table-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
         <table id="mainCategoriesTable" class="table table-dark table-hover mb-0" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
             <thead>
                 <tr>
@@ -35,13 +35,13 @@
             <tbody>
                 @foreach($categories as $c)
                 <tr>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td data-label="Category" class="admin-category-title-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($c->is_featured) <i class="fa-solid fa-star text-warning me-1"></i> @endif
                         @if($c->icon) <i class="{{ $c->icon }} me-1"></i> @endif
                         <a href="{{ route('admin.categories.details', $c->id) }}" style="color:var(--tx);text-decoration:none;font-weight:600;">{{ $c->title }}</a>
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ Str::limit($c->description, 50) }}</td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td data-label="Description" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ Str::limit($c->description, 50) }}</td>
+                    <td data-label="Type" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($c->type == 'game')
                             <span class="badge bg-info text-dark">Game</span>
                         @elseif($c->type == 'learning')
@@ -50,16 +50,16 @@
                             <span class="badge bg-primary">Core</span>
                         @endif
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $c->questions_count ?? $c->questions()->count() }}</td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td data-label="Questions" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $c->questions_count ?? $c->questions()->count() }}</td>
+                    <td data-label="Status" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($c->status == 'active')
                             <span class="badge bg-success"><i class="fa-solid fa-circle me-1"></i>Active</span>
                         @else
                             <span class="badge bg-secondary"><i class="fa-solid fa-circle me-1"></i>Inactive</span>
                         @endif
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
-                        <form action="{{ route('admin.categories.status', $c->id) }}" method="POST" style="display:inline-block">
+                    <td data-label="Actions" class="admin-category-action-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                        <form action="{{ route('admin.categories.status', $c->id) }}" method="POST" class="admin-category-row-action-form" style="display:inline-block">
                             @csrf @method('PATCH')
                             <button class="btn btn-sm btn-outline-warning" style="font-size:.7rem" title="Toggle Status"><i class="fa-solid fa-power-off"></i></button>
                         </form>

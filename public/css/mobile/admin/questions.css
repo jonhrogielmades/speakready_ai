@@ -299,3 +299,446 @@
                 justify-content: flex-end;
             }
         }
+
+/* Final mobile fit guard for the admin interview question bank. */
+body.admin-mobile-shell #mob-content #sec-admin-questions.admin-questions-shell,
+body.admin-mobile-shell #mob-content #sec-admin-questions.admin-questions-shell * {
+    box-sizing: border-box;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-questions.admin-questions-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-questions.admin-questions-shell > * {
+    max-width: 100% !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-questions .question-table-controls,
+body.admin-mobile-shell #mob-content #sec-admin-questions .admin-questions-table-card {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+@media (max-width: 767px) {
+    body.admin-mobile-shell #mob-content #sec-admin-questions .admin-questions-header {
+        display: flex !important;
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        min-width: 0 !important;
+        margin-bottom: 14px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .admin-questions-header > div:first-child {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .admin-questions-title {
+        width: 100% !important;
+        max-width: 100% !important;
+        font-size: 1.08rem !important;
+        line-height: 1.18 !important;
+        letter-spacing: 0 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .admin-questions-subtitle {
+        width: 100% !important;
+        max-width: 100% !important;
+        font-size: 0.82rem !important;
+        line-height: 1.4 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .admin-questions-header-actions {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .admin-questions-header-actions .btn,
+    body.admin-mobile-shell #mob-content #sec-admin-questions .admin-questions-header-actions a.btn {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 42px !important;
+        border-radius: 10px !important;
+        padding: 9px 12px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .alert {
+        margin-bottom: 12px !important;
+        border-radius: 10px !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-table-controls {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 10px !important;
+        margin-bottom: 12px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .category-filter-select,
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-bulk-action-bar {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .category-filter-select select,
+    body.admin-mobile-shell #mob-content #sec-admin-questions #btnBulkDelete {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 42px !important;
+        border-radius: 10px !important;
+        font-size: 0.84rem !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTableWrapper {
+        overflow-x: hidden !important;
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-select-all-wrap {
+        display: flex !important;
+        justify-content: flex-start !important;
+        margin-bottom: 10px !important;
+        padding-bottom: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-select-all-wrap .form-check {
+        justify-content: flex-start !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        table-layout: auto !important;
+        border-collapse: separate !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable thead {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody {
+        display: grid !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody tr {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 12px !important;
+        border: 1px solid var(--bd, rgba(148, 163, 184, 0.22)) !important;
+        border-radius: 10px !important;
+        background: var(--bg3, rgba(148, 163, 184, 0.08)) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        padding: 8px 0 !important;
+        border-top: 0 !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important;
+        text-align: right !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td::before {
+        content: attr(data-label) !important;
+        flex: 0 0 auto !important;
+        max-width: 46% !important;
+        color: var(--tx3, #64748b) !important;
+        font-size: 0.68rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0 !important;
+        line-height: 1.2 !important;
+        text-align: left !important;
+        text-transform: uppercase !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td[data-label="Question"] {
+        order: -2 !important;
+        display: block !important;
+        padding-bottom: 11px !important;
+        margin-bottom: 2px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td[data-label="Question"]::before,
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td[data-label="Actions"]::before {
+        content: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td[data-label="Select"] {
+        order: -1 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-title {
+        display: block !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        font-size: 0.88rem !important;
+        line-height: 1.35 !important;
+        text-align: left !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-detail-cell .mt-1 {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 5px !important;
+        margin-top: 8px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-category {
+        max-width: 62% !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable .badge {
+        max-width: 100% !important;
+        min-height: 26px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+        padding: 5px 8px !important;
+        font-size: 0.68rem !important;
+        line-height: 1.15 !important;
+        letter-spacing: 0 !important;
+        white-space: normal !important;
+        text-align: right !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td[data-label="Type / Diff"] {
+        align-items: flex-start !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td[data-label="Type / Diff"] > span {
+        display: inline-flex !important;
+        margin-bottom: 0 !important;
+        margin-left: 5px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td[data-label="Actions"] {
+        display: block !important;
+        border-bottom: 0 !important;
+        padding-top: 12px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-row-action-form {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-action-cell .btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 38px !important;
+        border-radius: 10px !important;
+        padding: 7px 8px !important;
+        font-size: 0.76rem !important;
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #addQuestionModal .modal-dialog,
+    body.admin-mobile-shell [id^="editQuestionModal"] .modal-dialog,
+    body.admin-mobile-shell [id^="previewQuestionModal"] .modal-dialog,
+    body.admin-mobile-shell #importQuestionsModal .modal-dialog,
+    body.admin-mobile-shell #analyticsModal .modal-dialog,
+    body.admin-mobile-shell #aiGenerateModal .modal-dialog,
+    body.admin-mobile-shell #datasetsModal .modal-dialog {
+        width: calc(100vw - 24px) !important;
+        max-width: 520px !important;
+        margin: 12px auto !important;
+    }
+
+    body.admin-mobile-shell #addQuestionModal .modal-content,
+    body.admin-mobile-shell [id^="editQuestionModal"] .modal-content,
+    body.admin-mobile-shell [id^="previewQuestionModal"] .modal-content,
+    body.admin-mobile-shell #importQuestionsModal .modal-content,
+    body.admin-mobile-shell #analyticsModal .modal-content,
+    body.admin-mobile-shell #aiGenerateModal .modal-content,
+    body.admin-mobile-shell #datasetsModal .modal-content {
+        max-height: calc(var(--sr-visual-vh, 100dvh) - 24px) !important;
+        overflow: hidden !important;
+        border-radius: 12px !important;
+    }
+
+    body.admin-mobile-shell #addQuestionModal .modal-body,
+    body.admin-mobile-shell [id^="editQuestionModal"] .modal-body,
+    body.admin-mobile-shell [id^="previewQuestionModal"] .modal-body,
+    body.admin-mobile-shell #importQuestionsModal .modal-body,
+    body.admin-mobile-shell #analyticsModal .modal-body,
+    body.admin-mobile-shell #aiGenerateModal .modal-body,
+    body.admin-mobile-shell #datasetsModal .modal-body {
+        max-height: calc(var(--sr-visual-vh, 100dvh) - 150px) !important;
+        overflow-y: auto !important;
+        padding: 14px !important;
+    }
+
+    body.admin-mobile-shell #addQuestionModal .modal-title,
+    body.admin-mobile-shell [id^="editQuestionModal"] .modal-title,
+    body.admin-mobile-shell [id^="previewQuestionModal"] .modal-title,
+    body.admin-mobile-shell #importQuestionsModal .modal-title,
+    body.admin-mobile-shell #analyticsModal .modal-title,
+    body.admin-mobile-shell #aiGenerateModal .modal-title,
+    body.admin-mobile-shell #datasetsModal .modal-title {
+        min-width: 0 !important;
+        font-size: 1rem !important;
+        line-height: 1.25 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #addQuestionModal .modal-body .row,
+    body.admin-mobile-shell [id^="editQuestionModal"] .modal-body .row,
+    body.admin-mobile-shell #datasetsModal .modal-body .row,
+    body.admin-mobile-shell #analyticsModal .modal-body .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #addQuestionModal .modal-body [class*="col-"],
+    body.admin-mobile-shell [id^="editQuestionModal"] .modal-body [class*="col-"],
+    body.admin-mobile-shell #datasetsModal .modal-body [class*="col-"],
+    body.admin-mobile-shell #analyticsModal .modal-body [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #addQuestionModal .oinp,
+    body.admin-mobile-shell [id^="editQuestionModal"] .oinp,
+    body.admin-mobile-shell #importQuestionsModal .form-control,
+    body.admin-mobile-shell #aiGenerateModal .oinp {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 42px !important;
+        border-radius: 10px !important;
+    }
+
+    body.admin-mobile-shell [id^="previewQuestionModal"] h3 {
+        font-size: 1rem !important;
+        line-height: 1.35 !important;
+        margin-bottom: 16px !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell [id^="previewQuestionModal"] .d-flex.justify-content-center {
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    body.admin-mobile-shell #aiGenerateModal .text-end {
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #aiGenerateModal .text-end .btn,
+    body.admin-mobile-shell #datasetsModal form .btn {
+        width: 100% !important;
+        min-height: 40px !important;
+        border-radius: 10px !important;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #addQuestionModal .modal-footer,
+    body.admin-mobile-shell [id^="editQuestionModal"] .modal-footer,
+    body.admin-mobile-shell #importQuestionsModal .modal-footer {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        padding: 12px 14px !important;
+    }
+
+    body.admin-mobile-shell #addQuestionModal .modal-footer .btn,
+    body.admin-mobile-shell [id^="editQuestionModal"] .modal-footer .btn,
+    body.admin-mobile-shell #importQuestionsModal .modal-footer .btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 40px !important;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+    }
+}
+
+@media (min-width: 560px) and (max-width: 767px) {
+    body.admin-mobile-shell #mob-content #sec-admin-questions .admin-questions-header-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .admin-questions-header-actions > .bgrd {
+        grid-column: span 2 !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+        gap: 5px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable tbody td::before {
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-category,
+    body.admin-mobile-shell #mob-content #sec-admin-questions #mainTable .badge {
+        max-width: 100% !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-questions .question-actions {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

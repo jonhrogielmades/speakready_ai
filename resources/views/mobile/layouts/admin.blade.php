@@ -1568,6 +1568,277 @@
          }
       </style>
       @stack('styles')
+      <style data-admin-mobile-topbar-drawer-fix>
+         body.admin-mobile-shell {
+            --admin-drawer-bg: rgba(255, 255, 255, 0.98);
+            --admin-drawer-panel: rgba(255, 255, 255, 0.96);
+            --admin-drawer-card: rgba(248, 250, 252, 0.96);
+            --admin-drawer-card-hover: rgba(239, 246, 255, 0.98);
+            --admin-drawer-border: rgba(15, 23, 42, 0.12);
+            --admin-drawer-text: #0f172a;
+            --admin-drawer-muted: #475569;
+            --admin-drawer-subtle: #64748b;
+            --admin-drawer-active-bg: rgba(248, 113, 113, 0.14);
+            --admin-drawer-backdrop: rgba(15, 23, 42, 0.32);
+            --admin-notif-bg: rgba(255, 255, 255, 0.98);
+            --admin-notif-panel: rgba(248, 250, 252, 0.98);
+            --admin-notif-text: #0f172a;
+            --admin-notif-muted: #475569;
+            --admin-notif-border: rgba(15, 23, 42, 0.12);
+         }
+
+         html:not(.lm) body.admin-mobile-shell,
+         html.dm body.admin-mobile-shell,
+         body.admin-mobile-shell.dm {
+            --admin-drawer-bg: rgba(15, 10, 10, 0.98);
+            --admin-drawer-panel: rgba(24, 16, 17, 0.98);
+            --admin-drawer-card: rgba(255, 255, 255, 0.075);
+            --admin-drawer-card-hover: rgba(255, 255, 255, 0.12);
+            --admin-drawer-border: rgba(255, 255, 255, 0.14);
+            --admin-drawer-text: #f8fafc;
+            --admin-drawer-muted: #cbd5e1;
+            --admin-drawer-subtle: #94a3b8;
+            --admin-drawer-active-bg: rgba(248, 113, 113, 0.22);
+            --admin-drawer-backdrop: rgba(2, 6, 23, 0.56);
+            --admin-notif-bg: rgba(15, 10, 10, 0.98);
+            --admin-notif-panel: rgba(24, 16, 17, 0.98);
+            --admin-notif-text: #f8fafc;
+            --admin-notif-muted: #cbd5e1;
+            --admin-notif-border: rgba(255, 255, 255, 0.14);
+         }
+
+         html.lm body.admin-mobile-shell,
+         body.admin-mobile-shell.lm {
+            --admin-drawer-bg: rgba(255, 255, 255, 0.98);
+            --admin-drawer-panel: rgba(255, 255, 255, 0.96);
+            --admin-drawer-card: rgba(248, 250, 252, 0.96);
+            --admin-drawer-card-hover: rgba(239, 246, 255, 0.98);
+            --admin-drawer-border: rgba(15, 23, 42, 0.12);
+            --admin-drawer-text: #0f172a;
+            --admin-drawer-muted: #475569;
+            --admin-drawer-subtle: #64748b;
+            --admin-drawer-active-bg: rgba(248, 113, 113, 0.14);
+            --admin-drawer-backdrop: rgba(15, 23, 42, 0.32);
+            --admin-notif-bg: rgba(255, 255, 255, 0.98);
+            --admin-notif-panel: rgba(248, 250, 252, 0.98);
+            --admin-notif-text: #0f172a;
+            --admin-notif-muted: #475569;
+            --admin-notif-border: rgba(15, 23, 42, 0.12);
+         }
+
+         body.admin-mobile-shell .mob-more-backdrop {
+            z-index: 1090;
+            background: var(--admin-drawer-backdrop);
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown {
+            z-index: 1110;
+            background: var(--admin-drawer-bg) !important;
+            border-color: var(--admin-drawer-border) !important;
+            color: var(--admin-drawer-text);
+            box-shadow: 0 24px 72px rgba(0, 0, 0, 0.34);
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown[data-origin="top"] {
+            top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px) !important;
+            right: max(10px, env(safe-area-inset-right, 0px)) !important;
+            bottom: auto !important;
+            left: auto !important;
+            width: min(310px, calc(100vw - 20px)) !important;
+            max-width: calc(100vw - 20px) !important;
+            max-height: min(62dvh, 430px);
+            margin: 0 !important;
+            transform: none !important;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown[data-origin="bottom"] {
+            top: auto !important;
+            right: max(10px, env(safe-area-inset-right, 0px)) !important;
+            bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 10px) !important;
+            left: max(10px, env(safe-area-inset-left, 0px)) !important;
+            width: auto !important;
+            max-width: none !important;
+            max-height: calc(var(--sr-visual-vh, 100dvh) - var(--mob-nav-h) - var(--mob-safe-bottom) - var(--mob-safe-top) - 22px);
+            margin: 0 !important;
+            transform: none !important;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="pages"] > .mob-profile-account-head,
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="account"] .mob-profile-pages,
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="account"] .mob-profile-pages-head,
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="pages"] .mob-profile-account {
+            display: none !important;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="account"] > .mob-profile-account-head,
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="pages"] .mob-profile-pages-head {
+            display: flex !important;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-head,
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-pages-head {
+            background: var(--admin-drawer-panel);
+            border-color: var(--admin-drawer-border);
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="pages"] .mob-profile-menu {
+            padding: 0 10px 10px;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="account"] .mob-profile-menu {
+            padding: 10px;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown[data-origin="top"] .mob-profile-menu {
+            max-height: calc(62dvh - 72px);
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown[data-origin="bottom"] .mob-profile-menu {
+            max-height: calc(var(--sr-visual-vh, 100dvh) - var(--mob-nav-h) - var(--mob-safe-bottom) - var(--mob-safe-top) - 72px);
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-name,
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-pages-head,
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-link,
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-action {
+            color: var(--admin-drawer-text) !important;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-role,
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-section-title {
+            color: var(--admin-drawer-subtle) !important;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-close {
+            background: var(--admin-drawer-card);
+            border-color: var(--admin-drawer-border);
+            color: var(--admin-drawer-muted);
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-link,
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-action {
+            background: var(--admin-drawer-card) !important;
+            border-color: var(--admin-drawer-border) !important;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-link:active,
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-link:hover,
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-action:active {
+            background: var(--admin-drawer-card-hover) !important;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-link.active {
+            background: var(--admin-drawer-active-bg) !important;
+            border-color: rgba(248, 113, 113, 0.42) !important;
+            outline: 1px solid rgba(248, 113, 113, 0.22);
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-link span,
+         body.admin-mobile-shell #mobProfileDropdown .mob-profile-action span {
+            color: inherit !important;
+            font-weight: 800;
+            line-height: 1.25;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="account"] .mob-profile-grid {
+            grid-template-columns: 1fr;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="pages"] .mob-profile-link {
+            min-height: 44px;
+         }
+
+         body.admin-mobile-shell .mob-notification-wrap {
+            position: static;
+         }
+
+         body.admin-mobile-shell #mob-header .mob-notification-dropdown {
+            position: fixed !important;
+            top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px) !important;
+            right: max(10px, env(safe-area-inset-right, 0px)) !important;
+            left: auto !important;
+            z-index: 1125;
+            width: min(360px, calc(100vw - 20px)) !important;
+            max-width: calc(100vw - 20px) !important;
+            max-height: calc(var(--sr-visual-vh, 100dvh) - var(--mob-top-h) - var(--mob-safe-top) - 18px);
+            margin: 0 !important;
+            transform: none !important;
+            background: var(--admin-notif-bg) !important;
+            border-color: var(--admin-notif-border) !important;
+            color: var(--admin-notif-text);
+         }
+
+         body.admin-mobile-shell #mob-header .admin-mob-notif-header,
+         body.admin-mobile-shell #mob-header .admin-mob-notif-footer {
+            background: var(--admin-notif-panel) !important;
+            border-color: var(--admin-notif-border) !important;
+         }
+
+         body.admin-mobile-shell #mob-header .admin-mob-notif-title,
+         body.admin-mobile-shell #mob-header .mob-notification-list .admin-activity-item,
+         body.admin-mobile-shell #mob-header .mob-notification-list .fw-bold {
+            color: var(--admin-notif-text) !important;
+         }
+
+         body.admin-mobile-shell #mob-header .mob-notification-list {
+            background: var(--admin-notif-bg) !important;
+            max-height: min(55dvh, 380px);
+         }
+
+         body.admin-mobile-shell #mob-header .mob-notification-list .admin-activity-item {
+            background: var(--admin-notif-panel) !important;
+            border-color: var(--admin-notif-border) !important;
+         }
+
+         body.admin-mobile-shell #mob-header .mob-notification-list .text-muted,
+         body.admin-mobile-shell #mob-header .mob-notification-list .admin-activity-item > div:last-child {
+            color: var(--admin-notif-muted) !important;
+         }
+
+         body.admin-mobile-shell #mob-header .admin-mob-notif-action {
+            flex: 0 0 auto;
+            background: var(--admin-drawer-card) !important;
+            border-color: var(--admin-notif-border) !important;
+            color: var(--admin-notif-text) !important;
+         }
+
+         body.admin-mobile-shell #mob-header .admin-mob-notif-action.danger {
+            color: #f87171 !important;
+            border-color: rgba(248, 113, 113, 0.34) !important;
+         }
+
+         @media (max-width: 575px) {
+            body.admin-mobile-shell #mob-header .admin-mob-notif-header {
+               align-items: center;
+               flex-direction: row;
+            }
+
+            body.admin-mobile-shell #mob-header .admin-mob-notif-actions {
+               width: auto;
+            }
+
+            body.admin-mobile-shell #mob-header .admin-mob-notif-action {
+               width: 36px;
+               min-width: 36px;
+               padding: 0;
+            }
+
+            body.admin-mobile-shell #mob-header .admin-mob-notif-action span {
+               display: none;
+            }
+         }
+
+         @media (max-width: 380px) {
+            body.admin-mobile-shell #mobProfileDropdown[data-origin="top"],
+            body.admin-mobile-shell #mob-header .mob-notification-dropdown {
+               right: max(8px, env(safe-area-inset-right, 0px)) !important;
+               left: max(8px, env(safe-area-inset-left, 0px)) !important;
+               width: auto !important;
+               max-width: none !important;
+            }
+         }
+      </style>
       <style data-mobile-side-gutter="10px">
          @media (max-width: 991.98px) {
             body.admin-mobile-shell {
@@ -1592,6 +1863,207 @@
             }
          }
       </style>
+      <style data-admin-mobile-ui-repair="dashboard-pages">
+         @media (max-width: 767.98px) {
+            body.admin-mobile-shell,
+            body.admin-mobile-shell * {
+               box-sizing: border-box;
+            }
+
+            body.admin-mobile-shell {
+               --admin-page-gap: 12px;
+               --admin-card-radius: 12px;
+               --admin-control-h: 42px;
+               --admin-label-w: minmax(82px, 34%);
+            }
+
+            body.admin-mobile-shell #mob-content,
+            body.admin-mobile-shell #mob-content > .db-content,
+            body.admin-mobile-shell #mob-content .db-section {
+               width: 100% !important;
+               max-width: 100% !important;
+               overflow-x: clip !important;
+            }
+
+            body.admin-mobile-shell #mob-content :is(.row, .container, .container-fluid) {
+               min-width: 0 !important;
+               max-width: 100% !important;
+            }
+
+            body.admin-mobile-shell #mob-content .row {
+               margin-left: 0 !important;
+               margin-right: 0 !important;
+            }
+
+            body.admin-mobile-shell #mob-content .row > [class*="col-"] {
+               min-width: 0 !important;
+               max-width: 100% !important;
+            }
+
+            body.admin-mobile-shell #mob-content :is(.premium-card, .card, [class*="panel"], [class*="wrapper"]) {
+               max-width: 100% !important;
+            }
+
+            body.admin-mobile-shell #mob-content .db-section > .d-flex:first-child,
+            body.admin-mobile-shell #mob-content :is(.admin-dashboard-header, .feedback-header, .ai-providers-header) {
+               align-items: stretch !important;
+               gap: var(--admin-page-gap) !important;
+               margin-bottom: 14px !important;
+               min-width: 0 !important;
+            }
+
+            body.admin-mobile-shell #mob-content .db-section > .d-flex:first-child > *,
+            body.admin-mobile-shell #mob-content :is(.admin-dashboard-header, .feedback-header, .ai-providers-header) > * {
+               min-width: 0 !important;
+               max-width: 100% !important;
+            }
+
+            body.admin-mobile-shell #mob-content :is(h1, h2, h3, h4, h5, h6, p, span, a, button, label, small, td, th) {
+               overflow-wrap: anywhere;
+            }
+
+            body.admin-mobile-shell #mob-content :is(.btn, button, .badge, .stat-badge) {
+               max-width: 100%;
+               white-space: normal !important;
+               line-height: 1.15;
+            }
+
+            body.admin-mobile-shell #mob-content :is(.btn, button, .form-control, .form-select) {
+               min-height: var(--admin-control-h);
+            }
+
+            body.admin-mobile-shell #mob-content :is(form.row, .session-filter-form, .feedback-filter-form) {
+               --bs-gutter-x: 8px;
+               --bs-gutter-y: 8px;
+               margin-left: 0 !important;
+               margin-right: 0 !important;
+            }
+
+            body.admin-mobile-shell #mob-content :is(form.row, .session-filter-form, .feedback-filter-form) > [class*="col-"] {
+               width: 100% !important;
+               max-width: 100% !important;
+               padding-left: 0 !important;
+               padding-right: 0 !important;
+            }
+
+            body.admin-mobile-shell #mob-content :is([style*="overflow-x:auto"], [style*="overflow-x: auto"], .table-responsive) {
+               width: 100% !important;
+               max-width: 100% !important;
+               overflow-x: visible !important;
+               -webkit-overflow-scrolling: auto !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table,
+            body.admin-mobile-shell #mob-content table {
+               width: 100% !important;
+               min-width: 0 !important;
+               max-width: 100% !important;
+               table-layout: auto !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table thead,
+            body.admin-mobile-shell #mob-content table.admin-mobile-card-table thead {
+               display: none !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody,
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody tr,
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td {
+               display: block;
+               width: 100% !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody tr {
+               border: 1px solid var(--bd) !important;
+               border-radius: var(--admin-card-radius) !important;
+               background: var(--bg3) !important;
+               padding: 11px !important;
+               margin-bottom: 10px !important;
+               box-shadow: none !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td {
+               display: grid !important;
+               grid-template-columns: var(--admin-label-w) minmax(0, 1fr);
+               align-items: center;
+               gap: 10px;
+               min-width: 0 !important;
+               padding: 7px 0 !important;
+               border: 0 !important;
+               border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+               text-align: right !important;
+               white-space: normal !important;
+               overflow: visible !important;
+               text-overflow: clip !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td:last-child {
+               border-bottom: 0 !important;
+               padding-top: 10px !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td[data-label]::before {
+               content: attr(data-label);
+               color: var(--tx3);
+               font-size: 0.66rem;
+               font-weight: 800;
+               letter-spacing: 0.04em;
+               line-height: 1.15;
+               text-align: left;
+               text-transform: uppercase;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td[colspan] {
+               display: block !important;
+               text-align: center !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td[colspan]::before {
+               display: none !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td > * {
+               min-width: 0 !important;
+               max-width: 100% !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td .d-flex {
+               min-width: 0 !important;
+               max-width: 100% !important;
+               flex-wrap: wrap;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td.text-end,
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td:last-child {
+               text-align: right !important;
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td:last-child :is(.btn, button, a.btn) {
+               min-width: 36px;
+            }
+
+            body.admin-mobile-shell #mob-content :is(.pagination, [class*="pagination"], [class*="page-actions"]) {
+               max-width: 100%;
+               flex-wrap: wrap;
+            }
+
+            body.admin-mobile-shell #mob-content :is(.text-truncate, [style*="text-overflow"]) {
+               white-space: normal !important;
+               overflow: visible !important;
+               text-overflow: clip !important;
+            }
+         }
+
+         @media (max-width: 380px) {
+            body.admin-mobile-shell {
+               --admin-label-w: minmax(76px, 32%);
+            }
+
+            body.admin-mobile-shell #mob-content .table-responsive > table tbody td {
+               gap: 8px;
+            }
+         }
+      </style>
    </head>
    <body class="admin-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="admin">
 
@@ -1605,7 +2077,7 @@
          </a>
          <div class="mob-header-right">
             <div class="dropdown mob-notification-wrap">
-                <a href="#" class="mob-icon-btn position-relative" data-bs-toggle="dropdown" aria-expanded="false" title="Live Activity" style="text-decoration:none;" onclick="resetAdminActivityBadge('mobile')">
+                <a href="#" id="mobNotificationBtn" class="mob-icon-btn position-relative" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Live Activity" style="text-decoration:none;" onclick="resetAdminActivityBadge('mobile'); closeMobileProfile();">
                    <i class="fa-regular fa-bell"></i>
                    <span id="admin-activity-badge-mobile" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-dark rounded-circle" style="display:none; width: 8px; height: 8px; margin-left: -5px; margin-top: 5px;">
                       <span class="visually-hidden">New alerts</span>
@@ -1621,7 +2093,7 @@
                         <div class="admin-mob-notif-actions">
                             <button class="admin-mob-notif-action" type="button" onclick="markAllActivitiesRead(event)" title="Mark all as read"><i class="fa-solid fa-check"></i><span>Read</span></button>
                             <button class="admin-mob-notif-action danger" type="button" onclick="clearAllActivities(event)" title="Clear all"><i class="fa-solid fa-trash"></i><span>Clear</span></button>
-                            <button class="admin-mob-notif-action" type="button" data-bs-toggle="dropdown" aria-label="Close notifications"><i class="fa-solid fa-xmark"></i></button>
+                            <button class="admin-mob-notif-action admin-mob-notif-close" type="button" data-admin-notif-close aria-label="Close notifications"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     </div>
                     <div id="admin-activity-list-mobile" class="mob-notification-list">
@@ -1646,6 +2118,8 @@
                  onclick="toggleMobileProfile(event, 'account')"
                  aria-controls="mobProfileDropdown"
                  aria-expanded="false"
+                 role="button"
+                 tabindex="0"
                  title="Account"
                  style="padding:0;overflow:hidden;">
                @if(Auth::check() && Auth::user()->profile_photo_path)
@@ -2585,7 +3059,7 @@
       <div id="mobMoreBackdrop" class="mob-more-backdrop" aria-hidden="true" onclick="closeMobileProfile()"></div>
 
       <div class="mob-profile-dropdown" id="mobProfileDropdown" aria-hidden="true" data-mode="pages" data-origin="bottom">
-         <div class="mob-profile-head">
+         <div class="mob-profile-head mob-profile-account-head">
             <div class="mob-profile-head-avatar">
                @if(Auth::check() && Auth::user()->profile_photo_path)
                   @php
@@ -2605,9 +3079,9 @@
          </div>
          <div class="mob-profile-menu" id="mobProfileMenu">
             <div class="mob-profile-pages">
-               <div class="mob-profile-pages-close">
+               <div class="mob-profile-pages-close mob-profile-pages-head">
                   <span>More</span>
-                  <button class="mob-profile-close" type="button" onclick="event.stopPropagation(); closeMobileProfile();" aria-label="Close more menu"><i class="fa-solid fa-xmark"></i></button>
+                  <button class="mob-profile-close mob-profile-pages-close-btn" type="button" onclick="event.stopPropagation(); closeMobileProfile();" aria-label="Close more menu"><i class="fa-solid fa-xmark"></i></button>
                </div>
                <div class="mob-profile-section-title">Interview Modules</div>
                <div class="mob-profile-grid">
@@ -2636,7 +3110,7 @@
             </div>
 
             <div class="mob-profile-account">
-               <div class="mob-profile-section-title">System</div>
+               <div class="mob-profile-section-title">Profile</div>
                <div class="mob-profile-grid mb-2">
                   <a href="{{ route('admin.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.account') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span>Account</span></a>
                   <a href="{{ route('admin.settings.index') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
@@ -2695,6 +3169,7 @@
 
             const currentMode = dropdown.getAttribute('data-mode') || 'pages';
             const isOpen = dropdown.classList.contains('open');
+            hideMobileNotificationDropdown();
             dropdown.setAttribute('data-mode', mode);
             dropdown.setAttribute('data-origin', mode === 'pages' ? 'bottom' : 'top');
 
@@ -2705,6 +3180,13 @@
             if (bottomButton) bottomButton.setAttribute('aria-expanded', willOpen && mode === 'pages' ? 'true' : 'false');
             if (moreBackdrop) moreBackdrop.classList.toggle('open', willOpen);
             if (willOpen) resetMobileProfileMenuScroll();
+         }
+
+         function hideMobileNotificationDropdown() {
+            const notificationButton = document.getElementById('mobNotificationBtn');
+            if (!notificationButton || typeof bootstrap === 'undefined' || !bootstrap.Dropdown) return;
+            const dropdown = bootstrap.Dropdown.getInstance(notificationButton) || bootstrap.Dropdown.getOrCreateInstance(notificationButton);
+            dropdown.hide();
          }
 
          function resetMobileProfileMenuScroll() {
@@ -2738,6 +3220,31 @@
             const moreButton = document.getElementById('mobnav-more');
             if (profileDropdown?.classList.contains('open') && !profileDropdown.contains(e.target) && !moreButton?.contains(e.target) && !profileButton?.contains(e.target)) {
                closeMobileProfile();
+            }
+         });
+
+         document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('[data-admin-notif-close]').forEach(function(button) {
+               button.addEventListener('click', function(event) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  hideMobileNotificationDropdown();
+               });
+            });
+
+            const notificationButton = document.getElementById('mobNotificationBtn');
+            if (notificationButton) {
+               notificationButton.addEventListener('show.bs.dropdown', closeMobileProfile);
+            }
+
+            const profileButton = document.getElementById('mobProfileBtn');
+            if (profileButton) {
+               profileButton.addEventListener('keydown', function(event) {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                     event.preventDefault();
+                     toggleMobileProfile(event, 'account');
+                  }
+               });
             }
          });
 

@@ -18,7 +18,7 @@
     };
 @endphp
 
-<div class="db-section active ai-evaluation-page ai-evaluation-report" id="sec-admin-ai-evaluation">
+<div class="db-section active ai-evaluation-page ai-evaluation-report admin-ai-evaluation-shell" id="sec-admin-ai-evaluation">
     <div class="ai-eval-header btn-no-print">
         <div>
             <h4 class="fw-bold mb-1"><i class="fa-solid fa-file-pdf me-2"></i>AI Provider Evidence Report</h4>
@@ -55,7 +55,7 @@
         <p class="ai-report-note">{{ $summary['panelist_requirement_label'] ?? 'Panelist requirement: evaluate 3 or more AI APIs.' }}</p>
 
         <h2>Provider Matrix</h2>
-        <table class="ai-report-table">
+        <table class="ai-report-table ai-report-mobile-table">
             <thead>
                 <tr>
                     <th>Provider</th>
@@ -70,13 +70,13 @@
             <tbody>
                 @foreach($rankedProviders as $provider)
                     <tr>
-                        <td>{{ $provider['provider_name'] }}</td>
-                        <td>{{ ucfirst($provider['status']) }}</td>
-                        <td>{{ $provider['overall_score'] }}%</td>
-                        <td>{{ $provider['question_generation_score'] !== null ? $provider['question_generation_score'].'%' : 'None' }}</td>
-                        <td>{{ $provider['feedback_generation_score'] !== null ? $provider['feedback_generation_score'].'%' : 'None' }}</td>
-                        <td>{{ $provider['operational_reliability_score'] !== null ? $provider['operational_reliability_score'].'%' : 'No logs' }}</td>
-                        <td>{{ $provider['evidence_level'] }}</td>
+                        <td data-label="Provider">{{ $provider['provider_name'] }}</td>
+                        <td data-label="Status">{{ ucfirst($provider['status']) }}</td>
+                        <td data-label="Overall">{{ $provider['overall_score'] }}%</td>
+                        <td data-label="Question">{{ $provider['question_generation_score'] !== null ? $provider['question_generation_score'].'%' : 'None' }}</td>
+                        <td data-label="Feedback">{{ $provider['feedback_generation_score'] !== null ? $provider['feedback_generation_score'].'%' : 'None' }}</td>
+                        <td data-label="Reliability">{{ $provider['operational_reliability_score'] !== null ? $provider['operational_reliability_score'].'%' : 'No logs' }}</td>
+                        <td data-label="Evidence">{{ $provider['evidence_level'] }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -97,7 +97,7 @@
 
         @if($selectedRun && $selectedRun->results->count() > 0)
             <h2>Provider Comparison Evidence</h2>
-            <table class="ai-report-table">
+            <table class="ai-report-table ai-report-mobile-table">
                 <thead>
                     <tr>
                         <th>Provider</th>
@@ -113,14 +113,14 @@
                 <tbody>
                     @foreach($selectedRun->results as $result)
                         <tr>
-                            <td>{{ $result->provider_name }}</td>
-                            <td>{{ ucfirst(str_replace('_', ' ', $result->task_type)) }}</td>
-                            <td>{{ ucfirst($result->status) }}</td>
-                            <td>{{ $result->quality_score }}%</td>
-                            <td>{{ $result->schema_score }}%</td>
-                            <td>{{ $result->accuracy_score }}%</td>
-                            <td>{{ $result->safety_score }}%</td>
-                            <td>{{ number_format((int) $result->response_time_ms) }}ms</td>
+                            <td data-label="Provider">{{ $result->provider_name }}</td>
+                            <td data-label="Case">{{ ucfirst(str_replace('_', ' ', $result->task_type)) }}</td>
+                            <td data-label="Status">{{ ucfirst($result->status) }}</td>
+                            <td data-label="Quality">{{ $result->quality_score }}%</td>
+                            <td data-label="Schema">{{ $result->schema_score }}%</td>
+                            <td data-label="Accuracy">{{ $result->accuracy_score }}%</td>
+                            <td data-label="Safety">{{ $result->safety_score }}%</td>
+                            <td data-label="Latency">{{ number_format((int) $result->response_time_ms) }}ms</td>
                         </tr>
                     @endforeach
                 </tbody>

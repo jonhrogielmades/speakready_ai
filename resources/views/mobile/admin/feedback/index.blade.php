@@ -1,11 +1,11 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/feedback/index.css?v=6') }}" data-page-style="admin-feedback-index">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/feedback/index.css?v=7') }}" data-page-style="admin-feedback-index">
 @endpush
 
 @section('content')
-<div class="container-fluid py-4 feedback-audit-page">
+<div id="sec-admin-feedback" class="container-fluid py-4 feedback-audit-page admin-feedback-audit-shell">
     <!-- Header -->
     <div class="feedback-header d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -96,9 +96,9 @@
             </div>
         </div>
         <div class="col-md-8">
-            <div class="card boc feedback-content-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
+            <div class="card boc feedback-content-card feedback-audit-list-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-body p-4">
-                    <h6 class="fw-bold mb-3" style="color: var(--tx);">Interview Feedback Audit List</h6>
+                    <h6 class="fw-bold mb-3 feedback-audit-list-title" style="color: var(--tx);">Interview Feedback Audit List</h6>
                     
                     <!-- Filters -->
                     <form action="{{ route('admin.feedback.index') }}" method="GET" class="feedback-filter-form row g-2 mb-3">
@@ -134,19 +134,19 @@
                             <tbody>
                                 @forelse($feedbacks as $fb)
                                 <tr>
-                                    <td style="border-bottom: 1px solid var(--bd);">#{{ $fb->id }}</td>
-                                    <td style="border-bottom: 1px solid var(--bd);">
+                                    <td data-label="Audit ID" style="border-bottom: 1px solid var(--bd);">#{{ $fb->id }}</td>
+                                    <td data-label="Question" class="feedback-question-cell" style="border-bottom: 1px solid var(--bd);">
                                         <div class="text-truncate" style="max-width: 250px;" title="{{ $fb->question ? $fb->question->question_text : 'N/A' }}">
                                             {{ $fb->question ? $fb->question->question_text : 'N/A' }}
                                         </div>
                                     </td>
-                                    <td style="border-bottom: 1px solid var(--bd);">
+                                    <td data-label="Score" style="border-bottom: 1px solid var(--bd);">
                                         <span class="badge" style="{{ $fb->score >= 80 ? 'background: rgba(16, 185, 129, 0.1); color: #10b981;' : ($fb->score >= 50 ? 'background: rgba(245, 158, 11, 0.1); color: #f59e0b;' : 'background: var(--danger-bg); color: var(--danger-tx);') }}">
                                             {{ $fb->score ?? 'N/A' }}%
                                         </span>
                                     </td>
-                                    <td style="border-bottom: 1px solid var(--bd);">{{ $fb->created_at->format('M d, Y') }}</td>
-                                    <td style="border-bottom: 1px solid var(--bd);">
+                                    <td data-label="Generated" style="border-bottom: 1px solid var(--bd);">{{ $fb->created_at->format('M d, Y') }}</td>
+                                    <td data-label="Status" style="border-bottom: 1px solid var(--bd);">
                                         @if($fb->audit_status == 'approved')
                                             <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i class="fa-solid fa-check-circle me-1"></i> Approved</span>
                                         @elseif($fb->audit_status == 'under_review')
@@ -157,13 +157,13 @@
                                             <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25"><i class="fa-solid fa-archive me-1"></i> Archived</span>
                                         @endif
                                     </td>
-                                    <td style="border-bottom: 1px solid var(--bd);">
+                                    <td data-label="Action" class="feedback-action-cell" style="border-bottom: 1px solid var(--bd);">
                                         <a href="{{ route('admin.feedback.show', $fb) }}" class="btn btn-sm btn-outline-primary feedback-review-btn" style="border-radius: 6px;"><i class="fa-solid fa-eye"></i>Review</a>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-4" style="color: var(--tx3); border-bottom: 1px solid var(--bd);">No feedback records found.</td>
+                                    <td colspan="6" class="text-center py-4 feedback-empty-cell" style="color: var(--tx3); border-bottom: 1px solid var(--bd);">No feedback records found.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -215,9 +215,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const scoresCanvas = document.getElementById('scoresChart');
     if (!scoresCanvas) return;
 
+    const compactFeedbackChart = window.matchMedia('(max-width: 767px)').matches;
     const ctx = scoresCanvas.getContext('2d');
     new Chart(ctx, {
         type: 'bar',
+        options: {
+            indexAxis: compactFeedbackChart ? 'y' : 'x',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: compactFeedbackChart,
+                    max: compactFeedbackChart ? 100 : undefined,
+                    ticks: { color: '#888' },
+                    grid: { color: 'rgba(128, 128, 128, 0.2)' }
+                },
+                y: {
+                    beginAtZero: !compactFeedbackChart,
+                    max: compactFeedbackChart ? undefined : 100,
+                    ticks: { color: '#888' },
+                    grid: { color: 'rgba(128, 128, 128, 0.2)' }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: !compactFeedbackChart,
+                    labels: { color: '#888' }
+                }
+            }
+        },
         data: {
             labels: ['Overall', 'Clarity', 'Relevance'],
             datasets: [{
@@ -240,27 +266,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 borderWidth: 1,
                 borderRadius: 4
             }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    ticks: { color: '#888' },
-                    grid: { color: 'rgba(128, 128, 128, 0.2)' }
-                },
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: { color: '#888' },
-                    grid: { color: 'rgba(128, 128, 128, 0.2)' }
-                }
-            },
-            plugins: {
-                legend: {
-                    labels: { color: '#888' }
-                }
-            }
         }
     });
 });

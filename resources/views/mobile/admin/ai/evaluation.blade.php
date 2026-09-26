@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/ai/evaluation.css?v=2') }}" data-page-style="admin-ai-evaluation">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/ai/evaluation.css?v=3') }}" data-page-style="admin-ai-evaluation">
 @endpush
 
 @section('content')

@@ -1,16 +1,16 @@
 @extends('mobile.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/questions.css?v=6') }}" data-page-style="admin-questions">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/questions.css?v=7') }}" data-page-style="admin-questions">
 @endpush
 
 @section('content')
-<div class="db-section active" id="sec-admin-questions">
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+<div class="db-section active admin-questions-shell" id="sec-admin-questions">
+    <div class="mb-4 d-flex justify-content-between align-items-center admin-questions-header">
         <div>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Interview Question Bank</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage practice questions for local job interviews.</p>
+            <h4 class="admin-questions-title" style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Interview Question Bank</h4>
+            <p class="admin-questions-subtitle" style="font-size:.875rem;color:var(--tx3);margin:0">Manage practice questions for local job interviews.</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 admin-questions-header-actions">
             <button class="btn btn-outline-info py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#aiGenerateModal"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Question</button>
             <a href="{{ route('admin.questions.export') }}" class="btn btn-outline-secondary py-2" style="font-size:.85rem"><i class="fa-solid fa-download me-1"></i> Export</a>
             <button class="btn btn-outline-secondary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#importQuestionsModal"><i class="fa-solid fa-upload me-1"></i> Import</button>
@@ -42,7 +42,7 @@
         </div>
     </div>
 
-    <div id="mainTableWrapper" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
+    <div id="mainTableWrapper" class="admin-questions-table-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
         <div class="d-md-none mb-3 pb-2 question-select-all-wrap" style="border-bottom: 1px solid var(--bd);">
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="selectAllMobile" onclick="document.getElementById('selectAllQuestions').click();">
@@ -67,10 +67,10 @@
             <tbody>
                 @foreach($questions as $q)
                 <tr class="question-row" data-category-id="{{ $q->category_id }}">
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td data-label="Select" class="question-select-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         <input class="form-check-input question-checkbox" type="checkbox" value="{{ $q->id }}" onchange="toggleBulkDeleteBtn()">
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px;">
+                    <td data-label="Question" class="question-detail-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px;">
                         <div class="fw-bold question-title" title="{{ $q->question_text }}">{{ $q->question_text }}</div>
                         @if($q->mapped_skills)
                             <div class="mt-1">
@@ -87,24 +87,24 @@
                             </div>
                         @endif
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px"><span class="question-category" title="{{ $q->category->title ?? 'N/A' }}">{{ $q->category->title ?? 'N/A' }}</span></td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td data-label="Category" style="border-bottom:1px solid var(--bd);padding:12px 8px"><span class="question-category" title="{{ $q->category->title ?? 'N/A' }}">{{ $q->category->title ?? 'N/A' }}</span></td>
+                    <td data-label="Type / Diff" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         <span class="badge bg-secondary mb-1 d-block">{{ $q->type }}</span>
                         @if($q->difficulty == 'Easy') <span class="badge bg-success d-block">Easy</span>
                         @elseif($q->difficulty == 'Medium') <span class="badge bg-warning text-dark d-block">Medium</span>
                         @else <span class="badge d-block" style="background: var(--danger-bg); color: var(--danger-tx);">Hard</span>
                         @endif
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td data-label="Status" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($q->status == 'active')
                             <span class="badge bg-success"><i class="fa-solid fa-circle me-1"></i>Active</span>
                         @else
                             <span class="badge bg-secondary"><i class="fa-solid fa-circle me-1"></i>Inactive</span>
                         @endif
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td data-label="Actions" class="question-action-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         <div class="question-actions">
-                            <form action="{{ route('admin.questions.status', $q->id) }}" method="POST" style="display:inline-block">
+                            <form action="{{ route('admin.questions.status', $q->id) }}" method="POST" class="question-row-action-form" style="display:inline-block">
                                 @csrf @method('PATCH')
                                 <button class="btn btn-sm btn-outline-warning" style="font-size:.7rem" title="Toggle Status"><i class="fa-solid fa-power-off"></i></button>
                             </form>

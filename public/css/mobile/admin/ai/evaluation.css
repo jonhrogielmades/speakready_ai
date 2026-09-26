@@ -904,3 +904,277 @@ body.dm #sec-admin-ai-evaluation .ai-eval-actions .ai-eval-clear-btn:focus-visib
         background: #f8fafc !important;
     }
 }
+
+/* Final mobile fit guard for AI evaluation dashboards and reports. */
+body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell,
+body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell * {
+    box-sizing: border-box;
+    letter-spacing: 0 !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell :is(h1, h2, h3, h4, h5, h6, p, span, small, strong, b, td, th, li) {
+    overflow-wrap: anywhere;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .premium-card,
+body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-card,
+body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-provider-output-card,
+body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-paper {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .stat-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    border-radius: 999px;
+    line-height: 1.2;
+    white-space: normal;
+    text-align: center;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .table-responsive {
+    width: 100%;
+    max-width: 100%;
+}
+
+@media (max-width: 767.98px) {
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-header {
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-header h4 {
+        font-size: 1.25rem !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-actions {
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-actions .btn,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-actions button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 42px;
+        border-radius: 8px;
+        white-space: normal;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-filter {
+        padding: 12px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-card {
+        min-height: 96px;
+        padding: 12px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-panel {
+        padding: 14px !important;
+        overflow: visible;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-panel-title {
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-panel-title .stat-badge {
+        width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-detail-grid {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-eval-detail-grid > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .table-responsive {
+        overflow-x: visible !important;
+        -webkit-overflow-scrolling: auto !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .custom-table {
+        width: 100%;
+        min-width: 0 !important;
+        table-layout: auto !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .custom-table,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .custom-table tbody,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .custom-table tr,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .custom-table td {
+        display: block;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .custom-table thead {
+        display: none;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .custom-table tr {
+        margin-bottom: 12px;
+        padding: 12px;
+        border: 1px solid var(--bd, rgba(255, 255, 255, 0.1));
+        border-radius: 8px;
+        background: var(--bg3, rgba(255, 255, 255, 0.03));
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .custom-table td {
+        min-width: 0;
+        padding: 9px 0 !important;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+        color: var(--tx);
+        text-align: left !important;
+        white-space: normal !important;
+        text-overflow: clip !important;
+        overflow: visible !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .custom-table td:last-child {
+        border-bottom: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .custom-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 5px;
+        color: var(--tx3, #94a3b8);
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell details pre {
+        max-width: 100%;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-best-action-row {
+        grid-template-columns: 1fr;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-best-action-btn {
+        min-height: 42px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-feedback-scores {
+        gap: 5px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-feedback-scores span {
+        max-width: 100%;
+        white-space: normal;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-paper {
+        padding: 14px;
+        overflow: visible;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-title {
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-title img {
+        width: 42px;
+        height: 42px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-title h1 {
+        font-size: 1rem;
+        line-height: 1.25;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-summary {
+        grid-template-columns: 1fr;
+        gap: 9px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-table {
+        width: 100%;
+        min-width: 0;
+        table-layout: auto;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-mobile-table,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-mobile-table tbody,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-mobile-table tr,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-mobile-table td {
+        display: block;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-mobile-table thead {
+        display: none;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-mobile-table tr {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid var(--bd);
+        border-radius: 8px;
+        background: var(--bg3);
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-mobile-table td {
+        padding: 8px 0 !important;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+        text-align: left !important;
+        white-space: normal;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-mobile-table td:last-child {
+        border-bottom: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-mobile-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        color: var(--tx3, #94a3b8);
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-output-provider,
+    body.admin-mobile-shell #mob-content #sec-admin-ai-evaluation.admin-ai-evaluation-shell .ai-report-feedback-item {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+}

@@ -26,7 +26,7 @@
     };
 @endphp
 
-<div class="db-section active ai-evaluation-page" id="sec-admin-ai-evaluation">
+<div class="db-section active ai-evaluation-page admin-ai-evaluation-shell" id="sec-admin-ai-evaluation">
     @if(session('message'))
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
             {{ session('message') }}
@@ -177,27 +177,27 @@
                 <tbody>
                     @foreach($rankedProviders as $provider)
                         <tr>
-                            <td>
+                            <td data-label="Provider">
                                 <div class="ai-eval-provider-name">{{ $provider['provider_name'] }}</div>
                                 <small>{{ $provider['role'] }} · {{ $provider['provider_key'] }}</small>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 <span class="stat-badge {{ $provider['status'] === 'active' ? 'success' : ($provider['status'] === 'unconfigured' ? 'secondary' : 'danger') }}">
                                     {{ ucfirst($provider['status']) }}
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="Overall">
                                 <strong>{{ $provider['overall_score'] }}%</strong>
                                 <small class="d-block">{{ $provider['quality_label'] }}</small>
                             </td>
-                            <td>{{ $provider['question_generation_score'] !== null ? $provider['question_generation_score'].'%' : 'None' }}</td>
-                            <td>{{ $provider['feedback_generation_score'] !== null ? $provider['feedback_generation_score'].'%' : 'None' }}</td>
-                            <td>
+                            <td data-label="Questions">{{ $provider['question_generation_score'] !== null ? $provider['question_generation_score'].'%' : 'None' }}</td>
+                            <td data-label="Feedback">{{ $provider['feedback_generation_score'] !== null ? $provider['feedback_generation_score'].'%' : 'None' }}</td>
+                            <td data-label="Reliability">
                                 {{ $provider['operational_reliability_score'] !== null ? $provider['operational_reliability_score'].'%' : 'No logs' }}
                                 <small class="d-block">{{ $provider['success_rate'] !== null ? $provider['success_rate'].'% success' : '' }}</small>
                             </td>
-                            <td>{{ $provider['avg_latency_ms'] !== null ? number_format($provider['avg_latency_ms']).'ms' : 'No logs' }}</td>
-                            <td>
+                            <td data-label="Latency">{{ $provider['avg_latency_ms'] !== null ? number_format($provider['avg_latency_ms']).'ms' : 'No logs' }}</td>
+                            <td data-label="Evidence">
                                 <span class="ai-eval-evidence-level">{{ $provider['evidence_level'] }}</span>
                                 <small class="d-block">{{ $provider['evidence_note'] }}</small>
                             </td>
@@ -440,7 +440,7 @@
         @endif
     </div>
 
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 ai-eval-detail-grid">
         <div class="col-lg-5">
             <div class="premium-card ai-eval-panel h-100">
                 <div class="ai-eval-panel-title">
@@ -476,9 +476,9 @@
                         <tbody>
                             @foreach($benchmarkCases as $case)
                                 <tr>
-                                    <td class="fw-bold">{{ $case['title'] }}</td>
-                                    <td>{{ ucfirst(str_replace('_', ' ', $case['task_type'])) }}</td>
-                                    <td>{{ $case['evidence_focus'] }}</td>
+                                    <td data-label="Case" class="fw-bold">{{ $case['title'] }}</td>
+                                    <td data-label="Task">{{ ucfirst(str_replace('_', ' ', $case['task_type'])) }}</td>
+                                    <td data-label="Evidence Focus">{{ $case['evidence_focus'] }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -513,19 +513,19 @@
                     <tbody>
                         @foreach($selectedRun->results as $result)
                             <tr>
-                                <td class="fw-bold">{{ $result->provider_name }}</td>
-                                <td>{{ ucfirst(str_replace('_', ' ', $result->task_type)) }}</td>
-                                <td>
+                                <td data-label="Provider" class="fw-bold">{{ $result->provider_name }}</td>
+                                <td data-label="Task">{{ ucfirst(str_replace('_', ' ', $result->task_type)) }}</td>
+                                <td data-label="Status">
                                     <span class="stat-badge {{ $result->status === 'success' ? 'success' : 'danger' }}">
                                         {{ ucfirst($result->status) }}
                                     </span>
                                 </td>
-                                <td>{{ $result->quality_score }}%</td>
-                                <td>{{ $result->schema_score }}%</td>
-                                <td>{{ $result->accuracy_score }}%</td>
-                                <td>{{ $result->safety_score }}%</td>
-                                <td>{{ number_format((int) $result->response_time_ms) }}ms</td>
-                                <td>
+                                <td data-label="Quality">{{ $result->quality_score }}%</td>
+                                <td data-label="Schema">{{ $result->schema_score }}%</td>
+                                <td data-label="Accuracy">{{ $result->accuracy_score }}%</td>
+                                <td data-label="Safety">{{ $result->safety_score }}%</td>
+                                <td data-label="Latency">{{ number_format((int) $result->response_time_ms) }}ms</td>
+                                <td data-label="Output Evidence">
                                     @php
                                         $benchmarkEvidence = collect($result->evidence ?? [])
                                             ->except(['generated_questions', 'generated_feedback', 'sample_output'])

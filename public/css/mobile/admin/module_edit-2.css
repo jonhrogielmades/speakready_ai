@@ -50,3 +50,59 @@
     body.dark-mode #sec-admin-module-edit .ql-snow .ql-picker {
         color: #e2e8f0;
     }
+
+/* Final Quill editor fit guard for mobile module chapter modals. */
+body.admin-mobile-shell #addChapterModal .ql-toolbar.ql-snow,
+body.admin-mobile-shell [id^="editChapterModal"] .ql-toolbar.ql-snow {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    padding: 8px !important;
+}
+
+body.admin-mobile-shell #addChapterModal .ql-toolbar.ql-snow .ql-formats,
+body.admin-mobile-shell [id^="editChapterModal"] .ql-toolbar.ql-snow .ql-formats {
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    gap: 2px !important;
+    margin: 0 4px 4px 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+}
+
+body.admin-mobile-shell #addChapterModal .ql-container.ql-snow,
+body.admin-mobile-shell [id^="editChapterModal"] .ql-container.ql-snow,
+body.admin-mobile-shell #addChapterModal .ql-editor,
+body.admin-mobile-shell [id^="editChapterModal"] .ql-editor {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+@media (max-width: 767px) {
+    body.admin-mobile-shell #addChapterModal .ql-container.ql-snow,
+    body.admin-mobile-shell [id^="editChapterModal"] .ql-container.ql-snow {
+        min-height: 190px !important;
+    }
+
+    body.admin-mobile-shell #addChapterModal .ql-editor,
+    body.admin-mobile-shell [id^="editChapterModal"] .ql-editor {
+        min-height: 170px !important;
+        max-height: 220px !important;
+        overflow-y: auto !important;
+        font-size: 0.88rem !important;
+        line-height: 1.45 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #addChapterModal [id="editor-container"],
+    body.admin-mobile-shell [id^="editChapterModal"] [id^="edit-editor-container"] {
+        height: auto !important;
+        min-height: 230px !important;
+        max-height: 286px !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        border-radius: 0 0 10px 10px !important;
+    }
+}

@@ -512,3 +512,353 @@
             gap: 12px;
         }
     }
+
+/* Final mobile fit guard for System Settings. */
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell,
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell * {
+    box-sizing: border-box;
+    letter-spacing: 0 !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell :is(h4, h5, h6, p, span, small, label, input, select, textarea, button, td, th, li) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-header,
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-panel,
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-jump,
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .custom-switch-container,
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .btn-save-fixed {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    border-radius: 8px;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-heading {
+    min-width: 0;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-panel {
+    overflow: hidden;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .form-control,
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .form-select {
+    width: 100%;
+    max-width: 100%;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .form-control-color {
+    min-width: 100%;
+    min-height: 44px;
+}
+
+@media (max-width: 767.98px) {
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-header {
+        min-height: 0;
+        padding: 16px 14px;
+        margin-bottom: 14px !important;
+        gap: 12px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-header h4 {
+        font-size: 1.25rem !important;
+        line-height: 1.25;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-header p {
+        font-size: 0.84rem !important;
+        line-height: 1.4;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-save-top,
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-save-top {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 42px;
+        margin-top: 0;
+        white-space: normal;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-grid,
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-jump-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-grid > [class*="col-"],
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-jump-grid > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-jump {
+        min-height: 96px;
+        padding: 11px 8px;
+        gap: 6px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-jump-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-jump-label {
+        font-size: 0.78rem;
+        line-height: 1.2;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-jump-kicker {
+        font-size: 0.54rem;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-panel {
+        margin-bottom: 12px;
+        padding: 14px;
+        overflow: visible;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-panel-head {
+        gap: 6px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-panel-head h5 {
+        align-items: flex-start;
+        font-size: 0.98rem;
+        line-height: 1.25;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-panel-head p {
+        font-size: 0.78rem;
+        line-height: 1.4;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell :is(.admin-settings-fields-grid, .admin-settings-check-grid, .settings-panel > .row) {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell :is(.admin-settings-fields-grid, .admin-settings-check-grid, .settings-panel > .row) > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .form-label {
+        font-size: 0.78rem;
+        line-height: 1.25;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .form-control,
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .form-select {
+        min-height: 42px;
+        padding: 9px 10px;
+        font-size: 0.84rem;
+        border-radius: 8px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell textarea.form-control {
+        min-height: 96px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .custom-switch-container {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .custom-switch-container h6 {
+        font-size: 0.84rem;
+        line-height: 1.25;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .custom-switch-container small {
+        display: block;
+        font-size: 0.72rem;
+        line-height: 1.38;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .custom-switch-container .form-check {
+        min-width: 48px;
+        padding-left: 0;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .form-switch .form-check-input {
+        width: 2.85rem !important;
+        min-width: 2.85rem !important;
+        height: 1.5rem !important;
+        min-height: 1.5rem !important;
+        margin-left: 0;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-check-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        min-height: 44px;
+        padding: 11px 12px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-check-row .form-check-input {
+        flex: 0 0 auto;
+        margin-left: 0;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-check-row .form-check-label {
+        font-size: 0.8rem;
+        line-height: 1.3;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-backup-actions {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 9px !important;
+        width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-backup-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 40px;
+        border-radius: 8px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-logo-preview {
+        max-width: 100%;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .btn-save-fixed,
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-save-bar {
+        position: static;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 12px;
+        margin-top: 12px !important;
+        box-shadow: var(--settings-card-shadow);
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-save-bar span {
+        font-size: 0.78rem;
+        line-height: 1.35;
+        text-align: center;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-save-bottom {
+        width: 100%;
+        min-height: 42px;
+        border-radius: 8px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell #mainAuditLogsTableWrapper {
+        overflow-x: visible !important;
+        -webkit-overflow-scrolling: auto !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell #mainAuditLogsTable,
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell #mainAuditLogsTable tbody,
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell #mainAuditLogsTable tr,
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell #mainAuditLogsTable td {
+        display: block;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell #mainAuditLogsTable thead {
+        display: none;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell #mainAuditLogsTable tr {
+        margin-bottom: 12px;
+        padding: 12px;
+        border: 1px solid var(--settings-card-border);
+        border-radius: 8px;
+        background: var(--settings-control-bg);
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell #mainAuditLogsTable td {
+        min-width: 0;
+        padding: 9px 0 !important;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+        color: var(--settings-page-title);
+        text-align: left !important;
+        white-space: normal !important;
+        text-overflow: clip !important;
+        overflow: visible !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell #mainAuditLogsTable td:last-child {
+        border-bottom: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell #mainAuditLogsTable td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 5px;
+        color: var(--settings-muted);
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-empty-cell {
+        padding: 18px 10px !important;
+        text-align: center !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-empty-cell::before {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-info-list {
+        overflow: hidden;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-info-item {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        align-items: start !important;
+        gap: 4px;
+        padding: 11px 12px;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-info-item span:last-child {
+        text-align: left;
+        font-weight: 800;
+    }
+}
+
+@media (max-width: 380px) {
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-grid,
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .admin-settings-jump-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .custom-switch-container {
+        grid-template-columns: 1fr;
+    }
+}

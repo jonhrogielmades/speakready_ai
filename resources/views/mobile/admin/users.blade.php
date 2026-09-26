@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/users.css?v=2') }}" data-page-style="admin-users">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/users.css?v=3') }}" data-page-style="admin-users">
 @endpush
 
 @section('content')
@@ -51,12 +51,12 @@
 
 <div class="db-section active" id="sec-admin-users">
     <!-- Top Header & Actions -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div class="admin-users-header d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-users-gear me-2" style="color:#3b82f6;"></i>User Management</h4>
-            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Manage users, track performance, and broadcast announcements.</p>
+            <h4 class="admin-users-title fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-users-gear me-2" style="color:#3b82f6;"></i>User Management</h4>
+            <p class="admin-users-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">Manage users, track performance, and broadcast announcements.</p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="admin-users-header-actions d-flex flex-wrap gap-2">
             <!-- Feature 14 & 15: Broadcast Announcements -->
             <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#broadcastModal"><i class="fa-solid fa-bullhorn me-2"></i>Broadcast</button>
             <!-- Feature 3: Add User -->
@@ -201,9 +201,9 @@
     </div>
 
     <!-- Feature 1: User List Main Table -->
-    <div class="premium-card">
+    <div class="premium-card admin-users-table-card">
         <!-- Search and Filter -->
-        <form method="GET" action="{{ route('admin.users.index') }}" class="row g-3 mb-3" id="filterForm">
+        <form method="GET" action="{{ route('admin.users.index') }}" class="row g-3 mb-3 admin-users-filter-form" id="filterForm">
             <div class="col-md-4">
                 <div class="input-group">
                     <span class="input-group-text" style="background:var(--bg3);border-color:var(--bd);color:var(--tx2);"><i class="fa-solid fa-search"></i></span>
@@ -245,7 +245,7 @@
                 <tbody>
                     @forelse($users as $user)
                     <tr>
-                        <td>
+                        <td data-label="User">
                             <div class="d-flex align-items-center gap-3">
                                 @if($user->profile_photo_path)
                                     @php
@@ -287,15 +287,15 @@
                                 </div>
                             </div>
                         </td>
-                        <td>{{ $user->email }}</td>
-                        <td>
+                        <td data-label="Email">{{ $user->email }}</td>
+                        <td data-label="Role">
                             @if($user->is_admin)
                                 <span class="stat-badge primary" style="background:rgba(59,130,246,0.15);color:#60a5fa;">Admin</span>
                             @else
                                 <span class="stat-badge secondary">User</span>
                             @endif
                         </td>
-                        <td>
+                        <td data-label="Status">
                             @if($user->status === 'active')
                                 <span class="stat-badge success"><i class="fa-solid fa-circle me-1"></i>Active</span>
                             @elseif($user->status === 'inactive')
@@ -307,8 +307,8 @@
                                 <div class="mt-1"><span class="stat-badge text-white" style="background:#f59e0b;font-size:0.65rem;">Req. Reactivation</span></div>
                             @endif
                         </td>
-                        <td style="color:var(--tx2);">{{ $user->created_at->format('M d, Y') }}</td>
-                        <td class="text-end">
+                        <td data-label="Registered" style="color:var(--tx2);">{{ $user->created_at->format('M d, Y') }}</td>
+                        <td data-label="Actions" class="text-end">
                             <div class="user-action-cell">
                             @if($user->reactivation_requested_at)
                             <form action="{{ route('admin.users.approve-reactivation', $user) }}" method="POST">
@@ -347,11 +347,11 @@
             </table>
         </div>
         
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3 pt-3" style="border-top:1px solid var(--bd);">
-            <div style="color:var(--tx2);font-size:0.9rem;">
+        <div class="admin-users-pagination d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3 pt-3" style="border-top:1px solid var(--bd);">
+            <div class="admin-users-pagination-count" style="color:var(--tx2);font-size:0.9rem;">
                 Showing {{ $users->firstItem() ?? 0 }}-{{ $users->lastItem() ?? 0 }} of {{ $users->total() }} users
             </div>
-            <div class="d-flex align-items-center gap-2">
+            <div class="admin-users-pagination-controls d-flex align-items-center gap-2">
                 @if($users->onFirstPage())
                     <span class="btn btn-outline-secondary disabled" aria-disabled="true">Previous</span>
                 @else
@@ -881,22 +881,22 @@
 
                 const interviewRows = (data.interviews || []).map(session => `
                     <tr>
-                        <td>${escapeHtml(session.date)}</td>
-                        <td><span class="stat-badge primary">${escapeHtml(session.category)}</span></td>
-                        <td><span class="fw-bold">${scoreText(session.score)}</span></td>
-                        <td>${escapeHtml(session.status)}</td>
-                        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(session.review_url)}">View Feedback</a></td>
+                        <td data-label="Date">${escapeHtml(session.date)}</td>
+                        <td data-label="Category"><span class="stat-badge primary">${escapeHtml(session.category)}</span></td>
+                        <td data-label="Score"><span class="fw-bold">${scoreText(session.score)}</span></td>
+                        <td data-label="Status">${escapeHtml(session.status)}</td>
+                        <td data-label="Actions" class="text-end"><a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(session.review_url)}">View Feedback</a></td>
                     </tr>
                 `).join('');
                 document.getElementById('userDetailInterviews').innerHTML = interviewRows || '<tr><td colspan="5" class="text-center text-muted py-3">No completed interviews found.</td></tr>';
 
                 const learningRows = (data.learning_progress || []).map(item => `
                     <tr>
-                        <td>${escapeHtml(item.module)}</td>
-                        <td><span class="stat-badge primary">${escapeHtml(String(item.status || 'enrolled').replace(/_/g, ' '))}</span></td>
-                        <td><span class="fw-bold">${item.progress_percentage ?? 0}%</span></td>
-                        <td>${item.quiz_score === null || item.quiz_score === undefined ? 'N/A' : escapeHtml(item.quiz_score) + '%'}</td>
-                        <td>${escapeHtml(item.updated || '--')}</td>
+                        <td data-label="Module">${escapeHtml(item.module)}</td>
+                        <td data-label="Status"><span class="stat-badge primary">${escapeHtml(String(item.status || 'enrolled').replace(/_/g, ' '))}</span></td>
+                        <td data-label="Progress"><span class="fw-bold">${item.progress_percentage ?? 0}%</span></td>
+                        <td data-label="Quiz">${item.quiz_score === null || item.quiz_score === undefined ? 'N/A' : escapeHtml(item.quiz_score) + '%'}</td>
+                        <td data-label="Updated">${escapeHtml(item.updated || '--')}</td>
                     </tr>
                 `).join('');
                 document.getElementById('userDetailLearningProgress').innerHTML = learningRows || '<tr><td colspan="5" class="text-center text-muted py-3">No learning module updates found.</td></tr>';

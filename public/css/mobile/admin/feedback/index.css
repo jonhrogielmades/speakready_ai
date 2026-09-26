@@ -538,3 +538,405 @@
             font-size: 1.08rem;
         }
     }
+
+/* Final mobile fit guard for the admin feedback audit page. */
+body.admin-mobile-shell #mob-content #sec-admin-feedback.admin-feedback-audit-shell,
+body.admin-mobile-shell #mob-content #sec-admin-feedback.admin-feedback-audit-shell * {
+    box-sizing: border-box;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-feedback.admin-feedback-audit-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-feedback.admin-feedback-audit-shell > * {
+    max-width: 100% !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-grid,
+body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-main-grid,
+body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-filter-form {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-grid > [class*="col-"],
+body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-main-grid > [class*="col-"],
+body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-filter-form > [class*="col-"] {
+    min-width: 0 !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-card,
+body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-content-card,
+body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTableWrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+@media (max-width: 767px) {
+    body.admin-mobile-shell #mob-content #sec-admin-feedback.admin-feedback-audit-shell {
+        padding: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-header {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        margin-bottom: 14px !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-header > div:first-child {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-page-title {
+        width: 100% !important;
+        max-width: 100% !important;
+        justify-content: flex-start !important;
+        gap: 9px !important;
+        font-size: 1.08rem !important;
+        line-height: 1.18 !important;
+        letter-spacing: 0 !important;
+        overflow-wrap: anywhere !important;
+        text-wrap: wrap !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-page-title i {
+        width: 32px !important;
+        height: 32px !important;
+        flex: 0 0 32px !important;
+        border-radius: 10px !important;
+        font-size: 0.86rem !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-page-subtitle {
+        width: 100% !important;
+        max-width: 100% !important;
+        font-size: 0.82rem !important;
+        line-height: 1.4 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-header-actions,
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-export-btn {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-export-btn {
+        min-height: 42px !important;
+        padding: 9px 12px !important;
+        border-radius: 10px !important;
+        white-space: normal !important;
+        font-size: 0.84rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        margin-bottom: 14px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-grid > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-card {
+        border-radius: 10px !important;
+        overflow: hidden !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-card .card-body {
+        min-height: 104px !important;
+        padding: 12px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-card .card-body > .d-flex {
+        min-width: 0 !important;
+        gap: 9px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-card h6 {
+        font-size: 0.68rem !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-card h3 {
+        font-size: 1.16rem !important;
+        line-height: 1.08 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-icon {
+        width: 36px !important;
+        height: 36px !important;
+        flex: 0 0 36px !important;
+        border-radius: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-main-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 14px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-main-grid > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-content-card {
+        border-radius: 10px !important;
+        overflow: hidden !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-content-card > .card-body {
+        padding: 12px !important;
+        min-width: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-content-card h6,
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-audit-list-title {
+        font-size: 0.92rem !important;
+        line-height: 1.25 !important;
+        letter-spacing: 0 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-chart-box {
+        height: 178px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-chart-box canvas {
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-filter-form {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 10px !important;
+        margin-bottom: 14px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-filter-form > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-filter-form .form-control,
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-filter-form .form-select,
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-filter-btn {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 42px !important;
+        border-radius: 10px !important;
+        font-size: 0.84rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTableWrapper {
+        overflow-x: hidden !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        table-layout: auto !important;
+        border-collapse: separate !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable thead {
+        display: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody {
+        display: grid !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody tr {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 12px !important;
+        border: 1px solid var(--bd, rgba(148, 163, 184, 0.22)) !important;
+        border-radius: 10px !important;
+        background: var(--bg3, rgba(148, 163, 184, 0.08)) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        padding: 8px 0 !important;
+        border-top: 0 !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important;
+        text-align: right !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td::before {
+        content: attr(data-label) !important;
+        flex: 0 0 auto !important;
+        max-width: 46% !important;
+        color: var(--tx3, #64748b) !important;
+        font-size: 0.68rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0 !important;
+        line-height: 1.2 !important;
+        text-align: left !important;
+        text-transform: uppercase !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td[data-label="Question"] {
+        order: -1 !important;
+        display: block !important;
+        padding-bottom: 11px !important;
+        margin-bottom: 2px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td[data-label="Question"]::before,
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td[data-label="Action"]::before,
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td.feedback-empty-cell::before {
+        content: none !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td[data-label="Question"] .text-truncate {
+        display: block !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        font-size: 0.86rem !important;
+        line-height: 1.35 !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable .badge {
+        max-width: 100% !important;
+        min-height: 28px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 9px !important;
+        padding: 5px 8px !important;
+        font-size: 0.7rem !important;
+        line-height: 1.15 !important;
+        letter-spacing: 0 !important;
+        white-space: normal !important;
+        text-align: right !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td[data-label="Action"] {
+        display: block !important;
+        border-bottom: 0 !important;
+        padding-top: 12px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-review-btn {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 38px !important;
+        border-radius: 10px !important;
+        padding: 8px 12px !important;
+        font-size: 0.8rem !important;
+        font-weight: 800 !important;
+        white-space: normal !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td.feedback-empty-cell {
+        display: block !important;
+        border-bottom: 0 !important;
+        text-align: center !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .admin-feedback-pagination {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 10px !important;
+        margin-top: 14px !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .admin-feedback-page-count {
+        width: 100% !important;
+        text-align: center !important;
+        font-size: 0.82rem !important;
+        line-height: 1.3 !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .admin-feedback-page-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .admin-feedback-page-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 40px !important;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+        font-size: 0.8rem !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback .feedback-stat-card .card-body {
+        min-height: auto !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+        gap: 5px !important;
+        text-align: left !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable tbody td::before {
+        max-width: 100% !important;
+    }
+
+    body.admin-mobile-shell #mob-content #sec-admin-feedback #mainFeedbackTable .badge {
+        text-align: left !important;
+        justify-content: flex-start !important;
+    }
+}
