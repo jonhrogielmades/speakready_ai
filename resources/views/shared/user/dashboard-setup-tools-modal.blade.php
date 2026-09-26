@@ -7,12 +7,17 @@
                         <span class="sr-dashboard-coach-icon sr-dashboard-setup-icon"><i class="fa-solid fa-sliders"></i></span>
                         <div>
                             <h5 class="modal-title" id="dashboardSetupToolsModalTitle">Setup tools</h5>
-                            <p>Choose the tools to prepare for voice practice and interview sessions.</p>
+                            <p>Prepare camera, microphone, and alerts for practice.</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" data-sr-setup-later aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="sr-dashboard-setup-intro" role="note">
+                        <span><i class="fa-solid fa-shield-halved"></i> Browser permission check</span>
+                        <strong>Ready for desktop and mobile</strong>
+                    </div>
+
                     <div class="sr-dashboard-setup-list" role="group" aria-label="Dashboard tool permissions">
                         <label class="sr-dashboard-setup-tool" data-sr-setup-tool-row="microphone">
                             <span class="sr-dashboard-setup-tool-icon"><i class="fa-solid fa-microphone"></i></span>
@@ -21,7 +26,7 @@
                                 <small>Voice answers and AI coach prompts.</small>
                             </span>
                             <span class="sr-dashboard-setup-switch">
-                                <input type="checkbox" data-sr-setup-tool="microphone" checked>
+                                <input type="checkbox" role="switch" aria-label="Enable microphone" aria-checked="true" data-sr-setup-tool="microphone" checked>
                                 <span class="sr-dashboard-setup-switch-ui" aria-hidden="true"></span>
                             </span>
                             <span class="sr-dashboard-setup-tool-status" data-sr-setup-tool-status="microphone">On</span>
@@ -34,7 +39,7 @@
                                 <small>Camera checks for monitored practice.</small>
                             </span>
                             <span class="sr-dashboard-setup-switch">
-                                <input type="checkbox" data-sr-setup-tool="camera" checked>
+                                <input type="checkbox" role="switch" aria-label="Enable camera" aria-checked="true" data-sr-setup-tool="camera" checked>
                                 <span class="sr-dashboard-setup-switch-ui" aria-hidden="true"></span>
                             </span>
                             <span class="sr-dashboard-setup-tool-status" data-sr-setup-tool-status="camera">On</span>
@@ -47,7 +52,7 @@
                                 <small>Practice reminders and progress alerts.</small>
                             </span>
                             <span class="sr-dashboard-setup-switch">
-                                <input type="checkbox" data-sr-setup-tool="notifications">
+                                <input type="checkbox" role="switch" aria-label="Enable notifications" aria-checked="false" data-sr-setup-tool="notifications">
                                 <span class="sr-dashboard-setup-switch-ui" aria-hidden="true"></span>
                             </span>
                             <span class="sr-dashboard-setup-tool-status" data-sr-setup-tool-status="notifications">Off</span>
@@ -57,6 +62,7 @@
                     <div class="sr-dashboard-coach-status sr-dashboard-setup-status" id="dashboardSetupToolsStatus" role="status" aria-live="polite"></div>
                 </div>
                 <div class="modal-footer">
+                    <span class="sr-dashboard-setup-footer-note">Prompts open only for tools left on.</span>
                     <button type="button" class="sr-dashboard-coach-secondary sr-dashboard-setup-later" data-bs-dismiss="modal" data-sr-setup-later>Do later</button>
                     <button type="submit" class="sr-dashboard-coach-submit sr-dashboard-setup-allow" id="dashboardSetupToolsAllow"><i class="fa-solid fa-check"></i> Allow</button>
                 </div>
@@ -170,6 +176,7 @@
                 const enabled = input.checked;
                 const row = rowFor(tool);
 
+                input.setAttribute('aria-checked', enabled ? 'true' : 'false');
                 if (row) row.classList.toggle('is-off', !enabled);
                 setToolStatus(tool, enabled ? 'On' : 'Off', enabled ? 'ready' : 'off');
             }

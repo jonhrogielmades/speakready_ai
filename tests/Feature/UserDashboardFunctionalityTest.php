@@ -126,6 +126,8 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('data-sr-setup-tool="microphone"', false)
                 ->assertSee('data-sr-setup-tool="camera"', false)
                 ->assertSee('data-sr-setup-tool="notifications"', false)
+                ->assertSee('role="switch"', false)
+                ->assertSee('Browser permission check')
                 ->assertSee('id="dashboardSetupToolsAllow"', false)
                 ->assertSee('Do later')
                 ->assertSee('navigator.mediaDevices.getUserMedia', false)
