@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=43') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=44') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -587,7 +587,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  })();
  const voiceSessionTimesliceMs = 1000;
  const voiceSessionStopTimeoutMs = 8000;
- const serverTranscriptionTimesliceMs = mobileSpeechSurface? {{ max(1000, min(1500, (int) config('services.ai_transcription.mobile_chunk_ms', 1500))) }}: {{ max(900, min(1200, (int) config('services.ai_transcription.chunk_ms', 1200))) }};
+ const serverTranscriptionTimesliceMs = mobileSpeechSurface? {{ max(2200, min(5000, (int) config('services.ai_transcription.mobile_chunk_ms', 3500))) }}: {{ max(1800, min(4000, (int) config('services.ai_transcription.chunk_ms', 2500))) }};
  const serverTranscriptionDrainTimeoutMs = {{ max(8000, min(60000, (int) config('services.ai_transcription.drain_timeout_ms', 20000))) }};
  const serverTranscriptionRequestTimeoutMs = {{ max(10000, min(60000, (int) config('services.ai_transcription.request_timeout_ms', 30000))) }};
  const voiceSessionTranscriptionMaxBytes = 25600 * 1024;
@@ -598,7 +598,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  && Boolean(window.MediaRecorder)
  && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
  const displayRealtimeTranscriptInTextarea = true;
- let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (serverTranscriptionSupported? 'server': (BrowserSpeechRecognition? 'browser': null)): null;
+ let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null)): null;
  const duplicateSafeWordSet = new Set([
  'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
  'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
@@ -1039,10 +1039,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function setTranscriptionStatus(message, color = 'var(--tx3)') {
  const status = document.getElementById('transcriptionStatus');
  if (!status) return;
- status.dataset.message = String(message || '');
- status.textContent = '';
+ const normalizedMessage = String(message || '').trim();
+ status.dataset.message = normalizedMessage;
+ status.textContent = normalizedMessage;
  status.style.color = color;
- status.style.display = 'none';
+ status.style.display = normalizedMessage? 'block': 'none';
  }
 
  function currentTranscriptionStatusMessage() {
@@ -1625,6 +1626,22 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return voiceSessionTranscriptPromise;
  }
 
+ async function fillEmptyHybridTranscriptFromRecording(index = currentQIdx) {
+ if (!isHybridTranscriptionMode() || currentAnswerTextareaText().trim() !== '') return false;
+ if (!serverTranscriptionEnabled || serverTranscriptionUnavailable || microphoneRequiresSecureOrigin()) return false;
+ const recording = voiceSessionRecordings.get(voiceSessionKeyFor(index));
+ if (!recording?.blob || recording.blob.size < 128) return false;
+
+ const transcript = await transcribeVoiceSessionRecording(index, {
+ silent: true,
+ skipStopRecording: true,
+ replaceAnswerText: true,
+ previousTranscript: ''
+ });
+
+ return cleanTranscriptText(transcript).trim() !== '' && currentAnswerTextareaText().trim() !== '';
+ }
+
  async function startVoiceSessionRecorder() {
  if (voiceSessionStartPromise) return voiceSessionStartPromise;
  voiceSessionStartPromise = startVoiceSessionRecorderInternal().finally(() => {
@@ -2133,8 +2150,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function preferredTranscriptionEngine() {
  if (!isHybridTranscriptionMode()) return null;
  if (microphoneRequiresSecureOrigin()) return null;
- if (canUseServerTranscription()) return 'server';
  if (recognition) return 'browser';
+ if (canUseServerTranscription()) return 'server';
  return null;
  }
 
@@ -2319,11 +2336,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function handleServerTranscriptionFailure(error) {
  serverTranscriptionConsecutiveFailures++;
  const errorCode = String(error?.errorCode || '');
+ const status = Number(error?.status || 0);
  const rateLimited = errorCode === 'speech_transcription_rate_limited' || error?.status === 429;
  const hardUnavailable = errorCode === 'speech_transcription_unavailable'
- || error?.status === 401
- || error?.status === 403
- || error?.status === 419;
+ || [400, 401, 403, 404, 413, 419, 422, 500, 501, 503].includes(status);
 
  if (rateLimited) {
  const waitSeconds = Number(error?.retryAfterSeconds || 0);
@@ -2617,6 +2633,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  let lastSpeechEnd = 0;
+ let browserNoSpeechErrorCount = 0;
  if (BrowserSpeechRecognition) {
  recognition = new BrowserSpeechRecognition();
  recognition.continuous =!mobileSpeechSurface;
@@ -2630,6 +2647,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  };
  
  recognition.onsoundstart = function() {
+ browserNoSpeechErrorCount = 0;
  if (lastSpeechEnd > 0) {
  const gap = (Date.now() - lastSpeechEnd) / 1000;
  if (gap > 3) {
@@ -2645,10 +2663,12 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  recognition.onresult = function(event) {
  const interimParts = [];
+ let heardSpeech = false;
 
  for (let i = event.resultIndex; i < event.results.length; ++i) {
  const transcript = bestSpeechAlternative(event.results[i]);
  if (!transcript) continue;
+ heardSpeech = true;
 
  if (event.results[i].isFinal) {
  if (commitSpeechSegment(transcript)) {
@@ -2659,6 +2679,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  }
 
+ if (heardSpeech) {
+ browserNoSpeechErrorCount = 0;
+ }
  liveSpeechInterim = cleanTranscriptText(interimParts.join(' '));
  renderSpeechTranscript();
  };
@@ -2677,6 +2700,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  shouldAutoRestartRecognition = false;
  setTranscriptionStatus(microphoneErrorMessage(error), '#f87171');
  } else if (error === 'no-speech' && isRecording) {
+ browserNoSpeechErrorCount++;
+ if (browserNoSpeechErrorCount >= 2 && canUseServerTranscription()) {
+ setTimeout(() => activateServerTranscriptionFallback('Browser captions did not hear speech - using server transcription'), 0);
+ return;
+ }
  shouldAutoRestartRecognition = true;
  setTranscriptionStatus('Still listening - distant speech is quiet', '#fbbf24');
  }
@@ -5043,6 +5071,13 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  async function stopRecordingInternal() {
  await pauseRecording();
  await stopVoiceSessionRecorder();
+ let generatedFinalTranscript = false;
+ if (isHybridTranscriptionMode()) {
+ generatedFinalTranscript = await fillEmptyHybridTranscriptFromRecording().catch(error => {
+ console.warn('Final hybrid recording transcription failed:', error);
+ return false;
+ });
+ }
  if (isHybridTranscriptionMode() && answersData[currentQIdx]) {
  const textareaText = currentAnswerTextareaText();
  answersData[currentQIdx].text = textareaText;
@@ -5055,7 +5090,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  resetSpeechRecognitionBufferFromTextarea();
  if (isHybridTranscriptionMode()) {
  const hasTranscriptText = currentAnswerTextareaText().trim() !== '';
- setTranscriptionStatus(hasTranscriptText? 'Recording stopped - transcript is ready to edit': 'Recording stopped - no speech detected yet', hasTranscriptText? '#16a34a': '#fbbf24');
+ setTranscriptionStatus(hasTranscriptText? (generatedFinalTranscript? 'Recording stopped - transcript generated and ready to edit': 'Recording stopped - transcript is ready to edit'): 'Recording stopped - no speech detected yet', hasTranscriptText? '#16a34a': '#fbbf24');
  } else if (isVoiceOnlyMode()) {
  setTranscriptionStatus('Recording stopped');
  } else {
