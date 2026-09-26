@@ -5965,33 +5965,3 @@ html:not(.lm) body #mob-content #sec-interview-setup .setup-stepper-lock {
     color: #cbd5e1 !important;
     box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.4) !important;
 }
-
-@media (max-width: 767.98px) {
-    html body.user-mobile-shell #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel.setup-step-active,
-    html body.user-mobile-shell #sec-interview-setup.setup-step-mode #setup-left-col > #panel-basic.setup-details-card.setup-step-active,
-    html body.user-mobile-shell #sec-interview-setup.setup-step-mode #panel-summary.setup-step-active,
-    html body #mob-content #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel.setup-step-active,
-    html body #mob-content #sec-interview-setup.setup-step-mode #setup-left-col > #panel-basic.setup-details-card.setup-step-active,
-    html body #mob-content #sec-interview-setup.setup-step-mode #panel-summary.setup-step-active {
-        display: flex !important;
-        flex-direction: column !important;
-        min-height: min(560px, calc(100dvh - 176px)) !important;
-    }
-
-    html body.user-mobile-shell #sec-interview-setup .setup-stepper-actions,
-    html body #mob-content #sec-interview-setup .setup-stepper-actions {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 8px !important;
-        width: 100% !important;
-        margin-top: auto !important;
-        padding-top: 18px !important;
-    }
-
-    html body.user-mobile-shell #sec-interview-setup .setup-stepper-actions .setup-step-btn,
-    html body #mob-content #sec-interview-setup .setup-stepper-actions .setup-step-btn {
-        width: 100% !important;
-        min-width: 0 !important;
-        border-radius: 8px !important;
-    }
-}
