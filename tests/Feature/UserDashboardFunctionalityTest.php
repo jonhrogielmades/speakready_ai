@@ -129,7 +129,8 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('id="dashboardSetupToolsAllow"', false)
                 ->assertSee('Do later')
                 ->assertSee('navigator.mediaDevices.getUserMedia', false)
-                ->assertSee('Notification.requestPermission', false);
+                ->assertSee('Notification.requestPermission', false)
+                ->assertSee('Some selected tools still need browser permission.', false);
         }
     }
 

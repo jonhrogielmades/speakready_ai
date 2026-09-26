@@ -319,6 +319,13 @@
                             results[input.dataset.srSetupTool] = 'off';
                         });
 
+                    const blockedTools = enabledTools.filter((tool) => results[tool] !== 'granted');
+
+                    if (blockedTools.length) {
+                        setStatus('Some selected tools still need browser permission. Allow them in site settings, switch them off, or choose Do later.', 'warning');
+                        return;
+                    }
+
                     saveSetup(results);
                     setStatus('Setup saved. You can change browser permissions anytime from site settings.', 'success');
                     window.setTimeout(dismissModal, 650);
