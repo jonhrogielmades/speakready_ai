@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=18') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=19') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
@@ -224,6 +224,8 @@
                               @php
                                  $mobilePreviewSlides = [
                                     [
+                                       'image' => 'img/mobile-preview/01-home-dashboard.png',
+                                       'alt' => 'SpeakReady AI mobile home dashboard preview',
                                        'kicker' => 'Dashboard Overview',
                                        'title' => 'See your readiness at a glance.',
                                        'text' => 'Track your interview progress, practice streak, rating, and next goal from one clean mobile dashboard.',
@@ -234,6 +236,8 @@
                                        ],
                                     ],
                                     [
+                                       'image' => 'img/mobile-preview/02-interview-progress.png',
+                                       'alt' => 'SpeakReady AI mobile interview progress preview',
                                        'kicker' => 'Progress Tracking',
                                        'title' => 'Know what to improve next.',
                                        'text' => 'Review your streak, exported reports, AI insights, and learning progress made for your interview growth.',
@@ -244,6 +248,8 @@
                                        ],
                                     ],
                                     [
+                                       'image' => 'img/mobile-preview/03-interview-setup.png',
+                                       'alt' => 'SpeakReady AI mobile interview setup preview',
                                        'kicker' => 'Interview Setup',
                                        'title' => 'Configure a focused mock interview.',
                                        'text' => 'Set your practice scenario, target position, and interview details before starting a tailored session.',
@@ -254,6 +260,8 @@
                                        ],
                                     ],
                                     [
+                                       'image' => 'img/mobile-preview/04-feedback-center.png',
+                                       'alt' => 'SpeakReady AI mobile feedback center preview',
                                        'kicker' => 'Feedback Center',
                                        'title' => 'Review coaching feedback after practice.',
                                        'text' => 'Browse feedback summaries, priority recommendations, answer coaching, and history from the mobile shell.',
@@ -264,6 +272,8 @@
                                        ],
                                     ],
                                     [
+                                       'image' => 'img/mobile-preview/05-interview-modules.png',
+                                       'alt' => 'SpeakReady AI mobile interview modules preview',
                                        'kicker' => 'Interview Modules',
                                        'title' => 'Explore guided preparation modules.',
                                        'text' => 'Open learning paths and recommended lessons that keep interview preparation organized by topic.',
@@ -274,6 +284,8 @@
                                        ],
                                     ],
                                     [
+                                       'image' => 'img/mobile-preview/06-interview-challenges.png',
+                                       'alt' => 'SpeakReady AI mobile interview challenges preview',
                                        'kicker' => 'Interview Challenges',
                                        'title' => 'Build skill through challenge journeys.',
                                        'text' => 'Complete gamified interview challenges with goals, question sets, skill rewards, and progress stats.',
@@ -284,6 +296,8 @@
                                        ],
                                     ],
                                     [
+                                       'image' => 'img/mobile-preview/07-ai-coach.png',
+                                       'alt' => 'SpeakReady AI mobile AI coach preview',
                                        'kicker' => 'AI Coach',
                                        'title' => 'Ask for focused interview help.',
                                        'text' => 'Use the coach chat for interview, resume, certificate, and practice guidance while keeping claims truthful.',
@@ -294,6 +308,20 @@
                                        ],
                                     ],
                                     [
+                                       'image' => 'img/mobile-preview/08-activity-calendar.png',
+                                       'alt' => 'SpeakReady AI mobile activity calendar preview',
+                                       'kicker' => 'Activity Calendar',
+                                       'title' => 'Track practice days and streaks.',
+                                       'text' => 'See recent interview activity, active days, weekly progress, and recorded practice sessions in one calendar view.',
+                                       'points' => [
+                                          'Review active practice days',
+                                          'Track weekly consistency',
+                                          'Open recorded sessions',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview/09-interview-reports.png',
+                                       'alt' => 'SpeakReady AI mobile interview reports preview',
                                        'kicker' => 'Interview Reports',
                                        'title' => 'Review and export interview reports.',
                                        'text' => 'See report availability, start a scored interview, and access export actions from the mobile report screen.',
@@ -304,6 +332,8 @@
                                        ],
                                     ],
                                     [
+                                       'image' => 'img/mobile-preview/10-notifications.png',
+                                       'alt' => 'SpeakReady AI mobile notifications preview',
                                        'kicker' => 'Notifications',
                                        'title' => 'Stay current on activity and alerts.',
                                        'text' => 'View notification states and recent account activity in a mobile-friendly timeline.',
@@ -314,6 +344,8 @@
                                        ],
                                     ],
                                     [
+                                       'image' => 'img/mobile-preview/11-account-management.png',
+                                       'alt' => 'SpeakReady AI mobile account management preview',
                                        'kicker' => 'Account Management',
                                        'title' => 'Manage profile and security settings.',
                                        'text' => 'Update profile details, target role, profile photo, and password fields from the mobile account screen.',
@@ -327,7 +359,22 @@
                               @endphp
                               <div class="swiper-wrapper">
                                  @foreach($mobilePreviewSlides as $slide)
+                                    @php
+                                       $previewImageSrc = asset($slide['image']);
+                                       $shouldPreloadPreview = $loop->first || $loop->iteration === 2 || $loop->last;
+                                    @endphp
                                     <div class="swiper-slide mobile-preview-image-slide">
+                                       <img
+                                          class="mobile-preview-shell-img"
+                                          src="{{ $shouldPreloadPreview ? $previewImageSrc : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==' }}"
+                                          @unless($shouldPreloadPreview) data-src="{{ $previewImageSrc }}" @endunless
+                                          data-preview-index="{{ $loop->index }}"
+                                          alt="{{ $slide['alt'] }}"
+                                          loading="{{ $loop->first ? 'eager' : 'lazy' }}"
+                                          decoding="async"
+                                          width="420"
+                                          height="840"
+                                       >
                                        <div class="mobile-preview-copy">
                                           <div class="mobile-preview-copy-kicker"><span>{{ $loop->iteration }}</span> {{ $slide['kicker'] }}</div>
                                           <h3 class="mobile-preview-copy-title">{{ $slide['title'] }}</h3>

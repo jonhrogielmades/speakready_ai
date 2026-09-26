@@ -1603,6 +1603,7 @@ html, body {
             --mobile-preview-control-bg: color-mix(in srgb, var(--sf, #ffffff) 92%, transparent);
             --mobile-preview-control: var(--tx, #0f172a);
             --mobile-preview-shadow: rgba(15, 23, 42, 0.14);
+            --mobile-preview-shot-width: 188px;
             width: min(calc(100vw - 8px), 410px);
             max-width: none;
             margin-left: 50%;
@@ -1744,10 +1745,11 @@ html, body {
          }
 
          .mobile-preview-shell-img {
+            flex: 0 0 auto;
             display: block;
-            width: 100%;
+            width: min(100%, var(--mobile-preview-shot-width));
             max-width: 100%;
-            aspect-ratio: 2 / 3;
+            aspect-ratio: 1 / 2;
             height: auto;
             object-fit: contain;
             border-radius: 28px;
@@ -2018,8 +2020,10 @@ html, body {
          }
 
          #landing .mobile-preview-shell-img {
-            width: min(100%, 214px);
-            max-height: 346px;
+            width: min(100%, var(--mobile-preview-shot-width));
+            max-height: none;
+            aspect-ratio: 1 / 2;
+            height: auto;
             margin: 0 auto;
             padding: 0;
             border: 0;
@@ -2391,6 +2395,7 @@ html, body {
              }
 
              #landing .mobile-preview-image-swiper {
+                --mobile-preview-shot-width: 174px;
                 width: min(calc(100vw - 24px), 370px);
                 padding-bottom: 38px;
                 overflow: hidden;
@@ -2403,7 +2408,8 @@ html, body {
              }
 
              #landing .mobile-preview-shell-img {
-                max-height: min(54vh, 430px);
+                width: min(100%, var(--mobile-preview-shot-width));
+                max-height: none;
              }
 
              #landing .mobile-preview-copy-title {
@@ -2424,6 +2430,7 @@ html, body {
              }
 
              #landing .mobile-preview-image-swiper {
+                --mobile-preview-shot-width: 174px;
                 width: min(100%, 390px);
                 padding-bottom: 42px;
                 overflow: visible;
@@ -2435,8 +2442,8 @@ html, body {
              }
 
              #landing .mobile-preview-shell-img {
-                width: min(100%, 214px);
-                max-height: 346px;
+                width: min(100%, var(--mobile-preview-shot-width));
+                max-height: none;
              }
 
              #landing .mobile-preview-copy-title {
