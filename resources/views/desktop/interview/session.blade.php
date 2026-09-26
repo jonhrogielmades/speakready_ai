@@ -598,7 +598,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  && Boolean(window.MediaRecorder)
  && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
  const displayRealtimeTranscriptInTextarea = true;
- let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null)): null;
+ let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (serverTranscriptionSupported? 'server': (BrowserSpeechRecognition? 'browser': null)): null;
  const duplicateSafeWordSet = new Set([
  'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
  'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
@@ -938,7 +938,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  lastCommittedSpeech = '';
  lastCommittedAt = 0;
 
- if (displayRealtimeTranscriptInTextarea) {
+ if (isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea) {
  answerState.speech_transcript = currentText;
  }
  answersData[currentQIdx] = answerState;
@@ -991,20 +991,48 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return true;
  }
 
+ function syncHybridAnswerStateFromTextarea() {
+ const answerState = answersData[currentQIdx];
+ if (!answerState ||!isHybridTranscriptionMode()) return;
+
+ const textareaText = currentAnswerTextareaText();
+ answerState.text = textareaText;
+ answerState.speech_transcript = cleanTranscriptText(textareaText);
+ answersData[currentQIdx] = answerState;
+ }
+
+ function writeHybridTranscriptToTextarea(value) {
+ if (!isHybridTranscriptionMode() ||!displayRealtimeTranscriptInTextarea) return false;
+
+ const textarea = answerTextareaElement();
+ const renderedTranscript = String(value || '');
+ const wasFocusedAtEnd = textarea
+ && document.activeElement === textarea
+ && textarea.selectionStart === textarea.value.length
+ && textarea.selectionEnd === textarea.value.length;
+
+ if (textarea && textarea.value!== renderedTranscript) {
+ textarea.value = renderedTranscript;
+ if (wasFocusedAtEnd && typeof textarea.setSelectionRange === 'function') {
+ const end = textarea.value.length;
+ textarea.setSelectionRange(end, end);
+ }
+ textarea.scrollTop = textarea.scrollHeight;
+ }
+
+ const answerState = answersData[currentQIdx] || defaultAnswerState();
+ answerState.text = textarea? String(textarea.value || ''): renderedTranscript;
+ answerState.speech_transcript = cleanTranscriptText(answerState.text);
+ answersData[currentQIdx] = answerState;
+ return true;
+ }
+
  function renderSpeechTranscript() {
  if (!isHybridTranscriptionMode() ||!displayRealtimeTranscriptInTextarea) return;
- const ta = document.getElementById('answerTextarea');
- if (!ta) return;
 
  const recognizedTranscript = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
  const renderedTranscript = mergeTranscriptParts(preRecordingText, recognizedTranscript);
- ta.value = renderedTranscript;
-
- const answerState = answersData[currentQIdx] || defaultAnswerState();
- answerState.text = renderedTranscript;
- answerState.speech_transcript = renderedTranscript;
- answersData[currentQIdx] = answerState;
-
+ if (!writeHybridTranscriptToTextarea(renderedTranscript)) return;
  triggerAnalysis();
  }
 
@@ -2105,8 +2133,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function preferredTranscriptionEngine() {
  if (!isHybridTranscriptionMode()) return null;
  if (microphoneRequiresSecureOrigin()) return null;
- if (recognition) return 'browser';
  if (canUseServerTranscription()) return 'server';
+ if (recognition) return 'browser';
  return null;
  }
 
@@ -2994,7 +3022,12 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const text = String(value || '');
  const textarea = answerTextareaElement();
  if (textarea) textarea.value = text;
- if (answersData[currentQIdx]) answersData[currentQIdx].text = text;
+ if (answersData[currentQIdx]) {
+ answersData[currentQIdx].text = text;
+ if (isHybridTranscriptionMode()) {
+ answersData[currentQIdx].speech_transcript = cleanTranscriptText(text);
+ }
+ }
  return text;
  }
 
@@ -5056,6 +5089,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function saveCurrentAnswer(isSkipped = false, timedOut = false) {
  if (interviewTerminated) return Promise.reject(new Error('Interview session has been terminated.'));
+ syncHybridAnswerStateFromTextarea();
  stopQuestionTimer();
  captureTranscriptTimeline(timedOut? 'timed_out_submit': 'submitted', true);
  const formData = new FormData();
@@ -5094,7 +5128,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (interviewEnding || interviewTerminated) return Promise.resolve();
  if (answersData[currentQIdx]) {
  if (!isSubmittingAnswer) {
+ syncHybridAnswerStateFromTextarea();
+ if (!isHybridTranscriptionMode()) {
  answersData[currentQIdx].text = currentAnswerTextareaText();
+ }
  }
  answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
  }
@@ -5197,6 +5234,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  } catch (error) {
  console.warn('Final transcription flush before submit failed:', error);
  }
+ syncHybridAnswerStateFromTextarea();
  
  const timedOut = options.timedOut === true;
  let answerText = currentAnswerTextareaText().trim();
