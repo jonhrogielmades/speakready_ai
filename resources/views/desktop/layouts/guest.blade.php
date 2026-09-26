@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=7') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=6') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=7') }}" />
       <style>
          :root,
          .lm {
