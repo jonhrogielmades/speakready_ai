@@ -4,9 +4,28 @@
         box-sizing: border-box;
     }
     .feedback-audit-page {
+        --feedback-audit-title-color: var(--tx, #0f172a);
+        --feedback-audit-title-icon: var(--pur, #3b82f6);
+        --feedback-audit-title-icon-bg: rgba(59, 130, 246, 0.14);
+        --sr-page-title-accent: var(--feedback-audit-title-color);
         width: 100%;
         max-width: 100%;
         overflow-x: hidden;
+    }
+    html:not(.lm) body.admin-mobile-shell .feedback-audit-page,
+    html.dm body.admin-mobile-shell .feedback-audit-page,
+    body.admin-mobile-shell.dm .feedback-audit-page {
+        --feedback-audit-title-color: #f8fafc;
+        --feedback-audit-title-icon: #f8fafc;
+        --feedback-audit-title-icon-bg: rgba(255, 255, 255, 0.14);
+        --sr-page-title-accent: var(--feedback-audit-title-color);
+    }
+    html.lm body.admin-mobile-shell .feedback-audit-page,
+    body.admin-mobile-shell.lm .feedback-audit-page {
+        --feedback-audit-title-color: #0f172a;
+        --feedback-audit-title-icon: var(--pur, #3b82f6);
+        --feedback-audit-title-icon-bg: rgba(59, 130, 246, 0.14);
+        --sr-page-title-accent: var(--feedback-audit-title-color);
     }
     .feedback-header {
         gap: 16px;
@@ -21,10 +40,10 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        color: var(--sr-page-title-accent, #ffffff) !important;
-        -webkit-text-fill-color: var(--sr-page-title-accent, #ffffff) !important;
+        color: var(--feedback-audit-title-color, var(--tx, #0f172a)) !important;
+        -webkit-text-fill-color: var(--feedback-audit-title-color, var(--tx, #0f172a)) !important;
         text-transform: uppercase;
-        text-shadow: 0 2px 12px rgba(15, 23, 42, 0.18);
+        text-shadow: none;
         overflow-wrap: anywhere;
     }
     .feedback-page-title i {
@@ -34,8 +53,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255, 255, 255, 0.14);
-        color: var(--sr-page-title-accent, #ffffff);
+        background: var(--feedback-audit-title-icon-bg, rgba(59, 130, 246, 0.14));
+        color: var(--feedback-audit-title-icon, var(--pur, #3b82f6));
         flex: 0 0 auto;
     }
     .feedback-export-btn,

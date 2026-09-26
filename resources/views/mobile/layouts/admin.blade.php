@@ -192,7 +192,7 @@
          }
          .mob-header-brand > span:not(.mob-admin-logo-ring):not(.adm-badge) {
             min-width: 0;
-            max-width: min(42vw, 12rem);
+            max-width: min(45vw, 13rem);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -227,22 +227,26 @@
          }
          .mob-header-right { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 0 0 auto; }
          .mob-icon-btn {
-            width: 36px; height: 36px; border-radius: 10px;
+            width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 10px;
             border: 1px solid var(--adm-bd);
             background: transparent; color: var(--tx);
             display: flex; align-items: center; justify-content: center;
             font-size: 0.9rem; cursor: pointer; transition: 0.2s;
             -webkit-tap-highlight-color: transparent;
             flex: 0 0 36px;
+            aspect-ratio: 1 / 1;
+            padding: 0;
          }
          .mob-icon-btn:active { background: var(--adm-bg); transform: scale(0.92); }
          .mob-avatar-adm {
-            width: 32px; height: 32px; border-radius: 50%;
+            width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 999px;
             background: #f87171; color: #fff;
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+            font-size: 0.8rem; font-weight: 700; flex: 0 0 36px;
             cursor: pointer; border: 2px solid var(--adm-bd);
             -webkit-tap-highlight-color: transparent;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
          }
 
          body.admin-mobile-shell.user-app-fullscreen {
@@ -2121,7 +2125,7 @@
             <span class="mob-admin-logo-ring">
                <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}">
             </span>
-            <span>{{ $systemName ?? 'SpeakReady AI' }} Admin</span>
+            <span>{{ $systemName ?? 'SpeakReady AI' }}</span>
          </a>
          <div class="mob-header-right">
             <div class="dropdown mob-notification-wrap">

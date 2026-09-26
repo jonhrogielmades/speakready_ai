@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/feedback/index.css?v=7') }}" data-page-style="admin-feedback-index">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/feedback/index.css?v=8') }}" data-page-style="admin-feedback-index">
 @endpush
 
 @section('content')

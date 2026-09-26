@@ -162,9 +162,13 @@ class MobileLayoutTest extends TestCase
             ->assertSee('id="mobFullscreenBtn"', false)
             ->assertSee('data-user-fullscreen-toggle', false)
             ->assertSee('js/user-ui.js?v=21', false)
+            ->assertSee('<span>SpeakReady AI</span>', false)
+            ->assertDontSee('<span>SpeakReady AI Admin</span>', false)
+            ->assertSee('width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 10px;', false)
+            ->assertSee('border-radius: 999px', false)
             ->assertSee('body.admin-mobile-shell.user-app-fullscreen #mob-content', false)
             ->assertSee('grid-template-columns: repeat(5, minmax(0, 1fr));', false)
-            ->assertSee('max-width: min(42vw, 12rem);', false)
+            ->assertSee('max-width: min(45vw, 13rem);', false)
             ->assertSee('data-admin-mobile-topbar-drawer-fix', false)
             ->assertSee('id="mobNotificationBtn"', false)
             ->assertSee('data-bs-auto-close="outside"', false)
@@ -676,7 +680,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('class="admin-mobile-shell mobile-shell"', false)
             ->assertSee('id="sec-admin-feedback"', false)
-            ->assertSee('css/mobile/admin/feedback/index.css?v=7', false)
+            ->assertSee('css/mobile/admin/feedback/index.css?v=8', false)
             ->assertSee('feedback-stat-grid', false)
             ->assertSee('feedback-main-grid', false)
             ->assertSee('feedback-filter-form', false)
@@ -692,6 +696,11 @@ class MobileLayoutTest extends TestCase
             ->assertSee('#'.$answer->id, false)
             ->assertSee('Describe a time you improved a mobile workflow.', false)
             ->assertDontSee('class="db-sidebar"', false);
+
+        $feedbackMobileCss = file_get_contents(public_path('css/mobile/admin/feedback/index.css'));
+        $this->assertStringContainsString('--feedback-audit-title-color', $feedbackMobileCss);
+        $this->assertStringContainsString('--sr-page-title-accent: var(--feedback-audit-title-color);', $feedbackMobileCss);
+        $this->assertStringContainsString('color: var(--feedback-audit-title-color, var(--tx, #0f172a)) !important;', $feedbackMobileCss);
     }
 
     public function test_admin_notifications_page_uses_mobile_notifications_layout(): void
