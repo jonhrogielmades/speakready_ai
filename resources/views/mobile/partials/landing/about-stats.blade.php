@@ -1,3 +1,6 @@
+         @php
+            $landingStats = $landingStats ?? app(\App\Services\LandingStatsService::class)->summary();
+         @endphp
          <!-- ABOUT THE SYSTEM & SYSTEM STATS -->
          <section id="about" class="sp position-relative" style="background:var(--bg2)">
             <div class="container position-relative" style="z-index:1">
@@ -21,34 +24,34 @@
                   <div class="col-lg-6 rv" style="transition-delay:.1s">
                      <!-- STATISTICS -->
                      <div class="row g-3 text-center">
-                        <div class="col-6 col-sm-6">
+                        <div class="col-6 col-sm-6" data-landing-stat="registered-users">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">250</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">{{ data_get($landingStats, 'registered_users.display', '0') }}</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Registered Users</div>
                            </div>
                         </div>
-                        <div class="col-6 col-sm-6">
+                        <div class="col-6 col-sm-6" data-landing-stat="interview-sessions">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">1,200</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">{{ data_get($landingStats, 'interview_sessions.display', '0') }}</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Interview Sessions</div>
                            </div>
                         </div>
-                        <div class="col-6 col-sm-6">
+                        <div class="col-6 col-sm-6" data-landing-stat="questions-available">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">500</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">{{ data_get($landingStats, 'questions_available.display', '0') }}</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Questions Available</div>
                            </div>
                         </div>
-                        <div class="col-6 col-sm-6">
+                        <div class="col-6 col-sm-6" data-landing-stat="feedback-generated">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">900</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">{{ data_get($landingStats, 'feedback_generated.display', '0') }}</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">AI Feedback Generated</div>
                            </div>
                         </div>
-                        <div class="col-12 mt-3">
+                        <div class="col-12 mt-3" data-landing-stat="success-rate">
                            <div class="gc p-4">
                               <div class="d-flex justify-content-center align-items-center gap-2">
-                                <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">85</span>%</div>
+                                <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">{{ data_get($landingStats, 'success_rate.display', '0') }}</span>%</div>
                                 <div class="text-start plbl text-uppercase" style="font-size:0.9rem; letter-spacing:1px;">Success<br>Rate</div>
                               </div>
                            </div>
