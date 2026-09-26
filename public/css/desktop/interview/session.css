@@ -4154,6 +4154,46 @@ html body #sec-interview-session .answer-transcript-stage .answer-transcription-
     line-height: 1.25 !important;
 }
 
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript #answerTextarea {
+    padding-right: clamp(150px, 32%, 244px) !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-overlay {
+    inset: auto 14px 44px auto !important;
+    width: min(220px, calc(100% - 28px)) !important;
+    height: 132px !important;
+    min-height: 132px !important;
+    padding: 10px 12px !important;
+    gap: 8px !important;
+    border: 1px solid rgba(56, 189, 248, 0.28) !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14) !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-wave {
+    gap: 7px !important;
+    height: 78px !important;
+    max-width: 100% !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-wave span {
+    width: 8px !important;
+    height: 52px !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-wave span:nth-child(2n) {
+    height: 66px !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-wave span:nth-child(3n) {
+    height: 42px !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-message {
+    font-size: 0.72rem !important;
+}
+
 html body #sec-interview-session .answer-transcript-stage.is-recording-empty-transcript #answerTextarea::placeholder,
 html body #sec-interview-session .answer-transcript-stage #answerTextarea.has-transcription-overlay::placeholder {
     color: transparent !important;
@@ -4166,6 +4206,13 @@ html[data-theme="dark"] body #sec-interview-session .answer-transcript-stage .an
 body.dm #sec-interview-session .answer-transcript-stage .answer-transcription-overlay {
     background: rgba(15, 23, 42, 0.72) !important;
     color: #dbeafe !important;
+}
+
+html:not(.lm) body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-overlay,
+html[data-theme="dark"] body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-overlay,
+body.dm #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-overlay {
+    background: rgba(15, 23, 42, 0.88) !important;
+    border-color: rgba(56, 189, 248, 0.32) !important;
 }
 
 html:not(.lm) body #sec-interview-session .answer-transcript-stage .answer-transcription-message,

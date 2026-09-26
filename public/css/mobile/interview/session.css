@@ -3824,6 +3824,42 @@ html body #sec-interview-session .answer-transcript-stage .answer-transcription-
     line-height: 1.25 !important;
 }
 
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-overlay {
+    inset: auto 10px 38px auto !important;
+    width: min(154px, calc(100% - 20px)) !important;
+    height: 100px !important;
+    min-height: 100px !important;
+    padding: 8px 9px !important;
+    gap: 6px !important;
+    border: 1px solid rgba(56, 189, 248, 0.28) !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14) !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-wave {
+    gap: 5px !important;
+    height: 58px !important;
+    max-width: 100% !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-wave span {
+    width: 6px !important;
+    height: 38px !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-wave span:nth-child(2n) {
+    height: 50px !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-wave span:nth-child(3n) {
+    height: 30px !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-message {
+    font-size: 0.64rem !important;
+}
+
 html body #sec-interview-session .answer-transcript-stage.is-recording-empty-transcript #answerTextarea::placeholder,
 html body #sec-interview-session .answer-transcript-stage #answerTextarea.has-transcription-overlay::placeholder {
     color: transparent !important;
@@ -3836,6 +3872,13 @@ html[data-theme="dark"] body #sec-interview-session .answer-transcript-stage .an
 body.dm #sec-interview-session .answer-transcript-stage .answer-transcription-overlay {
     background: rgba(15, 23, 42, 0.72) !important;
     color: #dbeafe !important;
+}
+
+html:not(.lm) body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-overlay,
+html[data-theme="dark"] body #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-overlay,
+body.dm #sec-interview-session .answer-transcript-stage.is-recording-with-transcript .answer-transcription-overlay {
+    background: rgba(15, 23, 42, 0.88) !important;
+    border-color: rgba(56, 189, 248, 0.32) !important;
 }
 
 html:not(.lm) body #sec-interview-session .answer-transcript-stage .answer-transcription-message,

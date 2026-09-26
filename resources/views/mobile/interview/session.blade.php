@@ -1483,7 +1483,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const existingText = textarea? String(textarea.value || ''): String(answerState.text || '');
  const mergedAnswerText = options.replaceAnswerText === true
  ? cleanTranscript
- : mergeFullVoiceTranscriptWithAnswer(existingText, answerState.speech_transcript || '', cleanTranscript);
+ : (options.appendTranscript === true
+ ? mergeTranscriptParts(existingText, cleanTranscript)
+ : mergeFullVoiceTranscriptWithAnswer(existingText, answerState.speech_transcript || '', cleanTranscript));
  const voiceDuration = Math.max(
  Number(answerState.voice_duration || 0),
  Number(recording?.durationSeconds || 0),
@@ -1491,7 +1493,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  );
  const wordCount = wordsForTranscript(cleanTranscript).length;
 
- answerState.speech_transcript = cleanTranscript;
+ answerState.speech_transcript = cleanTranscriptText(mergedAnswerText);
  answerState.text = mergedAnswerText;
  answerState.voice_duration = Math.max(0, Math.round(voiceDuration));
  answerState.wpm = answerState.voice_duration > 0? Math.round((wordCount / Math.max(1, answerState.voice_duration)) * 60): answerState.wpm;
@@ -1618,6 +1620,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  const appliedTranscript = applyVoiceSessionTranscript(index, transcript, data, recording, {
+ appendTranscript: options.appendTranscript === true,
  replaceAnswerText: options.replaceAnswerText === true
  });
  setVoiceSessionUiState('transcribed', 'Transcript added to answer', key);
@@ -1662,6 +1665,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const transcript = await transcribeVoiceSessionRecording(index, {
  silent: true,
  skipStopRecording: true,
+ appendTranscript: Boolean(recordingStartText),
  replaceAnswerText: false,
  previousTranscript: recordingStartText || answersData[index]?.speech_transcript || ''
  });
