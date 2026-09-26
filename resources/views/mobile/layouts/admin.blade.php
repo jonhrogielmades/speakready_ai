@@ -3149,27 +3149,24 @@
                </div>
                <div class="mob-profile-section-title">Interview Modules</div>
                <div class="mob-profile-grid">
-                  <a href="{{ route('admin.dashboard') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
-                   <a href="{{ route('admin.users.index') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="fa-solid fa-users"></i><span>Users</span></a>
-                   <a href="{{ route('admin.categories') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i><span>Categories</span></a>
-                   <a href="{{ route('admin.questions') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i><span>Questions</span></a>
-                   <a href="{{ route('admin.modules') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i><span>Lessons</span></a>
-                  <a href="{{ route('admin.game') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Games</span></a>
+                  <a href="{{ route('admin.dashboard') }}" data-mobile-more-link="dashboard" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+                   <a href="{{ route('admin.categories') }}" data-mobile-more-link="categories" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i><span>Categories</span></a>
+                   <a href="{{ route('admin.questions') }}" data-mobile-more-link="questions" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i><span>Questions</span></a>
+                   <a href="{{ route('admin.modules') }}" data-mobile-more-link="lessons" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i><span>Lessons</span></a>
+                  <a href="{{ route('admin.game') }}" data-mobile-more-link="games" class="mob-profile-link profile-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Games</span></a>
                </div>
 
                <div class="mob-profile-section-title">Interview Monitoring</div>
                <div class="mob-profile-grid">
-                  <a href="{{ route('admin.sessions.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('admin.sessions.index') || request()->routeIs('admin.sessions.show') || request()->routeIs('admin.sessions.review') ? 'active' : '' }}"><i class="fa-solid fa-video"></i><span>Sessions</span></a>
-                  <a href="{{ route('admin.sessions.archive') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.sessions.archive') ? 'active' : '' }}"><i class="fa-solid fa-box-archive"></i><span>Archive</span></a>
-                  <a href="{{ route('admin.feedback.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.feedback.*') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i><span>Feedback</span></a>
-                  <a href="{{ route('admin.contacts.index') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i><span>Contacts</span></a>
-                  <a href="{{ route('admin.notifications.index') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
+                  <a href="{{ route('admin.sessions.archive') }}" data-mobile-more-link="archive" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.sessions.archive') ? 'active' : '' }}"><i class="fa-solid fa-box-archive"></i><span>Archive</span></a>
+                  <a href="{{ route('admin.contacts.index') }}" data-mobile-more-link="contacts" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i><span>Contacts</span></a>
+                  <a href="{{ route('admin.notifications.index') }}" data-mobile-more-link="notifications" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
                </div>
 
                <div class="mob-profile-section-title">System</div>
                <div class="mob-profile-grid mb-2">
-                  <a href="{{ route('admin.ai.providers') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.ai.providers*') || request()->routeIs('admin.ai.evaluation*') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i><span>AI Providers</span></a>
-                  <a href="{{ route('admin.settings.index') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+                  <a href="{{ route('admin.ai.providers') }}" data-mobile-more-link="ai-providers" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.ai.providers*') || request()->routeIs('admin.ai.evaluation*') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i><span>AI Providers</span></a>
+                  <a href="{{ route('admin.settings.index') }}" data-mobile-more-link="settings" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
                </div>
             </div>
          </div>
