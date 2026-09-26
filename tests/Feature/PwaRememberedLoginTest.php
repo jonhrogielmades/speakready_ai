@@ -190,6 +190,17 @@ class PwaRememberedLoginTest extends TestCase
             ]);
     }
 
+    public function test_google_callback_requires_an_authorization_code(): void
+    {
+        $this->configureGoogleOAuth();
+
+        $this->get(route('auth.google.callback'))
+            ->assertRedirect('/')
+            ->assertSessionHasErrors([
+                'email' => 'Google sign-in expired. Please start Google login again.',
+            ]);
+    }
+
     public function test_google_callback_reports_network_timeout_clearly(): void
     {
         $this->mockGoogleCallbackFailure(new \RuntimeException(
@@ -197,7 +208,7 @@ class PwaRememberedLoginTest extends TestCase
         ));
 
         $this->withSession(['google_auth_intent' => 'login'])
-            ->get(route('auth.google.callback'))
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect('/')
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in could not reach Google in time. Please check your connection and try again.',
@@ -224,7 +235,7 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $this->withSession(['google_auth_intent' => 'login'])
-            ->get(route('auth.google.callback'))
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('dashboard'));
 
         $this->assertSame($avatarUrl, $user->fresh()->profile_photo_path);
@@ -251,7 +262,7 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $this->withSession(['google_auth_intent' => 'login'])
-            ->get(route('auth.google.callback'))
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('dashboard'));
 
         $this->assertNotNull($user->fresh()->email_verified_at);
@@ -274,7 +285,7 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $this->withSession(['google_auth_intent' => 'register'])
-            ->get(route('auth.google.callback'))
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('terms.acceptance.show'))
             ->assertSessionHas('registration_success', true);
 
@@ -303,7 +314,7 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $this->withSession(['google_auth_intent' => 'login'])
-            ->get(route('auth.google.callback'))
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('dashboard'));
 
         $this->assertSame($uploadedPhoto, $user->fresh()->profile_photo_path);

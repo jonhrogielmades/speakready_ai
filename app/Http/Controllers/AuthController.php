@@ -6,6 +6,7 @@ use App\Helpers\ActivityLogger;
 use App\Models\Profile;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\AccountNotificationSchema;
 use App\Support\SystemSettings;
 use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Auth\Events\PasswordReset;
@@ -24,7 +25,9 @@ use Throwable;
 class AuthController extends Controller
 {
     private const LOGIN_EMAIL_MISMATCH_MESSAGE = 'The email address do not match our records.';
+
     private const LOGIN_PASSWORD_MISMATCH_MESSAGE = 'The password do not match our records.';
+
     private const LOGIN_CREDENTIALS_MISMATCH_MESSAGE = 'The provided credentials do not match our records.';
 
     public function register(Request $request)
@@ -310,7 +313,20 @@ class AuthController extends Controller
             ]);
         }
 
+        if (! $request->filled('code')) {
+            Log::warning('Google authentication callback was missing an authorization code.', [
+                'query_keys' => array_keys($request->query()),
+                'redirect_uri' => config('services.google.redirect'),
+            ]);
+
+            return redirect('/')->withErrors([
+                'email' => 'Google sign-in expired. Please start Google login again.',
+            ]);
+        }
+
         try {
+            AccountNotificationSchema::ensureUserColumns();
+
             $intent = $request->session()->pull('google_auth_intent', 'login');
             $intent = in_array($intent, ['login', 'register'], true) ? $intent : 'login';
             $driver = $this->googleDriver();
@@ -583,7 +599,13 @@ class AuthController extends Controller
             return 'Google sign-in could not reach Google in time. Please check your connection and try again.';
         }
 
-        if (Str::contains($message, ['invalid_grant', 'bad_verification_code'])) {
+        if (Str::contains($message, [
+            'authorization code',
+            'bad_verification_code',
+            'invalid_grant',
+            'invalid_request',
+            'missing required parameter: code',
+        ])) {
             return 'Google sign-in expired. Please start Google login again.';
         }
 
