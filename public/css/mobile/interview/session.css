@@ -4581,3 +4581,80 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
         max-width: 40px !important;
     }
 }
+
+/* Keep the mobile avatar actions readable when the response panel is not fullscreen. */
+@media (max-width: 767.98px) {
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel #interviewControls.interview-panel-actions {
+        inset: auto 12px 50px 12px !important;
+        z-index: 78 !important;
+        width: auto !important;
+        max-width: calc(100% - 24px) !important;
+        justify-content: flex-start !important;
+        overflow: visible !important;
+    }
+
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel #interviewControls.interview-panel-actions > div:first-child {
+        flex: 0 1 auto !important;
+        width: auto !important;
+        max-width: 100% !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+    }
+
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel #answerTranscriptControls.interview-panel-voice-actions {
+        inset: auto 12px 12px 12px !important;
+        z-index: 78 !important;
+        width: auto !important;
+        max-width: calc(100% - 24px) !important;
+        justify-content: flex-end !important;
+        overflow: visible !important;
+    }
+
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel #answerTranscriptControls.interview-panel-voice-actions #voiceControls .d-flex.gap-2 {
+        gap: 6px !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #sec-interview-session .question-caption-overlay,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session .question-caption-overlay,
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .question-caption-overlay {
+        inset: auto 14px 92px 14px !important;
+    }
+
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel:has(#answerTranscriptControls[hidden]) #interviewControls.interview-panel-actions {
+        inset: auto 12px 12px 12px !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel:has(#answerTranscriptControls[hidden]) .question-caption-overlay,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session .ai-avatar-panel:has(#answerTranscriptControls[hidden]) .question-caption-overlay,
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel:has(#answerTranscriptControls[hidden]) .question-caption-overlay {
+        inset: auto 14px 64px 14px !important;
+    }
+}
+
+@media (max-width: 390px) {
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel #interviewControls.interview-panel-actions {
+        inset: auto 10px 46px 10px !important;
+        max-width: calc(100% - 20px) !important;
+    }
+
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel #answerTranscriptControls.interview-panel-voice-actions {
+        inset: auto 10px 10px 10px !important;
+        max-width: calc(100% - 20px) !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #sec-interview-session .question-caption-overlay,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session .question-caption-overlay,
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .question-caption-overlay {
+        inset: auto 12px 84px 12px !important;
+    }
+
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel:has(#answerTranscriptControls[hidden]) #interviewControls.interview-panel-actions {
+        inset: auto 10px 10px 10px !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel:has(#answerTranscriptControls[hidden]) .question-caption-overlay,
+    html body:not(.mobile-interview-fullscreen) #mob-content #sec-interview-session .ai-avatar-panel:has(#answerTranscriptControls[hidden]) .question-caption-overlay,
+    html body:not(.mobile-interview-fullscreen) #sec-interview-session .ai-avatar-panel:has(#answerTranscriptControls[hidden]) .question-caption-overlay {
+        inset: auto 12px 58px 12px !important;
+    }
+}
