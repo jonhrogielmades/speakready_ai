@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=45') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=46') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -565,6 +565,12 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let serverTranscriptionSessionToken = 0;
  let farFieldAudioContext = null;
  let farFieldAudioNodes = [];
+ let answerWaveAudioContext = null;
+ let answerWaveAnalyser = null;
+ let answerWaveSource = null;
+ let answerWaveFrame = null;
+ let answerWaveTimeData = null;
+ let answerWaveFrequencyData = null;
  let cameraTrackingInFlight = false;
  window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
  const cameraMovementBaselines = {};
@@ -1146,6 +1152,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function releaseVoiceSessionStream() {
  clearVoiceSessionTrackListeners();
+ stopAnswerTranscriptionVisualizer();
  stopMediaStream(voiceSessionStream);
  voiceSessionStream = null;
  }
@@ -1678,6 +1685,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  voiceSessionRecorder.resume();
  voiceSessionRecordingStartedAt = recordingTimerNow();
  setVoiceSessionUiState('recording', 'Recording', key);
+ startAnswerTranscriptionVisualizer(voiceSessionStream);
+ updateAnswerTranscriptionOverlay();
  return true;
  } catch (error) {
  console.warn('Voice session resume failed:', error);
@@ -1686,6 +1695,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  if (voiceSessionRecorder && voiceSessionQuestionKey === key && voiceSessionRecorder.state === 'recording') {
  if (!voiceSessionRecordingStartedAt) voiceSessionRecordingStartedAt = recordingTimerNow();
+ startAnswerTranscriptionVisualizer(voiceSessionStream);
+ updateAnswerTranscriptionOverlay();
  return true;
  }
 
@@ -1727,6 +1738,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  recorder.start(voiceSessionTimesliceMs);
  voiceSessionRecordingStartedAt = recordingTimerNow();
  setVoiceSessionUiState('recording', 'Recording', key);
+ startAnswerTranscriptionVisualizer(sourceStream);
+ updateAnswerTranscriptionOverlay();
  return true;
  } catch (error) {
  console.warn('Voice session recorder could not start:', error);
@@ -2007,6 +2020,124 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const error = new Error('No live microphone audio track was available.');
  error.name = 'NotFoundError';
  throw error;
+ }
+
+ function answerTranscriptionWaveBars() {
+ return Array.from(document.querySelectorAll('#answerTranscriptionOverlay .answer-transcription-wave span'));
+ }
+
+ function resetAnswerTranscriptionWave() {
+ const restingLevels = [0.38, 0.58, 0.44, 0.72, 0.48, 0.62, 0.4];
+ answerTranscriptionWaveBars().forEach((bar, index) => {
+ bar.style.setProperty('--wave-level', String(restingLevels[index % restingLevels.length]));
+ bar.style.setProperty('--wave-opacity', '0.55');
+ });
+ }
+
+ function stopAnswerTranscriptionVisualizer(options = {}) {
+ if (answerWaveFrame) {
+ cancelAnimationFrame(answerWaveFrame);
+ answerWaveFrame = null;
+ }
+
+ try {
+ answerWaveSource?.disconnect?.();
+ } catch (error) {
+ console.warn('Answer transcription wave source cleanup failed:', error);
+ }
+
+ if (answerWaveAudioContext) {
+ try {
+ answerWaveAudioContext.close();
+ } catch (error) {
+ console.warn('Answer transcription wave audio context cleanup failed:', error);
+ }
+ }
+
+ answerWaveAudioContext = null;
+ answerWaveAnalyser = null;
+ answerWaveSource = null;
+ answerWaveTimeData = null;
+ answerWaveFrequencyData = null;
+
+ if (options.reset!== false) {
+ resetAnswerTranscriptionWave();
+ }
+ }
+
+ function startAnswerTranscriptionVisualizer(stream = voiceSessionStream) {
+ if (!mediaStreamHasLiveAudio(stream)) return false;
+ if (answerWaveAnalyser && answerWaveAudioContext && answerWaveAudioContext.state!== 'closed') return true;
+
+ const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+ if (!AudioContextClass) {
+ resetAnswerTranscriptionWave();
+ return false;
+ }
+
+ try {
+ stopAnswerTranscriptionVisualizer({ reset: false });
+ answerWaveAudioContext = new AudioContextClass();
+ answerWaveAnalyser = answerWaveAudioContext.createAnalyser();
+ answerWaveAnalyser.fftSize = 512;
+ answerWaveAnalyser.smoothingTimeConstant = 0.58;
+ answerWaveSource = answerWaveAudioContext.createMediaStreamSource(stream);
+ answerWaveSource.connect(answerWaveAnalyser);
+ answerWaveTimeData = new Uint8Array(answerWaveAnalyser.fftSize);
+ answerWaveFrequencyData = new Uint8Array(answerWaveAnalyser.frequencyBinCount);
+
+ if (answerWaveAudioContext.state === 'suspended') {
+ answerWaveAudioContext.resume().catch(error => {
+ console.warn('Answer transcription wave audio context resume failed:', error);
+ });
+ }
+
+ const renderFrame = () => {
+ if (!answerWaveAnalyser ||!answerWaveTimeData ||!answerWaveFrequencyData) return;
+ const bars = answerTranscriptionWaveBars();
+ if (!bars.length) {
+ answerWaveFrame = requestAnimationFrame(renderFrame);
+ return;
+ }
+
+ answerWaveAnalyser.getByteTimeDomainData(answerWaveTimeData);
+ answerWaveAnalyser.getByteFrequencyData(answerWaveFrequencyData);
+
+ let sum = 0;
+ for (let index = 0; index < answerWaveTimeData.length; index++) {
+ const centered = (answerWaveTimeData[index] - 128) / 128;
+ sum += centered * centered;
+ }
+ const rms = Math.sqrt(sum / Math.max(1, answerWaveTimeData.length));
+ const voiceLevel = Math.max(0, Math.min(1, (rms - 0.012) * 9.5));
+ const usableBins = Math.max(1, Math.floor(answerWaveFrequencyData.length * 0.42));
+ const mid = (bars.length - 1) / 2;
+
+ bars.forEach((bar, index) => {
+ const start = Math.floor((index / bars.length) * usableBins);
+ const end = Math.max(start + 1, Math.floor(((index + 1) / bars.length) * usableBins));
+ let bandTotal = 0;
+ for (let bin = start; bin < end; bin++) {
+ bandTotal += answerWaveFrequencyData[bin] || 0;
+ }
+ const bandLevel = Math.max(0, Math.min(1, ((bandTotal / Math.max(1, end - start)) / 255 - 0.025) * 3.8));
+ const centerWeight = 1 - Math.abs(index - mid) / Math.max(1, mid) * 0.32;
+ const level = Math.max(0.18, Math.min(1.55, 0.2 + Math.max(voiceLevel, bandLevel) * centerWeight * 1.35));
+ const opacity = Math.max(0.48, Math.min(1, 0.5 + Math.max(voiceLevel, bandLevel) * 0.62));
+ bar.style.setProperty('--wave-level', level.toFixed(2));
+ bar.style.setProperty('--wave-opacity', opacity.toFixed(2));
+ });
+
+ answerWaveFrame = requestAnimationFrame(renderFrame);
+ };
+
+ renderFrame();
+ return true;
+ } catch (error) {
+ console.warn('Answer transcription wave visualizer unavailable:', error);
+ stopAnswerTranscriptionVisualizer();
+ return false;
+ }
  }
 
  function releaseFarFieldAudio() {
@@ -3070,6 +3201,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (textarea) {
  textarea.classList.toggle('has-transcription-overlay', shouldShow);
  textarea.placeholder = shouldShow? '': responseModePlaceholder();
+ }
+ if (shouldShow) {
+ startAnswerTranscriptionVisualizer(voiceSessionStream);
+ } else {
+ stopAnswerTranscriptionVisualizer();
  }
  }
 
