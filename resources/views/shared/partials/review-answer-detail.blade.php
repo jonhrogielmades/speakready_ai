@@ -34,7 +34,6 @@
  : ($isVoiceOnlyAnswer && $hasVoiceEvidence
  ? 'Voice answer saved. Feedback is based on the saved voice session.'
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
- $feedbackText = $reviewFeedbackText($answer->ai_feedback ?: 'No feedback was generated for this answer.');
  $whatWorked = $reviewFeedbackText($contentAlignment['what_worked'] ?? '');
  $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
  $nextAttemptSteps = $reviewFeedbackItems($contentAlignment['next_attempt_steps'] ?? [], 2);
@@ -197,11 +196,6 @@
  </section>
 
  <div class="review-answer-summary-grid">
- <section class="review-answer-section review-answer-section-wide">
- <div class="review-block-title"><i class="fa-solid fa-comment-medical"></i><span>Overall Feedback</span></div>
- <p>{{ $feedbackText }}</p>
- </section>
-
  @if($whatWorked !== '')
  <section class="review-answer-section">
  <div class="review-block-title review-title-success"><i class="fa-solid fa-circle-check"></i><span>What Worked</span></div>
