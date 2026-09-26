@@ -205,6 +205,20 @@ services:
       - dokploy-network
       - speakready-internal
 
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ADMINER_DEFAULT_SERVER: database
+    expose:
+      - "8080"
+    networks:
+      - dokploy-network
+      - speakready-internal
+
   db:
     image: mariadb:11.4
     restart: unless-stopped
@@ -223,7 +237,9 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - speakready-internal
+      speakready-internal:
+        aliases:
+          - database
 
 volumes:
   speakready_storage:
