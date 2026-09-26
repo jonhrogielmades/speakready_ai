@@ -225,7 +225,37 @@
             text-transform: uppercase; letter-spacing: 0.05em;
             flex-shrink: 0;
          }
-         .mob-header-right { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 0 0 auto; }
+         .mob-header-right {
+            --admin-topbar-control-size: 36px;
+            display: flex; align-items: center; gap: 8px; min-width: 0; flex: 0 0 auto;
+            height: var(--admin-topbar-control-size);
+         }
+         .mob-notification-wrap,
+         .mob-icon-btn,
+         .mob-avatar-adm {
+            width: var(--admin-topbar-control-size) !important;
+            height: var(--admin-topbar-control-size) !important;
+            min-width: var(--admin-topbar-control-size) !important;
+            min-height: var(--admin-topbar-control-size) !important;
+            max-width: var(--admin-topbar-control-size) !important;
+            max-height: var(--admin-topbar-control-size) !important;
+            flex: 0 0 var(--admin-topbar-control-size) !important;
+            box-sizing: border-box !important;
+            align-self: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            aspect-ratio: 1 / 1;
+            line-height: 1 !important;
+         }
+         .mob-notification-wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+         }
+         .mob-notification-wrap>.mob-icon-btn {
+            width: 100% !important;
+            height: 100% !important;
+         }
          .mob-icon-btn {
             width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 10px;
             border: 1px solid var(--adm-bd);
@@ -247,6 +277,13 @@
             -webkit-tap-highlight-color: transparent;
             aspect-ratio: 1 / 1;
             overflow: hidden;
+         }
+         .mob-avatar-adm img {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: inherit;
+            object-fit: cover;
          }
 
          body.admin-mobile-shell.user-app-fullscreen {
