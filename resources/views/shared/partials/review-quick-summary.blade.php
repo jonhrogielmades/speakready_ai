@@ -9,55 +9,28 @@
 
  return rtrim(mb_substr($clean, 0, max(1, $limit - 3), 'UTF-8'), " \t\n\r\0\x0B.,;:") . '...';
  };
- $shortList = static function ($items, int $limit = 3, int $textLimit = 130) use ($limitText): array {
+ $paragraphList = static function ($items, int $limit = 3): array {
  if (! is_array($items)) {
  return [];
  }
 
  return array_slice(array_values(array_filter(array_map(
- fn ($item) => is_scalar($item) ? $limitText(review_feedback_without_question_text((string) $item), $textLimit) : '',
+ fn ($item) => is_scalar($item) ? trim(preg_replace('/\s+/u', ' ', review_feedback_without_question_text((string) $item)) ?? '') : '',
  $items
  ))), 0, $limit);
  };
  $scoreItems = array_slice(array_values(array_filter($categoryBreakdown, 'is_array')), 0, 6);
- $strengthItems = $shortList($report['strength_items'] ?? [], 3);
- $weaknessItems = $shortList($report['weakness_items'] ?? [], 3);
- $suggestionItems = $shortList($report['suggestion_items'] ?? [], 2, 150);
+ $strengthItems = $paragraphList($report['strength_items'] ?? [], 3);
+ $weaknessItems = $paragraphList($report['weakness_items'] ?? [], 3);
  $fallbackSummary = is_scalar($overview['summary'] ?? null)
  ? review_feedback_without_question_text((string) $overview['summary'])
  : 'Feedback is ready. Review one focus area and practice again.';
- $fallbackFocusAdvice = is_scalar($overview['focus_advice'] ?? null)
- ? trim((string) $overview['focus_advice'])
- : 'Practice one answer again with a clear example.';
- if ($fallbackFocusAdvice === '') {
- $fallbackFocusAdvice = 'Practice one answer again with a clear example.';
- }
- $fallbackFocusLabel = is_scalar($overview['focus_label'] ?? null)
- ? trim((string) $overview['focus_label'])
- : 'Practice Focus';
- if ($fallbackFocusLabel === '') {
- $fallbackFocusLabel = 'Practice Focus';
- }
  $score = $sessionRecord->score;
  $overallScore = is_numeric($score?->overall_readiness_score ?? null)
  ? max(0, min(100, (int) round($score->overall_readiness_score)))
  : null;
  $rating = $score?->readiness_band ?: ($overallScore === null ? 'Pending' : ($overallScore >= 80 ? 'Ready for Simulation' : ($overallScore >= 60 ? 'Nearly Ready' : 'Developing')));
  $scoreColor = $overallScore === null ? '#64748b' : ($overallScore >= 80 ? '#10b981' : ($overallScore >= 60 ? '#3b82f6' : '#f59e0b'));
- $actionPriorities = collect($actionPriorities ?? [])->filter(fn ($item) => is_array($item))->values();
- $priorityAction = $actionPriorities->first(fn ($item) => trim((string) ($item['task'] ?? '')) !== '');
- $primarySuggestion = $priorityAction
- ? trim((string) ($priorityAction['task'] ?? ''))
- : ($suggestionItems[0] ?? $fallbackFocusAdvice);
- $primarySuggestion = $limitText(review_feedback_without_question_text($primarySuggestion), 170);
- $primarySuggestionLabel = $priorityAction
- ? $feedbackReportSkillLabel($priorityAction['skill'] ?? null)
- : $fallbackFocusLabel;
- $recommendedPath = collect($recommendedPaths ?? [])->first(fn ($item) => is_array($item) && trim((string) ($item['url'] ?? '')) !== '');
- $practiceUrl = is_array($recommendedPath) ? (string) $recommendedPath['url'] : route('interview.setup');
- $practiceLabel = is_array($recommendedPath) && trim((string) ($recommendedPath['label'] ?? '')) !== ''
- ? preg_replace('/^Interview\s+/i', '', (string) $recommendedPath['label'])
- : 'Practice again';
  $answers = $sessionRecord->relationLoaded('answers') ? $sessionRecord->answers : collect();
  $removeHandFeedback = static function (string $text): string {
  $clean = preg_replace('/(?:^|\s+)[^.!?]*(?:hand|hands|gesture|gestures)[^.!?]*[.!?]/iu', ' ', $text) ?? $text;
@@ -104,7 +77,7 @@
  'tip' => $limitText($cameraTip, 160),
  ];
  }
- $overallSummary = $limitText($fallbackSummary, 700);
+ $overallSummary = trim(preg_replace('/\s+/u', ' ', $fallbackSummary) ?? '');
 @endphp
 
 <section class="review-quick-panel premium-panel animate-fade-up" aria-labelledby="review-quick-title" style="animation-delay:.1s;">
@@ -165,10 +138,6 @@
  @else
  <p>Add one specific action, example, or result.</p>
  @endif
- <p><strong>{{ $primarySuggestionLabel }}:</strong> {{ $primarySuggestion }}</p>
- <a href="{{ $practiceUrl }}" class="btn btn-primary btn-sm review-practice-btn">
- <i class="fa-solid fa-rotate-right"></i>{{ $practiceLabel }}
- </a>
  </section>
 
  @if($cameraSummary)

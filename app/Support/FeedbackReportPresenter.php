@@ -21,7 +21,7 @@ class FeedbackReportPresenter
  $answerStrengthItems = self::generalizedAnswerReviewItems(self::answerReviewStrengthItems($answers));
  $strengthItems = $answerStrengthItems!== []
  ? $answerStrengthItems
- : self::bulletItems($strengths, '', 4);
+ : self::bulletItems($strengths, '', 4, null);
  if ($strengthItems === []) {
  $strengthItems = ['No answer-level strength is reliable yet. Add a complete answer so the review can identify what worked.'];
  }
@@ -29,8 +29,8 @@ class FeedbackReportPresenter
  $weaknessItems = $answerWeaknessItems!== []
  ? $answerWeaknessItems
  : self::mergedItems(
- self::bulletItems($weaknesses, '', 4),
- self::bulletItems($suggestions, '', 2, 130)
+ self::bulletItems($weaknesses, '', 4, null),
+ self::bulletItems($suggestions, '', 2, null)
  );
  if ($weaknessItems === []) {
  $weaknessItems = ['Add one direct answer, one specific detail, and one true result or lesson.'];
@@ -121,7 +121,7 @@ class FeedbackReportPresenter
  ->all();
  }
 
- private static function bulletItems(string $text, string $fallback, int $limit = 4, int $characterLimit = 150): array
+ private static function bulletItems(string $text, string $fallback, int $limit = 4, ?int $characterLimit = 150): array
  {
  $clean = self::cleanText($text);
  if ($clean === '') {
@@ -133,7 +133,7 @@ class FeedbackReportPresenter
  $seen = [];
 
  foreach ($parts as $part) {
- $item = self::limitText($part, $characterLimit);
+ $item = $characterLimit === null? self::cleanText($part): self::limitText($part, $characterLimit);
  if ($item === '') {
  continue;
  }
@@ -150,7 +150,7 @@ class FeedbackReportPresenter
  }
  }
 
- return $items!== []? $items: [self::limitText($clean, $characterLimit)];
+ return $items!== []? $items: [$characterLimit === null? $clean: self::limitText($clean, $characterLimit)];
  }
 
  private static function mergedItems(array ...$groups): array
@@ -196,7 +196,7 @@ class FeedbackReportPresenter
  $added = false;
 
  foreach ([data_get($alignment, 'what_worked'), data_get($alignment, 'keep')] as $candidate) {
- $text = self::reviewText($candidate, $questionSource, 145);
+ $text = self::reviewText($candidate, $questionSource);
  if ($text !== '') {
  $items[] = $label.': '.$text;
  $added = true;
@@ -205,7 +205,7 @@ class FeedbackReportPresenter
  }
 
  if (! $added) {
- $excerpt = self::reviewText(data_get($alignment, 'evidence_quotes.0', data_get($evidenceMap, 'supporting_excerpts.0', '')), $questionSource, 120);
+ $excerpt = self::reviewText(data_get($alignment, 'evidence_quotes.0', data_get($evidenceMap, 'supporting_excerpts.0', '')), $questionSource);
  if ($excerpt !== '') {
  $items[] = $label.': includes usable answer evidence, "'.$excerpt.'".';
  $added = true;
@@ -246,7 +246,7 @@ class FeedbackReportPresenter
  (array) data_get($alignment, 'next_attempt_steps', [])
  );
  foreach ($candidates as $candidate) {
- $text = self::reviewText($candidate, $questionSource, 150);
+ $text = self::reviewText($candidate, $questionSource);
  if ($text !== '') {
  $items[] = $label.': '.$text;
  break;
@@ -261,7 +261,7 @@ class FeedbackReportPresenter
  return self::mergedItems($items);
  }
 
- private static function reviewText(mixed $text, mixed $questionSource = null, int $limit = 150): string
+ private static function reviewText(mixed $text, mixed $questionSource = null, ?int $limit = null): string
  {
  if (! is_scalar($text)) {
  return '';
@@ -276,7 +276,7 @@ class FeedbackReportPresenter
  $clean = review_feedback_without_question_text($clean, $questionSource);
  }
 
- return self::limitText($clean, $limit);
+ return $limit === null? $clean: self::limitText($clean, $limit);
  }
 
  private static function generalizedAnswerReviewItems(array $items): array
@@ -349,7 +349,7 @@ class FeedbackReportPresenter
  $text = preg_replace('/^include\s+/iu', 'the reviewed answers need to include ', $text)?? $text;
  $text = preg_replace('/^no\s+answer\s+was\s+submitted\b/iu', 'some answer reviews have no submitted response', $text)?? $text;
 
- return self::limitText(self::sentenceCase($text), 180);
+ return self::sentenceCase($text);
  }
 
  private static function sentenceCase(string $text): string
@@ -424,7 +424,7 @@ class FeedbackReportPresenter
  }
 
  $weaknessPattern = self::answerReviewPattern($weaknessItems);
- $suggestion = self::firstEvidenceItem($suggestions, 170);
+ $suggestion = self::firstEvidenceItem($suggestions);
  if ($weaknessPattern!== '') {
  $sentences[] = self::sentence('Weakness pattern across the answer reviews: '.$weaknessPattern);
  }
@@ -506,9 +506,9 @@ class FeedbackReportPresenter
  continue;
  }
 
- $area = self::limitText((string) ($priority['area']?? 'Top focus'), 80);
- $observation = rtrim(self::limitText(review_feedback_without_question_text((string) ($priority['observation']?? '')), 150), " \t\n\r\0\x0B.?!;");
- $action = rtrim(self::limitText(review_feedback_without_question_text((string) ($priority['action']?? '')), 170), " \t\n\r\0\x0B.?!;");
+ $area = self::cleanText((string) ($priority['area']?? 'Top focus'));
+ $observation = rtrim(self::cleanText(review_feedback_without_question_text((string) ($priority['observation']?? ''))), " \t\n\r\0\x0B.?!;");
+ $action = rtrim(self::cleanText(review_feedback_without_question_text((string) ($priority['action']?? ''))), " \t\n\r\0\x0B.?!;");
  $parts = [];
  $parts[] = 'Top focus: '.($area!== ''? $area: 'answer practice');
  if ($observation!== '') {
@@ -526,11 +526,11 @@ class FeedbackReportPresenter
  return '';
  }
 
- private static function firstEvidenceItem(string $text, int $limit): string
+ private static function firstEvidenceItem(string $text): string
  {
- $item = trim((string) (self::bulletItems($text, '', 1, $limit)[0]?? ''));
+ $item = trim((string) (self::bulletItems($text, '', 1, null)[0]?? ''));
 
- return self::limitText(review_feedback_without_question_text($item), $limit);
+ return self::cleanText(review_feedback_without_question_text($item));
  }
 
  private static function sentence(string $text): string

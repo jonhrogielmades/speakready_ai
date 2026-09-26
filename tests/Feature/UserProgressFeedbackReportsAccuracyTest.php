@@ -588,8 +588,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  'better_sample_answer' => 'Explain a time you helped a customer.',
  'coaching_feedback' => [
  'content_alignment' => [
- 'what_worked' => 'The saved answer explains the customer process action clearly.',
- 'improvement_focus' => 'Add the final customer result or lesson.',
+ 'what_worked' => 'The saved answer explains the customer process action clearly with enough context about what the user personally did, why the customer needed support, and how the process moved forward for the service team.',
+ 'improvement_focus' => 'Add the final customer result or lesson so the review can show the outcome, the value of the action, and why this example proves the user can help similar customers again.',
  'action' => 'Use STAR structure and add one measurable result.',
  ],
  ],
@@ -621,9 +621,14 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('Explain a time you helped a customer')
  ->assertSee('The reviewed answers explain the customer process action clearly')
  ->assertSee('The reviewed answers need to add the final customer result or lesson')
+ ->assertSee('how the process moved forward for the service team')
+ ->assertSee('why this example proves the user can help similar customers again')
  ->assertDontSee('Answer 1: The saved answer explains the customer process action clearly')
  ->assertDontSee('Answer 1: Add the final customer result or lesson')
  ->assertSee('Use STAR structure')
+ ->assertDontSee('review-practice-btn', false)
+ ->assertDontSee('<strong>STAR Method:</strong>', false)
+ ->assertDontSee('Practice a past-example answer and include Situation, Task, Action, and Result.')
  ->assertDontSee('The answer gives an action but needs a result.')
  ->assertDontSee('Category Breakdown')
  ->assertDontSee('Conciseness Check')
