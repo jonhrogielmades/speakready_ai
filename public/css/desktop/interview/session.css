@@ -4876,3 +4876,52 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
         font-size: 0.54rem !important;
     }
 }
+
+html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls {
+    align-items: center !important;
+}
+
+html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #recordingTimer {
+    display: inline-flex !important;
+    flex: 0 0 42px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
+    transform: none !important;
+}
+
+html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls,
+html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .d-flex.gap-2 {
+    align-items: center !important;
+}
+
+html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .d-flex.gap-2 {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+}
+
+@media (max-width: 575.98px) {
+    html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #recordingTimer,
+    html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .d-flex.gap-2 {
+        height: 28px !important;
+        min-height: 28px !important;
+        max-height: 28px !important;
+    }
+
+    html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #recordingTimer {
+        flex-basis: 40px !important;
+        width: 40px !important;
+        min-width: 40px !important;
+        max-width: 40px !important;
+    }
+}
