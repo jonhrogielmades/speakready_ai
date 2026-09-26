@@ -5965,3 +5965,22 @@ html:not(.lm) body #mob-content #sec-interview-setup .setup-stepper-lock {
     color: #cbd5e1 !important;
     box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.4) !important;
 }
+
+@media (max-width: 767.98px) {
+    html body.user-mobile-shell #sec-interview-setup #panel-structure .structure-select-grid,
+    html body #mob-content #sec-interview-setup #panel-structure .structure-select-grid {
+        gap: 14px !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup #panel-structure .structure-select-grid > div,
+    html body #mob-content #sec-interview-setup #panel-structure .structure-select-grid > div {
+        display: grid !important;
+        gap: 6px !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup #panel-structure .structure-select-grid .olbl,
+    html body #mob-content #sec-interview-setup #panel-structure .structure-select-grid .olbl {
+        margin: 0 !important;
+        line-height: 1.2 !important;
+    }
+}
