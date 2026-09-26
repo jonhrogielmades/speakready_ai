@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=48') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=49') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -85,13 +85,6 @@
  <div class="question-timer-anchor">
  <span class="session-chip" id="questionTimerChip"><i class="fa-regular fa-clock"></i><span id="perQuestionTimer">Self-paced</span></span>
  </div>
- @if(($sessionRecord->live_feedback_mode?? 'coaching') !== 'real_interview')
- <button type="button" id="aiCoachHeadButton" class="ai-coach-head-button coaching-only" onclick="toggleAiCoachPanel()" aria-label="Open AI Coach possible answer" aria-controls="aiCoachPanel" aria-expanded="false" title="AI Coach possible answer">
- <i class="fa-solid fa-head-side-brain" aria-hidden="true"></i>
- <span class="ai-coach-head-label">AI Coach</span>
- </button>
- @endif
-
  <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);">
  <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;--avatar-ring-color:#8b5cf6;">
  <!-- The Image Container (with border, glow, and clipping for the image itself) -->
@@ -149,6 +142,12 @@
  <div class="response-title-actions">
  @if($sessionRecord->game_level_id)
  <span class="badge" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> GAME MODE</span>
+ @endif
+ @if(($sessionRecord->live_feedback_mode?? 'coaching') !== 'real_interview')
+ <button type="button" id="aiCoachHeadButton" class="ai-coach-head-button response-ai-coach-toggle coaching-only" onclick="toggleAiCoachPanel()" aria-label="Open AI Coach possible answer" aria-controls="aiCoachPanel" aria-expanded="false" title="AI Coach possible answer">
+ <i class="fa-solid fa-head-side-brain" aria-hidden="true"></i>
+ <span class="ai-coach-head-label">AI Coach</span>
+ </button>
  @endif
  <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle d-md-none" onclick="toggleMobileFullscreen()" title="Enter fullscreen" aria-label="Enter fullscreen">
  <i class="fa-solid fa-expand"></i>

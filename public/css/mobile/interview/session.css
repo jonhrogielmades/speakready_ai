@@ -4264,53 +4264,65 @@ body.dm #sec-interview-session .answer-transcript-stage .answer-transcription-me
     }
 }
 
-html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button {
-    position: absolute !important;
-    inset: auto auto 14px 50% !important;
-    top: auto !important;
-    right: auto !important;
-    bottom: 14px !important;
-    left: 50% !important;
-    z-index: 78 !important;
-    width: 40px !important;
-    min-width: 40px !important;
-    max-width: 40px !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    max-height: 40px !important;
+html body #sec-interview-session .response-title-actions #aiCoachHeadButton.ai-coach-head-button {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+    flex: 0 0 auto !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    margin: 0 !important;
     padding: 0 !important;
-    border-radius: 12px !important;
-    font-size: 0 !important;
-    transform: translateX(-50%) !important;
+    border: 1px solid rgba(6, 182, 212, 0.46) !important;
+    border-radius: 9px !important;
+    background: rgba(8, 47, 73, 0.92) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    transform: none !important;
 }
 
-html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button .ai-coach-head-label {
+html body #sec-interview-session .response-title-actions #aiCoachHeadButton.ai-coach-head-button .ai-coach-head-label {
     display: none !important;
 }
 
-html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button i {
+html body #sec-interview-session .response-title-actions #aiCoachHeadButton.ai-coach-head-button i {
     margin: 0 !important;
-    font-size: 1rem !important;
+    color: currentColor !important;
+    font-size: 0.96rem !important;
 }
 
-html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button:active {
-    transform: translateX(-50%) scale(0.96) !important;
+html body #sec-interview-session .response-title-actions #aiCoachHeadButton.ai-coach-head-button:hover,
+html body #sec-interview-session .response-title-actions #aiCoachHeadButton.ai-coach-head-button:focus,
+html body #sec-interview-session .response-title-actions #aiCoachHeadButton.ai-coach-head-button.is-active {
+    border-color: rgba(103, 232, 249, 0.72) !important;
+    background: rgba(14, 116, 144, 0.94) !important;
+    color: #ecfeff !important;
+    -webkit-text-fill-color: #ecfeff !important;
+}
+
+html body #sec-interview-session .response-title-actions #aiCoachHeadButton.ai-coach-head-button:active {
+    transform: scale(0.94) !important;
 }
 
 @media (max-width: 390px) {
-    html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button {
-        bottom: 12px !important;
-        width: 36px !important;
-        min-width: 36px !important;
-        max-width: 36px !important;
-        height: 36px !important;
-        min-height: 36px !important;
-        max-height: 36px !important;
-        border-radius: 10px !important;
+    html body #sec-interview-session .response-title-actions #aiCoachHeadButton.ai-coach-head-button {
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+        border-radius: 8px !important;
     }
 
-    html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-head-button i {
-        font-size: 0.92rem !important;
+    html body #sec-interview-session .response-title-actions #aiCoachHeadButton.ai-coach-head-button i {
+        font-size: 0.9rem !important;
     }
 }
 
