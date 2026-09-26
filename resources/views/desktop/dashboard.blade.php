@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=42') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=43') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -830,6 +830,8 @@
         </div>
     </div>
 </div>
+
+@include('shared.user.dashboard-setup-tools-modal')
 
 @push('scripts')
 <script>

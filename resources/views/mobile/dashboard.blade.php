@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=25') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=26') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -595,6 +595,8 @@
         </div>
     </div>
 </div>
+
+@include('shared.user.dashboard-setup-tools-modal')
 
 @push('scripts')
 <script>

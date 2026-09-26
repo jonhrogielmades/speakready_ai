@@ -92,6 +92,47 @@ class UserDashboardFunctionalityTest extends TestCase
             ->assertViewMissing('readinessAlgorithms');
     }
 
+    public function test_dashboard_renders_setup_tools_modal_for_desktop_and_mobile_shells(): void
+    {
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+        $cases = [
+            [
+                'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
+                'headers' => [],
+                'shell' => 'class="user-desktop-shell desktop-shell',
+                'css' => 'css/desktop/dashboard.css?v=43',
+            ],
+            [
+                'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
+                'headers' => ['User-Agent' => $iphoneUserAgent],
+                'shell' => 'class="user-mobile-shell mobile-shell',
+                'css' => 'css/mobile/dashboard.css?v=26',
+            ],
+        ];
+
+        foreach ($cases as $case) {
+            $request = $this->actingAs($case['user']);
+
+            foreach ($case['headers'] as $header => $value) {
+                $request = $request->withHeader($header, $value);
+            }
+
+            $request->get(route('dashboard'))
+                ->assertOk()
+                ->assertSee($case['shell'], false)
+                ->assertSee($case['css'], false)
+                ->assertSee('id="dashboardSetupToolsModal"', false)
+                ->assertSee('id="dashboardSetupToolsForm"', false)
+                ->assertSee('data-sr-setup-tool="microphone"', false)
+                ->assertSee('data-sr-setup-tool="camera"', false)
+                ->assertSee('data-sr-setup-tool="notifications"', false)
+                ->assertSee('id="dashboardSetupToolsAllow"', false)
+                ->assertSee('Do later')
+                ->assertSee('navigator.mediaDevices.getUserMedia', false)
+                ->assertSee('Notification.requestPermission', false);
+        }
+    }
+
     public function test_removed_application_and_pack_urls_are_not_available(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
