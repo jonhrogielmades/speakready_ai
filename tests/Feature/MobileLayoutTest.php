@@ -171,10 +171,15 @@ class MobileLayoutTest extends TestCase
             ->assertSee('data-admin-notif-close', false)
             ->assertSee('mob-profile-account-head', false)
             ->assertSee('mob-profile-pages-head', false)
+            ->assertSee('mob-profile-dropdown mob-profile-is-pages', false)
             ->assertSee('--admin-drawer-text', false)
             ->assertSee('--admin-notif-text', false)
             ->assertSee('body.admin-mobile-shell #mobProfileDropdown[data-origin="top"]', false)
+            ->assertSee('mob-profile-is-account', false)
             ->assertSee('.mob-profile-account-head', false)
+            ->assertSee('function syncMobileProfileMode(mode = \'pages\')', false)
+            ->assertSee('pagesMenu.hidden = isAccountMode;', false)
+            ->assertSee('accountMenu.style.display', false)
             ->assertSee('function hideMobileNotificationDropdown()', false)
             ->assertDontSee('class="db-sidebar"', false);
     }

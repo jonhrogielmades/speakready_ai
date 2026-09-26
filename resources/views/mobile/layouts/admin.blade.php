@@ -1664,15 +1664,29 @@
          }
 
          body.admin-mobile-shell #mobProfileDropdown[data-mode="pages"] > .mob-profile-account-head,
+         body.admin-mobile-shell #mobProfileDropdown.mob-profile-is-pages > .mob-profile-account-head,
          body.admin-mobile-shell #mobProfileDropdown[data-mode="account"] .mob-profile-pages,
+         body.admin-mobile-shell #mobProfileDropdown.mob-profile-is-account .mob-profile-pages,
          body.admin-mobile-shell #mobProfileDropdown[data-mode="account"] .mob-profile-pages-head,
-         body.admin-mobile-shell #mobProfileDropdown[data-mode="pages"] .mob-profile-account {
+         body.admin-mobile-shell #mobProfileDropdown.mob-profile-is-account .mob-profile-pages-head,
+         body.admin-mobile-shell #mobProfileDropdown[data-mode="pages"] .mob-profile-account,
+         body.admin-mobile-shell #mobProfileDropdown.mob-profile-is-pages .mob-profile-account {
             display: none !important;
          }
 
          body.admin-mobile-shell #mobProfileDropdown[data-mode="account"] > .mob-profile-account-head,
+         body.admin-mobile-shell #mobProfileDropdown.mob-profile-is-account > .mob-profile-account-head,
+         body.admin-mobile-shell #mobProfileDropdown.mob-profile-is-account .mob-profile-account,
          body.admin-mobile-shell #mobProfileDropdown[data-mode="pages"] .mob-profile-pages-head {
             display: flex !important;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown.mob-profile-is-account .mob-profile-account {
+            display: block !important;
+         }
+
+         body.admin-mobile-shell #mobProfileDropdown.mob-profile-is-pages .mob-profile-pages {
+            display: block !important;
          }
 
          body.admin-mobile-shell #mobProfileDropdown .mob-profile-head,
@@ -3058,8 +3072,8 @@
 
       <div id="mobMoreBackdrop" class="mob-more-backdrop" aria-hidden="true" onclick="closeMobileProfile()"></div>
 
-      <div class="mob-profile-dropdown" id="mobProfileDropdown" aria-hidden="true" data-mode="pages" data-origin="bottom">
-         <div class="mob-profile-head mob-profile-account-head">
+      <div class="mob-profile-dropdown mob-profile-is-pages" id="mobProfileDropdown" aria-hidden="true" data-mode="pages" data-origin="bottom">
+         <div class="mob-profile-head mob-profile-account-head" hidden style="display:none;">
             <div class="mob-profile-head-avatar">
                @if(Auth::check() && Auth::user()->profile_photo_path)
                   @php
@@ -3109,7 +3123,7 @@
                </div>
             </div>
 
-            <div class="mob-profile-account">
+            <div class="mob-profile-account" hidden style="display:none;">
                <div class="mob-profile-section-title">Profile</div>
                <div class="mob-profile-grid mb-2">
                   <a href="{{ route('admin.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.account') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span>Account</span></a>
@@ -3170,8 +3184,7 @@
             const currentMode = dropdown.getAttribute('data-mode') || 'pages';
             const isOpen = dropdown.classList.contains('open');
             hideMobileNotificationDropdown();
-            dropdown.setAttribute('data-mode', mode);
-            dropdown.setAttribute('data-origin', mode === 'pages' ? 'bottom' : 'top');
+            syncMobileProfileMode(mode);
 
             const willOpen = !isOpen || currentMode !== mode;
             dropdown.classList.toggle('open', willOpen);
@@ -3180,6 +3193,39 @@
             if (bottomButton) bottomButton.setAttribute('aria-expanded', willOpen && mode === 'pages' ? 'true' : 'false');
             if (moreBackdrop) moreBackdrop.classList.toggle('open', willOpen);
             if (willOpen) resetMobileProfileMenuScroll();
+         }
+
+         function syncMobileProfileMode(mode = 'pages') {
+            const dropdown = document.getElementById('mobProfileDropdown');
+            if (!dropdown) return;
+
+            const isAccountMode = mode === 'account';
+            const accountHead = dropdown.querySelector('.mob-profile-account-head');
+            const accountMenu = dropdown.querySelector('.mob-profile-account');
+            const pagesMenu = dropdown.querySelector('.mob-profile-pages');
+            const pagesHead = dropdown.querySelector('.mob-profile-pages-head');
+
+            dropdown.setAttribute('data-mode', isAccountMode ? 'account' : 'pages');
+            dropdown.setAttribute('data-origin', isAccountMode ? 'top' : 'bottom');
+            dropdown.classList.toggle('mob-profile-is-account', isAccountMode);
+            dropdown.classList.toggle('mob-profile-is-pages', !isAccountMode);
+
+            if (accountHead) {
+               accountHead.hidden = !isAccountMode;
+               accountHead.style.display = isAccountMode ? 'flex' : 'none';
+            }
+            if (accountMenu) {
+               accountMenu.hidden = !isAccountMode;
+               accountMenu.style.display = isAccountMode ? 'block' : 'none';
+            }
+            if (pagesMenu) {
+               pagesMenu.hidden = isAccountMode;
+               pagesMenu.style.display = isAccountMode ? 'none' : 'block';
+            }
+            if (pagesHead) {
+               pagesHead.hidden = isAccountMode;
+               pagesHead.style.display = isAccountMode ? 'none' : 'flex';
+            }
          }
 
          function hideMobileNotificationDropdown() {
@@ -3224,6 +3270,8 @@
          });
 
          document.addEventListener('DOMContentLoaded', function() {
+            syncMobileProfileMode('pages');
+
             document.querySelectorAll('[data-admin-notif-close]').forEach(function(button) {
                button.addEventListener('click', function(event) {
                   event.preventDefault();
