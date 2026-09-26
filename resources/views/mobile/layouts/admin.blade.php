@@ -64,6 +64,7 @@
             -webkit-backdrop-filter: blur(18px);
             border-bottom: 1px solid var(--adm-bd);
             display: flex; align-items: center; justify-content: space-between;
+            overflow: visible;
          }
          .lm #mob-header { background: rgba(255, 248, 248, 0.95); }
 
@@ -1672,6 +1673,15 @@
             background: var(--admin-drawer-backdrop);
          }
 
+         body.admin-mobile-shell #mob-header {
+            overflow: visible !important;
+            isolation: isolate;
+         }
+
+         body.admin-mobile-shell.admin-notification-menu-open #mob-header {
+            z-index: 1140;
+         }
+
          body.admin-mobile-shell #mobProfileDropdown {
             z-index: 1110;
             background: var(--admin-drawer-bg) !important;
@@ -1846,16 +1856,22 @@
             position: fixed !important;
             top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px) !important;
             right: max(10px, env(safe-area-inset-right, 0px)) !important;
-            left: auto !important;
-            z-index: 1125;
-            width: min(360px, calc(100vw - 20px)) !important;
-            max-width: calc(100vw - 20px) !important;
+            left: max(10px, env(safe-area-inset-left, 0px)) !important;
+            z-index: 1145 !important;
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: none !important;
             max-height: calc(var(--sr-visual-vh, 100dvh) - var(--mob-top-h) - var(--mob-safe-top) - 18px);
             margin: 0 !important;
             transform: none !important;
             background: var(--admin-notif-bg) !important;
             border-color: var(--admin-notif-border) !important;
             color: var(--admin-notif-text);
+         }
+
+         body.admin-mobile-shell #mob-header .mob-notification-dropdown.show {
+            display: flex;
+            flex-direction: column;
          }
 
          body.admin-mobile-shell #mob-header .admin-mob-notif-header,
@@ -3313,7 +3329,12 @@
             }
          }
 
+         function setMobileNotificationLayer(isOpen) {
+            document.body.classList.toggle('admin-notification-menu-open', Boolean(isOpen));
+         }
+
          function hideMobileNotificationDropdown() {
+            setMobileNotificationLayer(false);
             const notificationButton = document.getElementById('mobNotificationBtn');
             if (!notificationButton || typeof bootstrap === 'undefined' || !bootstrap.Dropdown) return;
             const dropdown = bootstrap.Dropdown.getInstance(notificationButton) || bootstrap.Dropdown.getOrCreateInstance(notificationButton);
@@ -3381,7 +3402,16 @@
 
             const notificationButton = document.getElementById('mobNotificationBtn');
             if (notificationButton) {
-               notificationButton.addEventListener('show.bs.dropdown', closeMobileProfile);
+               notificationButton.addEventListener('show.bs.dropdown', function() {
+                  setMobileNotificationLayer(true);
+                  closeMobileProfile();
+               });
+               notificationButton.addEventListener('shown.bs.dropdown', function() {
+                  setMobileNotificationLayer(true);
+               });
+               notificationButton.addEventListener('hidden.bs.dropdown', function() {
+                  setMobileNotificationLayer(false);
+               });
             }
 
             const profileButton = document.getElementById('mobProfileBtn');
