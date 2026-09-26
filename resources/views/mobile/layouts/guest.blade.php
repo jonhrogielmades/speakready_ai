@@ -167,7 +167,7 @@
              <div class="container position-relative" style="z-index:2">
                 <div class="text-center mt-3 pt-3 afu" style="animation-delay:.05s">
                     <span class="hbadge">
-                 AI-Powered Practice | Real-Time Feedback
+                 AI-Based Interview Practice System
                     </span>
                 </div>
                 @php

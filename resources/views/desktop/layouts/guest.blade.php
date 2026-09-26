@@ -159,7 +159,7 @@
                   <div class="col-xl-5 col-lg-5 col-md-10 hero-home-copy text-center text-lg-start">
                      <div class="hero-badge-wrap afu" style="animation-delay:.05s">
                         <span class="hbadge">
-                     AI-Powered Practice | Real-Time Feedback
+                     AI-Based Interview Practice System
                         </span>
                      </div>
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
