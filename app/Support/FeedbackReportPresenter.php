@@ -18,14 +18,14 @@ class FeedbackReportPresenter
  $focus = self::primaryFocus($session);
  $categoryBreakdown = self::categoryBreakdown($session);
  $answers = self::answers($session);
- $answerStrengthItems = self::answerReviewStrengthItems($answers);
+ $answerStrengthItems = self::generalizedAnswerReviewItems(self::answerReviewStrengthItems($answers));
  $strengthItems = $answerStrengthItems!== []
  ? $answerStrengthItems
  : self::bulletItems($strengths, '', 4);
  if ($strengthItems === []) {
  $strengthItems = ['No answer-level strength is reliable yet. Add a complete answer so the review can identify what worked.'];
  }
- $answerWeaknessItems = self::answerReviewWeaknessItems($answers);
+ $answerWeaknessItems = self::generalizedAnswerReviewItems(self::answerReviewWeaknessItems($answers));
  $weaknessItems = $answerWeaknessItems!== []
  ? $answerWeaknessItems
  : self::mergedItems(
@@ -279,6 +279,24 @@ class FeedbackReportPresenter
  return self::limitText($clean, $limit);
  }
 
+ private static function generalizedAnswerReviewItems(array $items): array
+ {
+ $patterns = [];
+ foreach ($items as $item) {
+ $pattern = self::generalizeAnswerReviewItem((string) $item);
+ if ($pattern === '' || in_array($pattern, $patterns, true)) {
+ continue;
+ }
+
+ $patterns[] = $pattern;
+ if (count($patterns) >= 4) {
+ break;
+ }
+ }
+
+ return $patterns;
+ }
+
  private static function answerReviewPattern(array $items): string
  {
  $patterns = [];
@@ -331,7 +349,21 @@ class FeedbackReportPresenter
  $text = preg_replace('/^include\s+/iu', 'the reviewed answers need to include ', $text)?? $text;
  $text = preg_replace('/^no\s+answer\s+was\s+submitted\b/iu', 'some answer reviews have no submitted response', $text)?? $text;
 
- return self::limitText($text, 180);
+ return self::limitText(self::sentenceCase($text), 180);
+ }
+
+ private static function sentenceCase(string $text): string
+ {
+ $clean = self::cleanText($text);
+ if ($clean === '') {
+ return '';
+ }
+
+ if (preg_match('/^\p{Ll}/u', $clean) === 1) {
+ return mb_strtoupper(mb_substr($clean, 0, 1, 'UTF-8'), 'UTF-8').mb_substr($clean, 1, null, 'UTF-8');
+ }
+
+ return $clean;
  }
 
  private static function overallSummary(

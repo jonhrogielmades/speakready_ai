@@ -65,13 +65,15 @@ class FeedbackReportPresenterTest extends TestCase
 
         $report = FeedbackReportPresenter::forSession($session);
 
-        $this->assertSame(['Answer 1: The saved answer names the customer process action.'], $report['strength_items']);
-        $this->assertSame(['Answer 1: Add the final customer result.'], $report['weakness_items']);
-        $this->assertStringContainsString('Strength pattern across the answer reviews: the reviewed answers name the customer process action.', $report['overview']['summary']);
-        $this->assertStringContainsString('Weakness pattern across the answer reviews: the reviewed answers need to add the final customer result.', $report['overview']['summary']);
+        $this->assertSame(['The reviewed answers name the customer process action'], $report['strength_items']);
+        $this->assertSame(['The reviewed answers need to add the final customer result'], $report['weakness_items']);
+        $this->assertStringContainsString('Strength pattern across the answer reviews: The reviewed answers name the customer process action.', $report['overview']['summary']);
+        $this->assertStringContainsString('Weakness pattern across the answer reviews: The reviewed answers need to add the final customer result.', $report['overview']['summary']);
         $this->assertStringNotContainsString('Main strength', $report['overview']['summary']);
         $this->assertStringNotContainsString('Main weakness', $report['overview']['summary']);
         $this->assertStringNotContainsString('Answer 1:', $report['overview']['summary']);
+        $this->assertStringNotContainsString('Answer 1:', implode(' ', $report['strength_items']));
+        $this->assertStringNotContainsString('Answer 1:', implode(' ', $report['weakness_items']));
         $this->assertStringNotContainsString('Generic session strength', implode(' ', $report['strength_items']).' '.$report['overview']['summary']);
         $this->assertStringNotContainsString('Generic session weakness', implode(' ', $report['weakness_items']).' '.$report['overview']['summary']);
     }
