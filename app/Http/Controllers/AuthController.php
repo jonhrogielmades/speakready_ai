@@ -290,6 +290,26 @@ class AuthController extends Controller
 
     public function handleGoogleCallback(Request $request)
     {
+        if ($request->filled('error')) {
+            Log::warning('Google authentication returned an OAuth error.', [
+                'error' => $request->query('error'),
+                'error_description' => $request->query('error_description'),
+                'redirect_uri' => config('services.google.redirect'),
+            ]);
+
+            return redirect('/')->withErrors([
+                'email' => $this->googleOAuthErrorMessage($request),
+            ]);
+        }
+
+        if ($configurationError = $this->googleConfigurationErrorMessage()) {
+            Log::warning('Google authentication is not configured correctly.');
+
+            return redirect('/')->withErrors([
+                'email' => $configurationError,
+            ]);
+        }
+
         try {
             $intent = $request->session()->pull('google_auth_intent', 'login');
             $intent = in_array($intent, ['login', 'register'], true) ? $intent : 'login';
@@ -411,16 +431,29 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
 
         } catch (Throwable $e) {
-            Log::error('Google authentication failed: '.$e->getMessage(), ['exception' => $e]);
+            $message = $this->googleAuthenticationExceptionMessage($e);
+
+            Log::error('Google authentication failed: '.$e->getMessage(), [
+                'exception' => $e,
+                'friendly_message' => $message,
+            ]);
 
             return redirect('/')->withErrors([
-                'email' => 'Google authentication took too long or could not be completed. Please try again.',
+                'email' => $message,
             ]);
         }
     }
 
     private function redirectToGoogleWithIntent(Request $request, string $intent)
     {
+        if ($configurationError = $this->googleConfigurationErrorMessage()) {
+            Log::warning('Google authentication is not configured correctly.');
+
+            return redirect('/')->withErrors([
+                'email' => $configurationError,
+            ]);
+        }
+
         $request->session()->put('google_auth_intent', $intent);
 
         return Socialite::driver('google')->stateless()->redirect();
@@ -478,10 +511,12 @@ class AuthController extends Controller
     {
         $driver = Socialite::driver('google')->stateless();
 
+        $connectTimeout = (float) config('services.google.connect_timeout', 5);
+        $timeout = (float) config('services.google.timeout', 20);
         $guzzleOptions = [
-            'connect_timeout' => (float) config('services.google.connect_timeout', 3),
-            'timeout' => (float) config('services.google.timeout', 8),
-            'read_timeout' => (float) config('services.google.timeout', 8),
+            'connect_timeout' => max(5, $connectTimeout),
+            'timeout' => max(20, $timeout),
+            'read_timeout' => max(20, $timeout),
         ];
 
         $curlOptions = [];
@@ -502,6 +537,65 @@ class AuthController extends Controller
         $driver->setHttpClient(new GuzzleClient($guzzleOptions));
 
         return $driver;
+    }
+
+    private function googleConfigurationErrorMessage(): ?string
+    {
+        $required = [
+            'client_id' => config('services.google.client_id'),
+            'client_secret' => config('services.google.client_secret'),
+            'redirect' => config('services.google.redirect'),
+        ];
+
+        foreach ($required as $value) {
+            if (blank($value)) {
+                return 'Google sign-in is not configured correctly. Please contact the administrator.';
+            }
+        }
+
+        return null;
+    }
+
+    private function googleOAuthErrorMessage(Request $request): string
+    {
+        $error = trim((string) $request->query('error', ''));
+
+        if ($error === 'access_denied') {
+            return 'Google sign-in was cancelled. Please choose a Google account and allow access to continue.';
+        }
+
+        return 'Google could not authorize this request. Please start Google sign-in again.';
+    }
+
+    private function googleAuthenticationExceptionMessage(Throwable $e): string
+    {
+        $message = Str::lower($e->getMessage());
+
+        if (Str::contains($message, [
+            'curl error 6',
+            'curl error 7',
+            'curl error 28',
+            'could not resolve host',
+            'failed to connect',
+            'timed out',
+            'timeout',
+        ])) {
+            return 'Google sign-in could not reach Google in time. Please check your connection and try again.';
+        }
+
+        if (Str::contains($message, ['invalid_grant', 'bad_verification_code'])) {
+            return 'Google sign-in expired. Please start Google login again.';
+        }
+
+        if (Str::contains($message, ['redirect_uri_mismatch', 'redirect uri', 'redirect_uri'])) {
+            return 'Google sign-in is using the wrong callback URL. Please contact the administrator.';
+        }
+
+        if (Str::contains($message, ['invalid_client', 'unauthorized_client', 'client secret'])) {
+            return 'Google sign-in is not configured correctly. Please contact the administrator.';
+        }
+
+        return 'Google authentication could not be completed. Please start Google login again.';
     }
 
     private function normalizeEmail(mixed $email): string

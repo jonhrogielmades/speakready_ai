@@ -41,8 +41,8 @@ return [
  'client_id' => env('GOOGLE_CLIENT_ID'),
  'client_secret' => env('GOOGLE_CLIENT_SECRET'),
  'redirect' => env('GOOGLE_REDIRECT_URI'),
- 'connect_timeout' => env('GOOGLE_HTTP_CONNECT_TIMEOUT', 3),
- 'timeout' => env('GOOGLE_HTTP_TIMEOUT', 8),
+ 'connect_timeout' => env('GOOGLE_HTTP_CONNECT_TIMEOUT', 5),
+ 'timeout' => env('GOOGLE_HTTP_TIMEOUT', 20),
  ],
 
  'ai_tts' => [

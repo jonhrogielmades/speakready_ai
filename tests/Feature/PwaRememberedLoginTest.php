@@ -166,6 +166,44 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('border-right-color: rgba(14, 165, 233, 0.78);', false);
     }
 
+    public function test_google_login_reports_missing_configuration_before_redirect(): void
+    {
+        config([
+            'services.google.client_id' => null,
+            'services.google.client_secret' => 'test-secret',
+            'services.google.redirect' => route('auth.google.callback'),
+        ]);
+
+        $this->get(route('auth.google.login'))
+            ->assertRedirect('/')
+            ->assertSessionHasErrors([
+                'email' => 'Google sign-in is not configured correctly. Please contact the administrator.',
+            ]);
+    }
+
+    public function test_google_callback_reports_cancelled_authorization(): void
+    {
+        $this->get(route('auth.google.callback', ['error' => 'access_denied']))
+            ->assertRedirect('/')
+            ->assertSessionHasErrors([
+                'email' => 'Google sign-in was cancelled. Please choose a Google account and allow access to continue.',
+            ]);
+    }
+
+    public function test_google_callback_reports_network_timeout_clearly(): void
+    {
+        $this->mockGoogleCallbackFailure(new \RuntimeException(
+            'cURL error 28: Operation timed out after 20000 milliseconds with 0 bytes received'
+        ));
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback'))
+            ->assertRedirect('/')
+            ->assertSessionHasErrors([
+                'email' => 'Google sign-in could not reach Google in time. Please check your connection and try again.',
+            ]);
+    }
+
     public function test_google_login_uses_picture_fallback_for_profile_photo(): void
     {
         $user = User::factory()->create([
@@ -273,6 +311,8 @@ class PwaRememberedLoginTest extends TestCase
 
     private function mockGoogleCallback(array $attributes, array $raw = []): void
     {
+        $this->configureGoogleOAuth();
+
         $googleUser = SocialiteUser::fake($attributes);
         $googleUser->setRaw(array_merge($attributes, $raw));
 
@@ -285,5 +325,29 @@ class PwaRememberedLoginTest extends TestCase
             ->once()
             ->with('google')
             ->andReturn($provider);
+    }
+
+    private function mockGoogleCallbackFailure(\Throwable $exception): void
+    {
+        $this->configureGoogleOAuth();
+
+        $provider = Mockery::mock();
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('setHttpClient')->andReturnSelf();
+        $provider->shouldReceive('user')->andThrow($exception);
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
+    }
+
+    private function configureGoogleOAuth(): void
+    {
+        config([
+            'services.google.client_id' => 'test-google-client-id',
+            'services.google.client_secret' => 'test-google-client-secret',
+            'services.google.redirect' => route('auth.google.callback'),
+        ]);
     }
 }
