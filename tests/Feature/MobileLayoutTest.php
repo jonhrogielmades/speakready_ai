@@ -514,13 +514,9 @@ class MobileLayoutTest extends TestCase
                     ->get(route('interview.session'));
 
                 $response->assertOk()
-                    ->assertSee('id="answerTextarea"', false)
-                    ->assertSee('class="answer-transcript-stage"', false)
-                    ->assertSee('id="responseCountBar"', false)
                     ->assertSee('id="answerTranscriptControls"', false)
                     ->assertSee('id="recordingTimer"', false)
                     ->assertSee('id="voiceControls"', false)
-                    ->assertSee('Speak your answer, then edit the transcript here if needed...', false)
                     ->assertSee('const displayRealtimeTranscriptInTextarea = true;', false)
                     ->assertSee('function fullVoiceTranscriptionUnavailableMessage()', false)
                     ->assertSee('let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea?', false)
@@ -560,10 +556,17 @@ class MobileLayoutTest extends TestCase
                     ->assertDontSee('id="voiceSessionDownload"', false);
 
                 if ($responseMode === 'voice') {
-                    $response->assertSee('id="voiceSessionPanel"', false)
+                    $response->assertDontSee('id="answerTextarea"', false)
+                        ->assertDontSee('class="answer-transcript-stage"', false)
+                        ->assertDontSee('id="responseCountBar"', false)
+                        ->assertSee('id="voiceSessionPanel"', false)
                         ->assertSee('<span>Download</span>', false);
                 } else {
-                    $response->assertDontSee('id="voiceSessionPanel"', false)
+                    $response->assertSee('id="answerTextarea"', false)
+                        ->assertSee('class="answer-transcript-stage"', false)
+                        ->assertSee('id="responseCountBar"', false)
+                        ->assertSee('Speak your answer, then edit the transcript here if needed...', false)
+                        ->assertDontSee('id="voiceSessionPanel"', false)
                         ->assertDontSee('<span>Download</span>', false);
                 }
             }

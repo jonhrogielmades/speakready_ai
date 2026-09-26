@@ -55,11 +55,13 @@
  $initialQuestionCounter = $hasSavedInterviewState? 'Resume': 'Ready';
  $assistanceLevelKey = strtolower((string) ($sessionRecord->ai_assistance_level?? 'standard'));
  $assistanceLevelLabel = [
- 'beginner' => 'Beginner Assistance',
- 'standard' => 'Standard Assistance',
- 'challenge' => 'Challenge Assistance',
- ][$assistanceLevelKey]?? 'Standard Assistance';
- @endphp
+  'beginner' => 'Beginner Assistance',
+  'standard' => 'Standard Assistance',
+  'challenge' => 'Challenge Assistance',
+  ][$assistanceLevelKey]?? 'Standard Assistance';
+  $responseModeKey = strtolower((string) ($sessionRecord->response_mode?? 'text'));
+  $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
+  @endphp
  <div id="workspaceWrapper" style="display:none;">
  <div class="row g-4" id="workspaceRow">
  <!-- Main Content Area -->
@@ -158,6 +160,7 @@
  
  <form id="answerForm">
  <div id="chatTranscriptContainer" style="max-height: none; overflow: visible; padding: 0; margin-bottom: 12px; background: transparent; border: 0; display: none; flex-direction: column; gap: 10px;"></div>
+ @unless($isVoiceOnlyResponseMode)
  <label for="answerTextarea" class="visually-hidden">Your interview answer</label>
  <div id="responseModeLockNotice" class="response-mode-lock-notice" hidden>
  <i class="fa-solid fa-lock" aria-hidden="true"></i>
@@ -169,11 +172,12 @@
  <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
  </div>
  </div>
+ @endunless
  <div class="response-autosave-row">
  <span id="autoSaveIndicator" class="text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
  </div>
 
- @if(strtolower((string) ($sessionRecord->response_mode?? '')) === 'voice')
+ @if($isVoiceOnlyResponseMode)
  <div id="voiceSessionPanel" class="voice-session-panel" hidden data-state="idle">
  <div class="voice-session-summary">
  <div class="voice-session-title">
@@ -2971,15 +2975,31 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  if (canonicalResponseMode === 'voice') {
- return 'Voice Mode is voice-only. Use the microphone controls; no text transcript is created here.';
+ return '';
  }
 
  return 'Speak your answer, then edit the transcript here if needed...';
  }
 
+ function answerTextareaElement() {
+ return document.getElementById('answerTextarea');
+ }
+
  function currentAnswerTextareaText() {
- const textarea = document.getElementById('answerTextarea');
- return textarea? String(textarea.value || ''): '';
+ const textarea = answerTextareaElement();
+ return textarea? String(textarea.value || ''): String(answersData[currentQIdx]?.text || '');
+ }
+
+ function setCurrentAnswerTextareaText(value) {
+ const text = String(value || '');
+ const textarea = answerTextareaElement();
+ if (textarea) textarea.value = text;
+ if (answersData[currentQIdx]) answersData[currentQIdx].text = text;
+ return text;
+ }
+
+ function focusAnswerTextarea() {
+ answerTextareaElement()?.focus();
  }
 
  function hybridModeHasTranscriptText() {
@@ -3002,7 +3022,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function applyVoiceOnlyAnswerLock() {
- const textarea = document.getElementById('answerTextarea');
+ const textarea = answerTextareaElement();
  const lockNotice = document.getElementById('responseModeLockNotice');
  const locked = isVoiceOnlyMode();
 
@@ -3023,7 +3043,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const voiceControls = document.getElementById('voiceControls');
  const recordingTimer = document.getElementById('recordingTimer');
  const transcriptControls = document.getElementById('answerTranscriptControls');
- const textarea = document.getElementById('answerTextarea');
+ const textarea = answerTextareaElement();
 
  if (textarea) {
  textarea.placeholder = responseModePlaceholder();
@@ -3985,7 +4005,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const elapsed = getQuestionElapsedSeconds();
  if (!force && elapsed === lastTimelineCaptureAt) return;
  lastTimelineCaptureAt = elapsed;
- const text = document.getElementById('answerTextarea')?.value || '';
+ const text = currentAnswerTextareaText();
  answersData[currentQIdx].transcript_timeline = answersData[currentQIdx].transcript_timeline || [];
  answersData[currentQIdx].transcript_timeline.push({
  at: elapsed,
@@ -4104,7 +4124,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function setAnswerInputEnabled(enabled) {
  answerInputEnabled = Boolean(enabled);
- const textarea = document.getElementById('answerTextarea');
+ const textarea = answerTextareaElement();
  if (textarea) {
  textarea.disabled =!enabled;
  applyVoiceOnlyAnswerLock();
@@ -4387,7 +4407,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const restoredAnswerText = String(answerState.text || answerState.speech_transcript || '');
  answerState.text = restoredAnswerText;
  answersData[idx] = answerState;
- document.getElementById('answerTextarea').value = restoredAnswerText;
+ setCurrentAnswerTextareaText(restoredAnswerText);
  applyResponseModeUi();
  resetSpeechRecognitionBufferFromTextarea();
  renderVoiceSessionPanel(idx);
@@ -4593,13 +4613,15 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function triggerAnalysis() {
- const text = document.getElementById('answerTextarea').value;
+ const text = currentAnswerTextareaText();
  const currentQuestion = questions[currentQIdx]? questions[currentQIdx].question_text: '';
  const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
  const charCount = text.length;
- 
- document.getElementById('wordCount').innerText = wordCount + ' words';
- document.getElementById('charCount').innerText = charCount + ' characters';
+  
+ const wordCountTarget = document.getElementById('wordCount');
+ const charCountTarget = document.getElementById('charCount');
+ if (wordCountTarget) wordCountTarget.innerText = wordCount + ' words';
+ if (charCountTarget) charCountTarget.innerText = charCount + ' characters';
 
  const starSignals = detectStarSignals(text);
  
@@ -5072,7 +5094,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (interviewEnding || interviewTerminated) return Promise.resolve();
  if (answersData[currentQIdx]) {
  if (!isSubmittingAnswer) {
- answersData[currentQIdx].text = document.getElementById('answerTextarea').value;
+ answersData[currentQIdx].text = currentAnswerTextareaText();
  }
  answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
  }
@@ -5177,14 +5199,14 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  
  const timedOut = options.timedOut === true;
- let answerText = document.getElementById('answerTextarea').value.trim();
+ let answerText = currentAnswerTextareaText().trim();
  const localVoiceRecording = isVoiceTranscriptionMode()? voiceSessionRecordings.get(voiceSessionKeyFor()): null;
  const hasLocalVoiceRecording = isVoiceTranscriptionMode()
  && Boolean(localVoiceRecording || answersData[currentQIdx]?.voice_recording?.available);
 
  if (isHybridTranscriptionMode() &&!answerText && hasLocalVoiceRecording &&!timedOut && options.skipped!== true) {
  await transcribeVoiceSessionRecording(currentQIdx, { silent: true });
- answerText = document.getElementById('answerTextarea').value.trim();
+ answerText = currentAnswerTextareaText().trim();
  }
 
  const hasSubmittableVoiceRecording = Boolean(submittableVoiceSessionRecording(currentQIdx, localVoiceRecording));
@@ -5200,7 +5222,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  isSubmittingAnswer = false;
  updateSendAnswerButtonState();
  showSessionNotice(hasLocalVoiceRecording? (isVoiceOnlyMode()? 'This recording cannot be submitted. Record your voice answer again before sending.': 'This recording cannot be submitted. Record again, generate the transcript, or type the answer before submitting.'): (isVoiceOnlyMode()? 'Record a voice answer before submitting.': 'Please provide an answer before submitting.'));
- document.getElementById('answerTextarea')?.focus();
+ focusAnswerTextarea();
  return;
  }
  if(!answerText && hasSubmittableVoiceRecording &&!wasSkipped) {
@@ -5208,7 +5230,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  if(!answerText && timedOut &&!hasSubmittableVoiceRecording) {
  answerText = "[Time expired with no answer]";
- document.getElementById('answerTextarea').value = answerText;
+ setCurrentAnswerTextareaText(answerText);
  }
 
  setAnswerInputEnabled(false);
@@ -5335,7 +5357,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  async function skipQuestion() {
  await finalizeCurrentTranscriptionForSubmit();
- document.getElementById('answerTextarea').value = "[User skipped the question]";
+ setCurrentAnswerTextareaText("[User skipped the question]");
  submitAnswer({ skipped: true });
  }
 
@@ -5409,7 +5431,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const previewText = preview?.querySelector('p');
  if (!preview ||!previewText) return;
 
- const answerText = String(document.getElementById('answerTextarea')?.value || '').trim();
+ const answerText = currentAnswerTextareaText().trim();
  if (!answerText) {
  preview.hidden = true;
  previewText.textContent = '';
@@ -5425,7 +5447,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const answerState = answersData[currentQIdx];
  if (!question ||!answerState) return;
 
- const answerText = String(document.getElementById('answerTextarea')?.value || answerState.text || '').trim();
+ const answerText = String(currentAnswerTextareaText() || answerState.text || '').trim();
  if (!answerText) return;
 
  answerState.text = answerText;
@@ -5688,7 +5710,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  setFinishTransitionVisible(false);
  setAnswerInputEnabled(true);
  showSessionNotice('Report generation paused. Your final answer is still on screen.', 'warning');
- document.getElementById('answerTextarea')?.focus();
+ focusAnswerTextarea();
  }
 
  function setInterviewStartModalVisible(visible) {
