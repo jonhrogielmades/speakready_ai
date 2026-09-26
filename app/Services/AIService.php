@@ -1694,7 +1694,7 @@ You MUST return the visible coaching text for every answer. The app will not cre
 For each item, return:
 
 * ai_feedback: 3-4 short sentences tied to the exact question and exact answer evidence. Include what the detail changes for the score or interviewer understanding.
-* better_sample_answer: 1-3 short first-person sentences that improve the answer using only facts already found in candidate_answer. Write the improved answer itself, not the prompt, question text, or advice about how to answer. Do not add invented achievements, employers, tools, numbers, or results. If the answer is skipped, use an empty string.
+* better_sample_answer: 1-3 short first-person sentences that form a strong possible answer to this exact question, improving candidate_answer while using only facts already found in candidate_answer. Write the improved answer itself, not the prompt, question text, or advice about how to answer. Do not add invented achievements, employers, tools, numbers, or results. If a needed fact is missing, leave it out instead of inventing it. If the answer is skipped, use an empty string.
 * follow_up_question: one short interviewer question for the same answer that asks for a missing detail or clearer result.
 * coaching: the exact visible text for the compact report sections. These fields replace local wording in the user report, so do not use canned or repeated sentences.
 

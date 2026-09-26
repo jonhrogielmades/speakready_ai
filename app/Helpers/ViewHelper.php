@@ -301,29 +301,118 @@ if (! function_exists('review_text_looks_like_question')) {
     }
 }
 
+if (! function_exists('review_sentence_text')) {
+    function review_sentence_text(string $text): string
+    {
+        $clean = trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
+        if ($clean === '') {
+            return '';
+        }
+
+        if (preg_match('/[.!?]$/u', $clean) !== 1) {
+            $clean .= '.';
+        }
+
+        return $clean;
+    }
+}
+
+if (! function_exists('review_answer_is_usable_for_better_answer')) {
+    function review_answer_is_usable_for_better_answer(string $answerText, mixed $questionSource = null): bool
+    {
+        $clean = trim(preg_replace('/\s+/u', ' ', $answerText) ?? $answerText);
+
+        return $clean !== ''
+            && review_text_word_count($clean) >= 4
+            && preg_match('/^(?:ok|okay|yes|no|none|n\/a|na)$/iu', $clean) !== 1
+            && ! review_text_looks_like_question($clean, $questionSource);
+    }
+}
+
+if (! function_exists('review_question_based_better_answer')) {
+    function review_question_based_better_answer(string $questionText, string $answerText = ''): string
+    {
+        $question = trim(preg_replace('/\s+/u', ' ', $questionText) ?? $questionText);
+        $lowerQuestion = mb_strtolower($question, 'UTF-8');
+        $baseAnswer = review_sentence_text($answerText);
+        if ($baseAnswer !== '' && preg_match('/^\s*(?:I|we|my|our)\b/iu', $baseAnswer) !== 1) {
+            $baseAnswer = 'I would answer: ' . $baseAnswer;
+        }
+
+        if (preg_match('/\b(?:introduce yourself|tell me about yourself|background)\b/iu', $question) === 1) {
+            return $baseAnswer !== ''
+                ? $baseAnswer . ' My background connects to this role through [relevant experience or skill], and I can contribute by [specific value you can offer].'
+                : 'Hi, I am [your name], currently based in [your location]. My background is in [your relevant experience], and I am interested in this role because [skill or strength connected to the job].';
+        }
+
+        if (preg_match('/\b(?:irate|angry|upset|customer|client|complaint|concern)\b/iu', $question) === 1) {
+            return $baseAnswer !== ''
+                ? $baseAnswer . ' I stayed calm, confirmed the concern, took [specific action], and followed up with [result or lesson].'
+                : 'In a customer situation, I would first listen carefully, confirm the main concern, and stay calm. Then I would take [specific action], explain the next step clearly, and follow up with [result or lesson].';
+        }
+
+        if (preg_match('/\b(?:tell me about a time|describe a time|give an example|example of|challenge|conflict|handled|helped|solved|worked under pressure|difficult)\b/iu', $question) === 1) {
+            return $baseAnswer !== ''
+                ? $baseAnswer . ' The situation was [specific context], my action was [specific action], and the result was [clear result or lesson].'
+                : 'In a previous situation, [specific context happened]. My task was to [responsibility], so I [specific action you personally took]. As a result, [clear outcome or lesson].';
+        }
+
+        if (preg_match('/\b(?:weakness|improving|improve)\b/iu', $lowerQuestion) === 1) {
+            return $baseAnswer !== ''
+                ? $baseAnswer . ' I am improving it by [specific action], and I can show progress through [result or habit].'
+                : 'One weakness I am improving is [real weakness]. I noticed it when [specific context], so I now [specific improvement action]. I can see progress because [result or habit].';
+        }
+
+        if (preg_match('/\b(?:strength|strongest|good at|best skill)\b/iu', $lowerQuestion) === 1) {
+            return $baseAnswer !== ''
+                ? $baseAnswer . ' A strong proof point is [specific example], where I used this strength to [result].'
+                : 'One of my strongest skills is [strength]. I used it when [specific example], where I [specific action] and helped achieve [result].';
+        }
+
+        if (preg_match('/\b(?:why do you want|why are you interested|why this role|why our company|motivation)\b/iu', $lowerQuestion) === 1) {
+            return $baseAnswer !== ''
+                ? $baseAnswer . ' This role interests me because [specific reason], and I can contribute through [relevant skill or experience].'
+                : 'I want this role because [specific reason connected to the company or work]. My experience in [relevant skill] fits the role, and I can contribute by [specific contribution].';
+        }
+
+        if (preg_match('/\b(?:why should we hire|hire you|best candidate)\b/iu', $lowerQuestion) === 1) {
+            return $baseAnswer !== ''
+                ? $baseAnswer . ' The strongest reason to hire me is [specific proof], which shows I can [role-related result].'
+                : 'You should hire me because I bring [relevant skill], [experience], and [work habit]. For example, [brief proof], and I would use those strengths to [role-related result].';
+        }
+
+        if (preg_match('/\b(?:how would you|how do you|diagnose|troubleshoot|process|approach|steps?)\b/iu', $lowerQuestion) === 1) {
+            return $baseAnswer !== ''
+                ? $baseAnswer . ' I would start with [first step], take [specific action], and check the result by [validation step].'
+                : 'I would start by [first step], then [specific action or analysis], and finally [how you would check the result]. This approach helps me solve the problem clearly and avoid guessing.';
+        }
+
+        return $baseAnswer !== ''
+            ? $baseAnswer . ' For example, [specific example], I took [specific action], and the result was [clear result or lesson].'
+            : 'My direct answer is [clear answer to the question]. For example, [specific example], I took [specific action], and the result was [clear result or lesson].';
+    }
+}
+
 if (! function_exists('review_better_answer_fallback')) {
     function review_better_answer_fallback(mixed $answerSource = null, mixed $questionSource = null): string
     {
+        $questionText = review_question_text($questionSource);
         $answerText = review_answer_text($answerSource);
-        if ($answerText === '' || review_text_looks_like_question($answerText, $questionSource)) {
+        if (! review_answer_is_usable_for_better_answer($answerText, $questionSource)) {
+            if ($questionText !== '') {
+                return review_question_based_better_answer($questionText);
+            }
+
             return 'No AI-enhanced answer was generated yet. Submit a complete answer so the Better Answer can be based on your real details for this question.';
         }
 
         $answerText = trim(preg_replace('/\s+/u', ' ', $answerText) ?? $answerText);
 
-        if ($answerText !== '' && preg_match('/[.!?]$/u', $answerText) !== 1) {
-            $answerText .= '.';
+        if ($questionText !== '') {
+            return review_question_based_better_answer($questionText, $answerText);
         }
 
-        $draft = preg_match('/^\s*(?:I|we|my|our)\b/iu', $answerText) === 1
-            ? $answerText
-            : 'I would answer: ' . $answerText;
-
-        if (preg_match('/\b(?:as a result|result(?:ed)?|outcome|resolved|improved|learned|lesson|led to|\d+(?:\.\d+)?%?)\b/iu', $draft) !== 1) {
-            $draft .= ' I would close with my true result, effect, or lesson from this experience.';
-        }
-
-        return $draft;
+        return review_question_based_better_answer('', $answerText);
     }
 }
 

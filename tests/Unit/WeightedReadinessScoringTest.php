@@ -111,6 +111,14 @@ class WeightedReadinessScoringTest extends TestCase
         $adviceOnly = review_better_answer_text('Add more details about the result.', $answer, ['question_text' => $question]);
         $this->assertStringContainsString('Karyl from Cebu', $adviceOnly);
         $this->assertStringNotContainsString('Add more details', $adviceOnly);
+
+        $shortAnswer = review_better_answer_text('', ['answer_text' => 'ok'], ['question_text' => $question]);
+        $this->assertStringContainsString('Hi, I am [your name]', $shortAnswer);
+        $this->assertStringContainsString('[your relevant experience]', $shortAnswer);
+
+        $behavioralAnswer = review_better_answer_text('', ['answer_text' => ''], ['question_text' => 'Tell me about a time you helped a customer.']);
+        $this->assertStringContainsString('In a customer situation', $behavioralAnswer);
+        $this->assertStringContainsString('[result or lesson]', $behavioralAnswer);
     }
 
     public function test_it_uses_the_versioned_readiness_weights_for_relevance(): void
