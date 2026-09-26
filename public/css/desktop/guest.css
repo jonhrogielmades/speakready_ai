@@ -2441,8 +2441,8 @@
           }
 
           #hero .hero-demo-preview-col {
-             --hero-preview-max-width: clamp(620px, 47vw, 780px);
-             --hero-preview-side-gap: clamp(16px, 2.2vw, 28px);
+             --hero-preview-max-width: clamp(720px, 52vw, 980px);
+             --hero-preview-side-gap: clamp(8px, 1vw, 16px);
              overflow: hidden;
           }
 
@@ -2500,8 +2500,8 @@
           }
 
           #landing #hero .hero-demo-preview-col .desktop-preview-shell-img {
-             aspect-ratio: 16 / 10;
-             max-height: clamp(260px, 38vh, 410px);
+             aspect-ratio: 3 / 2;
+             max-height: none;
           }
 
           #landing #hero .hero-demo-preview-col .desktop-preview-copy {
@@ -2528,8 +2528,8 @@
 
           @media (min-width: 992px) and (max-width: 1199.98px) {
              #hero .hero-demo-preview-col {
-                --hero-preview-max-width: clamp(560px, 48vw, 640px);
-                --hero-preview-side-gap: clamp(12px, 1.8vw, 22px);
+                --hero-preview-max-width: clamp(600px, 53vw, 680px);
+                --hero-preview-side-gap: clamp(8px, 1vw, 12px);
              }
 
              #hero .hero-home-container {

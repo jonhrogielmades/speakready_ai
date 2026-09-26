@@ -4276,20 +4276,20 @@ html body #sec-interview-session .ai-avatar-panel #aiCoachHeadButton.ai-coach-he
 html body #sec-interview-session .ai-avatar-panel #interviewControls.interview-panel-actions .session-action-btn,
 html body #sec-interview-session .ai-avatar-panel #interviewControls .session-action-btn {
     flex: 0 0 auto !important;
-    width: auto !important;
-    min-width: 80px !important;
-    max-width: none !important;
-    height: 32px !important;
-    min-height: 32px !important;
-    max-height: 32px !important;
-    padding: 0 10px !important;
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    padding: 0 6px !important;
     border: none !important;
     border-radius: 10px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
-    font-size: 0.68rem !important;
+    font-size: 0.58rem !important;
     font-weight: 800 !important;
     line-height: 1.1 !important;
     white-space: nowrap !important;
@@ -4305,7 +4305,6 @@ html body #sec-interview-session .ai-avatar-panel #interviewControls .session-re
 
 html body #sec-interview-session .ai-avatar-panel #interviewControls.interview-panel-actions .session-end-btn,
 html body #sec-interview-session .ai-avatar-panel #interviewControls .session-end-btn {
-    min-width: 102px !important;
     background: #e11d48 !important;
     box-shadow: 0 4px 15px rgba(225, 29, 72, 0.28) !important;
 }
@@ -4313,30 +4312,27 @@ html body #sec-interview-session .ai-avatar-panel #interviewControls .session-en
 @media (max-width: 390px) {
     html body #sec-interview-session .ai-avatar-panel #interviewControls.interview-panel-actions .session-action-btn,
     html body #sec-interview-session .ai-avatar-panel #interviewControls .session-action-btn {
-        min-width: 72px !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        max-height: 30px !important;
-        padding: 0 7px !important;
-        font-size: 0.6rem !important;
-    }
-
-    html body #sec-interview-session .ai-avatar-panel #interviewControls.interview-panel-actions .session-end-btn,
-    html body #sec-interview-session .ai-avatar-panel #interviewControls .session-end-btn {
-        min-width: 90px !important;
+        width: 62px !important;
+        min-width: 62px !important;
+        max-width: 62px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        max-height: 28px !important;
+        padding: 0 5px !important;
+        font-size: 0.54rem !important;
     }
 }
 
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls.interview-panel-voice-actions #voiceControls .voice-action-btn,
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-action-btn {
     flex: 0 0 auto !important;
-    width: auto !important;
-    min-width: 76px !important;
-    max-width: none !important;
-    height: 32px !important;
-    min-height: 32px !important;
-    max-height: 32px !important;
-    padding: 0 10px !important;
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    padding: 0 6px !important;
     border: none !important;
     border-radius: 10px !important;
     display: inline-flex !important;
@@ -4344,7 +4340,7 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
     justify-content: center !important;
     gap: 5px !important;
     box-sizing: border-box !important;
-    font-size: 0.68rem !important;
+    font-size: 0.58rem !important;
     font-weight: 800 !important;
     line-height: 1.1 !important;
     white-space: nowrap !important;
@@ -4381,12 +4377,14 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
 @media (max-width: 390px) {
     html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls.interview-panel-voice-actions #voiceControls .voice-action-btn,
     html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voiceControls .voice-action-btn {
-        min-width: 66px !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        max-height: 30px !important;
-        padding: 0 7px !important;
+        width: 62px !important;
+        min-width: 62px !important;
+        max-width: 62px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        max-height: 28px !important;
+        padding: 0 5px !important;
         gap: 4px !important;
-        font-size: 0.6rem !important;
+        font-size: 0.54rem !important;
     }
 }
