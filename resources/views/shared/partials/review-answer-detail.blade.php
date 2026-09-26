@@ -36,10 +36,8 @@
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
  $whatWorked = $reviewFeedbackText($contentAlignment['what_worked'] ?? '');
  $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
- $nextAttemptSteps = $reviewFeedbackItems($contentAlignment['next_attempt_steps'] ?? [], 2);
  $supportingExcerpts = $listItems($contentAlignment['evidence_quotes'] ?? ($evidenceMap['supporting_excerpts'] ?? []), 1);
  $improvementFocus = $reviewFeedbackText($contentAlignment['improvement_focus'] ?? '');
- $impactExplanation = $reviewFeedbackText($contentAlignment['impact'] ?? '');
  if ($improvementFocus === '' && ! empty($missingPoints)) {
  $improvementFocus = $missingPoints[0];
  }
@@ -48,16 +46,6 @@
  }
  if ($improvementFocus === '') {
  $improvementFocus = 'Add one specific example, action, or result.';
- }
- $nextPractice = $reviewFeedbackText($contentAlignment['action'] ?? '');
- if ($nextPractice === '' && ! empty($nextAttemptSteps)) {
- $nextPractice = $nextAttemptSteps[0];
- }
- if ($nextPractice === '') {
- $nextPractice = $reviewFeedbackText($answer->recommendation_text ?? '');
- }
- if ($nextPractice === '') {
- $nextPractice = 'Try again with one clear example and one result.';
  }
  $betterAnswer = review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $questionSource);
  $rubricLevel = trim((string) ($answer->rubric_level ?? ''));
@@ -208,18 +196,6 @@
  <p>{{ $improvementFocus }}</p>
  </section>
 
- @if($impactExplanation !== '')
- <section class="review-answer-section">
- <div class="review-block-title"><i class="fa-solid fa-chart-line"></i><span>Why It Matters</span></div>
- <p>{{ $impactExplanation }}</p>
- </section>
- @endif
-
- <section class="review-answer-section">
- <div class="review-block-title"><i class="fa-solid fa-location-arrow"></i><span>Next Practice</span></div>
- <p>{{ $nextPractice }}</p>
- </section>
-
  @if($cameraVisible)
  <section class="review-answer-section review-answer-section-wide review-camera-card">
  <div class="review-block-title"><i class="fa-solid fa-video"></i><span>Camera Coaching Note</span></div>
@@ -235,7 +211,7 @@
  <p>{{ $answerDisplay }}</p>
  </section>
  <section class="review-better-example">
- <span>Better Example</span>
+ <span>Better Answer</span>
  <p>{{ $betterAnswer }}</p>
  </section>
  </div>

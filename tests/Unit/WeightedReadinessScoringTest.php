@@ -91,6 +91,28 @@ class WeightedReadinessScoringTest extends TestCase
         }
     }
 
+    public function test_review_better_answer_uses_provider_draft_or_answer_based_fallback(): void
+    {
+        $question = 'Please introduce yourself, including your name, location, and background.';
+        $answer = ['answer_text' => 'I am Karyl from Cebu and I have customer service experience.'];
+
+        $providerDraft = review_better_answer_text(
+            'Better example: I would answer: I am Karyl from Cebu, and I have customer service experience helping customers clearly.',
+            $answer,
+            ['question_text' => $question]
+        );
+
+        $this->assertSame('I am Karyl from Cebu, and I have customer service experience helping customers clearly.', $providerDraft);
+
+        $questionOnly = review_better_answer_text($question, $answer, ['question_text' => $question]);
+        $this->assertStringContainsString('Karyl from Cebu', $questionOnly);
+        $this->assertStringNotContainsString($question, $questionOnly);
+
+        $adviceOnly = review_better_answer_text('Add more details about the result.', $answer, ['question_text' => $question]);
+        $this->assertStringContainsString('Karyl from Cebu', $adviceOnly);
+        $this->assertStringNotContainsString('Add more details', $adviceOnly);
+    }
+
     public function test_it_uses_the_versioned_readiness_weights_for_relevance(): void
     {
         $score = AIService::calculateWeightedReadinessScore(

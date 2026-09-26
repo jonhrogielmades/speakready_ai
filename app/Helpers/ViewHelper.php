@@ -306,13 +306,10 @@ if (! function_exists('review_better_answer_fallback')) {
     {
         $answerText = review_answer_text($answerSource);
         if ($answerText === '' || review_text_looks_like_question($answerText, $questionSource)) {
-            return 'No better answer draft is available yet.';
+            return 'No AI-enhanced answer was generated yet. Submit a complete answer so the Better Answer can be based on your real details for this question.';
         }
 
         $answerText = trim(preg_replace('/\s+/u', ' ', $answerText) ?? $answerText);
-        $answerText = mb_strlen($answerText) > 420
-            ? rtrim(mb_substr($answerText, 0, 417), " \t\n\r\0\x0B.,;:") . '...'
-            : $answerText;
 
         if ($answerText !== '' && preg_match('/[.!?]$/u', $answerText) !== 1) {
             $answerText .= '.';
@@ -323,7 +320,7 @@ if (! function_exists('review_better_answer_fallback')) {
             : 'I would answer: ' . $answerText;
 
         if (preg_match('/\b(?:as a result|result(?:ed)?|outcome|resolved|improved|learned|lesson|led to|\d+(?:\.\d+)?%?)\b/iu', $draft) !== 1) {
-            $draft .= ' I would close with [true result, effect, or lesson].';
+            $draft .= ' I would close with my true result, effect, or lesson from this experience.';
         }
 
         return $draft;
@@ -336,11 +333,15 @@ if (! function_exists('review_better_answer_text')) {
         $questionSource ??= $answerSource;
         $clean = review_feedback_without_question_text((string) $text, $questionSource);
         $clean = preg_replace('/^\s*(?:(?:suggested|sample|better)\s+)?(?:better\s+)?(?:answer|response|example|draft)\s*[:\-]\s*/iu', '', $clean) ?? $clean;
+        $clean = preg_replace('/^\s*(?:I\s+would\s+answer|I\s+would\s+say)\s*[:\-]\s*/iu', '', $clean) ?? $clean;
         $clean = trim($clean);
+        $looksLikeAdvice = preg_match('/^\s*(?:a\s+stronger\s+answer\s+would|the\s+answer\s+should|you\s+should|try\s+to|make\s+sure|add|include|use|practice)\b/iu', $clean) === 1
+            && preg_match('/\b(?:I|we|my|our)\b/iu', $clean) !== 1;
 
         if ($clean !== ''
             && review_text_word_count($clean) >= 5
             && ! review_text_looks_like_question($clean, $questionSource)
+            && ! $looksLikeAdvice
         ) {
             return $clean;
         }

@@ -337,7 +337,7 @@
  </div>
  </div>
  <div class="col-md-6">
- <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved me-2"></i>Better Answer Draft</label>
+ <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved me-2"></i>Better Answer</label>
  <div style="color:var(--tx);background:rgba(16, 185, 129, 0.05);padding:16px;border-radius:12px;border:1px solid rgba(16, 185, 129, 0.2);height:100%;font-size:0.95rem;line-height:1.6;">
  {{ review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $answer->question ?? $answer) }}
  </div>
