@@ -21,7 +21,7 @@
  $questions = \App\Models\Question::where('interview_session_id', $sessionRecord->id)
  ->orderBy('id')
  ->get();
- 
+
  // Fallback to local category questions if none were specifically generated
  if ($questions->isEmpty()) {
  // Try to match exact difficulty and active status first
@@ -30,7 +30,7 @@
  ->where('difficulty', $sessionRecord->difficulty)
  ->when(!empty($selectedQuestionTypes), fn($query) => $query->whereIn('type', $selectedQuestionTypes))
  ->inRandomOrder()->limit($num)->get();
- 
+
  // If no questions match the difficulty, fallback to any active questions in category
  if ($questions->isEmpty()) {
  $questions = \App\Models\Question::where('category_id', $sessionRecord->category_id)
@@ -99,13 +99,13 @@
  <img src="{{ asset('img/ai_interviewer_avatar.png') }}" alt="AI Interviewer" style="width:100%;height:100%;object-fit:cover;">
  </div>
  </div>
- 
+
  <!-- Circular Audio Spectrum Waveform -->
  <div class="circular-spectrum sound-wave">
  @for ($i = 0; $i < 36; $i++)
- @php 
+ @php
  // Use a pseudo-random sequence so it looks dynamic but is consistent
- $animClass = 'sb'. (($i * 7) % 10 + 1); 
+ $animClass = 'sb'. (($i * 7) % 10 + 1);
  $rot = $i * 10;
  @endphp
  <div class="spectrum-bar {{ $animClass }}" style="--bar-rotation: {{ $rot }}deg;"></div>
@@ -123,7 +123,7 @@
  <button type="button" class="btn btn-outline-info flex-fill session-action-btn session-repeat-btn" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question">Repeat</button>
  <button type="button" class="btn btn-outline-danger flex-fill session-action-btn session-end-btn" onclick="requestAbortInterviewSession()" style="border-radius:12px;" aria-label="End session" title="End session">End Session</button>
  </div>
- 
+
  </div>
 
  <div id="answerTranscriptControls" class="answer-transcript-controls interview-panel-voice-actions" aria-label="Voice recording controls" hidden>
@@ -158,7 +158,7 @@
  </button>
  </div>
  </div>
- 
+
  <form id="answerForm">
  <!-- Voice controls are mounted inside the interview panel. -->
 
@@ -419,7 +419,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let aiCoachRequestInFlight = false;
  let aiCoachCurrentAnswer = '';
  let aiCoachCurrentQuestionId = null;
- 
+
  // Answers state
  function defaultVoiceRecordingState() {
  return {
@@ -551,6 +551,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let serverTranscriptionUnavailable = false;
  let serverTranscriptionConsecutiveFailures = 0;
  let serverTranscriptionSessionToken = 0;
+ let liveServerTranscriptionStartPromise = null;
  let farFieldAudioContext = null;
  let farFieldAudioNodes = [];
  let cameraTrackingInFlight = false;
@@ -752,6 +753,76 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function cleanTranscriptText(value) {
  return autoCorrectTranscriptText(String(value || '').replace(/\s+/g, ' ').trim());
+ }
+
+ function sentenceEndForTranscript(sentence) {
+ const normalized = normalizeTranscriptForMatch(sentence);
+ return /^(?:what|why|how|when|where|who|which|can|could|would|should|do|did|does|is|are|am|was|were)\b/u.test(normalized)? '?': '.';
+ }
+
+ function finishTranscriptSentence(sentence) {
+ const cleaned = cleanTranscriptText(sentence).replace(/\s+([,.;:!?])/g, '$1').replace(/([,.;:!?])(?=\S)/g, '$1 ');
+ if (!cleaned) return '';
+ const withoutTrailing = cleaned.replace(/[.!?]+$/u, '').trim();
+ if (!withoutTrailing) return '';
+ return upperFirstTranscript(withoutTrailing) + sentenceEndForTranscript(withoutTrailing);
+ }
+
+ function transcriptBoundaryBefore(words, index, currentLength) {
+ if (currentLength < 8) return false;
+ const phrase = words.slice(index, index + 4).map(normalizeTranscriptForMatch).join(' ');
+ return /^(?:then|after that|afterwards|for example|for instance|as a result|because of that|finally|overall|in conclusion|the result|this helped|i learned|i also)\b/u.test(phrase);
+ }
+
+ function punctuatePlainTranscript(text) {
+ const words = wordsForTranscript(text);
+ if (words.length === 0) return '';
+ const sentences = [];
+ let current = [];
+
+ words.forEach((word, index) => {
+ if (current.length > 0 && transcriptBoundaryBefore(words, index, current.length)) {
+ sentences.push(current.join(' '));
+ current = [];
+ }
+ current.push(word);
+ if (current.length >= 34) {
+ sentences.push(current.join(' '));
+ current = [];
+ }
+ });
+
+ if (current.length > 0) sentences.push(current.join(' '));
+ return sentences.map(finishTranscriptSentence).filter(Boolean).join(' ');
+ }
+
+ function capitalizeTranscriptSentences(text) {
+ return cleanTranscriptText(text)
+ .replace(/\s+([,.;:!?])/g, '$1')
+ .replace(/([,.;:!?])(?=\S)/g, '$1 ')
+ .replace(/(^|[.!?]\s+)([\p{L}])/gu, (match, prefix, letter) => prefix + letter.toLocaleUpperCase(speechLocale));
+ }
+
+ function autoPunctuateTranscriptText(value) {
+ const text = collapseRepeatedSpeech(cleanTranscriptText(value));
+ if (!text) return '';
+ const words = wordsForTranscript(text);
+ const sentencePunctuationCount = (text.match(/[.!?]/g) || []).length;
+ const hasUsefulSentencePunctuation = sentencePunctuationCount >= Math.max(1, Math.floor(words.length / 45));
+ let punctuated = hasUsefulSentencePunctuation? capitalizeTranscriptSentences(text): punctuatePlainTranscript(text);
+
+ punctuated = punctuated
+ .replace(/\b(First|Second|Third|Finally|Overall|For example|For instance|As a result|In my experience|In my previous role|During my internship|During my project|At school|After that)\b(?![,.:;!?])/gi, match => `${upperFirstTranscript(match)},`)
+ .replace(/\s+([,.;:!?])/g, '$1')
+ .replace(/([,.;:!?])(?=\S)/g, '$1 ')
+ .replace(/,\s*([.!?])/g, '$1')
+ .trim();
+
+ if (punctuated && !/[.!?]$/u.test(punctuated)) {
+ punctuated += sentenceEndForTranscript(punctuated);
+ }
+
+ return capitalizeTranscriptSentences(punctuated);
  }
 
  function normalizeTranscriptForMatch(value) {
@@ -2235,6 +2306,46 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  microphoneStream = null;
  }
 
+ async function startLiveServerTranscriptionBackup() {
+ if (!canUseServerTranscription() || serverTranscriptionRecorder || liveServerTranscriptionStartPromise) {
+ return Boolean(serverTranscriptionRecorder);
+ }
+
+ liveServerTranscriptionStartPromise = (async () => {
+ let sourceStream = null;
+ try {
+ if (mediaStreamHasLiveAudio(voiceSessionStream)) {
+ sourceStream = voiceSessionStream.clone();
+ } else if (mediaStreamHasLiveAudio(microphoneStream)) {
+ sourceStream = microphoneStream.clone();
+ } else {
+ sourceStream = await requestMicrophoneStream();
+ }
+
+ ensureLiveMicrophoneStream(sourceStream);
+ releaseServerTranscriptionStream();
+ microphoneStream = sourceStream;
+ serverTranscriptionStream = enhanceFarFieldAudioStream(sourceStream);
+ if (!isRecording || activeTranscriptionEngine === null) {
+ releaseServerTranscriptionStream();
+ return false;
+ }
+ return startServerTranscriptionEngine();
+ } catch (error) {
+ console.warn('Live server transcription backup could not start:', error);
+ stopMediaStream(sourceStream);
+ if (activeTranscriptionEngine === 'server') {
+ setTranscriptionStatus(microphoneErrorMessage(error), '#f87171');
+ }
+ return false;
+ }
+ })().finally(() => {
+ liveServerTranscriptionStartPromise = null;
+ });
+
+ return liveServerTranscriptionStartPromise;
+ }
+
  function serverTranscriptionFilename(blob) {
  const type = String(blob?.type || serverTranscriptionMimeType || '').toLowerCase();
  if (type.includes('mp4')) return 'speech.mp4';
@@ -2415,7 +2526,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  renderSpeechTranscript();
  }
 
- if (isRecording && activeTranscriptionEngine === 'server') {
+ if (isRecording && (activeTranscriptionEngine === 'server' || serverTranscriptionRecorder)) {
  setTranscriptionStatus('Listening - live transcript is updating');
  }
  }
@@ -2645,7 +2756,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  recognitionActive = true;
  setTranscriptionStatus('Listening - live transcript is updating');
  };
- 
+
  recognition.onsoundstart = function() {
  browserNoSpeechErrorCount = 0;
  if (lastSpeechEnd > 0) {
@@ -2656,7 +2767,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  }
  };
- 
+
  recognition.onsoundend = function() {
  lastSpeechEnd = Date.now();
  };
@@ -2779,7 +2890,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  markCameraUnavailable('browser_unsupported');
  }
  }
- 
+
  function setCameraStat(id, content, className = 'text-secondary', asHtml = false) {
  const element = document.getElementById(id);
  if (!element) return;
@@ -3052,6 +3163,16 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  }
  return text;
+ }
+
+ function applyStopPunctuationToCurrentAnswer() {
+ if (!isHybridTranscriptionMode()) return false;
+ const existingText = currentAnswerTextareaText();
+ const punctuatedText = autoPunctuateTranscriptText(existingText);
+ if (!punctuatedText || punctuatedText === existingText) return false;
+ setCurrentAnswerTextareaText(punctuatedText);
+ triggerAnalysis();
+ return true;
  }
 
  function focusAnswerTextarea() {
@@ -4160,16 +4281,16 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function startInterviewSession() {
  if (interviewStarted || interviewTerminated) return;
- 
+
  interviewStarted = true;
  document.getElementById('workspaceWrapper').style.display = 'block';
  document.getElementById('workspaceWrapper').classList.toggle('real-interview-mode', liveFeedbackMode === 'real_interview');
  document.getElementById('interviewControls').style.opacity = '1';
  document.getElementById('interviewControls').style.pointerEvents = 'auto';
  enterMobileFullscreen();
- 
+
  if (cameraDetectionEnabled) initCamera();
- 
+
  if(isVoiceTranscriptionMode()) {
  applyResponseModeUi();
  const recorderUnavailableMessage = voiceRecordingUnavailableMessage();
@@ -4203,7 +4324,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const s = (timerSeconds % 60).toString().padStart(2, '0');
  const interviewTimer = document.getElementById('interviewTimer');
  if (interviewTimer) interviewTimer.innerText = m + ':' + s;
- 
+
  if(timerSeconds % 30 === 0) autoSaveState(); // auto save every 30s
  }, 1000);
 
@@ -4211,7 +4332,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  (async () => {
  await loadQuestion(currentQIdx, { append:!restoredChat });
  })();
- 
+
  if (!answerListenersBound) {
  answerListenersBound = true;
  const answerTextarea = document.getElementById('answerTextarea');
@@ -4251,7 +4372,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (!q) return;
  resetAiCoachPanel();
  setAnswerInputEnabled(false);
- 
+
  document.getElementById('aiQuestionText').innerText = '...';
  document.getElementById('qCounter').innerText = isOpeningQuestion(q)? 'Intro': Math.min(questionDisplayNumber(idx), targetQuestionCount) + '/' + targetQuestionCount;
 
@@ -4271,7 +4392,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  resetSpeechRecognitionBufferFromTextarea();
  renderVoiceSessionPanel(idx);
  lastTimelineCaptureAt = 0;
- 
+
  setRepeatPrompt(q.question_text, {
  questionId: q.id,
  phase: 'question',
@@ -4280,7 +4401,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  await speakQuestion(q.question_text, { startTimerAfterSpeech: true, questionId: q.id });
  if (interviewTerminated || interviewEnding) return;
  setAnswerInputEnabled(true);
- 
+
  triggerAnalysis();
  scheduleStateSave();
  }
@@ -4475,14 +4596,14 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const currentQuestion = questions[currentQIdx]? questions[currentQIdx].question_text: '';
  const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
  const charCount = text.length;
-  
+
  const wordCountTarget = document.getElementById('wordCount');
  const charCountTarget = document.getElementById('charCount');
  if (wordCountTarget) wordCountTarget.innerText = wordCount + ' words';
  if (charCountTarget) charCountTarget.innerText = charCount + ' characters';
 
  const starSignals = detectStarSignals(text);
- 
+
  updateStarIcon('starS', starSignals.hasS);
  updateStarIcon('starT', starSignals.hasT);
  updateStarIcon('starA', starSignals.hasA);
@@ -4751,6 +4872,16 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return false;
  }
 
+ if (!voiceOnly && engine === 'browser' && canUseServerTranscription()) {
+ startLiveServerTranscriptionBackup().then(startedBackup => {
+ if (startedBackup && isRecording && activeTranscriptionEngine === 'browser') {
+ setTranscriptionStatus('Listening - live transcript is updating');
+ }
+ }).catch(error => {
+ console.warn('Live server transcription backup failed:', error);
+ });
+ }
+
  if (voiceOnly) {
  setTranscriptionStatus('Voice-only recording. Text transcription is off.');
  }
@@ -4793,8 +4924,13 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  finalizeInterimTranscript();
  shouldAutoRestartRecognition = false;
+ if (liveServerTranscriptionStartPromise) {
+ await liveServerTranscriptionStartPromise.catch(error => {
+ console.warn('Live server transcription start wait before pause failed:', error);
+ });
+ }
 
- const usedServerTranscription = activeTranscriptionEngine === 'server';
+ const usedServerTranscription = activeTranscriptionEngine === 'server' || Boolean(serverTranscriptionRecorder);
  const usedBrowserTranscription = activeTranscriptionEngine === 'browser';
  if(recognition && usedBrowserTranscription) {
  try {
@@ -4844,6 +4980,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return false;
  });
  }
+ const punctuationApplied = isHybridTranscriptionMode()? applyStopPunctuationToCurrentAnswer(): false;
  if (isHybridTranscriptionMode() && answersData[currentQIdx]) {
  const textareaText = currentAnswerTextareaText();
  answersData[currentQIdx].text = textareaText;
@@ -4856,7 +4993,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  resetSpeechRecognitionBufferFromTextarea();
  if (isHybridTranscriptionMode()) {
  const hasTranscriptText = currentAnswerTextareaText().trim() !== '';
- setTranscriptionStatus(hasTranscriptText? (generatedFinalTranscript? 'Recording stopped - transcript generated and ready to edit': 'Recording stopped - transcript is ready to edit'): 'Recording stopped - no speech detected yet', hasTranscriptText? '#16a34a': '#fbbf24');
+ const readyMessage = generatedFinalTranscript
+ ? (punctuationApplied? 'Recording stopped - transcript generated with punctuation': 'Recording stopped - transcript generated and ready to edit')
+ : (punctuationApplied? 'Recording stopped - punctuation added and ready to edit': 'Recording stopped - transcript is ready to edit');
+ setTranscriptionStatus(hasTranscriptText? readyMessage: 'Recording stopped - no speech detected yet', hasTranscriptText? '#16a34a': '#fbbf24');
  } else if (isVoiceOnlyMode()) {
  setTranscriptionStatus('Recording stopped');
  } else {
@@ -4956,7 +5096,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  chatHistory: interviewChatHistory,
  updated_at: new Date().toISOString()
  }));
- 
+
  return managedFetch('{{ route("interview.saveState") }}', {
  method: 'POST',
  body: formData,
@@ -4996,12 +5136,12 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  bubble.style.boxSizing = 'border-box';
  bubble.style.lineHeight = '1.35';
  bubble.style.fontSize = '0.76rem';
- 
+
  bubble.style.background = 'rgba(59,130,246,0.15)';
  bubble.style.border = '1px solid rgba(59,130,246,0.3)';
  bubble.style.alignSelf = 'flex-end';
  bubble.innerHTML = '<strong><i class="fa-solid fa-user me-1"></i> You</strong><br>' + escapeHtml(text);
- 
+
  chatContainer.appendChild(bubble);
 
  if (record) {
@@ -5036,7 +5176,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  console.warn('Final transcription flush before submit failed:', error);
  }
  syncHybridAnswerStateFromTextarea();
- 
+
  const timedOut = options.timedOut === true;
  let answerText = currentAnswerTextareaText().trim();
  const localVoiceRecording = isVoiceTranscriptionMode()? voiceSessionRecordings.get(voiceSessionKeyFor()): null;
@@ -5108,7 +5248,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  stopQuestionTimer();
  captureTranscriptTimeline(timedOut? 'timed_out_submit': 'submitted', true);
- 
+
  const chatContainer = document.getElementById('chatTranscriptContainer');
  chatContainer.style.display = 'flex';
  const thinkingBubble = document.createElement('div');
@@ -5122,7 +5262,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  thinkingBubble.style.background = 'rgba(255,255,255,0.05)';
  thinkingBubble.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-muted me-2"></i> <em>Interviewer is preparing the next question...</em>';
  chatContainer.appendChild(thinkingBubble);
- 
+
  const formData = new FormData();
  formData.append('_token', '{{ csrf_token() }}');
  formData.append('session_id', interviewSessionId);
