@@ -13,6 +13,7 @@ use App\Models\InterviewSession;
 use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -759,7 +760,7 @@ class UserSideHardeningTest extends TestCase
  }
 
  $mobileResponse
- ->assertSee('css/mobile/interview/setup.css?v=16', false)
+ ->assertSee('css/mobile/interview/setup.css?v=17', false)
  ->assertSee('css/mobile/interview/setup-2.css?v=3', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
@@ -779,9 +780,56 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('-webkit-overflow-scrolling: touch !important;', $mobileSetupCss);
  }
 
+ public function test_interview_setup_starts_without_auto_selected_choices_and_locks_future_steps(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
+ $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+ $desktopResponse = $this->actingAs($user)
+ ->get(route('interview.setup'))
+ ->assertOk();
+ $mobileResponse = $this->actingAs($user)
+ ->withHeader('User-Agent', $mobileUserAgent)
+ ->get(route('interview.setup'))
+ ->assertOk();
+
+ foreach ([$desktopResponse, $mobileResponse] as $response) {
+ $content = $response->getContent();
+
+ $response
+ ->assertSee('<option value="" disabled selected>Choose a practice scenario</option>', false)
+ ->assertSee('<option value="" disabled selected>Not yet selected</option>', false)
+ ->assertSee('id="difficultyError"', false)
+ ->assertSee('id="cameraDetectionError"', false)
+ ->assertSee('id="responseModeError"', false)
+ ->assertSee('setup-stepper-lock', false)
+ ->assertSee('function getMaxAccessibleSetupStepIndex', false);
+
+ $this->assertStringNotContainsString('name="difficulty" value="medium" class="setup-input" checked', $content);
+ $this->assertStringNotContainsString('name="camera_detection" value="0" class="setup-input" checked', $content);
+ $this->assertStringNotContainsString('<option value="10" selected', $content);
+ $this->assertStringNotContainsString('<option value="0" selected', $content);
+ $this->assertStringNotContainsString('<option value="standard" selected', $content);
+ $this->assertStringNotContainsString('<option value="coaching" selected', $content);
+ $this->assertStringNotContainsString('name="question_types[]" value="Behavioral" checked', $content);
+ $this->assertStringNotContainsString('name="question_types[]" value="Situational" checked', $content);
+ $this->assertStringNotContainsString('name="response_mode" value="voice" class="setup-input" checked', $content);
+ }
+
+ $desktopSetupCss = file_get_contents(public_path('css/desktop/interview/setup.css'));
+ $mobileSetupCss = file_get_contents(public_path('css/mobile/interview/setup.css'));
+
+ $this->assertStringContainsString('.setup-stepper-item.is-locked', $desktopSetupCss);
+ $this->assertStringContainsString('.setup-stepper-item.is-locked', $mobileSetupCss);
+ $this->assertStringContainsString('.camera-mode-list.setup-field-invalid', $desktopSetupCss);
+ $this->assertStringContainsString('.camera-mode-list.setup-field-invalid', $mobileSetupCss);
+ }
+
  public function test_interview_setup_shows_added_question_count_options_on_desktop_and_mobile(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Setting::setVal('int_max_questions', 30, 'interview', 'integer');
  $this->category();
  $expectedOptions = [
  '<option value="1"',
@@ -1050,6 +1098,7 @@ class UserSideHardeningTest extends TestCase
  public function test_interview_start_accepts_added_question_counts(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Setting::setVal('int_max_questions', 30, 'interview', 'integer');
  $category = $this->category();
 
  foreach ([1, 3, 25, 30] as $count) {

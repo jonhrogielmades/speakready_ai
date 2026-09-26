@@ -71,7 +71,10 @@ final class FeedbackEvidencePresenter
         $feedback = self::cleanFeedback($answer->ai_feedback ?: data_get($alignment, 'observation', ''), $question);
         $betterAnswer = self::betterAnswer((string) ($answer->better_sample_answer ?? ''), $answer, $question);
         $hasVoiceRecording = trim((string) ($answer->voice_recording_path ?? '')) !== '';
-        $isVoiceOnlyAnswer = $hasVoiceRecording && strtolower((string) ($answer->response_mode ?? '')) === 'voice';
+        $typedAnswerText = self::cleanText((string) ($answer->answer_text ?? ''));
+        $isVoiceOnlyAnswer = $hasVoiceRecording
+            && strtolower((string) ($answer->response_mode ?? '')) === 'voice'
+            && $typedAnswerText === '';
 
         return (object) [
             'number' => $index + 1,
@@ -393,12 +396,12 @@ final class FeedbackEvidencePresenter
 
     private static function answerDisplay(InterviewAnswer $answer, string $answerText, bool $hasVoiceRecording, bool $isVoiceOnlyAnswer): string
     {
-        if ($answerText !== '') {
-            return self::limitText($answerText, 260);
+        if ($isVoiceOnlyAnswer) {
+            return 'Voice answer recorded for feedback.';
         }
 
-        if ($isVoiceOnlyAnswer) {
-            return 'Voice answer saved. Feedback is based on the saved voice session.';
+        if ($answerText !== '') {
+            return self::limitText($answerText, 260);
         }
 
         return $hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer.' : 'No answer text recorded.';

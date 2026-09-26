@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=16') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=17') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=3') }}" data-page-style="interview-setup-2">
 @endpush
 
@@ -95,9 +95,9 @@
  ];
  })
  ->values();
- $firstScenario = $scenarioOptions->first();
- $selectedCategoryId = (int) old('category_id', $firstScenario['category_id']?? 0);
- $selectedScenario = $scenarioOptions->first(fn ($scenario) => (int) $scenario['category_id'] === $selectedCategoryId)?? $scenarioOptions->first();
+ $selectedCategoryId = old('category_id');
+ $selectedCategoryId = $selectedCategoryId === null || $selectedCategoryId === ''? null: (int) $selectedCategoryId;
+ $selectedScenario = $selectedCategoryId? $scenarioOptions->first(fn ($scenario) => (int) $scenario['category_id'] === $selectedCategoryId): null;
  $targetFieldMode = 'job';
  $targetFieldCopies = [
  'job' => [
@@ -123,15 +123,16 @@
  }
  $defaultTimeLimitSetting = (int) \App\Support\SystemSettings::value('int_time_limit', 0);
  $setupDefaults = [
- 'difficulty' => old('difficulty', 'medium'),
- 'num_questions' => (string) old('num_questions', $defaultQuestionSetting),
- 'time_limit' => (string) old('time_limit', $defaultTimeLimitSetting),
- 'interview_focus' => old('interview_focus', $selectedScenario['focus']?? 'Job Interview'),
- 'ai_assistance_level' => old('ai_assistance_level', 'standard'),
- 'live_feedback_mode' => old('live_feedback_mode', 'coaching'),
- 'response_mode' => old('response_mode', 'voice'),
+ 'difficulty' => old('difficulty', ''),
+ 'num_questions' => (string) old('num_questions', ''),
+ 'time_limit' => (string) old('time_limit', ''),
+ 'interview_focus' => old('interview_focus', $selectedScenario['focus']?? ''),
+ 'ai_assistance_level' => old('ai_assistance_level', ''),
+ 'live_feedback_mode' => old('live_feedback_mode', ''),
+ 'response_mode' => old('response_mode', ''),
  ];
- $selectedQuestionTypes = old('question_types', ['Behavioral', 'Situational']);
+ $selectedQuestionTypes = old('question_types', []);
+ $selectedQuestionTypes = is_array($selectedQuestionTypes)? $selectedQuestionTypes: [];
  $hasScenarioOptions = $scenarioOptions->isNotEmpty();
 @endphp
 
@@ -220,6 +221,9 @@
  </label>
  <div class="setup-select-wrap">
  <select class="oinp setup-input" name="category_id" id="valScenario" aria-describedby="scenarioHelp{{ $hasScenarioOptions? '': ' scenarioEmptyState' }}" aria-invalid="{{ $hasScenarioOptions? 'false': 'true' }}" required>
+ @if($hasScenarioOptions)
+ <option value="" disabled {{ $selectedScenario? '': 'selected' }}>Choose a practice scenario</option>
+ @endif
  @forelse($scenarioOptions as $scenario)
  <option value="{{ $scenario['category_id'] }}"
  data-focus="{{ $scenario['focus'] }}"
@@ -320,12 +324,14 @@
  <span class="structure-difficulty-icon" aria-hidden="true"><i class="fa-solid fa-shield-alt"></i></span>
  </label>
  </div>
+ <div class="setup-inline-error" id="difficultyError" role="alert" hidden>Select a difficulty level.</div>
 
  <div class="structure-select-grid">
  <div>
  <label class="olbl" for="valNumQuestions">Number of Questions</label>
  <div class="structure-select-wrap">
- <select class="oinp setup-input" name="num_questions" id="valNumQuestions">
+ <select class="oinp setup-input" name="num_questions" id="valNumQuestions" required>
+ <option value="" disabled {{ $setupDefaults['num_questions'] === '' ? 'selected': '' }}>Not yet selected</option>
  @foreach($questionOptions as $questionCount)
  <option value="{{ $questionCount }}" {{ $setupDefaults['num_questions'] === (string) $questionCount ? 'selected': '' }}>{{ $questionCount }} {{ $questionCount === 1 ? 'Question' : 'Questions' }}</option>
  @endforeach
@@ -335,7 +341,8 @@
  <div>
  <label class="olbl" for="valTimeLimit">Time Limit</label>
  <div class="structure-select-wrap">
- <select class="oinp setup-input" name="time_limit" id="valTimeLimit">
+ <select class="oinp setup-input" name="time_limit" id="valTimeLimit" required>
+ <option value="" disabled {{ $setupDefaults['time_limit'] === ''? 'selected': '' }}>Not yet selected</option>
  <option value="0" {{ $setupDefaults['time_limit'] === '0'? 'selected': '' }}>No Limit</option>
  <option value="1" {{ $setupDefaults['time_limit'] === '1'? 'selected': '' }}>1 Minute per Question</option>
  <option value="2" {{ $setupDefaults['time_limit'] === '2'? 'selected': '' }}>2 Minutes per Question</option>
@@ -355,11 +362,9 @@
  </div>
  <p class="setup-inclusive-copy">Turn camera-based body-language detection on or off for this interview.</p>
  @php
- $inclusive = Auth::user()->profile?->inclusive_preferences?? [];
- $cameraDetectionOn = filter_var(
- old('camera_detection', old('camera_coaching', data_get($inclusive, 'camera_detection', data_get($inclusive, 'camera_coaching', false)))),
- FILTER_VALIDATE_BOOLEAN
- );
+ $cameraDetectionValue = old('camera_detection', old('camera_coaching', null));
+ $cameraDetectionSelected = $cameraDetectionValue !== null && $cameraDetectionValue !== '';
+ $cameraDetectionOn = $cameraDetectionSelected && filter_var($cameraDetectionValue, FILTER_VALIDATE_BOOLEAN);
  @endphp
  <input type="hidden" name="separate_language_scoring" value="0">
  <input type="hidden" name="extended_time" value="0">
@@ -368,20 +373,21 @@
  <input type="hidden" name="simplified_questions" value="0">
  <div class="inclusive-option-list camera-mode-list" role="radiogroup" aria-label="Camera body-language detection">
  <label class="inclusive-option camera-mode-option">
- <input type="radio" name="camera_detection" value="1" class="setup-input" {{ $cameraDetectionOn? 'checked': '' }}>
+ <input type="radio" name="camera_detection" value="1" class="setup-input" {{ $cameraDetectionSelected && $cameraDetectionOn? 'checked': '' }}>
  <span class="camera-mode-copy">
  <strong>Camera On</strong>
  <small>Detects body language</small>
  </span>
  </label>
  <label class="inclusive-option camera-mode-option">
- <input type="radio" name="camera_detection" value="0" class="setup-input" {{! $cameraDetectionOn? 'checked': '' }}>
+ <input type="radio" name="camera_detection" value="0" class="setup-input" {{ $cameraDetectionSelected &&! $cameraDetectionOn? 'checked': '' }}>
  <span class="camera-mode-copy">
  <strong>Camera Off</strong>
  <small>No body-language detection</small>
  </span>
  </label>
  </div>
+ <div class="setup-inline-error" id="cameraDetectionError" role="alert" hidden>Choose Camera On or Camera Off.</div>
  <div class="inclusive-note">
  <i class="fa-solid fa-info" aria-hidden="true"></i>
  <span><strong>Important:</strong> Camera On enables visible framing, head alignment, shoulder/posture cues, and movement steadiness detection. Camera Off does not start body-language detection.</span>
@@ -401,7 +407,8 @@
  <div class="assistance-field assistance-level-field">
  <label class="olbl" for="valAssistance">AI Assistance Level</label>
  <div class="assistance-select-wrap">
- <select class="oinp setup-input" name="ai_assistance_level" id="valAssistance">
+ <select class="oinp setup-input" name="ai_assistance_level" id="valAssistance" required>
+ <option value="" disabled {{ $setupDefaults['ai_assistance_level'] === ''? 'selected': '' }}>Not yet selected</option>
  <option value="beginner" {{ $setupDefaults['ai_assistance_level'] === 'beginner'? 'selected': '' }}>Beginner Mode (More hints & feedback)</option>
  <option value="standard" {{ $setupDefaults['ai_assistance_level'] === 'standard'? 'selected': '' }}>Standard Mode (Balanced experience)</option>
  <option value="challenge" {{ $setupDefaults['ai_assistance_level'] === 'challenge'? 'selected': '' }}>Challenge Mode (No hints, harder follow-ups)</option>
@@ -412,7 +419,8 @@
  <div class="assistance-field assistance-feedback-field">
  <label class="olbl" for="valFeedbackMode">Live Feedback Mode</label>
  <div class="assistance-select-wrap">
- <select class="oinp setup-input" name="live_feedback_mode" id="valFeedbackMode">
+ <select class="oinp setup-input" name="live_feedback_mode" id="valFeedbackMode" required>
+ <option value="" disabled {{ $setupDefaults['live_feedback_mode'] === ''? 'selected': '' }}>Not yet selected</option>
  <option value="coaching" {{ $setupDefaults['live_feedback_mode'] === 'coaching'? 'selected': '' }}>Coaching On</option>
  <option value="real_interview" {{ $setupDefaults['live_feedback_mode'] === 'real_interview'? 'selected': '' }}>Real Interview Mode</option>
  </select>
@@ -471,6 +479,7 @@
  </span>
  </label>
  </div>
+ <div class="setup-inline-error" id="responseModeError" role="alert" hidden>Choose a response mode.</div>
  </div>
 
  </div>
@@ -582,6 +591,11 @@
  const setupFieldErrorIds = {
  valPosition: 'targetPositionError',
  };
+ const setupGroupErrorIds = {
+ difficulty: { container: '.structure-difficulty-list', error: 'difficultyError' },
+ camera_detection: { container: '.camera-mode-list', error: 'cameraDetectionError' },
+ response_mode: { container: '.response-mode-list', error: 'responseModeError' },
+ };
  let targetPositionAlertVisible = false;
  const setupScenarioMismatchMessages = {
  job: {
@@ -635,6 +649,24 @@
  if (!error) return;
  error.hidden =!visible;
  error.classList.toggle('setup-inline-error-visible', visible);
+ }
+
+ function setSetupGroupError(name, visible) {
+ const config = setupGroupErrorIds[name];
+ if (!config) return;
+
+ const group = document.querySelector(config.container);
+ const error = document.getElementById(config.error);
+
+ if (group) {
+ group.classList.toggle('setup-field-invalid', visible);
+ group.setAttribute('aria-invalid', visible? 'true': 'false');
+ }
+
+ if (error) {
+ error.hidden =!visible;
+ error.classList.toggle('setup-inline-error-visible', visible);
+ }
  }
 
  function showTargetPositionAlert(message = null, title = null) {
@@ -927,6 +959,12 @@
  }
  }
 
+ if (!panelId || panelId === 'panel-inclusive') {
+ if (!hasCheckedSetupInput('camera_detection')) {
+ missing.push({ type: 'group', name: 'camera_detection', panelId: 'panel-inclusive' });
+ }
+ }
+
  if (!panelId || panelId === 'panel-content') {
  if (!hasCheckedSetupInput('question_types[]')) {
  missing.push({ type: 'group', name: 'question_types[]', panelId: 'panel-content' });
@@ -944,8 +982,10 @@
 
  function markSetupValidation(missing) {
  const missingFieldIds = new Set(missing.filter(item => item.type === 'field' || item.type === 'scenario_mismatch').map(item => item.id));
+ const missingGroups = new Set(missing.filter(item => item.type === 'group').map(item => item.name));
  setupRequiredFieldIds.forEach(id => setSetupFieldInvalid(document.getElementById(id), missingFieldIds.has(id)));
  Object.keys(setupFieldErrorIds).forEach(id => setSetupFieldError(id, missingFieldIds.has(id)));
+ Object.keys(setupGroupErrorIds).forEach(name => setSetupGroupError(name, missingGroups.has(name)));
  setQuestionTypeError(missing.some(item => item.name === 'question_types[]'));
  }
 
@@ -1041,8 +1081,9 @@
  const scenarioSelect = document.getElementById('valScenario');
  if (scenarioSelect) {
  const selectedOption = scenarioSelect.options[scenarioSelect.selectedIndex];
- setSummaryValue('sumScenario', selectedOption?.dataset.contextLabel || selectedOption?.text || '', detailsReady);
- document.getElementById('valFocus').value = selectedOption?.dataset.focus || 'Job Interview';
+ const hasScenario = String(scenarioSelect.value || '').trim().length > 0;
+ setSummaryValue('sumScenario', selectedOption?.dataset.contextLabel || selectedOption?.text || '', detailsReady && hasScenario);
+ document.getElementById('valFocus').value = hasScenario? (selectedOption?.dataset.focus || 'Job Interview'): '';
  const sourceSummary = document.getElementById('sourceSummary');
  if (sourceSummary) {
  sourceSummary.innerText = selectedOption?.dataset.sourceSummary || 'career sources';
@@ -1068,7 +1109,7 @@
  const assistance = document.getElementById('valAssistance');
  if (assistance) {
  const assistanceLabel = (assistance.options[assistance.selectedIndex]?.text || '').replace(/\s*\([^)]*\)\s*$/, '');
- setSummaryValue('sumAssistance', assistanceLabel, contentReady);
+ setSummaryValue('sumAssistance', assistanceLabel, contentReady && Boolean(assistance.value));
  }
 
  const selectedQuestionTypes = Array.from(document.querySelectorAll('input[name="question_types[]"]:checked')).map(input => input.value);
@@ -1076,7 +1117,7 @@
 
  const feedbackMode = document.getElementById('valFeedbackMode');
  if (feedbackMode) {
- setSummaryValue('sumFeedbackMode', feedbackMode.options[feedbackMode.selectedIndex]?.text || '', contentReady);
+ setSummaryValue('sumFeedbackMode', feedbackMode.options[feedbackMode.selectedIndex]?.text || '', contentReady && Boolean(feedbackMode.value));
  }
 
  const timeLimit = parseInt(document.getElementById('valTimeLimit').value);
@@ -1099,10 +1140,11 @@
  });
 
  const hasDifficulty = hasCheckedSetupInput('difficulty');
+ const hasCameraDetection = hasCheckedSetupInput('camera_detection');
  const hasResponseMode = hasCheckedSetupInput('response_mode');
  const hasQuestionType = hasCheckedSetupInput('question_types[]');
  const hasScenarioTargetMatch = !setupScenarioTargetMismatch();
- const hasCompleteSetupFields = hasRequiredFields && hasDifficulty && hasResponseMode && hasQuestionType && hasScenarioTargetMatch;
+ const hasCompleteSetupFields = hasRequiredFields && hasDifficulty && hasCameraDetection && hasResponseMode && hasQuestionType && hasScenarioTargetMatch;
  const hasReviewedSetupSteps = getRequiredSetupReviewStepIds().every(stepId => visitedSetupStepIds.has(stepId));
  const canStart = hasCompleteSetupFields && hasReviewedSetupSteps;
  const activeStepId = getSetupSteps()[setupStepState.index]?.id;
@@ -1118,6 +1160,7 @@
  startButton.classList.toggle('setup-start-disabled',!canStart);
  startButton.setAttribute('aria-disabled', canStart? 'false': 'true');
  startButton.title = canStart? 'Start interview': (hasRequiredFields && !hasScenarioTargetMatch? 'Match the target to the selected scenario first': (hasCompleteSetupFields? 'Review all setup steps first': 'Complete all required details first'));
+ syncSetupStepperState();
  }
 
  document.querySelectorAll('.setup-input').forEach(el => {
@@ -1280,6 +1323,47 @@
  return setupStepState.baseSteps.map(step => step.id);
  }
 
+ function isSetupStepComplete(stepId) {
+ if (stepId === 'panel-summary') {
+ return getRequiredSetupReviewStepIds().every(requiredStepId => isSetupStepComplete(requiredStepId));
+ }
+
+ return missingSetupItems(stepId).length === 0;
+ }
+
+ function getMaxAccessibleSetupStepIndex(steps = getSetupSteps()) {
+ let maxAccessibleIndex = 0;
+
+ for (let index = 0; index < steps.length - 1; index++) {
+ if (!isSetupStepComplete(steps[index]?.id)) break;
+ maxAccessibleIndex = index + 1;
+ }
+
+ return maxAccessibleIndex;
+ }
+
+ function syncSetupStepperState(steps = getSetupSteps()) {
+ const maxAccessibleIndex = getMaxAccessibleSetupStepIndex(steps);
+
+ steps.forEach((step, index) => {
+ const stepButton = document.querySelector(`[data-setup-step="${index}"]`);
+ if (!stepButton) return;
+
+ const isActive = index === setupStepState.index;
+ const isLocked = index > maxAccessibleIndex;
+ const isComplete = step.id !== 'panel-summary' && isSetupStepComplete(step.id) && index < setupStepState.index;
+
+ stepButton.classList.toggle('is-active', isActive);
+ stepButton.classList.toggle('is-complete', isComplete);
+ stepButton.classList.toggle('is-locked', isLocked);
+ stepButton.setAttribute('aria-current', isActive? 'step': 'false');
+ stepButton.setAttribute('aria-disabled', isLocked? 'true': 'false');
+ stepButton.setAttribute('aria-label', isLocked? `${step.label} locked until previous selections are complete`: `Go to ${step.label}`);
+ stepButton.title = isLocked? 'Complete previous selections first': `Go to ${step.label}`;
+ stepButton.tabIndex = isLocked? -1: 0;
+ });
+ }
+
  function renderSetupStepper() {
  const track = document.getElementById('setupStepperTrack');
  if (!track) return;
@@ -1291,7 +1375,7 @@
  track.innerHTML = steps.map((step, index) => `
  <button type="button" class="setup-stepper-item" data-setup-step="${index}" aria-label="Go to ${step.label}">
  <span class="setup-stepper-dot"></span>
- <span class="setup-stepper-label">${step.label}</span>
+ <span class="setup-stepper-label"><span class="setup-stepper-label-text">${step.label}</span><i class="fa-solid fa-lock setup-stepper-lock" aria-hidden="true"></i></span>
  </button>
  `).join('');
  track.dataset.rendered = mode;
@@ -1299,8 +1383,14 @@
  track.querySelectorAll('[data-setup-step]').forEach(button => {
  button.addEventListener('click', () => {
  const targetIndex = Number(button.dataset.setupStep);
- if (targetIndex > setupStepState.index) {
  const steps = getSetupSteps();
+ const maxAccessibleIndex = getMaxAccessibleSetupStepIndex(steps);
+ if (targetIndex > maxAccessibleIndex) {
+ showSetupStep(maxAccessibleIndex);
+ validateSetupStep(steps[maxAccessibleIndex]?.id, true);
+ return;
+ }
+ if (targetIndex > setupStepState.index) {
  for (let index = setupStepState.index; index < targetIndex; index++) {
  if (!validateSetupStep(steps[index]?.id, true)) return;
  }
@@ -1321,7 +1411,8 @@
  if (!section ||!stepper) return;
 
  renderSetupStepper();
- setupStepState.index = Math.max(0, Math.min(steps.length - 1, nextIndex));
+ const requestedIndex = Math.max(0, Math.min(steps.length - 1, nextIndex));
+ setupStepState.index = Math.min(requestedIndex, getMaxAccessibleSetupStepIndex(steps));
  if (steps[setupStepState.index]?.id) {
  visitedSetupStepIds.add(steps[setupStepState.index].id);
  }
@@ -1342,13 +1433,9 @@
  }
  }
 
- const stepButton = document.querySelector(`[data-setup-step="${index}"]`);
- if (stepButton) {
- stepButton.classList.toggle('is-active', index === setupStepState.index);
- stepButton.classList.toggle('is-complete', index < setupStepState.index);
- stepButton.setAttribute('aria-current', index === setupStepState.index? 'step': 'false');
- }
  });
+
+ syncSetupStepperState(steps);
 
  if (prevButton) prevButton.disabled = setupStepState.index === 0;
  if (nextButton) {

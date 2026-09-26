@@ -5758,6 +5758,70 @@ html:not(.lm) body #mob-content #sec-interview-setup .setup-target-choice-select
     color: #bfdbfe !important;
 }
 
+html body #sec-interview-setup .setup-stepper-label,
+html body #mob-content #sec-interview-setup .setup-stepper-label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+}
+
+html body #sec-interview-setup .setup-stepper-label-text,
+html body #mob-content #sec-interview-setup .setup-stepper-label-text {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+html body #sec-interview-setup .setup-stepper-lock,
+html body #mob-content #sec-interview-setup .setup-stepper-lock {
+    display: none !important;
+    flex: 0 0 auto !important;
+    color: #64748b !important;
+    font-size: 0.64rem !important;
+    line-height: 1 !important;
+}
+
+html body #sec-interview-setup .setup-stepper-item.is-locked,
+html body #mob-content #sec-interview-setup .setup-stepper-item.is-locked {
+    cursor: not-allowed !important;
+    opacity: 0.58 !important;
+}
+
+html body #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-dot,
+html body #mob-content #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-dot {
+    background: var(--bg3) !important;
+    border-color: var(--bd) !important;
+    border-style: dashed !important;
+}
+
+html body #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-label,
+html body #mob-content #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-label {
+    color: var(--tx3) !important;
+}
+
+html body #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-lock,
+html body #mob-content #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-lock {
+    display: inline-block !important;
+}
+
+html body #sec-interview-setup .structure-difficulty-list.setup-field-invalid,
+html body #sec-interview-setup .camera-mode-list.setup-field-invalid,
+html body #sec-interview-setup .response-mode-list.setup-field-invalid,
+html body #mob-content #sec-interview-setup .structure-difficulty-list.setup-field-invalid,
+html body #mob-content #sec-interview-setup .camera-mode-list.setup-field-invalid,
+html body #mob-content #sec-interview-setup .response-mode-list.setup-field-invalid {
+    border-radius: 14px !important;
+    outline: 2px solid rgba(239, 68, 68, 0.52) !important;
+    outline-offset: 4px !important;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-stepper-lock,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-stepper-lock {
+    color: #cbd5e1 !important;
+}
+
 @media (max-width: 767.98px) {
     html body.user-mobile-shell #sec-interview-setup .setup-target-dropdown,
     html body #mob-content #sec-interview-setup .setup-target-dropdown {
