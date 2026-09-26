@@ -1663,6 +1663,40 @@
             transform: none !important;
          }
 
+         body.admin-mobile-shell #mobMoreDropdown {
+            z-index: 1110;
+            background: var(--admin-drawer-bg) !important;
+            border-color: var(--admin-drawer-border) !important;
+            color: var(--admin-drawer-text);
+            box-shadow: 0 24px 72px rgba(0, 0, 0, 0.34);
+         }
+
+         body.admin-mobile-shell #mobMoreDropdown[data-origin="bottom"] {
+            top: auto !important;
+            right: max(10px, env(safe-area-inset-right, 0px)) !important;
+            bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 10px) !important;
+            left: max(10px, env(safe-area-inset-left, 0px)) !important;
+            width: auto !important;
+            max-width: none !important;
+            max-height: calc(var(--sr-visual-vh, 100dvh) - var(--mob-nav-h) - var(--mob-safe-bottom) - var(--mob-safe-top) - 22px);
+            margin: 0 !important;
+            transform: none !important;
+         }
+
+         body.admin-mobile-shell #mobMoreDropdown .mob-profile-account,
+         body.admin-mobile-shell #mobMoreDropdown .mob-profile-account-head {
+            display: none !important;
+         }
+
+         body.admin-mobile-shell #mobMoreDropdown .mob-profile-pages,
+         body.admin-mobile-shell #mobMoreDropdown .mob-profile-pages-head {
+            display: flex !important;
+         }
+
+         body.admin-mobile-shell #mobMoreDropdown .mob-profile-pages {
+            display: block !important;
+         }
+
          body.admin-mobile-shell #mobProfileDropdown[data-mode="pages"] > .mob-profile-account-head,
          body.admin-mobile-shell #mobProfileDropdown.mob-profile-is-pages > .mob-profile-account-head,
          body.admin-mobile-shell #mobProfileDropdown[data-mode="account"] .mob-profile-pages,
@@ -3060,7 +3094,7 @@
             <button class="mob-nav-item {{ request()->routeIs('admin.account', 'admin.categories', 'admin.questions', 'admin.modules*', 'admin.game*', 'admin.sessions.archive', 'admin.contacts.*', 'admin.ai.*', 'admin.settings.*') ? 'active' : '' }}"
                     id="mobnav-more"
                     type="button"
-                    aria-controls="mobProfileDropdown"
+                    aria-controls="mobMoreDropdown"
                     aria-expanded="false"
                     aria-label="Open more menu"
                     onclick="toggleMobileProfile(event, 'pages')">
@@ -3072,8 +3106,8 @@
 
       <div id="mobMoreBackdrop" class="mob-more-backdrop" aria-hidden="true" onclick="closeMobileProfile()"></div>
 
-      <div class="mob-profile-dropdown mob-profile-is-pages" id="mobProfileDropdown" aria-hidden="true" data-mode="pages" data-origin="bottom">
-         <div class="mob-profile-head mob-profile-account-head" hidden style="display:none;">
+      <div class="mob-profile-dropdown mob-profile-account-dropdown mob-profile-is-account" id="mobProfileDropdown" aria-hidden="true" data-mode="account" data-origin="top">
+         <div class="mob-profile-head mob-profile-account-head">
             <div class="mob-profile-head-avatar">
                @if(Auth::check() && Auth::user()->profile_photo_path)
                   @php
@@ -3092,6 +3126,22 @@
             <button class="mob-profile-close" type="button" onclick="event.stopPropagation(); closeMobileProfile();" aria-label="Close admin menu"><i class="fa-solid fa-xmark"></i></button>
          </div>
          <div class="mob-profile-menu" id="mobProfileMenu">
+            <div class="mob-profile-account">
+               <div class="mob-profile-section-title">Profile</div>
+               <div class="mob-profile-grid mb-2">
+                  <a href="{{ route('admin.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.account') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span>Account</span></a>
+                  <a href="{{ route('admin.settings.index') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+               </div>
+               <form action="{{ route('logout') }}" method="POST">
+                  @csrf
+                  <button type="submit" class="mob-profile-action danger"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
+               </form>
+            </div>
+         </div>
+      </div>
+
+      <div class="mob-profile-dropdown mob-more-dropdown mob-profile-is-pages" id="mobMoreDropdown" aria-hidden="true" data-mode="pages" data-origin="bottom">
+         <div class="mob-profile-menu" id="mobMoreMenu">
             <div class="mob-profile-pages">
                <div class="mob-profile-pages-close mob-profile-pages-head">
                   <span>More</span>
@@ -3121,18 +3171,6 @@
                   <a href="{{ route('admin.ai.providers') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.ai.providers*') || request()->routeIs('admin.ai.evaluation*') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i><span>AI Providers</span></a>
                   <a href="{{ route('admin.settings.index') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
                </div>
-            </div>
-
-            <div class="mob-profile-account" hidden style="display:none;">
-               <div class="mob-profile-section-title">Profile</div>
-               <div class="mob-profile-grid mb-2">
-                  <a href="{{ route('admin.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.account') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span>Account</span></a>
-                  <a href="{{ route('admin.settings.index') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
-               </div>
-               <form action="{{ route('logout') }}" method="POST">
-                  @csrf
-                  <button type="submit" class="mob-profile-action danger"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
-               </form>
             </div>
          </div>
       </div>
@@ -3173,9 +3211,14 @@
       <script src="{{ asset('js/user-ui.js') }}?v=21" defer></script>
 
       <script>
+         function getMobileProfileDropdown(mode = 'pages') {
+            return document.getElementById(mode === 'pages' ? 'mobMoreDropdown' : 'mobProfileDropdown');
+         }
+
          function toggleMobileProfile(e, mode = 'pages') {
             if (e) e.stopPropagation();
-            const dropdown = document.getElementById('mobProfileDropdown');
+            const dropdown = getMobileProfileDropdown(mode);
+            const otherDropdown = getMobileProfileDropdown(mode === 'pages' ? 'account' : 'pages');
             const profileButton = document.getElementById('mobProfileBtn');
             const bottomButton = document.getElementById('mobnav-more');
             const moreBackdrop = document.getElementById('mobMoreBackdrop');
@@ -3184,7 +3227,11 @@
             const currentMode = dropdown.getAttribute('data-mode') || 'pages';
             const isOpen = dropdown.classList.contains('open');
             hideMobileNotificationDropdown();
-            syncMobileProfileMode(mode);
+            syncMobileProfileMode(mode, dropdown);
+            if (otherDropdown && otherDropdown !== dropdown) {
+               otherDropdown.classList.remove('open');
+               otherDropdown.setAttribute('aria-hidden', 'true');
+            }
 
             const willOpen = !isOpen || currentMode !== mode;
             dropdown.classList.toggle('open', willOpen);
@@ -3195,8 +3242,8 @@
             if (willOpen) resetMobileProfileMenuScroll();
          }
 
-         function syncMobileProfileMode(mode = 'pages') {
-            const dropdown = document.getElementById('mobProfileDropdown');
+         function syncMobileProfileMode(mode = 'pages', dropdown = null) {
+            dropdown = dropdown || getMobileProfileDropdown(mode);
             if (!dropdown) return;
 
             const isAccountMode = mode === 'account';
@@ -3236,11 +3283,16 @@
          }
 
          function resetMobileProfileMenuScroll() {
-            const menu = document.getElementById('mobProfileMenu');
-            if (!menu) return;
+            const menus = [
+               document.getElementById('mobProfileMenu'),
+               document.getElementById('mobMoreMenu')
+            ].filter(Boolean);
+            if (!menus.length) return;
             const reset = () => {
-               menu.scrollTop = 0;
-               menu.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+               menus.forEach(function(menu) {
+                  menu.scrollTop = 0;
+                  menu.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+               });
             };
             reset();
             requestAnimationFrame(reset);
@@ -3248,13 +3300,17 @@
          }
 
          function closeMobileProfile() {
-            const dropdown = document.getElementById('mobProfileDropdown');
+            const dropdowns = [
+               document.getElementById('mobProfileDropdown'),
+               document.getElementById('mobMoreDropdown')
+            ].filter(Boolean);
             const profileButton = document.getElementById('mobProfileBtn');
             const bottomButton = document.getElementById('mobnav-more');
             const moreBackdrop = document.getElementById('mobMoreBackdrop');
-            if (!dropdown) return;
-            dropdown.classList.remove('open');
-            dropdown.setAttribute('aria-hidden', 'true');
+            dropdowns.forEach(function(dropdown) {
+               dropdown.classList.remove('open');
+               dropdown.setAttribute('aria-hidden', 'true');
+            });
             if (profileButton) profileButton.setAttribute('aria-expanded', 'false');
             if (bottomButton) bottomButton.setAttribute('aria-expanded', 'false');
             if (moreBackdrop) moreBackdrop.classList.remove('open');
@@ -3262,14 +3318,19 @@
 
          document.addEventListener('click', function(e) {
             const profileDropdown = document.getElementById('mobProfileDropdown');
+            const moreDropdown = document.getElementById('mobMoreDropdown');
             const profileButton = document.getElementById('mobProfileBtn');
             const moreButton = document.getElementById('mobnav-more');
-            if (profileDropdown?.classList.contains('open') && !profileDropdown.contains(e.target) && !moreButton?.contains(e.target) && !profileButton?.contains(e.target)) {
+            const clickedOutsideProfile = !profileDropdown?.contains(e.target);
+            const clickedOutsideMore = !moreDropdown?.contains(e.target);
+            const anyDropdownOpen = profileDropdown?.classList.contains('open') || moreDropdown?.classList.contains('open');
+            if (anyDropdownOpen && clickedOutsideProfile && clickedOutsideMore && !moreButton?.contains(e.target) && !profileButton?.contains(e.target)) {
                closeMobileProfile();
             }
          });
 
          document.addEventListener('DOMContentLoaded', function() {
+            syncMobileProfileMode('account');
             syncMobileProfileMode('pages');
 
             document.querySelectorAll('[data-admin-notif-close]').forEach(function(button) {
