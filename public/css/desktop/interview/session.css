@@ -4101,10 +4101,14 @@ html body #sec-interview-session .answer-transcript-stage .answer-transcription-
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 12px !important;
+    gap: 16px !important;
     min-height: 70px !important;
     border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.78) !important;
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
     color: var(--tx2) !important;
+    overflow: hidden !important;
     pointer-events: none !important;
     text-align: center !important;
 }
@@ -4117,16 +4121,17 @@ html body #sec-interview-session .answer-transcript-stage .answer-transcription-
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 6px !important;
-    height: 46px !important;
+    gap: 10px !important;
+    height: clamp(88px, 34%, 132px) !important;
+    max-width: min(420px, calc(100% - 28px)) !important;
 }
 
 html body #sec-interview-session .answer-transcript-stage .answer-transcription-wave span {
-    width: 5px !important;
-    height: 28px !important;
+    width: clamp(8px, 1.4vw, 12px) !important;
+    height: clamp(62px, 22%, 92px) !important;
     border-radius: 999px !important;
     background: linear-gradient(180deg, #38bdf8 0%, #22c55e 100%) !important;
-    box-shadow: 0 0 14px rgba(56, 189, 248, 0.28) !important;
+    box-shadow: 0 0 22px rgba(56, 189, 248, 0.36) !important;
     transform-origin: center !important;
     transform: scaleY(var(--wave-level, 0.42)) !important;
     opacity: var(--wave-opacity, 0.55) !important;
@@ -4134,17 +4139,17 @@ html body #sec-interview-session .answer-transcript-stage .answer-transcription-
 }
 
 html body #sec-interview-session .answer-transcript-stage .answer-transcription-wave span:nth-child(2n) {
-    height: 36px !important;
+    height: clamp(76px, 28%, 112px) !important;
 }
 
 html body #sec-interview-session .answer-transcript-stage .answer-transcription-wave span:nth-child(3n) {
-    height: 22px !important;
+    height: clamp(52px, 18%, 82px) !important;
 }
 
 html body #sec-interview-session .answer-transcript-stage .answer-transcription-message {
     max-width: min(260px, calc(100% - 24px)) !important;
     color: var(--tx2) !important;
-    font-size: 0.82rem !important;
+    font-size: clamp(0.88rem, 1.1vw, 1rem) !important;
     font-weight: 800 !important;
     line-height: 1.25 !important;
 }
@@ -4159,6 +4164,7 @@ html body #sec-interview-session .answer-transcript-stage #answerTextarea.has-tr
 html:not(.lm) body #sec-interview-session .answer-transcript-stage .answer-transcription-overlay,
 html[data-theme="dark"] body #sec-interview-session .answer-transcript-stage .answer-transcription-overlay,
 body.dm #sec-interview-session .answer-transcript-stage .answer-transcription-overlay {
+    background: rgba(15, 23, 42, 0.72) !important;
     color: #dbeafe !important;
 }
 

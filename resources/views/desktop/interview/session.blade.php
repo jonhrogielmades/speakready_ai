@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=46') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=47') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -1647,20 +1647,27 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return voiceSessionTranscriptPromise;
  }
 
- async function fillEmptyHybridTranscriptFromRecording(index = currentQIdx) {
- if (!isHybridTranscriptionMode() || currentAnswerTextareaText().trim() !== '') return false;
+ async function fillMissingHybridTranscriptFromRecording(index = currentQIdx) {
+ if (!isHybridTranscriptionMode()) return false;
  if (!serverTranscriptionEnabled || serverTranscriptionUnavailable || microphoneRequiresSecureOrigin()) return false;
  const recording = voiceSessionRecordings.get(voiceSessionKeyFor(index));
  if (!recording?.blob || recording.blob.size < 128) return false;
 
+ const currentTextBeforeTranscription = cleanTranscriptText(currentAnswerTextareaText());
+ const recordingStartText = cleanTranscriptText(preRecordingText);
+ if (currentTextBeforeTranscription && normalizeTranscriptForMatch(currentTextBeforeTranscription)!== normalizeTranscriptForMatch(recordingStartText)) {
+ return false;
+ }
+
  const transcript = await transcribeVoiceSessionRecording(index, {
  silent: true,
  skipStopRecording: true,
- replaceAnswerText: true,
- previousTranscript: ''
+ replaceAnswerText: false,
+ previousTranscript: recordingStartText || answersData[index]?.speech_transcript || ''
  });
 
- return cleanTranscriptText(transcript).trim() !== '' && currentAnswerTextareaText().trim() !== '';
+ return cleanTranscriptText(transcript).trim() !== ''
+ && normalizeTranscriptForMatch(currentAnswerTextareaText())!== normalizeTranscriptForMatch(currentTextBeforeTranscription);
  }
 
  async function startVoiceSessionRecorder() {
@@ -3192,11 +3199,13 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const overlay = document.getElementById('answerTranscriptionOverlay');
  const hasText = textarea? String(textarea.value || '').trim() !== '': String(answersData[currentQIdx]?.text || '').trim() !== '';
  const shouldShow = isHybridTranscriptionMode()
- && !hasText
  && !isRecordingPaused
  && Boolean(isRecording || recordingStartPromise);
 
- if (stage) stage.classList.toggle('is-recording-empty-transcript', shouldShow);
+ if (stage) {
+ stage.classList.toggle('is-recording-empty-transcript', shouldShow &&!hasText);
+ stage.classList.toggle('is-recording-with-transcript', shouldShow && hasText);
+ }
  if (overlay) overlay.hidden =!shouldShow;
  if (textarea) {
  textarea.classList.toggle('has-transcription-overlay', shouldShow);
@@ -5258,7 +5267,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  await stopVoiceSessionRecorder();
  let generatedFinalTranscript = false;
  if (isHybridTranscriptionMode()) {
- generatedFinalTranscript = await fillEmptyHybridTranscriptFromRecording().catch(error => {
+ generatedFinalTranscript = await fillMissingHybridTranscriptFromRecording().catch(error => {
  console.warn('Final hybrid recording transcription failed:', error);
  return false;
  });
