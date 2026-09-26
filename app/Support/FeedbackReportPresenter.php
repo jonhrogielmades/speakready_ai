@@ -17,8 +17,24 @@ class FeedbackReportPresenter
  $overall = is_numeric($score?->overall_readiness_score?? null)? self::score($score->overall_readiness_score): null;
  $focus = self::primaryFocus($session);
  $categoryBreakdown = self::categoryBreakdown($session);
- $strengthItems = self::bulletItems($strengths, 'No strengths were generated for this session.');
- $weaknessItems = self::bulletItems($weaknesses, 'No focus areas were generated for this session.');
+ $answers = self::answers($session);
+ $answerStrengthItems = self::answerReviewStrengthItems($answers);
+ $strengthItems = $answerStrengthItems!== []
+ ? $answerStrengthItems
+ : self::bulletItems($strengths, '', 4);
+ if ($strengthItems === []) {
+ $strengthItems = ['No answer-level strength is reliable yet. Add a complete answer so the review can identify what worked.'];
+ }
+ $answerWeaknessItems = self::answerReviewWeaknessItems($answers);
+ $weaknessItems = $answerWeaknessItems!== []
+ ? $answerWeaknessItems
+ : self::mergedItems(
+ self::bulletItems($weaknesses, '', 4),
+ self::bulletItems($suggestions, '', 2, 130)
+ );
+ if ($weaknessItems === []) {
+ $weaknessItems = ['Add one direct answer, one specific detail, and one true result or lesson.'];
+ }
  $suggestionItems = self::bulletItems($suggestions, 'Practice one answer again with a clearer structure.', 3, 130);
 
  return [
@@ -30,7 +46,7 @@ class FeedbackReportPresenter
  'weakness_items' => $weaknessItems,
  'suggestion_items' => $suggestionItems,
  'overview' => [
- 'summary' => self::overallSummary($session, $overall, $categoryBreakdown, $strengths, $weaknesses, $suggestions, $focus),
+ 'summary' => self::overallSummary($session, $overall, $categoryBreakdown, $strengthItems, $weaknessItems, $suggestions, $focus),
  'focus_label' => $focus['label'],
  'focus_score' => $focus['score'],
  'focus_advice' => $focus['advice'],
@@ -137,12 +153,138 @@ class FeedbackReportPresenter
  return $items!== []? $items: [self::limitText($clean, $characterLimit)];
  }
 
+ private static function mergedItems(array ...$groups): array
+ {
+ $items = [];
+ $seen = [];
+ foreach ($groups as $group) {
+ foreach ($group as $item) {
+ $text = self::cleanText((string) $item);
+ if ($text === '') {
+ continue;
+ }
+
+ $key = mb_strtolower(preg_replace('/[^\p{L}\p{N}]+/u', ' ', $text)?? $text, 'UTF-8');
+ if (isset($seen[$key])) {
+ continue;
+ }
+
+ $seen[$key] = true;
+ $items[] = $text;
+ if (count($items) >= 4) {
+ return $items;
+ }
+ }
+ }
+
+ return $items;
+ }
+
+ private static function answerReviewStrengthItems(Collection $answers): array
+ {
+ $items = [];
+ foreach ($answers->values() as $index => $answer) {
+ if ((bool) ($answer->is_skipped?? false)) {
+ continue;
+ }
+
+ $questionSource = $answer->question?? $answer;
+ $coaching = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
+ $alignment = is_array(data_get($coaching, 'content_alignment'))? data_get($coaching, 'content_alignment'): [];
+ $evidenceMap = is_array($answer->evidence_map?? null)? $answer->evidence_map: [];
+ $label = 'Answer '.($index + 1);
+ $added = false;
+
+ foreach ([data_get($alignment, 'what_worked'), data_get($alignment, 'keep')] as $candidate) {
+ $text = self::reviewText($candidate, $questionSource, 145);
+ if ($text !== '') {
+ $items[] = $label.': '.$text;
+ $added = true;
+ break;
+ }
+ }
+
+ if (! $added) {
+ $excerpt = self::reviewText(data_get($alignment, 'evidence_quotes.0', data_get($evidenceMap, 'supporting_excerpts.0', '')), $questionSource, 120);
+ if ($excerpt !== '') {
+ $items[] = $label.': includes usable answer evidence, "'.$excerpt.'".';
+ $added = true;
+ }
+ }
+
+ if (! $added && is_numeric($answer->score?? null) && (int) round((float) $answer->score) >= 70) {
+ $items[] = $label.': scored well enough to count as a current strength.';
+ }
+
+ if (count($items) >= 4) {
+ break;
+ }
+ }
+
+ return self::mergedItems($items);
+ }
+
+ private static function answerReviewWeaknessItems(Collection $answers): array
+ {
+ $items = [];
+ foreach ($answers->values() as $index => $answer) {
+ $questionSource = $answer->question?? $answer;
+ $coaching = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
+ $alignment = is_array(data_get($coaching, 'content_alignment'))? data_get($coaching, 'content_alignment'): [];
+ $evidenceMap = is_array($answer->evidence_map?? null)? $answer->evidence_map: [];
+ $label = 'Answer '.($index + 1);
+
+ if ((bool) ($answer->is_skipped?? false)) {
+ $items[] = $label.': no answer was submitted, so there is no response to check.';
+ continue;
+ }
+
+ $candidates = array_merge(
+ [data_get($alignment, 'improvement_focus')],
+ (array) data_get($alignment, 'missing_points', data_get($evidenceMap, 'missing_evidence', [])),
+ [data_get($alignment, 'action')],
+ (array) data_get($alignment, 'next_attempt_steps', [])
+ );
+ foreach ($candidates as $candidate) {
+ $text = self::reviewText($candidate, $questionSource, 150);
+ if ($text !== '') {
+ $items[] = $label.': '.$text;
+ break;
+ }
+ }
+
+ if (count($items) >= 4) {
+ break;
+ }
+ }
+
+ return self::mergedItems($items);
+ }
+
+ private static function reviewText(mixed $text, mixed $questionSource = null, int $limit = 150): string
+ {
+ if (! is_scalar($text)) {
+ return '';
+ }
+
+ $clean = self::cleanText((string) $text);
+ if ($clean === '') {
+ return '';
+ }
+
+ if (function_exists('review_feedback_without_question_text')) {
+ $clean = review_feedback_without_question_text($clean, $questionSource);
+ }
+
+ return self::limitText($clean, $limit);
+ }
+
  private static function overallSummary(
  InterviewSession $session,
  ?int $overall,
  array $categoryBreakdown,
- string $strengths,
- string $weaknesses,
+ array $strengthItems,
+ array $weaknessItems,
  string $suggestions,
  array $focus
  ): string {
@@ -189,31 +331,29 @@ class FeedbackReportPresenter
  $sentences[] = 'The readiness score is still pending, so the safest next step is to use the answer notes instead of guessing performance.';
  }
 
- $strength = self::firstEvidenceItem($strengths, 190);
+ $strength = self::limitText((string) ($strengthItems[0]?? ''), 190);
  if ($strength!== '') {
- $sentences[] = self::sentence('What worked best: '.$strength);
+ $sentences[] = self::sentence('Main strength from the answer reviews: '.$strength);
+ }
+
+ $weakness = self::limitText((string) ($weaknessItems[0]?? ''), 190);
+ $suggestion = self::firstEvidenceItem($suggestions, 170);
+ if ($weakness!== '') {
+ $sentences[] = self::sentence('Main weakness from the answer reviews: '.$weakness);
  }
 
  $prioritySentence = self::priorityContextSentence((array) data_get($summary, 'priority_actions', []));
  if ($prioritySentence!== '') {
  $sentences[] = $prioritySentence;
- } else {
- $weakness = self::firstEvidenceItem($weaknesses, 190);
- $suggestion = self::firstEvidenceItem($suggestions, 170);
- if ($weakness!== '' && $suggestion!== '') {
- $sentences[] = self::sentence('Main improvement: '.$weakness.'; next practice: '.$suggestion);
- } elseif ($weakness!== '') {
- $sentences[] = self::sentence('Main improvement: '.$weakness);
  } elseif ($suggestion!== '') {
- $sentences[] = self::sentence('Next practice: '.$suggestion);
+ $sentences[] = self::sentence('Practice focus: '.$suggestion);
  } else {
  $focusLabel = trim((string) ($focus['label']?? 'Answer Structure'))?: 'Answer Structure';
  $focusAdvice = trim((string) ($focus['advice']?? 'Use one idea, one example, and one result.'))?: 'Use one idea, one example, and one result.';
- $sentences[] = self::sentence('Next practice for '.$focusLabel.': '.$focusAdvice);
- }
+ $sentences[] = self::sentence('Practice focus for '.$focusLabel.': '.$focusAdvice);
  }
 
- return implode(' ', array_slice(array_values(array_filter($sentences)), 0, 5));
+ return implode(' ', array_slice(array_values(array_filter($sentences)), 0, 6));
  }
 
  private static function contentOverviewSentence(array $overview): string
@@ -288,7 +428,7 @@ class FeedbackReportPresenter
  $parts[] = $observation;
  }
  if ($action!== '') {
- $parts[] = 'next practice: '.$action;
+ $parts[] = 'practice focus: '.$action;
  }
 
  if (count($parts) > 1 || $area!== '') {

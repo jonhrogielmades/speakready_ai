@@ -34,9 +34,9 @@
  }
  $fallbackFocusLabel = is_scalar($overview['focus_label'] ?? null)
  ? trim((string) $overview['focus_label'])
- : 'Next Practice';
+ : 'Practice Focus';
  if ($fallbackFocusLabel === '') {
- $fallbackFocusLabel = 'Next Practice';
+ $fallbackFocusLabel = 'Practice Focus';
  }
  $score = $sessionRecord->score;
  $overallScore = is_numeric($score?->overall_readiness_score ?? null)
@@ -142,7 +142,7 @@
  </section>
 
  <section class="review-quick-block">
- <div class="review-block-title review-title-success"><i class="fa-solid fa-circle-check"></i><span>What You Did Well</span></div>
+ <div class="review-block-title review-title-success"><i class="fa-solid fa-circle-check"></i><span>Strengths</span></div>
  @if(!empty($strengthItems))
  <ul class="review-short-list">
  @foreach($strengthItems as $item)
@@ -155,7 +155,7 @@
  </section>
 
  <section class="review-quick-block">
- <div class="review-block-title review-title-warning"><i class="fa-solid fa-bullseye"></i><span>What To Improve</span></div>
+ <div class="review-block-title review-title-warning"><i class="fa-solid fa-bullseye"></i><span>Weaknesses</span></div>
  @if(!empty($weaknessItems))
  <ul class="review-short-list">
  @foreach($weaknessItems as $item)
@@ -165,10 +165,6 @@
  @else
  <p>Add one specific action, example, or result.</p>
  @endif
- </section>
-
- <section class="review-quick-block review-next-tip">
- <div class="review-block-title"><i class="fa-solid fa-location-arrow"></i><span>Next Practice</span></div>
  <p><strong>{{ $primarySuggestionLabel }}:</strong> {{ $primarySuggestion }}</p>
  <a href="{{ $practiceUrl }}" class="btn btn-primary btn-sm review-practice-btn">
  <i class="fa-solid fa-rotate-right"></i>{{ $practiceLabel }}

@@ -586,6 +586,13 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  'answer_text' => 'I improved improved improved the customer process and explained the action clearly.',
  'ai_feedback' => 'The answer gives an action but needs a result.',
  'better_sample_answer' => 'Explain a time you helped a customer.',
+ 'coaching_feedback' => [
+ 'content_alignment' => [
+ 'what_worked' => 'The saved answer explains the customer process action clearly.',
+ 'improvement_focus' => 'Add the final customer result or lesson.',
+ 'action' => 'Use STAR structure and add one measurable result.',
+ ],
+ ],
  'score' => 68,
  ]);
 
@@ -598,16 +605,20 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('This overall review is based on the 1 answer review in this session')
  ->assertSee('Answer-match checks show 1 answered partly')
  ->assertSee('Overall readiness is 74%, with Fluency &amp; Clarity as the lowest recorded area at 45% and Grammar as the highest at 88%', false)
- ->assertSee('Top focus: Answer structure; 1 of 1 answers need a clearer opening and result; next practice: Use STAR structure and add one measurable result')
+ ->assertSee('Top focus: Answer structure; 1 of 1 answers need a clearer opening and result; practice focus: Use STAR structure and add one measurable result')
+ ->assertSee('Main strength from the answer reviews: Answer 1: The saved answer explains the customer process action clearly')
+ ->assertSee('Main weakness from the answer reviews: Answer 1: Add the final customer result or lesson')
  ->assertDontSee('Keep practicing. Answer each question directly and add one real example.')
  ->assertSee('Score Breakdown')
- ->assertSee('What You Did Well')
+ ->assertSee('Strengths')
+ ->assertSee('Weaknesses')
+ ->assertDontSee('What You Did Well')
  ->assertSee('What To Improve')
  ->assertSee('Better Example')
- ->assertSee('Next Practice')
  ->assertSee('Question 1')
  ->assertSee('Explain a time you helped a customer')
- ->assertSee('Strong empathy with customers')
+ ->assertSee('Answer 1: The saved answer explains the customer process action clearly')
+ ->assertSee('Answer 1: Add the final customer result or lesson')
  ->assertSee('Use STAR structure')
  ->assertDontSee('The answer gives an action but needs a result.')
  ->assertDontSee('Category Breakdown')
