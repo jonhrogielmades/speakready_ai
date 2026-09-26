@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=44') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=45') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -167,7 +167,19 @@
  <span>Voice Mode is voice-only. Text transcription and typing are disabled; use Hybrid Mode for voice-to-text.</span>
  </div>
  <div class="answer-transcript-stage">
- <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer using your own local school, work, internship, or project evidence..." aria-describedby="sessionNotice responseModeLockNotice responseCountBar"></textarea>
+ <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer using your own local school, work, internship, or project evidence..." aria-describedby="sessionNotice responseModeLockNotice answerTranscriptionOverlay responseCountBar"></textarea>
+ <div id="answerTranscriptionOverlay" class="answer-transcription-overlay" hidden role="status" aria-live="polite">
+ <div class="answer-transcription-wave" aria-hidden="true">
+ <span style="--wave-index:0"></span>
+ <span style="--wave-index:1"></span>
+ <span style="--wave-index:2"></span>
+ <span style="--wave-index:3"></span>
+ <span style="--wave-index:4"></span>
+ <span style="--wave-index:5"></span>
+ <span style="--wave-index:6"></span>
+ </div>
+ <div class="answer-transcription-message">Analyzing your transcription...</div>
+ </div>
  <div class="response-count-bar" id="responseCountBar" aria-live="polite">
  <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
  </div>
@@ -947,6 +959,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function handleAnswerInput() {
  syncSpeechRecognitionBufferFromManualEdit();
  triggerAnalysis();
+ updateAnswerTranscriptionOverlay();
  updateSendAnswerButtonState();
  }
 
@@ -1024,6 +1037,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  answerState.text = textarea? String(textarea.value || ''): renderedTranscript;
  answerState.speech_transcript = cleanTranscriptText(answerState.text);
  answersData[currentQIdx] = answerState;
+ updateAnswerTranscriptionOverlay();
  return true;
  }
 
@@ -3034,11 +3048,29 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return '';
  }
 
- return 'Speak your answer, then edit the transcript here if needed...';
+ return '';
  }
 
  function answerTextareaElement() {
  return document.getElementById('answerTextarea');
+ }
+
+ function updateAnswerTranscriptionOverlay() {
+ const textarea = answerTextareaElement();
+ const stage = document.querySelector('.answer-transcript-stage');
+ const overlay = document.getElementById('answerTranscriptionOverlay');
+ const hasText = textarea? String(textarea.value || '').trim() !== '': String(answersData[currentQIdx]?.text || '').trim() !== '';
+ const shouldShow = isHybridTranscriptionMode()
+ && !hasText
+ && !isRecordingPaused
+ && Boolean(isRecording || recordingStartPromise);
+
+ if (stage) stage.classList.toggle('is-recording-empty-transcript', shouldShow);
+ if (overlay) overlay.hidden =!shouldShow;
+ if (textarea) {
+ textarea.classList.toggle('has-transcription-overlay', shouldShow);
+ textarea.placeholder = shouldShow? '': responseModePlaceholder();
+ }
  }
 
  function currentAnswerTextareaText() {
@@ -3056,6 +3088,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  answersData[currentQIdx].speech_transcript = cleanTranscriptText(text);
  }
  }
+ updateAnswerTranscriptionOverlay();
  return text;
  }
 
@@ -3110,6 +3143,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  textarea.placeholder = responseModePlaceholder();
  }
  applyVoiceOnlyAnswerLock();
+ updateAnswerTranscriptionOverlay();
 
  if (!isVoiceTranscriptionMode()) {
  if (transcriptControls) transcriptControls.hidden = true;
@@ -3122,6 +3156,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  setVoiceControlsEnabled(false, 'Voice recording is disabled in Text Mode');
  setTranscriptionStatus('');
  renderVoiceSessionPanel();
+ updateAnswerTranscriptionOverlay();
  return;
  }
 
@@ -3134,6 +3169,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  setTranscriptionStatus('Voice-only mode. Text transcription is off.');
  }
  renderVoiceSessionPanel();
+ updateAnswerTranscriptionOverlay();
  }
 
  function managedFetch(url, options = {}) {
@@ -4191,6 +4227,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  applyVoiceOnlyAnswerLock();
  }
  updateSendAnswerButtonState();
+ updateAnswerTranscriptionOverlay();
  }
 
  function showInterviewerConversation(text, counterText = null) {
@@ -4911,7 +4948,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  recordingStartPromise = startRecordingInternal(options).finally(() => {
  recordingStartPromise = null;
+ updateAnswerTranscriptionOverlay();
  });
+ updateAnswerTranscriptionOverlay();
  return recordingStartPromise;
  }
 
@@ -4922,6 +4961,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const message = 'Voice recording is disabled in Text Mode.';
  setTranscriptionStatus('');
  setVoiceControlsEnabled(false, message);
+ updateAnswerTranscriptionOverlay();
  if(!silent) showSessionNotice(message);
  return false;
  }
@@ -4933,6 +4973,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const message = recorderUnavailableMessage || transcriptionUnavailableMessage();
  setTranscriptionStatus(message, '#f87171');
  setVoiceControlsEnabled(false, message);
+ updateAnswerTranscriptionOverlay();
  if(!silent) showSessionNotice(voiceOnly? `${message} Voice Mode needs microphone recording.`: `${message} You can type your answer instead.`);
  return false;
  }
@@ -4940,8 +4981,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (!isRecordingPaused) {
  resetSpeechRecognitionBufferFromTextarea();
  }
+ updateAnswerTranscriptionOverlay();
 
  if (!voiceOnly &&!await ensureMicrophoneReady(engine)) {
+ updateAnswerTranscriptionOverlay();
  if(!silent) {
  const message = currentTranscriptionStatusMessage() || transcriptionUnavailableMessage();
  showSessionNotice(`${message} You can type your answer instead.`);
@@ -4956,6 +4999,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  setTranscriptionStatus(message, '#f87171');
  setVoiceControlsEnabled(!unavailable, message);
  if (!unavailable) setRecordingControlButtons('idle');
+ updateAnswerTranscriptionOverlay();
  if(!silent) showSessionNotice(`${message} Check microphone permission, then try again. You can type your answer for feedback.`, 'warning');
  return false;
  }
@@ -4965,6 +5009,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  isRecording = true;
  isRecordingPaused = false;
  activeTranscriptionEngine = voiceOnly? null: engine;
+ updateAnswerTranscriptionOverlay();
 
  let started = voiceOnly? true: (engine === 'server'? startServerTranscriptionEngine(): startSpeechRecognitionEngine());
 
@@ -4981,6 +5026,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  await stopVoiceSessionRecorder({ discard: true, skipStartWait: true });
  const message = currentTranscriptionStatusMessage() || transcriptionUnavailableMessage();
  setVoiceControlsEnabled(false, message);
+ updateAnswerTranscriptionOverlay();
  if(!silent) showSessionNotice(`${message} You can type your answer instead.`);
  return false;
  }
@@ -4993,6 +5039,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  setVoiceControlsEnabled(true);
  setRecordingControlButtons('recording');
  startRecordingTimer(voiceSessionRecordingStartedAt);
+ updateAnswerTranscriptionOverlay();
 
  const scannerBox = document.getElementById('faceScannerBox');
  if (scannerBox) scannerBox.style.display = 'block';
@@ -5022,6 +5069,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  if (!isRecording &&!voiceSessionRecorder) {
  if (!isRecordingPaused) setRecordingControlButtons('idle');
+ updateAnswerTranscriptionOverlay();
  return false;
  }
 
@@ -5042,6 +5090,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  pauseRecordingTimer();
  pauseVoiceSessionRecorder();
  setRecordingControlButtons('paused');
+ updateAnswerTranscriptionOverlay();
  const scannerBox = document.getElementById('faceScannerBox');
  if (scannerBox) scannerBox.style.display = 'none';
 
@@ -5088,6 +5137,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  resetRecordingTimer();
  setRecordingControlButtons('idle');
  resetSpeechRecognitionBufferFromTextarea();
+ updateAnswerTranscriptionOverlay();
  if (isHybridTranscriptionMode()) {
  const hasTranscriptText = currentAnswerTextareaText().trim() !== '';
  setTranscriptionStatus(hasTranscriptText? (generatedFinalTranscript? 'Recording stopped - transcript generated and ready to edit': 'Recording stopped - transcript is ready to edit'): 'Recording stopped - no speech detected yet', hasTranscriptText? '#16a34a': '#fbbf24');
@@ -5483,6 +5533,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  releaseMicrophoneStream();
  discardVoiceSessionRecorder({ revokeSaved: true });
  setTranscriptionStatus('');
+ updateAnswerTranscriptionOverlay();
  cancelQuestionSpeechOutput();
  serverSpeechUrlCache.forEach(url => URL.revokeObjectURL(url));
  serverSpeechUrlCache.clear();

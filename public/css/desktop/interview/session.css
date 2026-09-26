@@ -4093,6 +4093,100 @@ html body #sec-interview-session .answer-transcript-stage #responseCountBar.resp
     white-space: nowrap !important;
 }
 
+@keyframes answer-transcription-wave {
+    0%,
+    100% {
+        transform: scaleY(0.42);
+        opacity: 0.55;
+    }
+
+    50% {
+        transform: scaleY(1.36);
+        opacity: 1;
+    }
+}
+
+html body #sec-interview-session .answer-transcript-stage .answer-transcription-overlay {
+    position: absolute !important;
+    inset: 12px 12px 42px 12px !important;
+    z-index: 3 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    min-height: 70px !important;
+    border-radius: 10px !important;
+    color: var(--tx2) !important;
+    pointer-events: none !important;
+    text-align: center !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage .answer-transcription-overlay[hidden] {
+    display: none !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage .answer-transcription-wave {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    height: 46px !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage .answer-transcription-wave span {
+    width: 5px !important;
+    height: 28px !important;
+    border-radius: 999px !important;
+    background: linear-gradient(180deg, #38bdf8 0%, #22c55e 100%) !important;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.28) !important;
+    transform-origin: center !important;
+    animation: answer-transcription-wave 780ms ease-in-out infinite !important;
+    animation-delay: calc(var(--wave-index) * 70ms) !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage .answer-transcription-wave span:nth-child(2n) {
+    height: 36px !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage .answer-transcription-wave span:nth-child(3n) {
+    height: 22px !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage .answer-transcription-message {
+    max-width: min(260px, calc(100% - 24px)) !important;
+    color: var(--tx2) !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+}
+
+html body #sec-interview-session .answer-transcript-stage.is-recording-empty-transcript #answerTextarea::placeholder,
+html body #sec-interview-session .answer-transcript-stage #answerTextarea.has-transcription-overlay::placeholder {
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    opacity: 0 !important;
+}
+
+html:not(.lm) body #sec-interview-session .answer-transcript-stage .answer-transcription-overlay,
+html[data-theme="dark"] body #sec-interview-session .answer-transcript-stage .answer-transcription-overlay,
+body.dm #sec-interview-session .answer-transcript-stage .answer-transcription-overlay {
+    color: #dbeafe !important;
+}
+
+html:not(.lm) body #sec-interview-session .answer-transcript-stage .answer-transcription-message,
+html[data-theme="dark"] body #sec-interview-session .answer-transcript-stage .answer-transcription-message,
+body.dm #sec-interview-session .answer-transcript-stage .answer-transcription-message {
+    color: #dbeafe !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html body #sec-interview-session .answer-transcript-stage .answer-transcription-wave span {
+        animation: none !important;
+        transform: scaleY(0.82) !important;
+    }
+}
+
 @media (max-width: 360px) {
     html body #sec-interview-session .answer-transcript-stage #responseCountBar.response-count-bar {
         inset: auto 10px 9px auto !important;
