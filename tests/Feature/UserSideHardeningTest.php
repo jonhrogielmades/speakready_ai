@@ -760,7 +760,7 @@ class UserSideHardeningTest extends TestCase
  }
 
  $mobileResponse
- ->assertSee('css/mobile/interview/setup.css?v=17', false)
+ ->assertSee('css/mobile/interview/setup.css?v=18', false)
  ->assertSee('css/mobile/interview/setup-2.css?v=3', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)

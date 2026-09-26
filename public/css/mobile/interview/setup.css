@@ -5877,3 +5877,91 @@ html:not(.lm) body #mob-content #sec-interview-setup .setup-stepper-lock {
         -webkit-tap-highlight-color: transparent !important;
     }
 }
+
+html body.user-mobile-shell #sec-interview-setup .setup-stepper-track,
+html body #mob-content #sec-interview-setup .setup-stepper-track {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+}
+
+html body.user-mobile-shell #sec-interview-setup .setup-stepper-item,
+html body #mob-content #sec-interview-setup .setup-stepper-item {
+    position: relative !important;
+    display: grid !important;
+    justify-items: center !important;
+    align-content: start !important;
+    min-width: 0 !important;
+}
+
+html body.user-mobile-shell #sec-interview-setup .setup-stepper-label,
+html body #mob-content #sec-interview-setup .setup-stepper-label {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 4px !important;
+    color: var(--setup-pro-muted, #64748b) !important;
+    font-size: 0.55rem !important;
+    font-weight: 850 !important;
+    line-height: 1.05 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+}
+
+html body.user-mobile-shell #sec-interview-setup .setup-stepper-label-text,
+html body #mob-content #sec-interview-setup .setup-stepper-label-text {
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+}
+
+html body.user-mobile-shell #sec-interview-setup .setup-stepper-lock,
+html body #mob-content #sec-interview-setup .setup-stepper-lock {
+    display: none !important;
+    position: absolute !important;
+    top: 14px !important;
+    left: calc(50% + 10px) !important;
+    z-index: 2 !important;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 999px !important;
+    background: #f8fafc !important;
+    color: #64748b !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.46rem !important;
+    line-height: 1 !important;
+    box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.35) !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-lock,
+html body #mob-content #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-lock {
+    display: inline-flex !important;
+}
+
+html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-locked,
+html body #mob-content #sec-interview-setup .setup-stepper-item.is-locked {
+    opacity: 0.72 !important;
+}
+
+html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-active,
+html body #mob-content #sec-interview-setup .setup-stepper-item.is-active {
+    opacity: 1 !important;
+}
+
+html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-label,
+html body #mob-content #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-label {
+    color: var(--setup-pro-primary, #2563eb) !important;
+    font-weight: 900 !important;
+}
+
+html:not(.lm) body.user-mobile-shell #sec-interview-setup .setup-stepper-lock,
+html:not(.lm) body #mob-content #sec-interview-setup .setup-stepper-lock {
+    background: #1f2937 !important;
+    color: #cbd5e1 !important;
+    box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.4) !important;
+}

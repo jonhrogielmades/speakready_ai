@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=17') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=18') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=3') }}" data-page-style="interview-setup-2">
 @endpush
 
