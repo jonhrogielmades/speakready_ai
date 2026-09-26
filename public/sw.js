@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speakready-pwa-v26';
+const CACHE_NAME = 'speakready-pwa-v27';
 const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
 
 function isSameOrigin(requestUrl) {

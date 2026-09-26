@@ -1853,6 +1853,7 @@
          }
 
          body.admin-mobile-shell #mob-header .mob-notification-dropdown {
+            display: none !important;
             position: fixed !important;
             top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px) !important;
             right: max(10px, env(safe-area-inset-right, 0px)) !important;
@@ -1867,11 +1868,18 @@
             background: var(--admin-notif-bg) !important;
             border-color: var(--admin-notif-border) !important;
             color: var(--admin-notif-text);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
          }
 
+         body.admin-mobile-shell.admin-notification-menu-open #mob-header .mob-notification-dropdown,
          body.admin-mobile-shell #mob-header .mob-notification-dropdown.show {
-            display: flex;
+            display: flex !important;
             flex-direction: column;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
          }
 
          body.admin-mobile-shell #mob-header .admin-mob-notif-header,
@@ -2182,13 +2190,13 @@
          </a>
          <div class="mob-header-right">
             <div class="dropdown mob-notification-wrap">
-                <a href="#" id="mobNotificationBtn" class="mob-icon-btn position-relative" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Live Activity" style="text-decoration:none;" onclick="resetAdminActivityBadge('mobile'); closeMobileProfile();">
+                <a href="#" id="mobNotificationBtn" class="mob-icon-btn position-relative" aria-expanded="false" aria-haspopup="dialog" title="Live Activity" style="text-decoration:none;" onclick="toggleMobileNotifications(event);">
                    <i class="fa-regular fa-bell"></i>
                    <span id="admin-activity-badge-mobile" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-dark rounded-circle" style="display:none; width: 8px; height: 8px; margin-left: -5px; margin-top: 5px;">
                       <span class="visually-hidden">New alerts</span>
                    </span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-end mob-notification-dropdown">
+                <div id="mobNotificationDropdown" class="dropdown-menu dropdown-menu-end mob-notification-dropdown" aria-hidden="true">
                     <div class="admin-mob-notif-header">
                         <div class="admin-mob-notif-title">
                             <i class="fa-regular fa-bell" style="color:var(--pur)"></i>
@@ -3329,16 +3337,57 @@
             }
          }
 
+         function getMobileNotificationDropdown() {
+            return document.getElementById('mobNotificationDropdown') || document.querySelector('.mob-notification-dropdown');
+         }
+
          function setMobileNotificationLayer(isOpen) {
-            document.body.classList.toggle('admin-notification-menu-open', Boolean(isOpen));
+            const notificationButton = document.getElementById('mobNotificationBtn');
+            const notificationDropdown = getMobileNotificationDropdown();
+            const open = Boolean(isOpen);
+
+            document.body.classList.toggle('admin-notification-menu-open', open);
+
+            if (notificationDropdown) {
+               notificationDropdown.classList.toggle('show', open);
+               notificationDropdown.setAttribute('aria-hidden', open ? 'false' : 'true');
+               notificationDropdown.style.removeProperty('position');
+               notificationDropdown.style.removeProperty('inset');
+               notificationDropdown.style.removeProperty('transform');
+            }
+
+            if (notificationButton) {
+               notificationButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+         }
+
+         function toggleMobileNotifications(event) {
+            if (event) {
+               event.preventDefault();
+               event.stopPropagation();
+            }
+
+            const willOpen = !document.body.classList.contains('admin-notification-menu-open');
+            if (willOpen) {
+               closeMobileProfile();
+               if (typeof resetAdminActivityBadge === 'function') {
+                  resetAdminActivityBadge('mobile');
+               }
+               if (typeof fetchAdminActivities === 'function') {
+                  fetchAdminActivities();
+               }
+            }
+
+            setMobileNotificationLayer(willOpen);
          }
 
          function hideMobileNotificationDropdown() {
-            setMobileNotificationLayer(false);
             const notificationButton = document.getElementById('mobNotificationBtn');
-            if (!notificationButton || typeof bootstrap === 'undefined' || !bootstrap.Dropdown) return;
-            const dropdown = bootstrap.Dropdown.getInstance(notificationButton) || bootstrap.Dropdown.getOrCreateInstance(notificationButton);
-            dropdown.hide();
+            const bootstrapDropdown = notificationButton && typeof bootstrap !== 'undefined' && bootstrap.Dropdown
+               ? bootstrap.Dropdown.getInstance(notificationButton)
+               : null;
+            if (bootstrapDropdown) bootstrapDropdown.hide();
+            setMobileNotificationLayer(false);
          }
 
          function resetMobileProfileMenuScroll() {
@@ -3380,11 +3429,24 @@
             const moreDropdown = document.getElementById('mobMoreDropdown');
             const profileButton = document.getElementById('mobProfileBtn');
             const moreButton = document.getElementById('mobnav-more');
+            const notificationDropdown = getMobileNotificationDropdown();
+            const notificationButton = document.getElementById('mobNotificationBtn');
+            const notificationOpen = document.body.classList.contains('admin-notification-menu-open');
+            const clickedOutsideNotification = !notificationDropdown?.contains(e.target) && !notificationButton?.contains(e.target);
             const clickedOutsideProfile = !profileDropdown?.contains(e.target);
             const clickedOutsideMore = !moreDropdown?.contains(e.target);
             const anyDropdownOpen = profileDropdown?.classList.contains('open') || moreDropdown?.classList.contains('open');
+            if (notificationOpen && clickedOutsideNotification) {
+               hideMobileNotificationDropdown();
+            }
             if (anyDropdownOpen && clickedOutsideProfile && clickedOutsideMore && !moreButton?.contains(e.target) && !profileButton?.contains(e.target)) {
                closeMobileProfile();
+            }
+         });
+
+         document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+               hideMobileNotificationDropdown();
             }
          });
 
@@ -3402,15 +3464,10 @@
 
             const notificationButton = document.getElementById('mobNotificationBtn');
             if (notificationButton) {
-               notificationButton.addEventListener('show.bs.dropdown', function() {
-                  setMobileNotificationLayer(true);
-                  closeMobileProfile();
-               });
-               notificationButton.addEventListener('shown.bs.dropdown', function() {
-                  setMobileNotificationLayer(true);
-               });
-               notificationButton.addEventListener('hidden.bs.dropdown', function() {
-                  setMobileNotificationLayer(false);
+               notificationButton.addEventListener('keydown', function(event) {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                     toggleMobileNotifications(event);
+                  }
                });
             }
 
@@ -3458,7 +3515,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=10')
+               navigator.serviceWorker.register('/sw.js?v=12')
                   .then(r => console.log('SW:', r.scope))
                   .catch(e => console.log('SW fail:', e));
             });
