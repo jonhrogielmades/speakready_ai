@@ -111,7 +111,7 @@
  <div class="review-quick-head">
  <div>
  <div class="review-kicker">Feedback Detailed Review</div>
- <h5 id="review-quick-title">Short Review</h5>
+ <h5 id="review-quick-title">Overall Review</h5>
  </div>
  <div class="review-overall-score" style="--review-score-color: {{ $scoreColor }};">
  <strong>{{ $overallScore === null ? 'Pending' : $overallScore.'%' }}</strong>
@@ -121,7 +121,7 @@
 
  <div class="review-quick-grid">
  <section class="review-quick-block review-quick-block-wide">
- <div class="review-block-title"><i class="fa-solid fa-clipboard-check"></i><span>Overall Feedback</span></div>
+ <div class="review-block-title"><i class="fa-solid fa-clipboard-check"></i><span>All Answer Review Summary</span></div>
  <p>{{ $overallSummary }}</p>
  </section>
 

@@ -593,8 +593,9 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->get(route('user.review', $session))
  ->assertOk()
  ->assertSee('Feedback Detailed Review')
- ->assertSee('Overall Feedback')
- ->assertSee('This feedback is based on the 1 saved answer in this session')
+ ->assertSee('Overall Review')
+ ->assertSee('All Answer Review Summary')
+ ->assertSee('This overall review is based on the 1 answer review in this session')
  ->assertSee('Answer-match checks show 1 answered partly')
  ->assertSee('Overall readiness is 74%, with Fluency &amp; Clarity as the lowest recorded area at 45% and Grammar as the highest at 88%', false)
  ->assertSee('Top focus: Answer structure; 1 of 1 answers need a clearer opening and result; next practice: Use STAR structure and add one measurable result')
@@ -620,7 +621,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('AI Feedback', false);
  }
 
- public function test_detailed_review_cleans_short_review_feedback_but_shows_answer_review_question(): void
+ public function test_detailed_review_cleans_overall_review_feedback_but_shows_answer_review_question(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('Personal');
@@ -661,7 +662,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Short Review')
+ ->assertSee('Overall Review')
  ->assertSee('Answer Review')
  ->assertSee('Question 1')
  ->assertSee('Please introduce yourself.')

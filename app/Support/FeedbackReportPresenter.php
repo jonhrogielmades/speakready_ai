@@ -156,8 +156,8 @@ class FeedbackReportPresenter
  ->filter(fn ($answer): bool => ! (bool) ($answer->is_skipped?? false) && self::answerContent($answer)!== '')
  ->count();
  $skippedCount = $answers->filter(fn ($answer): bool => (bool) ($answer->is_skipped?? false))->count();
- $answerLabel = $answerCount === 1? 'the 1 saved answer': 'all '.$answerCount.' saved answers';
- $answerScope = 'This feedback is based on '.$answerLabel.' in this session and does not assume details outside '.($answerCount === 1? 'it': 'them');
+ $answerLabel = $answerCount === 1? 'the 1 answer review': 'all '.$answerCount.' answer reviews';
+ $answerScope = 'This overall review is based on '.$answerLabel.' in this session and does not assume details outside the saved '.($answerCount === 1? 'answer': 'answers');
  if ($skippedCount > 0 || $answeredCount !== $answerCount) {
  $parts = [];
  if ($answeredCount > 0) {
