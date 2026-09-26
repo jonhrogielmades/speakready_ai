@@ -279,6 +279,61 @@ class FeedbackReportPresenter
  return self::limitText($clean, $limit);
  }
 
+ private static function answerReviewPattern(array $items): string
+ {
+ $patterns = [];
+ foreach ($items as $item) {
+ $pattern = self::generalizeAnswerReviewItem((string) $item);
+ if ($pattern === '' || in_array($pattern, $patterns, true)) {
+ continue;
+ }
+
+ $patterns[] = $pattern;
+ if (count($patterns) >= 2) {
+ break;
+ }
+ }
+
+ return self::humanList($patterns);
+ }
+
+ private static function generalizeAnswerReviewItem(string $item): string
+ {
+ $text = self::cleanText($item);
+ $text = preg_replace('/^Answer\s+\d+\s*:\s*/iu', '', $text)?? $text;
+ $text = trim($text, " \t\n\r\0\x0B.?!;");
+ if ($text === '') {
+ return '';
+ }
+
+ $verbMap = [
+ 'names' => 'name',
+ 'explains' => 'explain',
+ 'includes' => 'include',
+ 'shows' => 'show',
+ 'gives' => 'give',
+ 'uses' => 'use',
+ 'mentions' => 'mention',
+ 'states' => 'state',
+ 'adds' => 'add',
+ 'identifies' => 'identify',
+ ];
+
+ $text = preg_replace_callback(
+ '/^(?:the\s+)?(?:saved\s+)?answer\s+(' . implode('|', array_keys($verbMap)) . ')\b/iu',
+ static fn (array $matches): string => 'the reviewed answers '.$verbMap[mb_strtolower($matches[1])],
+ $text
+ )?? $text;
+ $text = preg_replace('/^(?:the\s+)?(?:saved\s+)?answer\s+needs?\b/iu', 'the reviewed answers need', $text)?? $text;
+ $text = preg_replace('/^this\s+answer\s+/iu', 'the reviewed answers ', $text)?? $text;
+ $text = preg_replace('/^add\s+/iu', 'the reviewed answers need to add ', $text)?? $text;
+ $text = preg_replace('/^use\s+/iu', 'the reviewed answers need to use ', $text)?? $text;
+ $text = preg_replace('/^include\s+/iu', 'the reviewed answers need to include ', $text)?? $text;
+ $text = preg_replace('/^no\s+answer\s+was\s+submitted\b/iu', 'some answer reviews have no submitted response', $text)?? $text;
+
+ return self::limitText($text, 180);
+ }
+
  private static function overallSummary(
  InterviewSession $session,
  ?int $overall,
@@ -331,15 +386,15 @@ class FeedbackReportPresenter
  $sentences[] = 'The readiness score is still pending, so the safest next step is to use the answer notes instead of guessing performance.';
  }
 
- $strength = self::limitText((string) ($strengthItems[0]?? ''), 190);
- if ($strength!== '') {
- $sentences[] = self::sentence('Main strength from the answer reviews: '.$strength);
+ $strengthPattern = self::answerReviewPattern($strengthItems);
+ if ($strengthPattern!== '') {
+ $sentences[] = self::sentence('Strength pattern across the answer reviews: '.$strengthPattern);
  }
 
- $weakness = self::limitText((string) ($weaknessItems[0]?? ''), 190);
+ $weaknessPattern = self::answerReviewPattern($weaknessItems);
  $suggestion = self::firstEvidenceItem($suggestions, 170);
- if ($weakness!== '') {
- $sentences[] = self::sentence('Main weakness from the answer reviews: '.$weakness);
+ if ($weaknessPattern!== '') {
+ $sentences[] = self::sentence('Weakness pattern across the answer reviews: '.$weaknessPattern);
  }
 
  $prioritySentence = self::priorityContextSentence((array) data_get($summary, 'priority_actions', []));
