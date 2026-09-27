@@ -178,16 +178,6 @@
  @endif
  <a href="{{ $feedbackEvidence->next_action->review_url }}">Open evidence <i class="fa-solid fa-arrow-right"></i></a>
  </div>
- @if($feedbackEvidence->recurring_focus->isNotEmpty())
- <div class="feedback-focus-list">
- @foreach($feedbackEvidence->recurring_focus as $focus)
- <div>
- <span>{{ $focus->count }}x</span>
- <p><strong>{{ $focus->area }}</strong>{{ $focus->action !== '' ? ' - '.$focus->action : '' }}</p>
- </div>
- @endforeach
- </div>
- @endif
  </section>
  @endif
 
@@ -238,7 +228,6 @@
  </div>
  @endif
  <p class="feedback-answer-feedback"><strong>Feedback:</strong> {{ $answerCoaching->feedback }}</p>
- <p class="feedback-answer-focus"><strong>Next practice:</strong> {{ $answerCoaching->next_practice ?? $answerCoaching->improvement }}</p>
  @if(($answerCoaching->success_check ?? '') !== '')
  <p class="feedback-answer-impact"><strong>Success check:</strong> {{ $answerCoaching->success_check }}</p>
  @endif
