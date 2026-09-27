@@ -277,11 +277,12 @@
                                  'text' => 'Review notification state and recent account activity from the desktop notifications page.',
                               ],
                            ];
+                           $desktopPreviewAssetVersion = '20260927';
                         @endphp
                         <div class="swiper-wrapper">
                            @foreach($desktopPreviewSlides as $slide)
                               @php
-                                 $previewImageSrc = asset($slide['image']);
+                                 $previewImageSrc = asset($slide['image']).'?v='.$desktopPreviewAssetVersion;
                                  $shouldPreloadPreview = $loop->first || $loop->iteration === 2 || $loop->last;
                               @endphp
                               <div class="swiper-slide desktop-preview-image-slide">
@@ -1404,7 +1405,7 @@
       <script>
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=10').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=11').then(function(registration) {
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
