@@ -310,11 +310,6 @@
  </div>
  @endforeach
  </div>
- @if(!empty($starAnalysis['suggestion']))
- <p style="color:var(--tx3);font-size:0.9rem;margin-top:12px;margin-bottom:0;">
- <strong style="color:#b45309;">Next practice:</strong> {{ $starAnalysis['suggestion'] }}
- </p>
- @endif
  </div>
  @elseif(($sessionRecord->score->star_method_score?? 0) > 0)
  <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">

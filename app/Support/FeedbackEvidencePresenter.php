@@ -25,7 +25,7 @@ final class FeedbackEvidencePresenter
             'reliability' => self::sessionReliability($session, $answerCards),
             'proof_stats' => self::proofStats($session, $answerCards),
             'next_action' => self::nextAction($session, $answerCards),
-            'recurring_focus' => self::recurringFocus($session, $answerCards),
+            'recurring_focus' => collect(),
             'answers' => $answerCards,
         ];
     }

@@ -111,7 +111,7 @@
  <div id="aiQuestionText" class="visually-hidden" aria-hidden="true">Loading your first question...</div>
 
  <!-- Unified Responsive Interview Controls (Desktop & Mobile) -->
- <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
+ <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150 interview-panel-actions" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
  <!-- Left: Navigation / Secondary -->
  <div class="d-flex gap-2 w-100 flex-fill">
  <button type="button" class="btn btn-outline-info flex-fill session-action-btn session-repeat-btn" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question">Repeat</button>
@@ -119,7 +119,7 @@
  </div>
  
  </div>
- <div id="answerTranscriptControls" class="answer-transcript-controls" aria-label="Voice recording controls" hidden>
+ <div id="answerTranscriptControls" class="answer-transcript-controls interview-panel-voice-actions" aria-label="Voice recording controls" hidden>
  <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
  <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
  <div class="d-flex gap-2">
@@ -616,7 +616,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  && Boolean(window.MediaRecorder)
  && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
  const displayRealtimeTranscriptInTextarea = true;
- let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null)): null;
+ let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (canUseServerTranscription()? 'server': (BrowserSpeechRecognition? 'browser': null)): null;
  const duplicateSafeWordSet = new Set([
  'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
  'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
@@ -2306,8 +2306,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function preferredTranscriptionEngine() {
  if (!isHybridTranscriptionMode()) return null;
  if (microphoneRequiresSecureOrigin()) return null;
- if (recognition) return 'browser';
  if (canUseServerTranscription()) return 'server';
+ if (recognition) return 'browser';
  return null;
  }
 
@@ -3188,6 +3188,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  if (canonicalResponseMode === 'voice') {
  return '';
+ }
+
+ if (canonicalResponseMode === 'hybrid') {
+ return 'Speak your answer, then edit the transcript here if needed...';
  }
 
  return '';
@@ -5289,7 +5293,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  updateAnswerTranscriptionOverlay();
  if (isHybridTranscriptionMode()) {
  const hasTranscriptText = currentAnswerTextareaText().trim() !== '';
- setTranscriptionStatus(hasTranscriptText? (generatedFinalTranscript? 'Recording stopped - transcript generated and ready to edit': 'Recording stopped - transcript is ready to edit'): 'Recording stopped - no speech detected yet', hasTranscriptText? '#16a34a': '#fbbf24');
+ setTranscriptionStatus(hasTranscriptText? (generatedFinalTranscript? 'Recording stopped - transcript generated and ready to edit': 'Recording stopped - transcript is ready to edit'): '', hasTranscriptText? '#16a34a': undefined);
  } else if (isVoiceOnlyMode()) {
  setTranscriptionStatus('Recording stopped');
  } else {

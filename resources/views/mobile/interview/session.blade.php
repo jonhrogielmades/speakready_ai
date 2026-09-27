@@ -3184,6 +3184,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return '';
  }
 
+ if (canonicalResponseMode === 'hybrid') {
+ return 'Speak your answer, then edit the transcript here if needed...';
+ }
+
  return '';
  }
 
@@ -5054,7 +5058,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  updateAnswerTranscriptionOverlay();
  if (isHybridTranscriptionMode()) {
  const hasTranscriptText = currentAnswerTextareaText().trim() !== '';
- setTranscriptionStatus(hasTranscriptText? (generatedFinalTranscript? 'Recording stopped - transcript generated and ready to edit': 'Recording stopped - transcript is ready to edit'): 'Recording stopped - no speech detected yet', hasTranscriptText? '#16a34a': '#fbbf24');
+ setTranscriptionStatus(hasTranscriptText? (generatedFinalTranscript? 'Recording stopped - transcript generated and ready to edit': 'Recording stopped - transcript is ready to edit'): '', hasTranscriptText? '#16a34a': undefined);
  } else if (isVoiceOnlyMode()) {
  setTranscriptionStatus('Recording stopped');
  } else {
