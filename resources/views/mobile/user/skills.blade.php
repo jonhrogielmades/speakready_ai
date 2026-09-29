@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/skills.css?v=1') }}" data-page-style="user-skills">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/skills-2.css?v=1') }}" data-page-style="user-skills-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/skills-2.css?v=2') }}" data-page-style="user-skills-2">
 @endpush
 
 @section('content')

@@ -1,5 +1,7 @@
 services:
   app:
+    image: "${APP_IMAGE_NAME:-speakready-ai}:${APP_IMAGE_TAG:-latest}"
+    pull_policy: build
     build:
       context: .
       dockerfile: Dockerfile

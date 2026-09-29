@@ -625,6 +625,29 @@ REPAIR_FEEDBACK_LIMIT=250
 
 Use this only when older completed interviews need feedback coaching backfill during startup.
 
+### Dokploy GitHub Auto Deploy
+
+Use Dokploy's Docker Compose service for this repository:
+
+```text
+Provider: GitHub
+Repository: jonhrogielmades/speakready_ai
+Branch: main
+Compose Path: ./docker-compose.yml
+Compose Type: Docker Compose, not Stack
+Auto Deploy: enabled
+```
+
+In Dokploy, paste the values from `dokploy.env.example` into the Docker Compose environment editor, then replace every `CHANGE_ME_*` value with production secrets. Keep `APP_KEY`, `DB_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `APP_URL`, `SESSION_DOMAIN`, and any AI/mail/OAuth keys stable between deploys.
+
+The `app` service sets `pull_policy: build`, so each Dokploy deploy rebuilds the image from the freshly cloned GitHub commit. If you override Dokploy's advanced command, include build and orphan cleanup flags:
+
+```text
+compose -p speakready-ai -f docker-compose.yml up -d --build --remove-orphans
+```
+
+Dokploy's GitHub integration automatically deploys pushes to the selected branch. If you use a webhook or API trigger instead, the included `.github/workflows/dokploy-deploy.yml` can trigger Dokploy on every push to `main`. Configure either `DOKPLOY_WEBHOOK_URL`, or all three API secrets: `DOKPLOY_URL`, `DOKPLOY_API_KEY`, and `DOKPLOY_COMPOSE_ID`.
+
 ## Useful Artisan Commands
 
 ```bash

@@ -1567,3 +1567,312 @@
     padding-top: 10px;
     font-size: .78rem;
 }
+
+/* Mobile readability pass: medium-sized text and icons for Detailed Review. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content .review-shell > .mb-4:first-child,
+    html body #mob-content .review-shell > .mb-4:first-child {
+        gap: 14px !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .btn-link,
+    html body #mob-content .review-shell .btn-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        font-size: 0.95rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .text-gradient-primary,
+    html body #mob-content .review-shell .text-gradient-primary {
+        font-size: 1.35rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .text-gradient-primary i,
+    html body #mob-content .review-shell .text-gradient-primary i {
+        font-size: 1.15rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .feedback-report-meta,
+    html body #mob-content .review-shell .feedback-report-meta {
+        gap: 8px 12px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.35 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .feedback-report-meta i,
+    html body #mob-content .review-shell .feedback-report-meta i,
+    body.user-mobile-shell #mob-content .review-shell i,
+    html body #mob-content .review-shell i {
+        font-size: max(0.95rem, 1em) !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .feedback-report-actions > .btn,
+    html body #mob-content .review-shell .feedback-report-actions > .btn,
+    body.user-mobile-shell #mob-content .review-shell .dropdown-item,
+    html body #mob-content .review-shell .dropdown-item {
+        min-height: 42px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .early-ended-review-alert,
+    html body #mob-content .review-shell .early-ended-review-alert,
+    body.user-mobile-shell #mob-content .review-shell .alert,
+    html body #mob-content .review-shell .alert {
+        font-size: 0.9rem !important;
+        line-height: 1.45 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-session-reliability-main span,
+    html body #mob-content .review-shell .review-session-reliability-main span,
+    body.user-mobile-shell #mob-content .review-shell .review-session-next-action span,
+    html body #mob-content .review-shell .review-session-next-action span,
+    body.user-mobile-shell #mob-content .review-shell .review-evidence-kicker,
+    html body #mob-content .review-shell .review-evidence-kicker,
+    body.user-mobile-shell #mob-content .review-shell .review-evidence-grid span,
+    html body #mob-content .review-shell .review-evidence-grid span,
+    body.user-mobile-shell #mob-content .review-shell .review-session-proof-grid span,
+    html body #mob-content .review-shell .review-session-proof-grid span {
+        font-size: 0.76rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-session-reliability-main strong,
+    html body #mob-content .review-shell .review-session-reliability-main strong {
+        font-size: 1.2rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-session-reliability-main p,
+    html body #mob-content .review-shell .review-session-reliability-main p,
+    body.user-mobile-shell #mob-content .review-shell .review-session-next-action p,
+    html body #mob-content .review-shell .review-session-next-action p,
+    body.user-mobile-shell #mob-content .review-shell .review-evidence-note,
+    html body #mob-content .review-shell .review-evidence-note,
+    body.user-mobile-shell #mob-content .review-shell .review-evidence-grid p,
+    html body #mob-content .review-shell .review-evidence-grid p,
+    body.user-mobile-shell #mob-content .review-shell .review-evidence-grid li,
+    html body #mob-content .review-shell .review-evidence-grid li,
+    body.user-mobile-shell #mob-content .review-shell .review-evidence-limitation,
+    html body #mob-content .review-shell .review-evidence-limitation {
+        font-size: 0.9rem !important;
+        line-height: 1.5 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-session-proof-grid strong,
+    html body #mob-content .review-shell .review-session-proof-grid strong,
+    body.user-mobile-shell #mob-content .review-shell .review-session-next-action strong,
+    html body #mob-content .review-shell .review-session-next-action strong {
+        font-size: 1.05rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-quick-panel,
+    html body #mob-content .review-shell .review-quick-panel {
+        gap: 14px !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-kicker,
+    html body #mob-content .review-shell .review-kicker {
+        font-size: 0.74rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-quick-head h5,
+    html body #mob-content .review-shell .review-quick-head h5 {
+        font-size: 1.12rem !important;
+        line-height: 1.22 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-overall-score,
+    html body #mob-content .review-shell .review-overall-score {
+        min-width: 96px !important;
+        min-height: 56px !important;
+        padding: 9px 11px !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-overall-score strong,
+    html body #mob-content .review-shell .review-overall-score strong {
+        font-size: 1.45rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-overall-score span,
+    html body #mob-content .review-shell .review-overall-score span {
+        font-size: 0.78rem !important;
+        line-height: 1.12 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-block-title,
+    html body #mob-content .review-shell .review-block-title,
+    body.user-mobile-shell #mob-content .review-shell .answer-review-body .review-block-title,
+    html body #mob-content .review-shell .answer-review-body .review-block-title {
+        gap: 8px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.22 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-block-title i,
+    html body #mob-content .review-shell .review-block-title i,
+    body.user-mobile-shell #mob-content .review-shell .answer-review-body .review-block-title i,
+    html body #mob-content .review-shell .answer-review-body .review-block-title i {
+        font-size: 0.95rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-quick-block p,
+    html body #mob-content .review-shell .review-quick-block p,
+    body.user-mobile-shell #mob-content .review-shell .review-short-list,
+    html body #mob-content .review-shell .review-short-list,
+    body.user-mobile-shell #mob-content .review-shell .review-answer-section p,
+    html body #mob-content .review-shell .review-answer-section p,
+    body.user-mobile-shell #mob-content .review-shell .review-answer-example-grid p,
+    html body #mob-content .review-shell .review-answer-example-grid p,
+    body.user-mobile-shell #mob-content .review-shell .early-ended-response-card,
+    html body #mob-content .review-shell .early-ended-response-card {
+        font-size: 0.9rem !important;
+        line-height: 1.5 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-score-item,
+    html body #mob-content .review-shell .review-score-item {
+        min-height: 42px !important;
+        padding: 9px 10px !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-score-item span,
+    html body #mob-content .review-shell .review-score-item span {
+        font-size: 0.86rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-score-item strong,
+    html body #mob-content .review-shell .review-score-item strong {
+        font-size: 0.98rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-practice-btn,
+    html body #mob-content .review-shell .review-practice-btn,
+    body.user-mobile-shell #mob-content .review-shell .answer-retry-action > .btn,
+    html body #mob-content .review-shell .answer-retry-action > .btn,
+    body.user-mobile-shell #mob-content .review-shell .retry-panel .btn,
+    html body #mob-content .review-shell .retry-panel .btn {
+        min-height: 42px !important;
+        gap: 8px !important;
+        font-size: 0.86rem !important;
+        line-height: 1.15 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .answer-review-heading,
+    html body #mob-content .review-shell .answer-review-heading {
+        font-size: 1.18rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .answer-review-toggle,
+    html body #mob-content .review-shell .answer-review-toggle {
+        grid-template-columns: minmax(0, 1fr) 22px !important;
+        gap: 10px !important;
+        padding: 13px 14px !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .answer-review-toggle::after,
+    html body #mob-content .review-shell .answer-review-toggle::after {
+        width: 18px !important;
+        height: 18px !important;
+        background-size: 18px 18px !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .answer-review-title,
+    html body #mob-content .review-shell .answer-review-title {
+        font-size: 0.98rem !important;
+        line-height: 1.36 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .answer-review-question-text,
+    html body #mob-content .review-shell .answer-review-question-text {
+        font-size: 0.9rem !important;
+        line-height: 1.45 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .answer-review-score .badge,
+    html body #mob-content .review-shell .answer-review-score .badge,
+    body.user-mobile-shell #mob-content .review-shell .retry-chip,
+    html body #mob-content .review-shell .retry-chip,
+    body.user-mobile-shell #mob-content .review-shell .review-evidence-badges span,
+    html body #mob-content .review-shell .review-evidence-badges span {
+        min-height: 30px !important;
+        padding: 6px 10px !important;
+        gap: 7px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.15 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .answer-review-body,
+    html body #mob-content .review-shell .answer-review-body {
+        gap: 12px !important;
+        padding: 13px 14px 14px !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-answer-section,
+    body.user-mobile-shell #mob-content .review-shell .review-answer-section-wide,
+    body.user-mobile-shell #mob-content .review-shell .review-answer-example-grid > section,
+    html body #mob-content .review-shell .review-answer-section,
+    html body #mob-content .review-shell .review-answer-section-wide,
+    html body #mob-content .review-shell .review-answer-example-grid > section {
+        gap: 9px !important;
+        padding: 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-answer-example-grid span,
+    html body #mob-content .review-shell .review-answer-example-grid span {
+        font-size: 0.74rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-answer-proof,
+    html body #mob-content .review-shell .review-answer-proof {
+        font-size: 0.84rem !important;
+        line-height: 1.45 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .early-ended-answer-note,
+    html body #mob-content .review-shell .early-ended-answer-note,
+    body.user-mobile-shell #mob-content .review-shell .answer-review-body .alert,
+    html body #mob-content .review-shell .answer-review-body .alert {
+        gap: 9px !important;
+        padding: 11px 12px !important;
+        font-size: 0.86rem !important;
+        line-height: 1.45 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .answer-review-body > .mt-4.p-4 h6,
+    html body #mob-content .review-shell .answer-review-body > .mt-4.p-4 h6 {
+        font-size: 0.9rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .answer-review-body > .mt-4.p-4 p,
+    html body #mob-content .review-shell .answer-review-body > .mt-4.p-4 p {
+        font-size: 0.86rem !important;
+        line-height: 1.45 !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .retry-textarea,
+    html body #mob-content .review-shell .retry-textarea {
+        font-size: 0.92rem !important;
+        line-height: 1.5 !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.user-mobile-shell #mob-content .review-shell .review-quick-head,
+    html body #mob-content .review-shell .review-quick-head {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-overall-score,
+    html body #mob-content .review-shell .review-overall-score {
+        width: 100% !important;
+    }
+}

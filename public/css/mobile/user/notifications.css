@@ -2167,3 +2167,315 @@
         white-space: nowrap !important;
     }
 }
+
+/* Mobile readability pass: medium-sized Notifications content and controls. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #notifications-page .notif-page-alert,
+    html body #mob-content #notifications-page .notif-page-alert,
+    html body #notifications-page .notif-page-alert {
+        padding: 11px 12px !important;
+        border-radius: 12px !important;
+        font-size: 0.86rem !important;
+        line-height: 1.35 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notif-bulk-actions,
+    html body #mob-content #notifications-page .notif-bulk-actions,
+    html body #notifications-page .notif-bulk-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notif-bulk-btn,
+    html body #mob-content #notifications-page .notif-bulk-btn,
+    html body #notifications-page .notif-bulk-btn {
+        min-height: 44px !important;
+        padding: 9px 10px !important;
+        border-radius: 10px !important;
+        gap: 7px !important;
+        font-size: 0.84rem !important;
+        line-height: 1.16 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notif-bulk-btn i,
+    html body #mob-content #notifications-page .notif-bulk-btn i,
+    html body #notifications-page .notif-bulk-btn i {
+        font-size: 0.9rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-row,
+    html body #mob-content #notifications-page .notification-row,
+    html body #notifications-page .notification-row {
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        gap: 12px !important;
+        padding: 14px !important;
+        border-radius: 14px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-icon-box,
+    html body #mob-content #notifications-page .notification-icon-box,
+    html body #notifications-page .notification-icon-box {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 12px !important;
+        font-size: 1.05rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-head,
+    html body #mob-content #notifications-page .notification-head,
+    html body #notifications-page .notification-head {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-head-copy,
+    html body #mob-content #notifications-page .notification-head-copy,
+    html body #notifications-page .notification-head-copy {
+        gap: 7px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-title,
+    html body #mob-content #notifications-page .notification-title,
+    html body #notifications-page .notification-title {
+        font-size: 0.96rem !important;
+        line-height: 1.3 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page :is(.notification-status-badge, .notification-meta),
+    html body #mob-content #notifications-page :is(.notification-status-badge, .notification-meta),
+    html body #notifications-page :is(.notification-status-badge, .notification-meta) {
+        min-height: 30px !important;
+        padding: 6px 9px !important;
+        border-radius: 999px !important;
+        gap: 6px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.1 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-meta i,
+    html body #mob-content #notifications-page .notification-meta i,
+    html body #notifications-page .notification-meta i {
+        font-size: 0.82rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-message,
+    html body #mob-content #notifications-page .notification-message,
+    html body #notifications-page .notification-message {
+        margin-top: 8px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.45 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-actions,
+    html body #mob-content #notifications-page .notification-actions,
+    html body #notifications-page .notification-actions {
+        grid-column: 1 / -1 !important;
+        grid-row: auto !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 2px 0 0 !important;
+        justify-content: stretch !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-actions > :only-child,
+    html body #mob-content #notifications-page .notification-actions > :only-child,
+    html body #notifications-page .notification-actions > :only-child {
+        grid-column: 1 / -1 !important;
+        width: min(100%, 152px) !important;
+        justify-self: start !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-action-btn,
+    html body #mob-content #notifications-page .notification-action-btn,
+    html body #notifications-page .notification-action-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        min-height: 42px !important;
+        padding: 9px 10px !important;
+        border-radius: 10px !important;
+        gap: 6px !important;
+        font-size: 0.82rem !important;
+        font-weight: 850 !important;
+        line-height: 1.15 !important;
+        white-space: normal !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notification-action-btn i,
+    html body #mob-content #notifications-page .notification-action-btn i,
+    html body #notifications-page .notification-action-btn i {
+        font-size: 0.88rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notifications-empty-state,
+    html body #mob-content #notifications-page .notifications-empty-state,
+    html body #notifications-page .notifications-empty-state {
+        min-height: 144px !important;
+        padding: 18px !important;
+        gap: 10px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.4 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notifications-empty-icon,
+    html body #mob-content #notifications-page .notifications-empty-icon,
+    html body #notifications-page .notifications-empty-icon {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        border-radius: 14px !important;
+        font-size: 1.15rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .notifications-pagination .page-link,
+    body.user-mobile-shell #mob-content #notifications-page .notifications-pagination span.page-link,
+    html body #mob-content #notifications-page .notifications-pagination .page-link,
+    html body #mob-content #notifications-page .notifications-pagination span.page-link,
+    html body #notifications-page .notifications-pagination .page-link,
+    html body #notifications-page .notifications-pagination span.page-link {
+        min-width: 42px !important;
+        min-height: 42px !important;
+        padding: 9px 11px !important;
+        font-size: 0.86rem !important;
+        line-height: 1.1 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-header,
+    html body #mob-content #notifications-page .activity-history-header,
+    html body #notifications-page .activity-history-header {
+        grid-template-columns: minmax(0, 1fr) !important;
+        min-height: auto !important;
+        gap: 12px !important;
+        padding: 16px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-heading,
+    html body #mob-content #notifications-page .activity-history-heading,
+    html body #notifications-page .activity-history-heading {
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page :is(.activity-history-icon, .activity-history-row-icon),
+    html body #mob-content #notifications-page :is(.activity-history-icon, .activity-history-row-icon),
+    html body #notifications-page :is(.activity-history-icon, .activity-history-row-icon) {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 12px !important;
+        font-size: 1.05rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-title,
+    html body #mob-content #notifications-page .activity-history-title,
+    html body #notifications-page .activity-history-title {
+        font-size: 1.05rem !important;
+        line-height: 1.24 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-subtitle,
+    html body #mob-content #notifications-page .activity-history-subtitle,
+    html body #notifications-page .activity-history-subtitle {
+        font-size: 0.88rem !important;
+        line-height: 1.38 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-header-meta,
+    html body #mob-content #notifications-page .activity-history-header-meta,
+    html body #notifications-page .activity-history-header-meta {
+        grid-column: auto !important;
+        grid-row: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        gap: 8px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page :is(.activity-history-count, .activity-history-time, .activity-history-date),
+    html body #mob-content #notifications-page :is(.activity-history-count, .activity-history-time, .activity-history-date),
+    html body #notifications-page :is(.activity-history-count, .activity-history-time, .activity-history-date) {
+        min-height: 30px !important;
+        padding: 6px 9px !important;
+        border-radius: 999px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.1 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-action-btn,
+    html body #mob-content #notifications-page .activity-history-action-btn,
+    html body #notifications-page .activity-history-action-btn {
+        width: auto !important;
+        min-width: 104px !important;
+        height: auto !important;
+        min-height: 42px !important;
+        padding: 9px 10px !important;
+        border-radius: 10px !important;
+        gap: 6px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.15 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-action-btn i,
+    html body #mob-content #notifications-page .activity-history-action-btn i,
+    html body #notifications-page .activity-history-action-btn i {
+        font-size: 0.88rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-row,
+    html body #mob-content #notifications-page .activity-history-row,
+    html body #notifications-page .activity-history-row {
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        gap: 12px !important;
+        padding: 14px !important;
+        border-radius: 14px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-row-title,
+    html body #mob-content #notifications-page .activity-history-row-title,
+    html body #notifications-page .activity-history-row-title {
+        font-size: 0.94rem !important;
+        line-height: 1.3 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-message,
+    html body #mob-content #notifications-page .activity-history-message,
+    html body #notifications-page .activity-history-message {
+        font-size: 0.88rem !important;
+        line-height: 1.42 !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-row-foot,
+    html body #mob-content #notifications-page .activity-history-row-foot,
+    html body #notifications-page .activity-history-row-foot {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    body.user-mobile-shell #mob-content #notifications-page .activity-history-date,
+    html body #mob-content #notifications-page .activity-history-date,
+    html body #notifications-page .activity-history-date {
+        max-width: none !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.user-mobile-shell #mob-content #notifications-page .notif-bulk-actions,
+    html body #mob-content #notifications-page .notif-bulk-actions,
+    html body #notifications-page .notif-bulk-actions,
+    body.user-mobile-shell #mob-content #notifications-page .notification-actions,
+    html body #mob-content #notifications-page .notification-actions,
+    html body #notifications-page .notification-actions {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

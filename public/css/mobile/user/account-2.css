@@ -1546,3 +1546,283 @@
         font-size: 0.82rem !important;
     }
 }
+
+/* Mobile readability pass: medium-sized Account content, forms, and controls. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #account-page .alert,
+    html body #mob-content #account-page .alert,
+    html body #account-page .alert {
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.4 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-card,
+    html body #mob-content #account-page .account-card,
+    html body #account-page .account-card {
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-card-title,
+    html body #mob-content #account-page .account-card-title,
+    html body #account-page .account-card-title {
+        gap: 10px !important;
+        margin-bottom: 16px !important;
+        font-size: 1.08rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-title-icon,
+    html body #mob-content #account-page .account-title-icon,
+    html body #account-page .account-title-icon {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        border-radius: 12px !important;
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-photo-row,
+    html body #mob-content #account-page .account-photo-row,
+    html body #account-page .account-photo-row {
+        gap: 14px !important;
+        margin-bottom: 18px !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-photo-avatar,
+    html body #mob-content #account-page .account-photo-avatar,
+    html body #account-page .account-photo-avatar {
+        width: 74px !important;
+        height: 74px !important;
+        min-width: 74px !important;
+        margin-right: 0 !important;
+        border-radius: 20px !important;
+        font-size: 1.7rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .upload-picture-btn,
+    html body #mob-content #account-page .upload-picture-btn,
+    html body #account-page .upload-picture-btn {
+        min-height: 46px !important;
+        padding: 10px 13px !important;
+        border-radius: 11px !important;
+        gap: 8px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .upload-picture-btn i,
+    html body #mob-content #account-page .upload-picture-btn i,
+    html body #account-page .upload-picture-btn i {
+        font-size: 0.95rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .upload-hint,
+    html body #mob-content #account-page .upload-hint,
+    html body #account-page .upload-hint {
+        font-size: 0.82rem !important;
+        line-height: 1.35 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-field,
+    html body #mob-content #account-page .account-field,
+    html body #account-page .account-field {
+        margin-bottom: 14px !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-field-label,
+    html body #mob-content #account-page .account-field-label,
+    html body #account-page .account-field-label {
+        gap: 7px !important;
+        margin-bottom: 8px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.22 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-label-icon,
+    html body #mob-content #account-page .account-label-icon,
+    html body #account-page .account-label-icon {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        border-radius: 8px !important;
+        font-size: 0.82rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .oinp,
+    html body #mob-content #account-page .oinp,
+    html body #account-page .oinp {
+        min-height: 46px !important;
+        padding: 11px 12px !important;
+        border-radius: 11px !important;
+        font-size: 0.92rem !important;
+        line-height: 1.32 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .password-field .oinp,
+    html body #mob-content #account-page .password-field .oinp,
+    html body #account-page .password-field .oinp {
+        min-height: 46px !important;
+        padding-left: 44px !important;
+        padding-right: 58px !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .password-prefix-icon,
+    html body #mob-content #account-page .password-prefix-icon,
+    html body #account-page .password-prefix-icon {
+        left: 12px !important;
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 0.88rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .password-toggle,
+    html body #mob-content #account-page .password-toggle,
+    html body #account-page .password-toggle {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        right: 4px !important;
+        border-radius: 10px !important;
+        font-size: 0.94rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page :is(.account-submit-btn, .delete-account-btn),
+    html body #mob-content #account-page :is(.account-submit-btn, .delete-account-btn),
+    html body #account-page :is(.account-submit-btn, .delete-account-btn) {
+        min-height: 46px !important;
+        padding: 10px 14px !important;
+        border-radius: 11px !important;
+        gap: 8px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page :is(.account-submit-btn, .delete-account-btn) i,
+    html body #mob-content #account-page :is(.account-submit-btn, .delete-account-btn) i,
+    html body #account-page :is(.account-submit-btn, .delete-account-btn) i {
+        font-size: 0.95rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .danger-title,
+    html body #mob-content #account-page .danger-title,
+    html body #account-page .danger-title {
+        gap: 9px !important;
+        font-size: 0.96rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .danger-icon,
+    html body #mob-content #account-page .danger-icon,
+    html body #account-page .danger-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 10px !important;
+        font-size: 0.95rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .danger-copy,
+    html body #mob-content #account-page .danger-copy,
+    html body #account-page .danger-copy {
+        font-size: 0.88rem !important;
+        line-height: 1.42 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-card,
+    html body #mob-content #account-page .account-record-card,
+    html body #account-page .account-record-card {
+        gap: 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-list,
+    html body #mob-content #account-page .account-record-list,
+    html body #account-page .account-record-list {
+        gap: 10px !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-item,
+    html body #mob-content #account-page .account-record-item,
+    html body #account-page .account-record-item {
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        gap: 12px !important;
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-icon,
+    html body #mob-content #account-page .account-record-icon,
+    html body #account-page .account-record-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 12px !important;
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-label,
+    html body #mob-content #account-page .account-record-label,
+    html body #account-page .account-record-label {
+        font-size: 0.78rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-copy strong,
+    html body #mob-content #account-page .account-record-copy strong,
+    html body #account-page .account-record-copy strong {
+        font-size: 0.95rem !important;
+        line-height: 1.24 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-copy small,
+    html body #mob-content #account-page .account-record-copy small,
+    html body #account-page .account-record-copy small {
+        font-size: 0.8rem !important;
+        line-height: 1.32 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-status,
+    html body #mob-content #account-page .account-record-status,
+    html body #account-page .account-record-status {
+        min-height: 30px !important;
+        padding: 6px 10px !important;
+        font-size: 0.82rem !important;
+    }
+
+    html body .profile-crop-dialog h6 {
+        font-size: 1rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body .profile-crop-dialog .olbl {
+        font-size: 0.86rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body .profile-crop-actions .btn {
+        min-height: 46px !important;
+        padding: 10px 14px !important;
+        border-radius: 11px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.18 !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.user-mobile-shell #mob-content #account-page .account-photo-row,
+    html body #mob-content #account-page .account-photo-row,
+    html body #account-page .account-photo-row {
+        align-items: flex-start !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-photo-avatar,
+    html body #mob-content #account-page .account-photo-avatar,
+    html body #account-page .account-photo-avatar {
+        width: 66px !important;
+        height: 66px !important;
+        min-width: 66px !important;
+    }
+}

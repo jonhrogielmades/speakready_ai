@@ -1,0 +1,48 @@
+name: Deploy to Dokploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: dokploy-deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DOKPLOY_WEBHOOK_URL: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
+      DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+      DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+      DOKPLOY_COMPOSE_ID: ${{ secrets.DOKPLOY_COMPOSE_ID }}
+    steps:
+      - name: Trigger Dokploy
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -n "${DOKPLOY_WEBHOOK_URL}" ]; then
+            curl --fail --show-error --silent --request POST "${DOKPLOY_WEBHOOK_URL}"
+            echo "Triggered Dokploy through DOKPLOY_WEBHOOK_URL."
+            exit 0
+          fi
+
+          if [ -n "${DOKPLOY_URL}" ] && [ -n "${DOKPLOY_API_KEY}" ] && [ -n "${DOKPLOY_COMPOSE_ID}" ]; then
+            short_sha="${GITHUB_SHA::7}"
+            dokploy_url="${DOKPLOY_URL%/}"
+
+            curl --fail --show-error --silent \
+              --request POST "${dokploy_url}/api/compose.deploy" \
+              --header "accept: application/json" \
+              --header "Content-Type: application/json" \
+              --header "x-api-key: ${DOKPLOY_API_KEY}" \
+              --data "{\"composeId\":\"${DOKPLOY_COMPOSE_ID}\",\"title\":\"GitHub push ${short_sha}\",\"description\":\"${GITHUB_REPOSITORY}@${GITHUB_SHA}\",\"freshVolumes\":false}"
+
+            echo "Triggered Dokploy compose deployment through the API."
+            exit 0
+          fi
+
+          echo "No Dokploy trigger secret configured. If Dokploy GitHub auto deploy is enabled, Dokploy will still deploy this push."

@@ -1421,3 +1421,216 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
         box-sizing: border-box !important;
     }
 }
+
+/* Mobile readability pass: medium-sized AI Coach chat text and controls. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-container,
+    html body #mob-content #ai-coach-page .chat-container,
+    html body #ai-coach-page .chat-container {
+        min-height: min(68dvh, 640px) !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-chat-header,
+    html body #mob-content #ai-coach-page .coach-chat-header,
+    html body #ai-coach-page .coach-chat-header {
+        min-height: 64px !important;
+        padding: 12px !important;
+        gap: 10px !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-chat-title,
+    html body #mob-content #ai-coach-page .coach-chat-title,
+    html body #ai-coach-page .coach-chat-title {
+        max-width: calc(100vw - 132px) !important;
+        font-size: 1rem !important;
+        line-height: 1.24 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-status,
+    html body #mob-content #ai-coach-page .coach-status,
+    html body #ai-coach-page .coach-status {
+        min-height: 28px !important;
+        padding: 6px 10px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-actions-toggle,
+    html body #mob-content #ai-coach-page .coach-actions-toggle,
+    html body #ai-coach-page .coach-actions-toggle {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        min-height: 42px !important;
+        border-radius: 11px !important;
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-actions-heading,
+    html body #mob-content #ai-coach-page .coach-actions-heading,
+    html body #ai-coach-page .coach-actions-heading {
+        padding: 9px 12px !important;
+        font-size: 0.76rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page :is(.coach-actions-item, .coach-actions-history, .coach-actions-empty),
+    html body #mob-content #ai-coach-page :is(.coach-actions-item, .coach-actions-history, .coach-actions-empty),
+    html body #ai-coach-page :is(.coach-actions-item, .coach-actions-history, .coach-actions-empty) {
+        min-height: 42px !important;
+        padding: 10px 12px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page :is(.coach-actions-item, .coach-actions-history) i,
+    html body #mob-content #ai-coach-page :is(.coach-actions-item, .coach-actions-history) i,
+    html body #ai-coach-page :is(.coach-actions-item, .coach-actions-history) i {
+        font-size: 0.94rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-messages,
+    html body #mob-content #ai-coach-page .chat-messages,
+    html body #ai-coach-page .chat-messages {
+        padding: 14px !important;
+        gap: 13px !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-msg-row,
+    html body #mob-content #ai-coach-page .coach-msg-row,
+    html body #ai-coach-page .coach-msg-row {
+        gap: 10px !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page :is(.coach-avatar, .coach-user-avatar),
+    html body #mob-content #ai-coach-page :is(.coach-avatar, .coach-user-avatar),
+    html body #ai-coach-page :is(.coach-avatar, .coach-user-avatar) {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        flex-basis: 38px !important;
+        border-radius: 12px !important;
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-bubble,
+    html body #mob-content #ai-coach-page .chat-bubble,
+    html body #ai-coach-page .chat-bubble {
+        max-width: calc(100% - 48px) !important;
+        padding: 13px 14px !important;
+        border-radius: 12px !important;
+        font-size: 0.92rem !important;
+        line-height: 1.5 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page #chatDateBadge .db-badge,
+    html body #mob-content #ai-coach-page #chatDateBadge .db-badge,
+    html body #ai-coach-page #chatDateBadge .db-badge {
+        min-height: 28px !important;
+        padding: 6px 10px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-input-area,
+    html body #mob-content #ai-coach-page .chat-input-area,
+    html body #ai-coach-page .chat-input-area {
+        padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-input-wrapper,
+    html body #mob-content #ai-coach-page .chat-input-wrapper,
+    html body #ai-coach-page .chat-input-wrapper {
+        grid-template-columns: 42px minmax(0, 1fr) 42px 42px !important;
+        min-height: 56px !important;
+        gap: 8px !important;
+        padding: 7px !important;
+        border-radius: 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page :is(.chat-attachment-btn, .chat-send-btn, .chat-voice-btn),
+    html body #mob-content #ai-coach-page :is(.chat-attachment-btn, .chat-send-btn, .chat-voice-btn),
+    html body #ai-coach-page :is(.chat-attachment-btn, .chat-send-btn, .chat-voice-btn) {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        min-height: 42px !important;
+        border-radius: 10px !important;
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea,
+    html body #mob-content #ai-coach-page .chat-textarea,
+    html body #ai-coach-page .chat-textarea {
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 112px !important;
+        padding: 10px 11px !important;
+        font-size: 0.92rem !important;
+        line-height: 1.35 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-attachment-chip,
+    html body #mob-content #ai-coach-page .chat-attachment-chip,
+    html body #ai-coach-page .chat-attachment-chip {
+        min-height: 34px !important;
+        padding: 7px 8px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-attachment-remove,
+    html body #mob-content #ai-coach-page .chat-attachment-remove,
+    html body #ai-coach-page .chat-attachment-remove {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        font-size: 0.9rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-inline-feedback,
+    html body #mob-content #ai-coach-page .coach-inline-feedback,
+    html body #ai-coach-page .coach-inline-feedback {
+        padding: 10px 12px !important;
+        font-size: 0.84rem !important;
+        line-height: 1.4 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-disclaimer,
+    html body #mob-content #ai-coach-page .coach-disclaimer,
+    html body #ai-coach-page .coach-disclaimer {
+        gap: 6px !important;
+        font-size: 0.76rem !important;
+        line-height: 1.4 !important;
+    }
+}
+
+@media (max-width: 360px) {
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-input-wrapper,
+    html body #mob-content #ai-coach-page .chat-input-wrapper,
+    html body #ai-coach-page .chat-input-wrapper {
+        grid-template-columns: 40px minmax(0, 1fr) 40px 40px !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page :is(.chat-attachment-btn, .chat-send-btn, .chat-voice-btn),
+    html body #mob-content #ai-coach-page :is(.chat-attachment-btn, .chat-send-btn, .chat-voice-btn),
+    html body #ai-coach-page :is(.chat-attachment-btn, .chat-send-btn, .chat-voice-btn) {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-bubble,
+    html body #mob-content #ai-coach-page .chat-bubble,
+    html body #ai-coach-page .chat-bubble {
+        font-size: 0.9rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-chat-title,
+    html body #mob-content #ai-coach-page .coach-chat-title,
+    html body #ai-coach-page .coach-chat-title {
+        font-size: 0.94rem !important;
+    }
+}

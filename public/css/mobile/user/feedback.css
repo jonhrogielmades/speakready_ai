@@ -4020,3 +4020,230 @@ body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badg
     color: #92400e;
     padding: 7px 9px;
 }
+
+/* Mobile readability pass: medium-sized text and icons for Feedback Center. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-insight-head,
+    html body #mob-content .feedback-shell .feedback-insight-head {
+        grid-template-columns: 48px minmax(0, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-insight-icon,
+    html body #mob-content .feedback-shell .feedback-insight-icon {
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 13px !important;
+        font-size: 1.2rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-insight-icon i,
+    html body #mob-content .feedback-shell .feedback-insight-icon i,
+    body.user-mobile-shell #mob-content .feedback-shell i,
+    html body #mob-content .feedback-shell i {
+        font-size: max(0.95rem, 1em) !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-insight-title,
+    html body #mob-content .feedback-shell .feedback-insight-title {
+        font-size: 1.1rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-insight-subtitle,
+    html body #mob-content .feedback-shell .feedback-insight-subtitle,
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-summary-headline,
+    html body #mob-content .feedback-shell .feedback-summary-headline {
+        font-size: 0.92rem !important;
+        line-height: 1.45 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-section-label,
+    html body #mob-content .feedback-shell .feedback-section-label,
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-proof-stat-grid span,
+    html body #mob-content .feedback-shell .feedback-proof-stat-grid span {
+        font-size: 0.76rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-proof-strip span,
+    html body #mob-content .feedback-shell .feedback-proof-strip span,
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-reliability-tags span,
+    html body #mob-content .feedback-shell .feedback-reliability-tags span,
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-answer-status,
+    html body #mob-content .feedback-shell .feedback-answer-status {
+        min-height: 30px !important;
+        padding: 7px 10px !important;
+        gap: 7px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-reliability-card p,
+    html body #mob-content .feedback-shell .feedback-reliability-card p,
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-answer-question,
+    html body #mob-content .feedback-shell .feedback-answer-question,
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-answer-evidence,
+    html body #mob-content .feedback-shell .feedback-answer-evidence,
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-answer-missing,
+    html body #mob-content .feedback-shell .feedback-answer-missing {
+        font-size: 0.9rem !important;
+        line-height: 1.48 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-proof-stat-grid strong,
+    html body #mob-content .feedback-shell .feedback-proof-stat-grid strong {
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-summary-action,
+    html body #mob-content .feedback-shell .feedback-summary-action {
+        min-height: 42px !important;
+        height: auto !important;
+        gap: 8px !important;
+        padding: 0 12px !important;
+        font-size: 0.86rem !important;
+        line-height: 1.15 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-summary-action i,
+    html body #mob-content .feedback-shell .feedback-summary-action i {
+        font-size: 0.95rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell #feedback-filters :is(.db-filter-input, .btn, .form-select),
+    html body #mob-content .feedback-shell #feedback-filters :is(.db-filter-input, .btn, .form-select),
+    body.user-mobile-shell #mob-content .feedback-shell #feedback-filters .feedback-search-wrap :is(.input-group-text, .form-control),
+    html body #mob-content .feedback-shell #feedback-filters .feedback-search-wrap :is(.input-group-text, .form-control) {
+        min-height: 44px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-empty-state,
+    html body #mob-content .feedback-shell .feedback-empty-state {
+        font-size: 0.9rem !important;
+        line-height: 1.45 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-empty-state i,
+    html body #mob-content .feedback-shell .feedback-empty-state i {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-page-btn,
+    html body #mob-content .feedback-shell .feedback-page-btn,
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-page-status,
+    html body #mob-content .feedback-shell .feedback-page-status {
+        min-height: 40px !important;
+        font-size: 0.86rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row),
+    html body #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) {
+        gap: 8px !important;
+        padding: 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(1),
+    html body #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(1) {
+        font-size: 0.78rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(2),
+    html body #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(2) {
+        font-size: 1rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-mobile-history-row,
+    html body #mob-content .feedback-shell .feedback-mobile-history-row {
+        grid-template-columns: minmax(54px, 0.7fr) minmax(88px, 1fr) minmax(124px, 1.25fr) !important;
+        gap: 9px !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-mobile-history-stat,
+    html body #mob-content .feedback-shell .feedback-mobile-history-stat {
+        min-height: 38px !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-mobile-history-stat > span:first-child,
+    html body #mob-content .feedback-shell .feedback-mobile-history-stat > span:first-child {
+        font-size: 0.68rem !important;
+        line-height: 1.12 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-mobile-history-stat strong,
+    html body #mob-content .feedback-shell .feedback-mobile-history-stat strong {
+        font-size: 0.92rem !important;
+        line-height: 1.12 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell #feedbackTable .feedback-mobile-history-stat .badge,
+    html body #mob-content .feedback-shell #feedbackTable .feedback-mobile-history-stat .badge {
+        min-height: 24px !important;
+        padding: 5px 8px !important;
+        font-size: 0.68rem !important;
+        line-height: 1.12 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn,
+    html body #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn {
+        max-width: 146px !important;
+        min-height: 38px !important;
+        height: auto !important;
+        gap: 6px !important;
+        padding: 0 10px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.1 !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn i,
+    html body #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn i {
+        font-size: 0.86rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-metric-chip,
+    html body #mob-content .feedback-shell .feedback-metric-chip {
+        grid-template-columns: 34px minmax(0, 1fr) auto !important;
+        min-height: 46px !important;
+        gap: 10px !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-metric-chip i,
+    html body #mob-content .feedback-shell .feedback-metric-chip i {
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-metric-chip span,
+    html body #mob-content .feedback-shell .feedback-metric-chip span {
+        font-size: 0.86rem !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-metric-chip strong,
+    html body #mob-content .feedback-shell .feedback-metric-chip strong {
+        font-size: 0.92rem !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-mobile-history-row,
+    html body #mob-content .feedback-shell .feedback-mobile-history-row {
+        grid-template-columns: minmax(0, 1fr) minmax(112px, auto) !important;
+        align-items: end !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions,
+    html body #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions {
+        grid-column: 1 / -1 !important;
+        justify-content: stretch !important;
+    }
+
+    body.user-mobile-shell #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn,
+    html body #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn {
+        max-width: none !important;
+    }
+}

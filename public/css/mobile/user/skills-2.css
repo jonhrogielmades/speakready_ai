@@ -849,3 +849,150 @@
             padding-inline: 8px !important;
         }
     }
+
+/* Mobile readability pass: medium-sized text and icons for Skill Trees. */
+@media (max-width: 767px) {
+    html body #skill-trees-page .sr-page-actions.skill-tree-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 9px !important;
+    }
+
+    html body #skill-trees-page .skill-level-pill,
+    html body #skill-trees-page .skill-back-link {
+        min-height: 42px !important;
+        padding: 9px 11px !important;
+        border-radius: 11px !important;
+        font-size: 0.84rem !important;
+        line-height: 1.18 !important;
+    }
+
+    html body #skill-trees-page .skill-level-pill i,
+    html body #skill-trees-page .skill-back-link i {
+        font-size: 0.92rem !important;
+    }
+
+    html body #skill-trees-page .skill-xp-overview {
+        gap: 10px !important;
+    }
+
+    html body #skill-trees-page .skill-xp-overview .stat-card {
+        grid-template-columns: 40px minmax(0, 1fr) !important;
+        gap: 8px 10px !important;
+        min-height: 112px !important;
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    html body #skill-trees-page .skill-xp-overview .stat-card [style*="width:50px"] {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 11px !important;
+        font-size: 1rem !important;
+    }
+
+    html body #skill-trees-page .skill-xp-overview h6 {
+        font-size: 0.72rem !important;
+        line-height: 1.18 !important;
+    }
+
+    html body #skill-trees-page .skill-xp-overview h3 {
+        font-size: 1.22rem !important;
+        line-height: 1.08 !important;
+    }
+
+    html body #skill-trees-page .skill-xp-overview h3 span {
+        font-size: 0.72rem !important;
+    }
+
+    html body #skill-trees-page .perks-title {
+        margin-bottom: 10px !important;
+        font-size: 1rem !important;
+        line-height: 1.24 !important;
+    }
+
+    html body #skill-trees-page .perk-list {
+        gap: 10px !important;
+    }
+
+    html body #skill-trees-page .perk-card {
+        grid-template-columns: 46px minmax(0, 1fr) !important;
+        gap: 10px 12px !important;
+        min-height: 116px !important;
+        padding: 13px !important;
+        border-radius: 12px !important;
+    }
+
+    html body #skill-trees-page .perk-card > .perk-icon,
+    html body #skill-trees-page .perk-card > [style*="width:60px"] {
+        width: 46px !important;
+        height: 46px !important;
+        border-radius: 12px !important;
+        font-size: 1.12rem !important;
+    }
+
+    html body #skill-trees-page .perk-card h5 {
+        margin-bottom: 6px !important;
+        font-size: 0.94rem !important;
+        line-height: 1.28 !important;
+    }
+
+    html body #skill-trees-page .perk-card p {
+        font-size: 0.82rem !important;
+        line-height: 1.42 !important;
+    }
+
+    html body #skill-trees-page .perk-purchase {
+        padding-top: 10px !important;
+    }
+
+    html body #skill-trees-page .perk-purchase .d-flex {
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        gap: 10px !important;
+    }
+
+    html body #skill-trees-page .perk-purchase span {
+        font-size: 0.72rem !important;
+        line-height: 1.16 !important;
+    }
+
+    html body #skill-trees-page .perk-purchase strong {
+        font-size: 0.92rem !important;
+        line-height: 1.18 !important;
+    }
+
+    html body #skill-trees-page .perk-card .btn {
+        min-width: 104px !important;
+        min-height: 42px !important;
+        padding: 9px 12px !important;
+        border-radius: 11px !important;
+        font-size: 0.86rem !important;
+        line-height: 1.18 !important;
+    }
+
+    html body #skill-trees-page .perk-card .btn i {
+        font-size: 0.9rem !important;
+    }
+}
+
+@media (max-width: 390px) {
+    html body #skill-trees-page .skill-level-pill,
+    html body #skill-trees-page .skill-back-link {
+        min-height: 40px !important;
+        font-size: 0.8rem !important;
+    }
+
+    html body #skill-trees-page .skill-xp-overview .stat-card {
+        min-height: 108px !important;
+        padding: 11px !important;
+    }
+
+    html body #skill-trees-page .perk-card {
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        padding: 12px !important;
+    }
+
+    html body #skill-trees-page .perk-card .btn {
+        min-width: 98px !important;
+        font-size: 0.82rem !important;
+    }
+}
