@@ -100,7 +100,7 @@ class UserDashboardFunctionalityTest extends TestCase
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => [],
                 'shell' => 'class="user-desktop-shell desktop-shell',
-                'css' => 'css/desktop/dashboard.css?v=43',
+                'css' => 'css/desktop/dashboard.css?v=44',
             ],
             [
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),

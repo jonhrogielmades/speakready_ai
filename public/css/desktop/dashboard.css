@@ -10039,14 +10039,13 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
         width: 100% !important;
         display: flex !important;
         align-items: center !important;
-        justify-content: flex-start !important;
+        justify-content: center !important;
         flex-wrap: nowrap !important;
         gap: 6px !important;
         margin: 0 !important;
         min-width: 0 !important;
     }
 
-    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-top-desktop .sr-status-pill,
     body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row > .sr-score-panel .sr-score-top-desktop .sr-chip {
         min-height: 28px !important;
         padding: 6px 8px !important;

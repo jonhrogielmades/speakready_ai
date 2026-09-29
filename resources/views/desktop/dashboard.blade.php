@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=43') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=44') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
