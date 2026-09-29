@@ -8,10 +8,7 @@
 @php
     $scoreVal = (int) round($profile->readiness_score ?? $avgScore ?? 0);
     $scoreVal = max(0, min(100, $scoreVal));
-    $scoreClass = $scoreVal >= 80 ? 'score-high' : ($scoreVal >= 60 ? 'score-med' : 'score-low');
-    $scoreText = $scoreVal >= 80 ? 'Interview Ready' : ($scoreVal >= 60 ? 'Boost' : 'Practice Mode');
-    $mobileScoreText = $scoreVal >= 80 ? 'Interview Ready' : 'Boost';
-    $scoreIcon = $scoreVal >= 80 ? 'fa-circle-check' : ($scoreVal >= 60 ? 'fa-chart-line' : 'fa-arrow-trend-up');
+    $scoreText = $scoreVal >= 80 ? 'Interview Ready' : 'Boost';
     $fullName = trim(Auth::user()->name ?? '') ?: 'User';
     $nameParts = preg_split('/\s+/', $fullName);
     $firstName = $nameParts[0] ?? 'User';
@@ -271,7 +268,6 @@
         <div class="sr-mobile-readiness-row">
             <section class="sr-card sr-score-panel {{ $scoreVal >= 80 ? 'score-high-panel' : ($scoreVal >= 60 ? 'score-med-panel' : 'score-low-panel') }}" aria-label="Readiness score">
                 <div class="sr-score-top sr-score-top-desktop">
-                    <span class="sr-status-pill {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
                     <span class="sr-chip sr-boost-chip"><i class="fa-solid fa-bolt"></i> Boost</span>
                     <span class="sr-chip ph-focus-chip"><i class="fa-solid fa-location-dot"></i> Interview Focus</span>
                 </div>

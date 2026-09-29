@@ -136,6 +136,19 @@ class UserDashboardFunctionalityTest extends TestCase
         }
     }
 
+    public function test_desktop_dashboard_does_not_show_practice_mode_status_pill(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id, 'readiness_score' => 25]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('class="user-desktop-shell desktop-shell', false)
+            ->assertDontSee('sr-status-pill', false)
+            ->assertDontSee('Practice Mode');
+    }
+
     public function test_removed_application_and_pack_urls_are_not_available(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
