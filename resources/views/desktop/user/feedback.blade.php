@@ -2,7 +2,7 @@
 @section('title', 'Feedback Center')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=16') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=17') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')

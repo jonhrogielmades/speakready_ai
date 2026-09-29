@@ -104,6 +104,25 @@ fi
 
 chmod -R ug+rwX storage bootstrap/cache 2>/dev/null || true
 
+clear_laravel_cache_files() {
+    echo "Removing stale Laravel cache files before serving traffic." >&2
+
+    # These paths can live on persistent volumes in Dokploy. Clear them before
+    # PHP-FPM starts so old compiled Blade/config files cannot be served.
+    rm -f \
+        bootstrap/cache/config.php \
+        bootstrap/cache/events.php \
+        bootstrap/cache/packages.php \
+        bootstrap/cache/routes-*.php \
+        bootstrap/cache/services.php \
+        bootstrap/cache/views.php \
+        storage/framework/views/*.php
+
+    if command -v find >/dev/null 2>&1; then
+        find storage/framework/views -type f -name '*.php' -delete 2>/dev/null || true
+    fi
+}
+
 run_required() {
     echo "Running: $*" >&2
     "$@" || {
@@ -167,16 +186,7 @@ run_migrations() {
 run_startup_maintenance() {
     echo "Running container startup maintenance." >&2
 
-    # Remove stale cache files before Laravel reads production environment values.
-    # packages.php/services.php can contain dev-only providers from a local build;
-    # production installs use --no-dev, so those stale manifests can crash boot.
-    rm -f \
-        bootstrap/cache/config.php \
-        bootstrap/cache/events.php \
-        bootstrap/cache/packages.php \
-        bootstrap/cache/routes-*.php \
-        bootstrap/cache/services.php \
-        bootstrap/cache/views.php
+    clear_laravel_cache_files
 
     # Run skipped composer scripts and clear stale framework state before schema work.
     run_required php artisan package:discover --ansi
@@ -257,6 +267,7 @@ handle_startup_maintenance_exit() {
 
 # Start PHP-FPM and Nginx quickly while Laravel startup maintenance runs behind
 # a static maintenance gate.
+clear_laravel_cache_files
 php-fpm -D
 (
     trap 'status=$?; handle_startup_maintenance_exit "$status"' EXIT

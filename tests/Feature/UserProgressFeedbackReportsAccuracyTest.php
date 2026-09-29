@@ -720,14 +720,14 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/desktop/user/feedback.css?v=16', false)
+ ->assertSee('css/desktop/user/feedback.css?v=17', false)
  ->assertSee('data-page-style="user-feedback"', false);
 
  $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/mobile/user/feedback.css?v=14', false)
+ ->assertSee('css/mobile/user/feedback.css?v=15', false)
  ->assertSee('serverDetectedMobile: true', false);
 
  foreach (['desktop', 'mobile'] as $device) {

@@ -51,7 +51,8 @@ RUN { \
         echo "opcache.memory_consumption=128"; \
         echo "opcache.interned_strings_buffer=16"; \
         echo "opcache.max_accelerated_files=20000"; \
-        echo "opcache.validate_timestamps=0"; \
+        echo "opcache.validate_timestamps=1"; \
+        echo "opcache.revalidate_freq=0"; \
         echo "opcache.save_comments=1"; \
     } > /usr/local/etc/php/conf.d/10-opcache.ini \
     && { \
