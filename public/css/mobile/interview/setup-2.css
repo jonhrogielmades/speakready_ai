@@ -4,6 +4,282 @@ html.interview-setup-page-root,
         overflow-x: hidden !important;
     }
 
+    /* Mobile readability pass: medium-sized Interview Setup controls and labels. */
+    @media (max-width: 767px) {
+        body.user-mobile-shell #mob-content #sec-interview-setup .alert,
+        body.interview-setup-page #mob-content #sec-interview-setup .alert,
+        html body #sec-interview-setup .alert {
+            padding: 12px 14px !important;
+            border-radius: 12px !important;
+            font-size: 0.88rem !important;
+            line-height: 1.4 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-stepper, .setup-panel, #panel-summary),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-stepper, .setup-panel, #panel-summary),
+        html body #sec-interview-setup :is(.setup-stepper, .setup-panel, #panel-summary) {
+            border-radius: 16px !important;
+            box-sizing: border-box !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-panel, #panel-summary),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-panel, #panel-summary),
+        html body #sec-interview-setup :is(.setup-panel, #panel-summary) {
+            padding: 16px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-stepper,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-stepper,
+        html body #sec-interview-setup .setup-stepper {
+            padding: 12px !important;
+            gap: 12px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-stepper-track,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-stepper-track,
+        html body #sec-interview-setup .setup-stepper-track {
+            gap: 6px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-stepper-dot,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-stepper-dot,
+        html body #sec-interview-setup .setup-stepper-dot {
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-stepper-label,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-stepper-label,
+        html body #sec-interview-setup .setup-stepper-label {
+            margin-top: 5px !important;
+            font-size: 0.66rem !important;
+            line-height: 1.12 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-stepper-actions,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-stepper-actions,
+        html body #sec-interview-setup .setup-stepper-actions {
+            gap: 9px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-step-btn,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-step-btn,
+        html body #sec-interview-setup .setup-step-btn {
+            min-height: 44px !important;
+            padding: 10px 13px !important;
+            border-radius: 11px !important;
+            gap: 7px !important;
+            font-size: 0.88rem !important;
+            line-height: 1.18 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-step-btn i,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-step-btn i,
+        html body #sec-interview-setup .setup-step-btn i {
+            font-size: 0.92rem !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-details-card-head, .response-head),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-details-card-head, .response-head),
+        html body #sec-interview-setup :is(.setup-details-card-head, .response-head) {
+            grid-template-columns: 44px minmax(0, 1fr) !important;
+            gap: 12px !important;
+            align-items: center !important;
+            margin-bottom: 16px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-details-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .summary-icon),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-details-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .summary-icon),
+        html body #sec-interview-setup :is(.setup-details-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .summary-icon) {
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            border-radius: 12px !important;
+            font-size: 1rem !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-details-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .summary-icon) i,
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-details-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .summary-icon) i,
+        html body #sec-interview-setup :is(.setup-details-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .summary-icon) i {
+            font-size: 1rem !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-details-card-title, .response-title, #panel-summary h5, .setup-panel h5),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-details-card-title, .response-title, #panel-summary h5, .setup-panel h5),
+        html body #sec-interview-setup :is(.setup-details-card-title, .response-title, #panel-summary h5, .setup-panel h5) {
+            font-size: 1.08rem !important;
+            line-height: 1.25 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-details-card-subtitle, .desc-text, .structure-difficulty-desc, .response-mode-desc),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-details-card-subtitle, .desc-text, .structure-difficulty-desc, .response-mode-desc),
+        html body #sec-interview-setup :is(.setup-details-card-subtitle, .desc-text, .structure-difficulty-desc, .response-mode-desc) {
+            font-size: 0.86rem !important;
+            line-height: 1.42 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-card-fields,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-card-fields,
+        html body #sec-interview-setup .setup-card-fields {
+            gap: 15px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-card-field,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-card-field,
+        html body #sec-interview-setup .setup-card-field {
+            gap: 8px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-card-label,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-card-label,
+        html body #sec-interview-setup .setup-card-label {
+            gap: 8px !important;
+            font-size: 0.9rem !important;
+            line-height: 1.24 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-card-label-icon,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-card-label-icon,
+        html body #sec-interview-setup .setup-card-label-icon {
+            width: 30px !important;
+            height: 30px !important;
+            min-width: 30px !important;
+            border-radius: 9px !important;
+            font-size: 0.9rem !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.oinp, .setup-input, .setup-target-trigger),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.oinp, .setup-input, .setup-target-trigger),
+        html body #sec-interview-setup :is(.oinp, .setup-input, .setup-target-trigger) {
+            min-height: 46px !important;
+            padding: 11px 12px !important;
+            border-radius: 11px !important;
+            font-size: 0.92rem !important;
+            line-height: 1.32 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-target-trigger-icon,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-target-trigger-icon,
+        html body #sec-interview-setup .setup-target-trigger-icon {
+            font-size: 0.9rem !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-target-menu,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-target-menu,
+        html body #sec-interview-setup .setup-target-menu {
+            border-radius: 12px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-target-choice-group-title,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-target-choice-group-title,
+        html body #sec-interview-setup .setup-target-choice-group-title {
+            min-height: 34px !important;
+            padding: 8px 10px !important;
+            font-size: 0.78rem !important;
+            line-height: 1.16 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-target-choice,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-target-choice,
+        html body #sec-interview-setup .setup-target-choice {
+            min-height: 46px !important;
+            padding: 11px 12px !important;
+            border-radius: 10px !important;
+            font-size: 0.88rem !important;
+            line-height: 1.26 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.structure-difficulty-list, .assistance-question-list, .response-mode-list, .camera-mode-list),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.structure-difficulty-list, .assistance-question-list, .response-mode-list, .camera-mode-list),
+        html body #sec-interview-setup :is(.structure-difficulty-list, .assistance-question-list, .response-mode-list, .camera-mode-list) {
+            gap: 11px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.structure-difficulty-card, .assistance-question-card, .response-mode-card, .custom-radio, .custom-cbx),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.structure-difficulty-card, .assistance-question-card, .response-mode-card, .custom-radio, .custom-cbx),
+        html body #sec-interview-setup :is(.structure-difficulty-card, .assistance-question-card, .response-mode-card, .custom-radio, .custom-cbx) {
+            min-height: 58px !important;
+            padding: 12px !important;
+            border-radius: 13px !important;
+            gap: 10px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(.structure-difficulty-title, .assistance-question-text, .response-mode-title, .custom-radio span, .custom-cbx span),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(.structure-difficulty-title, .assistance-question-text, .response-mode-title, .custom-radio span, .custom-cbx span),
+        html body #sec-interview-setup :is(.structure-difficulty-title, .assistance-question-text, .response-mode-title, .custom-radio span, .custom-cbx span) {
+            font-size: 0.92rem !important;
+            line-height: 1.3 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup :is(input[type="radio"], input[type="checkbox"]),
+        body.interview-setup-page #mob-content #sec-interview-setup :is(input[type="radio"], input[type="checkbox"]),
+        html body #sec-interview-setup :is(input[type="radio"], input[type="checkbox"]) {
+            width: 20px !important;
+            height: 20px !important;
+            min-width: 20px !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-inline-error,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-inline-error,
+        html body #sec-interview-setup .setup-inline-error {
+            padding: 9px 10px !important;
+            border-radius: 10px !important;
+            font-size: 0.84rem !important;
+            line-height: 1.35 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .summary-row,
+        body.interview-setup-page #mob-content #sec-interview-setup .summary-row,
+        html body #sec-interview-setup .summary-row {
+            grid-template-columns: 44px minmax(0, 0.9fr) minmax(0, 1.2fr) !important;
+            gap: 10px !important;
+            padding: 11px 0 !important;
+            align-items: center !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .summary-label,
+        body.interview-setup-page #mob-content #sec-interview-setup .summary-label,
+        html body #sec-interview-setup .summary-label {
+            font-size: 0.84rem !important;
+            line-height: 1.24 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .summary-val,
+        body.interview-setup-page #mob-content #sec-interview-setup .summary-val,
+        html body #sec-interview-setup .summary-val {
+            font-size: 0.9rem !important;
+            line-height: 1.28 !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup #btn-start-interview,
+        body.interview-setup-page #mob-content #sec-interview-setup #btn-start-interview,
+        html body #sec-interview-setup #btn-start-interview {
+            min-height: 48px !important;
+            font-size: 0.92rem !important;
+        }
+    }
+
+    @media (max-width: 380px) {
+        body.user-mobile-shell #mob-content #sec-interview-setup .setup-stepper-label,
+        body.interview-setup-page #mob-content #sec-interview-setup .setup-stepper-label,
+        html body #sec-interview-setup .setup-stepper-label {
+            font-size: 0.6rem !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .summary-row,
+        body.interview-setup-page #mob-content #sec-interview-setup .summary-row,
+        html body #sec-interview-setup .summary-row {
+            grid-template-columns: 40px minmax(0, 1fr) !important;
+        }
+
+        body.user-mobile-shell #mob-content #sec-interview-setup .summary-val,
+        body.interview-setup-page #mob-content #sec-interview-setup .summary-val,
+        html body #sec-interview-setup .summary-val {
+            grid-column: 2 !important;
+        }
+    }
+
     body.interview-setup-page #mob-content {
         box-sizing: border-box !important;
         min-height: var(--sr-visual-vh, 100dvh) !important;
@@ -183,3 +459,204 @@ html.interview-setup-page-root,
             padding: var(--setup-progress-panel-pad) !important;
         }
     }
+
+/* Final mobile readability enforcement for Interview Setup. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-stepper, .setup-panel, #panel-summary),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-stepper, .setup-panel, #panel-summary),
+    html body #sec-interview-setup :is(.setup-stepper, .setup-panel, #panel-summary) {
+        border-radius: 16px !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .setup-stepper,
+    body.interview-setup-page #mob-content #sec-interview-setup .setup-stepper,
+    html body #sec-interview-setup .setup-stepper {
+        padding: 12px !important;
+        gap: 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .setup-stepper-dot,
+    body.interview-setup-page #mob-content #sec-interview-setup .setup-stepper-dot,
+    html body #sec-interview-setup .setup-stepper-dot {
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .setup-stepper-label,
+    body.interview-setup-page #mob-content #sec-interview-setup .setup-stepper-label,
+    html body #sec-interview-setup .setup-stepper-label {
+        font-size: 0.66rem !important;
+        line-height: 1.12 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .setup-step-btn,
+    body.interview-setup-page #mob-content #sec-interview-setup .setup-step-btn,
+    html body #sec-interview-setup .setup-step-btn {
+        min-height: 44px !important;
+        padding: 10px 13px !important;
+        border-radius: 11px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-panel, #panel-summary),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-panel, #panel-summary),
+    html body #sec-interview-setup :is(.setup-panel, #panel-summary) {
+        padding: 16px !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-details-card-title, .response-title, #panel-summary h5, .setup-panel h5),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-details-card-title, .response-title, #panel-summary h5, .setup-panel h5),
+    html body #sec-interview-setup :is(.setup-details-card-title, .response-title, #panel-summary h5, .setup-panel h5) {
+        font-size: 1.08rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-details-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .summary-icon),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-details-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .summary-icon),
+    html body #sec-interview-setup :is(.setup-details-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .summary-icon) {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 12px !important;
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .setup-card-label,
+    body.interview-setup-page #mob-content #sec-interview-setup .setup-card-label,
+    html body #sec-interview-setup .setup-card-label {
+        font-size: 0.9rem !important;
+        line-height: 1.24 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.desc-text, .structure-difficulty-desc, .response-mode-desc),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.desc-text, .structure-difficulty-desc, .response-mode-desc),
+    html body #sec-interview-setup :is(.desc-text, .structure-difficulty-desc, .response-mode-desc) {
+        font-size: 0.86rem !important;
+        line-height: 1.42 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.oinp, .setup-input, .setup-target-trigger),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.oinp, .setup-input, .setup-target-trigger),
+    html body #sec-interview-setup :is(.oinp, .setup-input, .setup-target-trigger) {
+        min-height: 46px !important;
+        padding: 11px 12px !important;
+        border-radius: 11px !important;
+        font-size: 0.92rem !important;
+        line-height: 1.32 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-target-choice, .structure-difficulty-card, .assistance-question-card, .response-mode-card, .custom-radio, .custom-cbx),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-target-choice, .structure-difficulty-card, .assistance-question-card, .response-mode-card, .custom-radio, .custom-cbx),
+    html body #sec-interview-setup :is(.setup-target-choice, .structure-difficulty-card, .assistance-question-card, .response-mode-card, .custom-radio, .custom-cbx) {
+        min-height: 46px !important;
+        padding: 12px !important;
+        border-radius: 13px !important;
+        font-size: 0.88rem !important;
+        line-height: 1.28 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.structure-difficulty-title, .assistance-question-text, .response-mode-title, .custom-radio span, .custom-cbx span),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.structure-difficulty-title, .assistance-question-text, .response-mode-title, .custom-radio span, .custom-cbx span),
+    html body #sec-interview-setup :is(.structure-difficulty-title, .assistance-question-text, .response-mode-title, .custom-radio span, .custom-cbx span) {
+        font-size: 0.92rem !important;
+        line-height: 1.3 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .summary-row,
+    body.interview-setup-page #mob-content #sec-interview-setup .summary-row,
+    html body #sec-interview-setup .summary-row {
+        grid-template-columns: 44px minmax(0, 0.9fr) minmax(0, 1.2fr) !important;
+        gap: 10px !important;
+        padding: 11px 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .summary-label,
+    body.interview-setup-page #mob-content #sec-interview-setup .summary-label,
+    html body #sec-interview-setup .summary-label {
+        font-size: 0.84rem !important;
+        line-height: 1.24 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .summary-val,
+    body.interview-setup-page #mob-content #sec-interview-setup .summary-val,
+    html body #sec-interview-setup .summary-val {
+        font-size: 0.9rem !important;
+        line-height: 1.28 !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.user-mobile-shell #mob-content #sec-interview-setup .summary-row,
+    body.interview-setup-page #mob-content #sec-interview-setup .summary-row,
+    html body #sec-interview-setup .summary-row {
+        grid-template-columns: 40px minmax(0, 1fr) !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .summary-val,
+    body.interview-setup-page #mob-content #sec-interview-setup .summary-val,
+    html body #sec-interview-setup .summary-val {
+        grid-column: 2 !important;
+    }
+}
+
+/* Final mobile readability coverage for setup-specific panel heads and camera options. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-structure-head, .setup-inclusive-head, .assistance-head),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-structure-head, .setup-inclusive-head, .assistance-head),
+    html body #sec-interview-setup :is(.setup-structure-head, .setup-inclusive-head, .assistance-head) {
+        display: grid !important;
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin-bottom: 16px !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-structure-head-icon, .setup-inclusive-head-icon, .assistance-head-icon, .inclusive-note i),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-structure-head-icon, .setup-inclusive-head-icon, .assistance-head-icon, .inclusive-note i),
+    html body #sec-interview-setup :is(.setup-structure-head-icon, .setup-inclusive-head-icon, .assistance-head-icon, .inclusive-note i) {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 12px !important;
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-structure-title, .setup-inclusive-title, .assistance-title),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-structure-title, .setup-inclusive-title, .assistance-title),
+    html body #sec-interview-setup :is(.setup-structure-title, .setup-inclusive-title, .assistance-title) {
+        font-size: 1.08rem !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .olbl,
+    body.interview-setup-page #mob-content #sec-interview-setup .olbl,
+    html body #sec-interview-setup .olbl {
+        font-size: 0.88rem !important;
+        line-height: 1.24 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.setup-inclusive-copy, .inclusive-note, .camera-mode-copy small),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.setup-inclusive-copy, .inclusive-note, .camera-mode-copy small),
+    html body #sec-interview-setup :is(.setup-inclusive-copy, .inclusive-note, .camera-mode-copy small) {
+        font-size: 0.86rem !important;
+        line-height: 1.42 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup :is(.inclusive-option, .camera-mode-option),
+    body.interview-setup-page #mob-content #sec-interview-setup :is(.inclusive-option, .camera-mode-option),
+    html body #sec-interview-setup :is(.inclusive-option, .camera-mode-option) {
+        min-height: 58px !important;
+        padding: 12px !important;
+        border-radius: 13px !important;
+        gap: 10px !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup .camera-mode-copy strong,
+    body.interview-setup-page #mob-content #sec-interview-setup .camera-mode-copy strong,
+    html body #sec-interview-setup .camera-mode-copy strong {
+        font-size: 0.92rem !important;
+        line-height: 1.3 !important;
+    }
+}
