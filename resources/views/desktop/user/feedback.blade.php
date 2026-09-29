@@ -9,7 +9,6 @@
 @php
  $hasActiveFeedbackFilters = filled($feedbackFilters['scenario']?? '') || filled($feedbackFilters['search']?? '');
  $feedbackEvidence = $feedbackEvidence ?? null;
- $feedbackAnswerCards = $feedbackEvidence?->answers ?? collect();
 @endphp
 
 <div class="db-section active animate-fade-up feedback-shell">
@@ -83,7 +82,7 @@
  <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
  <div>
  <h5 class="feedback-insight-title" id="feedback-ai-summary-title">Evidence-Based Feedback Summary</h5>
- <p class="feedback-insight-subtitle">Score, confidence, proof, and next practice.</p>
+ <p class="feedback-insight-subtitle">Score, confidence, and proof coverage.</p>
  </div>
  </div>
  @if($feedbackSummary)
@@ -148,8 +147,8 @@
  <div class="feedback-insight-head">
  <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-fingerprint"></i></span>
  <div>
- <h5 class="feedback-insight-title" id="feedback-reliability-title">Proof & Next Action</h5>
- <p class="feedback-insight-subtitle">What the review can prove, where it is uncertain, and the next move.</p>
+ <h5 class="feedback-insight-title" id="feedback-reliability-title">Proof & Reliability</h5>
+ <p class="feedback-insight-subtitle">What the review can prove and where it is uncertain.</p>
  </div>
  </div>
  <div class="feedback-reliability-card" style="--reliability-color: {{ $feedbackEvidence->reliability->color }};">
@@ -169,79 +168,10 @@
  <div><span>Missing Points</span><strong>{{ $feedbackEvidence->proof_stats->missing_points }}</strong></div>
  <div><span>Practice Targets</span><strong>{{ $feedbackEvidence->proof_stats->needs_practice }}</strong></div>
  </div>
- <div class="feedback-next-action-card">
- <span class="feedback-section-label">Recommended next action</span>
- <strong>{{ $feedbackEvidence->next_action->area }}</strong>
- <p>{{ $feedbackEvidence->next_action->action }}</p>
- @if($feedbackEvidence->next_action->evidence !== '')
- <small>{{ $feedbackEvidence->next_action->evidence }}</small>
- @endif
- <a href="{{ $feedbackEvidence->next_action->review_url }}">Open evidence <i class="fa-solid fa-arrow-right"></i></a>
- </div>
  </section>
  @endif
 
  </div>
-
- <section class="feedback-insight-panel feedback-answer-panel" id="feedbackAnswerCoaching" aria-labelledby="feedback-answer-coaching-title">
- <div class="feedback-insight-head">
- <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
- <div>
- <h5 class="feedback-insight-title" id="feedback-answer-coaching-title">Evidence-Based Answer Review</h5>
- <p class="feedback-insight-subtitle">Each answer shows score confidence, source evidence, missing points, and a retry target.</p>
- </div>
- </div>
- <div class="feedback-answer-grid">
- @forelse($feedbackAnswerCards as $answerCoaching)
- <article class="feedback-answer-item">
- <div class="feedback-answer-top">
- <strong>{{ $answerCoaching->label ?? 'Answer '.$answerCoaching->number }}</strong>
- <div class="feedback-answer-badges">
- <span class="feedback-answer-score">{{ $answerCoaching->score_label ?? ($answerCoaching->score === null? 'Pending': $answerCoaching->score.'%') }}</span>
- <span class="feedback-answer-status" style="--status-color: {{ $answerCoaching->status_color ?? '#64748b' }}">{{ $answerCoaching->status_label ?? 'Reviewed' }}</span>
- <span class="feedback-answer-status" style="--status-color: {{ $answerCoaching->confidence_color ?? '#64748b' }}">{{ $answerCoaching->confidence_label ?? 'Confidence pending' }}</span>
- </div>
- </div>
- <div class="feedback-answer-question">{{ $answerCoaching->question ?? 'Question text unavailable.' }}</div>
- <div class="feedback-answer-user">
- <b>Your answer</b>
- <p>{{ $answerCoaching->answer }}</p>
- @if($answerCoaching->has_voice_recording?? false)
- <div class="feedback-answer-voice">
- <span><i class="fa-solid fa-wave-square" aria-hidden="true"></i> Voice answer session</span>
- <audio controls preload="metadata" src="{{ $answerCoaching->voice_recording_url }}"></audio>
- @if($answerCoaching->is_voice_only_answer?? false)
- <small>Feedback is based on this voice answer.</small>
- @endif
- </div>
- @endif
- </div>
- @if(($answerCoaching->evidence_quote ?? '') !== '')
- <p class="feedback-answer-evidence"><strong>Evidence used:</strong> "{{ $answerCoaching->evidence_quote }}"</p>
- @endif
- @if(!empty($answerCoaching->missing_points ?? []))
- <div class="feedback-answer-missing">
- <strong>Missing or weak:</strong>
- @foreach($answerCoaching->missing_points as $missingPoint)
- <span>{{ $missingPoint }}</span>
- @endforeach
- </div>
- @endif
- <p class="feedback-answer-feedback"><strong>Feedback:</strong> {{ $answerCoaching->feedback }}</p>
- @if(($answerCoaching->success_check ?? '') !== '')
- <p class="feedback-answer-impact"><strong>Success check:</strong> {{ $answerCoaching->success_check }}</p>
- @endif
- <a href="{{ $answerCoaching->review_url }}" class="feedback-answer-action">
- View full evidence <i class="fa-solid fa-arrow-right"></i>
- </a>
- </article>
- @empty
- <div class="feedback-feature-empty">
- Answer coaching appears after a completed interview.
- </div>
- @endforelse
- </div>
- </section>
 
  <div class="premium-panel">
  <div class="feedback-history-head">
@@ -406,16 +336,12 @@
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const stepsMobile = [
- { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to turn completed interviews into strengths, focus areas, and next practice actions.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to review completed interviews, proof signals, and practice history.', side: 'bottom', align: 'start' }},
  { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, and focus area.', side: 'bottom', align: 'start' }},
  { element: '.feedback-metric-grid', popover: { title: 'Category Breakdown', description: 'Scan the latest category scores to spot which interview skills are strongest or need attention.', side: 'top', align: 'start' }},
- { element: '#feedbackReliability', popover: { title: 'Proof And Next Action', description: 'Use this section to check reliability, evidence coverage, missing points, and the next recommended action.', side: 'top', align: 'start' }},
+ { element: '#feedbackReliability', popover: { title: 'Proof And Reliability', description: 'Use this section to check reliability, evidence coverage, and missing points.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
- { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review answer feedback, score, and the next practice cue.', side: 'bottom', align: 'start' }},
- { element: '.feedback-answer-item', popover: { title: 'Answer Coaching Card', description: 'Each card pairs your answer with short coaching and a shortcut to deeper review.', side: 'top', align: 'start' }},
- { element: '.feedback-answer-voice', popover: { title: 'Voice Answer Playback', description: 'When an answer used audio, listen here and review coaching against the spoken response.', side: 'top', align: 'start' }},
- { element: '#feedbackAnswerCoaching .feedback-feature-empty', popover: { title: 'Unlock Answer Coaching', description: 'Answer coaching appears after a completed interview with saved responses.', side: 'top', align: 'start' }},
  { element: '#feedback-filters', popover: { title: 'Filters And Search', description: 'Filter by scenario, sort by date, or search keywords to find a specific feedback record.', side: 'bottom', align: 'start' }},
  { element: '#scenarioFilter', popover: { title: 'Scenario Filter', description: 'Narrow the history to one interview scenario when you want targeted feedback.', side: 'bottom', align: 'start' }},
  { element: '#sortDateBtn', popover: { title: 'Sort History', description: 'Switch between newest and oldest records while reviewing past practice.', side: 'bottom', align: 'center' }},
@@ -427,16 +353,12 @@
  ];
 
  const stepsDesktop = [
- { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to turn completed interviews into strengths, focus areas, and next practice actions.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to review completed interviews, proof signals, and practice history.', side: 'bottom', align: 'start' }},
  { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, and focus area.', side: 'bottom', align: 'start' }},
  { element: '.feedback-metric-grid', popover: { title: 'Category Breakdown', description: 'Scan the latest category scores to spot which interview skills are strongest or need attention.', side: 'top', align: 'start' }},
- { element: '#feedbackReliability', popover: { title: 'Proof And Next Action', description: 'Use this section to check reliability, evidence coverage, missing points, and the next recommended action.', side: 'top', align: 'start' }},
+ { element: '#feedbackReliability', popover: { title: 'Proof And Reliability', description: 'Use this section to check reliability, evidence coverage, and missing points.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
- { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Review', description: 'Review answer feedback, score, and the next practice cue.', side: 'bottom', align: 'start' }},
- { element: '.feedback-answer-item', popover: { title: 'Answer Coaching Card', description: 'Each card pairs your answer with short coaching and a shortcut to deeper review.', side: 'top', align: 'start' }},
- { element: '.feedback-answer-voice', popover: { title: 'Voice Answer Playback', description: 'When an answer used audio, listen here and review coaching against the spoken response.', side: 'top', align: 'start' }},
- { element: '#feedbackAnswerCoaching .feedback-feature-empty', popover: { title: 'Unlock Answer Coaching', description: 'Answer coaching appears after a completed interview with saved responses.', side: 'top', align: 'start' }},
  { element: '#feedback-filters', popover: { title: 'Filters And Search', description: 'Filter by scenario, sort by date, or search keywords to find a specific feedback record.', side: 'bottom', align: 'end' }},
  { element: '#scenarioFilter', popover: { title: 'Scenario Filter', description: 'Narrow the history to one interview scenario when you want targeted feedback.', side: 'bottom', align: 'start' }},
  { element: '#sortDateBtn', popover: { title: 'Sort History', description: 'Switch between newest and oldest records while reviewing past practice.', side: 'bottom', align: 'center' }},

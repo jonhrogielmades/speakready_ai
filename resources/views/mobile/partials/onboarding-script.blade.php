@@ -782,15 +782,15 @@
             if (routeMatches(routeName, ['user.feedback'])) {
                 return withDefaults({
                     heroTitle: 'Feedback center',
-                    heroDescription: 'Review recent AI summaries, answer-by-answer coaching, and searchable interview history.',
-                    workspaceTitle: 'Coaching panels',
-                    workspaceDescription: 'Use answer coaching to turn scored feedback into focused practice.',
+                    heroDescription: 'Review recent AI summaries and searchable interview history.',
+                    workspaceTitle: 'Feedback summary',
+                    workspaceDescription: 'Use the latest summary and proof signals to understand the completed practice session.',
                     metricsTitle: 'Feedback history',
                     metricsDescription: 'Filter and scan previous sessions by scenario, score, rating, feedback, and available follow-up actions.',
                     actionsTitle: 'Filters and actions',
                     actionsDescription: 'Search, filter, open details, retry answers, clear history, or continue practice from the controls here.',
                     heroSelectors: ['#feedbackModulesLikeHero', '#feedbackAiSummary'],
-                    workspaceSelectors: ['#feedbackAnswerCoaching'],
+                    workspaceSelectors: ['#feedbackAiSummary', '#feedbackReliability'],
                     metricsSelectors: ['#feedbackTable', '#feedbackPagination', '#feedback-empty-state'],
                     actionSelectors: ['#feedback-filters', '#feedbackSearch', '#scenarioFilter'],
                 });

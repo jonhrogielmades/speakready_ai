@@ -397,19 +397,19 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
 
  $response->assertOk()
  ->assertSee('Feedback Summary')
- ->assertSee('Answer Review')
- ->assertSee('Proof &amp; Next Action', false)
+ ->assertSee('Proof & Reliability', false)
  ->assertSee('Category Breakdown')
  ->assertSee('Practice again')
  ->assertDontSee('feedback-clear-form', false)
  ->assertDontSee('data-sr-confirm-title="Delete interview session"', false)
+ ->assertDontSee('Evidence-Based Answer Review')
+ ->assertDontSee('Answer 1')
+ ->assertDontSee('Evidence used')
  ->assertDontSee('Strong empathy with customers')
  ->assertDontSee('Use STAR structure')
- ->assertSee('Answer 1')
  ->assertDontSee('Explain a time you handled an irate customer')
- ->assertSee('I listened to the customer and helped solve the issue.')
- ->assertSee('Good empathy, but the answer needs a clearer action and result.')
- ->assertSee('Evidence used')
+ ->assertDontSee('I listened to the customer and helped solve the issue.')
+ ->assertDontSee('Good empathy, but the answer needs a clearer action and result.')
  ->assertViewHas('feedbackSummary', fn ($summary) => $summary
  && $summary->overall === 74
  && $summary->focus_metric?->label === 'Fluency & Clarity')
@@ -462,7 +462,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $response = $this->actingAs($user)->get(route('user.feedback'));
 
  $response->assertOk()
- ->assertSee('Each answer shows score confidence, source evidence, missing points, and a retry target.')
+ ->assertDontSee('Each answer shows score confidence, source evidence, missing points, and a retry target.')
+ ->assertDontSee('Evidence-Based Answer Review')
  ->assertDontSee($leakedPrompt)
  ->assertViewHas('feedbackEvidence', fn ($evidence) => $evidence
  && $evidence->answers->count() === 1
@@ -492,9 +493,9 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
 
  $response->assertOk()
  ->assertSee('Pending')
- ->assertSee('Proof &amp; Next Action', false)
- ->assertSee('Start with one complete answer')
- ->assertSee('Complete a scored practice interview')
+ ->assertSee('Proof & Reliability', false)
+ ->assertDontSee('Start with one complete answer')
+ ->assertDontSee('Complete a scored practice interview')
  ->assertViewHas('feedbackSummary', fn ($summary) => $summary && $summary->overall === null)
  ->assertViewHas('feedbackEvidence', fn ($evidence) => $evidence
  && $evidence->next_action->area === 'Start with one complete answer'
@@ -522,8 +523,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('Practice delivery')
  ->assertDontSee('Rebuild answer structure')
  ->assertDontSee('Strengthen role proof')
- ->assertSee('Start with one complete answer')
- ->assertSee('Complete a scored practice interview')
+ ->assertDontSee('Start with one complete answer')
+ ->assertDontSee('Complete a scored practice interview')
  ->assertViewHas('feedbackEvidence', fn ($evidence) => $evidence
  && $evidence->next_action->area === 'Start with one complete answer');
  }
@@ -705,7 +706,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
 
  $response->assertOk()
  ->assertSee('Complete a mock interview to unlock your summary.')
- ->assertSee('Answer coaching appears after a completed interview.')
+ ->assertDontSee('Answer coaching appears after a completed interview.')
+ ->assertDontSee('Evidence-Based Answer Review')
  ->assertSee('Complete a practice interview to generate feedback.')
  ->assertViewHas('feedbackSummary', null)
  ->assertViewHas('feedbackEvidence', null);
