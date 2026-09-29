@@ -761,12 +761,92 @@
         margin: 0 !important;
     }
 
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-month-header,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-month-header,
+    #practice-calendar-page #activity-calendar .activity-month-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+        margin: 0 0 8px !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-month-label,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-month-label,
+    #practice-calendar-page #activity-calendar .activity-month-label {
+        color: var(--tx) !important;
+        font-size: 0.9rem !important;
+        font-weight: 900 !important;
+        line-height: 1.2 !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-month-note,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-month-note,
+    #practice-calendar-page #activity-calendar .activity-month-note {
+        color: #64748b !important;
+        font-size: 0.64rem !important;
+        font-weight: 850 !important;
+        line-height: 1.2 !important;
+        text-transform: uppercase !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-calendar-weekdays,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-calendar-weekdays,
+    #practice-calendar-page #activity-calendar .activity-calendar-weekdays {
+        display: grid !important;
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        margin: 0 0 6px !important;
+        width: 100% !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-calendar-weekdays span,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-calendar-weekdays span,
+    #practice-calendar-page #activity-calendar .activity-calendar-weekdays span {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 24px !important;
+        color: #64748b !important;
+        font-size: 0.62rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        text-transform: uppercase !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-month-grid .activity-day,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-month-grid .activity-day,
+    #practice-calendar-page #activity-calendar .activity-month-grid .activity-day {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        min-height: 54px !important;
+        gap: 4px !important;
+    }
+
     html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-day,
     html body #mob-content #practice-calendar-page #activity-calendar .activity-day,
     #practice-calendar-page #activity-calendar .activity-day {
         min-height: 48px !important;
         padding: 6px 8px !important;
         border-radius: 9px !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-day-spacer,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-day-spacer,
+    #practice-calendar-page #activity-calendar .activity-day-spacer {
+        visibility: hidden !important;
+        pointer-events: none !important;
+        border-color: transparent !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-day.is-future,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-day.is-future,
+    #practice-calendar-page #activity-calendar .activity-day.is-future {
+        opacity: 0.58 !important;
     }
 
     html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-day-week,
@@ -861,11 +941,30 @@
             gap: 5px !important;
         }
 
+        html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-calendar-weekdays,
+        html body #mob-content #practice-calendar-page #activity-calendar .activity-calendar-weekdays,
+        #practice-calendar-page #activity-calendar .activity-calendar-weekdays {
+            gap: 5px !important;
+        }
+
+        html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-calendar-weekdays span,
+        html body #mob-content #practice-calendar-page #activity-calendar .activity-calendar-weekdays span,
+        #practice-calendar-page #activity-calendar .activity-calendar-weekdays span {
+            min-height: 22px !important;
+            font-size: 0.56rem !important;
+        }
+
         html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-day,
         html body #mob-content #practice-calendar-page #activity-calendar .activity-day,
         #practice-calendar-page #activity-calendar .activity-day {
             min-height: 42px !important;
             padding: 5px 4px !important;
+        }
+
+        html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-month-grid .activity-day,
+        html body #mob-content #practice-calendar-page #activity-calendar .activity-month-grid .activity-day,
+        #practice-calendar-page #activity-calendar .activity-month-grid .activity-day {
+            min-height: 46px !important;
         }
 
         html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-day-week,
@@ -1266,19 +1365,19 @@
         box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.22) !important;
     }
 
-    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-title, .activity-summary-item strong, .activity-day-number),
-    .dm :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-title, .activity-summary-item strong, .activity-day-number),
-    :is(html:not(.lm), html[data-theme="dark"]) body #practice-calendar-page #activity-calendar :is(.activity-title, .activity-summary-item strong, .activity-day-number),
-    .dm #practice-calendar-page #activity-calendar :is(.activity-title, .activity-summary-item strong, .activity-day-number) {
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-title, .activity-month-label, .activity-summary-item strong, .activity-day-number),
+    .dm :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-title, .activity-month-label, .activity-summary-item strong, .activity-day-number),
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-calendar-page #activity-calendar :is(.activity-title, .activity-month-label, .activity-summary-item strong, .activity-day-number),
+    .dm #practice-calendar-page #activity-calendar :is(.activity-title, .activity-month-label, .activity-summary-item strong, .activity-day-number) {
         color: #f8fafc !important;
         -webkit-text-fill-color: #f8fafc !important;
         opacity: 1 !important;
     }
 
-    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-subtitle, .activity-summary-item span, .activity-day-week, .activity-legend span),
-    .dm :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-subtitle, .activity-summary-item span, .activity-day-week, .activity-legend span),
-    :is(html:not(.lm), html[data-theme="dark"]) body #practice-calendar-page #activity-calendar :is(.activity-subtitle, .activity-summary-item span, .activity-day-week, .activity-legend span),
-    .dm #practice-calendar-page #activity-calendar :is(.activity-subtitle, .activity-summary-item span, .activity-day-week, .activity-legend span) {
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-subtitle, .activity-month-note, .activity-calendar-weekdays span, .activity-summary-item span, .activity-day-week, .activity-legend span),
+    .dm :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-subtitle, .activity-month-note, .activity-calendar-weekdays span, .activity-summary-item span, .activity-day-week, .activity-legend span),
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-calendar-page #activity-calendar :is(.activity-subtitle, .activity-month-note, .activity-calendar-weekdays span, .activity-summary-item span, .activity-day-week, .activity-legend span),
+    .dm #practice-calendar-page #activity-calendar :is(.activity-subtitle, .activity-month-note, .activity-calendar-weekdays span, .activity-summary-item span, .activity-day-week, .activity-legend span) {
         color: #cbd5e1 !important;
         -webkit-text-fill-color: #cbd5e1 !important;
         opacity: 1 !important;

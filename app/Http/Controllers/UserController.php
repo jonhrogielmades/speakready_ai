@@ -1461,8 +1461,7 @@ class UserController extends Controller
  ->filter(fn ($session) => $session->created_at!== null)
  ->groupBy(fn ($session) => $session->created_at->toDateString());
 
- $days = collect(range(0, 27))->map(function (int $offset) use ($start, $today, $sessionsByDate) {
- $date = $start->copy()->addDays($offset);
+ $buildActivityDay = function (Carbon $date) use ($today, $sessionsByDate): object {
  $key = $date->toDateString();
  $daySessions = $sessionsByDate->get($key, collect());
  $scoredSessions = $daySessions
@@ -1492,7 +1491,53 @@ class UserController extends Controller
  'intensity' => $total > 0? min(100, 28 + ($total * 24)): 0,
  'tooltip' => $date->format('M d, Y').' - '.($details? implode(', ', $details): 'No practice recorded'),
  ];
- });
+ };
+
+ $days = collect(range(0, 27))->map(fn (int $offset) => $buildActivityDay($start->copy()->addDays($offset)));
+
+ $monthStart = $today->copy()->startOfMonth();
+ $monthEnd = $today->copy()->endOfMonth();
+ $monthDays = collect();
+
+ for ($blank = 0; $blank < $monthStart->dayOfWeek; $blank++) {
+ $monthDays->push((object) [
+ 'date' => null,
+ 'day_number' => '',
+ 'weekday' => '',
+ 'total' => 0,
+ 'intensity' => 0,
+ 'is_today' => false,
+ 'is_future' => false,
+ 'is_spacer' => true,
+ 'tooltip' => '',
+ ]);
+ }
+
+ for ($date = $monthStart->copy(); $date->lte($monthEnd); $date->addDay()) {
+ $day = $buildActivityDay($date->copy());
+ $day->is_spacer = false;
+ $day->is_future = $date->gt($today);
+
+ if ($day->is_future && $day->total === 0) {
+ $day->tooltip = $date->format('M d, Y').' - Upcoming day';
+ }
+
+ $monthDays->push($day);
+ }
+
+ for ($blank = $monthEnd->dayOfWeek; $blank < 6; $blank++) {
+ $monthDays->push((object) [
+ 'date' => null,
+ 'day_number' => '',
+ 'weekday' => '',
+ 'total' => 0,
+ 'intensity' => 0,
+ 'is_today' => false,
+ 'is_future' => false,
+ 'is_spacer' => true,
+ 'tooltip' => '',
+ ]);
+ }
 
  $activityDates = $sessionsByDate->keys()
  ->filter()
@@ -1504,6 +1549,11 @@ class UserController extends Controller
 
  return (object) [
  'days' => $days,
+ 'month_days' => $monthDays,
+ 'month_label' => $today->format('F Y'),
+ 'month_active_days' => $monthDays
+ ->filter(fn ($day) => empty($day->is_spacer) && $day->total > 0)
+ ->count(),
  'active_days' => $activityDates->count(),
  'range_active_days' => $days->where('total', '>', 0)->count(),
  'total_interviews' => $sessions->count(),

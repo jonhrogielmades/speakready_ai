@@ -1826,3 +1826,134 @@
         min-width: 66px !important;
     }
 }
+
+/* Mobile Account polish: centered profile photo stack and aligned card headings. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #account-page .account-card-title,
+    html body #mob-content #account-page .account-card-title,
+    html body #account-page .account-card-title {
+        display: grid !important;
+        grid-template-columns: 36px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 9px !important;
+        margin-bottom: 16px !important;
+        font-size: 1rem !important;
+        line-height: 1.22 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-card-title::after,
+    html body #mob-content #account-page .account-card-title::after,
+    html body #account-page .account-card-title::after {
+        display: none !important;
+        content: none !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-title-icon,
+    html body #mob-content #account-page .account-title-icon,
+    html body #account-page .account-title-icon {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        border-radius: 10px !important;
+        font-size: 0.92rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-title-icon i,
+    html body #mob-content #account-page .account-title-icon i,
+    html body #account-page .account-title-icon i {
+        font-size: 0.92rem !important;
+        line-height: 1 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-photo-row,
+    html body #mob-content #account-page .account-photo-row,
+    html body #account-page .account-photo-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        place-items: center !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 12px !important;
+        width: 100% !important;
+        margin: 0 0 18px !important;
+        text-align: center !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-photo-avatar,
+    html body #mob-content #account-page .account-photo-avatar,
+    html body #account-page .account-photo-avatar {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        justify-self: center !important;
+        width: 78px !important;
+        height: 78px !important;
+        min-width: 78px !important;
+        flex: 0 0 78px !important;
+        margin: 0 auto !important;
+        border-radius: 22px !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-photo-avatar img,
+    html body #mob-content #account-page .account-photo-avatar img,
+    html body #account-page .account-photo-avatar img {
+        border-radius: 18px !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-photo-actions,
+    html body #mob-content #account-page .account-photo-actions,
+    html body #account-page .account-photo-actions {
+        display: grid !important;
+        justify-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 260px !important;
+        margin: 0 auto !important;
+        text-align: center !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .upload-picture-btn,
+    html body #mob-content #account-page .upload-picture-btn,
+    html body #account-page .upload-picture-btn {
+        width: auto !important;
+        min-width: min(100%, 188px) !important;
+        max-width: 100% !important;
+        justify-self: center !important;
+        white-space: normal !important;
+        text-align: center !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .upload-hint,
+    html body #mob-content #account-page .upload-hint,
+    html body #account-page .upload-hint {
+        margin: 0 !important;
+        text-align: center !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.user-mobile-shell #mob-content #account-page .account-card-title,
+    html body #mob-content #account-page .account-card-title,
+    html body #account-page .account-card-title {
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        font-size: 0.96rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-title-icon,
+    html body #mob-content #account-page .account-title-icon,
+    html body #account-page .account-title-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-photo-avatar,
+    html body #mob-content #account-page .account-photo-avatar,
+    html body #account-page .account-photo-avatar {
+        width: 72px !important;
+        height: 72px !important;
+        min-width: 72px !important;
+        flex-basis: 72px !important;
+    }
+}

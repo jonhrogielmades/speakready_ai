@@ -1,17 +1,22 @@
 <div class="row g-4 mb-4">
     <div class="col-12" id="activity-calendar">
         <div class="activity-panel" style="--panel-accent:#6d5dfc;">
+            @php
+                $calendarMonthDays = collect($activityCalendar->month_days ?? $activityCalendar->days ?? []);
+                $calendarMonthLabel = $activityCalendar->month_label ?? 'This month';
+                $calendarActiveDays = $activityCalendar->month_active_days ?? $activityCalendar->range_active_days;
+            @endphp
             <div class="activity-heading">
                 <div class="activity-heading-icon"><i class="fa-regular fa-calendar"></i></div>
                 <div>
                     <h5 class="activity-title">Activity Calendar</h5>
-                    <p class="activity-subtitle">Completed interview activity from the last 28 days.</p>
+                    <p class="activity-subtitle">Completed interview activity for {{ $calendarMonthLabel }}.</p>
                 </div>
             </div>
-            @if($activityCalendar->range_active_days > 0)
+            @if(($activityCalendar->active_days ?? 0) > 0)
                 <div class="activity-summary-grid">
                     <div class="activity-summary-item">
-                        <strong>{{ $activityCalendar->range_active_days }}</strong>
+                        <strong>{{ $calendarActiveDays }}</strong>
                         <span>Active days</span>
                     </div>
                     <div class="activity-summary-item">
@@ -27,19 +32,32 @@
                         <span>Latest practice</span>
                     </div>
                 </div>
-                <div class="activity-grid" role="list" aria-label="Last 28 days practice activity">
-                    @foreach($activityCalendar->days as $day)
-                        <div class="activity-day {{ $day->total > 0? 'active': '' }} {{ $day->is_today? 'today': '' }}"
-                            role="listitem"
-                            title="{{ $day->tooltip }}"
-                            aria-label="{{ $day->tooltip }}"
-                            style="--activity-intensity: {{ $day->intensity }}%;">
-                            <span class="activity-day-week">{{ $day->weekday }}</span>
-                            <span class="activity-day-number">{{ $day->day_number }}</span>
-                            @if($day->total > 0)
-                                <span class="activity-day-dot">{{ $day->total }}</span>
-                            @endif
-                        </div>
+
+                <div class="activity-month-header" aria-hidden="true">
+                    <span class="activity-month-label">{{ $calendarMonthLabel }}</span>
+                    <span class="activity-month-note">Sun - Sat</span>
+                </div>
+                <div class="activity-calendar-weekdays" aria-hidden="true">
+                    @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $weekday)
+                        <span>{{ $weekday }}</span>
+                    @endforeach
+                </div>
+                <div class="activity-grid activity-month-grid" role="grid" aria-label="{{ $calendarMonthLabel }} practice activity calendar">
+                    @foreach($calendarMonthDays as $day)
+                        @if($day->is_spacer ?? false)
+                            <div class="activity-day activity-day-spacer" role="presentation" aria-hidden="true"></div>
+                        @else
+                            <div class="activity-day {{ $day->total > 0? 'active': '' }} {{ $day->is_today? 'today': '' }} {{ ($day->is_future ?? false) ? 'is-future' : '' }}"
+                                role="gridcell"
+                                title="{{ $day->tooltip }}"
+                                aria-label="{{ $day->tooltip }}"
+                                style="--activity-intensity: {{ $day->intensity }}%;">
+                                <span class="activity-day-number">{{ $day->day_number }}</span>
+                                @if($day->total > 0)
+                                    <span class="activity-day-dot">{{ $day->total }}</span>
+                                @endif
+                            </div>
+                        @endif
                     @endforeach
                 </div>
                 <div class="activity-legend">
