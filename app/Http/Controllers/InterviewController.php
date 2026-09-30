@@ -208,7 +208,7 @@ class InterviewController extends Controller
  0,
  [
  'question_type' => 'Personal',
- 'expected_guide' => 'Give your name, current location or city/province, brief background, and the role or opportunity you are interviewing for. Share only interview-appropriate personal details.',
+ 'expected_guide' => 'Give a concise overview of who you are, your relevant background or experience, and how it connects to the role or opportunity. Share only interview-appropriate personal details.',
  'mapped_skills' => ['self_introduction', 'communication_clarity', 'professional_presence'],
  'source_name' => $openingIntroProvider === 'local'? 'SpeakReady interview opening fallback': 'AI-generated interview opening',
  'source_url' => null,

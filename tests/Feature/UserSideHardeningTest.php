@@ -1247,6 +1247,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('without giving hints', $questionGenerationPrompt);
  $this->assertStringContainsString('Beginner assistance is enabled', $beginnerPrompt);
  $this->assertStringContainsString('clearer, shorter questions', $beginnerPrompt);
+ $this->assertStringContainsString('calm, professional, encouraging', $beginnerPrompt);
  $this->assertStringContainsString('Standard assistance is enabled', $standardPrompt);
  $this->assertStringContainsString('balanced professional interview style', $standardPrompt);
  $this->assertStringContainsString('Challenge assistance is enabled', $challengePrompt);
@@ -1308,10 +1309,13 @@ class UserSideHardeningTest extends TestCase
  $realPrompt = (string) data_get($capturedMessages, '1.1.content');
 
  $this->assertStringContainsString('Coached practice mode is enabled', $coachedPrompt);
+ $this->assertStringContainsString('supportive acknowledgements', $coachedPrompt);
  $this->assertStringContainsString('Final coaching and feedback are saved for the report', $coachedPrompt);
  $this->assertStringContainsString('one brief practice cue', $coachedSystem);
+ $this->assertStringContainsString('be encouraging and specific', $coachedSystem);
  $this->assertStringNotContainsString('Real interview mode is enabled', $coachedPrompt);
  $this->assertStringContainsString('Real interview mode is enabled', $realPrompt);
+ $this->assertStringContainsString('calm professional warmth', $realPrompt);
  $this->assertStringContainsString('do not reassure or teach', $realPrompt);
  $this->assertStringContainsString('prefer sharper follow-ups', $realPrompt);
  $this->assertStringContainsString('do not coach, reassure, teach', $realSystem);
@@ -1336,9 +1340,9 @@ class UserSideHardeningTest extends TestCase
  'ai_assistance_level' => 'challenge',
  ]), [], $shortAnswer);
 
- $this->assertStringContainsString("Let's make this easier to answer", $beginnerReply);
- $this->assertStringContainsString("Let's turn that into a stronger practice answer", $standardReply);
- $this->assertStringContainsString('That is not enough evidence yet', $challengeReply);
+ $this->assertStringContainsString('You can start small', $beginnerReply);
+ $this->assertStringContainsString("You're started; let's build it into a stronger practice answer", $standardReply);
+ $this->assertStringContainsString('You have a starting point', $challengeReply);
  }
 
  public function test_local_follow_up_fallback_respects_live_feedback_mode(): void
@@ -1355,8 +1359,8 @@ class UserSideHardeningTest extends TestCase
  'live_feedback_mode' => 'real_interview',
  ]), [], $shortAnswer);
 
- $this->assertStringContainsString("Let's turn that into a stronger practice answer", $coachedReply);
- $this->assertStringContainsString('I need a complete example to assess fit', $realReply);
+ $this->assertStringContainsString("You're started; let's build it into a stronger practice answer", $coachedReply);
+ $this->assertStringContainsString('To assess this fairly', $realReply);
  $this->assertStringNotContainsString('stronger practice answer', $realReply);
  }
 
@@ -1500,7 +1504,8 @@ class UserSideHardeningTest extends TestCase
  Question::where('interview_session_id', $session->id)
  ->where('source_type', 'real_interview_opening')
  ->pluck('question_text')
- ->every(fn (string $questionText) => str_contains($questionText, 'introduce yourself'))
+ ->every(fn (string $questionText) => str_contains($questionText, 'No need to be perfect')
+ && str_contains($questionText, 'Tell me about yourself'))
  );
  $this->assertTrue(
  Question::where('interview_session_id', $session->id)->get()

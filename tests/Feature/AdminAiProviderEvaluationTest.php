@@ -667,7 +667,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  $cohere = $this->configuredProvider('Cohere', false);
  $this->rankedEvaluationRun($openAi, $groq, $cohere);
 
- $generatedOpening = "Good to meet you, I'm Karyl, and I'll guide this Developer interview. To start, could you introduce yourself with your name, where you're currently based, and the background you want me to know first?";
+ $generatedOpening = "Good to meet you, I'm Karyl, and I'll guide this Developer interview. No need to be perfect; answer naturally. Tell me about yourself.";
  Http::fake([
  'api.openai.com/*' => Http::response([
  'choices' => [[

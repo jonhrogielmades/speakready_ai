@@ -638,11 +638,12 @@ class AIService
  $liveFeedbackMode = self::normalizedLiveFeedbackMode($session->live_feedback_mode?? 'coaching');
  $prompt = "You are an expert Interviewer conducting a realistic mock interview for a '{$targetPosition}' role. ";
  $prompt.= "The difficulty is '".($session->difficulty?? 'Medium')."'. ";
- $prompt.= 'Stay in interviewer mode. Sound like a real hiring manager: neutral, concise, curious, and professionally probing. ';
+ $prompt.= 'Stay in interviewer mode. Sound like a calm, encouraging hiring manager: warm, concise, curious, professionally probing, and never sarcastic or discouraging. ';
  $prompt.= "Every new question or follow-up must stay grounded in the '{$targetPosition}' target position by probing role responsibilities, required skills, deliverables, stakeholders, tools, or role-fit evidence. Avoid generic follow-ups that ignore the target position. ";
  $prompt.= 'Do not reintroduce yourself as '.self::INTERVIEWER_DISPLAY_NAME.' during normal interview questions; the opening already introduced you. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
  $prompt.= 'The next interviewer turn must be based on the candidate answer immediately before it, not on a generic question list. When natural, briefly reference one concrete detail the candidate just mentioned before asking the next question. ';
+ $prompt.= 'Use a confidence-building acknowledgement that helps the candidate keep answering, such as thanking them for a specific detail or naming the useful starting point they gave. Keep encouragement specific to effort or shared evidence, not performance scoring. ';
  $prompt.= 'If the candidate asks a brief human question such as your name, role, how you are doing, or what happens next, answer it naturally in one short clause as interviewer '.self::INTERVIEWER_DISPLAY_NAME.", then smoothly continue with one interview question grounded in the candidate's latest answer. ";
  $prompt.= self::languageOutputInstruction($targetLanguage, 'the spoken interviewer reply');
  $prompt.= self::assistanceLevelInstruction($session->ai_assistance_level?? 'standard');
@@ -710,9 +711,9 @@ class AIService
  $prompt.= self::truncateText($latestAnswer, 1200)."\n";
 
  if ($isFinal) {
- $prompt.= "\nYour task: This is the FINAL question of the interview. Briefly acknowledge the candidate's latest answer without evaluating it. If they asked a brief rapport or logistics question, answer it first in one short clause. Explicitly mention that this is the final question, and ask ONE concluding interview question that a real interviewer would ask. Prefer a question about strongest fit, remaining evidence, motivation, or what the candidate wants the interviewer to remember. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+ $prompt.= "\nYour task: This is the FINAL question of the interview. Briefly acknowledge the candidate's latest answer in a warm, encouraging sentence without evaluating it. If they asked a brief rapport or logistics question, answer it first in one short clause. Explicitly mention that this is the final question, and ask ONE concluding interview question that a real interviewer would ask. Prefer a question about strongest fit, remaining evidence, motivation, or what the candidate wants the interviewer to remember. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
  } else {
- $prompt.= "\nYour task: Briefly acknowledge the candidate's latest answer in one neutral sentence, then ask exactly ONE relevant follow-up question based on that answer. If they asked a brief rapport or logistics question, answer it first in one short clause before the interview question. If the answer was vague, ask for a specific example, their personal role, measurable result, or decision process. If the answer was strong, probe deeper into tradeoffs, constraints, stakeholder impact, or how they would apply it in this role. Do not jump to an unrelated prewritten question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+ $prompt.= "\nYour task: Briefly acknowledge the candidate's latest answer in one warm, encouraging sentence, then ask exactly ONE relevant follow-up question based on that answer. If they asked a brief rapport or logistics question, answer it first in one short clause before the interview question. If the answer was vague, keep the tone inviting while asking for a specific example, their personal role, measurable result, or decision process. If the answer was strong, probe deeper into tradeoffs, constraints, stakeholder impact, or how they would apply it in this role. Do not jump to an unrelated prewritten question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
  }
  $prompt.= ' Keep the reply natural for speech, under 75 words, with exactly one interviewer question. '.self::liveFeedbackReplyBoundary($liveFeedbackMode);
 
@@ -726,7 +727,7 @@ class AIService
 
  while ($attempt < $maxRetries) {
  try {
- $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation the way a live interviewer would, but stay in interview mode. If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation the way a live interviewer would, but stay in interview mode with a calm, encouraging tone that helps the candidate keep answering. If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
 
  // Rely on chatMessage for robust failover
  $response = self::chatMessage($prompt, [], $provider, $systemPrompt, $chatRequestOptions);
@@ -875,12 +876,12 @@ class AIService
  $focus = trim((string) ($session->interview_focus?? 'Interview'))?: 'Interview';
  $liveFeedbackMode = self::normalizedLiveFeedbackMode($session->live_feedback_mode?? 'coaching');
  $prompt = "Create ONE spoken opening introduction for a realistic mock interview. ";
- $prompt.= 'Combine the interviewer greeting and the candidate self-introduction prompt into one natural turn. ';
+ $prompt.= 'Combine the interviewer greeting and the candidate "Tell me about yourself" prompt into one natural turn. ';
  $prompt.= 'The interviewer is named '.self::INTERVIEWER_DISPLAY_NAME.". The target position is '{$targetPosition}'. The difficulty is '{$difficulty}', and the interview focus is '{$focus}'. ";
- $prompt.= "Ask the candidate to introduce themselves with their name, current location, and brief background or experience relevant to '{$targetPosition}'. ";
+ $prompt.= "Use the exact phrase \"Tell me about yourself\" as the only question or request in the opening, without asking separately for name, location, or background details. ";
  $prompt.= 'Do not mention how many questions there will be. Do not say "first question", "question count", or any number of questions. ';
- $prompt.= 'Do not evaluate, coach, explain the rubric, or mention feedback timing unless it is necessary in a short natural phrase. ';
- $prompt.= 'Use one concise paragraph for speech, under 70 words, with exactly one question mark. ';
+ $prompt.= 'Use a warm, welcoming, confidence-building tone. Do not evaluate, coach, explain the rubric, or mention feedback timing unless it is necessary in a short natural phrase. ';
+ $prompt.= 'Use one concise paragraph for speech, under 55 words. ';
  $prompt.= 'Do not include markdown, labels, JSON, or prefixes like "Interviewer:". ';
  $prompt.= self::languageOutputInstruction($targetLanguage, 'the whole interviewer opening');
  $prompt.= self::assistanceLevelInstruction($session->ai_assistance_level?? 'standard');
@@ -903,7 +904,7 @@ class AIService
  $prompt.= "Target job description summary: '".self::truncateText(trim(preg_replace('/\s+/', ' ', $session->job_description)?? ''), 140)."'. ";
  }
 
- $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Write only the spoken opening turn. It must greet the candidate and ask for their self-introduction in one combined prompt. Never mention the number of interview questions. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Write only the spoken opening turn. It must greet the candidate warmly and use the exact phrase "Tell me about yourself" as the self-introduction prompt. Never mention the number of interview questions. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
  $providers = self::providerPriorityList($provider);
  $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_INTERVIEW_OPENING_MAX_PROVIDERS', 2)));
  $providers = array_slice($providers, 0, $maxProviders);
@@ -1098,19 +1099,19 @@ class AIService
  };
 
  return $isRealInterviewMode
- ? "For my final question, what is the strongest evidence I should weigh about your fit for the {$targetPosition} role?"
+ ? "Thank you for staying with the interview. For my final question, what is the strongest evidence I should weigh about your fit for the {$targetPosition} role?"
  : "{$acknowledgement}{$coachedFinalQuestion}";
  }
 
  if ($answerText === '' || str_contains(strtolower($answerText), 'skipped') || $wordCount < 15) {
  if ($isRealInterviewMode) {
- return "I need a complete example to assess fit. What specific situation can you walk me through for the {$targetPosition} role?";
+ return "To assess this fairly, let's make it concrete. What specific situation can you walk me through for the {$targetPosition} role?";
  }
 
  return match ($assistanceLevel) {
- 'beginner' => "Let's make this easier to answer. What specific situation can you describe for the {$targetPosition} role?",
- 'challenge' => "That is not enough evidence yet. What specific situation proves you can handle the {$targetPosition} role?",
- default => "Let's turn that into a stronger practice answer. What specific situation can you walk me through for the {$targetPosition} role?",
+ 'beginner' => "You can start small; one real moment is enough. What specific situation can you describe for the {$targetPosition} role?",
+ 'challenge' => "You have a starting point; now let's add stronger evidence. What specific situation proves you can handle the {$targetPosition} role?",
+ default => "You're started; let's build it into a stronger practice answer. What specific situation can you walk me through for the {$targetPosition} role?",
  };
  }
 
@@ -1120,9 +1121,9 @@ class AIService
  }
 
  return match ($assistanceLevel) {
- 'beginner' => "{$acknowledgement}To make this clearer, what part did you personally handle for the {$targetPosition} role?",
- 'challenge' => "{$acknowledgement}I need clearer ownership. What decision or action did you personally own for the {$targetPosition} role?",
- default => "{$acknowledgement}To make the answer clearer, what was your personal responsibility, and which decision or action did you directly own for the {$targetPosition} role?",
+ 'beginner' => "{$acknowledgement}Let's make your role easy to see. What part did you personally handle for the {$targetPosition} role?",
+ 'challenge' => "{$acknowledgement}You're close; the next step is clearer ownership. What decision or action did you personally own for the {$targetPosition} role?",
+ default => "{$acknowledgement}Let's make the answer clearer and easier to trust. What was your personal responsibility, and which decision or action did you directly own for the {$targetPosition} role?",
  };
  }
 
@@ -1132,9 +1133,9 @@ class AIService
  }
 
  return match ($assistanceLevel) {
- 'beginner' => "{$acknowledgement}To complete the answer, what result or lesson came from it for the {$targetPosition} role?",
- 'challenge' => "{$acknowledgement}What measurable result proves your action worked, and why should that count for the {$targetPosition} role?",
- default => "{$acknowledgement}For a stronger practice answer, what result, customer impact, metric, or lesson came from that, and why would it matter in the {$targetPosition} role?",
+ 'beginner' => "{$acknowledgement}You're almost at a complete answer. What result or lesson came from it for the {$targetPosition} role?",
+ 'challenge' => "{$acknowledgement}Good, now make the evidence sharper. What measurable result proves your action worked, and why should that count for the {$targetPosition} role?",
+ default => "{$acknowledgement}That's useful context; let's connect it to impact. What result, customer impact, metric, or lesson came from that, and why would it matter in the {$targetPosition} role?",
  };
  }
 
@@ -1144,9 +1145,9 @@ class AIService
  }
 
  return match ($assistanceLevel) {
- 'beginner' => "{$acknowledgement}What tradeoff did you consider, and what did you learn for the {$targetPosition} role?",
- 'challenge' => "{$acknowledgement}Which tradeoff would you defend if the interviewer challenged your decision for the {$targetPosition} role?",
- default => "{$acknowledgement}What tradeoff did you consider, and how would you apply that same judgment as a {$targetPosition}?",
+ 'beginner' => "{$acknowledgement}That's a helpful start. What tradeoff did you consider, and what did you learn for the {$targetPosition} role?",
+ 'challenge' => "{$acknowledgement}Good, let's raise the bar. Which tradeoff would you defend if the interviewer challenged your decision for the {$targetPosition} role?",
+ default => "{$acknowledgement}That gives us something concrete to build on. What tradeoff did you consider, and how would you apply that same judgment as a {$targetPosition}?",
  };
  }
 
@@ -1155,9 +1156,9 @@ class AIService
  }
 
  return match ($assistanceLevel) {
- 'beginner' => "{$acknowledgement}What was the main challenge, and how would you handle a similar situation as a {$targetPosition}?",
- 'challenge' => "{$acknowledgement}What constraint exposed the hardest judgment call, and how would you defend your decision as a {$targetPosition}?",
- default => "{$acknowledgement}What constraint or tradeoff made that situation difficult, and how would you handle a similar case as a {$targetPosition}?",
+ 'beginner' => "{$acknowledgement}You're doing the right thing by giving context. What was the main challenge, and how would you handle a similar situation as a {$targetPosition}?",
+ 'challenge' => "{$acknowledgement}Strong answers can handle pressure, so let's test the judgment. What constraint exposed the hardest judgment call, and how would you defend your decision as a {$targetPosition}?",
+ default => "{$acknowledgement}That's a solid direction; let's bring out the judgment behind it. What constraint or tradeoff made that situation difficult, and how would you handle a similar case as a {$targetPosition}?",
  };
  }
 
@@ -1165,7 +1166,7 @@ class AIService
  {
  $anchor = self::answerAnchor($answerText);
 
- return $anchor!== ''? "You mentioned {$anchor}. ": 'Thank you. ';
+ return $anchor!== ''? "Thanks for sharing that; you mentioned {$anchor}. ": 'Thank you for continuing. ';
  }
 
  private static function candidateSideQuestionReply(string $answerText): string
@@ -1187,11 +1188,11 @@ class AIService
  }
 
  if (preg_match('/\b(?:how are you|how do you do)\b/i', $clean)) {
- return 'I am doing well, thank you for asking. ';
+ return 'I am doing well, thank you for asking. I am glad you are here. ';
  }
 
  if (preg_match('/\b(?:what happens next|what(?:\'s| is) next|next step|how will this work)\b/i', $clean)) {
- return 'I will guide the conversation one question at a time. ';
+ return 'I will guide the conversation one question at a time, and you can answer naturally. ';
  }
 
  return '';
@@ -1201,7 +1202,7 @@ class AIService
  {
  $targetPosition = trim((string) ($session->target_position?? ''))?: 'this role';
 
- return 'I am '.self::INTERVIEWER_DISPLAY_NAME.", and I will be your interviewer for the {$targetPosition} interview. To begin, could you introduce yourself with your name, where you are currently based, and the background or experience you would like me to know first?";
+ return 'I am '.self::INTERVIEWER_DISPLAY_NAME.", and I will be your interviewer for the {$targetPosition} interview. No need to be perfect; answer naturally. Tell me about yourself.";
  }
 
  private static function sanitizeInterviewOpeningIntro(string $reply): string
@@ -1215,7 +1216,7 @@ class AIService
  return '';
  }
 
- if (! preg_match('/\b(?:introduce yourself|your name|name|background|experience|currently based|location|where you are based)\b/i', $reply)) {
+ if (! preg_match('/\b(?:tell me about yourself|introduce yourself|your name|name|background|experience|currently based|location|where you are based)\b/i', $reply)) {
  return '';
  }
 
@@ -1295,7 +1296,7 @@ class AIService
  $instruction.= 'Standard assistance is enabled: use a balanced professional interview style. ';
  }
 
- $instruction.= 'The interviewer tone should be neutral, professional, and realistic. ';
+ $instruction.= 'The interviewer tone should be calm, professional, encouraging, and realistic. ';
 
  return $instruction;
  }
@@ -1315,28 +1316,28 @@ class AIService
  private static function liveFeedbackModeInstruction(string $mode): string
  {
  if ($mode === 'real_interview') {
- return 'Real interview mode is enabled: behave like a real interview panel, do not reassure or teach, do not provide hints, tips, sample answers, coaching, or improvement advice, politely interrupt vague answers by asking for proof, and prefer sharper follow-ups about tradeoffs, ownership, mistakes, measurable results, and role-specific judgment. ';
+ return 'Real interview mode is enabled: behave like a real interview panel with calm professional warmth, do not reassure or teach, do not provide hints, tips, sample answers, coaching, or improvement advice, politely interrupt vague answers by asking for proof, and prefer sharper follow-ups about tradeoffs, ownership, mistakes, measurable results, and role-specific judgment. ';
  }
 
- return 'Coached practice mode is enabled: keep the interviewer role, ask answer-based follow-ups, and when the candidate is vague you may include one brief process cue before the next question, such as asking for a specific situation, personal action, measurable result, or lesson. Final coaching and feedback are saved for the report, so do not reveal scores, rubrics, sample answers, or final evaluation during the interview. ';
+ return 'Coached practice mode is enabled: keep the interviewer role, ask answer-based follow-ups, use supportive acknowledgements, normalize imperfect first attempts, and when the candidate is vague you may include one brief process cue before the next question, such as asking for a specific situation, personal action, measurable result, or lesson. Final coaching and feedback are saved for the report, so do not reveal scores, rubrics, sample answers, or final evaluation during the interview. ';
  }
 
  private static function liveFeedbackReplyBoundary(string $mode): string
  {
  if ($mode === 'real_interview') {
- return 'Do not reveal scores, feedback, coaching tips, rubrics, hints, reassurance, teaching, or answer-improvement advice during the interview. ';
+ return 'A brief respectful acknowledgement is allowed, but do not reveal scores, feedback, coaching tips, rubrics, hints, reassurance, teaching, or answer-improvement advice during the interview. ';
  }
 
- return 'Do not reveal scores, rubrics, sample answers, or final evaluation during the interview. A brief practice cue is allowed only when it leads into the single follow-up question. ';
+ return 'Use one short encouraging acknowledgement before the question. Do not reveal scores, rubrics, sample answers, or final evaluation during the interview. A brief practice cue is allowed only when it leads into the single follow-up question. ';
  }
 
  private static function liveFeedbackSystemInstruction(string $mode): string
  {
  if ($mode === 'real_interview') {
- return 'Real interview mode: do not coach, reassure, teach, score, use markdown, add labels, or give hints; ask one sharper evidence-focused follow-up question.';
+ return 'Real interview mode: be professionally warm, but do not coach, reassure, teach, score, use markdown, add labels, or give hints; ask one sharper evidence-focused follow-up question.';
  }
 
- return 'Coached practice mode: do not score, use markdown, add labels, or give final feedback; you may give one brief practice cue before one supportive follow-up question.';
+ return 'Coached practice mode: be encouraging and specific; do not score, use markdown, add labels, or give final feedback; you may give one brief practice cue before one supportive follow-up question.';
  }
 
  private static function localHiringContextInstruction(): string
