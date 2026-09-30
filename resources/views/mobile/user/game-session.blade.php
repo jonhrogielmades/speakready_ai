@@ -28,6 +28,15 @@
  $questions = collect([]);
  }
  $isVoiceOnlyMode = $sessionRecord && $sessionRecord->response_mode === 'voice';
+ $interviewerAvatarImages = [
+ 'img/interviewers/Filipina_Interviewer_01.png',
+ 'img/interviewers/Filipina_Interviewer_02.png',
+ 'img/interviewers/Filipina_Interviewer_03.png',
+ 'img/interviewers/Filipina_Interviewer_04.png',
+ 'img/interviewers/Filipina_Interviewer_05.png',
+ ];
+ $interviewerAvatarImage = $interviewerAvatarImages[array_rand($interviewerAvatarImages)];
+ $interviewerAvatarImageUrls = array_map(fn ($image) => asset($image), $interviewerAvatarImages);
  @endphp
 
  @if($sessionRecord && $questions->count() > 0)
@@ -91,7 +100,7 @@
  <div class="avatar-wrapper" id="aiAvatarHead" style="width:100px;height:100px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;transition:border-color 0.3s;">
  <!-- The Image Container (with border, glow, and clipping for the image itself) -->
  <div class="avatar-frame" style="width:100%;height:100%;background:rgba(255,255,255,0.1);border-radius:50%;border:3px solid #8b5cf6;overflow:hidden;position:relative;z-index:10;box-shadow: 0 0 15px rgba(139,92,246,0.3);">
- <img src="{{ asset('img/ai_avatar.jpg') }}" alt="AI Avatar" style="width:100%;height:100%;object-fit:cover;">
+ <img id="interviewerAvatarImage" src="{{ asset($interviewerAvatarImage) }}" alt="AI Avatar" style="width:100%;height:100%;object-fit:cover;">
  </div>
  </div>
  
@@ -245,6 +254,8 @@
  const responseMode = "{{ $sessionRecord->response_mode }}";
  const isVoiceOnlySession = responseMode === "voice";
  const cameraCoachingEnabled = @json($cameraCoachingEnabled);
+ const interviewerAvatarImages = @json($interviewerAvatarImageUrls);
+ let activeInterviewerAvatarIndex = interviewerAvatarImages.indexOf(@json(asset($interviewerAvatarImage)));
  let currentQIdx = {{ $initialQuestionIndex }};
  let timerSeconds = 0;
  let timerInterval;
@@ -287,6 +298,19 @@ let committedSpeechTranscript = '';
  let gameMatchFullscreenRequested = false;
  let gameMatchFullscreenRetryQueued = false;
  const gameMatchFullscreenRetryEvents = ['pointerdown', 'keydown', 'touchstart', 'click'];
+
+ function randomizeInterviewerAvatar() {
+ const avatarImage = document.getElementById('interviewerAvatarImage');
+ if (!avatarImage || interviewerAvatarImages.length === 0) return;
+
+ let nextIndex = Math.floor(Math.random() * interviewerAvatarImages.length);
+ if (interviewerAvatarImages.length > 1 && nextIndex === activeInterviewerAvatarIndex) {
+ nextIndex = (nextIndex + 1) % interviewerAvatarImages.length;
+ }
+
+ activeInterviewerAvatarIndex = nextIndex;
+ avatarImage.src = interviewerAvatarImages[nextIndex];
+ }
 
  function refreshGameMatchFullscreenLayout() {
  window.SpeakReadyViewport?.refreshNow?.();
@@ -1002,6 +1026,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  function loadQuestion(idx) {
  currentQIdx = idx;
  const q = questions[idx];
+ randomizeInterviewerAvatar();
  
  const questionText = q.question_text || '';
  document.getElementById('aiQuestionText').innerText = questionText;

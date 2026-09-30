@@ -60,6 +60,15 @@
   ][$assistanceLevelKey]?? 'Standard Assistance';
   $responseModeKey = strtolower((string) ($sessionRecord->response_mode?? 'text'));
   $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
+  $interviewerAvatarImages = [
+  'img/interviewers/Filipina_Interviewer_01.png',
+  'img/interviewers/Filipina_Interviewer_02.png',
+  'img/interviewers/Filipina_Interviewer_03.png',
+  'img/interviewers/Filipina_Interviewer_04.png',
+  'img/interviewers/Filipina_Interviewer_05.png',
+  ];
+  $interviewerAvatarImage = $interviewerAvatarImages[array_rand($interviewerAvatarImages)];
+  $interviewerAvatarImageUrls = array_map(fn ($image) => asset($image), $interviewerAvatarImages);
   @endphp
  <div id="workspaceWrapper" style="display:none;">
  <div class="row g-4" id="workspaceRow">
@@ -89,7 +98,7 @@
  <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;--avatar-ring-color:#8b5cf6;">
  <!-- The Image Container (with border, glow, and clipping for the image itself) -->
  <div class="avatar-frame">
- <img src="{{ asset('img/ai_interviewer_avatar.png') }}" alt="AI Interviewer" style="width:100%;height:100%;object-fit:cover;">
+ <img id="interviewerAvatarImage" src="{{ asset($interviewerAvatarImage) }}" alt="AI Interviewer" style="width:100%;height:100%;object-fit:cover;">
  </div>
  </div>
  
@@ -584,6 +593,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const interviewerServerAudioPlaybackRate = 1.0;
  const interviewerCaptionWordMs = 430;
  const interviewerSpeechTimeoutWordMs = 720;
+ const interviewerAvatarImages = @json($interviewerAvatarImageUrls);
+ let activeInterviewerAvatarIndex = interviewerAvatarImages.indexOf(@json(asset($interviewerAvatarImage)));
  const serverTranscriptionMimeType = (() => {
  if (!window.MediaRecorder ||!MediaRecorder.isTypeSupported) return '';
  return [
@@ -619,6 +630,20 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  && Boolean(window.MediaRecorder)
  && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
  const displayRealtimeTranscriptInTextarea = true;
+
+ function randomizeInterviewerAvatar() {
+ const avatarImage = document.getElementById('interviewerAvatarImage');
+ if (!avatarImage || interviewerAvatarImages.length === 0) return;
+
+ let nextIndex = Math.floor(Math.random() * interviewerAvatarImages.length);
+ if (interviewerAvatarImages.length > 1 && nextIndex === activeInterviewerAvatarIndex) {
+ nextIndex = (nextIndex + 1) % interviewerAvatarImages.length;
+ }
+
+ activeInterviewerAvatarIndex = nextIndex;
+ avatarImage.src = interviewerAvatarImages[nextIndex];
+ }
+
  let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null)): null;
  const duplicateSafeWordSet = new Set([
  'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
@@ -4444,6 +4469,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  currentQIdx = idx;
  const q = questions[idx];
  if (!q) return;
+ randomizeInterviewerAvatar();
  resetAiCoachPanel();
  setAnswerInputEnabled(false);
  
