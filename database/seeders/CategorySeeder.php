@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Services\QuestionDatasetProvider;
+use App\Support\InterviewScope;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -16,6 +17,7 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $this->deactivateRemovedInterviewCategories();
+        $this->deactivateOutOfScopeCoreCategories();
 
         foreach ($this->interviewCategories() as $index => $category) {
             $record = Category::firstOrNew([
@@ -36,8 +38,11 @@ class CategorySeeder extends Seeder
             $record->save();
         }
 
-        $arenaCategories = ['Communication', 'Public Speaking', 'Emotional Intelligence', 'Leadership', 'Conflict Resolution'];
-        foreach ($arenaCategories as $category) {
+        $this->deactivateOutOfScopeCoreCategories();
+        $this->deactivateOutOfScopeGameCategories();
+
+        $gameCategories = ['Job Interview Challenges'];
+        foreach ($gameCategories as $category) {
             Category::where('title', $category)
                 ->where('type', 'arena')
                 ->update(['type' => 'game']);
@@ -84,10 +89,7 @@ class CategorySeeder extends Seeder
 
     private function isSeededCoreInterviewCategory(string $category): bool
     {
-        $title = mb_strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', $category)) ?? ''));
-
-        return str_contains($title, 'job interview')
-            || str_contains($title, 'general job');
+        return InterviewScope::isSupportedCategoryTitle($category);
     }
 
     private function deactivateRemovedInterviewCategories(): void
@@ -98,6 +100,21 @@ class CategorySeeder extends Seeder
                     ->orWhereRaw('LOWER(title) LIKE ?', ['%college admission%'])
                     ->orWhereRaw('LOWER(title) LIKE ?', ['%admission interview%']);
             })
+            ->update(['status' => 'inactive']);
+    }
+
+    private function deactivateOutOfScopeCoreCategories(): void
+    {
+        Category::where('type', 'core')
+            ->get()
+            ->reject(fn (Category $category): bool => InterviewScope::isSupportedCoreCategory($category))
+            ->each(fn (Category $category): bool => $category->forceFill(['status' => 'inactive'])->save());
+    }
+
+    private function deactivateOutOfScopeGameCategories(): void
+    {
+        Category::whereIn('type', ['arena', 'game'])
+            ->whereNotIn('title', ['Job Interview Challenges'])
             ->update(['status' => 'inactive']);
     }
 

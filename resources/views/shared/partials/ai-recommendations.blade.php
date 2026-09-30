@@ -19,7 +19,7 @@
             @if($practiceAiRecommendations->isNotEmpty())
                 <div class="recommend-list practice-ai-list">
                     @foreach($practiceAiRecommendations as $recommendation)
-                        <a href="{{ $recommendation->url ?? route('user.modules.index') }}" class="recommend-item practice-ai-item" style="--panel-accent: {{ $practiceAiSafeCssColor($recommendation->color ?? null) }};">
+                        <a href="{{ $recommendation->url ?? route('interview.setup') }}" class="recommend-item practice-ai-item" style="--panel-accent: {{ $practiceAiSafeCssColor($recommendation->color ?? null) }};">
                             <div class="recommend-item-icon"><i class="fa-solid {{ $practiceAiSafeIcon($recommendation->icon ?? null) }}"></i></div>
                             <div>
                                 <div class="recommend-item-title">{{ $recommendation->text ?? $recommendation->skill ?? 'Recommended next step' }}</div>

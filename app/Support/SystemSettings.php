@@ -18,7 +18,7 @@ class SystemSettings
         'sys_name' => ['value' => 'SpeakReady AI', 'group' => 'general', 'type' => 'string'],
         'sys_contact_email' => ['value' => 'support@speakready.ai', 'group' => 'general', 'type' => 'string'],
         'sys_contact_number' => ['value' => '+123456789', 'group' => 'general', 'type' => 'string'],
-        'sys_desc' => ['value' => 'SpeakReady AI helps users master communication skills.', 'group' => 'general', 'type' => 'string'],
+        'sys_desc' => ['value' => 'SpeakReady AI helps users prepare for job interviews with realistic practice, coaching, and feedback.', 'group' => 'general', 'type' => 'string'],
         'sys_footer' => ['value' => '&copy; 2026 SpeakReady AI. All Rights Reserved.', 'group' => 'general', 'type' => 'string'],
         'sys_language' => ['value' => 'en', 'group' => 'general', 'type' => 'string'],
 

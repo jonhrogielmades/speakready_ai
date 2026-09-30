@@ -1,9 +1,9 @@
-         <!-- BENEFITS & INTERVIEW CATEGORIES -->
+         <!-- BENEFITS & JOB INTERVIEW FOCUS -->
          <section id="benefits" class="sp position-relative">
             <div class="aur aur-b" style="top:50%;right:-200px;transform:translateY(-50%)"></div>
             <div class="container position-relative" style="z-index:1">
                <div class="landing-section-heading mb-5 rv">
-                  <span class="slbl">Interview Categories</span>
+                  <span class="slbl">Job Interview Focus</span>
                   <h2 class="stitle">Why use <span class="gt">SpeakReady AI?</span></h2>
                </div>
                <div class="row g-5">
@@ -11,7 +11,7 @@
                      <ul class="list-unstyled d-flex flex-column gap-3">
                         <li class="d-flex align-items-start gap-3">
                            <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-comments"></i></div>
-                           <div><h4 class="fs-6 fw-bold mb-1">Improve Communication Skills</h4><p style="font-size:.85rem;color:var(--tx2)">Enhance how you articulate your thoughts and experiences.</p></div>
+                           <div><h4 class="fs-6 fw-bold mb-1">Improve Interview Communication</h4><p style="font-size:.85rem;color:var(--tx2)">Enhance how you articulate your thoughts and experiences in hiring conversations.</p></div>
                         </li>
                         <li class="d-flex align-items-start gap-3">
                            <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-thumbs-up"></i></div>
@@ -38,8 +38,8 @@
                   
                   <div class="col-lg-7 rv">
                      <div class="landing-section-heading mb-4">
-                        <span class="slbl">Interview Categories</span>
-                        <h2 class="stitle">Tailored to your <span class="gt">goals</span></h2>
+                        <span class="slbl">Job Interview Scenarios</span>
+                        <h2 class="stitle">Tailored to your <span class="gt">target role</span></h2>
                      </div>
                      <div class="row g-3">
                         <div class="col-sm-6">

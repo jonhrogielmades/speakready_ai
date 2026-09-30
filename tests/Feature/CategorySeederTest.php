@@ -49,9 +49,15 @@ class CategorySeederTest extends TestCase
  'title' => 'Communication',
  'type' => 'core',
  ]);
- $this->assertDatabaseHas('categories', [
+ $this->assertDatabaseMissing('categories', [
  'title' => 'Communication',
  'type' => 'game',
+ 'status' => 'active',
+ ]);
+ $this->assertDatabaseHas('categories', [
+ 'title' => 'Job Interview Challenges',
+ 'type' => 'game',
+ 'status' => 'active',
  ]);
  }
 }

@@ -30,6 +30,7 @@ use App\Support\FeedbackSchema;
 use App\Support\GameSchema;
 use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
+use App\Support\InterviewScope;
 use App\Support\QuestionSchema;
 use App\Support\ScoreSchema;
 use App\Support\SystemSettings;
@@ -3689,7 +3690,7 @@ class InterviewController extends Controller
 
  private function interviewFocusForCategory(Category $category, ?string $submittedFocus): string
  {
- return 'Job Interview';
+ return InterviewScope::focus($category->title);
  }
 
  private function datasetForSession(InterviewSession $session):?array
@@ -3705,16 +3706,7 @@ class InterviewController extends Controller
 
  private function isSupportedInterviewCategory(Category $category): bool
  {
- $title = Str::lower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title))?? ''));
-
- if (Str::contains($title, ['bpo', 'customer', 'programming', 'technical', 'scholar']) || preg_match('/\bit\b/', $title)) {
- return false;
- }
-
- return Str::contains($title, [
- 'job interview',
- 'general job',
- ]);
+ return InterviewScope::isSupportedCoreCategory($category);
  }
 
  private function interviewScenarioKind(Category $category): string

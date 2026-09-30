@@ -23,63 +23,21 @@
  ->unique(fn (string $position) => strtolower($position))
  ->values();
  $interviewCategories = ($categories?? collect())
- ->filter(function ($category): bool {
- $title = strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title))?? ''));
-
- if (
- str_contains($title, 'bpo')
- || str_contains($title, 'customer')
- || str_contains($title, 'programming')
- || str_contains($title, 'technical')
- || str_contains($title, 'scholar')
- || preg_match('/\bit\b/', $title)
- ) {
- return false;
- }
-
- return str_contains($title, 'job interview')
- || str_contains($title, 'general job');
- })
+ ->filter(fn ($category): bool => \App\Support\InterviewScope::isSupportedCoreCategory($category))
  ->values();
 
  $scenarioLabelForCategory = function (?string $categoryTitle): string {
- $title = trim((string) $categoryTitle);
- $displayTitle = trim(preg_replace('/\s*\/\s*/', ' / ', $title)?? $title);
- $key = strtolower(trim(preg_replace('/\s+/', ' ', $displayTitle)?? $displayTitle));
- $knownLabels = [
- 'job interview' => 'Job Interviews',
- 'general job interview' => 'Job Interviews',
- ];
-
- if (isset($knownLabels[$key])) {
- return $knownLabels[$key];
- }
-
- if ($displayTitle === '') {
- return 'Job Interviews';
- }
-
- if (! str_contains($key, 'interview')) {
- $displayTitle.= ' Interview';
- }
-
- return $displayTitle;
+ return \App\Support\InterviewScope::categoryLabel($categoryTitle);
  };
 
  $focusForCategory = function (?string $categoryTitle, string $label): string {
- $title = strtolower((string) $categoryTitle);
-
- if (str_contains($title, 'job') &&! str_contains($title, 'bpo') &&! str_contains($title, 'customer')) {
- return 'Job Interview';
- }
-
- return $label;
+ return \App\Support\InterviewScope::focus($categoryTitle);
  };
 
  $scenarioOptions = $interviewCategories
  ->map(function ($category) use ($sourceDatasets, $scenarioLabelForCategory, $focusForCategory) {
  $key = \App\Services\QuestionDatasetProvider::defaultKeyForCategory($category->title);
- $sourceDataset = $sourceDatasets[$key]?? collect($sourceDatasets)->first()?? [];
+ $sourceDataset = $sourceDatasets[$key]?? $sourceDatasets['ph_job_interview']?? \App\Services\QuestionDatasetProvider::find('ph_job_interview')?? [];
  $label = $scenarioLabelForCategory($category->title);
  $sourceSummary = collect($sourceDataset['sources']?? [])
  ->pluck('name')
@@ -91,7 +49,7 @@
  'label' => $label,
  'focus' => $focusForCategory($category->title, $label),
  'context_label' => $label,
- 'source_summary' => $sourceSummary?: 'career sources',
+ 'source_summary' => $sourceSummary?: \App\Support\InterviewScope::sourceSummaryFallback(),
  ];
  })
  ->values();

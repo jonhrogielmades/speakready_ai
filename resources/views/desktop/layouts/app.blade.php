@@ -132,10 +132,8 @@
                 <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}" title="Interview Practice"><i class="fa-solid fa-microphone-lines"></i><span class="db-nav-label">Interview Practice</span></a>
                <a href="{{ route('user.practice.calendar') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}" title="Practice Activity Calendar"><i class="fa-regular fa-calendar-days"></i><span class="db-nav-label">Activity Calendar</span></a>
 
-               <div class="db-nav-section">Training</div>
-               <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.modules.*') ? 'active' : '' }}" title="Modules"><i class="fa-solid fa-book-open"></i><span class="db-nav-label">Modules</span></a>
-               <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}" title="Challenges"><i class="fa-solid fa-trophy"></i><span class="db-nav-label">Challenges</span></a>
-               <a href="{{ route('user.coach') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.coach') ? 'active' : '' }}" title="AI Coach"><i class="fa-solid fa-robot"></i><span class="db-nav-label">AI Coach</span></a>
+               <div class="db-nav-section">Coaching</div>
+               <a href="{{ route('user.coach') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.coach') ? 'active' : '' }}" title="Interview Coach"><i class="fa-solid fa-robot"></i><span class="db-nav-label">Interview Coach</span></a>
 
                <div class="db-nav-section">Growth</div>
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>
@@ -143,13 +141,13 @@
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
             </div>
             <div class="db-bottom">
-               <a href="{{ route('user.skills') }}" class="db-upgrade-card" title="View skill perks">
-                  <span class="db-upgrade-icon"><i class="fa-solid fa-gem"></i></span>
+               <a href="{{ route('interview.setup') }}" class="db-upgrade-card" title="Start job interview practice">
+                  <span class="db-upgrade-icon"><i class="fa-solid fa-briefcase"></i></span>
                   <span class="db-upgrade-copy">
-                     <strong>Unlock Pro Features</strong>
-                     <small>Get advanced AI feedback and personalized insights.</small>
+                     <strong>Job Interview Focus</strong>
+                     <small>Practice HR, role-fit, behavioral, and resume-based questions.</small>
                   </span>
-                  <span class="db-upgrade-action">Upgrade Now <i class="fa-solid fa-arrow-right"></i></span>
+                  <span class="db-upgrade-action">Start Practice <i class="fa-solid fa-arrow-right"></i></span>
                </a>
                <form action="{{ route('logout') }}" method="POST" class="db-logout-form">
                   @csrf
@@ -174,10 +172,10 @@
                   </button>
                </form>
                <div class="db-top-actions ms-auto d-flex align-items-center gap-3 flex-shrink-0">
-                  <span class="db-top-upgrade-card is-locked" title="Locked pro features" aria-disabled="true">
-                     <span class="db-top-upgrade-icon"><i class="fa-solid fa-lock"></i></span>
-                     <span class="db-top-upgrade-copy">Pro Locked</span>
-                     <span class="db-top-upgrade-action">Upgrade <i class="fa-solid fa-lock"></i></span>
+                  <span class="db-top-upgrade-card is-locked" title="Job interview practice mode" aria-disabled="true">
+                     <span class="db-top-upgrade-icon"><i class="fa-solid fa-briefcase"></i></span>
+                     <span class="db-top-upgrade-copy">Interview Mode</span>
+                     <span class="db-top-upgrade-action">Job Focus</span>
                   </span>
                   <button class="boc d-flex align-items-center justify-content-center" id="dbFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" data-user-fullscreen-toggle>
                      <i class="fa-solid fa-expand" id="dbFullscreenIcon" aria-hidden="true"></i>

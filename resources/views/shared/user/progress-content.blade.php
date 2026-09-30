@@ -560,7 +560,7 @@
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const stepsMobile = [
- { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, learning progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
+ { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, interview progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
  { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
  { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
  { element: '#category-performance-summary', popover: { title: 'Category Summary', description: 'Check which scoring categories are currently strongest before drilling into the full chart.', side: 'top', align: 'start' }},
@@ -574,7 +574,7 @@
  ];
 
  const stepsDesktop = [
- { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, learning progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
+ { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, interview progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
  { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
  { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
  { element: '#category-performance-summary', popover: { title: 'Category Summary', description: 'Check which scoring categories are currently strongest before drilling into the full chart.', side: 'top', align: 'start' }},

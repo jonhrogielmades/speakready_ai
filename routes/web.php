@@ -19,6 +19,7 @@ use App\Services\LandingStatsService;
 use App\Services\QuestionDatasetProvider;
 use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
+use App\Support\InterviewScope;
 use App\Support\QuestionSchema;
 use App\Support\ScoreSchema;
 use App\Support\SystemSettings;
@@ -112,31 +113,13 @@ Route::middleware(['auth', 'user'])->group(function () {
 
         $ensureInterviewSetupSchema();
 
-        $isSupportedInterviewCategory = function ($category): bool {
-            $title = strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title)) ?? ''));
-
-            if (
-                str_contains($title, 'bpo')
-                || str_contains($title, 'customer')
-                || str_contains($title, 'programming')
-                || str_contains($title, 'technical')
-                || str_contains($title, 'scholar')
-                || preg_match('/\bit\b/', $title)
-            ) {
-                return false;
-            }
-
-            return str_contains($title, 'job interview')
-                || str_contains($title, 'general job');
-        };
-
         $loadCategories = static fn () => Category::where('status', 'active')
                 ->where('type', 'core')
                 ->select(['id', 'title', 'status', 'type', 'sort_order'])
                 ->orderBy('sort_order')
                 ->orderBy('title')
                 ->get()
-                ->filter($isSupportedInterviewCategory)
+                ->filter(fn ($category): bool => InterviewScope::isSupportedCoreCategory($category))
                 ->values();
 
         $categories = Schema::hasTable('categories')

@@ -7,11 +7,11 @@
                <div class="text-center mt-3 pt-3">
                   <div class="afu" style="animation-delay:.05s">
                       <span class="hbadge">
-                   AI-Powered Learning | Real-Time Feedback | Interactive Training
+                   AI-Powered Job Interview Practice | Real-Time Feedback | Role-Fit Coaching
                       </span>
                   </div>
                   <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
-                  <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
+                  <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI focuses on job interview preparation with realistic mock interviews, personalized feedback, and role-fit coaching for your target position.</p>
                   <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                      <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Start Practicing</button>
                      <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
@@ -51,7 +51,7 @@
                               <button class="dsi on"><i class="fa-solid fa-chart-pie"></i> Analytics</button>
                               <button class="dsi"><i class="fa-solid fa-video"></i> Mock Sessions</button>
                               <button class="dsi"><i class="fa-solid fa-comment-medical"></i> Feedback</button>
-                              <button class="dsi"><i class="fa-solid fa-graduation-cap"></i> Learning Lab</button>
+                              <button class="dsi"><i class="fa-solid fa-briefcase"></i> Job Prep</button>
                            </div>
                            <div class="p-3">
                                  <div class="row g-2 mb-3">
@@ -101,7 +101,7 @@
                                     <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:12px;height:100%;display:flex;flex-direction:column;gap:8px">
                                        <div style="font-size:.71rem;color:var(--tx3);font-weight:600"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--pur);box-shadow:0 0 6px var(--pur);margin-right:6px;animation:bpls 2s infinite"></span>AI Feedback</div>
                                        <div class="cbbl cbus">Tell me about a time you handled a difficult customer or teammate.</div>
-                                       <div class="cbbl cbai"><strong>Good STAR structure for a interview.</strong> Add the specific result or customer impact to make it stronger.</div>
+                                       <div class="cbbl cbai"><strong>Good STAR structure for an interview.</strong> Add the specific result or workplace impact to make it stronger.</div>
                                     </div>
                                  </div>
                               </div>

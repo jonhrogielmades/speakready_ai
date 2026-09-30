@@ -1,6 +1,6 @@
 # SpeakReady AI
 
-SpeakReady AI is a Laravel-based interview preparation and career readiness platform. It combines mock interview sessions, AI-assisted feedback, learning modules, learning games, progress reporting, mentor review links, and an admin console for managing the whole system.
+SpeakReady AI is a Laravel-based job interview preparation platform. It combines mock interview sessions, AI-assisted feedback, interview coaching, progress reporting, mentor review links, and an admin console for managing the whole system.
 
 The current system includes separate desktop and mobile Blade experiences, a redesigned guest/landing experience, legal and security pages, richer user dashboards, AI provider fallbacks, local speech assessment hooks, container startup hardening, and automated schema repair commands for production reliability.
 
@@ -20,12 +20,12 @@ The current system includes separate desktop and mobile Blade experiences, a red
 - User dashboard with interview history, progress summaries, recommendations, readiness metrics, notifications, and quick access to practice tools.
 - Mock interview setup and live interview session flow with text answers, speech transcription, answer retries, state saving, abort, finish, review, and share controls.
 - AI coaching, feedback generation, interview chat replies, and attachment/text extraction support.
-- Learning modules with chapters, resources, quizzes, progress tracking, and personalized recommendations.
-- Learning Games with admin-generated levels, user sessions, answer scoring, progress, energy, and downloadable certificates.
+- Optional interview-prep modules with chapters, resources, quizzes, progress tracking, and personalized recommendations.
+- Optional job interview challenge flows with admin-generated levels, user sessions, answer scoring, progress, energy, and downloadable certificates.
 - Progress, feedback, reports, session exports, skills/perks, and account settings.
 - Public shared review pages with optional unlock flow and mentor comments.
 - Public contact form, newsletter subscription response, privacy policy, terms of service, security page, and cookie preferences page.
-- Admin console for users, categories, questions, modules, learning games, interview sessions, contacts, feedback audits, AI providers, settings, notifications, and activity logs.
+- Admin console for users, job interview categories, questions, optional prep modules/challenges, interview sessions, contacts, feedback audits, AI providers, settings, notifications, and activity logs.
 - Container startup script that binds early, runs migrations, repairs known schema drift, links storage, seeds the admin account, and rebuilds Laravel caches.
 
 ## Tech Stack
@@ -65,7 +65,7 @@ Regular users can access:
 - `/interview/setup` and `/interview/session` for mock interview practice.
 - `/progress`, `/feedback`, `/reports`, and `/session/{id}/review` for results and reflection.
 - `/coach` for AI coaching conversations.
-- `/learning`, `/modules`, `/modules/{id}`, and `/skills` for learning content and unlockable perks.
+- `/coach`, `/progress`, `/feedback`, and `/reports` for interview coaching, review, and readiness tracking.
 - `/notifications` and `/account` for utility workflows.
 
 ### Interviews And Feedback
@@ -87,7 +87,7 @@ Question generation uses a hybrid pipeline instead of relying on one algorithm. 
 | Process | Algorithms Or Approaches Evaluated | Current Choice | Evaluation Notes |
 | --- | --- | --- | --- |
 | Source intake and cleaning | Rule-based CSV/JSONL normalization; schema-validated dataset manifests; duplicate removal by normalized text; manual admin question-bank CRUD | Rule-based normalization with manifest-backed storage and normalized-text deduplication | Keeps private datasets reproducible, accepts CSV/JSONL inputs, and avoids duplicate question wording before retrieval or generation. |
-| Dataset/category routing | Keyword category matching; explicit admin/user dataset selection; source alias mapping; fallback to core job-interview dataset | Category keyword routing plus dataset aliases | Works reliably for supported practice categories such as job interview, BPO/customer support, and college admission while still providing a safe default. |
+| Dataset/category routing | Keyword category matching; explicit admin/user dataset selection; source alias mapping; fallback to core job-interview dataset | Job-interview-only category routing plus dataset aliases | Keeps supported practice centered on job interviews while still providing a safe default. |
 | Question type and intent detection | Regex/rule-based intent classification; stored question type labels; expected-guide/skill-context signals; STAR applicability checks | Rule-based intent classification enriched by stored type and guide context | This is explainable, testable, and suitable for deciding whether a question needs STAR evidence, personal action, or measurable results. |
 | Candidate retrieval | Sentence-BERT semantic similarity; lexical hash vector similarity; difficulty/type/category metadata bonus; role and job-description overlap scoring | Sentence-BERT in production, lexical hash in tests/fallback, with metadata bonuses | Semantic retrieval finds role-relevant examples, while metadata bonuses keep matches aligned to requested difficulty, question type, category, target role, and job description. |
 | Question generation | Retrieval-augmented LLM prompting; template/adaptation from source-backed examples; direct provider JSON generation; localized/simplified wording constraints | Retrieval-augmented provider generation through `AIService::generateQuestions` | The generated question must be role-specific, concise, difficulty-calibrated, source-aware, JSON-formatted, and adaptable to language or accessibility preferences. |
@@ -125,15 +125,15 @@ Implemented algorithms:
 - K-Means Clustering: assign score patterns to nearest centroids
 - Random Forest: majority vote from multiple bootstrapped decision trees
 
-### Learning Games
+### Job Interview Challenges
 
-The system uses "Learning Games" terminology throughout the user and admin UI. Game features include:
+The legacy game tables support optional job interview challenge flows. These features should stay grounded in job interview preparation.
 
-- Admin-created or AI-generated game levels.
-- Category-linked game practice.
+- Admin-created or AI-generated interview challenge levels.
+- Job interview category-linked practice.
 - User game sessions and answer records.
 - Energy and progression tracking.
-- Learning guidance, success criteria, scoring, and certificates.
+- Interview guidance, success criteria, scoring, and certificates.
 - Downloadable certificates by category.
 
 ### Admin Console
@@ -143,10 +143,10 @@ Admins can access:
 - `/admin/dashboard` for overview metrics.
 - `/admin/settings` for system settings.
 - `/admin/users` for user management, exports, status updates, delete/restore-related flows, and reactivation approval.
-- `/admin/categories` for interview and game categories.
+- `/admin/categories` for job interview and interview-challenge categories.
 - `/admin/questions` for question CRUD, bulk delete, import, export, analytics, dataset imports, and AI generation.
-- `/admin/modules` for learning modules, chapters, resources, quizzes, quiz questions, AI generation, and game-level attachments.
-- `/admin/game` for Learning Game level management and AI generation.
+- `/admin/modules` for optional interview-prep modules, chapters, resources, quizzes, quiz questions, AI generation, and challenge attachments.
+- `/admin/game` for optional job interview challenge level management and AI generation.
 - `/admin/sessions` for session monitoring, archive, restore, flagging, deletion, review, and CSV export.
 - `/admin/contacts` for stored contact messages.
 - `/admin/feedback` for feedback audits, complaints, status updates, notes, and export.
@@ -273,7 +273,7 @@ ADMIN_PASSWORD=change-this-password
 
 There is no tracked `database_dump.sql` in this repository, so migrations are the source of truth for setup.
 
-Optional starter content seeders are available if you want baseline categories or Learning Game levels:
+Optional starter content seeders are available if you want baseline job interview categories or interview challenge levels:
 
 ```bash
 php artisan db:seed --class=CategorySeeder
@@ -708,6 +708,6 @@ The current feature tests cover authentication, password reset, route integrity,
 - `mobile_view()` selects `desktop.*` or `mobile.*` Blade templates based on request device attributes.
 - Guest layout CSS was moved into dedicated desktop/mobile CSS files to keep guest Blade layouts smaller and easier to maintain.
 - Legal pages share `resources/views/legal/show.blade.php` and are populated by `LegalPageController`.
-- Learning Games are the current terminology and replaced older Arena wording in the UI and data model.
+- Legacy game tables remain for optional job interview challenges, but candidate-facing scope should stay focused on job interviews.
 - Contact messages are saved to the database before email is attempted, so support requests are not lost if SMTP fails.
 - Temporary Codex audit and browser profile folders are ignored by Git and should not be committed.

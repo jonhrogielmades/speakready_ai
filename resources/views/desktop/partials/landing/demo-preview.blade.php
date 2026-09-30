@@ -28,20 +28,20 @@
                                            <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Interactive AI avatar asking local job interview questions.</p>
                                        </div>
                                    </div>
-                                   <!-- Slide 3: Learning Lab -->
+                                   <!-- Slide 3: Job Interview Prep -->
                                    <div class="swiper-slide text-center">
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-book-open fa-4x mb-4" style="color:#ef4444"></i>
-                                           <h3 class="fs-3 fw-bold">Learning Lab</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Access curated resources and tutorials for interview scenarios.</p>
+                                           <i class="fa-solid fa-briefcase fa-4x mb-4" style="color:#ef4444"></i>
+                                           <h3 class="fs-3 fw-bold">Job Interview Prep</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Stay focused on role-fit, HR screening, resume, and behavioral interview scenarios.</p>
                                        </div>
                                    </div>
-                                   <!-- Slide 4: AI Coach -->
+                                   <!-- Slide 4: Interview Coach -->
                                    <div class="swiper-slide text-center">
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-robot fa-4x mb-4" style="color:#f59e0b"></i>
-                                           <h3 class="fs-3 fw-bold">AI Coach</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Get personalized advice and strategies from your AI mentor.</p>
+                                           <h3 class="fs-3 fw-bold">Interview Coach</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Get personalized job interview advice and answer strategies.</p>
                                        </div>
                                    </div>
                                    <!-- Slide 5: Progress Tracking -->

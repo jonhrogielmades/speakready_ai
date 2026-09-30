@@ -6,8 +6,8 @@
         ['id' => 'settings-account', 'icon' => 'fa-user-gear', 'label' => 'Account'],
         ['id' => 'settings-roles', 'icon' => 'fa-users-gear', 'label' => 'Roles'],
         ['id' => 'settings-interview', 'icon' => 'fa-microphone-lines', 'label' => 'Interview'],
-        ['id' => 'settings-ai-coach', 'icon' => 'fa-robot', 'label' => 'AI Coach'],
-        ['id' => 'settings-learning', 'icon' => 'fa-flask', 'label' => 'Learning Lab'],
+        ['id' => 'settings-ai-coach', 'icon' => 'fa-robot', 'label' => 'Interview Coach'],
+        ['id' => 'settings-learning', 'icon' => 'fa-briefcase', 'label' => 'Interview Prep'],
         ['id' => 'settings-notifications', 'icon' => 'fa-bell', 'label' => 'Notifications'],
         ['id' => 'settings-security', 'icon' => 'fa-shield', 'label' => 'Security'],
         ['id' => 'settings-backup', 'icon' => 'fa-database', 'label' => 'Backup'],
@@ -94,7 +94,7 @@
                 </div>
                 <div class="col-md-12">
                     <label class="form-label">System Description</label>
-                    <textarea class="form-control" name="sys_desc" rows="3">{{ $value('sys_desc', 'SpeakReady AI helps users master communication skills.') }}</textarea>
+                    <textarea class="form-control" name="sys_desc" rows="3">{{ $value('sys_desc', 'SpeakReady AI helps users prepare for job interviews with realistic practice, coaching, and feedback.') }}</textarea>
                 </div>
                 <div class="col-md-12">
                     <label class="form-label">Footer Text</label>
@@ -207,14 +207,14 @@
 
         <section class="settings-panel" id="settings-ai-coach">
             <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-robot"></i>AI Coach</h5>
-                <p>Enable or limit the user-side readiness coach features.</p>
+                <h5><i class="fa-solid fa-robot"></i>Interview Coach</h5>
+                <p>Enable or limit the user-side job interview coach features.</p>
             </div>
             @foreach([
-                'aic_enable' => ['Enable AI Coach', 'Allow users to open and chat with the AI coach.'],
+                'aic_enable' => ['Enable Interview Coach', 'Allow users to open and chat with the job interview coach.'],
                 'aic_sample' => ['Enable Fact-Grounded Revision Guidance', 'Allow improved-answer coaching based on user facts.'],
                 'aic_follow' => ['Enable Follow-Up Questions', 'Allow the coach to ask clarifying practice questions.'],
-                'aic_recommend' => ['Enable Learning Recommendations', 'Show learning recommendations from coach context.'],
+                'aic_recommend' => ['Enable Interview Prep Recommendations', 'Show interview-prep recommendations from coach context.'],
             ] as $key => [$title, $copy])
                 <div class="custom-switch-container">
                     <div><h6 class="mb-1">{{ $title }}</h6><small>{{ $copy }}</small></div>
@@ -225,14 +225,14 @@
 
         <section class="settings-panel" id="settings-learning">
             <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-flask"></i>Learning Lab</h5>
-                <p>Control modules, quizzes, certificates, and achievement features.</p>
+                <h5><i class="fa-solid fa-briefcase"></i>Interview Prep Tools</h5>
+                <p>Control optional interview-prep tools, certificates, and achievement features.</p>
             </div>
             @foreach([
-                'll_modules' => ['Enable Interview Learning Modules', 'Allow users to browse and complete learning modules.'],
-                'll_quizzes' => ['Enable Quizzes', 'Allow module quiz/progress submissions.'],
-                'll_certs' => ['Enable Certificates', 'Allow challenge certificate downloads.'],
-                'll_achievements' => ['Enable Achievements', 'Allow skill perks and achievement unlocks.'],
+                'll_modules' => ['Enable Interview Prep Modules', 'Allow users to browse and complete job interview preparation modules.'],
+                'll_quizzes' => ['Enable Interview Prep Quizzes', 'Allow interview-prep quiz/progress submissions.'],
+                'll_certs' => ['Enable Interview Certificates', 'Allow interview challenge certificate downloads.'],
+                'll_achievements' => ['Enable Interview Achievements', 'Allow interview-focused perks and achievement unlocks.'],
             ] as $key => [$title, $copy])
                 <div class="custom-switch-container">
                     <div><h6 class="mb-1">{{ $title }}</h6><small>{{ $copy }}</small></div>

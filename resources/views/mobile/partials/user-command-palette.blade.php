@@ -95,24 +95,10 @@
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
-                <a id="ucp-destination-modules" class="ucp-result" href="{{ route('user.modules.index') }}" data-ucp-item>
-                    <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-book-open-reader" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Interview Modules</strong><small>Open action modules for what to prepare, rehearse, revise, and check</small></span>
-                    <span class="ucp-result-group">Training</span>
-                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
-                </a>
-
-                <a id="ucp-destination-learning" class="ucp-result" href="{{ route('user.learning') }}" data-ucp-item>
-                    <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Challenges</strong><small>Sharpen interview skills through scenario challenges</small></span>
-                    <span class="ucp-result-group">Training</span>
-                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
-                </a>
-
                 <a id="ucp-destination-coach" class="ucp-result" href="{{ route('user.coach') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-robot" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>AI Coach</strong><small>Get interview guidance</small></span>
-                    <span class="ucp-result-group">Training</span>
+                    <span class="ucp-result-copy"><strong>Interview Coach</strong><small>Get job interview guidance</small></span>
+                    <span class="ucp-result-group">Coaching</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
@@ -168,7 +154,7 @@
             </footer>
             @else
             <footer class="ucp-footer">
-                <span class="ucp-status">15 destinations</span>
+                <span class="ucp-status">8 destinations</span>
                 <span class="ucp-help"><kbd>&uarr;</kbd><kbd>&darr;</kbd> move <kbd>Enter</kbd> open</span>
             </footer>
             @endif
