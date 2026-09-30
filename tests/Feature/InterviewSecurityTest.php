@@ -352,7 +352,7 @@ class InterviewSecurityTest extends TestCase
             'services.ai_tts.enabled' => true,
             'services.ai_tts.provider' => 'gemini',
             'services.gemini.tts_model' => 'gemini-3.1-flash-tts-preview',
-            'services.gemini.tts_voice' => 'Kore',
+            'services.gemini.tts_voice' => 'Leda',
             'services.gemini.tts_style' => 'Say clearly',
         ]);
 
@@ -395,7 +395,7 @@ class InterviewSecurityTest extends TestCase
 
         Http::assertSent(fn ($request) => $request->url() === 'https://generativelanguage.googleapis.com/v1beta/interactions'
             && $request['model'] === 'gemini-3.1-flash-tts-preview'
-            && data_get($request->data(), 'generation_config.speech_config.0.voice') === 'Kore'
+            && data_get($request->data(), 'generation_config.speech_config.0.voice') === 'Leda'
             && str_contains((string) $request['input'], 'female interviewer')
             && str_contains((string) $request['input'], $question->question_text));
     }
@@ -408,17 +408,18 @@ class InterviewSecurityTest extends TestCase
             'services.elevenlabs.api_key' => 'sk_test-eleven-key',
             'services.elevenlabs.api_endpoint' => 'https://api.elevenlabs.io/v1',
             'services.elevenlabs.tts_model' => 'eleven_multilingual_v2',
-            'services.elevenlabs.tts_voice_id' => 'JBFqnCBsd6RMkjVDRZzb',
+            'services.elevenlabs.tts_voice_id' => '21m00Tcm4TlvDq8ikWAM',
             'services.elevenlabs.tts_output_format' => 'mp3_44100_128',
             'services.elevenlabs.tts_language_code' => '',
             'services.elevenlabs.tts_stability' => 0.45,
             'services.elevenlabs.tts_similarity_boost' => 0.75,
             'services.elevenlabs.tts_style' => 0.15,
+            'services.elevenlabs.tts_speed' => 0.85,
             'services.elevenlabs.tts_speaker_boost' => true,
         ]);
 
         Http::fake([
-            'https://api.elevenlabs.io/v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb?output_format=mp3_44100_128' => Http::response('eleven-audio', 200, [
+            'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM?output_format=mp3_44100_128' => Http::response('eleven-audio', 200, [
                 'Content-Type' => 'audio/mpeg',
             ]),
         ]);
@@ -438,12 +439,62 @@ class InterviewSecurityTest extends TestCase
             ->assertHeader('Content-Type', 'audio/mpeg')
             ->assertSee('eleven-audio');
 
-        Http::assertSent(fn ($request) => $request->url() === 'https://api.elevenlabs.io/v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb?output_format=mp3_44100_128'
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM?output_format=mp3_44100_128'
             && $request->hasHeader('xi-api-key', 'sk_test-eleven-key')
             && $request['text'] === $question->question_text
             && $request['model_id'] === 'eleven_multilingual_v2'
             && data_get($request->data(), 'voice_settings.stability') === 0.45
+            && data_get($request->data(), 'voice_settings.speed') === 0.85
             && data_get($request->data(), 'voice_settings.use_speaker_boost') === true);
+    }
+
+    public function test_tts_provider_priority_falls_back_when_primary_provider_fails(): void
+    {
+        config([
+            'services.ai_tts.enabled' => true,
+            'services.ai_tts.provider' => 'elevenlabs,openai,gemini',
+            'services.openai.tts_enabled' => true,
+            'services.elevenlabs.api_key' => 'sk_test-eleven-key',
+            'services.elevenlabs.api_endpoint' => 'https://api.elevenlabs.io/v1',
+            'services.elevenlabs.tts_model' => 'eleven_multilingual_v2',
+            'services.elevenlabs.tts_voice_id' => '21m00Tcm4TlvDq8ikWAM',
+            'services.elevenlabs.tts_output_format' => 'mp3_44100_128',
+            'services.elevenlabs.tts_speed' => 0.85,
+        ]);
+
+        Http::fake([
+            'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM?output_format=mp3_44100_128' => Http::response('eleven-failed', 500),
+            'https://api.openai.com/v1/audio/speech' => Http::response('openai-backup-audio', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.speech'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+            ])
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertSee('openai-backup-audio');
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM?output_format=mp3_44100_128');
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'
+            && $request['input'] === $question->question_text
+            && $request['voice'] === 'nova');
     }
 
     public function test_speech_endpoint_does_not_call_paid_tts_when_disabled(): void

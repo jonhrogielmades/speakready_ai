@@ -580,6 +580,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const localMicrophoneHosts = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
  const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
  const speechLanguage = speechLocale.split('-')[0];
+ const interviewerSpeechRate = 0.85;
+ const interviewerServerAudioPlaybackRate = 0.92;
+ const interviewerCaptionWordMs = 430;
+ const interviewerSpeechTimeoutWordMs = 720;
  const serverTranscriptionMimeType = (() => {
  if (!window.MediaRecorder ||!MediaRecorder.isTypeSupported) return '';
  return [
@@ -3777,7 +3781,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function estimatedSpeechTimeoutMs(text) {
  const words = String(text || '').trim().split(/\s+/).filter(Boolean).length;
- return Math.max(4500, Math.min(60000, 2200 + (words * 620)));
+ return Math.max(5500, Math.min(70000, 2400 + (words * interviewerSpeechTimeoutWordMs)));
  }
 
  function resolveSpeechCompletion(token, status = 'finished') {
@@ -3819,7 +3823,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  } else {
  clearCaptionInterval();
  }
- }, 350);
+ }, interviewerCaptionWordMs);
 
  if (visualizerInterval) clearInterval(visualizerInterval);
  const bars = document.querySelectorAll('.spectrum-bar');
@@ -3937,6 +3941,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (!url || token!== questionSpeechToken || interviewTerminated) return false;
 
  const audio = new Audio(url);
+ audio.defaultPlaybackRate = interviewerServerAudioPlaybackRate;
+ audio.playbackRate = interviewerServerAudioPlaybackRate;
  activeQuestionAudio = audio;
 
  audio.addEventListener('play', () => {
@@ -3976,7 +3982,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let utterance = new SpeechSynthesisUtterance(text);
  utterance.lang = speechLocale;
  if (preferredVoice) utterance.voice = preferredVoice;
- utterance.rate = 0.95;
+ utterance.rate = interviewerSpeechRate;
  utterance.pitch = 1.0;
 
  let speechUi = null;

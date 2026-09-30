@@ -561,9 +561,17 @@ AI_VOICE_ANALYSIS_TIMEOUT=12
 AI_VOICE_ANALYSIS_MAX_PROVIDERS=2
 AI_VOICE_ANALYSIS_HTTP_ATTEMPTS=1
 AI_TTS_ENABLED=false
+AI_TTS_PROVIDER=elevenlabs,openai,gemini
+AI_TTS_TIMEOUT=30
 OPENAI_TTS_MODEL=gpt-4o-mini-tts
-OPENAI_TTS_VOICE=alloy
-OPENAI_TTS_SPEED=0.95
+OPENAI_TTS_VOICE=nova
+OPENAI_TTS_SPEED=0.85
+GEMINI_TTS_MODEL=gemini-3.1-flash-tts-preview
+GEMINI_TTS_VOICE=Leda
+GEMINI_TTS_STYLE="Say in a warm, clear, professional female interviewer voice with natural English pronunciation and measured pacing"
+ELEVENLABS_TTS_MODEL=eleven_multilingual_v2
+ELEVENLABS_TTS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
+ELEVENLABS_TTS_SPEED=0.85
 ```
 
 Optional local speech assessment:

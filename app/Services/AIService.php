@@ -2323,12 +2323,20 @@ PROMPT;
  return null;
  }
 
- return match (self::speechSynthesisProvider()) {
+ foreach (self::speechSynthesisProviderPriority() as $provider) {
+ $speech = match ($provider) {
  'gemini' => self::synthesizeSpeechWithGemini($text, $targetLanguage),
  'openai' => self::synthesizeSpeechWithOpenAI($text, $targetLanguage),
  'elevenlabs' => self::synthesizeSpeechWithElevenLabs($text, $targetLanguage),
  default => null,
  };
+
+ if ($speech!== null) {
+ return $speech;
+ }
+ }
+
+ return null;
  }
 
  private static function synthesizeSpeechWithElevenLabs(string $text, array|string|null $targetLanguage = null):?array
@@ -2405,7 +2413,7 @@ PROMPT;
  $language = self::languageConfigFrom($targetLanguage);
  $model = (string) config('services.openai.tts_model', 'gpt-4o-mini-tts');
  $voice = self::openAiFemaleSpeechVoice((string) config('services.openai.tts_voice', 'nova'));
- $speed = (float) config('services.openai.tts_speed', 0.95);
+ $speed = (float) config('services.openai.tts_speed', 0.85);
  $speed = max(0.25, min(4.0, $speed));
 
  $payload = [
@@ -2418,7 +2426,7 @@ PROMPT;
 
  if (! in_array($model, ['tts-1', 'tts-1-hd'], true)) {
  $target = $language['ai_label']?? $language['label']?? 'the selected language';
- $payload['instructions'] = "Speak as a calm, professional female interviewer. Use natural {$target} pronunciation and keep company names, role titles, acronyms, and numbers clear.";
+ $payload['instructions'] = "Speak as a calm, professional female interviewer. Use natural {$target} pronunciation at a slightly slower, measured pace, and keep company names, role titles, acronyms, and numbers clear.";
  }
 
  try {
@@ -2935,18 +2943,27 @@ PROMPT;
  return false;
  }
 
- return match (self::speechSynthesisProvider()) {
+ foreach (self::speechSynthesisProviderPriority() as $provider) {
+ $available = match ($provider) {
  'gemini' => self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key']!== '',
  'openai' => self::openAiSpeechCredentials()!== null,
  'elevenlabs' => self::elevenLabsSpeechCredentials(false)!== null,
  default => false,
  };
+
+ if ($available) {
+ return true;
+ }
+ }
+
+ return false;
  }
 
  public static function speechSynthesisCacheSignature(): array
  {
  return [
  'provider' => self::speechSynthesisProvider(),
+ 'provider_priority' => self::speechSynthesisProviderPriority(),
  'enabled' => self::speechSynthesisEnabled(),
  'gemini_model' => config('services.gemini.tts_model'),
  'gemini_voice' => config('services.gemini.tts_voice'),
@@ -2970,11 +2987,22 @@ PROMPT;
 
  private static function speechSynthesisProvider(): string
  {
- $provider = self::normalizeSpeechProviderName(
- config('services.ai_tts.provider', env('AI_PROVIDER', 'openai'))
- );
+ return self::speechSynthesisProviderPriority()[0]?? '';
+ }
 
- return in_array($provider, ['gemini', 'openai', 'elevenlabs'], true)? $provider: '';
+ private static function speechSynthesisProviderPriority(): array
+ {
+ $configured = config('services.ai_tts.provider', 'elevenlabs,openai,gemini');
+ $providers = is_array($configured)
+ ? $configured
+ : preg_split('/[,|]+/', (string) $configured);
+
+ return collect($providers?: [])
+ ->map(fn ($provider): string => self::normalizeSpeechProviderName($provider))
+ ->filter(fn (string $provider): bool => in_array($provider, ['gemini', 'openai', 'elevenlabs'], true))
+ ->unique()
+ ->values()
+ ->all();
  }
 
  private static function normalizeSpeechProviderName($provider): string
@@ -3004,7 +3032,7 @@ PROMPT;
  $target = $language['ai_label']?? $language['label']?? 'the selected language';
  $style = trim((string) config('services.gemini.tts_style', ''));
  if ($style === '') {
- $style = 'Say in a warm, clear, professional female interviewer voice with steady pacing';
+ $style = 'Say in a warm, clear, professional female interviewer voice with measured pacing';
  }
  if (! preg_match('/\bfemale\b|\bwoman\b|\bwoman\'s\b|\bgirl\b|\bgirl\'s\b/i', $style)) {
  $style.= ' in a warm, clear, professional female interviewer voice';
@@ -3207,6 +3235,7 @@ PROMPT;
  'stability' => 'services.elevenlabs.tts_stability',
  'similarity_boost' => 'services.elevenlabs.tts_similarity_boost',
  'style' => 'services.elevenlabs.tts_style',
+ 'speed' => 'services.elevenlabs.tts_speed',
  ] as $payloadKey => $configKey) {
  $value = config($configKey);
  if ($value === null || $value === '') {
