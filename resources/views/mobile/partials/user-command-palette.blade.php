@@ -98,14 +98,14 @@
                 <a id="ucp-destination-challenges" class="ucp-result" href="{{ route('user.learning') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-route" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Interview Challenges</strong><small>Practice job interview challenge paths</small></span>
-                    <span class="ucp-result-group">Practice</span>
+                    <span class="ucp-result-group">Interview Prep</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
                 <a id="ucp-destination-modules" class="ucp-result" href="{{ route('user.modules.index') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-indigo"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Interview Modules</strong><small>Open job interview prep modules</small></span>
-                    <span class="ucp-result-group">Practice</span>
+                    <span class="ucp-result-group">Interview Prep</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 

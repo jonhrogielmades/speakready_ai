@@ -130,9 +130,11 @@
 
                 <div class="db-nav-section">Practice</div>
                 <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}" title="Interview Practice"><i class="fa-solid fa-microphone-lines"></i><span class="db-nav-label">Interview Practice</span></a>
+               <a href="{{ route('user.practice.calendar') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}" title="Practice Activity Calendar"><i class="fa-regular fa-calendar-days"></i><span class="db-nav-label">Activity Calendar</span></a>
+
+               <div class="db-nav-section">Interview Prep</div>
                <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning', 'user.skills') ? 'active' : '' }}" title="Interview Challenges"><i class="fa-solid fa-route"></i><span class="db-nav-label">Interview Challenges</span></a>
                <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-blue {{ request()->routeIs('user.modules.*') ? 'active' : '' }}" title="Interview Modules"><i class="fa-solid fa-layer-group"></i><span class="db-nav-label">Interview Modules</span></a>
-               <a href="{{ route('user.practice.calendar') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}" title="Practice Activity Calendar"><i class="fa-regular fa-calendar-days"></i><span class="db-nav-label">Activity Calendar</span></a>
 
                <div class="db-nav-section">Coaching</div>
                <a href="{{ route('user.coach') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.coach') ? 'active' : '' }}" title="Interview Coach"><i class="fa-solid fa-robot"></i><span class="db-nav-label">Interview Coach</span></a>

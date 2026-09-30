@@ -4553,11 +4553,15 @@
                   <span>More</span>
                   <button class="mob-profile-close" type="button" onclick="event.stopPropagation(); closeMobileProfile();" aria-label="Close more menu"><i class="fa-solid fa-xmark"></i></button>
                </div>
+                <div class="mob-profile-section-title">Interview Prep</div>
+                <div class="mob-profile-grid">
+               <a href="{{ route('user.learning') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.learning', 'user.skills') ? 'active' : '' }}"><i class="fa-solid fa-route"></i><span>Challenges</span></a>
+               <a href="{{ route('user.modules.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-layer-group"></i><span>Modules</span></a>
+                </div>
+
                 <div class="mob-profile-section-title">Interview Tools</div>
                 <div class="mob-profile-grid">
                <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>Interview Coach</span></a>
-               <a href="{{ route('user.learning') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.learning', 'user.skills') ? 'active' : '' }}"><i class="fa-solid fa-route"></i><span>Challenges</span></a>
-               <a href="{{ route('user.modules.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-layer-group"></i><span>Modules</span></a>
                <a href="{{ route('user.practice.calendar') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}"><i class="fa-regular fa-calendar-days"></i><span>Calendar</span></a>
                <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>Reports</span></a>
                </div>
