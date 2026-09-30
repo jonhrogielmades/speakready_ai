@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=44') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=49') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -174,7 +174,7 @@
                     <div class="sr-image-speech" aria-hidden="true" data-sr-dashboard-bubble>
                         <strong>Hi! {{ $welcomeName }}</strong>
                         <span data-sr-dashboard-bubble-line>You're <span class="sr-image-speech-accent">ready</span> to practice and <span class="sr-image-speech-accent is-success">succeed</span> today!</span>
-                        <span class="sr-image-speech-action" data-sr-dashboard-bubble-action>Click the robot for AI Coach.</span>
+                        <span class="sr-image-speech-action" data-sr-dashboard-bubble-action>Use the floating coach icon for AI Coach.</span>
                     </div>
                     <div class="sr-image-head-icons" aria-hidden="true">
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-microphone"></i></span></span>
@@ -184,20 +184,7 @@
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-graduation-cap"></i></span></span>
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-star"></i></span></span>
                     </div>
-                    <button
-                        type="button"
-                        class="sr-image-robot sr-image-coach-trigger"
-                        id="dashboardCoachImageTrigger"
-                        data-bs-toggle="modal"
-                        data-bs-target="#dashboardCoachModal"
-                        aria-controls="dashboardCoachModal"
-                        aria-label="Open AI Coach"
-                        title="AI Coach"
-                    >
-                        <img src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true" draggable="false">
-                        <span class="visually-hidden">Open AI Coach</span>
-                    </button>
-                    <img class="sr-image-robot-hand" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true" draggable="false">
+                    <img class="sr-image-robot" src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" draggable="false">
                 </div>
             </section>
 
@@ -649,6 +636,23 @@
         </aside>
     </div>
 </div>
+
+<button
+    type="button"
+    class="sr-dashboard-coach-fab"
+    id="dashboardCoachFloatingLauncher"
+    data-dashboard-coach-launcher
+    data-bs-toggle="modal"
+    data-bs-target="#dashboardCoachModal"
+    aria-controls="dashboardCoachModal"
+    aria-label="Open AI Coach"
+    title="AI Coach"
+>
+    <span class="sr-dashboard-coach-fab-image" aria-hidden="true">
+        <img src="{{ asset('img/dashboard-coach-floating-robot.png') }}" alt="" draggable="false">
+    </span>
+    <span class="visually-hidden">Open AI Coach</span>
+</button>
 
 @php
     $dashboardMockScenarios = collect($dashboardMockScenarios ?? []);
@@ -1821,7 +1825,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const fallbackDashboardBubbleMessages = [
             {
                 line: 'You\'re ready to practice and succeed today!',
-                action: 'Click the robot for AI Coach.',
+                action: 'Use the floating coach icon for AI Coach.',
             },
             {
                 line: 'Warm up with one focused mock interview today.',
@@ -1833,7 +1837,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             {
                 line: 'Build confidence before the real interview.',
-                action: 'Tap the robot when you need help.',
+                action: 'Use the floating coach icon when you need help.',
             },
         ];
         let dashboardBubbleMessages = (Array.isArray(providerDashboardBubbleMessages) && providerDashboardBubbleMessages.length

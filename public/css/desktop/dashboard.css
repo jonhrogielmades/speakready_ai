@@ -5936,8 +5936,7 @@
         font-size: 0.58rem;
     }
 
-    .sr-image-robot,
-    .sr-image-robot-hand {
+    .sr-image-robot {
         position: absolute;
         right: 10px;
         bottom: 0;
@@ -5951,50 +5950,11 @@
         object-position: center bottom;
     }
 
-    .sr-image-coach-trigger {
-        display: block;
-        aspect-ratio: 3 / 2;
-        padding: 0;
-        border: 0;
-        margin: 0;
-        appearance: none;
-        background: transparent;
-        color: inherit;
-        cursor: pointer;
-        line-height: 0;
-        pointer-events: auto;
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .sr-image-coach-trigger:focus-visible {
-        outline: 3px solid rgba(255, 255, 255, 0.86);
-        outline-offset: 4px;
-        border-radius: 22px;
-    }
-
-    .sr-image-coach-trigger > img {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        object-position: center bottom;
-        pointer-events: none;
-        user-select: none;
-    }
-
     .sr-image-robot {
         z-index: 2;
-        filter: drop-shadow(0 24px 28px rgba(6, 24, 76, 0.22));
-    }
-
-    .sr-image-robot-hand {
-        z-index: 3;
-        clip-path: inset(17% 68% 49% 12%);
-        transform-origin: 25% 44%;
-        animation: srRobotHandWave 5.8s cubic-bezier(0.42, 0, 0.2, 1) infinite;
-        opacity: 0.96;
-        will-change: transform;
+        filter:
+            drop-shadow(0 24px 28px rgba(6, 24, 76, 0.22))
+            drop-shadow(0 0 22px rgba(56, 189, 248, 0.2));
     }
 
     .sr-image-head-icons {
@@ -6005,8 +5965,8 @@
         --sr-head-orbit-roll: -4deg;
         position: absolute;
         z-index: 4;
-        top: -10px;
-        right: 46px;
+        top: -6px;
+        right: 64px;
         width: 100px;
         height: 60px;
         pointer-events: none;
@@ -6435,8 +6395,7 @@
             min-height: 100px;
         }
 
-        .sr-image-robot,
-        .sr-image-robot-hand {
+        .sr-image-robot {
             right: 8px;
             bottom: 0;
             width: auto;
@@ -6450,8 +6409,8 @@
             --sr-head-orbit-tilt: 74deg;
             --sr-head-orbit-untilt: -74deg;
             --sr-head-orbit-roll: -4deg;
-            right: 46px;
-            top: -10px;
+            right: 64px;
+            top: -6px;
             width: 100px;
             height: 60px;
         }
@@ -6536,8 +6495,7 @@
             line-height: 1.14;
         }
 
-        body.user-desktop-shell .sr-image-robot,
-        body.user-desktop-shell .sr-image-robot-hand {
+        body.user-desktop-shell .sr-image-robot {
             right: 4px;
             height: calc(100% - 14px);
             max-height: 156px;
@@ -6548,8 +6506,8 @@
             --sr-head-orbit-tilt: 74deg;
             --sr-head-orbit-untilt: -74deg;
             --sr-head-orbit-roll: -4deg;
-            top: -8px;
-            right: 42px;
+            top: -5px;
+            right: 56px;
             width: 88px;
             height: 56px;
         }
@@ -6645,8 +6603,7 @@
             line-height: 1.14;
         }
 
-        .sr-image-robot,
-        .sr-image-robot-hand {
+        .sr-image-robot {
             right: 4px;
             height: calc(100% - 14px);
             max-height: 156px;
@@ -6657,8 +6614,8 @@
             --sr-head-orbit-tilt: 74deg;
             --sr-head-orbit-untilt: -74deg;
             --sr-head-orbit-roll: -4deg;
-            top: -8px;
-            right: 42px;
+            top: -5px;
+            right: 56px;
             width: 88px;
             height: 56px;
         }
@@ -6799,8 +6756,7 @@
             color: #1976ff !important;
         }
 
-        body.user-desktop-shell .sr-image-robot,
-        body.user-desktop-shell .sr-image-robot-hand {
+        body.user-desktop-shell .sr-image-robot {
             right: 8px;
             height: calc(100% - 8px);
             max-height: 148px;
@@ -6839,8 +6795,8 @@
             --sr-head-orbit-tilt: 74deg;
             --sr-head-orbit-untilt: -74deg;
             --sr-head-orbit-roll: -4deg;
-            top: -10px;
-            right: 46px;
+            top: -6px;
+            right: 64px;
             width: 100px;
             height: 60px;
         }
@@ -7240,8 +7196,7 @@
             line-height: 1.15;
         }
 
-        .sr-image-robot,
-        .sr-image-robot-hand {
+        .sr-image-robot {
             right: 6px;
             bottom: 0;
             width: auto;
@@ -7252,7 +7207,7 @@
 
         .sr-image-head-icons {
             --sr-head-orbit-radius: 31px;
-            right: 30px;
+            right: 44px;
             top: 8px;
             width: 88px;
             height: 88px;
@@ -7435,8 +7390,7 @@
             line-height: 1.1;
         }
 
-        .sr-image-robot,
-        .sr-image-robot-hand {
+        .sr-image-robot {
             right: 6px;
             bottom: 0;
             width: auto;
@@ -7445,8 +7399,8 @@
 
         .sr-image-head-icons {
             --sr-head-orbit-radius: 22px;
-            right: clamp(18px, 5vw, 24px);
-            top: clamp(22px, 6vw, 30px);
+            right: clamp(28px, 7.4vw, 36px);
+            top: clamp(20px, 5.8vw, 28px);
             width: 60px;
             height: 60px;
         }
@@ -7546,8 +7500,7 @@
             line-height: 1.08;
         }
 
-        .sr-image-robot,
-        .sr-image-robot-hand {
+        .sr-image-robot {
             right: 4px;
             bottom: 0;
             width: auto;
@@ -7556,8 +7509,8 @@
 
         .sr-image-head-icons {
             --sr-head-orbit-radius: 19px;
-            right: 18px;
-            top: 22px;
+            right: 28px;
+            top: 20px;
             width: 52px;
             height: 52px;
         }
@@ -7580,7 +7533,6 @@
 
     @media (prefers-reduced-motion: reduce) {
         .sr-image-speech,
-        .sr-image-robot-hand,
         .sr-image-chip,
         .sr-image-chip::after,
         .sr-image-head-icon,
@@ -7590,10 +7542,6 @@
 
         .sr-image-speech {
             opacity: 1;
-            transform: none;
-        }
-
-        .sr-image-robot-hand {
             transform: none;
         }
 
@@ -8314,6 +8262,99 @@ body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
     color: #047857;
     border: 1px solid rgba(16, 185, 129, 0.22);
     background: rgba(16, 185, 129, 0.1);
+}
+
+.sr-dashboard-coach-fab,
+.sr-dashboard-coach-fab * {
+    box-sizing: border-box;
+}
+
+.sr-dashboard-coach-fab {
+    position: fixed;
+    right: max(22px, env(safe-area-inset-right, 0px));
+    bottom: max(22px, env(safe-area-inset-bottom, 0px));
+    z-index: 1040;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 78px;
+    height: 78px;
+    min-width: 78px;
+    padding: 0;
+    border: 0;
+    border-radius: 20px;
+    background: transparent;
+    color: #2563eb;
+    box-shadow: none;
+    cursor: pointer;
+    overflow: visible;
+    touch-action: manipulation;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sr-dashboard-coach-fab::after {
+    display: none;
+}
+
+.sr-dashboard-coach-fab:hover,
+.sr-dashboard-coach-fab:focus-visible {
+    transform: translateY(-2px) scale(1.04);
+}
+
+.sr-dashboard-coach-fab:focus-visible {
+    outline: 3px solid rgba(14, 165, 233, 0.42);
+    outline-offset: 4px;
+}
+
+.sr-dashboard-coach-fab-image {
+    display: block;
+    width: 76px;
+    height: 76px;
+    overflow: visible;
+    background: transparent;
+}
+
+.sr-dashboard-coach-fab-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    filter:
+        drop-shadow(0 12px 18px rgba(15, 23, 42, 0.18))
+        drop-shadow(0 0 12px rgba(56, 189, 248, 0.3));
+    pointer-events: none;
+    user-select: none;
+}
+
+body.modal-open .sr-dashboard-coach-fab {
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+}
+
+@media (max-width: 767px) {
+    .sr-dashboard-coach-fab {
+        right: max(14px, env(safe-area-inset-right, 0px));
+        bottom: calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 20px);
+        width: 62px;
+        height: 62px;
+        min-width: 62px;
+    }
+
+    .sr-dashboard-coach-fab-image {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sr-dashboard-coach-fab,
+    .sr-dashboard-coach-fab::after {
+        animation: none;
+        transition: none;
+    }
 }
 
 .sr-dashboard-coach-modal,
@@ -9458,8 +9499,7 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
         min-height: 140px !important;
     }
 
-    body.user-desktop-shell:not(.admin-shell) .sr-image-robot,
-    body.user-desktop-shell:not(.admin-shell) .sr-image-robot-hand {
+    body.user-desktop-shell:not(.admin-shell) .sr-image-robot {
         right: 18px !important;
         bottom: 4px !important;
         height: calc(100% - 24px) !important;
@@ -9495,8 +9535,8 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
 
     body.user-desktop-shell:not(.admin-shell) .sr-image-head-icons {
         --sr-head-orbit-radius: 28px !important;
-        top: 0 !important;
-        right: 50px !important;
+        top: 2px !important;
+        right: 64px !important;
         width: 76px !important;
         height: 46px !important;
     }
@@ -9858,8 +9898,7 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    body.user-desktop-shell:not(.admin-shell) .sr-image-robot,
-    body.user-desktop-shell:not(.admin-shell) .sr-image-robot-hand {
+    body.user-desktop-shell:not(.admin-shell) .sr-image-robot {
         right: 12px !important;
         height: calc(100% - 28px) !important;
         max-height: 108px !important;
@@ -9881,8 +9920,8 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
 
     body.user-desktop-shell:not(.admin-shell) .sr-image-head-icons {
         --sr-head-orbit-radius: 24px !important;
-        top: 4px !important;
-        right: 38px !important;
+        top: 6px !important;
+        right: 50px !important;
         width: 68px !important;
         height: 40px !important;
     }
@@ -9907,8 +9946,7 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
         order: 3;
     }
 
-    body.user-desktop-shell:not(.admin-shell) .sr-image-robot,
-    body.user-desktop-shell:not(.admin-shell) .sr-image-robot-hand {
+    body.user-desktop-shell:not(.admin-shell) .sr-image-robot {
         right: 14px !important;
         height: calc(100% - 28px) !important;
         max-height: 110px !important;
@@ -9930,8 +9968,8 @@ body.dm.user-desktop-shell:not(.admin-shell) .sr-dashboard-coach-modal .btn-clos
 
     body.user-desktop-shell:not(.admin-shell) .sr-image-head-icons {
         --sr-head-orbit-radius: 25px !important;
-        top: 4px !important;
-        right: 42px !important;
+        top: 6px !important;
+        right: 54px !important;
         width: 70px !important;
         height: 42px !important;
     }

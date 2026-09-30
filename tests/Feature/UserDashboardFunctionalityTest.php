@@ -100,13 +100,13 @@ class UserDashboardFunctionalityTest extends TestCase
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => [],
                 'shell' => 'class="user-desktop-shell desktop-shell',
-                'css' => 'css/desktop/dashboard.css?v=44',
+                'css' => 'css/desktop/dashboard.css?v=49',
             ],
             [
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => ['User-Agent' => $iphoneUserAgent],
                 'shell' => 'class="user-mobile-shell mobile-shell',
-                'css' => 'css/mobile/dashboard.css?v=26',
+                'css' => 'css/mobile/dashboard.css?v=38',
             ],
         ];
 
@@ -117,10 +117,20 @@ class UserDashboardFunctionalityTest extends TestCase
                 $request = $request->withHeader($header, $value);
             }
 
-            $request->get(route('dashboard'))
+            $response = $request->get(route('dashboard'));
+
+            $response
                 ->assertOk()
                 ->assertSee($case['shell'], false)
                 ->assertSee($case['css'], false)
+                ->assertSee('img/dashboard-hero-robot-reference.png', false)
+                ->assertSee('id="dashboardCoachFloatingLauncher"', false)
+                ->assertSee('data-dashboard-coach-launcher', false)
+                ->assertSee('img/dashboard-coach-floating-robot.png', false)
+                ->assertSee('Use the floating coach icon for AI Coach.')
+                ->assertDontSee('id="dashboardCoachImageTrigger"', false)
+                ->assertDontSee('sr-image-coach-trigger', false)
+                ->assertDontSee('Click the robot for AI Coach.')
                 ->assertSee('id="dashboardSetupToolsModal"', false)
                 ->assertSee('id="dashboardSetupToolsForm"', false)
                 ->assertSee('data-sr-setup-tool="microphone"', false)
@@ -133,6 +143,12 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('navigator.mediaDevices.getUserMedia', false)
                 ->assertSee('Notification.requestPermission', false)
                 ->assertSee('Some selected tools still need browser permission.', false);
+
+            if (str_contains($case['css'], 'mobile/dashboard.css')) {
+                $response
+                    ->assertSee('position: fixed !important; left: auto !important; right: max(8px, env(safe-area-inset-right, 0px)) !important;', false)
+                    ->assertSee('document.body.appendChild(launcher)', false);
+            }
         }
     }
 

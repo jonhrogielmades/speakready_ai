@@ -323,7 +323,7 @@ class UserController extends Controller
  }
 
  $provider = AIService::defaultProviderKey();
- $cacheKey = 'dashboard-bubble-messages:v1:'.implode(':', [
+ $cacheKey = 'dashboard-bubble-messages:v2:'.implode(':', [
  $provider,
  (int) floor(((int) ($context['readiness_score']?? 0)) / 20),
  Str::slug((string) ($context['readiness_label']?? 'unknown')),
