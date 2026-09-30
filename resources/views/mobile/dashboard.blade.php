@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=27') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=28') }}" data-page-style="dashboard-v28">
 @endpush
 
 @section('content')
@@ -523,7 +523,7 @@
                 @endif
             </section>
 
-            <section class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#f59e0b">
+            <section id="card-achievements" class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#f59e0b">
                 <div class="sr-side-feature-header">
                     <div class="sr-side-title-row">
                         <div class="sr-side-icon"><i class="fa-solid fa-trophy"></i></div>

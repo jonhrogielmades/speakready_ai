@@ -565,13 +565,13 @@ AI_TTS_PROVIDER=elevenlabs,openai,gemini
 AI_TTS_TIMEOUT=30
 OPENAI_TTS_MODEL=gpt-4o-mini-tts
 OPENAI_TTS_VOICE=nova
-OPENAI_TTS_SPEED=0.85
+OPENAI_TTS_SPEED=0.90
 GEMINI_TTS_MODEL=gemini-3.1-flash-tts-preview
 GEMINI_TTS_VOICE=Leda
-GEMINI_TTS_STYLE="Say in a warm, clear, professional female interviewer voice with natural English pronunciation and measured pacing"
+GEMINI_TTS_STYLE="Say in a warm, clear, professional female interviewer voice with natural English pronunciation and medium, measured pacing"
 ELEVENLABS_TTS_MODEL=eleven_multilingual_v2
 ELEVENLABS_TTS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
-ELEVENLABS_TTS_SPEED=0.85
+ELEVENLABS_TTS_SPEED=0.90
 ```
 
 Optional local speech assessment:

@@ -65,7 +65,7 @@ return [
  'tts_enabled' => env('AI_TTS_ENABLED', false),
  'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
  'tts_voice' => env('OPENAI_TTS_VOICE', 'nova'),
- 'tts_speed' => env('OPENAI_TTS_SPEED', 0.85),
+ 'tts_speed' => env('OPENAI_TTS_SPEED', 0.90),
  'tts_timeout' => env('AI_TTS_TIMEOUT', 30),
  'transcription_model' => env('OPENAI_TRANSCRIPTION_MODEL', 'gpt-transcribe'),
  'transcription_timeout' => env('AI_TRANSCRIPTION_TIMEOUT', 45),
@@ -74,7 +74,7 @@ return [
  'gemini' => [
  'tts_model' => env('GEMINI_TTS_MODEL', 'gemini-3.1-flash-tts-preview'),
  'tts_voice' => env('GEMINI_TTS_VOICE', 'Leda'),
- 'tts_style' => env('GEMINI_TTS_STYLE', 'Say in a warm, clear, professional female interviewer voice with natural English pronunciation and measured pacing'),
+ 'tts_style' => env('GEMINI_TTS_STYLE', 'Say in a warm, clear, professional female interviewer voice with natural English pronunciation and medium, measured pacing'),
  'transcription_model' => env('GEMINI_TRANSCRIPTION_MODEL', env('GEMINI_MODEL', 'gemini-3.6-flash')),
  ],
 
@@ -88,7 +88,7 @@ return [
  'tts_stability' => env('ELEVENLABS_TTS_STABILITY', 0.45),
  'tts_similarity_boost' => env('ELEVENLABS_TTS_SIMILARITY_BOOST', 0.75),
  'tts_style' => env('ELEVENLABS_TTS_STYLE', 0.15),
- 'tts_speed' => env('ELEVENLABS_TTS_SPEED', 0.85),
+ 'tts_speed' => env('ELEVENLABS_TTS_SPEED', 0.90),
  'tts_speaker_boost' => env('ELEVENLABS_TTS_SPEAKER_BOOST', true),
  ],
 

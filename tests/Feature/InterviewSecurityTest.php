@@ -414,7 +414,7 @@ class InterviewSecurityTest extends TestCase
             'services.elevenlabs.tts_stability' => 0.45,
             'services.elevenlabs.tts_similarity_boost' => 0.75,
             'services.elevenlabs.tts_style' => 0.15,
-            'services.elevenlabs.tts_speed' => 0.85,
+            'services.elevenlabs.tts_speed' => 0.90,
             'services.elevenlabs.tts_speaker_boost' => true,
         ]);
 
@@ -444,7 +444,7 @@ class InterviewSecurityTest extends TestCase
             && $request['text'] === $question->question_text
             && $request['model_id'] === 'eleven_multilingual_v2'
             && data_get($request->data(), 'voice_settings.stability') === 0.45
-            && data_get($request->data(), 'voice_settings.speed') === 0.85
+            && data_get($request->data(), 'voice_settings.speed') === 0.90
             && data_get($request->data(), 'voice_settings.use_speaker_boost') === true);
     }
 
@@ -459,7 +459,7 @@ class InterviewSecurityTest extends TestCase
             'services.elevenlabs.tts_model' => 'eleven_multilingual_v2',
             'services.elevenlabs.tts_voice_id' => '21m00Tcm4TlvDq8ikWAM',
             'services.elevenlabs.tts_output_format' => 'mp3_44100_128',
-            'services.elevenlabs.tts_speed' => 0.85,
+            'services.elevenlabs.tts_speed' => 0.90,
         ]);
 
         Http::fake([
@@ -494,6 +494,43 @@ class InterviewSecurityTest extends TestCase
         Http::assertSent(fn ($request) => $request->url() === 'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM?output_format=mp3_44100_128');
         Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'
             && $request['input'] === $question->question_text
+            && $request['voice'] === 'nova');
+    }
+
+    public function test_user_can_request_onboarding_speech_from_tts_providers(): void
+    {
+        config([
+            'services.ai_tts.enabled' => true,
+            'services.ai_tts.provider' => 'openai',
+            'services.openai.tts_enabled' => true,
+        ]);
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/speech' => Http::response('onboarding-audio', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), [
+                'speech_text' => 'Welcome to your dashboard tutorial.',
+                'language' => 'en',
+            ])
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertSee('onboarding-audio');
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'
+            && $request['input'] === 'Welcome to your dashboard tutorial.'
             && $request['voice'] === 'nova');
     }
 

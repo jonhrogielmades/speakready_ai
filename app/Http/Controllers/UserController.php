@@ -3706,6 +3706,29 @@ class UserController extends Controller
  ]);
  }
 
+ public function onboardingSpeech(Request $request)
+ {
+ $validated = $request->validate([
+ 'speech_text' => ['required', 'string', 'max:900'],
+ 'language' => ['nullable', 'string', Rule::in(array_keys(Setting::supportedLanguages()))],
+ ]);
+
+ $speechText = trim(preg_replace('/\s+/', ' ', (string) $validated['speech_text'])?? '');
+ if ($speechText === '') {
+ return response()->json(['error' => 'Tutorial speech text is required.'], 422);
+ }
+
+ $languageCode = Setting::preferredLanguageFor(Auth::user())?: ($validated['language']?? 'en');
+ $speech = AIService::synthesizeSpeech($speechText, Setting::languageConfig($languageCode));
+ if (! $speech) {
+ return response()->json(['error' => 'Tutorial voiceover is not available.'], 503);
+ }
+
+ return response($speech['audio'], 200)
+ ->header('Content-Type', $speech['mime_type'])
+ ->header('Cache-Control', 'private, no-store, max-age=0');
+ }
+
  public function updateProfile(Request $request)
  {
  AccountNotificationSchema::ensure();

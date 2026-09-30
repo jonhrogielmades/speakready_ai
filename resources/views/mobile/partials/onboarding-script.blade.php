@@ -220,8 +220,28 @@
             return (sourceSteps || []).filter(isVisibleStep);
         }
 
-        function supportsTourVoiceover() {
+        const tourVoiceoverEndpoint = @json(route('user.onboarding.speech'));
+        const tourProviderVoiceoverPlaybackRate = 1.0;
+        let activeTourVoiceoverAudio = null;
+        let activeTourVoiceoverUrl = null;
+
+        function supportsBrowserTourVoiceover() {
             return 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+        }
+
+        function tourCsrfToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        }
+
+        function supportsProviderTourVoiceover(config = {}) {
+            return config.providerVoiceover !== false &&
+                Boolean(tourVoiceoverEndpoint) &&
+                typeof window.fetch === 'function' &&
+                tourCsrfToken() !== '';
+        }
+
+        function supportsTourVoiceover(config = {}) {
+            return supportsProviderTourVoiceover(config) || supportsBrowserTourVoiceover();
         }
 
         function getTourSpeechLocale(config) {
@@ -257,7 +277,7 @@
         let preferredTourVoice = null;
 
         function loadTourVoices(config) {
-            if (!supportsTourVoiceover()) return null;
+            if (!supportsBrowserTourVoiceover()) return null;
 
             const voices = window.speechSynthesis.getVoices();
             if (!voices.length) return preferredTourVoice;
@@ -276,7 +296,7 @@
             return preferredTourVoice;
         }
 
-        if (supportsTourVoiceover()) {
+        if (supportsBrowserTourVoiceover()) {
             loadTourVoices();
 
             if (typeof window.speechSynthesis.addEventListener === 'function') {
@@ -322,18 +342,79 @@
         function stopTourVoiceover() {
             tourVoiceoverToken += 1;
 
-            if (supportsTourVoiceover()) {
+            if (activeTourVoiceoverAudio) {
+                activeTourVoiceoverAudio.pause();
+                activeTourVoiceoverAudio.removeAttribute('src');
+                activeTourVoiceoverAudio.load();
+                activeTourVoiceoverAudio = null;
+            }
+
+            if (activeTourVoiceoverUrl) {
+                URL.revokeObjectURL(activeTourVoiceoverUrl);
+                activeTourVoiceoverUrl = null;
+            }
+
+            if (supportsBrowserTourVoiceover()) {
                 window.speechSynthesis.cancel();
             }
         }
 
-        function speakTourStep(step, config) {
-            if (config.voiceover === false || config.aiVoiceover === false || !supportsTourVoiceover()) return;
+        async function speakTourStepWithProvider(text, token, config) {
+            if (!supportsProviderTourVoiceover(config) || token !== tourVoiceoverToken) return false;
 
-            const text = getTourStepVoiceText(step);
-            if (!text) return;
+            const formData = new FormData();
+            formData.append('_token', tourCsrfToken());
+            formData.append('speech_text', text);
+            formData.append('language', String(getTourSpeechLocale(config) || '').split('-')[0] || 'en');
 
-            const token = ++tourVoiceoverToken;
+            try {
+                const response = await fetch(tourVoiceoverEndpoint, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'audio/mpeg',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': tourCsrfToken(),
+                    },
+                    credentials: 'same-origin',
+                });
+
+                if (!response.ok || token !== tourVoiceoverToken) return false;
+
+                const blob = await response.blob();
+                if (!blob || blob.size === 0 || token !== tourVoiceoverToken) return false;
+
+                const url = URL.createObjectURL(blob);
+                activeTourVoiceoverUrl = url;
+                const audio = new Audio(url);
+                audio.defaultPlaybackRate = tourProviderVoiceoverPlaybackRate;
+                audio.playbackRate = tourProviderVoiceoverPlaybackRate;
+                activeTourVoiceoverAudio = audio;
+
+                audio.addEventListener('ended', () => {
+                    if (token === tourVoiceoverToken) {
+                        tourVoiceoverToken += 1;
+                    }
+                }, { once: true });
+
+                audio.addEventListener('error', () => {
+                    if (token === tourVoiceoverToken) {
+                        tourVoiceoverToken += 1;
+                    }
+                }, { once: true });
+
+                await audio.play();
+
+                return true;
+            } catch (error) {
+                console.warn('Tutorial provider voiceover failed:', error);
+                return false;
+            }
+        }
+
+        function speakTourStepWithBrowser(text, token, config) {
+            if (!supportsBrowserTourVoiceover() || token !== tourVoiceoverToken) return;
+
             window.speechSynthesis.cancel();
 
             const utterance = new SpeechSynthesisUtterance(text);
@@ -344,7 +425,7 @@
                 utterance.voice = voice;
             }
 
-            utterance.rate = Number.isFinite(Number(config.voiceoverRate)) ? Number(config.voiceoverRate) : 0.94;
+            utterance.rate = Number.isFinite(Number(config.voiceoverRate)) ? Number(config.voiceoverRate) : 0.90;
             utterance.pitch = Number.isFinite(Number(config.voiceoverPitch)) ? Number(config.voiceoverPitch) : 1;
             utterance.volume = Number.isFinite(Number(config.voiceoverVolume)) ? Number(config.voiceoverVolume) : 1;
             utterance.onend = () => {
@@ -361,8 +442,25 @@
             try {
                 window.speechSynthesis.speak(utterance);
             } catch (error) {
-                console.warn('Tutorial voiceover failed:', error);
+                console.warn('Tutorial browser voiceover failed:', error);
             }
+        }
+
+        function speakTourStep(step, config) {
+            if (config.voiceover === false || config.aiVoiceover === false || !supportsTourVoiceover(config)) return;
+
+            const text = getTourStepVoiceText(step);
+            if (!text) return;
+
+            const token = ++tourVoiceoverToken;
+            stopTourVoiceover();
+            tourVoiceoverToken = token;
+
+            speakTourStepWithProvider(text, token, config).then((usedProviderVoice) => {
+                if (!usedProviderVoice && token === tourVoiceoverToken) {
+                    speakTourStepWithBrowser(text, token, config);
+                }
+            });
         }
 
         function escapeTourHtml(value) {

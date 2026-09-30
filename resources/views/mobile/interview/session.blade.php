@@ -580,8 +580,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const localMicrophoneHosts = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
  const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
  const speechLanguage = speechLocale.split('-')[0];
- const interviewerSpeechRate = 0.85;
- const interviewerServerAudioPlaybackRate = 0.92;
+ const interviewerSpeechRate = 0.90;
+ const interviewerServerAudioPlaybackRate = 1.0;
  const interviewerCaptionWordMs = 430;
  const interviewerSpeechTimeoutWordMs = 720;
  const serverTranscriptionMimeType = (() => {

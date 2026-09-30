@@ -197,6 +197,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/account', [UserController::class, 'account'])->name('user.account');
     Route::post('/language', [UserController::class, 'updateLanguage'])->name('user.language.update');
     Route::post('/language/translate', [UserController::class, 'translateLanguage'])->name('user.language.translate');
+    Route::post('/onboarding/speech', [UserController::class, 'onboardingSpeech'])->name('user.onboarding.speech');
     Route::post('/account/profile', [UserController::class, 'updateProfile'])->name('user.account.profile');
     Route::post('/account/password', [UserController::class, 'updatePassword'])->name('user.account.password');
     Route::post('/account/delete', [UserController::class, 'deleteAccount'])->name('user.account.delete');

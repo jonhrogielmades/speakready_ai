@@ -2413,7 +2413,7 @@ PROMPT;
  $language = self::languageConfigFrom($targetLanguage);
  $model = (string) config('services.openai.tts_model', 'gpt-4o-mini-tts');
  $voice = self::openAiFemaleSpeechVoice((string) config('services.openai.tts_voice', 'nova'));
- $speed = (float) config('services.openai.tts_speed', 0.85);
+ $speed = (float) config('services.openai.tts_speed', 0.90);
  $speed = max(0.25, min(4.0, $speed));
 
  $payload = [
@@ -2974,6 +2974,7 @@ PROMPT;
  'elevenlabs_model' => config('services.elevenlabs.tts_model'),
  'elevenlabs_voice_id' => config('services.elevenlabs.tts_voice_id'),
  'elevenlabs_output_format' => config('services.elevenlabs.tts_output_format'),
+ 'elevenlabs_speed' => config('services.elevenlabs.tts_speed'),
  ];
  }
 
@@ -3032,7 +3033,7 @@ PROMPT;
  $target = $language['ai_label']?? $language['label']?? 'the selected language';
  $style = trim((string) config('services.gemini.tts_style', ''));
  if ($style === '') {
- $style = 'Say in a warm, clear, professional female interviewer voice with measured pacing';
+ $style = 'Say in a warm, clear, professional female interviewer voice with medium, measured pacing';
  }
  if (! preg_match('/\bfemale\b|\bwoman\b|\bwoman\'s\b|\bgirl\b|\bgirl\'s\b/i', $style)) {
  $style.= ' in a warm, clear, professional female interviewer voice';
