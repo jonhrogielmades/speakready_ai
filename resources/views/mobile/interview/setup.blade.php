@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=19') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=6') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=8') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -439,7 +439,7 @@
  <label class="assistance-question-card">
  <input type="checkbox" name="question_types[]" value="{{ $questionType }}" {{ in_array($questionType, $selectedQuestionTypes, true)? 'checked': '' }}>
  <span class="assistance-question-icon" aria-hidden="true"><i class="{{ $questionIcon }}"></i></span>
- <span class="assistance-question-text">{{ $questionType }} Questions</span>
+ <span class="assistance-question-text">{{ $questionType }}</span>
  </label>
  @endforeach
  </div>
@@ -488,7 +488,7 @@
  <div class="col-lg-4 animate-fade-up delay-200">
  <div class="setup-summary-wrap">
  <div class="setup-panel" id="panel-summary" style="background:linear-gradient(145deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%); border:1px solid rgba(59,130,246,0.25); box-shadow: 0 15px 35px rgba(59,130,246,0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);">
- <h5 style="font-weight:800;margin-bottom:24px;color:var(--pur);text-align:center;letter-spacing:0.5px;"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
+ <h5 class="setup-summary-title" style="font-weight:800;margin-bottom:24px;color:var(--pur);text-align:center;letter-spacing:0.5px;"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
 
  <div class="summary-row">
  <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>

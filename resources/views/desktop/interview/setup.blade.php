@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=33') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=8') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=10') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -440,7 +440,7 @@
  <label class="assistance-question-card">
  <input type="checkbox" name="question_types[]" value="{{ $questionType }}" {{ in_array($questionType, $selectedQuestionTypes, true)? 'checked': '' }}>
  <span class="assistance-question-icon" aria-hidden="true"><i class="{{ $questionIcon }}"></i></span>
- <span class="assistance-question-text">{{ $questionType }} Questions</span>
+ <span class="assistance-question-text">{{ $questionType }}</span>
  </label>
  @endforeach
  </div>
