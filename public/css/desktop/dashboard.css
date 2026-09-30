@@ -8286,11 +8286,16 @@ body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
     background: transparent;
     color: #2563eb;
     box-shadow: none;
-    cursor: pointer;
+    cursor: grab;
     overflow: visible;
-    touch-action: manipulation;
+    touch-action: none;
     transition: transform 0.18s ease, opacity 0.18s ease;
     -webkit-tap-highlight-color: transparent;
+}
+
+.sr-dashboard-coach-fab.is-dragging {
+    cursor: grabbing;
+    transition: none;
 }
 
 .sr-dashboard-coach-fab::after {
@@ -8300,6 +8305,11 @@ body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
 .sr-dashboard-coach-fab:hover,
 .sr-dashboard-coach-fab:focus-visible {
     transform: translateY(-2px) scale(1.04);
+}
+
+.sr-dashboard-coach-fab.is-dragging:hover,
+.sr-dashboard-coach-fab.is-dragging:focus-visible {
+    transform: none;
 }
 
 .sr-dashboard-coach-fab:focus-visible {

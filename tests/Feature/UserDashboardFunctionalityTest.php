@@ -100,13 +100,13 @@ class UserDashboardFunctionalityTest extends TestCase
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => [],
                 'shell' => 'class="user-desktop-shell desktop-shell',
-                'css' => 'css/desktop/dashboard.css?v=49',
+                'css' => 'css/desktop/dashboard.css?v=50',
             ],
             [
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => ['User-Agent' => $iphoneUserAgent],
                 'shell' => 'class="user-mobile-shell mobile-shell',
-                'css' => 'css/mobile/dashboard.css?v=38',
+                'css' => 'css/mobile/dashboard.css?v=39',
             ],
         ];
 
@@ -126,6 +126,9 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('img/dashboard-hero-robot-reference.png', false)
                 ->assertSee('id="dashboardCoachFloatingLauncher"', false)
                 ->assertSee('data-dashboard-coach-launcher', false)
+                ->assertSee('data-dashboard-coach-draggable', false)
+                ->assertSee('initDashboardCoachLauncherDrag', false)
+                ->assertSee('localStorage.setItem(storageKey', false)
                 ->assertSee('img/dashboard-coach-floating-robot.png', false)
                 ->assertSee('Use the floating coach icon for AI Coach.')
                 ->assertDontSee('id="dashboardCoachImageTrigger"', false)
