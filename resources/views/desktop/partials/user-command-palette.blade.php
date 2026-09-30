@@ -95,6 +95,20 @@
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
+                <a id="ucp-destination-challenges" class="ucp-result" href="{{ route('user.learning') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-route" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Interview Challenges</strong><small>Practice job interview challenge paths</small></span>
+                    <span class="ucp-result-group">Practice</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-modules" class="ucp-result" href="{{ route('user.modules.index') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-indigo"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Interview Modules</strong><small>Open job interview prep modules</small></span>
+                    <span class="ucp-result-group">Practice</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
                 <a id="ucp-destination-coach" class="ucp-result" href="{{ route('user.coach') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-robot" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Interview Coach</strong><small>Get job interview guidance</small></span>
@@ -154,7 +168,7 @@
             </footer>
             @else
             <footer class="ucp-footer">
-                <span class="ucp-status">8 destinations</span>
+                <span class="ucp-status">10 destinations</span>
                 <span class="ucp-help"><kbd>&uarr;</kbd><kbd>&darr;</kbd> move <kbd>Enter</kbd> open</span>
             </footer>
             @endif
