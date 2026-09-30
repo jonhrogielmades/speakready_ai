@@ -23,8 +23,8 @@
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(245,158,11,.15);color:#f59e0b"><i class="fa-solid fa-file-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Job Evidence Mapping</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Compare your resume and role details to focus practice on the skills a job asks for.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Feedback Reports</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Review answer scores, coaching notes, and progress signals after each completed practice session.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">

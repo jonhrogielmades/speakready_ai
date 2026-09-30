@@ -79,7 +79,6 @@
  'delivery' => 'Speaking',
  'professionalism' => 'Tone',
  'relevance' => 'Answer match',
- 'job evidence match' => 'Role evidence',
  'delivery stability' => 'Pacing',
  default => $area,
  };

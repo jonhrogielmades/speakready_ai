@@ -24,8 +24,6 @@ class Score extends Model
         'readiness_band',
         'scoring_confidence',
         'body_language_score',
-        'ats_match_score',
-        'job_evidence_match_score',
         'star_method_score',
         'evidence_map',
         'rubric',

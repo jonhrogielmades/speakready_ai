@@ -336,7 +336,7 @@ class LearningChallengeGenerationService
  return match ($levelNumber) {
  1 => 'Clarity',
  2 => 'STAR Method',
- 3 => 'Role Evidence',
+ 3 => 'Problem Solving',
  4 => 'Professionalism',
  default => 'Interview Readiness',
  };

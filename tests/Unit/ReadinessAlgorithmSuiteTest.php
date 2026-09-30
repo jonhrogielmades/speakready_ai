@@ -33,8 +33,8 @@ class ReadinessAlgorithmSuiteTest extends TestCase
             $this->module([
                 'id' => 2,
                 'title' => 'Advanced Technical Proof',
-                'description' => 'Practice job evidence, technical tradeoffs, and role requirements.',
-                'mapped_skills' => ['job evidence'],
+                'description' => 'Practice technical tradeoffs, direct explanations, and question alignment.',
+                'mapped_skills' => ['relevance'],
             ]),
         ]);
 
@@ -136,7 +136,6 @@ class ReadinessAlgorithmSuiteTest extends TestCase
         $score->setRawAttributes(array_merge([
             'readiness_band' => '',
             'delivery_stability_score' => 0,
-            'job_evidence_match_score' => 0,
             'star_method_score' => 0,
         ], $attributes), true);
 

@@ -16,8 +16,7 @@ return new class extends Migration
         });
 
         Schema::table('scores', function (Blueprint $table) {
-            $table->integer('ats_match_score')->default(0)->after('overall_readiness_score');
-            $table->integer('star_method_score')->default(0)->after('ats_match_score');
+            $table->integer('star_method_score')->default(0)->after('overall_readiness_score');
         });
     }
 
@@ -31,7 +30,7 @@ return new class extends Migration
         });
 
         Schema::table('scores', function (Blueprint $table) {
-            $table->dropColumn(['ats_match_score', 'star_method_score']);
+            $table->dropColumn('star_method_score');
         });
     }
 };

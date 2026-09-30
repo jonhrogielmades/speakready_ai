@@ -72,12 +72,6 @@ class ScoreSchema
                 if (self::isMissing($missing, 'body_language_score')) {
                     $table->integer('body_language_score')->default(0);
                 }
-                if (self::isMissing($missing, 'ats_match_score')) {
-                    $table->integer('ats_match_score')->default(0);
-                }
-                if (self::isMissing($missing, 'job_evidence_match_score')) {
-                    $table->unsignedTinyInteger('job_evidence_match_score')->default(0);
-                }
                 if (self::isMissing($missing, 'star_method_score')) {
                     $table->integer('star_method_score')->default(0);
                 }
@@ -137,8 +131,6 @@ class ScoreSchema
             $table->string('readiness_band')->default('Developing');
             $table->unsignedTinyInteger('scoring_confidence')->default(0);
             $table->integer('body_language_score')->default(0);
-            $table->integer('ats_match_score')->default(0);
-            $table->unsignedTinyInteger('job_evidence_match_score')->default(0);
             $table->integer('star_method_score')->default(0);
             $table->json('evidence_map')->nullable();
             $table->json('rubric')->nullable();
@@ -185,8 +177,6 @@ class ScoreSchema
             'readiness_band',
             'scoring_confidence',
             'body_language_score',
-            'ats_match_score',
-            'job_evidence_match_score',
             'star_method_score',
             'evidence_map',
             'rubric',

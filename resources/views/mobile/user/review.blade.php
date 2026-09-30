@@ -24,7 +24,6 @@
  'relevance' => 'Answer Match',
  'professionalism', 'tone' => 'Professional Tone',
  'delivery stability', 'speaking steadiness' => 'Pacing',
- 'job evidence match', 'job detail match' => 'Role Evidence',
  default => $label!== ''? $label: 'Skill',
  };
  };

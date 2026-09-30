@@ -93,15 +93,6 @@ class FeedbackReportPresenter
  ];
  }
 
- $jobEvidenceScore = $score->job_evidence_match_score?? null;
- if (is_numeric($jobEvidenceScore) && ((int) $jobEvidenceScore > 0 || trim((string) ($session->job_description?? ''))!== '')) {
- $metrics[] = [
- 'name' => 'Role Evidence',
- 'score' => $jobEvidenceScore,
- 'color' => '#14b8a6',
- ];
- }
-
  if (self::hasMeasuredDelivery($session) && is_numeric($score->delivery_stability_score?? null)) {
  $metrics[] = [
  'name' => 'Pacing',
@@ -592,15 +583,6 @@ class FeedbackReportPresenter
  'advice' => 'Keep the wording direct, respectful, and role-focused.',
  ],
  ];
-
- $jobScore = $score?->job_evidence_match_score;
- if (is_numeric($jobScore) && ((int) $jobScore > 0 || trim((string) ($session->job_description?? ''))!== '')) {
- $metrics[] = [
- 'label' => 'Role Evidence',
- 'score' => $jobScore,
- 'advice' => 'Connect one answer detail to the role or company need.',
- ];
- }
 
  if (self::hasMeasuredDelivery($session) && is_numeric($score?->delivery_stability_score?? null)) {
  $metrics[] = [

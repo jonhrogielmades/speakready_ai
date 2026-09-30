@@ -35,10 +35,10 @@ class LearningModuleGenerationService
  ],
  [
  'key' => 'role_skills',
- 'title' => 'Role Skills and Work Evidence',
+ 'title' => 'Role Skills and Direct Answers',
  'difficulty' => 'Intermediate',
- 'skill_focus' => 'Job Evidence Match',
- 'theme' => 'turning responsibilities, tools, projects, school work, internships, or work history into role evidence',
+ 'skill_focus' => 'Relevance',
+ 'theme' => 'turning responsibilities, tools, projects, school work, internships, or work history into direct answers',
  ],
  [
  'key' => 'ph_hr_questions',
@@ -246,7 +246,7 @@ Return ONLY one JSON object with this exact shape:
  "title": "Specific module title for the target position",
  "description": "One short action-focused summary",
  "difficulty": "Beginner, Intermediate, or Advanced",
- "mapped_skills": ["Clarity", "STAR Method", "Job Evidence Match"],
+ "mapped_skills": ["Clarity", "STAR Method", "Relevance"],
  "chapters": [
  {
  "title": "Chapter 1 title",

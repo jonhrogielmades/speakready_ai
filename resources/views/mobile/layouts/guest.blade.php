@@ -812,7 +812,7 @@
                                              <div class="ui-desktop-wire-rec-list" style="margin-top:12px;">
                                                 <div class="ui-desktop-wire-rec-row">
                                                    <span class="ui-desktop-wire-icon"><i class="fa-solid fa-lightbulb"></i></span>
-                                                   <div><strong>Practice evidence mapping</strong><span>Use job details in answers.</span></div>
+                                                   <div><strong>Practice answer drills</strong><span>Use guided prompts.</span></div>
                                                    <i class="fa-solid fa-chevron-right"></i>
                                                 </div>
                                                 <div class="ui-desktop-wire-rec-row">
@@ -1162,7 +1162,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2" aria-expanded="false" aria-controls="f2">How does AI feedback work?</button></h2>
                            <div id="f2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                               <div class="accordion-body">SpeakReady evaluates answer relevance, clarity, professionalism, applicable STAR evidence, and job evidence using a versioned rubric. Delivery signals and optional body-language detection notes do not affect readiness scores and do not infer confidence, honesty, or personality.</div>
+                               <div class="accordion-body">SpeakReady evaluates answer relevance, clarity, professionalism, and applicable STAR evidence using a versioned rubric. Delivery signals and optional body-language detection notes do not affect readiness scores and do not infer confidence, honesty, or personality.</div>
                            </div>
                         </div>
                         <div class="accordion-item">

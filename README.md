@@ -98,7 +98,7 @@ Question generation uses a hybrid pipeline instead of relying on one algorithm. 
 
 The system includes a K-Nearest Neighbors readiness match through `App\Services\KnnReadinessClassifier`.
 It uses score features such as clarity, relevance, grammar, professionalism, confidence, delivery stability,
-job evidence match, and STAR method when those fields are available.
+and STAR method when those fields are available.
 
 The weighted Euclidean distance formula is:
 

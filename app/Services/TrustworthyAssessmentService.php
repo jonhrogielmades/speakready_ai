@@ -188,7 +188,7 @@ class TrustworthyAssessmentService
  };
  }
 
- public function sessionMetadata(InterviewSession $session, Collection $answers, array $metrics, int $starScore, int $jobEvidenceScore): array
+ public function sessionMetadata(InterviewSession $session, Collection $answers, array $metrics, int $starScore): array
  {
  $answerEvidence = $answers->mapWithKeys(function (InterviewAnswer $answer) {
  return [$answer->id => $this->answerEvidence($this->answerContent($answer), $answer->ai_feedback, $answer->question)];
@@ -218,7 +218,6 @@ class TrustworthyAssessmentService
  'readiness_band' => $this->readinessBand($overall),
  'scoring_confidence' => $confidence,
  'delivery_stability' => (int) round($deliveryScores->avg()?? 0),
- 'job_evidence_match' => $jobEvidenceScore,
  'evidence_map' => $answerEvidence,
  'rubric' => [
  'version' => self::SCORE_VERSION,

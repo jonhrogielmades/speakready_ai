@@ -126,7 +126,6 @@ class AdminAlgorithmDashboardTest extends TestCase
             'professionalism_score' => 0,
             'confidence_score' => 0,
             'delivery_stability_score' => 0,
-            'job_evidence_match_score' => 0,
             'star_method_score' => 0,
             'overall_readiness_score' => 0,
             'readiness_band' => 'Developing',

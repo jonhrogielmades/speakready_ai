@@ -53,12 +53,6 @@ class ReadinessAlgorithmSuite
             'terms' => ['delivery', 'stability', 'pace', 'pause', 'filler', 'voice', 'steady'],
             'core' => false,
         ],
-        'job_evidence_match_score' => [
-            'label' => 'Job Evidence Match',
-            'weight' => 0.06,
-            'terms' => ['job', 'role', 'evidence', 'resume', 'experience', 'skills', 'requirements'],
-            'core' => false,
-        ],
         'star_method_score' => [
             'label' => 'STAR Method',
             'weight' => 0.10,

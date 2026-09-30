@@ -1070,7 +1070,7 @@ class ReliabilityHardeningTest extends TestCase
  throw new \RuntimeException('Revision template unavailable.');
  }
 
- public function sessionMetadata(InterviewSession $session, Collection $answers, array $metrics, int $starScore, int $jobEvidenceScore): array
+ public function sessionMetadata(InterviewSession $session, Collection $answers, array $metrics, int $starScore): array
  {
  throw new \RuntimeException('Session metadata unavailable.');
  }

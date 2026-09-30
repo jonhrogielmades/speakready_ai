@@ -100,8 +100,6 @@ class TrustworthyReadinessFeaturesTest extends TestCase
             'delivery_stability_score' => 70,
             'body_language_score' => 0,
             'star_method_score' => $score,
-            'ats_match_score' => 0,
-            'job_evidence_match_score' => 60,
             'body_language_included' => false,
         ]);
 

@@ -142,7 +142,7 @@ class TrustworthyAssessmentServiceTest extends TestCase
             'relevance' => 70,
             'grammar' => 70,
             'professionalism' => 70,
-        ], 0, 0);
+        ], 0);
 
         $this->assertSame(40, $metadata['scoring_confidence']);
         $this->assertLessThanOrEqual(45, $metadata['scoring_confidence']);

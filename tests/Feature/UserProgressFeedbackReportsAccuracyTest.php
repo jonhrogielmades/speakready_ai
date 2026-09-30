@@ -63,6 +63,26 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  });
  }
 
+ public function test_progress_page_filters_removed_job_evidence_categories(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $legacy = $this->category('Job Evidence Match');
+ $technical = $this->category('Technical');
+
+ $this->completedSessionFor($user, $legacy, 88, now()->subDays(2));
+ $this->completedSessionFor($user, $technical, 70, now()->subDay());
+
+ $this->actingAs($user)
+ ->get(route('user.progress'))
+ ->assertOk()
+ ->assertDontSee('Job Evidence Match')
+ ->assertViewHas('categoryPerf', function ($categoryPerf) {
+ return $categoryPerf === [
+ 'Technical' => 70,
+ ];
+ });
+ }
+
  public function test_progress_page_renders_live_star_activity_goal_and_badge_data(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -840,8 +860,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertViewHas('latestPerformanceMetrics', function ($metrics) {
  $labels = collect($metrics)->pluck('name');
 
- return! $labels->contains('Speaking Steadiness')
- &&! $labels->contains('Job Detail Match');
+ return! $labels->contains('Speaking Steadiness');
  });
  }
 

@@ -103,10 +103,6 @@ return new class extends Migration
                     $table->unsignedTinyInteger('delivery_stability_score')->default(0);
                 }
 
-                if (! Schema::hasColumn('scores', 'job_evidence_match_score')) {
-                    $table->unsignedTinyInteger('job_evidence_match_score')->default(0);
-                }
-
                 if (! Schema::hasColumn('scores', 'evidence_map')) {
                     $table->json('evidence_map')->nullable();
                 }
@@ -140,7 +136,7 @@ return new class extends Migration
     {
         $this->dropColumnsIfPresent('scores', [
             'score_version', 'assessment_mode', 'readiness_band', 'scoring_confidence',
-            'delivery_stability_score', 'job_evidence_match_score', 'evidence_map', 'rubric',
+            'delivery_stability_score', 'evidence_map', 'rubric',
             'body_language_included',
         ]);
 

@@ -1035,14 +1035,13 @@ class InterviewController extends Controller
 
  $sFeedback = $aiFeedback['session_feedback']?? null;
  $starScore = $this->scoreValue($sFeedback['star_method_score']?? 0);
- $jobEvidenceScore = 0;
  $evaluatedAnswers = $answers->fresh(['question']);
  $metadata = $this->safeSessionMetadata($assessment, $session, $evaluatedAnswers, [
  'clarity' => $clarity,
  'relevance' => $relevance,
  'grammar' => $grammar,
  'professionalism' => $prof,
- ], $starScore, $jobEvidenceScore);
+ ], $starScore);
  $overall = is_array($sFeedback) && array_key_exists('overall_readiness_score', $sFeedback)? $this->scoreValue($sFeedback['overall_readiness_score']): $metadata['overall'];
  $metadata['overall'] = $overall;
  $metadata['readiness_band'] = $assessment->readinessBand($overall);
@@ -1070,8 +1069,6 @@ class InterviewController extends Controller
  'overall_readiness_score' => $overall,
  'readiness_band' => $metadata['readiness_band'],
  'scoring_confidence' => $metadata['scoring_confidence'],
- 'ats_match_score' => $jobEvidenceScore,
- 'job_evidence_match_score' => $jobEvidenceScore,
  'star_method_score' => $starScore,
  'evidence_map' => $metadata['evidence_map'],
  'rubric' => $metadata['rubric'],
@@ -1738,14 +1735,13 @@ class InterviewController extends Controller
  $prof = round($totalProf / $count);
  $sFeedback = $aiFeedback['session_feedback']?? null;
  $starScore = $this->scoreValue($sFeedback['star_method_score']?? 0);
- $jobEvidenceScore = 0;
  $evaluatedAnswers = $answers->fresh(['question']);
  $metadata = $this->safeSessionMetadata($assessment, $session, $evaluatedAnswers, [
  'clarity' => $clarity,
  'relevance' => $relevance,
  'grammar' => $grammar,
  'professionalism' => $prof,
- ], $starScore, $jobEvidenceScore);
+ ], $starScore);
  $overall = is_array($sFeedback) && array_key_exists('overall_readiness_score', $sFeedback)? $this->scoreValue($sFeedback['overall_readiness_score']): $metadata['overall'];
  $metadata['overall'] = $overall;
  $metadata['readiness_band'] = $assessment->readinessBand($overall);
@@ -1765,8 +1761,6 @@ class InterviewController extends Controller
  'overall_readiness_score' => $overall,
  'readiness_band' => $metadata['readiness_band'],
  'scoring_confidence' => $metadata['scoring_confidence'],
- 'ats_match_score' => $jobEvidenceScore,
- 'job_evidence_match_score' => $jobEvidenceScore,
  'star_method_score' => $starScore,
  'evidence_map' => $metadata['evidence_map'],
  'rubric' => $metadata['rubric'],
@@ -2663,11 +2657,10 @@ class InterviewController extends Controller
  InterviewSession $session,
  $answers,
  array $metrics,
- int $starScore,
- int $jobEvidenceScore
+ int $starScore
  ): array {
  try {
- return $assessment->sessionMetadata($session, $answers, $metrics, $starScore, $jobEvidenceScore);
+ return $assessment->sessionMetadata($session, $answers, $metrics, $starScore);
  } catch (\Throwable $error) {
  Log::warning('Interview session assessment metadata failed; using fallback.', [
  'session_id' => $session->id,
@@ -2676,7 +2669,7 @@ class InterviewController extends Controller
  'message' => Str::limit($error->getMessage(), 300),
  ]);
 
- return $this->fallbackSessionMetadata($session, $answers, $metrics, $starScore, $jobEvidenceScore);
+ return $this->fallbackSessionMetadata($session, $answers, $metrics, $starScore);
  }
  }
 
@@ -2684,8 +2677,7 @@ class InterviewController extends Controller
  InterviewSession $session,
  $answers,
  array $metrics,
- int $starScore,
- int $jobEvidenceScore
+ int $starScore
  ): array {
  $answers = $answers instanceof Collection? $answers->values(): collect($answers)->values();
  $starApplicable = $answers->contains(
@@ -2713,7 +2705,6 @@ class InterviewController extends Controller
  'readiness_band' => $this->fallbackReadinessBand($overall),
  'scoring_confidence' => $answerConfidences->isNotEmpty()? max(20, min(80, (int) round($answerConfidences->avg()))): 45,
  'delivery_stability' => (int) round($deliveryScores->avg()?? 0),
- 'job_evidence_match' => $jobEvidenceScore,
  'evidence_map' => $answers->mapWithKeys(function ($answer): array {
  if (! $answer instanceof InterviewAnswer) {
  return [];
@@ -4238,9 +4229,6 @@ class InterviewController extends Controller
  if ($answers->contains(fn (InterviewAnswer $answer): bool => QuestionIntentService::starApplicable($answer->question))) {
  $metrics['STAR Method'] = (int) ($score->star_method_score?? 0);
  }
- if ((int) ($score->job_evidence_match_score?? 0) > 0) {
- $metrics['Role Evidence'] = (int) $score->job_evidence_match_score;
- }
 
  asort($metrics);
  $weakest = array_slice($metrics, 0, 3, true);
@@ -4286,7 +4274,6 @@ class InterviewController extends Controller
  'Professional Tone' => 'Replace casual words with clear interview words and show what you did.',
  'Pacing' => 'Record the same answer twice, then compare speed, filler words, pauses, and ending.',
  'STAR Method' => 'Practice a past-example answer and include Situation, Task, Action, and Result.',
- 'Role Evidence' => 'Add a true work or school story that shows one skill needed in the job.',
  default => 'Practice the lowest-score answer and make the next version easier to check.',
  };
  }
@@ -4295,7 +4282,7 @@ class InterviewController extends Controller
  {
  return match ($weakestSkill) {
  'STAR Method', 'Fluency & Clarity', 'Pacing' => ['Behavioral', 'Situational'],
- 'Role Evidence', 'Answer Match' => ['Technical', 'Situational'],
+ 'Answer Match' => ['Technical', 'Situational'],
  'Professional Tone', 'Grammar' => ['Personal', 'Behavioral'],
  default => $this->decodeQuestionTypes($session->question_types)?: ['Behavioral', 'Situational'],
  };
@@ -5336,7 +5323,6 @@ class InterviewController extends Controller
  'Grammar' => 'grammar_score',
  'Professional Tone' => 'professionalism_score',
  'Pacing' => 'delivery_stability_score',
- 'Role Evidence' => 'job_evidence_match_score',
  'Overall' => 'overall_readiness_score',
  ];
 
@@ -5345,7 +5331,7 @@ class InterviewController extends Controller
  $previous = (int) ($previousSession->score->{$column}?? 0);
  $current = (int) ($session->score->{$column}?? 0);
 
- if (in_array($label, ['Pacing', 'Role Evidence'], true) && $previous === 0 && $current === 0) {
+ if ($label === 'Pacing' && $previous === 0 && $current === 0) {
  continue;
  }
 

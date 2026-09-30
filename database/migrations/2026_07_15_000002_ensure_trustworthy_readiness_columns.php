@@ -48,10 +48,6 @@ return new class extends Migration
                 $table->unsignedTinyInteger('delivery_stability_score')->default(0);
             }
 
-            if (! Schema::hasColumn('scores', 'job_evidence_match_score')) {
-                $table->unsignedTinyInteger('job_evidence_match_score')->default(0);
-            }
-
             if (! Schema::hasColumn('scores', 'evidence_map')) {
                 $table->json('evidence_map')->nullable();
             }

@@ -69,16 +69,6 @@ class LearningRecommendationService
  'keywords' => ['star', 'situation', 'task', 'action', 'result', 'behavioral', 'example', 'evidence', 'story'],
  'optional' => true,
  ],
- 'job_evidence' => [
- 'label' => 'Job Evidence Match',
- 'column' => 'job_evidence_match_score',
- 'icon' => 'fa-briefcase',
- 'color' => '#14b8a6',
- 'action' => 'Connect answers to the target role',
- 'reason' => 'your answer evidence should match the job more closely',
- 'keywords' => ['job', 'role', 'evidence', 'resume', 'experience', 'position', 'skills', 'requirements'],
- 'optional' => true,
- ],
  ];
 
  private const FEEDBACK_KEYWORDS = [
@@ -88,7 +78,6 @@ class LearningRecommendationService
  'professionalism' => ['professional', 'tone', 'attitude', 'formal', 'credibility'],
  'confidence' => ['confidence', 'nervous', 'hesitation', 'filler', 'pace', 'voice', 'delivery'],
  'star_method' => ['star', 'situation', 'task', 'action', 'result', 'example', 'impact'],
- 'job_evidence' => ['job', 'role', 'resume', 'experience', 'evidence', 'qualification'],
  ];
 
  public function forUser(int $userId, int $limit = 4,?Collection $modules = null): Collection
@@ -299,7 +288,7 @@ class LearningRecommendationService
  }
 
  if (str_contains($category, 'technical')) {
- return [$this->signal('job_evidence', 20, 'Technical interviews need stronger role-specific evidence.')];
+ return [$this->signal('relevance', 20, 'Technical interviews benefit from tighter answer-to-question alignment.')];
  }
 
  if (str_contains($category, 'communication')) {
