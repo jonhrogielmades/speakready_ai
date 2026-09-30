@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=39') }}" data-page-style="dashboard-v39">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=42') }}" data-page-style="dashboard-v42">
 @endpush
 
 @section('content')
@@ -135,7 +135,7 @@
                     <div class="sr-image-speech" aria-hidden="true" data-sr-dashboard-bubble>
                         <strong>Hi! {{ $welcomeName }}</strong>
                         <span data-sr-dashboard-bubble-line>You're <span class="sr-image-speech-accent">ready</span> to practice and <span class="sr-image-speech-accent is-success">succeed</span> today!</span>
-                        <span class="sr-image-speech-action" data-sr-dashboard-bubble-action>Use the floating coach icon for AI Coach.</span>
+                        <span class="sr-image-speech-action" data-sr-dashboard-bubble-action>Tap the robot for AI Coach.</span>
                     </div>
                     <div class="sr-image-head-icons" aria-hidden="true">
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-microphone"></i></span></span>
@@ -145,7 +145,18 @@
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-graduation-cap"></i></span></span>
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-star"></i></span></span>
                     </div>
-                    <img class="sr-image-robot" src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" draggable="false">
+                    <button
+                        type="button"
+                        class="sr-image-robot sr-image-coach-trigger"
+                        id="dashboardCoachImageTrigger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#dashboardCoachModal"
+                        aria-controls="dashboardCoachModal"
+                        aria-label="Open AI Coach"
+                        title="AI Coach"
+                    >
+                        <img src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" draggable="false">
+                    </button>
                 </div>
             </section>
 
@@ -540,25 +551,6 @@
     </div>
 </div>
 
-<button
-    type="button"
-    class="sr-dashboard-coach-fab"
-    id="dashboardCoachFloatingLauncher"
-    data-dashboard-coach-launcher
-    data-dashboard-coach-draggable
-    data-bs-toggle="modal"
-    data-bs-target="#dashboardCoachModal"
-    aria-controls="dashboardCoachModal"
-    aria-label="Open AI Coach"
-    title="AI Coach"
-    style="position: fixed !important; left: auto !important; right: max(8px, env(safe-area-inset-right, 0px)) !important; top: auto !important; bottom: calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 8px) !important; z-index: 1300 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 62px !important; height: 62px !important; min-width: 62px !important; padding: 0 !important; border: 0 !important; margin: 0 !important; background: transparent !important; box-shadow: none !important; overflow: visible !important; transform: none !important;"
->
-    <span class="sr-dashboard-coach-fab-image" aria-hidden="true" style="display: block !important; width: 60px !important; height: 60px !important; overflow: visible !important; background: transparent !important;">
-        <img src="{{ asset('img/dashboard-coach-floating-robot.png') }}" alt="" draggable="false" style="display: block !important; width: 100% !important; height: 100% !important; object-fit: contain !important; object-position: center !important; pointer-events: none !important;">
-    </span>
-    <span class="visually-hidden">Open AI Coach</span>
-</button>
-
 <div class="modal fade sr-dashboard-coach-modal" id="dashboardCoachModal" tabindex="-1" aria-labelledby="dashboardCoachModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -607,177 +599,6 @@
 @push('scripts')
 <script>
     (function() {
-        function initDashboardCoachLauncherDrag() {
-            const launcher = document.getElementById('dashboardCoachFloatingLauncher');
-            if (!launcher) return;
-            if (launcher.dataset.dragBound === 'true') return;
-
-            launcher.dataset.dragBound = 'true';
-
-            const isMobile = document.body?.classList.contains('user-mobile-shell');
-            const storageKey = 'speakready.dashboardCoachLauncher.' + (isMobile ? 'mobile' : 'desktop');
-            const dragThreshold = 6;
-            const edgePadding = 8;
-            let dragState = null;
-
-            function launcherSize() {
-                const rect = launcher.getBoundingClientRect();
-                return {
-                    width: rect.width || (isMobile ? 62 : 78),
-                    height: rect.height || (isMobile ? 62 : 78),
-                };
-            }
-
-            function clampPosition(x, y) {
-                const size = launcherSize();
-                const maxX = Math.max(edgePadding, window.innerWidth - size.width - edgePadding);
-                const maxY = Math.max(edgePadding, window.innerHeight - size.height - edgePadding);
-
-                return {
-                    x: Math.min(Math.max(edgePadding, x), maxX),
-                    y: Math.min(Math.max(edgePadding, y), maxY),
-                };
-            }
-
-            function applyPosition(x, y, persist = true) {
-                const position = clampPosition(x, y);
-
-                launcher.style.setProperty('position', 'fixed', 'important');
-                launcher.style.setProperty('left', Math.round(position.x) + 'px', 'important');
-                launcher.style.setProperty('top', Math.round(position.y) + 'px', 'important');
-                launcher.style.setProperty('right', 'auto', 'important');
-                launcher.style.setProperty('bottom', 'auto', 'important');
-                launcher.style.setProperty('transform', 'none', 'important');
-                launcher.style.setProperty('z-index', '1300', 'important');
-                launcher.style.setProperty('margin', '0', 'important');
-
-                if (persist) {
-                    try {
-                        localStorage.setItem(storageKey, JSON.stringify(position));
-                    } catch (error) {
-                        console.warn('Could not save dashboard coach launcher position:', error);
-                    }
-                }
-            }
-
-            function applyDefaultPosition() {
-                launcher.style.setProperty('position', 'fixed', 'important');
-                launcher.style.setProperty('left', 'auto', 'important');
-                launcher.style.setProperty('top', 'auto', 'important');
-                launcher.style.setProperty('right', isMobile ? 'max(8px, env(safe-area-inset-right, 0px))' : 'max(22px, env(safe-area-inset-right, 0px))', 'important');
-                launcher.style.setProperty('bottom', isMobile ? 'calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 8px)' : 'max(22px, env(safe-area-inset-bottom, 0px))', 'important');
-                launcher.style.setProperty('transform', 'none', 'important');
-                launcher.style.setProperty('z-index', '1300', 'important');
-                launcher.style.setProperty('margin', '0', 'important');
-            }
-
-            function restorePosition() {
-                if (launcher.parentElement !== document.body) {
-                    document.body.appendChild(launcher);
-                }
-
-                try {
-                    const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
-                    if (Number.isFinite(saved?.x) && Number.isFinite(saved?.y)) {
-                        applyPosition(saved.x, saved.y, false);
-                        return;
-                    }
-                } catch (error) {
-                    console.warn('Could not restore dashboard coach launcher position:', error);
-                }
-
-                applyDefaultPosition();
-            }
-
-            launcher.addEventListener('click', (event) => {
-                if (launcher.dataset.dragSuppressClick !== 'true') return;
-
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                delete launcher.dataset.dragSuppressClick;
-            }, true);
-
-            launcher.addEventListener('pointerdown', (event) => {
-                if (event.button !== undefined && event.button !== 0) return;
-
-                const rect = launcher.getBoundingClientRect();
-                dragState = {
-                    pointerId: event.pointerId,
-                    startX: event.clientX,
-                    startY: event.clientY,
-                    offsetX: event.clientX - rect.left,
-                    offsetY: event.clientY - rect.top,
-                    moved: false,
-                };
-
-                launcher.classList.add('is-dragging');
-
-                try {
-                    launcher.setPointerCapture(event.pointerId);
-                } catch (error) {
-                    console.warn('Could not capture dashboard coach launcher pointer:', error);
-                }
-            });
-
-            launcher.addEventListener('pointermove', (event) => {
-                if (!dragState || dragState.pointerId !== event.pointerId) return;
-
-                const deltaX = event.clientX - dragState.startX;
-                const deltaY = event.clientY - dragState.startY;
-
-                if (!dragState.moved && Math.hypot(deltaX, deltaY) >= dragThreshold) {
-                    dragState.moved = true;
-                }
-
-                if (!dragState.moved) return;
-
-                event.preventDefault();
-                applyPosition(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY, false);
-            });
-
-            function finishDrag(event) {
-                if (!dragState || dragState.pointerId !== event.pointerId) return;
-
-                if (dragState.moved) {
-                    event.preventDefault();
-                    applyPosition(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY, true);
-                    launcher.dataset.dragSuppressClick = 'true';
-                    window.setTimeout(() => {
-                        delete launcher.dataset.dragSuppressClick;
-                    }, 250);
-                }
-
-                launcher.classList.remove('is-dragging');
-
-                try {
-                    launcher.releasePointerCapture(event.pointerId);
-                } catch (error) {
-                    // Pointer capture may already be released by the browser.
-                }
-
-                dragState = null;
-            }
-
-            launcher.addEventListener('pointerup', finishDrag);
-            launcher.addEventListener('pointercancel', finishDrag);
-            window.addEventListener('resize', () => {
-                const left = Number.parseFloat(launcher.style.left);
-                const top = Number.parseFloat(launcher.style.top);
-
-                if (Number.isFinite(left) && Number.isFinite(top)) {
-                    applyPosition(left, top, true);
-                }
-            });
-
-            restorePosition();
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initDashboardCoachLauncherDrag, { once: true });
-        } else {
-            initDashboardCoachLauncherDrag();
-        }
-
         function initDashboardCoachModal() {
             const form = document.getElementById('dashboardCoachForm');
             if (!form || form.dataset.bound === 'true') return;
@@ -1250,7 +1071,6 @@
 
         function initDashboardCoach() {
             initDashboardCoachModal();
-            initDashboardCoachLauncherDrag();
         }
 
         if (document.readyState === 'loading') {
@@ -1643,13 +1463,25 @@ document.addEventListener("DOMContentLoaded", function() {
 @endpush
 
 @push('scripts')
+@php
+    $mobileDashboardBubbleMessages = collect($dashboardBubbleMessages ?? [])
+        ->map(function ($message) {
+            if (is_array($message) && isset($message['action']) && is_string($message['action']) && str_contains($message['action'], 'floating coach icon')) {
+                $message['action'] = 'Tap the robot for AI Coach.';
+            }
+
+            return $message;
+        })
+        ->values()
+        ->all();
+@endphp
 <script>
     (function() {
-        const providerDashboardBubbleMessages = @json($dashboardBubbleMessages ?? []);
+        const providerDashboardBubbleMessages = @json($mobileDashboardBubbleMessages);
         const fallbackDashboardBubbleMessages = [
             {
                 line: 'You\'re ready to practice and succeed today!',
-                action: 'Use the floating coach icon for AI Coach.',
+                action: 'Tap the robot for AI Coach.',
             },
             {
                 line: 'Warm up with one focused mock interview today.',
@@ -1661,7 +1493,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             {
                 line: 'Build confidence before the real interview.',
-                action: 'Use the floating coach icon when you need help.',
+                action: 'Tap the robot for AI Coach.',
             },
         ];
         let dashboardBubbleMessages = (Array.isArray(providerDashboardBubbleMessages) && providerDashboardBubbleMessages.length

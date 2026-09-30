@@ -1812,7 +1812,6 @@ document.addEventListener("DOMContentLoaded", function() {
             launcher.dataset.dragBound = 'true';
 
             const isMobile = document.body?.classList.contains('user-mobile-shell');
-            const storageKey = 'speakready.dashboardCoachLauncher.' + (isMobile ? 'mobile' : 'desktop');
             const dragThreshold = 6;
             const edgePadding = 8;
             let dragState = null;
@@ -1836,7 +1835,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 };
             }
 
-            function applyPosition(x, y, persist = true) {
+            function applyPosition(x, y) {
                 const position = clampPosition(x, y);
 
                 launcher.style.setProperty('position', 'fixed', 'important');
@@ -1847,14 +1846,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 launcher.style.setProperty('transform', 'none', 'important');
                 launcher.style.setProperty('z-index', '1300', 'important');
                 launcher.style.setProperty('margin', '0', 'important');
-
-                if (persist) {
-                    try {
-                        localStorage.setItem(storageKey, JSON.stringify(position));
-                    } catch (error) {
-                        console.warn('Could not save dashboard coach launcher position:', error);
-                    }
-                }
             }
 
             function applyDefaultPosition() {
@@ -1868,19 +1859,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 launcher.style.setProperty('margin', '0', 'important');
             }
 
-            function restorePosition() {
+            function resetLauncherPosition() {
                 if (launcher.parentElement !== document.body) {
                     document.body.appendChild(launcher);
                 }
 
                 try {
-                    const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
-                    if (Number.isFinite(saved?.x) && Number.isFinite(saved?.y)) {
-                        applyPosition(saved.x, saved.y, false);
-                        return;
-                    }
+                    localStorage.removeItem('speakready.dashboardCoachLauncher.mobile');
+                    localStorage.removeItem('speakready.dashboardCoachLauncher.desktop');
                 } catch (error) {
-                    console.warn('Could not restore dashboard coach launcher position:', error);
+                    console.warn('Could not clear dashboard coach launcher position:', error);
                 }
 
                 applyDefaultPosition();
@@ -1937,7 +1925,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 if (dragState.moved) {
                     event.preventDefault();
-                    applyPosition(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY, true);
+                    applyPosition(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY);
                     launcher.dataset.dragSuppressClick = 'true';
                     window.setTimeout(() => {
                         delete launcher.dataset.dragSuppressClick;
@@ -1962,11 +1950,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 const top = Number.parseFloat(launcher.style.top);
 
                 if (Number.isFinite(left) && Number.isFinite(top)) {
-                    applyPosition(left, top, true);
+                    applyPosition(left, top);
                 }
             });
 
-            restorePosition();
+            resetLauncherPosition();
         }
 
         function initDashboardModals() {
