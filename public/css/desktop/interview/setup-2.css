@@ -99,7 +99,7 @@ html.interview-setup-page-root,
 
     html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary .summary-row {
         display: grid !important;
-        grid-template-columns: 34px minmax(120px, 0.8fr) minmax(140px, 1.2fr) !important;
+        grid-template-columns: minmax(120px, 0.8fr) minmax(140px, 1.2fr) !important;
         align-items: center !important;
         column-gap: 8px !important;
         min-height: 42px !important;
@@ -108,11 +108,7 @@ html.interview-setup-page-root,
     }
 
     html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary .summary-icon {
-        width: 30px !important;
-        height: 30px !important;
-        min-width: 30px !important;
-        border-radius: 9px !important;
-        font-size: .78rem !important;
+        display: none !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary .summary-icon i {

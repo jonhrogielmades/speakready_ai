@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=33') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=7') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=8') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')

@@ -660,3 +660,63 @@ html.interview-setup-page-root,
         line-height: 1.3 !important;
     }
 }
+
+/* Final mobile type parity for the first setup fields. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #sec-interview-setup #panel-basic .setup-card-label,
+    body.interview-setup-page #mob-content #sec-interview-setup #panel-basic .setup-card-label,
+    html body #sec-interview-setup #panel-basic .setup-card-label {
+        font-size: 0.72rem !important;
+        line-height: 1.2 !important;
+        font-weight: 900 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup #panel-basic.setup-details-card :is(select.oinp, .setup-target-trigger),
+    body.interview-setup-page #mob-content #sec-interview-setup #panel-basic.setup-details-card :is(select.oinp, .setup-target-trigger),
+    html body #sec-interview-setup #panel-basic.setup-details-card :is(select.oinp, .setup-target-trigger) {
+        min-height: 40px !important;
+        height: 40px !important;
+        padding-top: 9px !important;
+        padding-bottom: 9px !important;
+        font-size: 0.84rem !important;
+        font-weight: 700 !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup #panel-basic .setup-target-trigger-text,
+    body.interview-setup-page #mob-content #sec-interview-setup #panel-basic .setup-target-trigger-text,
+    html body #sec-interview-setup #panel-basic .setup-target-trigger-text {
+        font-size: 0.84rem !important;
+        font-weight: 700 !important;
+        line-height: 1.25 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup #panel-basic #scenarioHelp,
+    body.interview-setup-page #mob-content #sec-interview-setup #panel-basic #scenarioHelp,
+    html body #sec-interview-setup #panel-basic #scenarioHelp {
+        font-size: 0.72rem !important;
+        line-height: 1.3 !important;
+    }
+}
+
+/* Remove mobile Interview Summary row icons and reclaim the space. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #sec-interview-setup #panel-summary .summary-icon,
+    body.interview-setup-page #mob-content #sec-interview-setup #panel-summary .summary-icon,
+    html body #sec-interview-setup #panel-summary .summary-icon {
+        display: none !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup #panel-summary .summary-row,
+    body.interview-setup-page #mob-content #sec-interview-setup #panel-summary .summary-row,
+    html body #sec-interview-setup #panel-summary .summary-row {
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr) !important;
+        gap: 8px !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-interview-setup #panel-summary .summary-val,
+    body.interview-setup-page #mob-content #sec-interview-setup #panel-summary .summary-val,
+    html body #sec-interview-setup #panel-summary .summary-val {
+        grid-column: auto !important;
+    }
+}
