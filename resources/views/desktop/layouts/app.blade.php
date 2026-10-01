@@ -228,12 +228,12 @@
                      <!-- Profile Dropdown -->
                      <div class="db-dropdown profile-dd" id="profileDropdown" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="userPill" style="right:0">
                         <div style="padding:8px 0">
-                           <a href="{{ route('user.account') }}" class="profile-menu-item" style="display:block;text-decoration:none;color:var(--tx2);"><i class="fa-solid fa-user-gear me-2"></i>Account Management</a>
-                           <a href="{{ route('user.notifications') }}" class="profile-menu-item" style="display:block;text-decoration:none;color:var(--tx2);"><i class="fa-solid fa-bell me-2"></i>Notifications</a>
+                           <a href="{{ route('user.account') }}" class="profile-menu-item profile-menu-account {{ request()->routeIs('user.account') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-user-gear me-2"></i>Account Management</a>
+                           <a href="{{ route('user.notifications') }}" class="profile-menu-item profile-menu-notifications {{ request()->routeIs('user.notifications') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-bell me-2"></i>Notifications</a>
                            <form action="{{ route('user.language.update') }}" method="POST" style="padding:10px 16px 8px;">
                               @csrf
-                              <label for="profileLanguageSelect" style="display:flex;align-items:center;gap:8px;color:var(--tx2);font-size:.86rem;font-weight:600;margin-bottom:8px;">
-                                 <i class="fa-solid fa-language" style="width:18px;text-align:center;color:#60a5fa;"></i>
+                              <label for="profileLanguageSelect" class="profile-language-label" style="display:flex;align-items:center;gap:8px;font-size:.86rem;font-weight:600;margin-bottom:8px;">
+                                 <i class="fa-solid fa-language" style="width:18px;text-align:center;"></i>
                                  Language
                               </label>
                               <select id="profileLanguageSelect" name="preferred_language" class="form-select form-select-sm" onchange="this.form.submit()" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;font-size:.82rem;">
@@ -245,7 +245,7 @@
                            </form>
                            <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                               @csrf
-                              <button type="submit" class="profile-menu-item danger" style="width:100%;text-align:left;" title="Log Out"><i class="fa-solid fa-right-from-bracket" style="color:#f87171"></i>Log Out</button>
+                              <button type="submit" class="profile-menu-item profile-menu-logout danger" style="width:100%;text-align:left;" title="Log Out"><i class="fa-solid fa-right-from-bracket"></i>Log Out</button>
                            </form>
                         </div>
                      </div>
