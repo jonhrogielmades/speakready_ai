@@ -1481,6 +1481,8 @@ class UserSideHardeningTest extends TestCase
  foreach ($expectedMarkup as $markup) {
  $desktopResponse->assertSee($markup, false);
  }
+ $desktopResponse->assertSee('class="db-nl db-nav-purple active" title="Interview Practice"', false);
+ $desktopResponse->assertSee('js/user-ui.js?v=22', false);
  foreach ($removedLiveWidgetMarkup as $markup) {
  $desktopResponse->assertDontSee($markup, false);
  }
@@ -1495,10 +1497,12 @@ class UserSideHardeningTest extends TestCase
  ->assertOk();
 
  foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=49']), [
- 'css/mobile/interview/session.css?v=44',
+ 'css/mobile/interview/session.css?v=50',
  ]) as $markup) {
  $mobileResponse->assertSee($markup, false);
  }
+ $mobileResponse->assertSee('class="mob-nav-item mob-nav-primary active"', false);
+ $mobileResponse->assertSee('js/user-ui.js?v=22', false);
  foreach ($removedLiveWidgetMarkup as $markup) {
  $mobileResponse->assertDontSee($markup, false);
  }

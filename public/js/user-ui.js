@@ -1262,6 +1262,12 @@
         return path === '/feedback' || /^\/session\/[^/]+\/review$/.test(path);
     }
 
+    function isInterviewPracticeNavigationPath(pathname) {
+        var path = normalizeUserNavigationPath(pathname);
+
+        return path === '/interview/setup' || path === '/interview/session';
+    }
+
     function isMoreNavigationPath(pathname) {
         var path = normalizeUserNavigationPath(pathname);
         var morePaths = [
@@ -1303,7 +1309,9 @@
                 return;
             }
 
-            var active = isSameOrChildNavigationPath(url.pathname, anchorUrl.pathname);
+            var active = anchorUrl.pathname === '/interview/setup'
+                ? isInterviewPracticeNavigationPath(url.pathname)
+                : isSameOrChildNavigationPath(url.pathname, anchorUrl.pathname);
             anchor.classList.toggle('active', active);
         });
 

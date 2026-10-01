@@ -49,7 +49,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=35') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=36') }}" />
       <style>
           :root,
           .lm {
@@ -129,7 +129,7 @@
 
 
                 <div class="db-nav-section">Practice</div>
-                <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}" title="Interview Practice"><i class="fa-solid fa-microphone-lines"></i><span class="db-nav-label">Interview Practice</span></a>
+                <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup', 'interview.session') ? 'active' : '' }}" title="Interview Practice"><i class="fa-solid fa-microphone-lines"></i><span class="db-nav-label">Interview Practice</span></a>
                <a href="{{ route('user.practice.calendar') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}" title="Practice Activity Calendar"><i class="fa-regular fa-calendar-days"></i><span class="db-nav-label">Activity Calendar</span></a>
 
                <div class="db-nav-section">Interview Prep</div>
@@ -143,6 +143,12 @@
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>
                <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback', 'user.review') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
+            </div>
+            <div class="db-bottom">
+               <a href="mailto:{{ $systemContactEmail ?? 'support@speakready.ai' }}?subject=SpeakReady%20AI%20Support%20Request" class="db-nl db-support-link" title="Help &amp; Support" aria-label="Email support">
+                  <i class="fa-solid fa-life-ring"></i>
+                  <span class="db-nav-label">Help &amp; Support</span>
+               </a>
             </div>
          </div>
          <button class="db-sidebar-backdrop" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()"></button>
@@ -295,7 +301,7 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=8') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=21" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=22" defer></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>
