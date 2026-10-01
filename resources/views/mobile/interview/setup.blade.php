@@ -210,9 +210,8 @@
  </button>
  <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="list" aria-labelledby="targetPositionLabelText" hidden>
  @foreach(['job' => $jobPositionOptionGroups] as $targetKind => $targetGroups)
- @foreach($targetGroups as $groupLabel => $targetChoices)
+ @foreach($targetGroups as $targetChoices)
  <div class="setup-target-choice-group" data-target-dropdown-group-kind="{{ $targetKind }}" {{ $targetFieldMode === $targetKind? '': 'hidden' }}>
- <div class="setup-target-choice-group-title">{{ $groupLabel }}</div>
  <div class="setup-target-choice-list">
  @foreach($targetChoices as $targetChoice)
  <button type="button" class="setup-target-choice" data-target-dropdown-choice-kind="{{ $targetKind }}" data-target-dropdown-choice-value="{{ $targetChoice }}" aria-pressed="{{ $targetFieldMode === $targetKind && strcasecmp($targetPositionDefault, $targetChoice) === 0? 'true': 'false' }}">

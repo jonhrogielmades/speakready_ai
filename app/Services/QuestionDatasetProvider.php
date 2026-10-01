@@ -252,7 +252,7 @@ class QuestionDatasetProvider
  }
 
  return [
- 'Common Philippines Positions' => self::commonPhilippinesTargetPositions($roleCounts),
+ self::commonPhilippinesTargetPositions($roleCounts),
  ];
  }
 
@@ -313,7 +313,7 @@ class QuestionDatasetProvider
  ->all();
 
  return [
- 'Configured Target Positions' => $configuredPositions,
+ $configuredPositions,
  ];
  }
 

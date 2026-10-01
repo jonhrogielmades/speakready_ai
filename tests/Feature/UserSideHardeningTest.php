@@ -638,7 +638,6 @@ class UserSideHardeningTest extends TestCase
  'category_id' => $admissionCategory->id,
  ];
  $expectedPositionGroups = QuestionDatasetProvider::targetPositionOptionGroups();
- $expectedGroupLabel = (string) array_key_first($expectedPositionGroups);
  $expectedPosition = (string) collect($expectedPositionGroups)->flatten()->first();
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
@@ -659,10 +658,10 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('<input type="hidden" class="setup-input setup-target-hidden-input" name="target_position" id="valPosition"', false)
  ->assertSee('id="targetPositionDropdownButton"', false)
  ->assertSee('id="targetPositionDropdownMenu"', false)
- ->assertSee('<div class="setup-target-choice-group-title">'.e($expectedGroupLabel).'</div>', false)
  ->assertSee('Choose a target position')
  ->assertSee('Dataset-trained role-calibrated practice')
  ->assertSee('data-target-dropdown-choice-value="'.e($expectedPosition).'"', false)
+ ->assertDontSee('<div class="setup-target-choice-group-title">', false)
  ->assertDontSee('<div class="setup-target-choice-group-title">College Programs - Version 1</div>', false)
  ->assertDontSee('Choose a target program')
  ->assertDontSee('data-target-dropdown-choice-value="BS Information Technology"', false)
@@ -750,10 +749,10 @@ class UserSideHardeningTest extends TestCase
 
  foreach ([$desktopResponse, $mobileResponse] as $response) {
  $response
- ->assertSee('<div class="setup-target-choice-group-title">Common Philippines Positions</div>', false)
  ->assertSee('data-target-dropdown-choice-value="Call Center Agent"', false)
  ->assertSee('data-target-dropdown-choice-value="Administrative Assistant"', false)
  ->assertSee('Dataset-trained role-calibrated practice')
+ ->assertDontSee('<div class="setup-target-choice-group-title">', false)
  ->assertDontSee('data-target-dropdown-choice-value="Robotics Field Technician"', false)
  ->assertDontSee('<div class="setup-target-choice-group-title">Local Government / Office</div>', false);
  }
@@ -768,7 +767,6 @@ class UserSideHardeningTest extends TestCase
  $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
  $this->category(['title' => 'College Admission', 'sort_order' => 2]);
  $expectedPositionGroups = QuestionDatasetProvider::targetPositionOptionGroups();
- $expectedGroupLabel = (string) array_key_first($expectedPositionGroups);
  $expectedPosition = (string) collect($expectedPositionGroups)->flatten()->first();
  $expectedJobChoiceCount = collect($expectedPositionGroups)
  ->flatMap(fn ($positions) => is_array($positions)? $positions: [$positions])
@@ -791,10 +789,10 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('id="targetPositionDropdownMenu"', false)
  ->assertSee('data-target-dropdown-menu', false)
  ->assertSee('name="target_position"', false)
- ->assertSee('<div class="setup-target-choice-group-title">'.e($expectedGroupLabel).'</div>', false)
  ->assertSee('data-target-dropdown-choice-value="'.e($expectedPosition).'"', false)
  ->assertSee('Dataset-trained role-calibrated practice')
  ->assertSee('Choose a target position')
+ ->assertDontSee('<div class="setup-target-choice-group-title">', false)
  ->assertDontSee('<select class="oinp setup-input" name="target_position" id="valPosition"', false)
  ->assertDontSee('<option value="Administrative Assistant / LGU Staff"', false)
  ->assertDontSee('<optgroup label="Local Government / Office">', false)
