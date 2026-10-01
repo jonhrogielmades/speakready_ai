@@ -397,7 +397,7 @@ class ReliabilityHardeningTest extends TestCase
  'api_endpoint' => 'https://api.openai.com/v1',
  'is_primary' => true,
  ]);
- $generatedOpening = "Good to meet you, I'm Karyl, and I'll guide this Backend Developer interview. To start, could you introduce yourself with your name, where you're currently based, and the background you want me to know first?";
+ $generatedOpening = "Hi, nice to meet you. I will be your AI interviewer for the Backend Developer interview. No need to be perfect; answer naturally. Tell me about yourself.";
 
  Http::fake([
  'api.openai.com/*' => Http::response([
@@ -428,6 +428,7 @@ class ReliabilityHardeningTest extends TestCase
  $openingQuestion = $startQuestions->first();
  $this->assertSame($generatedOpening, $openingQuestion->question_text);
  $this->assertStringNotContainsString('questions', strtolower($openingQuestion->question_text));
+ $this->assertStringNotContainsString('karyl', strtolower($openingQuestion->question_text));
  $this->assertSame('openai', $openingQuestion->ai_provider);
  $this->assertSame('real_interview_opening', $openingQuestion->source_type);
  Http::assertSent(fn ($request) => str_contains($request->url(), 'api.openai.com'));
@@ -657,7 +658,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertJsonPath('success', true);
 
  $nextQuestion = (string) $response->json('next_question_text');
- $this->assertStringContainsString('I am Karyl, nice to meet you.', $nextQuestion);
+ $this->assertStringContainsString('I am your AI interviewer, nice to meet you.', $nextQuestion);
  $this->assertSame(1, substr_count($nextQuestion, '?'));
  $this->assertStringContainsString('Developer', $nextQuestion);
  }

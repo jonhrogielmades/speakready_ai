@@ -667,7 +667,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  $cohere = $this->configuredProvider('Cohere', false);
  $this->rankedEvaluationRun($openAi, $groq, $cohere);
 
- $generatedOpening = "Good to meet you, I'm Karyl, and I'll guide this Developer interview. No need to be perfect; answer naturally. Tell me about yourself.";
+ $generatedOpening = "Hi, nice to meet you. I will be your AI interviewer for the Developer interview. No need to be perfect; answer naturally. Tell me about yourself.";
  Http::fake([
  'api.openai.com/*' => Http::response([
  'choices' => [[
@@ -700,6 +700,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  $this->assertSame('real_interview_opening', $questions->first()->source_type);
  $this->assertSame('Personal', $questions->first()->type);
  $this->assertSame($generatedOpening, $questions->first()->question_text);
+ $this->assertStringNotContainsString('karyl', strtolower($questions->first()->question_text));
  $this->assertSame('openai', $questions->first()->ai_provider);
  Http::assertSent(fn ($request) => str_contains($request->url(), 'api.openai.com'));
  }

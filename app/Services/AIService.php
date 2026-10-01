@@ -640,11 +640,11 @@ class AIService
  $prompt.= "The difficulty is '".($session->difficulty?? 'Medium')."'. ";
  $prompt.= 'Stay in interviewer mode. Sound like a calm, encouraging hiring manager: warm, concise, curious, professionally probing, and never sarcastic or discouraging. ';
  $prompt.= "Every new question or follow-up must stay grounded in the '{$targetPosition}' target position by probing role responsibilities, required skills, deliverables, stakeholders, tools, or role-fit evidence. Avoid generic follow-ups that ignore the target position. ";
- $prompt.= 'Do not reintroduce yourself as '.self::INTERVIEWER_DISPLAY_NAME.' during normal interview questions; the opening already introduced you. ';
+ $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
  $prompt.= 'The next interviewer turn must be based on the candidate answer immediately before it, not on a generic question list. When natural, briefly reference one concrete detail the candidate just mentioned before asking the next question. ';
  $prompt.= 'Use a confidence-building acknowledgement that helps the candidate keep answering, such as thanking them for a specific detail or naming the useful starting point they gave. Keep encouragement specific to effort or shared evidence, not performance scoring. ';
- $prompt.= 'If the candidate asks a brief human question such as your name, role, how you are doing, or what happens next, answer it naturally in one short clause as interviewer '.self::INTERVIEWER_DISPLAY_NAME.", then smoothly continue with one interview question grounded in the candidate's latest answer. ";
+ $prompt.= "If the candidate asks a brief human question such as your name, role, how you are doing, or what happens next, answer it naturally in one short clause as the AI interviewer, then smoothly continue with one interview question grounded in the candidate's latest answer. ";
  $prompt.= self::languageOutputInstruction($targetLanguage, 'the spoken interviewer reply');
  $prompt.= self::assistanceLevelInstruction($session->ai_assistance_level?? 'standard');
  $prompt.= self::liveFeedbackModeInstruction($liveFeedbackMode);
@@ -877,7 +877,8 @@ class AIService
  $liveFeedbackMode = self::normalizedLiveFeedbackMode($session->live_feedback_mode?? 'coaching');
  $prompt = "Create ONE spoken opening introduction for a realistic mock interview. ";
  $prompt.= 'Combine the interviewer greeting and the candidate "Tell me about yourself" prompt into one natural turn. ';
- $prompt.= 'The interviewer is named '.self::INTERVIEWER_DISPLAY_NAME.". The target position is '{$targetPosition}'. The difficulty is '{$difficulty}', and the interview focus is '{$focus}'. ";
+ $prompt.= "Start with this wording: \"Hi, nice to meet you. I will be your AI interviewer for the {$targetPosition} interview.\" ";
+ $prompt.= "Do not introduce yourself by a personal name. The target position is '{$targetPosition}'. The difficulty is '{$difficulty}', and the interview focus is '{$focus}'. ";
  $prompt.= "Use the exact phrase \"Tell me about yourself\" as the only question or request in the opening, without asking separately for name, location, or background details. ";
  $prompt.= 'Do not mention how many questions there will be. Do not say "first question", "question count", or any number of questions. ';
  $prompt.= 'Use a warm, welcoming, confidence-building tone. Do not evaluate, coach, explain the rubric, or mention feedback timing unless it is necessary in a short natural phrase. ';
@@ -904,7 +905,7 @@ class AIService
  $prompt.= "Target job description summary: '".self::truncateText(trim(preg_replace('/\s+/', ' ', $session->job_description)?? ''), 140)."'. ";
  }
 
- $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Write only the spoken opening turn. It must greet the candidate warmly and use the exact phrase "Tell me about yourself" as the self-introduction prompt. Never mention the number of interview questions. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $systemPrompt = 'You are a realistic AI hiring interviewer. Write only the spoken opening turn. Do not introduce yourself by a personal name. It must greet the candidate warmly and use the exact phrase "Tell me about yourself" as the self-introduction prompt. Never mention the number of interview questions. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
  $providers = self::providerPriorityList($provider);
  $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_INTERVIEW_OPENING_MAX_PROVIDERS', 2)));
  $providers = array_slice($providers, 0, $maxProviders);
@@ -1184,7 +1185,7 @@ class AIService
  || str_contains($lower, 'who are you')
  || preg_match('/\b(?:what(?:\'s| is)|may i know|can i ask|who are you|tell me)\b.*\b(?:your name|you called|who you are)\b/i', $clean)
  || preg_match('/\b(?:your name|name of (?:the )?interviewer)\b/i', $clean)) {
- return 'I am '.self::INTERVIEWER_DISPLAY_NAME.', nice to meet you. ';
+ return 'I am your AI interviewer, nice to meet you. ';
  }
 
  if (preg_match('/\b(?:how are you|how do you do)\b/i', $clean)) {
@@ -1202,7 +1203,7 @@ class AIService
  {
  $targetPosition = trim((string) ($session->target_position?? ''))?: 'this role';
 
- return 'I am '.self::INTERVIEWER_DISPLAY_NAME.", and I will be your interviewer for the {$targetPosition} interview. No need to be perfect; answer naturally. Tell me about yourself.";
+ return "Hi, nice to meet you. I will be your AI interviewer for the {$targetPosition} interview. No need to be perfect; answer naturally. Tell me about yourself.";
  }
 
  private static function sanitizeInterviewOpeningIntro(string $reply): string
@@ -1213,6 +1214,10 @@ class AIService
  }
 
  if (preg_match('/\b(?:first\s+question|question\s+count|how\s+many\s+questions|(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|several|few)\s+questions?)\b/i', $reply)) {
+ return '';
+ }
+
+ if (preg_match('/\b(?:I\s+am|I\'m|I’m|my\s+name\s+is)\s+'.preg_quote(self::INTERVIEWER_DISPLAY_NAME, '/').'\b/i', $reply)) {
  return '';
  }
 
