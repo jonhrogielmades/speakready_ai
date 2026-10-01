@@ -12323,6 +12323,25 @@ body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-language-lab
   font-weight: 800 !important;
 }
 
+body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-language-form {
+  padding: 2px 8px 8px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-language-label {
+  min-height: 40px !important;
+  margin: 2px 0 8px !important;
+  padding: 10px 16px !important;
+  gap: 10px !important;
+  line-height: 1.15 !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-language-select,
+body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-language-help {
+  width: calc(100% - 16px) !important;
+  margin-left: 8px !important;
+  margin-right: 8px !important;
+}
+
 body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-menu-item i,
 body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-language-label i {
   width: 28px !important;
@@ -12337,6 +12356,7 @@ body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-language-lab
   color: var(--profile-menu-accent, var(--tx2)) !important;
   box-shadow: 0 8px 18px color-mix(in srgb, var(--profile-menu-accent, #60a5fa) 14%, transparent) !important;
   font-size: 0.78rem !important;
+  margin-right: 0 !important;
 }
 
 html:not(.lm) body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-menu-item i,

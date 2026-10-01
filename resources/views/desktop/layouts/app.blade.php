@@ -230,18 +230,18 @@
                         <div style="padding:8px 0">
                            <a href="{{ route('user.account') }}" class="profile-menu-item profile-menu-account {{ request()->routeIs('user.account') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-user-gear me-2"></i>Account Management</a>
                            <a href="{{ route('user.notifications') }}" class="profile-menu-item profile-menu-notifications {{ request()->routeIs('user.notifications') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-bell me-2"></i>Notifications</a>
-                           <form action="{{ route('user.language.update') }}" method="POST" style="padding:10px 16px 8px;">
+                           <form action="{{ route('user.language.update') }}" method="POST" class="profile-language-form" style="padding:10px 16px 8px;">
                               @csrf
                               <label for="profileLanguageSelect" class="profile-language-label" style="display:flex;align-items:center;gap:8px;font-size:.86rem;font-weight:600;margin-bottom:8px;">
                                  <i class="fa-solid fa-language" style="width:18px;text-align:center;"></i>
                                  Language
                               </label>
-                              <select id="profileLanguageSelect" name="preferred_language" class="form-select form-select-sm" onchange="this.form.submit()" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;font-size:.82rem;">
+                              <select id="profileLanguageSelect" name="preferred_language" class="form-select form-select-sm profile-language-select" onchange="this.form.submit()" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;font-size:.82rem;">
                                  @foreach($supportedLanguages as $languageCode => $language)
                                     <option value="{{ $languageCode }}" {{ ($currentLanguageCode ?? 'en') === $languageCode ? 'selected' : '' }}>{{ $language['native_label'] ?? $language['label'] }}</option>
                                  @endforeach
                               </select>
-                              <small style="display:block;color:var(--tx3);font-size:.68rem;margin-top:6px;line-height:1.35;">AI translates the app and interview experience.</small>
+                              <small class="profile-language-help" style="display:block;color:var(--tx3);font-size:.68rem;margin-top:6px;line-height:1.35;">AI translates the app and interview experience.</small>
                            </form>
                            <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                               @csrf
