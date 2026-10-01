@@ -12324,12 +12324,13 @@ body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-language-lab
 }
 
 body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-language-form {
-  padding: 2px 8px 8px !important;
+  padding: 2px 0 8px !important;
 }
 
 body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-language-label {
+  width: calc(100% - 16px) !important;
   min-height: 40px !important;
-  margin: 2px 0 8px !important;
+  margin: 2px 8px 8px !important;
   padding: 10px 16px !important;
   gap: 10px !important;
   line-height: 1.15 !important;
