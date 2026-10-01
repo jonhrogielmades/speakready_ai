@@ -144,12 +144,6 @@
                <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback', 'user.review') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
             </div>
-            <div class="db-bottom">
-               <a href="mailto:{{ $systemContactEmail ?? 'support@speakready.ai' }}?subject=SpeakReady%20AI%20Support%20Request" class="db-nl db-support-link" title="Help &amp; Support" aria-label="Email support">
-                  <i class="fa-solid fa-life-ring"></i>
-                  <span class="db-nav-label">Help &amp; Support</span>
-               </a>
-            </div>
          </div>
          <button class="db-sidebar-backdrop" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()"></button>
          <!-- Main Content Area -->
