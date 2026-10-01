@@ -16,12 +16,7 @@
  ->values()
  ->all())
  ->filter(fn (array $positions) => $positions!== []);
- $jobPositionOptions = collect($targetScopes['job_positions']?? [])
- ->flatMap(fn ($positions) => is_array($positions)? $positions: [$positions])
- ->map(fn ($position) => trim((string) $position))
- ->filter()
- ->unique(fn (string $position) => strtolower($position))
- ->values();
+ $targetPositionExamples = \App\Services\QuestionDatasetProvider::targetPositionExamples(3, $jobPositionOptionGroups->all());
  $interviewCategories = ($categories?? collect())
  ->filter(fn ($category): bool => \App\Support\InterviewScope::isSupportedCoreCategory($category))
  ->values();
@@ -63,7 +58,7 @@
  'summary_label' => 'Position:',
  'placeholder' => 'Choose a target position',
  'required_message' => 'Enter the target position before continuing.',
- 'calibration_title' => 'Southern Leyte role-calibrated practice',
+ 'calibration_title' => 'Dataset-trained role-calibrated practice',
  ],
  ];
  $targetFieldCopy = $targetFieldCopies[$targetFieldMode];
@@ -558,7 +553,7 @@
  const setupScenarioMismatchMessages = {
  job: {
  title: 'Use a job target',
- message: 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative.',
+ message: @json('Job Interview accepts job-related target positions only. Enter a dataset-trained job role like '.$targetPositionExamples.'.'),
  },
  };
  const setupVagueTargetRecommendations = [
@@ -578,7 +573,7 @@
  placeholder: 'Choose a target position',
  requiredTitle: 'Target position required',
  requiredMessage: 'Enter the target position before continuing.',
- calibrationTitle: 'Southern Leyte role-calibrated practice',
+ calibrationTitle: 'Dataset-trained role-calibrated practice',
  },
  };
  const setupTargetChoiceGroups = @json([

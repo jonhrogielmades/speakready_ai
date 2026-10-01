@@ -16,6 +16,7 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
+use App\Services\QuestionDatasetProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
@@ -437,6 +438,7 @@ class UserSideHardeningTest extends TestCase
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Job Interview']);
+ $invalidTargetMessage = 'Job Interview accepts job-related target positions only. Enter a dataset-trained job role like '.QuestionDatasetProvider::targetPositionExamples().'.';
 
  $this->actingAs($user)
  ->from(route('interview.setup'))
@@ -445,7 +447,7 @@ class UserSideHardeningTest extends TestCase
  ]))
  ->assertRedirect(route('interview.setup'))
  ->assertSessionHasErrors([
- 'target_position' => 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative.',
+ 'target_position' => $invalidTargetMessage,
  ]);
 
  $this->assertDatabaseCount('interview_sessions', 0);
@@ -455,6 +457,7 @@ class UserSideHardeningTest extends TestCase
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Job Interview']);
+ $invalidTargetMessage = 'Job Interview accepts job-related target positions only. Enter a dataset-trained job role like '.QuestionDatasetProvider::targetPositionExamples().'.';
 
  $this->actingAs($user)
  ->from(route('interview.setup'))
@@ -463,7 +466,7 @@ class UserSideHardeningTest extends TestCase
  ]))
  ->assertRedirect(route('interview.setup'))
  ->assertSessionHasErrors([
- 'target_position' => 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative.',
+ 'target_position' => $invalidTargetMessage,
  ]);
 
  $this->assertDatabaseCount('interview_sessions', 0);
@@ -634,6 +637,9 @@ class UserSideHardeningTest extends TestCase
  $oldInput = [
  'category_id' => $admissionCategory->id,
  ];
+ $expectedPositionGroups = QuestionDatasetProvider::targetPositionOptionGroups();
+ $expectedGroupLabel = (string) array_key_first($expectedPositionGroups);
+ $expectedPosition = (string) collect($expectedPositionGroups)->flatten()->first();
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
  $desktopResponse = $this->actingAs($user)
@@ -653,10 +659,10 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('<input type="hidden" class="setup-input setup-target-hidden-input" name="target_position" id="valPosition"', false)
  ->assertSee('id="targetPositionDropdownButton"', false)
  ->assertSee('id="targetPositionDropdownMenu"', false)
- ->assertSee('<div class="setup-target-choice-group-title">Local Government / Office</div>', false)
+ ->assertSee('<div class="setup-target-choice-group-title">'.e($expectedGroupLabel).'</div>', false)
  ->assertSee('Choose a target position')
- ->assertSee('data-target-dropdown-choice-value="Administrative Assistant / LGU Staff"', false)
- ->assertSee('data-target-dropdown-choice-value="Software Developer"', false)
+ ->assertSee('Dataset-trained role-calibrated practice')
+ ->assertSee('data-target-dropdown-choice-value="'.e($expectedPosition).'"', false)
  ->assertDontSee('<div class="setup-target-choice-group-title">College Programs - Version 1</div>', false)
  ->assertDontSee('Choose a target program')
  ->assertDontSee('data-target-dropdown-choice-value="BS Information Technology"', false)
@@ -690,11 +696,69 @@ class UserSideHardeningTest extends TestCase
  foreach ([$desktopResponse, $mobileResponse] as $response) {
  $response
  ->assertSee('Use a job target')
- ->assertSee('Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative.')
+ ->assertSee('Job Interview accepts job-related target positions only. Enter a dataset-trained job role like')
  ->assertSee('Use a specific job target')
  ->assertSee('Clean is too broad for a target position. Recommendation: use a specific job target such as Cleaner, Janitor, Housekeeping Attendant, or Janitorial Services, then proceed with Job Interview.')
  ->assertDontSee('Proceed with School Admission')
  ->assertDontSee('Recommendation: proceed with School Admission Interviews.');
+ }
+ }
+
+ public function test_interview_setup_target_positions_come_from_trained_question_dataset(): void
+ {
+ $this->resetQuestionDatasetProviderCache();
+ Storage::fake('datasets');
+ Storage::disk('datasets')->put('manifests/speakready_reliable_questions_2026-09-08.json', json_encode([
+ 'dataset' => 'speakready_reliable_questions',
+ 'version' => '2026-09-08',
+ 'normalized_files' => [[
+ 'path' => 'normalized/questions/phpunit/setup_roles.jsonl',
+ 'format' => 'jsonl',
+ ]],
+ ], JSON_UNESCAPED_SLASHES));
+ Storage::disk('datasets')->put('normalized/questions/phpunit/setup_roles.jsonl', implode("\n", [
+ json_encode([
+ 'id' => 'setup-role-1',
+ 'dataset_key' => 'ph_job_interview',
+ 'question_text' => 'Tell me about a field repair you completed safely.',
+ 'type' => 'Behavioral',
+ 'difficulty' => 'Medium',
+ 'archive_roles' => ['Call center agent'],
+ ], JSON_UNESCAPED_SLASHES),
+ json_encode([
+ 'id' => 'setup-role-2',
+ 'dataset_key' => 'ph_job_interview',
+ 'question_text' => 'How would you organize office requests when several people need help at once?',
+ 'type' => 'Situational',
+ 'difficulty' => 'Medium',
+ 'archive_roles' => ['Administrative Assistant'],
+ ], JSON_UNESCAPED_SLASHES),
+ ])."\n");
+
+ try {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
+ $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+ $desktopResponse = $this->actingAs($user)
+ ->get(route('interview.setup'))
+ ->assertOk();
+ $mobileResponse = $this->actingAs($user)
+ ->withHeader('User-Agent', $mobileUserAgent)
+ ->get(route('interview.setup'))
+ ->assertOk();
+
+ foreach ([$desktopResponse, $mobileResponse] as $response) {
+ $response
+ ->assertSee('<div class="setup-target-choice-group-title">Common Philippines Positions</div>', false)
+ ->assertSee('data-target-dropdown-choice-value="Call Center Agent"', false)
+ ->assertSee('data-target-dropdown-choice-value="Administrative Assistant"', false)
+ ->assertSee('Dataset-trained role-calibrated practice')
+ ->assertDontSee('data-target-dropdown-choice-value="Robotics Field Technician"', false)
+ ->assertDontSee('<div class="setup-target-choice-group-title">Local Government / Office</div>', false);
+ }
+ } finally {
+ $this->resetQuestionDatasetProviderCache();
  }
  }
 
@@ -703,6 +767,13 @@ class UserSideHardeningTest extends TestCase
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
  $this->category(['title' => 'College Admission', 'sort_order' => 2]);
+ $expectedPositionGroups = QuestionDatasetProvider::targetPositionOptionGroups();
+ $expectedGroupLabel = (string) array_key_first($expectedPositionGroups);
+ $expectedPosition = (string) collect($expectedPositionGroups)->flatten()->first();
+ $expectedJobChoiceCount = collect($expectedPositionGroups)
+ ->flatMap(fn ($positions) => is_array($positions)? $positions: [$positions])
+ ->filter()
+ ->count();
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
  $desktopResponse = $this->actingAs($user)
@@ -720,11 +791,9 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('id="targetPositionDropdownMenu"', false)
  ->assertSee('data-target-dropdown-menu', false)
  ->assertSee('name="target_position"', false)
- ->assertSee('<div class="setup-target-choice-group-title">Local Government / Office</div>', false)
- ->assertSee('data-target-dropdown-choice-value="Administrative Assistant / LGU Staff"', false)
- ->assertSee('data-target-dropdown-choice-value="Agricultural Technician"', false)
- ->assertSee('data-target-dropdown-choice-value="Fisheries Technician"', false)
- ->assertSee('data-target-dropdown-choice-value="Sales Representative"', false)
+ ->assertSee('<div class="setup-target-choice-group-title">'.e($expectedGroupLabel).'</div>', false)
+ ->assertSee('data-target-dropdown-choice-value="'.e($expectedPosition).'"', false)
+ ->assertSee('Dataset-trained role-calibrated practice')
  ->assertSee('Choose a target position')
  ->assertDontSee('<select class="oinp setup-input" name="target_position" id="valPosition"', false)
  ->assertDontSee('<option value="Administrative Assistant / LGU Staff"', false)
@@ -755,13 +824,13 @@ class UserSideHardeningTest extends TestCase
  ->assertDontSee('setupTargetSuggestionAcronym', false);
 
  $content = $response->getContent();
- $this->assertSame(12, substr_count($content, 'data-target-dropdown-choice-kind="job"'));
+ $this->assertSame($expectedJobChoiceCount, substr_count($content, 'data-target-dropdown-choice-kind="job"'));
  $this->assertSame(0, substr_count($content, 'data-target-dropdown-choice-kind="school"'));
  }
 
  $mobileResponse
- ->assertSee('css/mobile/interview/setup.css?v=18', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=3', false)
+ ->assertSee('css/mobile/interview/setup.css?v=19', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=8', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)
@@ -2729,6 +2798,17 @@ class UserSideHardeningTest extends TestCase
  }
  } finally {
  Schema::enableForeignKeyConstraints();
+ }
+ }
+
+ private function resetQuestionDatasetProviderCache(): void
+ {
+ $reflection = new \ReflectionClass(QuestionDatasetProvider::class);
+
+ foreach (['storageQuestionBank', 'datasetCache'] as $propertyName) {
+ $property = $reflection->getProperty($propertyName);
+ $property->setAccessible(true);
+ $property->setValue(null, null);
  }
  }
 

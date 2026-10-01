@@ -3743,7 +3743,7 @@ class InterviewController extends Controller
  $targetKind = $this->targetScenarioKind($position);
 
  if ($scenarioKind === 'job' && $targetKind!== 'job') {
- return 'Job Interview accepts job-related target positions only. Enter a Southern Leyte job role like Administrative Assistant / LGU Staff, Teacher / Instructor, or Customer Service Representative.';
+ return 'Job Interview accepts job-related target positions only. Enter a dataset-trained job role like '.QuestionDatasetProvider::targetPositionExamples().'.';
  }
 
  return null;

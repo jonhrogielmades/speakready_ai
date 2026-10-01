@@ -17,6 +17,29 @@ class QuestionDatasetProvider
  'ph_bpo_communication' => 'ph_bpo_communication',
  ];
 
+ private const PH_COMMON_TARGET_POSITIONS = [
+ ['label' => 'Customer Service Representative', 'aliases' => ['customer service representative']],
+ ['label' => 'Call Center Agent', 'aliases' => ['call center agent']],
+ ['label' => 'Customer Service Agent', 'aliases' => ['customer service agent']],
+ ['label' => 'Administrative Assistant', 'aliases' => ['administrative assistant']],
+ ['label' => 'Executive Assistant', 'aliases' => ['executive assistant']],
+ ['label' => 'Receptionist', 'aliases' => ['receptionist']],
+ ['label' => 'Office Manager', 'aliases' => ['office manager']],
+ ['label' => 'Sales Manager', 'aliases' => ['sales manager']],
+ ['label' => 'Marketing Associate', 'aliases' => ['marketing associate']],
+ ['label' => 'Digital Marketing Analyst', 'aliases' => ['digital marketing analyst']],
+ ['label' => 'Nurse', 'aliases' => ['nurse']],
+ ['label' => 'Medical Assistant', 'aliases' => ['medical assistant']],
+ ['label' => 'Home Health Aide', 'aliases' => ['home health aide']],
+ ['label' => 'Software Engineer', 'aliases' => ['software engineer']],
+ ['label' => 'Web Developer', 'aliases' => ['web developer']],
+ ['label' => 'Technical Support Engineer', 'aliases' => ['technical support engineer']],
+ ['label' => 'Data Analyst', 'aliases' => ['data analyst']],
+ ['label' => 'Business Analyst', 'aliases' => ['business analyst']],
+ ['label' => 'QA Analyst', 'aliases' => ['qa analyst', 'quality assurance']],
+ ['label' => 'Operations Manager', 'aliases' => ['operations manager']],
+ ];
+
  private static?array $storageQuestionBank = null;
  private static?array $datasetCache = null;
 
@@ -185,6 +208,188 @@ class QuestionDatasetProvider
  return $datasets;
  }
 
+ public static function targetPositionOptionGroups(?array $datasets = null): array
+ {
+ $datasets??= self::all();
+ $roleCounts = [];
+
+ foreach ($datasets as $dataset) {
+ foreach (($dataset['questions']?? []) as $question) {
+ if (! is_array($question)) {
+ continue;
+ }
+
+ foreach (self::questionTargetRoles($question) as $role) {
+ $key = self::targetRoleDedupeKey($role);
+ if ($key === '') {
+ continue;
+ }
+
+ $roleCounts[$key]??= [
+ 'label' => $role,
+ 'count' => 0,
+ ];
+ $roleCounts[$key]['count']++;
+ }
+ }
+ }
+
+ uasort($roleCounts, function (array $left, array $right): int {
+ if ($left['count'] === $right['count']) {
+ return strcasecmp($left['label'], $right['label']);
+ }
+
+ return $right['count'] <=> $left['count'];
+ });
+
+ $positions = collect($roleCounts)
+ ->pluck('label')
+ ->values()
+ ->all();
+
+ if ($positions === []) {
+ return self::fallbackTargetPositionOptionGroups();
+ }
+
+ return [
+ 'Common Philippines Positions' => self::commonPhilippinesTargetPositions($roleCounts),
+ ];
+ }
+
+ public static function targetPositionExamples(int $limit = 3,?array $groups = null): string
+ {
+ $positions = collect($groups?? self::targetPositionOptionGroups())
+ ->flatMap(fn ($positions) => is_array($positions)? $positions: [$positions])
+ ->map(fn ($position): string => self::cleanTargetRoleOption($position))
+ ->filter()
+ ->unique(fn (string $position): string => self::targetRoleDedupeKey($position))
+ ->take(max(1, $limit))
+ ->values()
+ ->all();
+
+ if ($positions === []) {
+ return 'HR Specialist, Software Engineer, or Data Scientist';
+ }
+
+ if (count($positions) === 1) {
+ return $positions[0];
+ }
+
+ $last = array_pop($positions);
+
+ return implode(', ', $positions).', or '.$last;
+ }
+
+ private static function commonPhilippinesTargetPositions(array $roleCounts): array
+ {
+ $selected = [];
+ $used = [];
+
+ foreach (self::PH_COMMON_TARGET_POSITIONS as $position) {
+ foreach ($position['aliases'] as $alias) {
+ $key = self::targetRoleDedupeKey($alias);
+ if ($key === '' || ! isset($roleCounts[$key]) || isset($used[$key])) {
+ continue;
+ }
+
+ $selected[] = $position['label'];
+ $used[$key] = true;
+ break;
+ }
+ }
+
+ return array_slice($selected, 0, count(self::PH_COMMON_TARGET_POSITIONS));
+ }
+
+ private static function fallbackTargetPositionOptionGroups(): array
+ {
+ $configuredPositions = collect(config('speakready_scope.job_positions', []))
+ ->flatMap(fn ($positions) => is_array($positions)? $positions: [$positions])
+ ->map(fn ($position): string => self::cleanTargetRoleOption($position))
+ ->filter()
+ ->unique(fn (string $position): string => self::targetRoleDedupeKey($position))
+ ->take(count(self::PH_COMMON_TARGET_POSITIONS))
+ ->values()
+ ->all();
+
+ return [
+ 'Configured Target Positions' => $configuredPositions,
+ ];
+ }
+
+ private static function questionTargetRoles(array $question): array
+ {
+ $roles = [];
+
+ foreach (['archive_roles', 'target_roles', 'roles'] as $key) {
+ foreach (self::targetRoleValues($question[$key]?? []) as $role) {
+ $roles[] = $role;
+ }
+ }
+
+ foreach (['role', 'target_role', 'position', 'target_position'] as $key) {
+ foreach (self::targetRoleValues($question[$key]?? null) as $role) {
+ $roles[] = $role;
+ }
+ }
+
+ return collect($roles)
+ ->map(fn ($role): string => self::cleanTargetRoleOption($role))
+ ->filter(fn (string $role): bool => self::isUsableTargetRole($role))
+ ->unique(fn (string $role): string => self::targetRoleDedupeKey($role))
+ ->values()
+ ->all();
+ }
+
+ private static function targetRoleValues(mixed $value): array
+ {
+ if (is_string($value)) {
+ return preg_split('/\s*[;,]\s*/u', $value)?: [];
+ }
+
+ if (is_array($value)) {
+ return $value;
+ }
+
+ return [];
+ }
+
+ private static function cleanTargetRoleOption(mixed $role): string
+ {
+ $role = trim((string) $role);
+ $role = preg_replace('/\s+/u', ' ', $role)?? $role;
+
+ return trim($role);
+ }
+
+ private static function isUsableTargetRole(string $role): bool
+ {
+ if ($role === '' || mb_strlen($role) > 100 || ! preg_match('/[A-Za-z]/', $role)) {
+ return false;
+ }
+
+ $normalized = self::targetRoleDedupeKey($role);
+ if ($normalized === '') {
+ return false;
+ }
+
+ $genericRoles = [
+ 'career readiness',
+ 'general',
+ 'interview',
+ 'job interview',
+ 'job interview candidate',
+ 'role knowledge',
+ ];
+
+ return ! in_array($normalized, $genericRoles, true);
+ }
+
+ private static function targetRoleDedupeKey(mixed $role): string
+ {
+ return trim((string) preg_replace('/[^a-z0-9]+/u', ' ', mb_strtolower((string) $role)));
+ }
+
  private static function mergeStorageQuestionBank(array $datasets): array
  {
  $bank = self::storageQuestionBank();
@@ -278,6 +483,12 @@ class QuestionDatasetProvider
  'source_keys' => $sourceKeys,
  'dataset_record_id' => $question['id']?? null,
  'provenance' => $question['provenance']?? 'adapted_practice_prompt',
+ 'archive_category' => $question['archive_category']?? null,
+ 'archive_roles' => array_values(array_filter(array_map(
+ fn ($role): string => self::cleanTargetRoleOption($role),
+ self::targetRoleValues($question['archive_roles']?? [])
+ ))),
+ 'archive_experience_levels' => array_values(array_filter((array) ($question['archive_experience_levels']?? []))),
  ];
  }
 

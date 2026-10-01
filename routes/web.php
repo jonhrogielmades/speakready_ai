@@ -129,6 +129,7 @@ Route::middleware(['auth', 'user'])->group(function () {
             : collect();
         $sourceDatasets = QuestionDatasetProvider::all();
         $targetScopes = config('speakready_scope');
+        $targetScopes['job_positions'] = QuestionDatasetProvider::targetPositionOptionGroups($sourceDatasets);
 
         return mobile_view('interview.setup', compact('categories', 'sourceDatasets', 'targetScopes'));
     })->name('interview.setup');

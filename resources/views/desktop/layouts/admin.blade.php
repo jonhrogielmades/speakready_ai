@@ -181,12 +181,6 @@
                
                <a href="{{ route('admin.settings.index') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" title="System Settings"><i class="fa-solid fa-gear"></i><span class="db-nav-label">System Settings</span></a>
             </div>
-            <div class="db-bottom">
-                <form action="{{ route('logout') }}" method="POST" class="db-logout-form">
-                   @csrf
-                   <button type="submit" class="db-nl db-nav-danger" title="Log Out"><i class="fa-solid fa-right-from-bracket"></i><span class="db-nav-label">Log Out</span></button>
-                </form>
-            </div>
          </div>
          <button class="db-sidebar-backdrop" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()"></button>
          <!-- Main Content Area -->

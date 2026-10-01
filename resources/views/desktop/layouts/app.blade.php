@@ -144,20 +144,6 @@
                <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback', 'user.review') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
             </div>
-            <div class="db-bottom">
-               <a href="{{ route('interview.setup') }}" class="db-upgrade-card" title="Start job interview practice">
-                  <span class="db-upgrade-icon"><i class="fa-solid fa-briefcase"></i></span>
-                  <span class="db-upgrade-copy">
-                     <strong>Job Interview Focus</strong>
-                     <small>Practice HR, role-fit, behavioral, and resume-based questions.</small>
-                  </span>
-                  <span class="db-upgrade-action">Start Practice <i class="fa-solid fa-arrow-right"></i></span>
-               </a>
-               <form action="{{ route('logout') }}" method="POST" class="db-logout-form">
-                  @csrf
-                  <button type="submit" class="db-nl db-nav-danger" title="Log Out"><i class="fa-solid fa-right-from-bracket"></i><span class="db-nav-label">Log Out</span></button>
-               </form>
-            </div>
          </div>
          <button class="db-sidebar-backdrop" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()"></button>
          <!-- Main Content Area -->
@@ -256,6 +242,10 @@
                                  @endforeach
                               </select>
                               <small style="display:block;color:var(--tx3);font-size:.68rem;margin-top:6px;line-height:1.35;">AI translates the app and interview experience.</small>
+                           </form>
+                           <form action="{{ route('logout') }}" method="POST" style="display:inline;">
+                              @csrf
+                              <button type="submit" class="profile-menu-item danger" style="width:100%;text-align:left;" title="Log Out"><i class="fa-solid fa-right-from-bracket" style="color:#f87171"></i>Log Out</button>
                            </form>
                         </div>
                      </div>
