@@ -7,42 +7,102 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: dokploy-deploy-main
+  group: dokploy-deploy-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       DOKPLOY_WEBHOOK_URL: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
       DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
       DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
       DOKPLOY_COMPOSE_ID: ${{ secrets.DOKPLOY_COMPOSE_ID }}
     steps:
-      - name: Trigger Dokploy
+      - name: Validate Dokploy trigger
         shell: bash
         run: |
           set -euo pipefail
 
           if [ -n "${DOKPLOY_WEBHOOK_URL}" ]; then
-            curl --fail --show-error --silent --request POST "${DOKPLOY_WEBHOOK_URL}"
-            echo "Triggered Dokploy through DOKPLOY_WEBHOOK_URL."
+            echo "DOKPLOY_TRIGGER_MODE=webhook" >> "${GITHUB_ENV}"
+            echo "Dokploy webhook trigger is configured."
             exit 0
           fi
 
-          if [ -n "${DOKPLOY_URL}" ] && [ -n "${DOKPLOY_API_KEY}" ] && [ -n "${DOKPLOY_COMPOSE_ID}" ]; then
+          missing=()
+
+          [ -n "${DOKPLOY_URL}" ] || missing+=("DOKPLOY_URL")
+          [ -n "${DOKPLOY_API_KEY}" ] || missing+=("DOKPLOY_API_KEY")
+          [ -n "${DOKPLOY_COMPOSE_ID}" ] || missing+=("DOKPLOY_COMPOSE_ID")
+
+          if [ "${#missing[@]}" -eq 0 ]; then
+            echo "DOKPLOY_TRIGGER_MODE=api" >> "${GITHUB_ENV}"
+            echo "Dokploy API trigger is configured."
+            exit 0
+          fi
+
+          {
+            echo "::error title=Dokploy deploy is not configured::Add DOKPLOY_WEBHOOK_URL, or add DOKPLOY_URL, DOKPLOY_API_KEY, and DOKPLOY_COMPOSE_ID as GitHub Actions repository secrets."
+            echo "Missing secrets: ${missing[*]}"
+            echo "GitHub path: Settings -> Secrets and variables -> Actions -> New repository secret"
+          } >&2
+
+          exit 1
+
+      - name: Trigger Dokploy
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl_with_retries() {
+            curl \
+              --fail-with-body \
+              --show-error \
+              --silent \
+              --location \
+              --retry 5 \
+              --retry-delay 3 \
+              --retry-all-errors \
+              --connect-timeout 10 \
+              --max-time 60 \
+              "$@"
+          }
+
+          if [ "${DOKPLOY_TRIGGER_MODE}" = "webhook" ]; then
+            curl_with_retries --request POST "${DOKPLOY_WEBHOOK_URL}"
+            echo "Triggered Dokploy deployment through DOKPLOY_WEBHOOK_URL."
+            exit 0
+          fi
+
+          if [ "${DOKPLOY_TRIGGER_MODE}" = "api" ]; then
             short_sha="${GITHUB_SHA::7}"
             dokploy_url="${DOKPLOY_URL%/}"
+            payload="$(
+              python3 - <<'PY'
+          import json
+          import os
 
-            curl --fail --show-error --silent \
+          print(json.dumps({
+              "composeId": os.environ["DOKPLOY_COMPOSE_ID"],
+              "title": f"GitHub push {os.environ['GITHUB_SHA'][:7]}",
+              "description": f"{os.environ['GITHUB_REPOSITORY']}@{os.environ['GITHUB_SHA']}",
+              "freshVolumes": False,
+          }))
+          PY
+            )"
+
+            curl_with_retries \
               --request POST "${dokploy_url}/api/compose.deploy" \
               --header "accept: application/json" \
               --header "Content-Type: application/json" \
               --header "x-api-key: ${DOKPLOY_API_KEY}" \
-              --data "{\"composeId\":\"${DOKPLOY_COMPOSE_ID}\",\"title\":\"GitHub push ${short_sha}\",\"description\":\"${GITHUB_REPOSITORY}@${GITHUB_SHA}\",\"freshVolumes\":false}"
+              --data "${payload}"
 
-            echo "Triggered Dokploy compose deployment through the API."
+            echo "Triggered Dokploy compose deployment through the API for ${short_sha}."
             exit 0
           fi
 
-          echo "No Dokploy trigger secret configured. If Dokploy GitHub auto deploy is enabled, Dokploy will still deploy this push."
+          echo "::error title=Unknown Dokploy trigger mode::DOKPLOY_TRIGGER_MODE was not set by validation."
+          exit 1
