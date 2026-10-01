@@ -47,6 +47,8 @@
         --bs-gutter-y: var(--session-gap);
     }
     #sec-interview-session .ai-avatar-panel {
+        --desktop-camera-preview-width: clamp(154px, 16vw, 220px);
+        --desktop-camera-preview-height: clamp(104px, 9vw, 132px);
         border-radius: 16px !important;
         margin-bottom: var(--session-gap) !important;
         box-shadow: var(--shadow-soft, 0 10px 28px rgba(0, 0, 0, 0.14)) !important;
@@ -288,7 +290,7 @@
         animation: fa-spin 1s linear infinite;
     }
     #sec-interview-session .ai-avatar-panel.has-desktop-camera-pip .ai-coach-head-button {
-        right: calc(clamp(86px, 7vw, 112px) + 28px);
+        right: calc(var(--desktop-camera-preview-width) + 28px);
     }
     #aiCoachPanel[hidden] {
         display: none !important;
@@ -1307,10 +1309,12 @@
         position: absolute;
         top: 15px;
         right: 15px;
-        width: clamp(86px, 7vw, 112px);
-        height: clamp(86px, 7vw, 112px);
-        aspect-ratio: 1 / 1;
-        border-radius: 8px;
+        width: var(--desktop-camera-preview-width);
+        height: var(--desktop-camera-preview-height);
+        max-width: calc(100% - 30px);
+        max-height: calc(100% - 30px);
+        aspect-ratio: 16 / 10;
+        border-radius: 10px;
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, 0.28);
         z-index: 62;
@@ -4439,17 +4443,7 @@ html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #voi
 }
 
 html body #sec-interview-session .ai-avatar-panel #answerTranscriptControls #transcriptionStatus:not(:empty) {
-    position: absolute !important;
-    right: 0 !important;
-    bottom: calc(100% + 6px) !important;
-    max-width: 220px !important;
-    padding: 4px 7px !important;
-    border-radius: 8px !important;
-    background: rgba(15, 23, 42, 0.72) !important;
-    color: #ffffff !important;
-    font-size: 0.64rem !important;
-    line-height: 1.25 !important;
-    text-align: right !important;
+    display: none !important;
 }
 
 html[data-theme="dark"] body #sec-interview-session .ai-avatar-panel #interviewControls,
