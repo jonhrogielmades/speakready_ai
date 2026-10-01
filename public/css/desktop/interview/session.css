@@ -47,8 +47,7 @@
         --bs-gutter-y: var(--session-gap);
     }
     #sec-interview-session .ai-avatar-panel {
-        --desktop-camera-preview-width: clamp(154px, 16vw, 220px);
-        --desktop-camera-preview-height: clamp(104px, 9vw, 132px);
+        --desktop-camera-preview-size: clamp(148px, 11vw, 168px);
         border-radius: 16px !important;
         margin-bottom: var(--session-gap) !important;
         box-shadow: var(--shadow-soft, 0 10px 28px rgba(0, 0, 0, 0.14)) !important;
@@ -290,7 +289,7 @@
         animation: fa-spin 1s linear infinite;
     }
     #sec-interview-session .ai-avatar-panel.has-desktop-camera-pip .ai-coach-head-button {
-        right: calc(var(--desktop-camera-preview-width) + 28px);
+        right: calc(var(--desktop-camera-preview-size) + 28px);
     }
     #aiCoachPanel[hidden] {
         display: none !important;
@@ -1309,11 +1308,11 @@
         position: absolute;
         top: 15px;
         right: 15px;
-        width: var(--desktop-camera-preview-width);
-        height: var(--desktop-camera-preview-height);
+        width: var(--desktop-camera-preview-size);
+        height: var(--desktop-camera-preview-size);
         max-width: calc(100% - 30px);
         max-height: calc(100% - 30px);
-        aspect-ratio: 16 / 10;
+        aspect-ratio: 1 / 1;
         border-radius: 10px;
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, 0.28);

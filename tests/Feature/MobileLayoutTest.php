@@ -1298,7 +1298,7 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'));
 
         $response->assertOk()
-            ->assertSee('css/desktop/interview/session.css?v=48', false)
+            ->assertSee('css/desktop/interview/session.css?v=49', false)
             ->assertSee('const cameraDetectionEnabled = true;', false)
             ->assertSee('interview-session-browser-fullscreen', false)
             ->assertSee('interview-ready-fullscreen', false)
