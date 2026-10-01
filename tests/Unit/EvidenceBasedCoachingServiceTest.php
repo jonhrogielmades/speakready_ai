@@ -731,6 +731,121 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertStringNotContainsString('professionalism', $cameraText);
     }
 
+    public function test_camera_samples_keep_same_second_order_and_quality_metrics(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+
+        $observations = $service->normalizeObservationData([
+            'camera_samples' => [
+                [
+                    'sample_index' => 1,
+                    'captured_at_ms' => 1000,
+                    'at_seconds' => 2,
+                    'sample_quality' => 80,
+                    'face_detected' => true,
+                    'face_confidence' => 91,
+                    'face_size_percent' => 8,
+                    'face_size_status' => 'good',
+                    'camera_facing' => true,
+                    'camera_facing_score' => 88,
+                    'centered' => true,
+                    'framing_quality' => true,
+                    'pose_detected' => true,
+                ],
+                [
+                    'sample_index' => 2,
+                    'captured_at_ms' => 1200,
+                    'at_seconds' => 2,
+                    'sample_quality' => 75,
+                    'face_detected' => true,
+                    'face_confidence' => 88,
+                    'face_size_percent' => 9,
+                    'face_size_status' => 'good',
+                    'camera_facing' => true,
+                    'camera_facing_score' => 83,
+                    'centered' => true,
+                    'framing_quality' => true,
+                    'pose_detected' => true,
+                ],
+                [
+                    'sample_index' => 3,
+                    'captured_at_ms' => 4000,
+                    'at_seconds' => 4,
+                    'sample_quality' => 70,
+                    'face_detected' => true,
+                    'face_confidence' => 86,
+                    'face_size_percent' => 50,
+                    'face_size_status' => 'too_close',
+                    'camera_facing' => false,
+                    'camera_facing_score' => 44,
+                    'centered' => true,
+                    'framing_quality' => false,
+                    'pose_detected' => true,
+                ],
+                [
+                    'sample_index' => 4,
+                    'captured_at_ms' => 6000,
+                    'at_seconds' => 6,
+                    'sample_quality' => 20,
+                    'face_detected' => true,
+                    'face_confidence' => 82,
+                    'face_size_percent' => 2,
+                    'face_size_status' => 'too_far',
+                    'camera_facing' => false,
+                    'camera_facing_score' => 35,
+                    'centered' => false,
+                    'framing_quality' => false,
+                    'pose_detected' => true,
+                ],
+            ],
+        ], 'I explained my approach and verified the result with the team.', [
+            'response_mode' => 'voice',
+            'voice_duration' => 20,
+        ], true);
+
+        $camera = $observations['camera'];
+
+        $this->assertSame('measured', $camera['status']);
+        $this->assertSame(4, $camera['sample_count']);
+        $this->assertSame([1, 2, 3, 4], array_column($camera['samples'], 'sample_index'));
+        $this->assertSame(75, $camera['centered_percent']);
+        $this->assertSame(50, $camera['framing_quality_percent']);
+        $this->assertSame(61, $camera['average_sample_quality']);
+        $this->assertSame(1, $camera['low_quality_sample_count']);
+        $this->assertSame(25, $camera['low_quality_sample_percent']);
+        $this->assertSame(1, $camera['face_size_too_close_count']);
+        $this->assertSame(1, $camera['face_size_too_far_count']);
+
+        $coaching = $service->forAnswer(
+            'I explained my approach and verified the result with the team.',
+            ['type' => 'Personal', 'question_text' => 'Tell me about yourself.'],
+            ['response_mode' => 'voice', 'voice_duration' => 20],
+            $observations
+        );
+
+        $this->assertSame(50, data_get($coaching, 'camera_feedback.evidence.framing_quality_percent'));
+        $this->assertStringContainsString('framing', strtolower(json_encode($coaching['camera_feedback'], JSON_THROW_ON_ERROR)));
+    }
+
+    public function test_low_quality_camera_samples_are_not_treated_as_measured(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+
+        $observations = $service->normalizeObservationData([
+            'camera_samples' => [
+                ['at_seconds' => 0, 'sample_quality' => 20, 'face_detected' => true, 'pose_detected' => true],
+                ['at_seconds' => 4, 'sample_quality' => 25, 'face_detected' => true, 'pose_detected' => true],
+                ['at_seconds' => 8, 'sample_quality' => 30, 'face_detected' => true, 'pose_detected' => true],
+            ],
+        ], 'I explained my approach and verified the result.', [
+            'response_mode' => 'voice',
+            'voice_duration' => 20,
+        ], true);
+
+        $this->assertSame('insufficient_data', $observations['camera']['status']);
+        $this->assertSame(3, $observations['camera']['low_quality_sample_count']);
+    }
+
     public function test_forged_legacy_eye_and_posture_scores_are_ignored(): void
     {
         $service = new EvidenceBasedCoachingService;

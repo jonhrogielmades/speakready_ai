@@ -214,6 +214,18 @@
  'value' => max(0, (int) round($cameraEvidence['centered_count'])).' / '.$cameraSampleCount,
  ];
  }
+ if (array_key_exists('centered_percent', $cameraEvidence) && is_numeric($cameraEvidence['centered_percent'])) {
+ $cameraMetricItems[] = ['label' => 'Centered frame', 'value' => (int) round($cameraEvidence['centered_percent']).'%'];
+ }
+ if (array_key_exists('framing_quality_percent', $cameraEvidence) && is_numeric($cameraEvidence['framing_quality_percent'])) {
+ $cameraMetricItems[] = ['label' => 'Usable framing', 'value' => (int) round($cameraEvidence['framing_quality_percent']).'%'];
+ }
+ if (array_key_exists('average_sample_quality', $cameraEvidence) && is_numeric($cameraEvidence['average_sample_quality'])) {
+ $cameraMetricItems[] = ['label' => 'Camera quality', 'value' => (int) round($cameraEvidence['average_sample_quality']).' / 100'];
+ }
+ if (array_key_exists('average_face_size_percent', $cameraEvidence) && is_numeric($cameraEvidence['average_face_size_percent'])) {
+ $cameraMetricItems[] = ['label' => 'Face frame size', 'value' => round((float) $cameraEvidence['average_face_size_percent'], 1).'%'];
+ }
  if (array_key_exists('pose_detected_count', $cameraEvidence) && is_numeric($cameraEvidence['pose_detected_count'])) {
  $cameraMetricItems[] = [
  'label' => 'Body seen checks',

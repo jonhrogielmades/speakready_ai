@@ -590,6 +590,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let cameraTrackingInFlight = false;
  window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
  const cameraMovementBaselines = {};
+ let cameraSampleSequence = 0;
+ const cameraQualityThreshold = 0.35;
+ const cameraFaceSizeRange = { min: 3, max: 42 };
 
  const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
  const serverTranscriptionEnabled = @json(\App\Services\AIService::speechTranscriptionAvailable());
@@ -2934,18 +2937,26 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function initCamera() {
  if (!cameraDetectionEnabled) return;
  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
- navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+ navigator.mediaDevices.getUserMedia({
+ video: {
+ facingMode: 'user',
+ width: { ideal: 640 },
+ height: { ideal: 480 },
+ frameRate: { ideal: 15, max: 30 }
+ },
+ audio: false
+ }).then(function(stream) {
  let video = document.getElementById('userCamera');
  if (video) {
  video.srcObject = stream;
- video.play();
- video.closest('.desktop-camera-pip,.mobile-camera-pip,.avatar-camera-frame')?.classList.add('camera-ready');
+ video.onloadedmetadata = () => video.closest('.desktop-camera-pip,.mobile-camera-pip,.avatar-camera-frame')?.classList.add('camera-ready');
+ video.play().catch(error => console.warn('Camera preview playback failed', error));
  }
  let mobileVideo = document.getElementById('userCameraMobile');
  if (mobileVideo) {
  mobileVideo.srcObject = stream;
- mobileVideo.play();
- mobileVideo.closest('.mobile-camera-pip,.avatar-camera-frame')?.classList.add('camera-ready');
+ mobileVideo.onloadedmetadata = () => mobileVideo.closest('.mobile-camera-pip,.avatar-camera-frame')?.classList.add('camera-ready');
+ mobileVideo.play().catch(error => console.warn('Mobile camera preview playback failed', error));
  }
  }).catch(function(err) {
  console.error("Error accessing camera: ", err);
@@ -2992,6 +3003,30 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return Math.hypot(Number(left.x) - Number(right.x), Number(left.y) - Number(right.y));
  }
 
+ function boundedCameraNumber(value, minimum, maximum) {
+ const number = Number(value);
+ if (!Number.isFinite(number)) return null;
+ return Math.max(minimum, Math.min(maximum, number));
+ }
+
+ function cameraPercent(value, decimals = 0) {
+ const number = boundedCameraNumber(value, 0, 100);
+ if (number === null) return null;
+ const factor = Math.pow(10, decimals);
+ return Math.round(number * factor) / factor;
+ }
+
+ function cameraVideoReady(video) {
+ return Boolean(video && video.srcObject && video.readyState >= 2 && (video.videoWidth || video.clientWidth) && (video.videoHeight || video.clientHeight));
+ }
+
+ function cameraFaceSizeStatus(faceSizePercent) {
+ if (!Number.isFinite(Number(faceSizePercent))) return null;
+ if (faceSizePercent < cameraFaceSizeRange.min) return 'too_far';
+ if (faceSizePercent > cameraFaceSizeRange.max) return 'too_close';
+ return 'good';
+ }
+
  function detectVideoFrame(landmarker, video, timestamp) {
  if (!landmarker || typeof landmarker.detectForVideo!== 'function') return null;
  try {
@@ -3004,18 +3039,26 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  async function trackBodyLanguageDetection() {
  const bodyLanguageState = window.bodyLanguageModelState || {};
  const canUseBodyModels = Boolean(bodyLanguageState.ready && bodyLanguageState.poseLandmarker);
- const canUseFaceModel = typeof faceapi!== 'undefined';
+ const canUseFaceModel = typeof faceapi!== 'undefined' &&!window.faceFramingModelUnavailable;
  if (!cameraDetectionEnabled || cameraTrackingInFlight || (!canUseBodyModels &&!canUseFaceModel)) return;
  const video = document.getElementById('userCamera') || document.getElementById('userCameraMobile');
- if (!video ||!video.srcObject) return;
+ if (!cameraVideoReady(video)) return;
  const trackedQuestionIndex = currentQIdx;
+ const capturedAtMs = Math.round((window.performance && typeof window.performance.now === 'function'? window.performance.now(): Date.now()));
+ const sampleIndex = ++cameraSampleSequence;
+ const videoWidth = Math.max(1, video.videoWidth || video.clientWidth || 1);
+ const videoHeight = Math.max(1, video.videoHeight || video.clientHeight || 1);
 
  cameraTrackingInFlight = true;
  try {
  let detection = null;
+ let faceConfidence = null;
  if (canUseFaceModel) {
  try {
- detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+ const detectorOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.45 });
+ detection = await faceapi.detectSingleFace(video, detectorOptions).withFaceLandmarks();
+ faceConfidence = detection?.detection?.score!== undefined? cameraPercent(Number(detection.detection.score) * 100): (detection? 100: null);
+ if (faceConfidence!== null && faceConfidence < 45) detection = null;
  } catch (faceError) {
  console.error("Face framing tracking error", faceError);
  }
@@ -3024,8 +3067,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let poseLandmarks = null;
  if (canUseBodyModels) {
  try {
- const timestamp = performance.now();
- const poseResult = detectVideoFrame(bodyLanguageState.poseLandmarker, video, timestamp);
+ const poseResult = detectVideoFrame(bodyLanguageState.poseLandmarker, video, capturedAtMs);
  poseLandmarks = Array.isArray(poseResult?.landmarks) && poseResult.landmarks.length > 0? poseResult.landmarks[0]: null;
  } catch (bodyError) {
  console.error("Body-language tracking error", bodyError);
@@ -3044,6 +3086,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let uprightPosture = null;
  let movementScore = null;
  let highMovement = null;
+ let faceSizePercent = null;
+ let faceSizeStatus = null;
+ let faceFacingScore = null;
+ let poseFacingScore = null;
+ let cameraFacingScore = null;
  const movementPoints = {};
 
  if (detection) {
@@ -3051,27 +3098,29 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const rightEye = detection.landmarks.getRightEye();
  const nose = detection.landmarks.getNose();
  const centerOf = points => {
- const total = points.reduce(
+ const usable = points.filter(point => point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y)));
+ const total = usable.reduce(
  (point, current) => ({ x: point.x + current.x, y: point.y + current.y }),
  { x: 0, y: 0 }
  );
- return { x: total.x / Math.max(1, points.length), y: total.y / Math.max(1, points.length) };
+ return { x: total.x / Math.max(1, usable.length), y: total.y / Math.max(1, usable.length) };
  };
  const leftCenter = centerOf(leftEye);
  const rightCenter = centerOf(rightEye);
  const eyeMidpoint = { x: (leftCenter.x + rightCenter.x) / 2, y: (leftCenter.y + rightCenter.y) / 2 };
  const noseTip = nose[Math.min(3, Math.max(0, nose.length - 1))] || eyeMidpoint;
  const eyeDistance = Math.max(1, Math.hypot(rightCenter.x - leftCenter.x, rightCenter.y - leftCenter.y));
- cameraFacing = Math.abs((noseTip.x - eyeMidpoint.x) / eyeDistance) <= 0.32;
+ const faceYawOffset = Math.abs((noseTip.x - eyeMidpoint.x) / eyeDistance);
+ faceFacingScore = cameraPercent((1 - Math.min(faceYawOffset / 0.55, 1)) * 100);
+ cameraFacing = faceYawOffset <= 0.35;
 
  const box = detection.detection.box;
- const videoWidth = Math.max(1, video.videoWidth || video.clientWidth || 1);
- const videoHeight = Math.max(1, video.videoHeight || video.clientHeight || 1);
- centered = Math.abs((box.x + (box.width / 2)) - (videoWidth / 2)) <= videoWidth * 0.24
- && Math.abs((box.y + (box.height / 2)) - (videoHeight / 2)) <= videoHeight * 0.28;
-
- setCameraStat('stEyeContact', '<i class="fa-solid fa-check me-1"></i>Visible', 'text-success', true);
- setCameraStat('stPosture', cameraFacing? 'Camera-facing estimate': 'Head turned estimate', cameraFacing? 'text-success': 'text-warning');
+ const boxCenterX = box.x + (box.width / 2);
+ const boxCenterY = box.y + (box.height / 2);
+ centered = Math.abs(boxCenterX - (videoWidth / 2)) <= videoWidth * 0.25
+ && Math.abs(boxCenterY - (videoHeight / 2)) <= videoHeight * 0.30;
+ faceSizePercent = cameraPercent(((box.width * box.height) / Math.max(1, videoWidth * videoHeight)) * 100, 1);
+ faceSizeStatus = cameraFaceSizeStatus(faceSizePercent);
  }
 
  if (poseDetected) {
@@ -3080,9 +3129,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const rightShoulder = poseLandmarks[12];
  const leftHip = poseLandmarks[23];
  const rightHip = poseLandmarks[24];
- const noseVisible = visibleLandmark(nose);
- shouldersVisible = visibleLandmark(leftShoulder) && visibleLandmark(rightShoulder);
- const hipsVisible = visibleLandmark(leftHip) && visibleLandmark(rightHip);
+ const noseVisible = visibleLandmark(nose, 0.45);
+ shouldersVisible = visibleLandmark(leftShoulder, 0.45) && visibleLandmark(rightShoulder, 0.45);
+ const hipsVisible = visibleLandmark(leftHip, 0.4) && visibleLandmark(rightHip, 0.4);
  const shoulderMidpoint = shouldersVisible? centerOfNormalized([leftShoulder, rightShoulder]): null;
  const hipMidpoint = hipsVisible? centerOfNormalized([leftHip, rightHip]): null;
  const shoulderWidth = shouldersVisible? Math.max(0.01, pointDistance(leftShoulder, rightShoulder)?? 0.01): 0.01;
@@ -3095,7 +3144,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  shouldersLevel = Math.abs(Number(leftShoulder.y) - Number(rightShoulder.y)) <= 0.065;
  }
  if (noseVisible && shoulderMidpoint) {
- poseCameraFacing = Math.abs((Number(nose.x) - shoulderMidpoint.x) / shoulderWidth) <= 0.38;
+ const poseYawOffset = Math.abs((Number(nose.x) - shoulderMidpoint.x) / shoulderWidth);
+ poseFacingScore = cameraPercent((1 - Math.min(poseYawOffset / 0.7, 1)) * 100);
+ poseCameraFacing = poseYawOffset <= 0.38;
  }
  if (shoulderMidpoint && hipMidpoint) {
  const torsoHeight = Math.max(0.01, Math.abs(hipMidpoint.y - shoulderMidpoint.y));
@@ -3105,41 +3156,62 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  }
 
- const previousPoints = cameraMovementBaselines[trackedQuestionIndex] || null;
+ const previousBaseline = cameraMovementBaselines[trackedQuestionIndex] || null;
+ const previousPoints = previousBaseline?.points || previousBaseline;
  if (previousPoints && Object.keys(movementPoints).length > 0) {
  const distances = Object.entries(movementPoints).map(([key, point]) => pointDistance(point, previousPoints[key])).filter(distance => Number.isFinite(distance));
  if (distances.length > 0) {
  const averageDistance = distances.reduce((total, distance) => total + distance, 0) / distances.length;
- movementScore = Math.min(100, Math.round(averageDistance * 650));
+ movementScore = Math.min(100, Math.round(averageDistance * 560));
  highMovement = movementScore >= 45;
  }
  }
- cameraMovementBaselines[trackedQuestionIndex] = movementPoints;
+ if (Object.keys(movementPoints).length > 0) {
+ cameraMovementBaselines[trackedQuestionIndex] = { points: movementPoints, captured_at_ms: capturedAtMs };
+ }
 
- const faceDetected = Boolean(detection || (poseDetected && visibleLandmark(poseLandmarks[0])));
- cameraFacing = Boolean(detection? cameraFacing: poseCameraFacing);
+ const faceDetected = Boolean(detection || (poseDetected && visibleLandmark(poseLandmarks[0], 0.45)));
+ if (faceFacingScore!== null && poseFacingScore!== null) {
+ cameraFacingScore = Math.round((faceFacingScore * 0.65) + (poseFacingScore * 0.35));
+ } else {
+ cameraFacingScore = faceFacingScore!== null? faceFacingScore: poseFacingScore;
+ }
+ cameraFacing = cameraFacingScore!== null? cameraFacingScore >= 55: Boolean(detection? cameraFacing: poseCameraFacing);
  if (!detection && poseDetected && shouldersVisible) {
  const shoulderCenter = movementPoints.shoulders;
  centered = Boolean(shoulderCenter && Math.abs(shoulderCenter.x - 0.5) <= 0.24 && Math.abs(shoulderCenter.y - 0.5) <= 0.32);
  }
 
- if (!detection) {
- setCameraStat(
- 'stEyeContact',
- faceDetected? '<i class="fa-solid fa-check me-1"></i>Visible': 'Outside frame / unavailable',
- faceDetected? 'text-success': 'text-warning',
- faceDetected
- );
+ const framingQuality = Boolean(faceDetected && centered && (faceSizeStatus === null || faceSizeStatus === 'good'));
+ let sampleQuality = 20;
+ if (detection) sampleQuality += 35;
+ if (poseDetected) sampleQuality += 25;
+ if (centered) sampleQuality += 10;
+ if (faceSizeStatus === 'good') sampleQuality += 10;
+ if (faceConfidence!== null) sampleQuality += Math.max(-10, Math.min(10, (faceConfidence - 50) / 5));
+ sampleQuality = cameraPercent(sampleQuality);
+
+ let faceStatusText = faceDetected? '<i class="fa-solid fa-check me-1"></i>Visible': '<i class="fa-solid fa-circle-info me-1"></i>Move into frame';
+ let faceStatusClass = faceDetected? 'text-success': 'text-warning';
+ if (faceDetected && faceSizeStatus === 'too_far') {
+ faceStatusText = '<i class="fa-solid fa-arrow-up-right-from-square me-1"></i>Move closer';
+ faceStatusClass = 'text-warning';
+ } else if (faceDetected && faceSizeStatus === 'too_close') {
+ faceStatusText = '<i class="fa-solid fa-down-left-and-up-right-to-center me-1"></i>Move back';
+ faceStatusClass = 'text-warning';
+ } else if (faceDetected &&!centered) {
+ faceStatusText = '<i class="fa-solid fa-crosshairs me-1"></i>Center frame';
+ faceStatusClass = 'text-warning';
+ }
+ setCameraStat('stEyeContact', faceStatusText, faceStatusClass, true);
  setCameraStat(
  'stPosture',
- faceDetected? (cameraFacing? 'Camera-facing estimate': 'Head turned estimate'): 'Excluded from scoring',
+ faceDetected? (cameraFacing? 'Looking near camera': 'Head turned estimate'): 'Not measured',
  faceDetected? (cameraFacing? 'text-success': 'text-warning'): 'text-secondary'
  );
- }
-
  setCameraStat(
  'stPose',
- shouldersVisible? (shouldersLevel && uprightPosture!== false? 'Balanced upper body': 'Posture cue available'): (poseDetected? 'Partial pose estimate': 'Pose not detected'),
+ shouldersVisible? (shouldersLevel && uprightPosture!== false? 'Balanced upper body': 'Posture cue available'): (poseDetected? 'Partial pose estimate': 'Shoulders not visible'),
  shouldersVisible? (shouldersLevel && uprightPosture!== false? 'text-success': 'text-warning'): 'text-secondary'
  );
  setCameraStat(
@@ -3150,21 +3222,32 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  const detectionStatus = document.getElementById('cameraDetectionStatus');
  if (detectionStatus) {
- detectionStatus.innerHTML = canUseBodyModels? '<i class="fa-solid fa-person-rays me-1"></i>Pose estimate': '<i class="fa-solid fa-laptop me-1"></i>Framing estimate';
- detectionStatus.style.color = canUseBodyModels? '#34d399': '#cbd5e1';
+ const lowQuality = sampleQuality!== null && sampleQuality < (cameraQualityThreshold * 100);
+ detectionStatus.innerHTML = lowQuality
+ ? '<i class="fa-solid fa-circle-exclamation me-1"></i>Low-quality frame'
+ : (canUseBodyModels? '<i class="fa-solid fa-person-rays me-1"></i>Pose estimate': '<i class="fa-solid fa-laptop me-1"></i>Framing estimate');
+ detectionStatus.style.color = lowQuality? '#fbbf24': (canUseBodyModels? '#34d399': '#cbd5e1');
  }
 
  state.observation_data.camera_samples.push({
+ sample_index: sampleIndex,
+ captured_at_ms: capturedAtMs,
  at_seconds: Math.max(0, Number(state.voice_duration || recTimerSeconds || 0)),
  face_detected: faceDetected,
+ face_confidence: faceConfidence,
+ face_size_percent: faceSizePercent,
+ face_size_status: faceSizeStatus,
  camera_facing: Boolean(faceDetected && cameraFacing),
+ camera_facing_score: cameraFacingScore,
  centered: Boolean(faceDetected && centered),
+ framing_quality: framingQuality,
  pose_detected: poseDetected,
  shoulders_visible: shouldersVisible,
  shoulders_level: shouldersLevel,
  upright_posture: uprightPosture,
  movement_score: movementScore,
- high_movement: highMovement
+ high_movement: highMovement,
+ sample_quality: sampleQuality
  });
  state.observation_data.camera_samples = state.observation_data.camera_samples.slice(-180);
  answersData[trackedQuestionIndex] = state;
