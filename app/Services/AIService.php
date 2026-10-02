@@ -2090,6 +2090,25 @@ EOT;
  throw new \RuntimeException('No saved answers were available for feedback.');
  }
 
+ $localModel = app(LocalFeedbackModelService::class);
+ if ($localModel->available()) {
+ try {
+ $modelFeedback = $localModel->generateFeedback($sessionData, $answersData);
+ if (is_array($modelFeedback) && ! empty($modelFeedback['per_question_feedback']?? [])) {
+ return self::withFeedbackProviderMetadata(
+ self::normalizeFeedbackResponse($modelFeedback, $answersData, $sessionData, false),
+ 'localmodel',
+ ['localmodel']
+ );
+ }
+ } catch (\Throwable $error) {
+ Log::warning('Local feedback model failed; using deterministic local evidence fallback.', [
+ 'error_type' => $error::class,
+ 'message' => self::safeProviderErrorMessage($error),
+ ]);
+ }
+ }
+
  return self::withFeedbackProviderMetadata(self::normalizeFeedbackResponse([
  'per_question_feedback' => [],
  'session_feedback' => [],
