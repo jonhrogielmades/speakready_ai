@@ -1,9 +1,66 @@
 @php
     $progressCategoryItems = collect($categoryPerf ?? []);
     $progressCategoryColors = ['#22c55e', '#3b82f6', '#06b6d4', '#f59e0b', '#8b5cf6'];
+    $learningItems = collect($learningProgress ?? [])
+        ->filter(fn ($progress) => $progress?->learningModule)
+        ->values();
+    $learningColors = ['#7c3aed', '#2563eb', '#0ea5e9', '#10b981', '#f59e0b'];
+    $learningAverage = $learningItems->isNotEmpty()
+        ? (int) round($learningItems->avg(fn ($progress) => max(0, min(100, (int) ($progress->progress_percentage ?? 0)))))
+        : null;
 @endphp
 
 <div class="progress-live-grid">
+    <div class="progress-live-card animate-fade-up" id="learning-progress" style="animation-delay: 0.5s;">
+        <div class="learning-panel" style="--panel-accent:#7c3aed;">
+            <div class="learning-heading">
+                <div class="learning-heading-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div>
+                    <h5 class="learning-title">Learning Progress</h5>
+                    <p class="learning-subtitle">Continue the modules connected to your interview growth.</p>
+                </div>
+            </div>
+
+            @if($learningItems->isNotEmpty())
+                <div class="learning-list">
+                    @foreach($learningItems->take(3) as $progress)
+                        @php
+                            $module = $progress->learningModule;
+                            $percent = max(0, min(100, (int) ($progress->progress_percentage ?? 0)));
+                            $color = $learningColors[$loop->index % count($learningColors)];
+                        @endphp
+                        <a class="learning-module" href="{{ route('user.modules.show', $module->id) }}" style="--module-color: {{ $color }};">
+                            <div class="learning-module-icon"><i class="fa-solid fa-book-open-reader"></i></div>
+                            <div>
+                                <div class="learning-module-top">
+                                    <span class="learning-module-title">{{ $module->title }}</span>
+                                    <span class="learning-percent">{{ $percent }}%</span>
+                                </div>
+                                <div class="learning-track" aria-label="{{ $percent }}% complete">
+                                    <div class="learning-fill" style="--learning-progress: {{ $percent }}%;"></div>
+                                </div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+                <div class="learning-summary">
+                    <div class="learning-summary-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                    <div>
+                        <div class="learning-summary-value">{{ $learningAverage }}%</div>
+                        <div class="learning-summary-label">Average completion across {{ $learningItems->count() }} {{ $learningItems->count() === 1 ? 'module' : 'modules' }}.</div>
+                    </div>
+                </div>
+            @else
+                <div class="skill-empty-state">
+                    <div>
+                        <div class="skill-empty-icon"><i class="fa-solid fa-book-open"></i></div>
+                        <p class="skill-empty-text">Start a learning module to connect lessons with your interview progress.</p>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+
     <div class="progress-live-card" id="skill-tracker">
         <div class="premium-panel progress-chart-panel" style="height:100%; --panel-accent:#8b5cf6;">
             <div class="progress-panel-heading">

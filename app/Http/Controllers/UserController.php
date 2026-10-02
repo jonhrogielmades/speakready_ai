@@ -443,7 +443,7 @@ class UserController extends Controller
  $readinessMovement = $this->readinessMovementFor($latestScoredSession, $previousScoredSession);
  $readinessSummary = $this->readinessSummaryFor($latestScoredSession, $previousScoredSession);
  $skillComparison = $this->skillComparisonFor($scoredSessions);
- $latestSkillSummary = $this->skillSummaryFor($scoredSessions->last()?->score);
+ $latestSkillSummary = $this->skillSummaryFor($latestScoredSession?->score, $latestScoredSession?->feedback);
 
  $profile = Profile::firstOrCreate(['user_id' => $userId]);
 
@@ -1119,23 +1119,40 @@ class UserController extends Controller
  $metricWeaknesses = [];
 
  foreach ($metrics as $metric) {
+ $label = $metric['name'].' ('.$metric['score'].'%)';
  if ($metric['score'] >= 80) {
- $metricStrengths[] = $metric['name'];
+ $metricStrengths[] = $label;
  } else {
- $metricWeaknesses[] = $metric['name'];
+ $metricWeaknesses[] = $label;
  }
  }
 
  $feedbackStrengths = $this->reportFeedbackItems($feedback?->strengths);
  $feedbackWeaknesses = $this->reportFeedbackItems($feedback?->weaknesses);
  $suggestions = $this->reportFeedbackItems($feedback?->improvement_suggestions, 3, 150);
+ $strengths =! empty($feedbackStrengths)? $feedbackStrengths: $metricStrengths;
+ $weaknesses =! empty($feedbackWeaknesses)? $feedbackWeaknesses: $metricWeaknesses;
+ $hasData =! empty($metrics) ||! empty($feedbackStrengths) ||! empty($feedbackWeaknesses) ||! empty($suggestions);
+ $lowestMetric = collect($metrics)->sortBy('score')->first();
+ $strongestMetric = collect($metrics)->sortByDesc('score')->first();
 
  return (object) [
- 'has_data' =>! empty($metrics) ||! empty($feedbackStrengths) ||! empty($feedbackWeaknesses) ||! empty($suggestions),
+ 'has_data' => $hasData,
  'metrics' => $metrics,
- 'strengths' =>! empty($feedbackStrengths)? $feedbackStrengths: $metricStrengths,
- 'weaknesses' =>! empty($feedbackWeaknesses)? $feedbackWeaknesses: $metricWeaknesses,
+ 'strengths' => $strengths,
+ 'weaknesses' => $weaknesses,
+ 'has_strengths' =>! empty($strengths),
+ 'has_weaknesses' =>! empty($weaknesses),
+ 'strength_empty_text' => $hasData? 'No strong area is confirmed yet. Aim for one metric above 80% in the next scored interview.': 'Complete a scored interview to identify strengths.',
+ 'weakness_empty_text' => $hasData? 'No urgent weak spot is confirmed in the latest scored data. Keep practicing for consistency.': 'Complete a scored interview to identify improvement areas.',
  'suggestions' => $suggestions,
+ 'source_note' => $hasData
+ ? (! empty($feedbackStrengths) ||! empty($feedbackWeaknesses)
+ ? 'Based on the latest saved feedback and scored interview metrics.'
+ : 'Based on the latest scored interview metrics.')
+ : 'No scored interview evidence is available yet.',
+ 'lowest_metric' => $lowestMetric? (object) $lowestMetric: null,
+ 'strongest_metric' => $strongestMetric? (object) $strongestMetric: null,
  ];
  }
 
@@ -1700,10 +1717,13 @@ class UserController extends Controller
  $coverageComplete = $partProgress->sum('complete');
  $coveragePercent = $coverageTotal > 0? $this->barWidth((int) round(($coverageComplete / $coverageTotal) * 100)): null;
  $starScores = Score::hasColumn('star_method_score')? $sessions
+ ->filter(fn ($session) => $this->scoreHasRecordedStarMetric($session->score))
  ->map(fn ($session) => $this->scoreValue($session->score, 'star_method_score'))
  ->filter(fn ($score) => $score!== null): collect();
  $averageScore = $starScores->isNotEmpty()? $this->barWidth((int) round($starScores->avg())): null;
  $overallPercent = $coveragePercent?? $averageScore;
+ $hasAnswerData = $analyzedAnswers > 0;
+ $hasScoreData = $averageScore!== null;
 
  return (object) [
  'has_data' => $overallPercent!== null,
@@ -1711,10 +1731,35 @@ class UserController extends Controller
  'average_score' => $averageScore,
  'analyzed_answers' => $analyzedAnswers,
  'complete_answers' => $completeAnswers,
+ 'has_answer_data' => $hasAnswerData,
+ 'has_score_data' => $hasScoreData,
+ 'data_source' => $coveragePercent!== null? 'answer_analysis': ($hasScoreData? 'score_metric': null),
+ 'reliability_note' => $coveragePercent!== null
+ ? 'Based on saved STAR checks from your answers.'
+ : ($hasScoreData? 'Based on the latest recorded STAR score. Answer-level STAR parts were not available.': 'No reliable STAR evidence has been recorded yet.'),
  'parts' => $partProgress,
  'message' => $this->starProgressMessage($overallPercent, $analyzedAnswers),
  'suggestion' => $latestSuggestion?: $this->starProgressSuggestion($overallPercent),
  ];
+ }
+
+ private function scoreHasRecordedStarMetric(?Score $score): bool
+ {
+ $value = $this->scoreValue($score, 'star_method_score');
+ if ($value === null) {
+ return false;
+ }
+
+ if ($value > 0) {
+ return true;
+ }
+
+ $rubric = is_array($score?->rubric?? null)? $score->rubric: [];
+ $scoreVersion = (int) ($score?->score_version?? 0);
+ $rubricVersion = (int) ($rubric['version']?? 0);
+
+ return $scoreVersion >= TrustworthyAssessmentService::SCORE_VERSION
+ || $rubricVersion >= TrustworthyAssessmentService::SCORE_VERSION;
  }
 
  private function starPartIsPresent($value): bool

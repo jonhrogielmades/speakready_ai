@@ -166,6 +166,68 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertViewHas('goalNote', fn ($note) => $note && $note->title === 'First milestone waiting');
  }
 
+ public function test_progress_star_card_does_not_treat_default_zero_as_reliable_star_evidence(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('Behavioral');
+
+ $session = $this->completedSessionFor($user, $category, 74, now());
+ Score::where('interview_session_id', $session->id)->update([
+ 'clarity_score' => 82,
+ 'relevance_score' => 76,
+ 'grammar_score' => 84,
+ 'professionalism_score' => 78,
+ 'overall_readiness_score' => 74,
+ 'star_method_score' => 0,
+ ]);
+
+ $response = $this->actingAs($user)->get(route('user.progress'));
+
+ $response->assertOk()
+ ->assertSee('Complete a behavioral or situational answer with saved feedback to unlock STAR progress.')
+ ->assertSee('Clarity (82%)')
+ ->assertSee('Grammar (84%)')
+ ->assertSee('Relevance (76%)')
+ ->assertDontSee('0%</span>')
+ ->assertViewHas('starProgress', fn ($progress) => $progress &&! $progress->has_data)
+ ->assertViewHas('latestSkillSummary', fn ($summary) => $summary
+ && $summary->has_data
+ && in_array('Clarity (82%)', $summary->strengths, true)
+ && in_array('Relevance (76%)', $summary->weaknesses, true));
+ }
+
+ public function test_progress_strengths_card_uses_latest_feedback_when_available(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('BPO / Customer Support');
+ $session = $this->completedSessionFor($user, $category, 74, now());
+
+ Score::where('interview_session_id', $session->id)->update([
+ 'clarity_score' => 52,
+ 'relevance_score' => 68,
+ 'grammar_score' => 85,
+ 'professionalism_score' => 90,
+ 'overall_readiness_score' => 74,
+ ]);
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'Polite tone with customer empathy.',
+ 'weaknesses' => 'Needs a clearer opening answer.',
+ 'improvement_suggestions' => 'Start with a direct answer, then add one result.',
+ ]);
+
+ $response = $this->actingAs($user)->get(route('user.progress'));
+
+ $response->assertOk()
+ ->assertSee('Polite tone with customer empathy.')
+ ->assertSee('Needs a clearer opening answer.')
+ ->assertSee('Based on the latest saved feedback and scored interview metrics.')
+ ->assertViewHas('latestSkillSummary', fn ($summary) => $summary
+ && $summary->has_data
+ && $summary->strengths === ['Polite tone with customer empathy.']
+ && $summary->weaknesses === ['Needs a clearer opening answer.']);
+ }
+
  public function test_progress_page_keeps_activity_on_dedicated_page(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

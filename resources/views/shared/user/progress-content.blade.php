@@ -130,8 +130,8 @@
  <div class="col-12 animate-fade-up" id="strengths-tracker" style="animation-delay: 0.9s;">
  <div class="premium-panel strengths-star-panel" style="height:100%; --panel-accent:#7c3aed;">
  @php
- $strengths = $latestSkillSummary->strengths?: ['None identified yet'];
- $weaknesses = $latestSkillSummary->weaknesses?: ['None identified yet'];
+ $strengths = $latestSkillSummary->strengths?? [];
+ $weaknesses = $latestSkillSummary->weaknesses?? [];
  @endphp
  <div class="strengths-overview">
  <div class="strengths-icon"><i class="fa-solid fa-star"></i></div>
@@ -142,22 +142,31 @@
  <div class="strengths-list-card">
  <h6 class="text-success"><i class="fa-solid fa-arrow-trend-up me-2"></i>Strengths</h6>
  <ul>
+ @if(!empty($strengths))
  @foreach(array_slice($strengths, 0, 3) as $str)
  <li><i class="fa-solid fa-check text-success me-2"></i>{{ $str }}</li>
  @endforeach
+ @else
+ <li><i class="fa-solid fa-circle-info text-secondary me-2"></i>{{ $latestSkillSummary->strength_empty_text?? 'No strong area is confirmed yet.' }}</li>
+ @endif
  </ul>
  </div>
  <div class="strengths-list-card">
  <h6 class="text-warning"><i class="fa-solid fa-arrow-trend-down me-2"></i>Needs Work</h6>
  <ul>
+ @if(!empty($weaknesses))
  @foreach(array_slice($weaknesses, 0, 3) as $wk)
  <li><i class="fa-solid fa-xmark text-warning me-2"></i>{{ $wk }}</li>
  @endforeach
+ @else
+ <li><i class="fa-solid fa-circle-check text-success me-2"></i>{{ $latestSkillSummary->weakness_empty_text?? 'No urgent weak spot is confirmed yet.' }}</li>
+ @endif
  </ul>
  </div>
  </div>
+ <p class="strengths-text mt-2">{{ $latestSkillSummary->source_note?? 'Based on the latest scored interview evidence.' }}</p>
  @else
- <p class="strengths-text">Complete an interview to see strengths and areas for improvement.</p>
+ <p class="strengths-text">Complete a scored interview to see reliable strengths and areas for improvement.</p>
  @endif
  </div>
  </div>
@@ -169,6 +178,9 @@
  <h5 class="star-title">STAR Method Progress</h5>
  @if($starProgress->has_data)
  <p class="star-text">{{ $starProgress->message }}</p>
+ @if(!empty($starProgress->reliability_note))
+ <p class="star-text">{{ $starProgress->reliability_note }}</p>
+ @endif
  <div class="star-progress-summary">
  <div class="star-progress-score" style="--star-overall: {{ $starProgress->overall_percent?? 0 }}%;">
  <span>{{ $starProgress->overall_percent }}%</span>
@@ -189,15 +201,15 @@
  </div>
  </div>
  @else
- <p class="star-text">Insufficient data to analyze your STAR Method usage. Keep practicing behavioral questions!</p>
+ <p class="star-text">Not enough reliable STAR evidence yet. Complete a behavioral or situational answer with saved feedback to unlock STAR progress.</p>
  @endif
  </div>
  </div>
  <div class="star-note">
  <div class="star-note-icon"><i class="fa-regular fa-lightbulb"></i></div>
  <div>
- <h6 class="star-note-title">{{ $starProgress->has_data? 'Next STAR Step': 'What is STAR Method?' }}</h6>
- <p class="star-note-text">{{ $starProgress->has_data? $starProgress->suggestion: 'STAR stands for Situation, Task, Action, Result. It helps you structure strong and impactful answers.' }}</p>
+ <h6 class="star-note-title">{{ $starProgress->has_data? 'Next STAR Step': 'Start STAR Tracking' }}</h6>
+ <p class="star-note-text">{{ $starProgress->has_data? $starProgress->suggestion: 'STAR stands for Situation, Task, Action, Result. Use one real example and include all four parts so progress can be measured accurately.' }}</p>
  </div>
  </div>
  </div>

@@ -10458,3 +10458,18 @@ body.dm #sec-progress-tracking :is(#strengths-tracker .strengths-icon, #strength
         width: min(190px, 76%) !important;
     }
 }
+
+/* Progress live grid: Learning, Skill, and Scenario cards. */
+html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #category-performance-summary) {
+    display: flex !important;
+    min-width: 0 !important;
+}
+
+html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #category-performance-summary) > :is(.learning-panel, .progress-chart-panel, .progress-category-panel) {
+    width: 100% !important;
+}
+
+html body #sec-progress-tracking #learning-progress .learning-module {
+    color: inherit !important;
+    text-decoration: none !important;
+}

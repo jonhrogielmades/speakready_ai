@@ -11278,3 +11278,32 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-t
         line-height: 1.5 !important;
     }
 }
+
+/* Progress live grid: Learning, Skill, and Scenario cards. */
+@media (min-width: 1200px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid,
+    html body #sec-progress-tracking > .progress-live-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199.98px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid,
+    html body #sec-progress-tracking > .progress-live-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #category-performance-summary) {
+    display: flex !important;
+    min-width: 0 !important;
+}
+
+html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #category-performance-summary) > :is(.learning-panel, .progress-chart-panel, .progress-category-panel) {
+    width: 100% !important;
+}
+
+html body #sec-progress-tracking #learning-progress .learning-module {
+    color: inherit !important;
+    text-decoration: none !important;
+}
