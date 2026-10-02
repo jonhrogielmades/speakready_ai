@@ -1,5 +1,4 @@
 @php
-    $jobPerformance = $jobInterviewPerformance ?? null;
     $learningItems = collect($learningProgress ?? [])
         ->filter(fn ($progress) => $progress?->learningModule)
         ->values();
@@ -93,58 +92,6 @@
                     <div>
                         <div class="skill-empty-icon"><i class="fa-solid fa-clipboard-check"></i></div>
                         <p class="skill-empty-text">Complete multiple practice interviews to track your specific skill improvements.</p>
-                    </div>
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <div class="progress-live-card animate-fade-up" id="job-interview-performance" style="animation-delay: 0.55s;">
-        <div class="premium-panel progress-category-panel job-performance-card" style="--panel-accent:{{ $jobPerformance?->color ?? '#10b981' }};">
-            <div class="progress-panel-heading">
-                <div class="progress-panel-icon"><i class="fa-solid fa-briefcase"></i></div>
-                <div>
-                    <h5 class="progress-panel-title">Job Interview Performance</h5>
-                    <p class="progress-panel-subtitle">Average score from scored Job Interview sessions.</p>
-                </div>
-            </div>
-
-            @if($jobPerformance?->has_data)
-                <div class="job-performance-main" style="--job-performance: {{ $jobPerformance->bar }}%; --job-performance-color: {{ $jobPerformance->color }};">
-                    <div class="job-performance-score-row">
-                        <div>
-                            <div class="job-performance-status">{{ $jobPerformance->status }}</div>
-                            <div class="job-performance-copy">Based only on Job Interviews.</div>
-                        </div>
-                        <div class="job-performance-score">{{ $jobPerformance->average }}%</div>
-                    </div>
-                    <div class="job-performance-track" aria-label="{{ $jobPerformance->average }}% average score">
-                        <span></span>
-                    </div>
-                    <div class="job-performance-stats">
-                        <div>
-                            <span>Sessions</span>
-                            <strong>{{ $jobPerformance->sessions }}</strong>
-                        </div>
-                        <div>
-                            <span>Best Score</span>
-                            <strong>{{ $jobPerformance->best }}%</strong>
-                        </div>
-                        <div>
-                            <span>Last Score</span>
-                            <strong>{{ $jobPerformance->last }}%</strong>
-                        </div>
-                    </div>
-                    <div class="job-performance-next">
-                        <i class="fa-regular fa-lightbulb"></i>
-                        <span>{{ $jobPerformance->next_focus }}</span>
-                    </div>
-                </div>
-            @else
-                <div class="skill-empty-state progress-category-empty">
-                    <div>
-                        <div class="skill-empty-icon"><i class="fa-solid fa-briefcase"></i></div>
-                        <p class="skill-empty-text">Complete a scored Job Interview session to unlock performance.</p>
                     </div>
                 </div>
             @endif

@@ -11279,11 +11279,11 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-t
     }
 }
 
-/* Progress live grid: Learning, Skill, and Job Interview Performance cards. */
+/* Progress live grid: Learning and Skill cards. */
 @media (min-width: 1200px) {
     html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid,
     html body #sec-progress-tracking > .progress-live-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         align-items: start !important;
     }
 }
@@ -11296,12 +11296,12 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-t
     }
 }
 
-html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #job-interview-performance) {
+html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker) {
     display: flex !important;
     min-width: 0 !important;
 }
 
-html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #job-interview-performance) > :is(.learning-panel, .progress-chart-panel, .progress-category-panel) {
+html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker) > :is(.learning-panel, .progress-chart-panel) {
     width: 100% !important;
 }
 
@@ -11310,14 +11310,32 @@ html body #sec-progress-tracking #learning-progress .learning-module {
     text-decoration: none !important;
 }
 
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid,
+html body #sec-progress-tracking > .row.g-4.progress-overview-grid {
+    align-items: stretch !important;
+}
+
+html body #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #job-interview-performance) {
+    display: flex !important;
+    min-width: 0 !important;
+}
+
+html body #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #job-interview-performance) > :is(.progress-chart-panel, .progress-category-panel) {
+    width: 100% !important;
+    height: 100% !important;
+}
+
 html body #sec-progress-tracking #job-interview-performance .job-performance-card {
-    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
     padding: 18px !important;
 }
 
 html body #sec-progress-tracking .job-performance-main {
     display: grid;
     gap: 14px;
+    flex: 1 1 auto;
+    align-content: center;
 }
 
 html body #sec-progress-tracking .job-performance-score-row {

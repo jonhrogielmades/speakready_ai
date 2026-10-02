@@ -78,7 +78,7 @@
 
  <div class="row g-4 mb-4 progress-overview-grid">
  <!-- Feature 1: Readiness Score Trend -->
- <div class="col-12 animate-fade-up" id="readiness-trend" style="animation-delay: 0.6s;">
+ <div class="col-12 col-xl-6 animate-fade-up" id="readiness-trend" style="animation-delay: 0.6s;">
  <div class="premium-panel progress-chart-panel" style="height:100%; --panel-accent:#2563eb;">
  <div class="progress-panel-heading">
  <div class="progress-panel-icon"><i class="fa-solid fa-chart-line"></i></div>
@@ -98,6 +98,58 @@
  </div>
  @endif
  </div>
+ </div>
+ </div>
+ <div class="col-12 col-xl-6 animate-fade-up" id="job-interview-performance" style="animation-delay: 0.65s;">
+ @php $jobPerformance = $jobInterviewPerformance ?? null; @endphp
+ <div class="premium-panel progress-category-panel job-performance-card" style="--panel-accent:{{ $jobPerformance?->color ?? '#10b981' }};">
+ <div class="progress-panel-heading">
+ <div class="progress-panel-icon"><i class="fa-solid fa-briefcase"></i></div>
+ <div>
+ <h5 class="progress-panel-title">Job Interview Performance</h5>
+ <p class="progress-panel-subtitle">Average score from scored Job Interview sessions.</p>
+ </div>
+ </div>
+
+ @if($jobPerformance?->has_data)
+ <div class="job-performance-main" style="--job-performance: {{ $jobPerformance->bar }}%; --job-performance-color: {{ $jobPerformance->color }};">
+ <div class="job-performance-score-row">
+ <div>
+ <div class="job-performance-status">{{ $jobPerformance->status }}</div>
+ <div class="job-performance-copy">Based only on Job Interviews.</div>
+ </div>
+ <div class="job-performance-score">{{ $jobPerformance->average }}%</div>
+ </div>
+ <div class="job-performance-track" aria-label="{{ $jobPerformance->average }}% average score">
+ <span></span>
+ </div>
+ <div class="job-performance-stats">
+ <div>
+ <span>Sessions</span>
+ <strong>{{ $jobPerformance->sessions }}</strong>
+ </div>
+ <div>
+ <span>Best Score</span>
+ <strong>{{ $jobPerformance->best }}%</strong>
+ </div>
+ <div>
+ <span>Last Score</span>
+ <strong>{{ $jobPerformance->last }}%</strong>
+ </div>
+ </div>
+ <div class="job-performance-next">
+ <i class="fa-regular fa-lightbulb"></i>
+ <span>{{ $jobPerformance->next_focus }}</span>
+ </div>
+ </div>
+ @else
+ <div class="skill-empty-state progress-category-empty">
+ <div>
+ <div class="skill-empty-icon"><i class="fa-solid fa-briefcase"></i></div>
+ <p class="skill-empty-text">Complete a scored Job Interview session to unlock performance.</p>
+ </div>
+ </div>
+ @endif
  </div>
  </div>
  </div>
@@ -497,8 +549,8 @@
  { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, interview progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
  { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
  { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
- { element: '#job-interview-performance', popover: { title: 'Job Interview Performance', description: 'Review your Job Interview average, session count, best score, latest score, and next focus without unrelated categories.', side: 'top', align: 'start' }},
  { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time as you complete more scored sessions.', side: 'bottom', align: 'start' }},
+ { element: '#job-interview-performance', popover: { title: 'Job Interview Performance', description: 'Review your Job Interview average, session count, best score, latest score, and next focus without unrelated categories.', side: 'top', align: 'start' }},
  { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, STAR method coverage, and the next coaching suggestion.', side: 'top', align: 'start' }},
  { element: '#historySearch', popover: { title: 'Search History', description: 'Filter your interview history when you want to revisit a scenario, date, rating, or score quickly.', side: 'top', align: 'start' }},
  { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
@@ -510,8 +562,8 @@
  { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, interview progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
  { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
  { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
- { element: '#job-interview-performance', popover: { title: 'Job Interview Performance', description: 'Review your Job Interview average, session count, best score, latest score, and next focus without unrelated categories.', side: 'top', align: 'start' }},
  { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time as you complete more scored sessions.', side: 'bottom', align: 'start' }},
+ { element: '#job-interview-performance', popover: { title: 'Job Interview Performance', description: 'Review your Job Interview average, session count, best score, latest score, and next focus without unrelated categories.', side: 'top', align: 'start' }},
  { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, STAR method coverage, and the next coaching suggestion.', side: 'left', align: 'start' }},
  { element: '#historySearch', popover: { title: 'Search History', description: 'Filter your interview history when you want to revisit a scenario, date, rating, or score quickly.', side: 'top', align: 'start' }},
  { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},

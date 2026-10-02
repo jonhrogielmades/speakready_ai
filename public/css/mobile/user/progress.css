@@ -10459,13 +10459,13 @@ body.dm #sec-progress-tracking :is(#strengths-tracker .strengths-icon, #strength
     }
 }
 
-/* Progress live grid: Learning, Skill, and Job Interview Performance cards. */
-html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #job-interview-performance) {
+/* Progress live grid: Learning and Skill cards. */
+html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker) {
     display: flex !important;
     min-width: 0 !important;
 }
 
-html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #job-interview-performance) > :is(.learning-panel, .progress-chart-panel, .progress-category-panel) {
+html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker) > :is(.learning-panel, .progress-chart-panel) {
     width: 100% !important;
 }
 
@@ -10475,6 +10475,8 @@ html body #sec-progress-tracking #learning-progress .learning-module {
 }
 
 html body #sec-progress-tracking #job-interview-performance .job-performance-card {
+    display: flex !important;
+    flex-direction: column !important;
     min-height: 0 !important;
     padding: 16px !important;
 }
@@ -10482,6 +10484,7 @@ html body #sec-progress-tracking #job-interview-performance .job-performance-car
 html body #sec-progress-tracking .job-performance-main {
     display: grid;
     gap: 12px;
+    flex: 1 1 auto;
 }
 
 html body #sec-progress-tracking .job-performance-score-row {
