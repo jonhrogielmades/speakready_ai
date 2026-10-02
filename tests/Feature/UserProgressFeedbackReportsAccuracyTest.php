@@ -43,8 +43,10 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $response->assertOk()
  ->assertSee('+30%')
  ->assertSee('Score pending')
- ->assertSee('Category Performance')
- ->assertSee('id="category-performance-summary"', false)
+ ->assertSee('Job Interview Performance')
+ ->assertSee('id="job-interview-performance"', false)
+ ->assertDontSee('Scenario Performance')
+ ->assertDontSee('id="category-perf"', false)
  ->assertViewHas('longestStreak', 4)
  ->assertViewHas('scoreTrend', function ($trend) {
  return $trend->pluck('score')->all() === [60, 90];
@@ -53,6 +55,15 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  return $categoryPerf === [
  'Job Interviews' => 60,
  ];
+ })
+ ->assertViewHas('jobInterviewPerformance', function ($performance) {
+ return $performance
+ && $performance->has_data
+ && $performance->average === 60
+ && $performance->sessions === 1
+ && $performance->best === 60
+ && $performance->last === 60
+ && $performance->status === 'Improving';
  })
  ->assertViewHas('readinessMovement', function ($movement) {
  return $movement
@@ -75,8 +86,14 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->get(route('user.progress'))
  ->assertOk()
  ->assertDontSee('Job Evidence Match')
+ ->assertSee('Complete a scored Job Interview session to unlock performance.')
  ->assertViewHas('categoryPerf', function ($categoryPerf) {
  return $categoryPerf === [];
+ })
+ ->assertViewHas('jobInterviewPerformance', function ($performance) {
+ return $performance
+ &&! $performance->has_data
+ && $performance->sessions === 0;
  });
  }
 
@@ -152,13 +169,14 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
 
  $response->assertOk()
  ->assertSee('No readiness trend yet')
- ->assertSee('No scenario performance yet')
+ ->assertSee('Complete a scored Job Interview session to unlock performance.')
  ->assertSee('First milestone waiting')
  ->assertDontSee('id="personalized-practice-plan"', false)
  ->assertDontSee('id="activity-calendar"', false)
  ->assertSee('id="historyNoResults"', false)
  ->assertSee('No history records match your search.')
  ->assertViewHas('starProgress', fn ($progress) => $progress &&! $progress->has_data)
+ ->assertViewHas('jobInterviewPerformance', fn ($performance) => $performance &&! $performance->has_data)
  ->assertViewHas('activityCalendar', fn ($calendar) => $calendar && $calendar->range_active_days === 0)
  ->assertViewHas('goalNote', fn ($note) => $note && $note->title === 'First milestone waiting');
  }

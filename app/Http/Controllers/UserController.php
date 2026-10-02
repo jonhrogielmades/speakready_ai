@@ -438,6 +438,7 @@ class UserController extends Controller
  $scoredSessions = $this->scoredSessions($sessions);
  $scoreTrend = $this->scoreTrendFor($scoredSessions);
  $categoryPerf = $this->categoryPerformanceFor($scoredSessions);
+ $jobInterviewPerformance = $this->jobInterviewPerformanceFor($scoredSessions);
  $latestScoredSession = $scoredSessions->last();
  $previousScoredSession = $scoredSessions->count() > 1? $scoredSessions[$scoredSessions->count() - 2]: null;
  $readinessMovement = $this->readinessMovementFor($latestScoredSession, $previousScoredSession);
@@ -510,6 +511,7 @@ class UserController extends Controller
  'scoredSessions',
  'scoreTrend',
  'categoryPerf',
+ 'jobInterviewPerformance',
  'readinessMovement',
  'readinessSummary',
  'skillComparison',
@@ -1046,6 +1048,60 @@ class UserController extends Controller
  ->map(fn ($rows) => (int) round($rows->avg('score')))
  ->sortKeys()
  ->all();
+ }
+
+ private function jobInterviewPerformanceFor($sessions): object
+ {
+ $scores = $sessions
+ ->filter(fn ($session) => $this->isJobInterviewPerformanceCategory($session->category?->title))
+ ->map(fn ($session) => $this->scoreValue($session->score, 'overall_readiness_score'))
+ ->filter(fn ($score) => $score!== null)
+ ->values();
+
+ if ($scores->isEmpty()) {
+ return (object) [
+ 'has_data' => false,
+ 'average' => null,
+ 'bar' => 0,
+ 'sessions' => 0,
+ 'best' => null,
+ 'last' => null,
+ 'status' => 'Waiting',
+ 'color' => '#64748b',
+ 'next_focus' => 'Complete a scored Job Interview session to unlock performance.',
+ ];
+ }
+
+ $average = $this->barWidth((int) round($scores->avg()));
+ $status = 'Needs Work';
+ $color = '#ef4444';
+ $nextFocus = 'Practice one structured STAR answer and aim for 50%+ next session.';
+
+ if ($average >= 85) {
+ $status = 'Excellent';
+ $color = '#10b981';
+ $nextFocus = 'Keep using specific examples and measurable results.';
+ } elseif ($average >= 70) {
+ $status = 'Strong';
+ $color = '#2563eb';
+ $nextFocus = 'Polish role-fit evidence and keep answers concise.';
+ } elseif ($average >= 50) {
+ $status = 'Improving';
+ $color = '#f59e0b';
+ $nextFocus = 'Build clearer structure and complete STAR answers.';
+ }
+
+ return (object) [
+ 'has_data' => true,
+ 'average' => $average,
+ 'bar' => $average,
+ 'sessions' => $scores->count(),
+ 'best' => (int) $scores->max(),
+ 'last' => (int) $scores->last(),
+ 'status' => $status,
+ 'color' => $color,
+ 'next_focus' => $nextFocus,
+ ];
  }
 
  private function isJobInterviewPerformanceCategory(?string $categoryTitle): bool

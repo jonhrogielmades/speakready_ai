@@ -100,29 +100,6 @@
  </div>
  </div>
  </div>
- <!-- Feature 3: Scenario Performance Analysis -->
- <div class="col-12 animate-fade-up" id="category-perf" style="animation-delay: 0.7s;">
- <div class="premium-panel progress-chart-panel" style="height:100%; --panel-accent:#10b981;">
- <div class="progress-panel-heading">
- <div class="progress-panel-icon"><i class="fa-solid fa-crosshairs"></i></div>
- <div>
- <h5 class="progress-panel-title">Scenario Performance</h5>
- <p class="progress-panel-subtitle">Your Job Interviews category average without unrelated categories.</p>
- </div>
- </div>
- <div class="progress-chart-frame scenario">
- @if(count($categoryPerf) > 0)
- <canvas id="categoryChart"></canvas>
- @else
- <div class="progress-chart-empty">
- <i class="fa-solid fa-crosshairs"></i>
- <h6>No scenario performance yet</h6>
- <p>Your Job Interviews category average appears here after a scored Job Interview session.</p>
- </div>
- @endif
- </div>
- </div>
- </div>
  </div>
 
  <div class="row g-4 mb-4">
@@ -378,7 +355,6 @@
  }
 
  const trendData = @json($scoreTrend);
- const scenarioPerformance = @json($categoryPerf);
  const progressCharts = [];
  const previousChartColorUpdater = window.updateChartColors;
  const progressThemeColors = () => {
@@ -479,60 +455,6 @@
  }
  }
 
- // Feature 3: Scenario Performance
- const categoryCanvas = document.getElementById('categoryChart');
- if (categoryCanvas) {
- if (window.Chart && document.getElementById('categoryChart')) {
- try {
- const scenarioLabels = Object.keys(scenarioPerformance);
- const scenarioData = Object.values(scenarioPerformance);
-
- const categoryChart = new Chart(categoryCanvas, {
- type: 'bar',
- data: {
- labels: scenarioLabels,
- datasets: [{
- label: 'Avg Score',
- data: scenarioData,
- backgroundColor: [
- '#3b82f6',
- '#10b981',
- '#8b5cf6',
- '#fb923c'
- ],
- borderRadius: 4,
- maxBarThickness: 96
- }]
- },
- options: {
- responsive: true,
- maintainAspectRatio: false,
- plugins: { legend: { display: false } },
- scales: {
- y: {
- beginAtZero: true,
- max: 100,
- ticks: { color: progressThemeColors().tick, stepSize: 10, padding: 12 },
- border: { display: false },
- grid: { color: progressThemeColors().grid, borderDash: [4, 5], drawTicks: false }
- },
- x: {
- ticks: { color: progressThemeColors().tick, maxRotation: 0, font: { weight: 500 } },
- border: { color: progressThemeColors().border },
- grid: { display: false }
- }
- }
- }
- });
- progressCharts.push(categoryChart);
- } catch (error) {
- console.error(error);
- showProgressChartFallback(categoryCanvas, 'Scenario scores are available, but the chart could not be rendered.');
- }
- } else {
- showProgressChartFallback(categoryCanvas, 'Scenario scores are available, but the chart library did not load.');
- }
- }
  window.updateChartColors = function() {
  if (typeof previousChartColorUpdater === 'function') {
  previousChartColorUpdater();
@@ -575,9 +497,8 @@
  { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, interview progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
  { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
  { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
- { element: '#category-performance-summary', popover: { title: 'Category Summary', description: 'Check which scoring categories are currently strongest before drilling into the full chart.', side: 'top', align: 'start' }},
+ { element: '#job-interview-performance', popover: { title: 'Job Interview Performance', description: 'Review your Job Interview average, session count, best score, latest score, and next focus without unrelated categories.', side: 'top', align: 'start' }},
  { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time as you complete more scored sessions.', side: 'bottom', align: 'start' }},
- { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare practice scenarios to find strengths, weak spots, and where your next session should focus.', side: 'top', align: 'start' }},
  { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, STAR method coverage, and the next coaching suggestion.', side: 'top', align: 'start' }},
  { element: '#historySearch', popover: { title: 'Search History', description: 'Filter your interview history when you want to revisit a scenario, date, rating, or score quickly.', side: 'top', align: 'start' }},
  { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
@@ -589,9 +510,8 @@
  { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, interview progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
  { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
  { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
- { element: '#category-performance-summary', popover: { title: 'Category Summary', description: 'Check which scoring categories are currently strongest before drilling into the full chart.', side: 'top', align: 'start' }},
+ { element: '#job-interview-performance', popover: { title: 'Job Interview Performance', description: 'Review your Job Interview average, session count, best score, latest score, and next focus without unrelated categories.', side: 'top', align: 'start' }},
  { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time as you complete more scored sessions.', side: 'bottom', align: 'start' }},
- { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare practice scenarios to find strengths, weak spots, and where your next session should focus.', side: 'bottom', align: 'start' }},
  { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, STAR method coverage, and the next coaching suggestion.', side: 'left', align: 'start' }},
  { element: '#historySearch', popover: { title: 'Search History', description: 'Filter your interview history when you want to revisit a scenario, date, rating, or score quickly.', side: 'top', align: 'start' }},
  { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},

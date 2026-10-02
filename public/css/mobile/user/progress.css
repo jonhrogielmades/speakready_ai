@@ -10459,17 +10459,126 @@ body.dm #sec-progress-tracking :is(#strengths-tracker .strengths-icon, #strength
     }
 }
 
-/* Progress live grid: Learning, Skill, and Scenario cards. */
-html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #category-performance-summary) {
+/* Progress live grid: Learning, Skill, and Job Interview Performance cards. */
+html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #job-interview-performance) {
     display: flex !important;
     min-width: 0 !important;
 }
 
-html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #category-performance-summary) > :is(.learning-panel, .progress-chart-panel, .progress-category-panel) {
+html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker, #job-interview-performance) > :is(.learning-panel, .progress-chart-panel, .progress-category-panel) {
     width: 100% !important;
 }
 
 html body #sec-progress-tracking #learning-progress .learning-module {
     color: inherit !important;
     text-decoration: none !important;
+}
+
+html body #sec-progress-tracking #job-interview-performance .job-performance-card {
+    min-height: 0 !important;
+    padding: 16px !important;
+}
+
+html body #sec-progress-tracking .job-performance-main {
+    display: grid;
+    gap: 12px;
+}
+
+html body #sec-progress-tracking .job-performance-score-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+html body #sec-progress-tracking .job-performance-status {
+    color: var(--job-performance-color, #10b981);
+    font-size: 0.96rem;
+    font-weight: 900;
+    line-height: 1.2;
+}
+
+html body #sec-progress-tracking .job-performance-copy {
+    margin-top: 3px;
+    color: var(--tx3);
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.32;
+}
+
+html body #sec-progress-tracking .job-performance-score {
+    color: var(--job-performance-color, #10b981);
+    font-size: 1.75rem;
+    font-weight: 950;
+    line-height: 1;
+}
+
+html body #sec-progress-tracking .job-performance-track {
+    height: 9px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.18);
+    overflow: hidden;
+}
+
+html body #sec-progress-tracking .job-performance-track span {
+    display: block;
+    width: var(--job-performance, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: var(--job-performance-color, #10b981);
+}
+
+html body #sec-progress-tracking .job-performance-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+}
+
+html body #sec-progress-tracking .job-performance-stats > div,
+html body #sec-progress-tracking .job-performance-next {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 11px;
+    background: rgba(248, 250, 252, 0.64);
+}
+
+html body #sec-progress-tracking .job-performance-stats > div {
+    padding: 9px 7px;
+}
+
+html body #sec-progress-tracking .job-performance-stats span {
+    display: block;
+    color: var(--tx3);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+html body #sec-progress-tracking .job-performance-stats strong {
+    display: block;
+    margin-top: 4px;
+    color: var(--tx);
+    font-size: 0.86rem;
+    font-weight: 950;
+    line-height: 1.1;
+}
+
+html body #sec-progress-tracking .job-performance-next {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px;
+    color: var(--tx2);
+    font-size: 0.72rem;
+    font-weight: 750;
+    line-height: 1.32;
+}
+
+html body #sec-progress-tracking .job-performance-next i {
+    color: var(--job-performance-color, #10b981);
+    margin-top: 2px;
+}
+
+:root:not(.lm) body #sec-progress-tracking .job-performance-stats > div,
+:root:not(.lm) body #sec-progress-tracking .job-performance-next {
+    background: rgba(15, 23, 42, 0.36);
 }
