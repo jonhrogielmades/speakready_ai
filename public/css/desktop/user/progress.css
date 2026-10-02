@@ -10466,8 +10466,8 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-t
         flex: none !important;
     }
 
-    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #category-perf),
-    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #category-perf) > .progress-chart-panel {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #job-interview-performance),
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #job-interview-performance) > :is(.progress-chart-panel, .progress-category-panel) {
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
@@ -10475,8 +10475,8 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-t
         justify-self: stretch !important;
     }
 
-    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #category-perf) .progress-chart-frame,
-    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #category-perf) canvas {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #job-interview-performance) .progress-chart-frame,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #job-interview-performance) canvas {
         width: 100% !important;
         max-width: 100% !important;
     }
@@ -11332,107 +11332,111 @@ html body #sec-progress-tracking #job-interview-performance .job-performance-car
 }
 
 html body #sec-progress-tracking .job-performance-main {
-    display: grid;
-    gap: 14px;
-    flex: 1 1 auto;
-    align-content: center;
+    display: grid !important;
+    gap: 14px !important;
+    flex: 1 1 auto !important;
+    align-content: center !important;
 }
 
 html body #sec-progress-tracking .job-performance-score-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 14px;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
 }
 
 html body #sec-progress-tracking .job-performance-status {
-    color: var(--job-performance-color, #10b981);
-    font-size: 1rem;
-    font-weight: 900;
-    line-height: 1.2;
+    color: var(--job-performance-color, #10b981) !important;
+    font-size: 1rem !important;
+    font-weight: 900 !important;
+    line-height: 1.2 !important;
 }
 
 html body #sec-progress-tracking .job-performance-copy {
-    margin-top: 3px;
-    color: var(--tx3);
-    font-size: 0.78rem;
-    font-weight: 700;
-    line-height: 1.35;
+    margin-top: 3px !important;
+    color: var(--tx3) !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
 }
 
 html body #sec-progress-tracking .job-performance-score {
-    color: var(--job-performance-color, #10b981);
-    font-size: 2rem;
-    font-weight: 950;
-    line-height: 1;
+    display: block !important;
+    color: var(--job-performance-color, #10b981) !important;
+    font-size: 2rem !important;
+    font-weight: 950 !important;
+    line-height: 1 !important;
 }
 
 html body #sec-progress-tracking .job-performance-track {
-    height: 10px;
-    border-radius: 999px;
-    background: rgba(148, 163, 184, 0.18);
-    overflow: hidden;
+    display: block !important;
+    width: 100% !important;
+    height: 10px !important;
+    border-radius: 999px !important;
+    background: rgba(148, 163, 184, 0.18) !important;
+    overflow: hidden !important;
 }
 
 html body #sec-progress-tracking .job-performance-track span {
-    display: block;
-    width: var(--job-performance, 0%);
-    height: 100%;
-    border-radius: inherit;
-    background: var(--job-performance-color, #10b981);
+    display: block !important;
+    width: var(--job-performance, 0%) !important;
+    height: 100% !important;
+    border-radius: inherit !important;
+    background: var(--job-performance-color, #10b981) !important;
 }
 
 html body #sec-progress-tracking .job-performance-stats {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
 }
 
 html body #sec-progress-tracking .job-performance-stats > div,
 html body #sec-progress-tracking .job-performance-next {
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    border-radius: 12px;
-    background: rgba(248, 250, 252, 0.64);
+    border: 1px solid rgba(148, 163, 184, 0.18) !important;
+    border-radius: 12px !important;
+    background: rgba(248, 250, 252, 0.64) !important;
 }
 
 html body #sec-progress-tracking .job-performance-stats > div {
-    padding: 10px;
+    display: block !important;
+    padding: 10px !important;
 }
 
 html body #sec-progress-tracking .job-performance-stats span {
-    display: block;
-    color: var(--tx3);
-    font-size: 0.68rem;
-    font-weight: 800;
-    line-height: 1.2;
+    display: block !important;
+    color: var(--tx3) !important;
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
 }
 
 html body #sec-progress-tracking .job-performance-stats strong {
-    display: block;
-    margin-top: 4px;
-    color: var(--tx);
-    font-size: 0.94rem;
-    font-weight: 950;
-    line-height: 1.1;
+    display: block !important;
+    margin-top: 4px !important;
+    color: var(--tx) !important;
+    font-size: 0.94rem !important;
+    font-weight: 950 !important;
+    line-height: 1.1 !important;
 }
 
 html body #sec-progress-tracking .job-performance-next {
-    display: flex;
-    align-items: flex-start;
-    gap: 9px;
-    padding: 11px;
-    color: var(--tx2);
-    font-size: 0.76rem;
-    font-weight: 750;
-    line-height: 1.35;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 9px !important;
+    padding: 11px !important;
+    color: var(--tx2) !important;
+    font-size: 0.76rem !important;
+    font-weight: 750 !important;
+    line-height: 1.35 !important;
 }
 
 html body #sec-progress-tracking .job-performance-next i {
-    color: var(--job-performance-color, #10b981);
-    margin-top: 2px;
+    color: var(--job-performance-color, #10b981) !important;
+    margin-top: 2px !important;
 }
 
 :root:not(.lm) body #sec-progress-tracking .job-performance-stats > div,
 :root:not(.lm) body #sec-progress-tracking .job-performance-next {
-    background: rgba(15, 23, 42, 0.36);
+    background: rgba(15, 23, 42, 0.36) !important;
 }
