@@ -106,7 +106,7 @@
                 <div class="progress-panel-icon"><i class="fa-solid fa-layer-group"></i></div>
                 <div>
                     <h5 class="progress-panel-title">Category Performance</h5>
-                    <p class="progress-panel-subtitle">Where your interview scores are strongest.</p>
+                    <p class="progress-panel-subtitle">Job Interviews category average only.</p>
                 </div>
             </div>
 
@@ -130,7 +130,7 @@
                 <div class="skill-empty-state progress-category-empty">
                     <div>
                         <div class="skill-empty-icon"><i class="fa-solid fa-folder-open"></i></div>
-                        <p class="skill-empty-text">Complete an interview session to unlock category performance.</p>
+                        <p class="skill-empty-text">Complete a scored Job Interview session to unlock category performance.</p>
                     </div>
                 </div>
             @endif

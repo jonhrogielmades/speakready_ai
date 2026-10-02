@@ -461,8 +461,12 @@
  <div class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
  <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-chart-bar text-primary me-2"></i>Scenario Performance</h5>
  <div class="report-chart-frame" style="height:250px;">
+ @if(count($categoryPerf) > 0)
  <canvas id="catChart"></canvas>
  <div class="report-chart-fallback d-none" id="catChartFallback">Scenario performance chart is unavailable right now.</div>
+ @else
+ <div class="report-chart-fallback" id="catChartFallback">Job Interviews category performance appears after a scored Job Interview session.</div>
+ @endif
  </div>
  </div>
  </div>

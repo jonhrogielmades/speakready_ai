@@ -24,7 +24,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  public function test_progress_analytics_only_use_recorded_scores(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $behavioral = $this->category('Behavioral');
+ $job = $this->category('Job Interview');
  $technical = $this->category('Technical');
 
  Profile::create([
@@ -34,8 +34,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  'longest_streak' => 4,
  ]);
 
- $this->completedSessionFor($user, $behavioral, 60, now()->subDays(3));
- $this->completedSessionFor($user, $behavioral, null, now()->subDays(2));
+ $this->completedSessionFor($user, $job, 60, now()->subDays(3));
+ $this->completedSessionFor($user, $job, null, now()->subDays(2));
  $this->completedSessionFor($user, $technical, 90, now()->subDay());
 
  $response = $this->actingAs($user)->get(route('user.progress'));
@@ -51,8 +51,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  })
  ->assertViewHas('categoryPerf', function ($categoryPerf) {
  return $categoryPerf === [
- 'Behavioral' => 60,
- 'Technical' => 90,
+ 'Job Interviews' => 60,
  ];
  })
  ->assertViewHas('readinessMovement', function ($movement) {
@@ -77,9 +76,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertOk()
  ->assertDontSee('Job Evidence Match')
  ->assertViewHas('categoryPerf', function ($categoryPerf) {
- return $categoryPerf === [
- 'Technical' => 70,
- ];
+ return $categoryPerf === [];
  });
  }
 
@@ -881,13 +878,13 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  public function test_reports_use_scored_sessions_for_readiness_trends_without_unrelated_learning_totals(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $behavioral = $this->category('Behavioral');
+ $job = $this->category('Job Interview');
  $technical = $this->category('Technical');
 
- $first = $this->completedSessionFor($user, $behavioral, 50, now()->subDays(4));
+ $first = $this->completedSessionFor($user, $job, 50, now()->subDays(4));
  $this->completedSessionFor($user, $technical, null, now()->subDays(3));
  $this->completedSessionFor($user, $technical, 70, now()->subDays(2));
- $latest = $this->completedSessionFor($user, $behavioral, 85, now()->subDay());
+ $latest = $this->completedSessionFor($user, $job, 85, now()->subDay());
 
  $response = $this->actingAs($user)->get(route('user.reports'));
 
@@ -915,8 +912,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  })
  ->assertViewHas('categoryPerf', function ($categoryPerf) {
  return $categoryPerf === [
- 'Behavioral' => 68,
- 'Technical' => 70,
+ 'Job Interviews' => 68,
  ];
  })
  ->assertViewHas('latestPerformanceMetrics', function ($metrics) {

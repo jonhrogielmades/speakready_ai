@@ -1037,16 +1037,30 @@ class UserController extends Controller
  }
 
  return [
- 'category' => $session->category?->title?: 'Uncategorized',
+ 'category' => $this->isJobInterviewPerformanceCategory($session->category?->title)? 'Job Interviews': null,
  'score' => $score,
  ];
  })
- ->filter(fn ($row) => $row!== null)
- ->reject(fn (array $row): bool => $this->isRemovedJobEvidenceText($row['category']?? ''))
+ ->filter(fn ($row) => $row!== null && $row['category']!== null)
  ->groupBy('category')
  ->map(fn ($rows) => (int) round($rows->avg('score')))
  ->sortKeys()
  ->all();
+ }
+
+ private function isJobInterviewPerformanceCategory(?string $categoryTitle): bool
+ {
+ $title = Str::lower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $categoryTitle))?? ''));
+
+ if ($title === '' || $this->isRemovedJobEvidenceText($title)) {
+ return false;
+ }
+
+ if (Str::contains($title, ['bpo', 'customer', 'programming', 'technical', 'scholar']) || preg_match('/\bit\b/', $title)) {
+ return false;
+ }
+
+ return Str::contains($title, ['job interview', 'job interviews', 'general job']);
  }
 
  private function practiceScenarioLabel(?InterviewSession $session): string

@@ -107,7 +107,7 @@
  <div class="progress-panel-icon"><i class="fa-solid fa-crosshairs"></i></div>
  <div>
  <h5 class="progress-panel-title">Scenario Performance</h5>
- <p class="progress-panel-subtitle">Your average scores across job interview scenarios.</p>
+ <p class="progress-panel-subtitle">Your Job Interviews category average without unrelated categories.</p>
  </div>
  </div>
  <div class="progress-chart-frame scenario">
@@ -117,7 +117,7 @@
  <div class="progress-chart-empty">
  <i class="fa-solid fa-crosshairs"></i>
  <h6>No scenario performance yet</h6>
- <p>Your scored scenario averages appear here after completed practice sessions.</p>
+ <p>Your Job Interviews category average appears here after a scored Job Interview session.</p>
  </div>
  @endif
  </div>
