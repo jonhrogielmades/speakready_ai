@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=19') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=8') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=11') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -935,10 +935,16 @@
  function markSetupValidation(missing) {
  const missingFieldIds = new Set(missing.filter(item => item.type === 'field' || item.type === 'scenario_mismatch').map(item => item.id));
  const missingGroups = new Set(missing.filter(item => item.type === 'group').map(item => item.name));
+ const missingPanelIds = new Set(missing.map(item => item.panelId).filter(Boolean));
  setupRequiredFieldIds.forEach(id => setSetupFieldInvalid(document.getElementById(id), missingFieldIds.has(id)));
  Object.keys(setupFieldErrorIds).forEach(id => setSetupFieldError(id, missingFieldIds.has(id)));
  Object.keys(setupGroupErrorIds).forEach(name => setSetupGroupError(name, missingGroups.has(name)));
  setQuestionTypeError(missing.some(item => item.name === 'question_types[]'));
+ document.querySelectorAll('#panel-basic, #panel-structure, #panel-inclusive, #panel-content, #panel-response, #panel-summary').forEach(panel => {
+ const invalid = missingPanelIds.has(panel.id);
+ panel.classList.toggle('setup-panel-invalid', invalid);
+ panel.setAttribute('aria-invalid', invalid? 'true': 'false');
+ });
  }
 
  function showSetupValidationIssue(item) {
@@ -1303,9 +1309,11 @@
 
  const isActive = index === setupStepState.index;
  const isLocked = index > maxAccessibleIndex;
+ const isReady = step.id !== 'panel-summary' && isSetupStepComplete(step.id);
  const isComplete = step.id !== 'panel-summary' && isSetupStepComplete(step.id) && index < setupStepState.index;
 
  stepButton.classList.toggle('is-active', isActive);
+ stepButton.classList.toggle('is-ready', isReady);
  stepButton.classList.toggle('is-complete', isComplete);
  stepButton.classList.toggle('is-locked', isLocked);
  stepButton.setAttribute('aria-current', isActive? 'step': 'false');

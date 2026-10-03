@@ -760,3 +760,160 @@ html.interview-setup-page-root,
         white-space: nowrap !important;
     }
 }
+
+@media (max-width: 991.98px) {
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-track,
+    html body #mob-content #sec-interview-setup .setup-stepper-track,
+    html body #sec-interview-setup .setup-stepper-track {
+        --setup-stepper-link-gap: 6px;
+        --setup-stepper-dot-size: 26px;
+        display: grid !important;
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: var(--setup-stepper-link-gap) !important;
+        overflow: visible !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-item,
+    html body #mob-content #sec-interview-setup .setup-stepper-item,
+    html body #sec-interview-setup .setup-stepper-item {
+        position: relative !important;
+        overflow: visible !important;
+        z-index: 1 !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-item:not(:last-child)::after,
+    html body #mob-content #sec-interview-setup .setup-stepper-item:not(:last-child)::after,
+    html body #sec-interview-setup .setup-stepper-item:not(:last-child)::after {
+        content: "" !important;
+        position: absolute !important;
+        z-index: 0 !important;
+        top: calc(var(--setup-stepper-dot-size) / 2) !important;
+        left: calc(50% + (var(--setup-stepper-dot-size) / 2)) !important;
+        width: calc(100% + var(--setup-stepper-link-gap) - var(--setup-stepper-dot-size)) !important;
+        border-top: 2px dashed rgba(148, 163, 184, 0.56) !important;
+        pointer-events: none !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-ready:not(:last-child)::after,
+    html body #mob-content #sec-interview-setup .setup-stepper-item.is-ready:not(:last-child)::after,
+    html body #sec-interview-setup .setup-stepper-item.is-ready:not(:last-child)::after {
+        border-top-color: rgba(22, 163, 74, 0.64) !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-dot,
+    html body #mob-content #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-dot,
+    html body #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-dot {
+        position: relative !important;
+        width: var(--setup-stepper-dot-size) !important;
+        height: var(--setup-stepper-dot-size) !important;
+        min-width: var(--setup-stepper-dot-size) !important;
+        border-color: #16a34a !important;
+        background: #16a34a !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.13) !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-dot::before,
+    html body #mob-content #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-dot::before,
+    html body #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-dot::before {
+        content: "" !important;
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        width: 6px !important;
+        height: 11px !important;
+        border: solid currentColor !important;
+        border-width: 0 2px 2px 0 !important;
+        transform: translate(-50%, -58%) rotate(45deg) !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-label,
+    html body #mob-content #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-label,
+    html body #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-label {
+        color: #166534 !important;
+        font-weight: 900 !important;
+    }
+
+    html:not(.lm) body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-label,
+    html:not(.lm) body #mob-content #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-label,
+    html:not(.lm) body #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-label {
+        color: #86efac !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-dot,
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-dot,
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-dot,
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-complete .setup-stepper-dot,
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-dot,
+    html body #mob-content #sec-interview-setup .setup-stepper-dot,
+    html body #mob-content #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-dot,
+    html body #mob-content #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-dot,
+    html body #mob-content #sec-interview-setup .setup-stepper-item.is-complete .setup-stepper-dot,
+    html body #mob-content #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-dot,
+    html body #sec-interview-setup .setup-stepper-dot,
+    html body #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-dot,
+    html body #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-dot,
+    html body #sec-interview-setup .setup-stepper-item.is-complete .setup-stepper-dot,
+    html body #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-dot {
+        border-radius: 999px !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-actions .setup-step-btn,
+    html body #mob-content #sec-interview-setup .setup-stepper-actions .setup-step-btn,
+    html body #sec-interview-setup .setup-stepper-actions .setup-step-btn,
+    html body.user-mobile-shell #sec-interview-setup .setup-stepper-actions #btn-start-interview,
+    html body #mob-content #sec-interview-setup .setup-stepper-actions #btn-start-interview,
+    html body #sec-interview-setup .setup-stepper-actions #btn-start-interview {
+        box-sizing: border-box !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    html body.user-mobile-shell #sec-interview-setup .oinp.setup-field-invalid,
+    html body.user-mobile-shell #sec-interview-setup .setup-input.setup-field-invalid,
+    html body.user-mobile-shell #sec-interview-setup .setup-target-trigger.setup-field-invalid,
+    html body #mob-content #sec-interview-setup .oinp.setup-field-invalid,
+    html body #mob-content #sec-interview-setup .setup-input.setup-field-invalid,
+    html body #mob-content #sec-interview-setup .setup-target-trigger.setup-field-invalid,
+    html body #sec-interview-setup .oinp.setup-field-invalid,
+    html body #sec-interview-setup .setup-input.setup-field-invalid,
+    html body #sec-interview-setup .setup-target-trigger.setup-field-invalid {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16) !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .structure-difficulty-list.setup-field-invalid,
+    html body.user-mobile-shell #sec-interview-setup .camera-mode-list.setup-field-invalid,
+    html body.user-mobile-shell #sec-interview-setup .assistance-question-list.setup-field-invalid,
+    html body.user-mobile-shell #sec-interview-setup .response-mode-list.setup-field-invalid,
+    html body #mob-content #sec-interview-setup .structure-difficulty-list.setup-field-invalid,
+    html body #mob-content #sec-interview-setup .camera-mode-list.setup-field-invalid,
+    html body #mob-content #sec-interview-setup .assistance-question-list.setup-field-invalid,
+    html body #mob-content #sec-interview-setup .response-mode-list.setup-field-invalid,
+    html body #sec-interview-setup .structure-difficulty-list.setup-field-invalid,
+    html body #sec-interview-setup .camera-mode-list.setup-field-invalid,
+    html body #sec-interview-setup .assistance-question-list.setup-field-invalid,
+    html body #sec-interview-setup .response-mode-list.setup-field-invalid {
+        border: 1px solid #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-setup .setup-panel.setup-panel-invalid,
+    html body.user-mobile-shell #sec-interview-setup #panel-summary.setup-panel-invalid,
+    html body #mob-content #sec-interview-setup .setup-panel.setup-panel-invalid,
+    html body #mob-content #sec-interview-setup #panel-summary.setup-panel-invalid,
+    html body #sec-interview-setup .setup-panel.setup-panel-invalid,
+    html body #sec-interview-setup #panel-summary.setup-panel-invalid {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14), var(--setup-saas-shadow, 0 12px 28px rgba(15, 23, 42, 0.08)) !important;
+    }
+}
