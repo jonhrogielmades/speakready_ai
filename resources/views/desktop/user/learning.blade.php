@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=24') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=23') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -57,34 +57,17 @@
  </div>
  @endif
 
- <div class="row g-4">
- <div class="col-lg-12">
-
-@php
-$maxEnergy = \App\Models\Profile::MAX_ENERGY;
-$currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy));
-@endphp
-
- <div class="journey-header d-flex justify-content-between align-items-center mb-3">
- <h5 class="journey-title" style="margin:0">Challenge Journey</h5>
- <div class="journey-header-actions">
- <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm journey-skill-tree-btn d-inline-flex align-items-center justify-content-center"><i class="fa-solid fa-tree me-1"></i> <span>Skill Tree</span></a>
- <span class="badge journey-lives"><i class="fa-solid fa-heart me-1" style="color:#ef4444"></i> {{ $currentEnergy }} / {{ $maxEnergy }} Lives</span>
- </div>
- </div>
-
- <div class="challenge-journey-layout">
-<!-- Gamified HUD Stats -->
- <div id="dashboard-stats" class="challenge-journey-stats">
+ <!-- Gamified HUD Stats -->
+ <div id="dashboard-stats" class="row g-4 mb-4">
  <!-- Player Level & XP -->
- <div class="challenge-stat-cell animate-fade-up" style="animation-delay: 0.1s">
+ <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.1s">
  <div class="ll-stat-card" style="display:flex; flex-direction:column; justify-content:center; height:100%;">
  <div class="d-flex justify-content-between align-items-center mb-2">
  <span style="font-weight:800; color:var(--tx); font-size:1.1rem;"><i class="fa-solid fa-crown text-warning me-2"></i> LEVEL {{ $profile?->player_level?? 1 }}</span>
  <span style="font-size:0.75rem; color:var(--tx3); font-weight:700; background:var(--bg3); padding:3px 8px; border-radius:6px;">{{ ($profile?->player_level?? 1) >= 5? 'GOLD': (($profile?->player_level?? 1) >= 3? 'SILVER': 'BRONZE') }}</span>
  </div>
  <div class="ll-progress-bar" style="height:12px; background:var(--bd); border-radius:6px; margin:5px 0;">
- @php
+ @php 
  $xp = $profile?->experience_points?? 0;
  $nextLevelXp = ($profile?->player_level?? 1) * 1000;
  $percent = min(100, ($xp / $nextLevelXp) * 100);
@@ -94,13 +77,13 @@ $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy))
  <div style="font-size:0.75rem; color:var(--tx3); font-weight:700; text-align:right;">{{ number_format($xp) }} / {{ number_format($nextLevelXp) }} XP</div>
  </div>
  </div>
-
+ 
  <!-- Energy/Lives -->
  @php
  $maxEnergy = \App\Models\Profile::MAX_ENERGY;
  $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy));
  @endphp
- <div class="challenge-stat-cell animate-fade-up" style="animation-delay: 0.2s">
+ <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.2s">
  <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
  <div style="width:55px; height:55px; border-radius:15px; background:rgba(239,68,68,0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
  <i class="fa-solid fa-heart"></i>
@@ -113,7 +96,7 @@ $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy))
  </div>
 
  <!-- Streak -->
- <div class="challenge-stat-cell animate-fade-up" style="animation-delay: 0.3s">
+ <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.3s">
  <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
  <div style="width:55px; height:55px; border-radius:15px; background:rgba(245,158,11,0.1); color:#f59e0b; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
  <i class="fa-solid fa-fire"></i>
@@ -126,7 +109,7 @@ $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy))
  </div>
 
  <!-- Score/Accuracy -->
- <div class="challenge-stat-cell animate-fade-up" style="animation-delay: 0.4s">
+ <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.4s">
  <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
  <div style="width:55px; height:55px; border-radius:15px; background:rgba(52,211,153,0.1); color:#34d399; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
  <i class="fa-solid fa-bullseye"></i>
@@ -140,9 +123,18 @@ $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy))
  </div>
  </div>
 
+ <div class="row g-4">
+ <div class="col-lg-12">
+ 
+ <div class="journey-header d-flex justify-content-between align-items-center mb-3">
+ <h5 class="journey-title" style="margin:0">Challenge Journey</h5>
+ <div class="journey-header-actions">
+ <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm journey-skill-tree-btn d-inline-flex align-items-center justify-content-center"><i class="fa-solid fa-tree me-1"></i> <span>Skill Tree</span></a>
+ <span class="badge journey-lives"><i class="fa-solid fa-heart me-1" style="color:#ef4444"></i> {{ $currentEnergy }} / {{ $maxEnergy }} Lives</span>
+ </div>
+ </div>
 
-<div class="challenge-journey-main">
-<div class="level-path-container" id="modules-list">
+ <div class="level-path-container" id="modules-list">
  @if(session('error') &&! $gameResult)
  <div class="learning-notice learning-notice-danger" role="alert">
  <span class="learning-notice-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
@@ -163,10 +155,10 @@ $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy))
  <button type="button" class="challenge-step-nav" id="challengeStepNext" aria-label="Next challenge level"><i class="fa-solid fa-arrow-right"></i></button>
  </div>
  @endif
-
+ 
  <!-- Path Line -->
  <div class="level-path-line">
- @php
+ @php 
  $visibleLevelIds = $gameLevels? $gameLevels->pluck('id'): collect();
  $completedCount = $gameProgress? $gameProgress->whereIn('game_level_id', $visibleLevelIds)->where('status', 'completed')->count(): 0;
  $totalLevels = $gameLevels? $gameLevels->count(): 1;
@@ -182,10 +174,10 @@ $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy))
  if (!isset($catPassed[$level->category_id])) {
  $catPassed[$level->category_id] = true; // First level in any category is unlocked
  }
-
+ 
  $prog = $gameProgress? $gameProgress->get($level->id): null;
  $isCompleted = $prog && $prog->best_score >= $level->required_score;
-
+ 
  if ($isCompleted) {
  $status = 'completed';
  $catPassed[$level->category_id] = true; // Next level in this category will be unlocked
@@ -211,7 +203,7 @@ $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy))
  if ($level->is_hidden && $status === 'locked') {
  continue;
  }
-
+ 
  $score = $prog? $prog->best_score: 0;
  $successChecklist = $level->guidance_checklist;
  $lockedArtIcons = ['fa-lightbulb', 'fa-comment-dots', 'fa-chalkboard-user', 'fa-trophy'];
@@ -265,7 +257,7 @@ $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy))
  <div class="requirement-badge" style="background:var(--bg3);color:var(--tx3)"><i class="fa-solid fa-lock"></i> Locked</div>
  @endif
  </div>
-
+ 
  <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:10px;line-height:1.5">{{ $level->description }}</p>
 
  @if($level->skill_focus || $level->learning_objective)
@@ -278,7 +270,7 @@ $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy))
  @endif
  </div>
  @endif
-
+ 
  @if($status === 'active' || $status === 'completed')
  <div class="d-flex flex-wrap gap-2 learning-badge-row {{ $status === 'active'? 'learning-badge-row-active': '' }}">
  @if($level->skill_focus)
@@ -404,11 +396,9 @@ $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy))
  <h5 style="color:var(--tx3)">{{ $selectedChallengePosition!== ''? 'No related challenge levels loaded yet.': 'No challenge levels loaded yet.' }}</h5>
  </div>
  @endif
-</div>
-</div>
-</div>
-</div>
-</div>
+ </div>
+ </div>
+ </div>
 </div>
 
 <div class="modal fade challenge-position-modal" id="challengePositionModal" tabindex="-1" aria-labelledby="challengePositionModalTitle" aria-hidden="true" data-show-on-load="{{ ($showPositionModal || $errors->has('target_position'))? 'true': 'false' }}" data-require-choice="{{ $selectedChallengePosition === ''? 'true': 'false' }}">

@@ -3653,43 +3653,6 @@
 }
 
 @media (min-width: 992px) {
-    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-journey-layout {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 18px;
-        align-items: start;
-    }
-
-    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-journey-main {
-        order: 1;
-        min-width: 0;
-    }
-
-    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats.challenge-journey-stats {
-        order: 2;
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-        width: 100%;
-        min-width: 0;
-        margin: 8px 0 0 !important;
-    }
-
-    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats.challenge-journey-stats .challenge-stat-cell {
-        width: 100%;
-        min-width: 0;
-        max-width: none;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats.challenge-journey-stats .ll-stat-card {
-        width: 100% !important;
-        min-height: 132px !important;
-        height: 100% !important;
-        box-sizing: border-box;
-    }
-
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-path-container.level-stepper-mode {
         display: block !important;
         grid-template-columns: none !important;
