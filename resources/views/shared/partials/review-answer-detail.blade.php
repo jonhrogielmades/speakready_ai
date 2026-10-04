@@ -26,6 +26,8 @@
  return array_values(array_filter(array_map($reviewFeedbackText, $listItems($items, $limit))));
  };
  $answerText = trim((string) ($answer->answer_text ?? ''));
+ $starApplicable = \App\Services\QuestionIntentService::starApplicable($questionSource);
+ $hasAnswerForBetterDraft = review_answer_is_usable_for_better_answer(review_answer_text($answer), $questionSource);
  $hasVoiceRecording = trim((string) ($answer->voice_recording_path ?? '')) !== '';
  $hasVoiceEvidence = trim((string) ($answer->delivery_transcript ?? '')) !== '';
  $isVoiceOnlyAnswer = strtolower((string) ($answer->response_mode ?? '')) === 'voice' && $hasVoiceRecording;
@@ -219,8 +221,17 @@
  <p>{{ $answerDisplay }}</p>
  </section>
  <section class="review-better-example">
- <span>Better Answer</span>
- <p>{{ $betterAnswer }}</p>
+ <span>Possible Answer Based on Your Response</span>
+ <small style="display:block;color:var(--tx3);font-size:.78rem;line-height:1.45;margin:0 0 8px;">
+ @if(!$hasAnswerForBetterDraft)
+ Add enough answer detail to create a response-based draft.
+ @elseif($starApplicable)
+ AI Coach STAR format. Keep only your real details and fill placeholders truthfully.
+ @else
+ Uses your saved answer. Fill any placeholders only with true details.
+ @endif
+ </small>
+ <p style="white-space:pre-line;">{{ $betterAnswer }}</p>
  </section>
  </div>
 

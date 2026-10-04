@@ -1029,9 +1029,9 @@ class AIService
  : 'Base the answer on the question, target role, answer guide, resume excerpt, and job description excerpt when present.';
 
  $starRule = match ($starApplicable) {
- true => 'Organize the answer clearly as Situation, Task, Action, and Result. Short STAR labels are allowed.',
+ true => 'Use the exact labels Situation:, Task:, Action:, and Result: in this order, with one section per line. Base each section only on candidate_answer. If a STAR detail is missing, put a short bracketed placeholder in that section instead of guessing.',
  false => 'Do not force STAR labels unless the question asks for a past example.',
- default => 'When the supplied star_applicable value is true, organize the answer clearly as Situation, Task, Action, and Result. When star_applicable is false, do not force STAR labels.',
+ default => 'When the supplied star_applicable value is true, use the exact labels Situation:, Task:, Action:, and Result: in this order, with one section per line. Use only candidate_answer details and bracketed placeholders for missing parts. When star_applicable is false, do not force STAR labels.',
  };
 
  $groundingRule = $groundInCandidateAnswer
@@ -4517,7 +4517,8 @@ PROMPT;
 
  private static function providerBetterSampleAnswerIsValid(string $text, array $answer): bool
  {
- $text = self::normalizeEvidenceText($text);
+ $rawText = trim($text);
+ $text = self::normalizeEvidenceText($rawText);
  if (self::isSkippedAnswer($answer)) {
  return $text === '';
  }
@@ -4531,7 +4532,22 @@ PROMPT;
  &&! self::betterSampleAnswerLooksLikeAdvice($text)
  &&! self::feedbackInfersForbiddenTrait($text)
  &&! self::feedbackClaimsPerfectCertainty($text)
- &&! self::feedbackHasUnsupportedNumbers($text, $answerText);
+ &&! self::feedbackHasUnsupportedNumbers($text, $answerText)
+ && (! self::questionUsesStar($answer) || self::betterSampleAnswerHasCompleteStarStructure($rawText));
+ }
+
+ private static function betterSampleAnswerHasCompleteStarStructure(string $text): bool
+ {
+ preg_match_all('/^[ \t]*(Situation|Task|Action|Result)[ \t]*:[ \t]*([^\r\n]+)[ \t]*$/imu', trim($text), $matches, PREG_SET_ORDER);
+ $sections = [];
+ foreach ($matches as $match) {
+ if (trim((string) ($match[2]?? '')) === '') {
+ return false;
+ }
+ $sections[] = ucfirst(strtolower((string) $match[1]));
+ }
+
+ return $sections === ['Situation', 'Task', 'Action', 'Result'];
  }
 
  private static function betterSampleAnswerLooksLikeAdvice(string $text): bool

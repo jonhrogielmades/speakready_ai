@@ -263,7 +263,7 @@
  <textarea class="oinp retry-textarea" id="retry-text-{{ $answer->id }}" rows="5" style="font-size:.95rem;" placeholder="Type your improved answer here..." onfocus="startRetryTimer({{ $answer->id }})" oninput="updateRetryWordCount({{ $answer->id }})"></textarea>
  <div class="d-flex flex-column flex-md-row gap-2 mt-3">
  <button type="button" class="btn btn-outline-secondary" style="border-radius:12px;font-weight:700;" onclick="prefillRetry({{ $answer->id }}, @js(review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $answer->question ?? $answer)), @js($answer->answer_text?: ''))">
- <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Use Better Draft
+ <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Use Possible Answer
  </button>
  <button type="button" class="btn btn-primary" id="retry-submit-{{ $answer->id }}" style="border-radius:12px;font-weight:700;" onclick="submitRetry({{ $answer->id }})">
  <i class="fa-solid fa-paper-plane me-1"></i>Submit Attempt

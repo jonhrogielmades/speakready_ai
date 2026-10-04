@@ -399,14 +399,21 @@ if (! function_exists('review_better_answer_fallback')) {
         $questionText = review_question_text($questionSource);
         $answerText = review_answer_text($answerSource);
         if (! review_answer_is_usable_for_better_answer($answerText, $questionSource)) {
-            if ($questionText !== '') {
-                return review_question_based_better_answer($questionText);
+            if (trim($answerText) === '') {
+                return 'A response-based possible answer is unavailable because no usable answer text was saved. Submit an answer to get a draft based on your details.';
             }
 
-            return 'No AI-enhanced answer was generated yet. Submit a complete answer so the Better Answer can be based on your real details for this question.';
+            return 'Your saved answer is too short or does not contain enough response detail to build a reliable draft. Add true details, then try again.';
         }
 
         $answerText = trim(preg_replace('/\s+/u', ' ', $answerText) ?? $answerText);
+
+        if (\App\Services\QuestionIntentService::starApplicable($questionSource)) {
+            $assessment = app(\App\Services\TrustworthyAssessmentService::class);
+            $evidence = $assessment->answerEvidence($answerText, null, $questionSource);
+
+            return $assessment->groundedRevisionTemplate($answerText, $evidence);
+        }
 
         if ($questionText !== '') {
             return review_question_based_better_answer($questionText, $answerText);
@@ -416,11 +423,38 @@ if (! function_exists('review_better_answer_fallback')) {
     }
 }
 
+if (! function_exists('review_better_answer_has_complete_star_structure')) {
+    function review_better_answer_has_complete_star_structure(string $text): bool
+    {
+        preg_match_all('/^[ \t]*(Situation|Task|Action|Result)[ \t]*:[ \t]*([^\r\n]+)[ \t]*$/imu', trim($text), $matches, PREG_SET_ORDER);
+        $sections = [];
+
+        foreach ($matches as $match) {
+            if (trim((string) ($match[2] ?? '')) === '') {
+                return false;
+            }
+
+            $sections[] = ucfirst(strtolower((string) $match[1]));
+        }
+
+        return $sections === ['Situation', 'Task', 'Action', 'Result'];
+    }
+}
+
 if (! function_exists('review_better_answer_text')) {
     function review_better_answer_text(?string $text, mixed $answerSource = null, mixed $questionSource = null): string
     {
         $questionSource ??= $answerSource;
-        $clean = review_feedback_without_question_text((string) $text, $questionSource);
+        if (! review_answer_is_usable_for_better_answer(review_answer_text($answerSource), $questionSource)) {
+            return review_better_answer_fallback($answerSource, $questionSource);
+        }
+
+        $lineBreakMarker = "\u{E000}reviewline\u{E001}";
+        $clean = review_feedback_without_question_text(
+            str_replace(["\r\n", "\r", "\n"], $lineBreakMarker, (string) $text),
+            $questionSource
+        );
+        $clean = str_replace($lineBreakMarker, "\n", $clean);
         $clean = preg_replace('/^\s*(?:(?:suggested|sample|better)\s+)?(?:better\s+)?(?:answer|response|example|draft)\s*[:\-]\s*/iu', '', $clean) ?? $clean;
         $clean = preg_replace('/^\s*(?:I\s+would\s+answer|I\s+would\s+say)\s*[:\-]\s*/iu', '', $clean) ?? $clean;
         $clean = trim($clean);
@@ -431,6 +465,8 @@ if (! function_exists('review_better_answer_text')) {
             && review_text_word_count($clean) >= 5
             && ! review_text_looks_like_question($clean, $questionSource)
             && ! $looksLikeAdvice
+            && (! \App\Services\QuestionIntentService::starApplicable($questionSource)
+                || review_better_answer_has_complete_star_structure($clean))
         ) {
             return $clean;
         }

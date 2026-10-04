@@ -57,7 +57,7 @@ final class QuestionIntentService
         // wording, without misclassifying direct prompts such as "describe your
         // leadership style" as behavioral.
         $experiential = preg_match(
-            '/\b(tell me about|describe|share|give (?:me )?an example|walk me through)\b.*\b(time|situation|experience|project|incident|challenge|mistake|conflict|case|handoff|outage|deadline|decision|failure|success|problem|issue|achievement|change|disagreement|pressure|setback)\b|\bexample of how you\b/i',
+            '/\b(tell me about|describe|share|give (?:me )?an example|walk me through)\b.*\b(time|situation|experience|project|incident|challenge|mistake|conflict|case|handoff|outage|deadline|decision|failure|success|problem|issue|achievement|change|disagreement|pressure|setback)\b|\bexplain\s+(?:a|an|the)\s+(?:time|situation|experience|project|incident|challenge|mistake|conflict|case|handoff|outage|deadline|decision|failure|success|problem|issue|achievement|change|disagreement|pressure|setback)\b|\bexample of how you\b/i',
             $text
         ) === 1;
         $starGuide = preg_match('/\buse STAR\b|\bSTAR Method\b|\bsituation[, ]+task[, ]+action[, ]+(?:and )?result\b/i', $context) === 1;

@@ -104,6 +104,16 @@ class WeightedReadinessScoringTest extends TestCase
 
         $this->assertSame('I am Karyl from Cebu, and I have customer service experience helping customers clearly.', $providerDraft);
 
+        $starQuestion = ['question_text' => 'Tell me about a time you helped a customer.'];
+        $starAnswer = ['answer_text' => 'I listened to the customer, checked the account, and explained the next step clearly.'];
+        $starDraft = "Situation: A customer raised a concern.\nTask: I needed to respond to the concern.\nAction: I listened to the customer, checked the account, and explained the next step clearly.\nResult: [Add only a true result or lesson.]";
+        $shownStarDraft = review_better_answer_text($starDraft, $starAnswer, $starQuestion);
+        $this->assertSame($starDraft, $shownStarDraft);
+
+        $unstructuredStarDraft = review_better_answer_text('I listened to the customer and explained the next step.', $starAnswer, $starQuestion);
+        $this->assertStringContainsString('Situation:', $unstructuredStarDraft);
+        $this->assertStringContainsString('Result:', $unstructuredStarDraft);
+
         $questionOnly = review_better_answer_text($question, $answer, ['question_text' => $question]);
         $this->assertStringContainsString('Karyl from Cebu', $questionOnly);
         $this->assertStringNotContainsString($question, $questionOnly);
@@ -113,12 +123,12 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringNotContainsString('Add more details', $adviceOnly);
 
         $shortAnswer = review_better_answer_text('', ['answer_text' => 'ok'], ['question_text' => $question]);
-        $this->assertStringContainsString('Hi, I am [your name]', $shortAnswer);
-        $this->assertStringContainsString('[your relevant experience]', $shortAnswer);
+        $this->assertStringContainsString('too short', $shortAnswer);
+        $this->assertStringNotContainsString('[your name]', $shortAnswer);
 
         $behavioralAnswer = review_better_answer_text('', ['answer_text' => ''], ['question_text' => 'Tell me about a time you helped a customer.']);
-        $this->assertStringContainsString('In a customer situation', $behavioralAnswer);
-        $this->assertStringContainsString('[result or lesson]', $behavioralAnswer);
+        $this->assertStringContainsString('no usable answer text was saved', $behavioralAnswer);
+        $this->assertStringNotContainsString('Situation:', $behavioralAnswer);
     }
 
     public function test_provider_advice_style_better_answer_is_replaced_with_grounded_fallback(): void
@@ -156,6 +166,42 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString('Action:', $answer);
         $this->assertStringContainsString('Result:', $answer);
         $this->assertStringContainsString('Customer Service Representative', $answer);
+    }
+
+    public function test_answer_review_requires_complete_star_draft_and_uses_the_shared_ai_coach_rules(): void
+    {
+        $answer = [
+            'id' => 78,
+            'question' => 'Tell me about a time you helped a customer.',
+            'answer' => 'I listened to a customer, checked the account, and explained the next step clearly.',
+            'question_type' => 'Behavioral',
+        ];
+        $this->assertTrue(\App\Services\QuestionIntentService::starApplicable([
+            'question_text' => 'Explain a time you helped a customer.',
+            'type' => 'Situational',
+        ]));
+        $draft = "Situation: A customer needed help.\nTask: I needed to respond to the concern.\nAction: I listened to a customer, checked the account, and explained the next step clearly.\nResult: [Add only a true result or lesson.]";
+        $missingResult = "Situation: A customer needed help.\nTask: I needed to respond to the concern.\nAction: I listened to a customer, checked the account, and explained the next step clearly.";
+
+        $this->assertTrue($this->invokePrivate('providerBetterSampleAnswerIsValid', [$draft, $answer]));
+        $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$missingResult, $answer]));
+
+        $rules = $this->invokePrivate('aiCoachPossibleAnswerWritingRules', [true, true]);
+        $this->assertStringContainsString('Situation:, Task:, Action:, and Result:', $rules);
+        $this->assertStringContainsString('candidate_answer', $rules);
+        $this->assertStringContainsString('instead of guessing', $rules);
+        $batchRules = $this->invokePrivate('aiCoachPossibleAnswerWritingRules', [null, true]);
+        $this->assertStringContainsString('When the supplied star_applicable value is true, use the exact labels', $batchRules);
+
+        $feedback = $this->v4FeedbackFor($answer, 80, 'directly_addressed', true, 70);
+        $feedback['better_sample_answer'] = $missingResult;
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertStringContainsString('Situation:', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('Task:', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('Action:', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('Result:', $normalized['better_sample_answer']);
+        $this->assertStringContainsString($answer['answer'], $normalized['better_sample_answer']);
     }
 
     public function test_it_uses_the_versioned_readiness_weights_for_relevance(): void
