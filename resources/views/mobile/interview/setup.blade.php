@@ -75,13 +75,15 @@
      $defaultQuestionSetting = (int) ($questionOptions->last() ?: 10);
  }
  $defaultTimeLimitSetting = (int) \App\Support\SystemSettings::value('int_time_limit', 0);
+ $requestedLiveFeedbackMode = request()->query('live_feedback_mode');
+ $requestedLiveFeedbackMode = in_array($requestedLiveFeedbackMode, ['coaching', 'real_interview'], true) ? $requestedLiveFeedbackMode : '';
  $setupDefaults = [
  'difficulty' => old('difficulty', ''),
  'num_questions' => (string) old('num_questions', ''),
  'time_limit' => (string) old('time_limit', ''),
  'interview_focus' => old('interview_focus', $selectedScenario['focus']?? ''),
  'ai_assistance_level' => old('ai_assistance_level', ''),
- 'live_feedback_mode' => old('live_feedback_mode', ''),
+ 'live_feedback_mode' => old('live_feedback_mode', $requestedLiveFeedbackMode),
  'response_mode' => old('response_mode', ''),
  ];
  $selectedQuestionTypes = old('question_types', []);

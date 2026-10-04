@@ -1912,3 +1912,42 @@
         width: 100% !important;
     }
 }
+
+.review-coaching-answer-head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 2px;
+}
+
+.review-coaching-answer-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    border: 1px solid rgba(16, 185, 129, .26);
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, .16), rgba(59, 130, 246, .10));
+    color: #047857;
+    -webkit-text-fill-color: #047857;
+    font-size: .84rem;
+    font-weight: 900;
+    line-height: 1.2;
+    padding: 8px 14px;
+    text-decoration: none;
+}
+
+.review-coaching-answer-btn:hover,
+.review-coaching-answer-btn:focus {
+    color: #065f46;
+    -webkit-text-fill-color: #065f46;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.review-coaching-answer-btn i {
+    color: currentColor;
+    -webkit-text-fill-color: currentColor;
+    font-size: .9rem;
+}

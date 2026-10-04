@@ -224,16 +224,12 @@
  <p>{{ $answerDisplay }}</p>
  </section>
  <section class="review-better-example">
- <span>Possible Answer Based on Your Response</span>
- <small style="display:block;color:var(--tx3);font-size:.78rem;line-height:1.45;margin:0 0 8px;">
- @if(!$hasAnswerForBetterDraft)
- Add enough answer detail to create a response-based draft.
- @elseif($starApplicable)
- AI Coach STAR order, rewritten from your saved response as a paragraph.
- @else
- Rewritten from your saved answer as a paragraph.
- @endif
- </small>
+ <div class="review-coaching-answer-head">
+ <a href="{{ route('interview.setup', ['live_feedback_mode' => 'coaching']) }}" class="review-coaching-answer-btn">
+ <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+ Coaching Mode
+ </a>
+ </div>
  <p>{{ $betterAnswer }}</p>
  </section>
  </div>
