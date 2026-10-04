@@ -3893,3 +3893,155 @@
         width: 100% !important;
     }
 }
+
+/* Challenge Journey theme visibility. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page {
+        --journey-card-bg: #ffffff;
+        --journey-card-border: rgba(191, 219, 254, 0.78);
+        --journey-panel-bg: rgba(239, 246, 255, 0.78);
+        --journey-panel-border: rgba(147, 197, 253, 0.46);
+        --journey-title: #0f172a;
+        --journey-copy: #334155;
+        --journey-muted: #475569;
+        --journey-accent: #2563eb;
+        --journey-info: #0284c7;
+        --journey-info-bg: rgba(239, 246, 255, 0.92);
+        --journey-info-border: rgba(147, 197, 253, 0.55);
+        --journey-badge-bg: #f8fafc;
+        --journey-badge-border: rgba(191, 219, 254, 0.88);
+        --journey-badge-text: #0f172a;
+        --journey-step-bg: #ffffff;
+        --journey-step-border: #cfe0f7;
+        --journey-step-line: #cfe0f7;
+        --journey-step-muted: #64748b;
+        --journey-step-active-label: #1d4ed8;
+        --journey-disabled-bg: #94a3b8;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #learning-games-page,
+    body.dm.user-desktop-shell:not(.admin-shell) #learning-games-page,
+    .dm body.user-desktop-shell:not(.admin-shell) #learning-games-page {
+        --journey-card-bg: #0f172a;
+        --journey-card-border: rgba(148, 163, 184, 0.28);
+        --journey-panel-bg: rgba(30, 41, 59, 0.82);
+        --journey-panel-border: rgba(96, 165, 250, 0.26);
+        --journey-title: #f8fafc;
+        --journey-copy: #cbd5e1;
+        --journey-muted: #94a3b8;
+        --journey-accent: #93c5fd;
+        --journey-info: #67e8f9;
+        --journey-info-bg: rgba(30, 41, 59, 0.9);
+        --journey-info-border: rgba(96, 165, 250, 0.3);
+        --journey-badge-bg: rgba(15, 23, 42, 0.82);
+        --journey-badge-border: rgba(148, 163, 184, 0.28);
+        --journey-badge-text: #e2e8f0;
+        --journey-step-bg: #111827;
+        --journey-step-border: rgba(148, 163, 184, 0.42);
+        --journey-step-line: rgba(148, 163, 184, 0.28);
+        --journey-step-muted: #cbd5e1;
+        --journey-step-active-label: #93c5fd;
+        --journey-disabled-bg: #64748b;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-title {
+        color: var(--journey-title) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .challenge-level-stepper {
+        color: var(--journey-copy) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .challenge-step-dot {
+        color: var(--journey-step-muted) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .challenge-step-dot::after {
+        background: var(--journey-step-line) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .challenge-step-dot.status-completed::after {
+        background: linear-gradient(90deg, #10b981, #60a5fa) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .challenge-step-circle {
+        background: var(--journey-step-bg) !important;
+        border-color: var(--journey-step-border) !important;
+        color: var(--journey-step-muted) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .challenge-step-dot.status-completed .challenge-step-circle {
+        background: #10b981 !important;
+        border-color: #10b981 !important;
+        color: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .challenge-step-dot.is-active .challenge-step-circle,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .challenge-step-dot.is-active.status-locked .challenge-step-circle,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .challenge-step-dot.is-active.status-completed .challenge-step-circle {
+        background: linear-gradient(135deg, #60a5fa, #1d4ed8) !important;
+        border-color: #93c5fd !important;
+        color: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .challenge-step-dot.is-active .challenge-step-label {
+        color: var(--journey-step-active-label) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card {
+        background: var(--journey-card-bg) !important;
+        border: 1px solid var(--journey-card-border) !important;
+        color: var(--journey-title) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card h5,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card [style*="color:var(--tx)"] {
+        color: var(--journey-title) !important;
+        -webkit-text-fill-color: var(--journey-title) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card p,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card [style*="color:var(--tx2)"] {
+        color: var(--journey-copy) !important;
+        -webkit-text-fill-color: var(--journey-copy) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card [style*="color:var(--tx3)"] {
+        color: var(--journey-muted) !important;
+        -webkit-text-fill-color: var(--journey-muted) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card [style*="color:var(--pur)"] {
+        color: var(--journey-accent) !important;
+        -webkit-text-fill-color: var(--journey-accent) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card [style*="color:#38bdf8"] {
+        color: var(--journey-info) !important;
+        -webkit-text-fill-color: var(--journey-info) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card [style*="background:rgba(59,130,246,0.07)"],
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .active-challenge-panel {
+        background: var(--journey-panel-bg) !important;
+        border-color: var(--journey-panel-border) !important;
+        color: var(--journey-copy) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node :is(.badge, .requirement-badge, .score-badge) {
+        background: var(--journey-badge-bg) !important;
+        border-color: var(--journey-badge-border) !important;
+        color: var(--journey-badge-text) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node :is(.locked-unlock-note, .locked-certificate-note) {
+        color: var(--journey-copy) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node :is(.locked-start-challenge-btn, .locked-certificate-download-btn),
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node :is(.locked-start-challenge-btn, .locked-certificate-download-btn):disabled {
+        background: var(--journey-disabled-bg) !important;
+        border-color: var(--journey-disabled-bg) !important;
+        color: #ffffff !important;
+    }
+}
