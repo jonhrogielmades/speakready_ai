@@ -3754,8 +3754,8 @@
         min-height: 520px !important;
         margin: 0 !important;
         border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
+        border-radius: 18px !important;
+        background: #ffffff !important;
         box-shadow: none !important;
     }
 
