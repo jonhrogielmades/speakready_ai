@@ -105,7 +105,7 @@ class TrustworthyAssessmentService
  }
 
  $evidence??= $this->answerEvidence($clean);
- $answerSentence = $this->sentenceText(mb_substr($clean, 0, 700));
+ $answerSentence = $this->sentenceText(mb_substr($clean, 0, 700), ($evidence['star_applicable']?? false)? 2: 4);
  $questionText = trim((string) ($evidence['question_text']?? ''));
 
  if ($evidence['star_applicable']?? false) {
@@ -114,20 +114,50 @@ class TrustworthyAssessmentService
 
  $intent = (string) ($evidence['question_intent']?? 'direct_evidence');
 
- $closing = match ($intent) {
- 'strength' => 'I would use that strength to support the team and handle the role responsibilities with care.',
- 'strength_and_weakness' => 'I would keep the strength clear, name the development area honestly, and connect both points to how I work.',
- 'weakness' => 'I am continuing to improve it by staying consistent with the progress I described.',
- 'salary_expectation' => 'I am open to discussing a fair range based on the role, the responsibilities, and the experience I shared.',
- 'motivation', 'role_fit' => 'That is why the role fits my interests, my experience, and the contribution I want to make.',
- 'self_introduction' => 'This background gives me a clear starting point for the role and shows the experience I can bring.',
- 'career_transition' => 'This explains my reason clearly and connects it to the next step I am aiming for.',
- 'technical' => 'I would explain the reason for each step and check the result before moving on.',
- 'situational' => 'I would stay focused on the main issue, take the step I described, and check whether it solved the problem.',
- default => 'I would keep the answer focused, direct, and connected to the role.',
+ [$support, $closing] = match ($intent) {
+ 'strength' => [
+ 'This gives a clearer proof point for the strength I named.',
+ 'I would connect that strength to how I can support the team and handle the role responsibilities.',
+ ],
+ 'strength_and_weakness' => [
+ 'This keeps the strength and development area clear without adding details I did not give.',
+ 'I would connect both points to how I work and how I am improving.',
+ ],
+ 'weakness' => [
+ 'This names the development area honestly and keeps the focus on progress.',
+ 'I would explain the habit I am building and stay within the example I already gave.',
+ ],
+ 'salary_expectation' => [
+ 'This keeps the answer open and tied to the responsibilities already discussed.',
+ 'I would avoid naming a number unless I can support it with a real range.',
+ ],
+ 'motivation', 'role_fit' => [
+ 'This connects my answer to the role without adding unsupported details.',
+ 'I would keep the response focused on the experience and contribution I already described.',
+ ],
+ 'self_introduction' => [
+ 'This gives the interviewer a clearer view of my background.',
+ 'I would connect that background to the role using only details I can explain truthfully.',
+ ],
+ 'career_transition' => [
+ 'This explains my reason in a direct and simple way.',
+ 'I would connect it to the next step I am aiming for without adding details I did not share.',
+ ],
+ 'technical' => [
+ 'This shows the steps I would take before changing the solution.',
+ 'I would explain each check clearly so the interviewer can follow my reasoning.',
+ ],
+ 'situational' => [
+ 'This shows the first action I would take and keeps the response practical.',
+ 'I would explain how I would check progress without adding details I cannot support.',
+ ],
+ default => [
+ 'This keeps the main point clear and easy to follow.',
+ 'I would keep the answer focused, direct, and connected to the role.',
+ ],
  };
 
- return trim($answerSentence.' '.$closing);
+ return trim($answerSentence.' '.$support.' '.$closing);
  }
 
  private function starParagraphRevision(string $answerSentence, string $questionText): string
@@ -170,13 +200,20 @@ class TrustworthyAssessmentService
  };
  }
 
- private function sentenceText(string $text): string
+ private function sentenceText(string $text, int $maxSentences = 1): string
  {
  $text = trim(preg_replace('/\s+/', ' ', $text)?? $text);
  if ($text === '') {
  return '';
  }
 
+ preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', $text, $matches);
+ $sentences = array_slice(array_values(array_filter(array_map(
+ fn (string $sentence): string => trim($sentence),
+ $matches[0]?? []
+ ))), 0, max(1, $maxSentences));
+
+ $text = trim(implode(' ', $sentences));
  $text = preg_replace('/\bi\b/u', 'I', $text)?? $text;
  $text = mb_strtoupper(mb_substr($text, 0, 1, 'UTF-8'), 'UTF-8').mb_substr($text, 1, null, 'UTF-8');
 

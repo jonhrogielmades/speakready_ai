@@ -1045,8 +1045,11 @@ class AIService
  $missingFactRule = $groundInCandidateAnswer
  ? 'Do not use bracketed placeholders. When a personal fact or result is missing, omit it or use a cautious sentence that stays within candidate_answer.'
  : 'When a personal fact or result is needed but missing, use a short bracketed placeholder such as [specific project], [your action], or [result].';
+ $sentenceCountRule = $groundInCandidateAnswer
+ ? 'Use a minimum of 3 sentences and a maximum of 6 sentences.'
+ : '';
 
- return trim($sourceRule.' '.$starRule.' '.$groundingRule.' '.$missingFactRule.' Write the answer itself, not advice. Do not include markdown, bullets, greetings, scoring, coaching explanation, or text before or after the answer.');
+ return trim($sourceRule.' '.$starRule.' '.$groundingRule.' '.$missingFactRule.' '.$sentenceCountRule.' Write the answer itself, not advice. Do not include markdown, bullets, greetings, scoring, coaching explanation, or text before or after the answer.');
  }
 
  public static function fallbackCoachPossibleAnswer($session, $question): string
@@ -4536,6 +4539,7 @@ PROMPT;
  return $text!== ''
  && self::wordCount($text) >= 5
  && mb_strlen($text) <= 900
+ && self::betterSampleAnswerHasRequiredSentenceCount($rawText)
  &&! self::betterSampleAnswerHasPlaceholders($rawText)
  && self::betterSampleAnswerUsesCandidateAnswer($text, $answerText)
  &&! self::betterSampleAnswerCopiesQuestion($text, trim((string) ($answer['question']?? '')))
@@ -4544,6 +4548,28 @@ PROMPT;
  &&! self::feedbackClaimsPerfectCertainty($text)
  &&! self::feedbackHasUnsupportedNumbers($text, $answerText)
  && (! self::betterSampleAnswerUsesStarLabels($rawText) || self::betterSampleAnswerHasCompleteStarStructure($rawText));
+ }
+
+ private static function betterSampleAnswerHasRequiredSentenceCount(string $text): bool
+ {
+ $count = self::betterSampleAnswerSentenceCount($text);
+
+ return $count >= 3 && $count <= 6;
+ }
+
+ private static function betterSampleAnswerSentenceCount(string $text): int
+ {
+ $text = preg_replace('/^[ \t]*(?:Situation|Task|Action|Result)[ \t]*:[ \t]*/imu', '', trim($text))?? trim($text);
+ if ($text === '') {
+ return 0;
+ }
+
+ preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', $text, $matches);
+
+ return count(array_filter(array_map(
+ fn (string $sentence): string => trim($sentence),
+ $matches[0]?? []
+ )));
  }
 
  private static function betterSampleAnswerHasPlaceholders(string $text): bool

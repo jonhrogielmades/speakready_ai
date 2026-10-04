@@ -97,12 +97,12 @@ class WeightedReadinessScoringTest extends TestCase
         $answer = ['answer_text' => 'I am Karyl from Cebu and I have customer service experience.'];
 
         $providerDraft = review_better_answer_text(
-            'Better example: I would answer: I am Karyl from Cebu, and I have customer service experience helping customers clearly.',
+            'Better example: I would answer: I am Karyl from Cebu, and I have customer service experience. This background helps me communicate with customers clearly. I would connect that experience to the role using only details I can explain truthfully.',
             $answer,
             ['question_text' => $question]
         );
 
-        $this->assertSame('I am Karyl from Cebu, and I have customer service experience helping customers clearly.', $providerDraft);
+        $this->assertSame('I am Karyl from Cebu, and I have customer service experience. This background helps me communicate with customers clearly. I would connect that experience to the role using only details I can explain truthfully.', $providerDraft);
 
         $starQuestion = ['question_text' => 'Tell me about a time you helped a customer.'];
         $starAnswer = ['answer_text' => 'I listened to the customer, checked the account, and explained the next step clearly.'];
@@ -182,7 +182,7 @@ class WeightedReadinessScoringTest extends TestCase
             'question_text' => 'Explain a time you helped a customer.',
             'type' => 'Situational',
         ]));
-        $draft = 'In a customer situation, I listened to a customer, checked the account, and explained the next step clearly. This helped the customer understand the next step.';
+        $draft = 'In a customer situation, I needed to understand the concern before responding. I listened to a customer, checked the account, and explained the next step clearly. This helped the customer understand the next step.';
         $missingResult = "Situation: A customer needed help.\nTask: I needed to respond to the concern.\nAction: I listened to a customer, checked the account, and explained the next step clearly.";
 
         $this->assertTrue($this->invokePrivate('providerBetterSampleAnswerIsValid', [$draft, $answer]));
@@ -192,6 +192,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString('one natural paragraph', $rules);
         $this->assertStringContainsString('candidate_answer', $rules);
         $this->assertStringContainsString('Do not use bracketed placeholders', $rules);
+        $this->assertStringContainsString('minimum of 3 sentences and a maximum of 6 sentences', $rules);
         $batchRules = $this->invokePrivate('aiCoachPossibleAnswerWritingRules', [null, true]);
         $this->assertStringContainsString('When the supplied star_applicable value is true, write one natural paragraph', $batchRules);
 
@@ -277,7 +278,7 @@ class WeightedReadinessScoringTest extends TestCase
         $validItem['answer_alignment'] = 'directly_addressed';
         $validItem['missing_criteria'] = [];
         $validItem['ai_feedback'] = 'For "'.$answers[0]['question'].'", you stated "An index can improve selective reads but adds storage and write overhead", which identifies a relevant indexing tradeoff.';
-        $validItem['better_sample_answer'] = 'An index can improve selective reads but adds storage and write overhead, so I verify the workload and query plan first.';
+        $validItem['better_sample_answer'] = 'An index can improve selective reads but adds storage and write overhead. I verify the workload and query plan first. This keeps the tradeoff clear before changing the database design.';
         $validItem['coaching'] = $this->coachingFor($answers[0], 'An index can improve selective reads but adds storage and write overhead');
         $validResponse = [
             'per_question_feedback' => [$validItem],
@@ -493,7 +494,7 @@ class WeightedReadinessScoringTest extends TestCase
 
         $item['evidence_quotes'] = ['I inspected the query plan and verified the index usage'];
         $item['ai_feedback'] = 'For "'.$answers[0]['question'].'", you stated "I inspected the query plan and verified the index usage", which supports the diagnostic score.';
-        $item['better_sample_answer'] = 'I inspected the query plan and verified the index usage before changing the query.';
+        $item['better_sample_answer'] = 'I inspected the query plan and verified the index usage before changing the query. I would explain what each check showed. This keeps the diagnostic answer clear and grounded in the steps I described.';
         $item['coaching'] = $this->coachingFor($answers[0], 'I inspected the query plan and verified the index usage');
 
         $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
@@ -1015,7 +1016,7 @@ class WeightedReadinessScoringTest extends TestCase
         )), 0, 4));
         $focusTerms = $focusTerms !== '' ? $focusTerms : 'the exact prompt';
         $item['ai_feedback'] = 'For "'.$question.'", the exact answer evidence "'.$answerText.'" directly addressed this question. Question-specific focus terms: '.$focusTerms.'. This explains the score using only the evidence from this answer.';
-        $item['better_sample_answer'] = $answerText.' I would keep this answer focused and explain the true result clearly.';
+        $item['better_sample_answer'] = $answerText.' I would keep this answer focused on the details I already gave. I would explain the true result clearly without adding unsupported facts.';
         $item['coaching'] = $this->coachingFor($answer, $answerText);
 
         return $item;

@@ -70,7 +70,9 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $revision = $service->groundedRevisionTemplate($answer);
 
         $this->assertStringContainsString($answer, $revision);
-        $this->assertStringContainsString('Add only a true result', $revision);
+        $this->assertGreaterThanOrEqual(3, $this->sentenceCount($revision));
+        $this->assertLessThanOrEqual(6, $this->sentenceCount($revision));
+        $this->assertStringNotContainsString('[', $revision);
         $this->assertStringNotContainsString('increased revenue', $revision);
     }
 
@@ -88,7 +90,9 @@ class TrustworthyAssessmentServiceTest extends TestCase
 
         $this->assertFalse($evidence['result_required']);
         $this->assertNotContains('A clear result, effect, or lesson', $evidence['missing_evidence']);
-        $this->assertStringContainsString('Direct response:', $revision);
+        $this->assertStringContainsString('I would explain each check clearly', $revision);
+        $this->assertGreaterThanOrEqual(3, $this->sentenceCount($revision));
+        $this->assertLessThanOrEqual(6, $this->sentenceCount($revision));
         $this->assertStringNotContainsString('Situation/Task:', $revision);
     }
 
@@ -108,7 +112,9 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $this->assertFalse($evidence['star_applicable']);
         $this->assertFalse($evidence['personal_action_required']);
         $this->assertSame('role_fit', $evidence['question_intent']);
-        $this->assertStringContainsString('Direct response:', $revision);
+        $this->assertStringContainsString('This connects my answer to the role', $revision);
+        $this->assertGreaterThanOrEqual(3, $this->sentenceCount($revision));
+        $this->assertLessThanOrEqual(6, $this->sentenceCount($revision));
         $this->assertStringNotContainsString('Situation/Task:', $revision);
     }
 
@@ -146,5 +152,15 @@ class TrustworthyAssessmentServiceTest extends TestCase
 
         $this->assertSame(40, $metadata['scoring_confidence']);
         $this->assertLessThanOrEqual(45, $metadata['scoring_confidence']);
+    }
+
+    private function sentenceCount(string $text): int
+    {
+        preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', trim($text), $matches);
+
+        return count(array_filter(array_map(
+            fn (string $sentence): string => trim($sentence),
+            $matches[0] ?? []
+        )));
     }
 }

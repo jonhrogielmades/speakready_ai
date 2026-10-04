@@ -340,56 +340,74 @@ if (! function_exists('review_question_based_better_answer')) {
         }
 
         if (preg_match('/\b(?:introduce yourself|tell me about yourself|background)\b/iu', $question) === 1) {
-            return $baseAnswer !== ''
-                ? $baseAnswer . ' This background gives the interviewer a clear view of my experience and how I can connect it to the role.'
+            $draft = $baseAnswer !== ''
+                ? $baseAnswer . ' This background gives the interviewer a clear view of my experience. I would connect it to the role using only details I can explain truthfully.'
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
+
+            return review_better_answer_limit_sentences($draft);
         }
 
         if (preg_match('/\b(?:irate|angry|upset|customer|client|complaint|concern)\b/iu', $question) === 1) {
-            return $baseAnswer !== ''
-                ? $baseAnswer . ' I would present this as a calm, organized response that helps the customer understand the next step.'
+            $draft = $baseAnswer !== ''
+                ? $baseAnswer . ' I would present this as a calm, organized response. This helps the customer understand the next step without adding details I cannot support.'
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
+
+            return review_better_answer_limit_sentences($draft);
         }
 
         if (preg_match('/\b(?:tell me about a time|describe a time|give an example|example of|challenge|conflict|handled|helped|solved|worked under pressure|difficult)\b/iu', $question) === 1) {
-            return $baseAnswer !== ''
-                ? $baseAnswer . ' I would keep the story in STAR order by making the situation, task, action, and honest result clear in one connected answer.'
+            $draft = $baseAnswer !== ''
+                ? $baseAnswer . ' I would keep the story in STAR order. I would make the situation, task, action, and honest result clear in one connected answer.'
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
+
+            return review_better_answer_limit_sentences($draft);
         }
 
         if (preg_match('/\b(?:weakness|improving|improve)\b/iu', $lowerQuestion) === 1) {
-            return $baseAnswer !== ''
-                ? $baseAnswer . ' I would explain this honestly and connect it to the progress I am actively working on.'
+            $draft = $baseAnswer !== ''
+                ? $baseAnswer . ' I would explain this honestly. I would connect it to the progress I am actively working on.'
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
+
+            return review_better_answer_limit_sentences($draft);
         }
 
         if (preg_match('/\b(?:strength|strongest|good at|best skill)\b/iu', $lowerQuestion) === 1) {
-            return $baseAnswer !== ''
-                ? $baseAnswer . ' I would connect that strength to how I can support the team and handle the role responsibilities.'
+            $draft = $baseAnswer !== ''
+                ? $baseAnswer . ' This gives a clear proof point for the strength I named. I would connect that strength to how I can support the team and handle the role responsibilities.'
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
+
+            return review_better_answer_limit_sentences($draft);
         }
 
         if (preg_match('/\b(?:why do you want|why are you interested|why this role|why our company|motivation)\b/iu', $lowerQuestion) === 1) {
-            return $baseAnswer !== ''
-                ? $baseAnswer . ' I would make the reason clear and connect it to the experience or skill I already shared.'
+            $draft = $baseAnswer !== ''
+                ? $baseAnswer . ' I would make the reason clear. I would connect it to the experience or skill I already shared.'
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
+
+            return review_better_answer_limit_sentences($draft);
         }
 
         if (preg_match('/\b(?:why should we hire|hire you|best candidate)\b/iu', $lowerQuestion) === 1) {
-            return $baseAnswer !== ''
-                ? $baseAnswer . ' I would close by showing how that experience can help me contribute to the role.'
+            $draft = $baseAnswer !== ''
+                ? $baseAnswer . ' This keeps the answer focused on the experience I already shared. I would close by showing how that experience can help me contribute to the role.'
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
+
+            return review_better_answer_limit_sentences($draft);
         }
 
         if (preg_match('/\b(?:how would you|how do you|diagnose|troubleshoot|process|approach|steps?)\b/iu', $lowerQuestion) === 1) {
-            return $baseAnswer !== ''
-                ? $baseAnswer . ' I would also explain why each step matters and how I would check that the issue is resolved.'
+            $draft = $baseAnswer !== ''
+                ? $baseAnswer . ' I would explain why each step matters. I would also explain how I would check that the issue is resolved.'
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
+
+            return review_better_answer_limit_sentences($draft);
         }
 
-        return $baseAnswer !== ''
-            ? $baseAnswer . ' I would keep the answer focused, direct, and connected to the role.'
+        $draft = $baseAnswer !== ''
+            ? $baseAnswer . ' This keeps the main point clear and easy to follow. I would keep the answer focused, direct, and connected to the role.'
             : 'A response-based possible answer is unavailable because no usable answer text was saved.';
+
+        return review_better_answer_limit_sentences($draft);
     }
 }
 
@@ -428,6 +446,50 @@ if (! function_exists('review_better_answer_contains_placeholder')) {
     function review_better_answer_contains_placeholder(string $text): bool
     {
         return preg_match('/\[[^\]]+\]/u', $text) === 1;
+    }
+}
+
+if (! function_exists('review_better_answer_sentence_count')) {
+    function review_better_answer_sentence_count(string $text): int
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return 0;
+        }
+
+        preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', $text, $matches);
+
+        return count(array_filter(array_map(
+            fn (string $sentence): string => trim($sentence),
+            $matches[0] ?? []
+        )));
+    }
+}
+
+if (! function_exists('review_better_answer_has_required_sentence_count')) {
+    function review_better_answer_has_required_sentence_count(string $text): bool
+    {
+        $count = review_better_answer_sentence_count($text);
+
+        return $count >= 3 && $count <= 6;
+    }
+}
+
+if (! function_exists('review_better_answer_limit_sentences')) {
+    function review_better_answer_limit_sentences(string $text, int $maxSentences = 6): string
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return '';
+        }
+
+        preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', $text, $matches);
+        $sentences = array_slice(array_values(array_filter(array_map(
+            fn (string $sentence): string => trim($sentence),
+            $matches[0] ?? []
+        ))), 0, max(1, $maxSentences));
+
+        return trim(implode(' ', array_map('review_sentence_text', $sentences)));
     }
 }
 
@@ -508,12 +570,14 @@ if (! function_exists('review_better_answer_text')) {
         $thinStarParagraph = $starApplicable
             && ! review_better_answer_uses_star_labels($clean)
             && review_text_word_count($clean) < 12;
+        $hasRequiredSentenceCount = review_better_answer_has_required_sentence_count($clean);
 
         if ($clean !== ''
             && review_text_word_count($clean) >= 5
             && ! $containsPlaceholder
             && ! $usesIncompleteStarLabels
             && ! $thinStarParagraph
+            && $hasRequiredSentenceCount
             && ! review_text_looks_like_question($clean, $questionSource)
             && ! $looksLikeAdvice
         ) {
