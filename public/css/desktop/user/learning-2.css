@@ -3657,17 +3657,18 @@
         display: block !important;
         grid-template-columns: none !important;
         gap: 0 !important;
-        padding: 0 !important;
+        padding: 0 18px !important;
         margin-top: 8px !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node,
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node.active {
         display: flex !important;
+        justify-content: center !important;
         width: 100% !important;
-        max-width: none !important;
+        max-width: 900px !important;
         min-height: 0 !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
         padding: 0 !important;
         grid-column: 1 / -1 !important;
     }
@@ -3678,8 +3679,9 @@
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card {
         width: 100% !important;
+        max-width: 900px !important;
         height: auto !important;
         min-height: 0 !important;
-        margin-left: 0 !important;
+        margin: 0 auto !important;
     }
 }
