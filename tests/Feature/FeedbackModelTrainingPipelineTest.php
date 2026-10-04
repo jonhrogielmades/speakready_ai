@@ -168,6 +168,7 @@ class FeedbackModelTrainingPipelineTest extends TestCase
  ],
  ],
  'session_feedback' => [
+ 'overall_summary' => 'Across the customer service answer, the response gave a clear action and result. The next focus is to add one measurable customer impact.',
  'strengths' => 'The answer gave a clear action and result.',
  'weaknesses' => 'It could add one measurable detail.',
  'improvement_suggestions' => 'Add a number or final customer impact.',

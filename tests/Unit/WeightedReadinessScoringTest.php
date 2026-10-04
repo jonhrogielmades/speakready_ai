@@ -272,6 +272,7 @@ class WeightedReadinessScoringTest extends TestCase
         $response['per_question_feedback'][1]['answer_alignment'] = 'partially_addressed';
         $response['per_question_feedback'][1]['missing_criteria'] = [];
         $response['per_question_feedback'][1]['ai_feedback'] = 'For "'.$answers[1]['question'].'", you stated "'.$answers[1]['answer'].'". This described personal ownership and an outcome.';
+        $response['session_feedback']['overall_summary'] = 'Across the database query and production incident answers, the candidate gave useful diagnostic and outage details. The next focus is to explain tradeoffs and constraints more clearly.';
 
         $normalized = $this->invokePrivate('normalizeFeedbackResponse', [$response, $answers, []]);
 
@@ -304,6 +305,7 @@ class WeightedReadinessScoringTest extends TestCase
             'per_question_feedback' => [$validItem],
             'session_feedback' => $this->sessionFeedback(80, 0),
         ];
+        $validResponse['session_feedback']['overall_summary'] = 'Across the indexing tradeoff answer, the candidate explained selective reads, storage, write overhead, workload, and query plan checks. The next focus is to keep those tradeoffs clear.';
 
         $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [$validResponse, $answers]));
 
@@ -471,6 +473,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertContains('success_check', $item['properties']['coaching']['required']);
         $this->assertArrayHasKey('session_feedback', $schema['properties']);
         $this->assertContains('session_feedback', $schema['required']);
+        $this->assertContains('overall_summary', $schema['properties']['session_feedback']['required']);
         $this->assertContains('strengths', $schema['properties']['session_feedback']['required']);
         $this->assertContains('weaknesses', $schema['properties']['session_feedback']['required']);
         $this->assertContains('improvement_suggestions', $schema['properties']['session_feedback']['required']);
@@ -519,7 +522,9 @@ class WeightedReadinessScoringTest extends TestCase
 
         $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
             'per_question_feedback' => [$item],
-            'session_feedback' => $this->sessionFeedback(80, 0),
+            'session_feedback' => array_merge($this->sessionFeedback(80, 0), [
+                'overall_summary' => 'Across the slow query answer, the candidate used query plan and index usage details. The next focus is to explain what each diagnostic check showed.',
+            ]),
         ], $answers]));
     }
 
@@ -765,7 +770,9 @@ class WeightedReadinessScoringTest extends TestCase
 
         $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
             'per_question_feedback' => [$feedback],
-            'session_feedback' => $this->sessionFeedback(88, 0),
+            'session_feedback' => array_merge($this->sessionFeedback(88, 0), [
+                'overall_summary' => 'Across the role fit answer, the candidate connected support experience, careful documentation, and customer requests to the role. The next focus is to add a clearer result.',
+            ]),
         ], [$answer]]));
         $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
         $this->assertFalse($normalized['star_applicable']);
@@ -1080,6 +1087,7 @@ class WeightedReadinessScoringTest extends TestCase
         return [
             'overall_readiness_score' => $readiness,
             'star_method_score' => $starScore,
+            'overall_summary' => 'Across the submitted answers, the candidate used specific evidence and should practice connecting each decision to a measurable result.',
             'strengths' => 'The candidate used specific evidence in the submitted answers.',
             'weaknesses' => 'Some answers could explain tradeoffs and constraints more clearly.',
             'improvement_suggestions' => 'Practice connecting each decision to a measurable result.',

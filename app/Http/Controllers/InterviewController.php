@@ -1046,7 +1046,7 @@ class InterviewController extends Controller
  $overall = is_array($sFeedback) && array_key_exists('overall_readiness_score', $sFeedback)? $this->scoreValue($sFeedback['overall_readiness_score']): $metadata['overall'];
  $metadata['overall'] = $overall;
  $metadata['readiness_band'] = $assessment->readinessBand($overall);
- $coachingSummary = $this->safeSessionCoachingSummary($evaluatedAnswers, $session);
+ $coachingSummary = $this->sessionCoachingSummaryWithProviderFeedback($evaluatedAnswers, $session, $sFeedback);
 
  // Game perks affect game progression, never the stored assessment score.
  $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
@@ -1774,7 +1774,7 @@ class InterviewController extends Controller
  'strengths' => trim((string) ($sFeedback['strengths']?? '')),
  'weaknesses' => trim((string) ($sFeedback['weaknesses']?? '')),
  'improvement_suggestions' => trim((string) ($sFeedback['improvement_suggestions']?? '')),
- 'coaching_summary' => $this->safeSessionCoachingSummary($evaluatedAnswers, $session),
+ 'coaching_summary' => $this->sessionCoachingSummaryWithProviderFeedback($evaluatedAnswers, $session, $sFeedback),
  ]);
 
  $session->update([
@@ -2253,6 +2253,24 @@ class InterviewController extends Controller
 
  return $this->fallbackAnswerCoaching($answerText, $question, $metrics, $observationData);
  }
+ }
+
+ private function sessionCoachingSummaryWithProviderFeedback($answers, InterviewSession $session, mixed $sessionFeedback): array
+ {
+ $summary = $this->safeSessionCoachingSummary($answers, $session);
+ if (! is_array($sessionFeedback)) {
+ return $summary;
+ }
+
+ $overallSummary = trim((string) ($sessionFeedback['overall_summary']?? ''));
+ if ($overallSummary === '') {
+ return $summary;
+ }
+
+ $summary['overall_summary'] = Str::limit($overallSummary, 700, '');
+ $summary['overall_summary_source'] = 'ai_provider_validated';
+
+ return $summary;
  }
 
  private function safeSessionCoachingSummary($answers, InterviewSession $session): array
@@ -4581,47 +4599,17 @@ class InterviewController extends Controller
  array $sessionData,
  array $answersData,?string $feedbackProvider = null
  ): array {
- if (! $gameLevel && ! SystemSettings::enabled('int_ai_eval', true)) {
- return AIService::generateLocalFeedback($sessionData, $answersData);
- }
-
- try {
+ if ($gameLevel) {
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
- } catch (AiFeedbackProviderFailureException $error) {
- Log::warning('AI feedback providers failed; using local evidence report fallback.', [
- 'session_id' => $session->id,
- 'user_id' => $session->user_id,
- 'provider' => $feedbackProvider,
- 'provider_count' => $error->providerCount(),
- 'providers_attempted' => $error->attemptedProviders(),
- ]);
-
- return AIService::generateLocalFeedback($sessionData, $answersData);
- } catch (\Throwable $error) {
- Log::warning('Interview feedback generation failed; using local evidence report fallback.', [
- 'session_id' => $session->id,
- 'user_id' => $session->user_id,
- 'provider' => $feedbackProvider,
- 'error_type' => $error::class,
- 'message' => Str::limit($error->getMessage(), 300),
- ]);
-
- try {
- return AIService::generateLocalFeedback($sessionData, $answersData);
- } catch (\Throwable $fallbackError) {
- Log::error('Local feedback fallback failed after AI feedback generation error.', [
- 'session_id' => $session->id,
- 'user_id' => $session->user_id,
- 'provider' => $feedbackProvider,
- 'original_error_type' => $error::class,
- 'original_message' => Str::limit($error->getMessage(), 300),
- 'fallback_error_type' => $fallbackError::class,
- 'fallback_message' => Str::limit($fallbackError->getMessage(), 300),
- ]);
-
- throw $error;
  }
+
+ $feedbackProviderKey = AIService::normalizeProviderKey($feedbackProvider);
+ if (! SystemSettings::enabled('int_ai_eval', true)
+ || in_array($feedbackProviderKey, ['local', 'localmodel'], true)) {
+ return AIService::generateLocalFeedback($sessionData, $answersData);
  }
+
+ return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  }
 
  protected function generateInterviewFeedbackForSession(
@@ -4636,7 +4624,9 @@ class InterviewController extends Controller
  return AIService::generateFeedback(
  $sessionData,
  $answersData,
- $feedbackProvider?: $this->bestEvaluatedInterviewProvider('feedback_generation')
+ $feedbackProvider?: $this->bestEvaluatedInterviewProvider('feedback_generation'),
+ false,
+ false
  );
  }
 
@@ -4656,6 +4646,7 @@ class InterviewController extends Controller
  'session_feedback' => [
  'overall_readiness_score' => $overall,
  'star_method_score' => $starScore,
+ 'overall_summary' => ($overall >= 70? 'Across the challenge answers, the responses had enough structure and useful detail to show progress.': 'Across the challenge answers, there was enough material to review, but the answers need stronger detail.').' The next focus is '.$lowestArea.'.',
  'strengths' => $overall >= 70? 'Your challenge answers had enough structure and useful detail to show progress.': 'You sent answers for the challenge, so there was material to review.',
  'weaknesses' => 'The main area to improve is '.$lowestArea.'.',
  'improvement_suggestions' => $gameLevel->retry_hint?: 'Answer each prompt directly, add your own action, and end with a clear result or lesson.',

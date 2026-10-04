@@ -387,7 +387,8 @@ class AdminAiProviderEvaluationTest extends TestCase
  $providerLabel,
  $answer->id,
  $answer->question?->question_text,
- strtolower((string) $answer->question?->type) === 'behavioral'
+ strtolower((string) $answer->question?->type) === 'behavioral',
+ $answer->answer_text
  )), 200);
  });
 
@@ -754,7 +755,8 @@ class AdminAiProviderEvaluationTest extends TestCase
  $providerLabel,
  $answer->id,
  $question->question_text,
- true
+ true,
+ $answer->answer_text
  )), 200);
  });
 
@@ -1027,11 +1029,17 @@ class AdminAiProviderEvaluationTest extends TestCase
  private function validFeedbackBenchmarkResponse(
  string $providerLabel = 'OpenAI',
  int $answerId = 1,?string $questionFocus = null,
- bool $starApplicable = true
+ bool $starApplicable = true,?string $evidenceQuote = null
  ): array
  {
  $questionFocus??= 'Tell me about a time you solved a customer issue.';
  $starScore = $starApplicable? 100: 0;
+ $answerText = trim((string) ($evidenceQuote?: 'I listened to the customer, checked the account, explained the delay, and confirmed the next step.'));
+ $evidenceQuote = $this->benchmarkEvidenceQuote($answerText);
+ $remainingDetail = trim((string) preg_replace('/\s+/', ' ', str_replace($evidenceQuote, '', $answerText)));
+ $remainingDetail = trim($remainingDetail, " \t\n\r\0\x0B.,;:");
+ $specificDetail = $remainingDetail!== ''? $remainingDetail: 'customer issue';
+ $sampleAnswer = rtrim($answerText, ".!? \t\n\r\0\x0B").'. I would keep those same saved details clear. I would add only a true final result if it is missing.';
 
  return [
  'per_question_feedback' => [
@@ -1045,34 +1053,49 @@ class AdminAiProviderEvaluationTest extends TestCase
  'star_applicable' => $starApplicable,
  'star_method_score' => $starScore,
  'evidence_quotes' => [
- 'I listened to the customer',
+ $evidenceQuote,
  ],
  'question_focus' => $questionFocus,
  'answer_alignment' => 'directly_addressed',
  'missing_criteria' => [],
- 'ai_feedback' => "For {$questionFocus}, {$providerLabel} says the answer directly addressed the question because it used \"I listened to the customer\" and checked the account. It can add the final customer result.",
- 'better_sample_answer' => 'I listened to the customer, checked the account, explained the delay, and confirmed the next step.',
- 'follow_up_question' => 'What final customer result came after you confirmed the next step?',
+ 'ai_feedback' => "For {$questionFocus}, {$providerLabel} says the answer directly addressed the question because it used \"{$evidenceQuote}\". It also mentions {$specificDetail}, so the next step is to add the final result or effect if that detail is still missing.",
+ 'better_sample_answer' => $sampleAnswer,
+ 'follow_up_question' => 'What final result or effect came after the action in this answer?',
  'coaching' => [
- 'keep' => 'Keep the part where you listened to the customer and checked the account.',
- 'improve' => 'Add the final customer result after you confirmed the next step.',
- 'impact' => 'The result matters because it shows whether the customer action worked and helps explain the score.',
- 'next_try' => 'Answer this customer question by naming the issue, your action, and the result.',
+ 'keep' => 'Keep the saved detail "'.$evidenceQuote.'".',
+ 'improve' => 'Add the final result or effect connected to "'.$evidenceQuote.'".',
+ 'impact' => 'The result matters because it shows what the interviewer can judge from "'.$evidenceQuote.'".',
+ 'next_try' => 'Answer this question by keeping "'.$evidenceQuote.'" and adding the true result.',
  'next_attempt_steps' => [
- 'Name the customer complaint or delay.',
- 'Say that you listened and checked the account.',
- 'End with the customer result after the next step.',
+ 'Start with the situation from "'.$evidenceQuote.'".',
+ 'Explain the action shown in "'.$evidenceQuote.'".',
+ 'End with the true result or effect linked to "'.$evidenceQuote.'".',
  ],
- 'success_check' => 'The retry answers the customer question with action and result.',
+ 'success_check' => 'The retry connects "'.$evidenceQuote.'" to a clear result.',
  ],
  ],
  ],
  'session_feedback' => [
- 'strengths' => 'The answer mentioned listening to the customer and checking the account.',
- 'weaknesses' => 'The answer needs the final customer result after the next step.',
- 'improvement_suggestions' => 'Add the customer outcome after explaining the delay.',
+ 'overall_summary' => 'Across the saved answer, the response used "'.$evidenceQuote.'" and '.$specificDetail.' as the main details. The next focus is to add the final result or effect only if it is missing.',
+ 'strengths' => 'The answer used the saved detail "'.$evidenceQuote.'" clearly.',
+ 'weaknesses' => 'The answer can be stronger by naming the final result or effect after that action.',
+ 'improvement_suggestions' => 'Keep the same saved detail and add the true outcome without inventing facts.',
  ],
  ];
+ }
+
+ private function benchmarkEvidenceQuote(string $answerText): string
+ {
+ $clean = trim((string) preg_replace('/\s+/', ' ', $answerText));
+ if ($clean === '') {
+ return 'I listened to the customer';
+ }
+
+ if (preg_match('/^(.{18,120}?)(?:,|\.|;|$)/', $clean, $match) === 1) {
+ return trim($match[1]);
+ }
+
+ return mb_strlen($clean) > 120? mb_substr($clean, 0, 120): $clean;
  }
 
  private function clearProviderEnv(): void

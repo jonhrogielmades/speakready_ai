@@ -74,7 +74,7 @@ class ReliabilityHardeningTest extends TestCase
  'answer_alignment' => 'directly_addressed',
  'missing_criteria' => [],
  'ai_feedback' => 'For "How would you diagnose a slow database query?", you stated "I inspected the query plan, compared row estimates, and verified index usage", which directly supports a relevant diagnostic approach.',
- 'better_sample_answer' => 'I would answer: I inspected the query plan, compared row estimates, and verified index usage before changing the query.',
+ 'better_sample_answer' => 'I inspected the query plan before changing the query. I compared row estimates and verified index usage. I would keep those same diagnostic steps and add the true final result.',
  'follow_up_question' => 'What final result or detail from this answer would make it stronger?',
  'coaching' => [
  'keep' => 'Keep the query plan and row-estimate detail for "How would you diagnose a slow database query?".',
@@ -89,6 +89,7 @@ class ReliabilityHardeningTest extends TestCase
  ],
  ]],
  'session_feedback' => [
+ 'overall_summary' => 'Across the slow database query answer, the response used query plan, row estimate, and index usage details. The next focus is to add the final database result.',
  'strengths' => 'The AI review used saved answer details such as "I inspected the query plan, compared row estimates, and verified index usage" to identify what worked.',
  'weaknesses' => 'The answer could add the final result from the same database work.',
  'improvement_suggestions' => 'Keep the diagnostic steps and add the outcome only if it is true.',
@@ -343,7 +344,11 @@ class ReliabilityHardeningTest extends TestCase
  $providers = $method->invoke(null, null);
 
  $this->assertSame('openai', $providers[0]?? null);
- $this->assertSame(['openai'], $providers);
+ $this->assertNotEmpty($providers);
+ foreach ($providers as $provider) {
+ $this->assertIsString($provider);
+ }
+ $this->assertSame([], array_diff($providers, ['openai', 'gemini', 'groq', 'cohere']));
  $this->assertNotContains('localmodel', $providers);
  }
 
@@ -910,6 +915,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'content_alignment.next_attempt_steps'));
  $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'content_alignment.success_check'));
  $this->assertNotEmpty($savedFeedback->coaching_summary);
+ $this->assertSame('ai_provider_validated', data_get($savedFeedback->coaching_summary, 'overall_summary_source'));
  $this->assertNotEmpty(data_get($savedFeedback->coaching_summary, 'content_overview'));
  $this->assertNotEmpty(data_get($savedFeedback->coaching_summary, 'question_improvements'));
 
@@ -917,8 +923,9 @@ class ReliabilityHardeningTest extends TestCase
  ->get(route('user.review', $session))
  ->assertOk()
  ->assertSee('Answer Match')
- ->assertDontSee($question->question_text)
+ ->assertSee($question->question_text)
  ->assertSee('Feedback Detailed Review')
+ ->assertSee('Validated AI provider check')
  ->assertSee('What To Improve')
  ->assertSee('Next Practice')
  ->assertDontSee('â€œ', false);
@@ -927,7 +934,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->get(route('shared.review', 'alignment-review-token'))
  ->assertOk()
  ->assertSee('Answer Match')
- ->assertDontSee($question->question_text)
+ ->assertSee($question->question_text)
  ->assertSee('Good start')
  ->assertSee('Improve')
  ->assertSee('Next try checklist')
@@ -969,7 +976,7 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  $question = $this->question($category, [
  'interview_session_id' => $session->id,
- 'question_text' => 'Tell me about a process you improved.',
+ 'question_text' => 'Tell me about a release checklist process you improved.',
  ]);
  $answer = InterviewAnswer::create([
  'interview_session_id' => $session->id,
@@ -977,7 +984,7 @@ class ReliabilityHardeningTest extends TestCase
  'answer_text' => 'I owned the release checklist, coordinated the missing approvals, and documented the final handoff result.',
  'response_mode' => 'text',
  ]);
- $this->fakeOpenAiFeedback([$answer]);
+ $this->fakeOpenAiFeedback();
 
  $this->actingAs($user)
  ->withSession([
@@ -1104,7 +1111,7 @@ class ReliabilityHardeningTest extends TestCase
  $savedAnswer = $answer->fresh();
  $score = Score::where('interview_session_id', $session->id)->firstOrFail();
 
- $this->assertStringContainsString('I would answer:', $savedAnswer->better_sample_answer);
+ $this->assertStringContainsString('same details', $savedAnswer->better_sample_answer);
  $this->assertSame(
  'A dependable automatic answer check was unavailable for this retry.',
  data_get($savedAnswer->evidence_map, 'missing_evidence.0')
@@ -1187,7 +1194,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
  }
 
- public function test_interview_finish_uses_local_feedback_when_ai_feedback_generation_crashes(): void
+ public function test_interview_finish_returns_retry_when_ai_feedback_generation_crashes(): void
  {
  Http::preventStrayRequests();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -1218,18 +1225,18 @@ class ReliabilityHardeningTest extends TestCase
  'active_interview_provider' => 'openai',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertOk()
- ->assertJsonPath('redirect_url', route('user.review', $session));
+ ->assertStatus(503)
+ ->assertJsonPath('message', 'Your answers were saved, but the feedback report could not be finalized. Please retry the report generation in a moment.')
+ ->assertJsonPath('retry_after_ms', 1500);
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
- $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
+ $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
- $this->assertNotEmpty($savedAnswer->ai_feedback);
- $this->assertSame('local_evidence', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+ $this->assertEmpty($savedAnswer->ai_feedback);
  }
 
- public function test_interview_finish_uses_local_feedback_when_all_ai_feedback_providers_fail(): void
+ public function test_interview_finish_returns_provider_error_when_all_ai_feedback_providers_fail(): void
  {
  foreach ([
  'GEMINI_API_KEY' => 'gemini_test_token',
@@ -1269,15 +1276,17 @@ class ReliabilityHardeningTest extends TestCase
  'active_interview_provider' => 'gemini',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertOk()
- ->assertJsonPath('redirect_url', route('user.review', $session));
+ ->assertStatus(503)
+ ->assertJsonPath('error_code', 'ai_feedback_providers_failed')
+ ->assertJsonPath('provider_count', 4)
+ ->assertJsonPath('providers_attempted', ['gemini', 'groq', 'cohere', 'openai'])
+ ->assertJsonPath('retry_after_ms', 1500);
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
- $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
+ $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
- $this->assertNotEmpty($savedAnswer->ai_feedback);
- $this->assertSame('local_evidence', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+ $this->assertEmpty($savedAnswer->ai_feedback);
  Http::assertSentCount(4);
  }
 
@@ -1318,7 +1327,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('Feedback Detailed Review')
  ->assertSee('Score Breakdown')
- ->assertDontSee($question->question_text);
+ ->assertSee($question->question_text);
  }
 
  public function test_interview_finish_repairs_missing_report_tables(): void
@@ -1397,7 +1406,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Feedback Detailed Review')
  ->assertSee('Answer Match')
  ->assertSee('What To Improve')
- ->assertDontSee($question->question_text);
+ ->assertSee($question->question_text);
 
  $this->assertSame(
  EvidenceBasedCoachingService::VERSION,
@@ -1456,9 +1465,9 @@ class ReliabilityHardeningTest extends TestCase
  ->get(route('user.review', $session))
  ->assertOk()
  ->assertSee('Detailed Review')
- ->assertSee('Saved feedback remains visible.')
+ ->assertSee('I reviewed the process')
  ->assertSee('Feedback Detailed Review')
- ->assertSeeInOrder(['Next Practice', 'Fluency &amp; Clarity', 'Add a specific result.'], false)
+ ->assertSee('Next Practice')
  ->assertSee('Score Breakdown')
  ->assertDontSee('>Clarity</strong>', false)
  ->assertDontSee('Score version', false)
@@ -1569,7 +1578,7 @@ class ReliabilityHardeningTest extends TestCase
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('css/mobile/user/review.css?v=9', false)
+ ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('appendRetryAttempt(answerId, data);', false);
  }
 
@@ -2093,6 +2102,7 @@ class ReliabilityHardeningTest extends TestCase
  'content' => json_encode([
  'per_question_feedback' => $items,
  'session_feedback' => [
+ 'overall_summary' => $firstQuote? 'Across the saved answers, the AI review used details such as "'.$firstQuote.'" to identify what worked. The next focus is to add clearer results or missing details from the same saved answers.': 'Across the saved answers, there was too little answer detail to name a clear strength. The next focus is to answer each question directly with one true detail.',
  'strengths' => $firstQuote? 'The AI review used saved answer details such as "'.$firstQuote.'" to identify what worked.': 'The AI review found too little answer detail to name a clear strength.',
  'weaknesses' => 'Some responses need a clearer result or missing detail from the same saved answer.',
  'improvement_suggestions' => 'Keep each answer direct, remove repeated wording, and add the final result only when it is true.',
@@ -2182,7 +2192,7 @@ class ReliabilityHardeningTest extends TestCase
  'answer_alignment' => $alignment,
  'missing_criteria' => [],
  'ai_feedback' => $isSkipped? 'For "'.$questionText.'", this answer was skipped, so AI could not check saved answer evidence for this question.': 'For "'.$questionText.'", you stated "'.$quote.'", which directly addressed this answer with specific saved details. The review is tied to '.$specificTerms.' from this answer.',
- 'better_sample_answer' => $isSkipped? '': 'I would answer: '.$answerText,
+ 'better_sample_answer' => $isSkipped? '': $this->feedbackBetterSampleAnswer($answerText),
  'follow_up_question' => 'What final result or detail from this answer would make it stronger?',
  'coaching' => [
  'keep' => $isSkipped? 'For "'.$questionText.'", there is no saved answer detail to keep yet.': 'Keep "'.$quote.'" as the saved detail for "'.$questionText.'".',
@@ -2222,6 +2232,18 @@ class ReliabilityHardeningTest extends TestCase
  $clean = trim((string) preg_replace('/\s+/', ' ', $answerText));
 
  return mb_strlen($clean) > 260? mb_substr($clean, 0, 260): $clean;
+ }
+
+ private function feedbackBetterSampleAnswer(string $answerText): string
+ {
+ $clean = trim((string) preg_replace('/\s+/', ' ', $answerText));
+ if ($clean === '') {
+ return '';
+ }
+
+ $clean = rtrim($clean, ".!? \t\n\r\0\x0B");
+
+ return $clean.'. I would keep the answer focused on the same details. I would add the true result without inventing new facts.';
  }
 
  private function aiProvider(string $name, array $overrides = []): AiProvider

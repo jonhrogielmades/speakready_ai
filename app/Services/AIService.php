@@ -1617,11 +1617,12 @@ class AIService
  'type' => 'object',
  'additionalProperties' => false,
  'properties' => [
+ 'overall_summary' => ['type' => 'string'],
  'strengths' => ['type' => 'string'],
  'weaknesses' => ['type' => 'string'],
  'improvement_suggestions' => ['type' => 'string'],
  ],
- 'required' => ['strengths', 'weaknesses', 'improvement_suggestions'],
+ 'required' => ['overall_summary', 'strengths', 'weaknesses', 'improvement_suggestions'],
  ],
  ],
  'required' => ['per_question_feedback', 'session_feedback'],
@@ -1639,7 +1640,7 @@ class AIService
  $prompt = "You are an expert interview coach. Apply the score guide consistently and check only details in each candidate answer.\n";
  $prompt.= self::languageOutputInstruction(
  $sessionData['target_language']?? null,
- 'ai_feedback, better_sample_answer, follow_up_question, coaching text, and session_feedback text while preserving evidence_quotes, question_focus, and missing_criteria exactly as written in their source text'
+ 'ai_feedback, better_sample_answer, follow_up_question, coaching text, session_feedback.overall_summary, and other session_feedback text while preserving evidence_quotes, question_focus, and missing_criteria exactly as written in their source text'
  )."\n";
  $contextText = strtolower(
  (string) ($sessionData['interview_focus']?? '').' '.
@@ -1953,10 +1954,11 @@ Bad:
 
 SESSION FEEDBACK REQUIREMENTS:
 
-Return session_feedback with strengths, weaknesses, and improvement_suggestions.
+Return session_feedback with overall_summary, strengths, weaknesses, and improvement_suggestions.
 Base session_feedback only on the candidate answers and the per_question_feedback you returned.
 Mention patterns from the actual answers without copying the same sentence repeatedly.
 Each field must be 1-2 short sentences.
+overall_summary must summarize the user's full performance across all saved answers. Mention at least one real pattern from the candidate answers or questions, the main repeated strength, the main repeated gap, and the next practice focus. Do not use a fixed template or vague wording that could fit any user.
 Do not include score numbers in session_feedback.
 If every answer was skipped or too short, say there was not enough answer detail to name a clear strength.
 
@@ -1993,6 +1995,7 @@ OUTPUT SCHEMA:
 }
 ],
 "session_feedback": {
+"overall_summary": "",
 "strengths": "",
 "weaknesses": "",
 "improvement_suggestions": ""
@@ -4489,7 +4492,7 @@ PROMPT;
  $answersData
  )));
 
- foreach (['strengths', 'weaknesses', 'improvement_suggestions'] as $field) {
+ foreach (['overall_summary', 'strengths', 'weaknesses', 'improvement_suggestions'] as $field) {
  if (! array_key_exists($field, $sessionFeedback) ||! is_string($sessionFeedback[$field])) {
  $errors[] = "session_feedback.{$field} must be a string.";
 
@@ -4515,6 +4518,9 @@ PROMPT;
  if ($answerText!== '' && self::feedbackHasUnsupportedNumbers($text, $answerText)) {
  $errors[] = "session_feedback.{$field} contains unsupported numbers.";
  }
+ if ($field === 'overall_summary' &&! self::sessionFeedbackReferencesAnswers($text, $answersData)) {
+ $errors[] = 'session_feedback.overall_summary is not specific to the saved answers.';
+ }
 
  $fingerprint = mb_strtolower(self::normalizeEvidenceText($text));
  if ($fingerprint!== '' && isset($seen[$fingerprint])) {
@@ -4524,6 +4530,48 @@ PROMPT;
  }
 
  return $errors;
+ }
+
+ private static function sessionFeedbackReferencesAnswers(string $text, array $answersData): bool
+ {
+ $summaryKeywords = self::meaningfulKeywords($text);
+ if ($summaryKeywords === []) {
+ return false;
+ }
+
+ $evidenceKeywords = [];
+ $usableAnswerCount = 0;
+ $skippedOrShortCount = 0;
+ foreach ($answersData as $answer) {
+ $answerText = self::candidateAnswerText($answer);
+ if (self::isSkippedAnswer($answer) || self::isTooShortAnswer($answerText)) {
+ $skippedOrShortCount++;
+ } else {
+ $usableAnswerCount++;
+ }
+
+ $evidenceKeywords = array_merge(
+ $evidenceKeywords,
+ self::meaningfulKeywords($answerText),
+ self::meaningfulKeywords(self::feedbackQuestionContext($answer)),
+ self::meaningfulKeywords((string) ($answer['expected_guide']?? ''))
+ );
+ }
+
+ $evidenceKeywords = array_values(array_unique($evidenceKeywords));
+ if ($evidenceKeywords === []) {
+ return $usableAnswerCount === 0
+ && preg_match('/\b(?:skipped|too short|not enough|no answer|saved answer|answer detail)\b/i', $text) === 1;
+ }
+
+ $matched = count(array_intersect($summaryKeywords, $evidenceKeywords));
+ if ($matched >= min(2, count($evidenceKeywords))) {
+ return true;
+ }
+
+ return $usableAnswerCount === 0
+ && $skippedOrShortCount > 0
+ && preg_match('/\b(?:skipped|too short|not enough|no answer|saved answer|answer detail)\b/i', $text) === 1;
  }
 
  private static function providerBetterSampleAnswerIsValid(string $text, array $answer): bool
@@ -6495,11 +6543,14 @@ PROMPT;
  // from uncapped component averages can produce a session score higher
  // than every individual answer.
  $readinessScore = self::averageQuestionMetric($questionFeedback, 'score');
+ $providerOverallSummary = self::providerSessionFeedbackText($sessionFeedback['overall_summary']?? null);
  $providerStrengths = self::providerSessionFeedbackText($sessionFeedback['strengths']?? null);
  $providerWeaknesses = self::providerSessionFeedbackText($sessionFeedback['weaknesses']?? null);
  $providerSuggestions = self::providerSessionFeedbackText($sessionFeedback['improvement_suggestions']?? null);
 
  if ($requireAiGenerated && (
+ $providerOverallSummary === null
+ ||
  $providerStrengths === null
  || $providerWeaknesses === null
  || $providerSuggestions === null
@@ -6510,6 +6561,7 @@ PROMPT;
  return [
  'overall_readiness_score' => $readinessScore,
  'star_method_score' => $starMethodScore,
+ 'overall_summary' => $providerOverallSummary?? self::sessionOverallSummaryFromEvidence($questionFeedback),
  'strengths' => $providerStrengths?? self::sessionStrengthsFromEvidence($questionFeedback),
  'weaknesses' => $providerWeaknesses?? self::sessionWeaknessesFromEvidence($questionFeedback),
  'improvement_suggestions' => $providerSuggestions?? self::sessionSuggestionsFromEvidence($questionFeedback),
@@ -6540,6 +6592,20 @@ PROMPT;
  );
 
  return count($scores) > 0? self::normalizeScore(array_sum($scores) / count($scores)): 0;
+ }
+
+ private static function sessionOverallSummaryFromEvidence(array $questionFeedback): string
+ {
+ $counts = self::sessionEvidenceCounts($questionFeedback);
+ if ($counts['total'] <= 0) {
+ return 'No saved answer was available, so the summary cannot name a reliable strength or gap yet.';
+ }
+
+ $strength = self::sessionStrengthsFromEvidence($questionFeedback);
+ $weakness = self::sessionWeaknessesFromEvidence($questionFeedback);
+ $suggestion = self::sessionSuggestionsFromEvidence($questionFeedback);
+
+ return 'Based on the saved answers, '.$strength.' '.$weakness.' Next practice focus: '.$suggestion;
  }
 
  private static function sessionStrengthsFromEvidence(array $questionFeedback): string

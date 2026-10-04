@@ -1853,7 +1853,7 @@ class UserSideHardeningTest extends TestCase
 
  $answer->forceFill([
  'ai_feedback' => 'Based on your voice answer, you gave a clear customer support example.',
- 'better_sample_answer' => 'I listened to the customer and fixed the billing issue.',
+ 'better_sample_answer' => 'I listened to the customer and fixed the billing issue. I would keep the same customer action clear. I would add the true final result without inventing new facts.',
  'score' => 82,
  ])->save();
  $session->forceFill(['status' => 'completed'])->save();
@@ -1904,14 +1904,14 @@ class UserSideHardeningTest extends TestCase
  'relevance_score' => 82,
  'grammar_score' => 82,
  'professionalism_score' => 82,
- 'star_applicable' => false,
- 'star_method_score' => 0,
+ 'star_applicable' => true,
+ 'star_method_score' => 75,
  'evidence_quotes' => [$voiceTranscript],
  'question_focus' => 'Tell me about a time you helped a customer.',
  'answer_alignment' => 'directly_addressed',
  'missing_criteria' => [],
  'ai_feedback' => 'For "Tell me about a time you helped a customer.", you stated "'.$voiceTranscript.'", which directly supports the customer help example.',
- 'better_sample_answer' => 'I listened to the customer, fixed the billing issue, and followed up the next day.',
+ 'better_sample_answer' => 'I listened to the customer and fixed the billing issue. I followed up the next day. I would add the true final customer result without inventing new facts.',
  'follow_up_question' => 'What result did the customer or team see after your follow-up?',
  'coaching' => [
  'keep' => 'Keep the billing issue and follow-up detail for this customer question.',
@@ -1921,12 +1921,13 @@ class UserSideHardeningTest extends TestCase
  'next_attempt_steps' => [
  'Start with the customer billing issue.',
  'State your action and follow-up.',
- 'Add one true result.',
+ 'Add one true customer result after the billing follow-up.',
  ],
  'success_check' => 'The retry connects the billing help to a clear result.',
  ],
  ]],
  'session_feedback' => [
+ 'overall_summary' => 'Across the customer billing answer, the voice response gave action and follow-up details. The next focus is to add the final customer result.',
  'strengths' => 'The voice answer gave a clear customer support example.',
  'weaknesses' => 'The answer could add the final customer result.',
  'improvement_suggestions' => 'Keep the action clear and add one true result.',
@@ -2392,7 +2393,7 @@ class UserSideHardeningTest extends TestCase
  'answer_alignment' => 'directly_addressed',
  'missing_criteria' => [],
  'ai_feedback' => 'For "Describe a difficult project.", you stated "I built a deployment checklist and improved release quality with clearer ownership", which gives project detail. The review is tied to deployment and checklist from this answer.',
- 'better_sample_answer' => 'I would answer: I built a deployment checklist and improved release quality with clearer ownership.',
+ 'better_sample_answer' => 'I built a deployment checklist and improved release quality with clearer ownership. I would keep the checklist and ownership details clear. I would add the true final project result without inventing new facts.',
  'follow_up_question' => 'What final result or detail from this project would make it stronger?',
  'coaching' => [
  'keep' => 'Keep the deployment checklist detail for "Describe a difficult project.".',
@@ -2407,6 +2408,7 @@ class UserSideHardeningTest extends TestCase
  ],
  ]],
  'session_feedback' => [
+ 'overall_summary' => 'Across the difficult project answer, the response used deployment checklist and release quality details. The next focus is to add the final project result.',
  'strengths' => 'The AI review used saved project details to identify what worked.',
  'weaknesses' => 'The answer could add the final result from the same project.',
  'improvement_suggestions' => 'Keep the project action and add the outcome only if it is true.',

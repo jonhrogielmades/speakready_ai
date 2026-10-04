@@ -72,6 +72,15 @@
  <span><i class="fa-solid fa-triangle-exclamation"></i>{{ $feedbackEvidence->proof_stats->needs_practice }} need practice</span>
  </div>
  @endif
+ @if($feedbackSummary->has_voice_recording ?? false)
+ <div class="feedback-proof-strip">
+ <span><i class="fa-solid fa-microphone-lines"></i>{{ $feedbackSummary->voice_answer_label }}</span>
+ @if($feedbackSummary->voice_recording_url)
+ <span><i class="fa-solid fa-wave-square"></i><a href="{{ $feedbackSummary->voice_recording_url }}" style="color:inherit;text-decoration:none;">Voice answer session</a></span>
+ @endif
+ <span><i class="fa-solid fa-circle-check"></i>{{ $feedbackSummary->voice_answer_detail }}</span>
+ </div>
+ @endif
  @if($feedbackSummary->metrics->count() > 0)
  <div class="feedback-section-label">Category Breakdown</div>
  <div class="feedback-metric-grid" aria-label="Latest score metrics">

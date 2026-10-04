@@ -664,6 +664,10 @@ class UserController extends Controller
  $metricRows = $this->feedbackCenterMetricRows($score);
  $focusMetric = $metricRows->sortBy('value')->first();
  $strongestMetric = $metricRows->sortByDesc('value')->first();
+ $voiceAnswer = $session->relationLoaded('answers')
+ ? $session->answers->first(fn ($answer) => trim((string) ($answer->voice_recording_path?? ''))!== '')
+ : null;
+ $hasVoiceEvidence = $voiceAnswer && trim((string) ($voiceAnswer->delivery_transcript?? ''))!== '';
  $rating = $score?->readiness_band?: ($overall === null? 'Score pending': ($overall >= 90? 'Excellent': ($overall >= 70? 'Good': ($overall >= 50? 'Fair': 'Needs Practice'))));
  $headline = match (true) {
  $overall === null => 'Feedback is ready. Score is still pending.',
@@ -682,6 +686,12 @@ class UserController extends Controller
  'metrics' => $metricRows,
  'focus_metric' => $focusMetric,
  'strongest_metric' => $strongestMetric,
+ 'has_voice_recording' => $voiceAnswer!== null,
+ 'voice_recording_url' => $voiceAnswer? route('interview.answer.voiceRecording', $voiceAnswer): null,
+ 'voice_answer_label' => $voiceAnswer? 'Voice answer recorded for feedback.': '',
+ 'voice_answer_detail' => $voiceAnswer
+ ? ($hasVoiceEvidence? 'Feedback is based on this voice answer.': 'Transcript unavailable. Listen to the saved voice answer.')
+ : '',
  ];
  }
 

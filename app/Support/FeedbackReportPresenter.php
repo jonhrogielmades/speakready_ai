@@ -372,6 +372,12 @@ class FeedbackReportPresenter
  return 'No saved answer text was available for this session yet. The review cannot identify reliable strengths or gaps without submitted responses. Complete one answer, then practice again with one direct point and one true example.';
  }
 
+ $summary = is_array($session->feedback?->coaching_summary?? null)? $session->feedback->coaching_summary: [];
+ $providerSummary = self::reviewText(data_get($summary, 'overall_summary'), null, 700);
+ if ($providerSummary!== '') {
+ return $providerSummary;
+ }
+
  $answeredCount = $answers
  ->filter(fn ($answer): bool => ! (bool) ($answer->is_skipped?? false) && self::answerContent($answer)!== '')
  ->count();
@@ -396,7 +402,6 @@ class FeedbackReportPresenter
  }
 
  $sentences = [self::sentence($answerScope)];
- $summary = is_array($session->feedback?->coaching_summary?? null)? $session->feedback->coaching_summary: [];
  $contentSentence = self::contentOverviewSentence((array) data_get($summary, 'content_overview', []));
  if ($contentSentence!== '') {
  $sentences[] = $contentSentence;

@@ -141,4 +141,40 @@ class FeedbackReportPresenterTest extends TestCase
         $this->assertStringContainsString('why the example proves you can handle the role', $combined);
         $this->assertStringNotContainsString('...', $combined);
     }
+
+    public function test_overall_review_prefers_validated_provider_summary(): void
+    {
+        $session = new InterviewSession();
+        $providerSummary = 'Across the customer process answers, the response kept a useful support action but still needs the final customer result. Next practice focus: add the true outcome after the coordinated action.';
+
+        $feedback = new Feedback();
+        $feedback->setRawAttributes([
+            'strengths' => 'Fallback strength should not replace the provider summary.',
+            'weaknesses' => 'Fallback weakness should not replace the provider summary.',
+            'improvement_suggestions' => 'Fallback suggestion should not replace the provider summary.',
+            'coaching_summary' => json_encode([
+                'overall_summary' => $providerSummary,
+                'content_overview' => ['partially_answered' => 1],
+            ]),
+        ], true);
+
+        $question = new Question();
+        $question->setRawAttributes(['question_text' => 'Explain a time you helped a customer.'], true);
+
+        $answer = new InterviewAnswer();
+        $answer->setRawAttributes([
+            'answer_text' => 'I explained the customer process and coordinated the next action.',
+            'is_skipped' => false,
+        ], true);
+        $answer->setRelation('question', $question);
+
+        $session->setRelation('feedback', $feedback);
+        $session->setRelation('score', new Score());
+        $session->setRelation('answers', collect([$answer]));
+
+        $report = FeedbackReportPresenter::forSession($session);
+
+        $this->assertSame($providerSummary, $report['overview']['summary']);
+        $this->assertStringNotContainsString('This overall review is based on', $report['overview']['summary']);
+    }
 }
