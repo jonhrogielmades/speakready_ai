@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 
 class LearningModuleGenerationService
 {
- private const TARGET_MODULE_COUNT = 4;
+ private const TARGET_MODULE_COUNT = 5;
  private const TARGET_CHAPTER_COUNT = 10;
  private const MIN_CHAPTER_WORD_COUNT = 520;
  private const MIN_CHAPTER_PARAGRAPH_COUNT = 8;

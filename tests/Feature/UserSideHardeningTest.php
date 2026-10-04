@@ -138,13 +138,15 @@ class UserSideHardeningTest extends TestCase
  'title' => 'Software Developer Screening',
  'target_position' => 'Software Developer',
  ]);
+ $expectedPositionOptions = collect(QuestionDatasetProvider::targetPositionOptionGroups())->flatten()->values()->all();
 
  $this->actingAs($user)
  ->get(route('user.learning', ['category_id' => $category->id]))
  ->assertOk()
  ->assertSee('id="challengePositionModal"', false)
  ->assertSee('data-show-on-load="true"', false)
- ->assertSee('What position are you applying for?');
+ ->assertSee('What position are you applying for?')
+ ->assertViewHas('challengePositionOptions', fn ($options): bool => $options === $expectedPositionOptions);
 
  $response = $this->actingAs($user)
  ->post(route('user.learning.position'), [

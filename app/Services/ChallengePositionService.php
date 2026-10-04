@@ -24,21 +24,6 @@ class ChallengePositionService
  'Local interview',
  ];
 
- private const DEFAULT_POSITION_OPTIONS = [
- 'Administrative Assistant / LGU Staff',
- 'Teacher / Instructor',
- 'Nurse / Healthcare Worker',
- 'Agricultural Technician',
- 'Fisheries Technician',
- 'Tourism Staff / Hospitality Worker',
- 'Civil Engineer',
- 'IT Support Specialist',
- 'Customer Service Representative',
- 'Software Developer',
- 'Accounting Assistant',
- 'Sales Representative',
- ];
-
  public function clean(?string $position): string
  {
  return (string) Str::of((string) $position)->squish()->limit(255, '');
@@ -120,20 +105,16 @@ class ChallengePositionService
  return $this->specificMatchingLevels($levels, $position)->isNotEmpty();
  }
 
- public function positionOptions(Collection $levels,?string $currentPosition = null): array
+ public function positionOptions(): array
  {
- $options = collect([$currentPosition])
- ->merge($levels->pluck('target_position'))
- ->merge(self::DEFAULT_POSITION_OPTIONS)
+ return collect(QuestionDatasetProvider::targetPositionOptionGroups())
+ ->flatMap(fn ($positions) => is_array($positions)? $positions: [$positions])
  ->map(fn ($position): string => $this->clean($position))
  ->filter()
  ->reject(fn (string $position): bool => $this->isGeneralPosition($position))
  ->unique(fn (string $position): string => Str::lower($position))
  ->values()
- ->take(12)
  ->all();
-
- return $options!== []? $options: self::DEFAULT_POSITION_OPTIONS;
  }
 
  public function isGeneralPosition(?string $position): bool

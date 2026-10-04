@@ -4382,7 +4382,7 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 /* Final user modules filter alignment. */
 html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-filter-bar {
     display: grid !important;
-    grid-template-columns: minmax(280px, 1fr) 148px minmax(220px, 384px) auto !important;
+    grid-template-columns: minmax(280px, 1fr) minmax(220px, 384px) auto !important;
     align-items: stretch !important;
     gap: 10px !important;
     width: 100% !important;
@@ -4412,13 +4412,18 @@ html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-f
 
 @media (max-width: 991.98px) {
     html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-filter-bar {
-        grid-template-columns: minmax(0, 1fr) minmax(124px, 148px) !important;
+        grid-template-columns: minmax(0, 1fr) !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-filter-bar .module-topic-select-shell,
     html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-filter-bar .module-filter-clear {
         grid-column: 1 / -1;
     }
+}
+
+#interview-modules-page #moduleResults.is-loading {
+    opacity: 0.58;
+    transition: opacity 120ms ease;
 }
 
 @media (max-width: 575.98px) {

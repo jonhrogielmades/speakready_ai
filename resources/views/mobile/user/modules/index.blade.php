@@ -2,7 +2,7 @@
 @section('title', 'Interview Modules')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/modules/index.css?v=7') }}" data-page-style="user-modules-index">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/modules/index.css?v=8') }}" data-page-style="user-modules-index">
 @endpush
 
 @section('content')
@@ -62,63 +62,11 @@
  $currentSearch = $search?? request('search', '');
  $hasModuleFilters = trim((string) $currentCategory)!== '' || trim((string) $currentSearch)!== '';
  @endphp
- @if((isset($moduleRecommendations) && $moduleRecommendations->count() > 0) || (isset($learningPaths) && $learningPaths->count() > 0))
- <div class="module-smart-row">
- @if(isset($moduleRecommendations) && $moduleRecommendations->count() > 0)
- <section class="module-smart-panel" aria-labelledby="module-recommendations-title">
- <div class="module-smart-head">
- <div>
- <h5 id="module-recommendations-title" class="module-smart-title"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#f59e0b"></i>Recommended For You</h5>
- <p class="module-smart-subtitle">Suggested from your latest interview scores, feedback, and module progress.</p>
- </div>
- <a href="{{ route('user.progress') }}" class="module-progress-link">View Progress</a>
- </div>
- <div class="module-rec-grid">
- @foreach($moduleRecommendations as $recommendation)
- <a href="{{ $recommendation->url }}" class="module-rec-item">
- <div class="module-rec-icon" style="--rec-color: {{ $recommendation->color }}"><i class="fa-solid {{ $recommendation->icon }}"></i></div>
- <div class="module-rec-copy">
- <strong>{{ $recommendation->module->title }}</strong>
- <span>{{ $recommendation->reason }}</span>
- </div>
- </a>
- @endforeach
- </div>
- </section>
- @endif
-
- @if(isset($learningPaths) && $learningPaths->count() > 0)
- <section class="module-smart-panel module-path-panel" aria-labelledby="module-paths-title">
- <div class="module-section-head">
- <span class="module-section-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></span>
- <div>
- <h5 id="module-paths-title" class="module-smart-title">Learning Paths</h5>
- <p class="module-smart-subtitle">Track completion by topic so your interview preparation stays ordered.</p>
- </div>
- </div>
- <div class="module-path-grid">
- @foreach($learningPaths->take(6) as $path)
- <a href="{{ $path->url }}" class="module-path-item">
- <div class="module-rec-icon" style="--rec-color:#06b6d4"><i class="fa-solid fa-layer-group"></i></div>
- <div class="module-path-copy">
- <strong>{{ $path->title }}</strong>
- <span>{{ $path->completed }}/{{ $path->total }} modules completed</span>
- <div class="module-path-progress" aria-label="{{ $path->progress }}% complete"><span style="--path-progress: {{ $path->progress }}%"></span></div>
- </div>
- </a>
- @endforeach
- </div>
- </section>
- @endif
- </div>
- @endif
-
  <form id="moduleFiltersForm" class="module-filter-bar" action="{{ route('user.modules.index') }}" method="GET" role="search">
  <div class="module-search-shell">
  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
  <input id="moduleSearchInput" class="module-search-input" type="search" name="search" value="{{ $currentSearch }}" placeholder="Search modules, skills, or topics" autocomplete="off" aria-label="Search interview modules">
  </div>
- <button type="submit" class="module-filter-submit"><i class="fa-solid fa-filter" aria-hidden="true"></i><span>Search</span></button>
  <div class="module-topic-select-shell">
  <select id="moduleTopicSelect" name="category" class="module-topic-select" aria-label="Select module topic">
  <option value="" {{ $currentCategory === ''? 'selected': '' }}>All Topics</option>
@@ -130,8 +78,10 @@
  @if($hasModuleFilters)
  <a id="moduleClearFilters" href="{{ route('user.modules.index') }}" class="module-filter-clear">Clear</a>
  @endif
+ <span id="moduleSearchStatus" class="visually-hidden" role="status" aria-live="polite"></span>
  </form>
 
+<div id="moduleResults" aria-live="polite">
  <div class="row g-4 mb-4 modules-card-grid">
  @forelse($modules as $index => $module)
  <div class="col-12 col-md-6 col-lg-4 animate-fade-up" style="animation-delay: {{ $index * 0.1 }}s">
@@ -182,6 +132,7 @@
  </div>
  @endif
 </div>
+</div>
 
 <div class="modal fade module-position-modal" id="modulePositionModal" tabindex="-1" aria-labelledby="modulePositionModalTitle" aria-hidden="true" data-show-on-load="{{ ($showModulePositionModal || $errors->has('target_position'))? 'true': 'false' }}" data-require-choice="{{ $selectedModulePosition === ''? 'true': 'false' }}">
  <div class="modal-dialog modal-dialog-centered">
@@ -200,9 +151,6 @@
  <label for="moduleTargetPosition" class="form-label">Target position</label>
  <select class="form-control module-position-input @error('target_position') is-invalid @enderror" id="moduleTargetPosition" name="target_position" required>
  <option value="" disabled {{ $modulePositionValue === ''? 'selected': '' }}>Choose a target position</option>
- @if($modulePositionValue!== '' && ! $modulePositionOptions->contains(fn ($positionOption): bool => strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0))
- <option value="{{ $modulePositionValue }}" selected>{{ $modulePositionValue }}</option>
- @endif
  @foreach($modulePositionOptions as $positionOption)
  <option value="{{ $positionOption }}" {{ strcasecmp((string) $positionOption, (string) $modulePositionValue) === 0? 'selected': '' }}>{{ $positionOption }}</option>
  @endforeach
@@ -226,11 +174,105 @@
 @push('scripts')
 <script>
  document.addEventListener('DOMContentLoaded', function () {
- const topicSelect = document.getElementById('moduleTopicSelect');
  const filtersForm = document.getElementById('moduleFiltersForm');
- if (topicSelect && filtersForm) {
- topicSelect.addEventListener('change', function () {
- filtersForm.submit();
+ const searchInput = document.getElementById('moduleSearchInput');
+ const topicSelect = document.getElementById('moduleTopicSelect');
+ let searchTimer = null;
+ let activeSearchRequest = null;
+
+ const syncClearLink = nextForm => {
+ const currentClear = filtersForm.querySelector('#moduleClearFilters');
+ const nextClear = nextForm?.querySelector('#moduleClearFilters');
+ if (currentClear && nextClear) currentClear.href = nextClear.href;
+ else if (currentClear) currentClear.remove();
+ else if (nextClear) filtersForm.appendChild(nextClear.cloneNode(true));
+ };
+
+ const searchModules = async (url, updateFields = false) => {
+ if (!filtersForm) return;
+ if (activeSearchRequest) activeSearchRequest.abort();
+ const controller = new AbortController();
+ activeSearchRequest = controller;
+ const results = document.getElementById('moduleResults');
+ filtersForm.setAttribute('aria-busy', 'true');
+ results?.classList.add('is-loading');
+
+ try {
+ const response = await fetch(url, {
+ credentials: 'same-origin',
+ headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
+ signal: controller.signal
+ });
+ if (!response.ok) throw new Error('Module search failed');
+ const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+ const nextResults = page.getElementById('moduleResults');
+ const currentResults = document.getElementById('moduleResults');
+ if (!nextResults || !currentResults) {
+ window.location.assign(url);
+ return;
+ }
+
+ const nextForm = page.getElementById('moduleFiltersForm');
+ if (updateFields && nextForm) {
+ searchInput.value = nextForm.querySelector('[name="search"]')?.value ?? '';
+ topicSelect.value = nextForm.querySelector('[name="category"]')?.value ?? '';
+ }
+ syncClearLink(nextForm);
+ currentResults.replaceWith(nextResults);
+ history.replaceState({}, '', url);
+ const count = nextResults.querySelectorAll('.module-card').length;
+ const status = document.getElementById('moduleSearchStatus');
+ if (status) status.textContent = `Showing ${count} matching module${count === 1 ? '' : 's'}.`;
+ } catch (error) {
+ if (error.name !== 'AbortError') {
+ console.error(error);
+ const status = document.getElementById('moduleSearchStatus');
+ if (status) status.textContent = 'Search could not be updated. Press Enter to try again.';
+ }
+ } finally {
+ if (activeSearchRequest === controller) {
+ activeSearchRequest = null;
+ filtersForm.removeAttribute('aria-busy');
+ document.getElementById('moduleResults')?.classList.remove('is-loading');
+ }
+ }
+ };
+
+ const searchFromForm = () => {
+ const url = new URL(filtersForm.action, window.location.origin);
+ new FormData(filtersForm).forEach((value, key) => {
+ if (String(value).trim() !== '') url.searchParams.set(key, value);
+ });
+ searchModules(url.toString());
+ };
+
+ if (filtersForm && searchInput && topicSelect) {
+ searchInput.addEventListener('input', () => {
+ window.clearTimeout(searchTimer);
+ searchTimer = window.setTimeout(searchFromForm, 300);
+ });
+ topicSelect.addEventListener('change', searchFromForm);
+ filtersForm.addEventListener('submit', event => {
+ event.preventDefault();
+ window.clearTimeout(searchTimer);
+ searchFromForm();
+ });
+ filtersForm.addEventListener('click', event => {
+ const clearLink = event.target.closest('#moduleClearFilters');
+ if (!clearLink) return;
+ event.preventDefault();
+ searchInput.value = '';
+ topicSelect.value = '';
+ searchModules(clearLink.href);
+ });
+ document.addEventListener('click', event => {
+ const pageLink = event.target.closest('#moduleResults .module-entry-pager a, #moduleResults .pagination a');
+ if (!pageLink || pageLink.getAttribute('aria-disabled') === 'true') return;
+ event.preventDefault();
+ searchModules(pageLink.href);
+ });
+ window.addEventListener('popstate', () => {
+ searchModules(window.location.href, true);
  });
  }
 
@@ -255,7 +297,6 @@
  { element: 'body:not(.modal-open) #interview-modules-page .modules-page-hero, body:not(.modal-open) #interview-modules-page .modules-hero', popover: { title: 'Interview Modules', description: 'Use modules for focused preparation tasks like planning examples, improving structure, and polishing interview answers.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) .module-position-strip', popover: { title: 'Target Position', description: 'This controls which role-specific modules appear. Change it whenever your interview target changes.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) #moduleFiltersForm', popover: { title: 'Find A Module', description: 'Search by topic or skill, or filter by module category to narrow the list.', side: 'bottom', align: 'center' }},
- { element: 'body:not(.modal-open) .module-smart-row', popover: { title: 'Smart Suggestions', description: 'Recommendations and learning paths pull from your interview performance and module progress when available.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) .modules-card-grid', popover: { title: 'Module Library', description: 'Browse the module cards to find concrete preparation work for your next interview.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) .module-card-link', popover: { title: 'Open Action Module', description: 'Open a module to work through its preparation actions and update your progress.', side: 'top', align: 'center' }}
  ];
@@ -267,7 +308,6 @@
  { element: 'body:not(.modal-open) #interview-modules-page .modules-page-hero, body:not(.modal-open) #interview-modules-page .modules-hero', popover: { title: 'Interview Modules', description: 'Use modules for focused preparation tasks like planning examples, improving structure, and polishing interview answers.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) .module-position-strip', popover: { title: 'Target Position', description: 'This controls which role-specific modules appear. Change it whenever your interview target changes.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) #moduleFiltersForm', popover: { title: 'Find A Module', description: 'Search by topic or skill, or filter by module category to narrow the list.', side: 'bottom', align: 'center' }},
- { element: 'body:not(.modal-open) .module-smart-row', popover: { title: 'Smart Suggestions', description: 'Recommendations and learning paths pull from your interview performance and module progress when available.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) .modules-card-grid', popover: { title: 'Module Library', description: 'Browse the module cards to find concrete preparation work for your next interview.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) .module-card-link', popover: { title: 'Open Action Module', description: 'Open a module to work through its preparation actions and update your progress.', side: 'top', align: 'center' }}
  ];

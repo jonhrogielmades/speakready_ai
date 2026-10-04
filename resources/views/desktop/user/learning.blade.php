@@ -416,9 +416,6 @@
  <span class="challenge-position-select-icon" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
  </button>
  <div class="challenge-position-dropdown" id="challengeTargetPositionMenu" role="listbox" aria-labelledby="challengeTargetPositionButton">
- @if($challengePositionValue!== '' && ! $challengePositionOptions->contains(fn ($positionOption): bool => strcasecmp((string) $positionOption, (string) $challengePositionValue) === 0))
- <button type="button" class="challenge-position-option is-selected" role="option" aria-selected="true" data-position-option="{{ $challengePositionValue }}">{{ $challengePositionValue }}</button>
- @endif
  @foreach($challengePositionOptions as $positionOption)
  @php
  $challengeOptionSelected = strcasecmp((string) $positionOption, (string) $challengePositionValue) === 0;

@@ -3022,7 +3022,7 @@
 /* User modules filter bar placement and sizing. */
 #interview-modules-page .module-filter-bar {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(112px, 136px) !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     align-items: stretch !important;
     gap: 8px !important;
     width: 100% !important;
@@ -3416,11 +3416,16 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 body.user-mobile-shell #mob-content #interview-modules-page .module-filter-bar,
 html body #mob-content #interview-modules-page .module-filter-bar {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(112px, 136px) !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     align-items: stretch !important;
     gap: 8px !important;
     width: 100% !important;
     margin: 0 0 14px !important;
+}
+
+#interview-modules-page #moduleResults.is-loading {
+    opacity: 0.58;
+    transition: opacity 120ms ease;
 }
 
 body.user-mobile-shell #mob-content #interview-modules-page .module-filter-bar .module-topic-select-shell,

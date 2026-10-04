@@ -3480,10 +3480,7 @@ class UserController extends Controller
  $usingGeneralChallengeFallback = $selectedChallengePosition!== ''
  && $allCategoryGameLevels->isNotEmpty()
  &&! $hasPositionSpecificLevels;
- $challengePositionOptions = $challengePositions->positionOptions(
- $allVisibleGameLevels,
- $selectedChallengePosition?: ($user->target_position?? null)
- );
+ $challengePositionOptions = $challengePositions->positionOptions();
  $showPositionModal =! session()->has('game_result')
  && (
  $request->boolean('choose_position')
@@ -4109,14 +4106,24 @@ class UserController extends Controller
  }
 
  if ($search!== '') {
- $searchPattern = $this->escapedModuleSearchPattern($search);
- $query->where(function ($q) use ($searchPattern) {
- $this->whereEscapedModuleLike($q, 'title', $searchPattern);
- $this->whereEscapedModuleLike($q, 'description', $searchPattern, 'or');
- $this->whereEscapedModuleLike($q, 'category', $searchPattern, 'or');
- $this->whereEscapedModuleLike($q, 'difficulty', $searchPattern, 'or');
- $this->whereEscapedModuleLike($q, 'type', $searchPattern, 'or');
- $this->whereEscapedModuleLike($q, 'career_path', $searchPattern, 'or');
+ $searchTerms = collect(preg_split('/\s+/u', $search)?: [])
+ ->map(fn (string $term): string => trim($term))
+ ->filter()
+ ->values();
+
+ $query->where(function ($q) use ($searchTerms) {
+ foreach ($searchTerms as $term) {
+ $searchPattern = $this->escapedModuleSearchPattern($term);
+ $q->where(function ($termQuery) use ($searchPattern) {
+ $this->whereEscapedModuleLike($termQuery, 'title', $searchPattern);
+ $this->whereEscapedModuleLike($termQuery, 'description', $searchPattern, 'or');
+ $this->whereEscapedModuleLike($termQuery, 'category', $searchPattern, 'or');
+ $this->whereEscapedModuleLike($termQuery, 'difficulty', $searchPattern, 'or');
+ $this->whereEscapedModuleLike($termQuery, 'type', $searchPattern, 'or');
+ $this->whereEscapedModuleLike($termQuery, 'career_path', $searchPattern, 'or');
+ $this->whereEscapedModuleLike($termQuery, 'mapped_skills', $searchPattern, 'or');
+ });
+ }
  });
  }
 
@@ -4146,11 +4153,7 @@ class UserController extends Controller
  $modules = (clone $query)->orderBy('created_at', 'desc')->paginate(6)->withQueryString();
  $moduleRecommendations = app(LearningRecommendationService::class)->forUser(Auth::id(), 3, $recommendationModules);
  $learningPaths = app(LearningRecommendationService::class)->learningPathsForUser(Auth::id(), $pathModules);
- $modulePositionOptions = $this->modulePositionOptions(
- $challengePositions,
- $selectedModulePosition,
- $user->target_position?? null
- );
+ $modulePositionOptions = $this->modulePositionOptions();
  $showModulePositionModal = $request->boolean('choose_position')
  || $selectedModulePosition === ''
  || (! $request->session()->has('learning_module_position') &&! $request->has('position'));
@@ -4221,7 +4224,7 @@ class UserController extends Controller
  ->with('success', $message);
  }
 
- private function ensureFastRoleModuleTopUp(string $position, int $targetCount = 5): int
+ private function ensureFastRoleModuleTopUp(string $position, int $targetCount = 6): int
  {
  $normalizedPosition = Str::of($position)->lower()->toString();
  $publishedCount = LearningModule::where('status', 'published')
@@ -4414,22 +4417,14 @@ class UserController extends Controller
  return $challengePositions->clean(Auth::user()->target_position?? null);
  }
 
- private function modulePositionOptions(
- ChallengePositionService $challengePositions,?string $selectedPosition = null,?string $profilePosition = null
- ): array {
- return collect([
- $selectedPosition,
- $profilePosition,
- session('learning_challenge_position'),
- ])
- ->merge(LearningModule::where('status', 'published')->whereNotNull('career_path')->pluck('career_path'))
- ->merge(collect(config('speakready_scope.job_positions', []))->flatten())
- ->map(fn ($position): string => $challengePositions->clean(is_scalar($position)? (string) $position: ''))
+ private function modulePositionOptions(): array
+ {
+ return collect(QuestionDatasetProvider::targetPositionOptionGroups())
+ ->flatten()
+ ->map(fn ($position): string => is_scalar($position)? trim((string) $position): '')
  ->filter()
- ->reject(fn (string $position): bool => $challengePositions->isGeneralPosition($position) || $this->isBroadModulePositionOption($position))
  ->unique(fn (string $position): string => Str::lower($position))
  ->values()
- ->take(12)
  ->all();
  }
 
@@ -4510,20 +4505,4 @@ class UserController extends Controller
  return $terms->isNotEmpty()? $terms->all(): [$position];
  }
 
- private function isBroadModulePositionOption(string $position): bool
- {
- $normalized = Str::of($position)->lower()->squish()->toString();
-
- return in_array($normalized, [
- 'communication',
- 'confidence',
- 'core interview skills',
- 'general',
- 'grammar',
- 'interview skills',
- 'professionalism',
- 'star method',
- 'voice',
- ], true);
- }
 }

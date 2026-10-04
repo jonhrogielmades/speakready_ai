@@ -15,13 +15,13 @@ class LearningModuleGenerationServiceTest extends TestCase
     {
         $result = app(LearningModuleGenerationService::class)->ensureAiModulesForPosition('QA Engineer');
 
-        $this->assertSame(4, (int) $result['created_count']);
+        $this->assertSame(5, (int) $result['created_count']);
 
         $modules = LearningModule::with('chapters')
             ->where('career_path', 'QA Engineer')
             ->get();
 
-        $this->assertCount(4, $modules);
+        $this->assertCount(5, $modules);
 
         foreach ($modules as $module) {
             $this->assertCount(10, $module->chapters);
@@ -93,6 +93,7 @@ class LearningModuleGenerationServiceTest extends TestCase
             'role_skills',
             'ph_hr_questions',
             'final_mock_readiness',
+            'legacy_extra',
         ] as $index => $specKey) {
             LearningModule::create([
                 'title' => 'Generated Module '.($index + 1),
@@ -125,9 +126,9 @@ class LearningModuleGenerationServiceTest extends TestCase
             ->where('mapped_skills', 'LIKE', '%ai_module_spec:%')
             ->get();
 
-        $this->assertCount(4, $publishedGeneratedModules);
+        $this->assertCount(5, $publishedGeneratedModules);
         $this->assertDatabaseHas('learning_modules', [
-            'title' => 'Generated Module 5',
+            'title' => 'Generated Module 6',
             'status' => 'draft',
         ]);
         $this->assertDatabaseHas('learning_modules', [

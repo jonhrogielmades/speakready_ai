@@ -9,6 +9,7 @@ use App\Models\LearningModule;
 use App\Models\Score;
 use App\Models\User;
 use App\Notifications\UserActivityNotification;
+use App\Services\QuestionDatasetProvider;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -428,13 +429,15 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  'category' => 'Role Fit',
  'career_path' => 'Software Developer',
  ]);
+ $expectedPositionOptions = collect(QuestionDatasetProvider::targetPositionOptionGroups())->flatten()->values()->all();
 
  $this->actingAs($user)
  ->get(route('user.modules.index'))
  ->assertOk()
  ->assertSee('id="modulePositionModal"', false)
  ->assertSee('data-show-on-load="true"', false)
- ->assertSee('What position are you applying for?');
+ ->assertSee('What position are you applying for?')
+ ->assertViewHas('modulePositionOptions', fn ($options): bool => $options === $expectedPositionOptions);
 
  $this->actingAs($user)
  ->post(route('user.modules.position'), [
@@ -468,13 +471,13 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ])
  ->assertRedirect(route('user.modules.index'))
  ->assertSessionHas('learning_module_position', 'Customer Service Representative')
- ->assertSessionHas('success', fn (string $message): bool => str_contains($message, 'Generated 5'));
+ ->assertSessionHas('success', fn (string $message): bool => str_contains($message, 'Generated 6'));
 
  $generatedModules = LearningModule::where('status', 'published')
  ->where('career_path', 'Customer Service Representative')
  ->get();
 
- $this->assertCount(5, $generatedModules);
+ $this->assertCount(6, $generatedModules);
  $generatedModules->each(function (LearningModule $module): void {
  $this->assertGreaterThanOrEqual(2, $module->chapters()->count());
  $this->assertSame(1, $module->activities()->count());
@@ -485,7 +488,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ->withSession(['learning_module_position' => 'Customer Service Representative'])
  ->get(route('user.modules.index'))
  ->assertOk()
- ->assertViewHas('modules', fn ($modules): bool => $modules->total() === 5)
+ ->assertViewHas('modules', fn ($modules): bool => $modules->total() === 6)
  ->assertSee('Customer Service Representative Interview: Introduction and Role Fit')
  ->assertSee('Customer Service Representative Interview: HR Questions');
 
@@ -496,7 +499,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ->assertRedirect(route('user.modules.index'));
 
  $this->assertSame(
- 5,
+ 6,
  LearningModule::where('status', 'published')
  ->where('career_path', 'Customer Service Representative')
  ->count()

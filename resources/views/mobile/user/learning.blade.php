@@ -417,9 +417,6 @@
  <label for="challengeTargetPosition" class="form-label">Target position</label>
  <select class="form-control challenge-position-input @error('target_position') is-invalid @enderror" id="challengeTargetPosition" name="target_position" required>
  <option value="" disabled {{ $challengePositionValue === ''? 'selected': '' }}>Choose a target position</option>
- @if($challengePositionValue!== '' && ! $challengePositionOptions->contains(fn ($positionOption): bool => strcasecmp((string) $positionOption, (string) $challengePositionValue) === 0))
- <option value="{{ $challengePositionValue }}" selected>{{ $challengePositionValue }}</option>
- @endif
  @foreach($challengePositionOptions as $positionOption)
  <option value="{{ $positionOption }}" {{ strcasecmp((string) $positionOption, (string) $challengePositionValue) === 0? 'selected': '' }}>{{ $positionOption }}</option>
  @endforeach
