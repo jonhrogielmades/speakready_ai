@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=21') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=22') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -799,6 +799,8 @@
  const isSelected = index === selectedStepIndex;
  button.hidden = !isMatch;
  button.classList.toggle('is-active', isSelected);
+ button.classList.toggle('is-first-visible-step', index === firstAvailable);
+ button.classList.toggle('is-last-visible-step', index === lastAvailable);
  button.setAttribute('aria-selected', isSelected? 'true': 'false');
  button.tabIndex = isSelected? 0: -1;
  });
