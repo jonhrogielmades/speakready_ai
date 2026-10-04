@@ -1187,7 +1187,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
  }
 
- public function test_interview_finish_keeps_report_pending_when_ai_feedback_generation_crashes(): void
+ public function test_interview_finish_uses_local_feedback_when_ai_feedback_generation_crashes(): void
  {
  Http::preventStrayRequests();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -1218,19 +1218,18 @@ class ReliabilityHardeningTest extends TestCase
  'active_interview_provider' => 'openai',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertStatus(503)
- ->assertJsonPath('message', 'Your answers were saved, but the feedback report could not be finalized. Please retry the report generation in a moment.')
- ->assertJsonPath('retry_after_ms', 1500);
+ ->assertOk()
+ ->assertJsonPath('redirect_url', route('user.review', $session));
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
- $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+ $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
- $this->assertEmpty($savedAnswer->ai_feedback);
- $this->assertNull(data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+ $this->assertNotEmpty($savedAnswer->ai_feedback);
+ $this->assertSame('local_evidence', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
  }
 
- public function test_interview_finish_keeps_report_pending_when_all_ai_feedback_providers_fail(): void
+ public function test_interview_finish_uses_local_feedback_when_all_ai_feedback_providers_fail(): void
  {
  foreach ([
  'GEMINI_API_KEY' => 'gemini_test_token',
@@ -1270,18 +1269,15 @@ class ReliabilityHardeningTest extends TestCase
  'active_interview_provider' => 'gemini',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertStatus(503)
- ->assertJsonPath('error_code', 'ai_feedback_providers_failed')
- ->assertJsonPath('provider_count', 4)
- ->assertJsonPath('providers_attempted', ['gemini', 'groq', 'cohere', 'openai'])
- ->assertJsonPath('retry_after_ms', 1500);
+ ->assertOk()
+ ->assertJsonPath('redirect_url', route('user.review', $session));
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
- $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+ $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
- $this->assertEmpty($savedAnswer->ai_feedback);
- $this->assertNull(data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+ $this->assertNotEmpty($savedAnswer->ai_feedback);
+ $this->assertSame('local_evidence', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
  Http::assertSentCount(4);
  }
 

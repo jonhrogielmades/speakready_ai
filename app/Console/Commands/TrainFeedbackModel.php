@@ -86,7 +86,7 @@ class TrainFeedbackModel extends Command
 
  $this->line(trim($process->getOutput()));
  $this->info("Model saved to {$outputPath}");
- $this->line('Final interview reports use hosted API providers only. Keep LOCAL_FEEDBACK_MODEL_ENABLED=false unless you are running separate offline analysis.');
+ $this->line('Enable it with LOCAL_FEEDBACK_MODEL_ENABLED=true. Keep AI_FEEDBACK_PROVIDER_PRIORITY openai-first unless you intentionally want localmodel to run before hosted feedback.');
 
  return self::SUCCESS;
  }

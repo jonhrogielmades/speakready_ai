@@ -117,10 +117,9 @@
  : null;
  $evaluationSource = trim((string) data_get($contentAlignment, 'evaluation_source', ''));
  $evaluationSourceLabel = match ($evaluationSource) {
- 'ai_evidence_validated' => 'API provider review',
- 'provider' => 'API provider review',
- 'local_evidence' => 'Legacy local check',
- 'local_fallback' => 'Legacy fallback check',
+ 'local_evidence' => 'Local evidence check',
+ 'local_fallback' => 'Fallback evidence check',
+ 'provider' => 'AI provider check',
  '' => 'Saved review',
  default => \Illuminate\Support\Str::headline(str_replace('_', ' ', $evaluationSource)),
  };

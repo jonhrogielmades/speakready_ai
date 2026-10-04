@@ -200,7 +200,7 @@
                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="int_follow_up" value="true" {{ $checked('int_follow_up') }}></div>
             </div>
             <div class="custom-switch-container">
-                <div><h6 class="mb-1">Enable AI Evaluation</h6><small>Use hosted API provider feedback when finalizing interview reports. If disabled, no feedback report is generated.</small></div>
+                <div><h6 class="mb-1">Enable AI Evaluation</h6><small>Use AI feedback when finalizing interview reports. If disabled, local scoring fallback is used.</small></div>
                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="int_ai_eval" value="true" {{ $checked('int_ai_eval') }}></div>
             </div>
         </section>
