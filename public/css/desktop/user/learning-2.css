@@ -3783,19 +3783,37 @@
 
 @media (min-width: 992px) {
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page .sr-learning-hero.sr-page-hero {
-        margin: 0 0 15px !important;
+        margin: 0 0 10px !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-position-strip {
-        margin: 0 0 15px !important;
+        margin: 0 0 10px !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats {
-        margin: 0 0 15px !important;
+        --bs-gutter-x: 15px !important;
+        --bs-gutter-y: 0 !important;
+        margin: 0 0 10px !important;
+        row-gap: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats > [class*="col-"] {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats + .row {
+        --bs-gutter-y: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats + .row > [class*="col-"] {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header {
-        margin: 0 0 15px !important;
+        margin: 0 0 10px !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-path-container,
