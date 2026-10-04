@@ -52,7 +52,6 @@
  }
  $improvementFocus = review_feedback_with_sentence_range($improvementFocus, 'improve');
  $betterAnswer = review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $questionSource);
- $rubricLevel = trim((string) ($answer->rubric_level ?? ''));
  $alignmentStatus = strtolower(str_replace([' ', '-'], '_', trim((string) ($contentAlignment['status'] ?? ''))));
  $scoreUnavailable = in_array($alignmentStatus, ['insufficient_evidence', 'not_evaluated', 'skipped'], true);
  $cameraDetectionOn = (isset($sessionRecord) && $sessionRecord instanceof \App\Models\InterviewSession)
@@ -234,17 +233,4 @@
  </section>
  </div>
 
- @if($rubricLevel !== '' || !empty($supportingExcerpts) || !empty($missingPoints))
- <div class="review-answer-proof">
- @if($rubricLevel !== '')
- <span class="retry-chip">{{ $rubricLevel }}</span>
- @endif
- @foreach($supportingExcerpts as $item)
- <span><strong>Keep:</strong> {{ $item }}</span>
- @endforeach
- @foreach($missingPoints as $item)
- <span><strong>Add:</strong> {{ $item }}</span>
- @endforeach
- </div>
- @endif
 </div>

@@ -217,64 +217,7 @@
 
  @endif
 
- @php
- $retryAttempts = $answer->retryAttempts?? collect();
- @endphp
- <div class="practice-attempts-panel mt-4 p-4" id="retry-attempts-{{ $answer->id }}" @if($retryAttempts->isEmpty()) hidden @endif>
- <h6 style="color:#10b981;font-weight:800;margin-bottom:12px;"><i class="fa-solid fa-rotate me-2"></i>Practice Attempts</h6>
- <div class="d-flex flex-column gap-3" id="retry-attempt-list-{{ $answer->id }}">
- @foreach($retryAttempts as $retry)
- <div class="retry-attempt-entry" data-retry-attempt="{{ $retry->attempt_number }}">
- <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
- <div>
- <strong>Attempt {{ $retry->attempt_number }}</strong>
- <div style="color:var(--tx3);font-size:.85rem;">{{ $retry->created_at?->format('M d, Y g:i A') }}</div>
- </div>
- <div class="retry-meta">
- <span class="retry-chip">Score {{ $retry->score?? 0 }}%</span>
- @if(in_array(strtolower((string) $retry->response_mode), ['voice', 'hybrid', 'voice_and_text'], true) && ($retry->voice_duration?? 0) > 0 && $retry->delivery_stability_score!== null)
- <span class="retry-chip">Pacing {{ $retry->delivery_stability_score }}%</span>
- @endif
- </div>
- </div>
- @if($retry->ai_feedback)
- <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">{{ review_feedback_without_question_text($retry->ai_feedback, $retry->question ?? $answer->question ?? $retry) }}</p>
- @endif
- @include('mobile.partials.interview-answer-coaching', ['answer' => $retry, 'sessionRecord' => $sessionRecord])
- </div>
- @endforeach
- </div>
- </div>
 
- @if(!$sessionEndedEarly)
- <div class="answer-retry-action">
- <button type="button" class="btn btn-outline-primary btn-sm" style="border-radius:999px;font-weight:700;" onclick="toggleRetryPanel({{ $answer->id }})">
- <i class="fa-solid fa-rotate-right me-1"></i>Practice This Answer Again
- </button>
- <div class="retry-panel" id="retry-panel-{{ $answer->id }}" data-url="{{ route('interview.answer.retry', $answer->id) }}">
- <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
- <div>
- <strong style="color:var(--tx);">Practice Attempt</strong>
- <div style="color:var(--tx3);font-size:.85rem;">This saves as a practice attempt and does not change the original score.</div>
- </div>
- <div class="retry-meta">
- <span class="retry-chip" id="retry-timer-{{ $answer->id }}"><i class="fa-regular fa-clock"></i>00:00</span>
- <span class="retry-chip" id="retry-words-{{ $answer->id }}">0 words</span>
- </div>
- </div>
- <textarea class="oinp retry-textarea" id="retry-text-{{ $answer->id }}" rows="5" style="font-size:.95rem;" placeholder="Type your improved answer here..." onfocus="startRetryTimer({{ $answer->id }})" oninput="updateRetryWordCount({{ $answer->id }})"></textarea>
- <div class="d-flex flex-column flex-md-row gap-2 mt-3">
- <button type="button" class="btn btn-outline-secondary" style="border-radius:12px;font-weight:700;" onclick="prefillRetry({{ $answer->id }}, @js(review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $answer->question ?? $answer)), @js($answer->answer_text?: ''))">
- <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Use Possible Answer
- </button>
- <button type="button" class="btn btn-primary" id="retry-submit-{{ $answer->id }}" style="border-radius:12px;font-weight:700;" onclick="submitRetry({{ $answer->id }})">
- <i class="fa-solid fa-paper-plane me-1"></i>Submit Attempt
- </button>
- </div>
- <div class="mt-3" id="retry-result-{{ $answer->id }}" style="display:none;" aria-live="polite"></div>
- </div>
- </div>
- @endif
  </div>
  </div>
  </div>
