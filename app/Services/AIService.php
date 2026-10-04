@@ -3949,8 +3949,8 @@ PROMPT;
  }
 
  $providers = array_merge(
- array_map('trim', explode(',', (string) $priorityString)),
  [$requestedProvider],
+ array_map('trim', explode(',', (string) $priorityString)),
  self::activeProviderKeys()
  );
  $providers = array_values(array_filter(
