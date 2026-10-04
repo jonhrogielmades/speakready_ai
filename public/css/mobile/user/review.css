@@ -1575,6 +1575,42 @@
         gap: 14px !important;
     }
 
+    body.user-mobile-shell #mob-content .review-shell .review-back-button-wrap,
+    html body #mob-content .review-shell .review-back-button-wrap {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        margin: 0 0 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-back-button,
+    html body #mob-content .review-shell .review-back-button {
+        min-height: 44px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 9px !important;
+        padding: 0 16px !important;
+        border: 1px solid rgba(37, 99, 235, 0.22) !important;
+        border-radius: 14px !important;
+        background: rgba(37, 99, 235, 0.08) !important;
+        color: #2563eb !important;
+        -webkit-text-fill-color: #2563eb !important;
+        font-size: 0.94rem !important;
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+        text-decoration: none !important;
+        box-shadow: 0 10px 26px rgba(37, 99, 235, 0.12) !important;
+    }
+
+    body.user-mobile-shell #mob-content .review-shell .review-back-button i,
+    html body #mob-content .review-shell .review-back-button i {
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 0.9rem !important;
+        line-height: 1 !important;
+    }
+
     body.user-mobile-shell #mob-content .review-shell .btn-link,
     html body #mob-content .review-shell .btn-link {
         display: inline-flex !important;

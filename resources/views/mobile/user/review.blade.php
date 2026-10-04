@@ -2,7 +2,7 @@
 @section('title', 'Detailed Review')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=11') }}" data-page-style="user-review">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=12') }}" data-page-style="user-review">
 @endpush
 
 @section('content')
@@ -48,7 +48,9 @@
  <!-- Feature 2 & 15: Header, Report Info, Export -->
  <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
  <div>
- <a href="{{ route('user.feedback') }}" class="btn btn-link text-decoration-none p-0 mb-2" style="color:#3b82f6;"><i class="fa-solid fa-arrow-left me-2"></i>Back to Feedback Center</a>
+ <div class="review-back-button-wrap">
+ <a href="{{ route('user.feedback') }}" class="review-back-button"><i class="fa-solid fa-arrow-left"></i><span>Back to Feedback Center</span></a>
+ </div>
  <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:0;text-transform:uppercase;">
 <i class="fa-solid fa-file-invoice me-2"></i>{{ $sessionEndedEarly? 'Ended Session Review': 'Detailed Review' }}</h4>
  <div class="d-flex gap-3 mt-2 feedback-report-meta" style="font-size:0.9rem;color:var(--tx3)">
