@@ -2660,9 +2660,11 @@ class InterviewController extends Controller
  }
 
  $questionText = $this->questionTextFrom($question);
- $questionLabel = $questionText!== ''? ' for "'.mb_substr($questionText, 0, 180).'"': '';
+ if (function_exists('review_question_based_better_answer')) {
+ return review_question_based_better_answer($questionText, $clean);
+ }
 
- return "Answer draft based on your facts{$questionLabel} - keep only details you can check:\n".'Source answer: '.mb_substr($clean, 0, 700)."\n"."Direct response: [Answer the exact question using only facts already present in your answer.]\n"."Supporting detail: [Organize your action, reasoning, or responsibility.]\n".'Result or lesson: [Add only a true result, lesson, or placeholder until you can check one.]';
+ return rtrim(mb_substr($clean, 0, 700), '.!?').'. I would keep the answer focused, direct, and connected to the role.';
  }
 
  private function safeSessionMetadata(

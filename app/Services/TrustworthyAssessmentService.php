@@ -105,81 +105,86 @@ class TrustworthyAssessmentService
  }
 
  $evidence??= $this->answerEvidence($clean);
- $excerpt = mb_substr($clean, 0, 700);
- $missing = $evidence['missing_evidence']?? [];
- $resultPrompt = in_array('A clear result, effect, or lesson', $missing, true)? '[Add only a true result, or say that no number was recorded.]': '[Restate only the result already present in your answer.]';
+ $answerSentence = $this->sentenceText(mb_substr($clean, 0, 700));
+ $questionText = trim((string) ($evidence['question_text']?? ''));
 
  if ($evidence['star_applicable']?? false) {
- return "Possible answer based on your details:\n"
- ."Situation: [Add only the situation you described. If it is missing, fill this in with a true detail.]\n"
- ."Task: [Add only your actual responsibility. Do not infer it from the question.]\n"
- ."Action: [Organize only the actions in your saved answer: {$excerpt}]\n"
- ."Result: {$resultPrompt}";
+ return $this->starParagraphRevision($answerSentence, $questionText);
  }
 
- $questionText = trim((string) ($evidence['question_text']?? ''));
- $questionLabel = $questionText!== ''? ' for "'.mb_substr($questionText, 0, 180).'"': '';
  $intent = (string) ($evidence['question_intent']?? 'direct_evidence');
- $intentScaffold = match ($intent) {
- 'strength' => [
- 'Direct response: [Name only the strength supported by your source answer.]',
- 'Proof: [Use the best true example already present.]',
- 'Role connection: [Explain the role connection without adding an unsupported result.]',
- ],
- 'strength_and_weakness' => [
- 'Strength: [Name and support one true job strength.]',
- 'Development area: [Name only the real weakness stated in the source answer.]',
- 'Improvement: [Restate the improvement action and sign of progress already present.]',
- ],
- 'weakness' => [
- 'Development area: [State the real, manageable weakness from the source answer.]',
- 'Effect: [Explain only the real effect already described.]',
- 'Improvement: [Restate the clear improvement habit and progress already shown.]',
- ],
- 'salary_expectation' => [
- 'Direct response: [State only the range or flexibility actually supported by your source answer.]',
- 'Basis: [Connect it to experience, responsibilities, or conditions without inventing market data.]',
- 'Close: [State only the work-friendly openness already expressed.]',
- ],
- 'motivation', 'role_fit' => [
- 'Direct response: [State the specific reason or role fit supported by your source answer.]',
- 'Proof: [Connect one skill, experience, or goal already present.]',
- 'Contribution/next step: [Use only the contribution or career direction already stated.]',
- ],
- 'self_introduction' => [
- 'Present: [State the current professional or educational focus already provided.]',
- 'Past: [Select only the experience that best fits the role.]',
- 'Next step: [Restate the truthful role connection already present.]',
- ],
- 'career_transition' => [
- 'Reason: [State the reason briefly and clearly.]',
- 'Learning: [Use only the lesson or need already described.]',
- 'Next step: [Connect it to what you truthfully seek next.]',
- ],
- 'technical' => [
- 'Direct response: [State the technical conclusion already supported by the source.]',
- 'Reasoning: [Organize only the diagnostic or reasoning steps already present.]',
- 'Verification/tradeoff: [Restate only a verification step or tradeoff already mentioned.]',
- ],
- 'situational' => [
- 'Goal and constraints: [Use only the goal or constraint stated in the source.]',
- 'Ordered action: [Organize the steps already proposed.]',
- 'Success check: [Restate only how the answer says success would be checked.]',
- ],
- default => [
- 'Direct response: [Answer the exact question in one sentence using only facts in your answer.]',
- 'Supporting detail: [Organize the reasoning or actions already present in the source answer.]',
- 'Result or lesson: '.$resultPrompt,
- ],
+
+ $closing = match ($intent) {
+ 'strength' => 'I would use that strength to support the team and handle the role responsibilities with care.',
+ 'strength_and_weakness' => 'I would keep the strength clear, name the development area honestly, and connect both points to how I work.',
+ 'weakness' => 'I am continuing to improve it by staying consistent with the progress I described.',
+ 'salary_expectation' => 'I am open to discussing a fair range based on the role, the responsibilities, and the experience I shared.',
+ 'motivation', 'role_fit' => 'That is why the role fits my interests, my experience, and the contribution I want to make.',
+ 'self_introduction' => 'This background gives me a clear starting point for the role and shows the experience I can bring.',
+ 'career_transition' => 'This explains my reason clearly and connects it to the next step I am aiming for.',
+ 'technical' => 'I would explain the reason for each step and check the result before moving on.',
+ 'situational' => 'I would stay focused on the main issue, take the step I described, and check whether it solved the problem.',
+ default => 'I would keep the answer focused, direct, and connected to the role.',
  };
 
- $evidencePrompt = ($evidence['result_required']?? true)? $resultPrompt: '[Restate only the reasoning, check step, or result already present; do not invent one.]';
-
- if ($intent === 'direct_evidence') {
- $intentScaffold[2] = 'Result or lesson: '.$evidencePrompt;
+ return trim($answerSentence.' '.$closing);
  }
 
- return "Answer draft based on your facts{$questionLabel} - keep only details you can check:\n"."Source answer: {$excerpt}\n".implode("\n", $intentScaffold);
+ private function starParagraphRevision(string $answerSentence, string $questionText): string
+ {
+ $context = $this->starContextSentence($questionText);
+ $task = 'My task was to understand the situation, take responsibility for my part, and respond clearly.';
+ $action = preg_match('/\b(?:I|we|my|our)\b/iu', $answerSentence) === 1
+ ? $answerSentence
+ : 'I would explain it this way: '.$answerSentence;
+ $result = $this->starResultSentence($questionText);
+
+ return trim($context.' '.$task.' '.$action.' '.$result);
+ }
+
+ private function starContextSentence(string $questionText): string
+ {
+ $question = mb_strtolower($questionText, 'UTF-8');
+
+ return match (true) {
+ preg_match('/\b(?:customer|client|complaint|concern|upset|angry|irate)\b/u', $question) === 1 => 'In a customer situation, I needed to understand the concern before responding.',
+ preg_match('/\b(?:team|collaborat|coworker|colleague)\b/u', $question) === 1 => 'In a team situation, I needed to work with others and keep the goal clear.',
+ preg_match('/\b(?:project|assignment|task)\b/u', $question) === 1 => 'During a project or task, I needed to stay organized and focus on the expected outcome.',
+ preg_match('/\b(?:pressure|deadline|urgent|stress)\b/u', $question) === 1 => 'During a time-sensitive situation, I needed to stay calm and choose the next useful step.',
+ preg_match('/\b(?:conflict|difficult|challenge|problem)\b/u', $question) === 1 => 'In a challenging situation, I needed to understand the problem and respond carefully.',
+ default => 'In that situation, I needed to understand what was happening and respond in a clear way.',
+ };
+ }
+
+ private function starResultSentence(string $questionText): string
+ {
+ $question = mb_strtolower($questionText, 'UTF-8');
+
+ return match (true) {
+ preg_match('/\b(?:customer|client|complaint|concern|upset|angry|irate)\b/u', $question) === 1 => 'This helped me give a clearer next step and handle the concern in an organized way.',
+ preg_match('/\b(?:team|collaborat|coworker|colleague)\b/u', $question) === 1 => 'This helped the team move forward with clearer direction.',
+ preg_match('/\b(?:project|assignment|task)\b/u', $question) === 1 => 'This helped me move the work forward in a more organized way.',
+ preg_match('/\b(?:pressure|deadline|urgent|stress)\b/u', $question) === 1 => 'This helped me stay focused and continue working through the pressure.',
+ preg_match('/\b(?:conflict|difficult|challenge|problem)\b/u', $question) === 1 => 'This helped me handle the challenge with a clearer process and a better lesson for next time.',
+ default => 'This helped me turn the situation into a clearer lesson about how I work.',
+ };
+ }
+
+ private function sentenceText(string $text): string
+ {
+ $text = trim(preg_replace('/\s+/', ' ', $text)?? $text);
+ if ($text === '') {
+ return '';
+ }
+
+ $text = preg_replace('/\bi\b/u', 'I', $text)?? $text;
+ $text = mb_strtoupper(mb_substr($text, 0, 1, 'UTF-8'), 'UTF-8').mb_substr($text, 1, null, 'UTF-8');
+
+ if (preg_match('/[.!?]$/u', $text)!== 1) {
+ $text.= '.';
+ }
+
+ return $text;
  }
 
  public function rubricLevel(int $score): array

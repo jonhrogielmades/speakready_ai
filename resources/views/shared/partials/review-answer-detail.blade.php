@@ -226,12 +226,12 @@
  @if(!$hasAnswerForBetterDraft)
  Add enough answer detail to create a response-based draft.
  @elseif($starApplicable)
- AI Coach STAR format. Keep only your real details and fill placeholders truthfully.
+ AI Coach STAR order, rewritten from your saved response as a paragraph.
  @else
- Uses your saved answer. Fill any placeholders only with true details.
+ Rewritten from your saved answer as a paragraph.
  @endif
  </small>
- <p style="white-space:pre-line;">{{ $betterAnswer }}</p>
+ <p>{{ $betterAnswer }}</p>
  </section>
  </div>
 

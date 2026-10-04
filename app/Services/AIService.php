@@ -1029,16 +1029,24 @@ class AIService
  : 'Base the answer on the question, target role, answer guide, resume excerpt, and job description excerpt when present.';
 
  $starRule = match ($starApplicable) {
- true => 'Use the exact labels Situation:, Task:, Action:, and Result: in this order, with one section per line. Base each section only on candidate_answer. If a STAR detail is missing, put a short bracketed placeholder in that section instead of guessing.',
+ true => $groundInCandidateAnswer
+ ? 'For STAR applicable items, write one natural paragraph in Situation, Task, Action, Result order. Do not use STAR labels or bracketed placeholders. If a STAR detail is missing from candidate_answer, keep that part general and truthful instead of inventing an outcome.'
+ : 'Use the exact labels Situation:, Task:, Action:, and Result: in this order, with one section per line. Use placeholders for unknown personal facts.',
  false => 'Do not force STAR labels unless the question asks for a past example.',
- default => 'When the supplied star_applicable value is true, use the exact labels Situation:, Task:, Action:, and Result: in this order, with one section per line. Use only candidate_answer details and bracketed placeholders for missing parts. When star_applicable is false, do not force STAR labels.',
+ default => $groundInCandidateAnswer
+ ? 'When the supplied star_applicable value is true, write one natural paragraph in Situation, Task, Action, Result order without STAR labels or bracketed placeholders. When star_applicable is false, do not force STAR labels.'
+ : 'When the supplied star_applicable value is true, use the exact labels Situation:, Task:, Action:, and Result: in this order, with one section per line. Use placeholders for unknown personal facts. When star_applicable is false, do not force STAR labels.',
  };
 
  $groundingRule = $groundInCandidateAnswer
  ? 'Keep every personal detail grounded in candidate_answer. Do not add invented achievements, employers, tools, numbers, results, names, schools, dates, awards, certifications, or intentions.'
  : 'Do not invent names, employers, schools, dates, numbers, awards, tools, certifications, achievements, or other personal facts that are not provided.';
 
- return trim($sourceRule.' '.$starRule.' '.$groundingRule.' When a personal fact or result is needed but missing, use a short bracketed placeholder such as [specific project], [your action], or [result]. Write the answer itself, not advice. Do not include markdown, bullets, greetings, scoring, coaching explanation, or text before or after the answer.');
+ $missingFactRule = $groundInCandidateAnswer
+ ? 'Do not use bracketed placeholders. When a personal fact or result is missing, omit it or use a cautious sentence that stays within candidate_answer.'
+ : 'When a personal fact or result is needed but missing, use a short bracketed placeholder such as [specific project], [your action], or [result].';
+
+ return trim($sourceRule.' '.$starRule.' '.$groundingRule.' '.$missingFactRule.' Write the answer itself, not advice. Do not include markdown, bullets, greetings, scoring, coaching explanation, or text before or after the answer.');
  }
 
  public static function fallbackCoachPossibleAnswer($session, $question): string
@@ -4528,12 +4536,38 @@ PROMPT;
  return $text!== ''
  && self::wordCount($text) >= 5
  && mb_strlen($text) <= 900
+ &&! self::betterSampleAnswerHasPlaceholders($rawText)
+ && self::betterSampleAnswerUsesCandidateAnswer($text, $answerText)
  &&! self::betterSampleAnswerCopiesQuestion($text, trim((string) ($answer['question']?? '')))
  &&! self::betterSampleAnswerLooksLikeAdvice($text)
  &&! self::feedbackInfersForbiddenTrait($text)
  &&! self::feedbackClaimsPerfectCertainty($text)
  &&! self::feedbackHasUnsupportedNumbers($text, $answerText)
- && (! self::questionUsesStar($answer) || self::betterSampleAnswerHasCompleteStarStructure($rawText));
+ && (! self::betterSampleAnswerUsesStarLabels($rawText) || self::betterSampleAnswerHasCompleteStarStructure($rawText));
+ }
+
+ private static function betterSampleAnswerHasPlaceholders(string $text): bool
+ {
+ return preg_match('/\[[^\]]+\]/u', $text) === 1;
+ }
+
+ private static function betterSampleAnswerUsesStarLabels(string $text): bool
+ {
+ return preg_match('/^[ \t]*(?:Situation|Task|Action|Result)[ \t]*:/imu', trim($text)) === 1;
+ }
+
+ private static function betterSampleAnswerUsesCandidateAnswer(string $text, string $answerText): bool
+ {
+ $answerKeywords = self::meaningfulKeywords($answerText);
+ if ($answerKeywords === []) {
+ return true;
+ }
+
+ $draftKeywords = self::meaningfulKeywords($text);
+ $matches = count(array_intersect($answerKeywords, $draftKeywords));
+ $minimumMatches = count($answerKeywords) <= 6? 1: 2;
+
+ return $matches >= $minimumMatches;
  }
 
  private static function betterSampleAnswerHasCompleteStarStructure(string $text): bool

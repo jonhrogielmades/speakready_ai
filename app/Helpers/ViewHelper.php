@@ -341,55 +341,55 @@ if (! function_exists('review_question_based_better_answer')) {
 
         if (preg_match('/\b(?:introduce yourself|tell me about yourself|background)\b/iu', $question) === 1) {
             return $baseAnswer !== ''
-                ? $baseAnswer . ' My background connects to this role through [relevant experience or skill], and I can contribute by [specific value you can offer].'
-                : 'Hi, I am [your name], currently based in [your location]. My background is in [your relevant experience], and I am interested in this role because [skill or strength connected to the job].';
+                ? $baseAnswer . ' This background gives the interviewer a clear view of my experience and how I can connect it to the role.'
+                : 'A response-based possible answer is unavailable because no usable answer text was saved.';
         }
 
         if (preg_match('/\b(?:irate|angry|upset|customer|client|complaint|concern)\b/iu', $question) === 1) {
             return $baseAnswer !== ''
-                ? $baseAnswer . ' I stayed calm, confirmed the concern, took [specific action], and followed up with [result or lesson].'
-                : 'In a customer situation, I would first listen carefully, confirm the main concern, and stay calm. Then I would take [specific action], explain the next step clearly, and follow up with [result or lesson].';
+                ? $baseAnswer . ' I would present this as a calm, organized response that helps the customer understand the next step.'
+                : 'A response-based possible answer is unavailable because no usable answer text was saved.';
         }
 
         if (preg_match('/\b(?:tell me about a time|describe a time|give an example|example of|challenge|conflict|handled|helped|solved|worked under pressure|difficult)\b/iu', $question) === 1) {
             return $baseAnswer !== ''
-                ? $baseAnswer . ' The situation was [specific context], my action was [specific action], and the result was [clear result or lesson].'
-                : 'In a previous situation, [specific context happened]. My task was to [responsibility], so I [specific action you personally took]. As a result, [clear outcome or lesson].';
+                ? $baseAnswer . ' I would keep the story in STAR order by making the situation, task, action, and honest result clear in one connected answer.'
+                : 'A response-based possible answer is unavailable because no usable answer text was saved.';
         }
 
         if (preg_match('/\b(?:weakness|improving|improve)\b/iu', $lowerQuestion) === 1) {
             return $baseAnswer !== ''
-                ? $baseAnswer . ' I am improving it by [specific action], and I can show progress through [result or habit].'
-                : 'One weakness I am improving is [real weakness]. I noticed it when [specific context], so I now [specific improvement action]. I can see progress because [result or habit].';
+                ? $baseAnswer . ' I would explain this honestly and connect it to the progress I am actively working on.'
+                : 'A response-based possible answer is unavailable because no usable answer text was saved.';
         }
 
         if (preg_match('/\b(?:strength|strongest|good at|best skill)\b/iu', $lowerQuestion) === 1) {
             return $baseAnswer !== ''
-                ? $baseAnswer . ' A strong proof point is [specific example], where I used this strength to [result].'
-                : 'One of my strongest skills is [strength]. I used it when [specific example], where I [specific action] and helped achieve [result].';
+                ? $baseAnswer . ' I would connect that strength to how I can support the team and handle the role responsibilities.'
+                : 'A response-based possible answer is unavailable because no usable answer text was saved.';
         }
 
         if (preg_match('/\b(?:why do you want|why are you interested|why this role|why our company|motivation)\b/iu', $lowerQuestion) === 1) {
             return $baseAnswer !== ''
-                ? $baseAnswer . ' This role interests me because [specific reason], and I can contribute through [relevant skill or experience].'
-                : 'I want this role because [specific reason connected to the company or work]. My experience in [relevant skill] fits the role, and I can contribute by [specific contribution].';
+                ? $baseAnswer . ' I would make the reason clear and connect it to the experience or skill I already shared.'
+                : 'A response-based possible answer is unavailable because no usable answer text was saved.';
         }
 
         if (preg_match('/\b(?:why should we hire|hire you|best candidate)\b/iu', $lowerQuestion) === 1) {
             return $baseAnswer !== ''
-                ? $baseAnswer . ' The strongest reason to hire me is [specific proof], which shows I can [role-related result].'
-                : 'You should hire me because I bring [relevant skill], [experience], and [work habit]. For example, [brief proof], and I would use those strengths to [role-related result].';
+                ? $baseAnswer . ' I would close by showing how that experience can help me contribute to the role.'
+                : 'A response-based possible answer is unavailable because no usable answer text was saved.';
         }
 
         if (preg_match('/\b(?:how would you|how do you|diagnose|troubleshoot|process|approach|steps?)\b/iu', $lowerQuestion) === 1) {
             return $baseAnswer !== ''
-                ? $baseAnswer . ' I would start with [first step], take [specific action], and check the result by [validation step].'
-                : 'I would start by [first step], then [specific action or analysis], and finally [how you would check the result]. This approach helps me solve the problem clearly and avoid guessing.';
+                ? $baseAnswer . ' I would also explain why each step matters and how I would check that the issue is resolved.'
+                : 'A response-based possible answer is unavailable because no usable answer text was saved.';
         }
 
         return $baseAnswer !== ''
-            ? $baseAnswer . ' For example, [specific example], I took [specific action], and the result was [clear result or lesson].'
-            : 'My direct answer is [clear answer to the question]. For example, [specific example], I took [specific action], and the result was [clear result or lesson].';
+            ? $baseAnswer . ' I would keep the answer focused, direct, and connected to the role.'
+            : 'A response-based possible answer is unavailable because no usable answer text was saved.';
     }
 }
 
@@ -408,11 +408,12 @@ if (! function_exists('review_better_answer_fallback')) {
 
         $answerText = trim(preg_replace('/\s+/u', ' ', $answerText) ?? $answerText);
 
-        if (\App\Services\QuestionIntentService::starApplicable($questionSource)) {
-            $assessment = app(\App\Services\TrustworthyAssessmentService::class);
-            $evidence = $assessment->answerEvidence($answerText, null, $questionSource);
+        $assessment = app(\App\Services\TrustworthyAssessmentService::class);
+        $evidence = $assessment->answerEvidence($answerText, null, $questionSource);
+        $draft = $assessment->groundedRevisionTemplate($answerText, $evidence);
 
-            return $assessment->groundedRevisionTemplate($answerText, $evidence);
+        if ($draft !== '') {
+            return $draft;
         }
 
         if ($questionText !== '') {
@@ -420,6 +421,20 @@ if (! function_exists('review_better_answer_fallback')) {
         }
 
         return review_question_based_better_answer('', $answerText);
+    }
+}
+
+if (! function_exists('review_better_answer_contains_placeholder')) {
+    function review_better_answer_contains_placeholder(string $text): bool
+    {
+        return preg_match('/\[[^\]]+\]/u', $text) === 1;
+    }
+}
+
+if (! function_exists('review_better_answer_uses_star_labels')) {
+    function review_better_answer_uses_star_labels(string $text): bool
+    {
+        return preg_match('/^[ \t]*(?:Situation|Task|Action|Result)[ \t]*:/imu', trim($text)) === 1;
     }
 }
 
@@ -441,6 +456,28 @@ if (! function_exists('review_better_answer_has_complete_star_structure')) {
     }
 }
 
+if (! function_exists('review_better_answer_star_to_paragraph')) {
+    function review_better_answer_star_to_paragraph(string $text): string
+    {
+        preg_match_all('/^[ \t]*(Situation|Task|Action|Result)[ \t]*:[ \t]*([^\r\n]+)[ \t]*$/imu', trim($text), $matches, PREG_SET_ORDER);
+        if (count($matches) !== 4) {
+            return trim($text);
+        }
+
+        $sentences = [];
+        foreach ($matches as $match) {
+            $sentence = trim((string) ($match[2] ?? ''));
+            if ($sentence === '' || review_better_answer_contains_placeholder($sentence)) {
+                return trim($text);
+            }
+
+            $sentences[] = review_sentence_text($sentence);
+        }
+
+        return trim(implode(' ', $sentences));
+    }
+}
+
 if (! function_exists('review_better_answer_text')) {
     function review_better_answer_text(?string $text, mixed $answerSource = null, mixed $questionSource = null): string
     {
@@ -458,15 +495,27 @@ if (! function_exists('review_better_answer_text')) {
         $clean = preg_replace('/^\s*(?:(?:suggested|sample|better)\s+)?(?:better\s+)?(?:answer|response|example|draft)\s*[:\-]\s*/iu', '', $clean) ?? $clean;
         $clean = preg_replace('/^\s*(?:I\s+would\s+answer|I\s+would\s+say)\s*[:\-]\s*/iu', '', $clean) ?? $clean;
         $clean = trim($clean);
+        $starApplicable = \App\Services\QuestionIntentService::starApplicable($questionSource);
+        $containsPlaceholder = review_better_answer_contains_placeholder($clean);
+        if (! $containsPlaceholder && $starApplicable && review_better_answer_has_complete_star_structure($clean)) {
+            $clean = review_better_answer_star_to_paragraph($clean);
+        }
         $looksLikeAdvice = preg_match('/^\s*(?:a\s+stronger\s+answer\s+would|the\s+answer\s+should|you\s+should|try\s+to|make\s+sure|add|include|use|practice)\b/iu', $clean) === 1
             && preg_match('/\b(?:I|we|my|our)\b/iu', $clean) !== 1;
+        $usesIncompleteStarLabels = $starApplicable
+            && review_better_answer_uses_star_labels($clean)
+            && ! review_better_answer_has_complete_star_structure($clean);
+        $thinStarParagraph = $starApplicable
+            && ! review_better_answer_uses_star_labels($clean)
+            && review_text_word_count($clean) < 12;
 
         if ($clean !== ''
             && review_text_word_count($clean) >= 5
+            && ! $containsPlaceholder
+            && ! $usesIncompleteStarLabels
+            && ! $thinStarParagraph
             && ! review_text_looks_like_question($clean, $questionSource)
             && ! $looksLikeAdvice
-            && (! \App\Services\QuestionIntentService::starApplicable($questionSource)
-                || review_better_answer_has_complete_star_structure($clean))
         ) {
             return $clean;
         }

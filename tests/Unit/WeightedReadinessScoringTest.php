@@ -106,13 +106,15 @@ class WeightedReadinessScoringTest extends TestCase
 
         $starQuestion = ['question_text' => 'Tell me about a time you helped a customer.'];
         $starAnswer = ['answer_text' => 'I listened to the customer, checked the account, and explained the next step clearly.'];
-        $starDraft = "Situation: A customer raised a concern.\nTask: I needed to respond to the concern.\nAction: I listened to the customer, checked the account, and explained the next step clearly.\nResult: [Add only a true result or lesson.]";
+        $starDraft = "Situation: A customer raised a concern.\nTask: I needed to respond to the concern.\nAction: I listened to the customer, checked the account, and explained the next step clearly.\nResult: This gave the customer a clear next step.";
         $shownStarDraft = review_better_answer_text($starDraft, $starAnswer, $starQuestion);
-        $this->assertSame($starDraft, $shownStarDraft);
+        $this->assertSame('A customer raised a concern. I needed to respond to the concern. I listened to the customer, checked the account, and explained the next step clearly. This gave the customer a clear next step.', $shownStarDraft);
 
         $unstructuredStarDraft = review_better_answer_text('I listened to the customer and explained the next step.', $starAnswer, $starQuestion);
-        $this->assertStringContainsString('Situation:', $unstructuredStarDraft);
-        $this->assertStringContainsString('Result:', $unstructuredStarDraft);
+        $this->assertStringContainsString('In a customer situation', $unstructuredStarDraft);
+        $this->assertStringContainsString('I listened to the customer', $unstructuredStarDraft);
+        $this->assertStringNotContainsString('Situation:', $unstructuredStarDraft);
+        $this->assertStringNotContainsString('[', $unstructuredStarDraft);
 
         $questionOnly = review_better_answer_text($question, $answer, ['question_text' => $question]);
         $this->assertStringContainsString('Karyl from Cebu', $questionOnly);
@@ -145,10 +147,10 @@ class WeightedReadinessScoringTest extends TestCase
         $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
 
         $this->assertStringNotContainsString('A stronger answer would', $normalized['better_sample_answer']);
-        $this->assertStringContainsString('Possible answer based on your details:', $normalized['better_sample_answer']);
-        $this->assertStringContainsString('Situation:', $normalized['better_sample_answer']);
-        $this->assertStringContainsString('Action:', $normalized['better_sample_answer']);
         $this->assertStringContainsString('I listened to the customer', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('In a customer situation', $normalized['better_sample_answer']);
+        $this->assertStringNotContainsString('Situation:', $normalized['better_sample_answer']);
+        $this->assertStringNotContainsString('[', $normalized['better_sample_answer']);
     }
 
     public function test_ai_coach_local_behavioral_possible_answer_uses_star_labels(): void
@@ -180,28 +182,27 @@ class WeightedReadinessScoringTest extends TestCase
             'question_text' => 'Explain a time you helped a customer.',
             'type' => 'Situational',
         ]));
-        $draft = "Situation: A customer needed help.\nTask: I needed to respond to the concern.\nAction: I listened to a customer, checked the account, and explained the next step clearly.\nResult: [Add only a true result or lesson.]";
+        $draft = 'In a customer situation, I listened to a customer, checked the account, and explained the next step clearly. This helped the customer understand the next step.';
         $missingResult = "Situation: A customer needed help.\nTask: I needed to respond to the concern.\nAction: I listened to a customer, checked the account, and explained the next step clearly.";
 
         $this->assertTrue($this->invokePrivate('providerBetterSampleAnswerIsValid', [$draft, $answer]));
         $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$missingResult, $answer]));
 
         $rules = $this->invokePrivate('aiCoachPossibleAnswerWritingRules', [true, true]);
-        $this->assertStringContainsString('Situation:, Task:, Action:, and Result:', $rules);
+        $this->assertStringContainsString('one natural paragraph', $rules);
         $this->assertStringContainsString('candidate_answer', $rules);
-        $this->assertStringContainsString('instead of guessing', $rules);
+        $this->assertStringContainsString('Do not use bracketed placeholders', $rules);
         $batchRules = $this->invokePrivate('aiCoachPossibleAnswerWritingRules', [null, true]);
-        $this->assertStringContainsString('When the supplied star_applicable value is true, use the exact labels', $batchRules);
+        $this->assertStringContainsString('When the supplied star_applicable value is true, write one natural paragraph', $batchRules);
 
         $feedback = $this->v4FeedbackFor($answer, 80, 'directly_addressed', true, 70);
         $feedback['better_sample_answer'] = $missingResult;
         $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
 
-        $this->assertStringContainsString('Situation:', $normalized['better_sample_answer']);
-        $this->assertStringContainsString('Task:', $normalized['better_sample_answer']);
-        $this->assertStringContainsString('Action:', $normalized['better_sample_answer']);
-        $this->assertStringContainsString('Result:', $normalized['better_sample_answer']);
         $this->assertStringContainsString($answer['answer'], $normalized['better_sample_answer']);
+        $this->assertStringContainsString('In a customer situation', $normalized['better_sample_answer']);
+        $this->assertStringNotContainsString('Situation:', $normalized['better_sample_answer']);
+        $this->assertStringNotContainsString('[', $normalized['better_sample_answer']);
     }
 
     public function test_it_uses_the_versioned_readiness_weights_for_relevance(): void
@@ -276,6 +277,7 @@ class WeightedReadinessScoringTest extends TestCase
         $validItem['answer_alignment'] = 'directly_addressed';
         $validItem['missing_criteria'] = [];
         $validItem['ai_feedback'] = 'For "'.$answers[0]['question'].'", you stated "An index can improve selective reads but adds storage and write overhead", which identifies a relevant indexing tradeoff.';
+        $validItem['better_sample_answer'] = 'An index can improve selective reads but adds storage and write overhead, so I verify the workload and query plan first.';
         $validItem['coaching'] = $this->coachingFor($answers[0], 'An index can improve selective reads but adds storage and write overhead');
         $validResponse = [
             'per_question_feedback' => [$validItem],
@@ -491,6 +493,7 @@ class WeightedReadinessScoringTest extends TestCase
 
         $item['evidence_quotes'] = ['I inspected the query plan and verified the index usage'];
         $item['ai_feedback'] = 'For "'.$answers[0]['question'].'", you stated "I inspected the query plan and verified the index usage", which supports the diagnostic score.';
+        $item['better_sample_answer'] = 'I inspected the query plan and verified the index usage before changing the query.';
         $item['coaching'] = $this->coachingFor($answers[0], 'I inspected the query plan and verified the index usage');
 
         $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
@@ -1012,6 +1015,7 @@ class WeightedReadinessScoringTest extends TestCase
         )), 0, 4));
         $focusTerms = $focusTerms !== '' ? $focusTerms : 'the exact prompt';
         $item['ai_feedback'] = 'For "'.$question.'", the exact answer evidence "'.$answerText.'" directly addressed this question. Question-specific focus terms: '.$focusTerms.'. This explains the score using only the evidence from this answer.';
+        $item['better_sample_answer'] = $answerText.' I would keep this answer focused and explain the true result clearly.';
         $item['coaching'] = $this->coachingFor($answer, $answerText);
 
         return $item;
