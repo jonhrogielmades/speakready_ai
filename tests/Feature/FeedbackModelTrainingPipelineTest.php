@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\AiFeedbackProviderFailureException;
 use App\Models\Category;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
@@ -9,7 +10,6 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\User;
 use App\Services\AIService;
-use App\Services\LocalFeedbackModelService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -130,53 +130,15 @@ class FeedbackModelTrainingPipelineTest extends TestCase
  $this->assertNotContains('localmodel', $providers);
  }
 
- public function test_local_feedback_fallback_uses_available_trained_model(): void
+ public function test_local_feedback_generation_is_disabled_for_interview_reports(): void
  {
  $question = 'Tell me about a time you solved a customer issue.';
  $answerText = 'I checked the account, explained the delay, and resolved the issue before the end of the call.';
 
- $this->app->instance(LocalFeedbackModelService::class, new class extends LocalFeedbackModelService
- {
- public function available(): bool
- {
- return true;
- }
+ $this->expectException(AiFeedbackProviderFailureException::class);
+ $this->expectExceptionMessage('Local/offline feedback generation is disabled for interview reports.');
 
- public function generateFeedback(array $sessionData, array $answersData): array
- {
- $question = (string) ($answersData[0]['question']?? '');
- $quote = 'I checked the account, explained the delay, and resolved the issue before the end of the call.';
-
- return [
- 'per_question_feedback' => [
- [
- 'id' => 1,
- 'score' => 88,
- 'clarity_score' => 86,
- 'relevance_score' => 90,
- 'grammar_score' => 84,
- 'professionalism_score' => 89,
- 'star_applicable' => true,
- 'star_method_score' => 75,
- 'evidence_quotes' => [$quote],
- 'question_focus' => $question,
- 'answer_alignment' => 'directly_addressed',
- 'missing_criteria' => [],
- 'ai_feedback' => 'For the question "'.$question.'", you said "'.$quote.'". That answered the question directly because it gave a clear action and result. Keep the same focus and add one number if available.',
- 'better_sample_answer' => $quote,
- 'follow_up_question' => 'What result would you add to make this answer stronger?',
- ],
- ],
- 'session_feedback' => [
- 'strengths' => 'The answer gave a clear action and result.',
- 'weaknesses' => 'It could add one measurable detail.',
- 'improvement_suggestions' => 'Add a number or final customer impact.',
- ],
- ];
- }
- });
-
- $feedback = AIService::generateLocalFeedback(
+ AIService::generateLocalFeedback(
  ['target_position' => 'Customer Service Representative', 'difficulty' => 'Medium'],
  [
  [
@@ -192,12 +154,6 @@ class FeedbackModelTrainingPipelineTest extends TestCase
  ],
  ]
  );
-
- $this->assertSame('localmodel', $feedback['_provider_key']);
- $this->assertSame(['localmodel'], $feedback['_providers_attempted']);
- $this->assertSame(1, data_get($feedback, 'per_question_feedback.0.id'));
- $this->assertSame('ai_evidence_validated', data_get($feedback, 'per_question_feedback.0.evaluation_source'));
- $this->assertSame('verified', data_get($feedback, 'feedback_quality.status'));
  }
 
  public function test_auto_train_command_exports_and_detects_pending_training(): void

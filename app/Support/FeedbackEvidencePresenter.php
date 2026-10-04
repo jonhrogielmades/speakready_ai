@@ -386,9 +386,10 @@ final class FeedbackEvidencePresenter
         $source = is_scalar($source) ? trim((string) $source) : '';
 
         return match ($source) {
-            'local_evidence' => 'Local evidence check',
-            'local_fallback' => 'Fallback evidence check',
-            'provider' => 'AI provider check',
+            'ai_evidence_validated' => 'API provider review',
+            'provider' => 'API provider review',
+            'local_evidence' => 'Legacy local check',
+            'local_fallback' => 'Legacy fallback check',
             '' => 'Saved review',
             default => Str::headline(str_replace('_', ' ', $source)),
         };

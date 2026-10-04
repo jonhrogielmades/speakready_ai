@@ -423,10 +423,10 @@ Provider URLs and model names are already listed in `.env.example`. Configure at
 Recommended hosted AI runtime limits:
 
 ```env
-AI_FEEDBACK_TIMEOUT=6
-AI_FEEDBACK_DEADLINE_SECONDS=10
-AI_FEEDBACK_MAX_PROVIDERS=2
-AI_FEEDBACK_ATTEMPTS=1
+AI_FEEDBACK_TIMEOUT=15
+AI_FEEDBACK_DEADLINE_SECONDS=60
+AI_FEEDBACK_MAX_PROVIDERS=4
+AI_FEEDBACK_ATTEMPTS=2
 AI_FEEDBACK_HTTP_ATTEMPTS=1
 AI_FEEDBACK_RETRY_DELAY_MS=100
 AI_VOICE_ANALYSIS_TIMEOUT=12
@@ -481,9 +481,9 @@ When that index exists, mock interviews use it for source-backed similarity
 matching before falling back to the ordered question bank. For CI or machines
 without ML packages, use `--backend=lexical_hash` only as a smoke-test backend.
 
-### Local Feedback Model Training
+### Local Feedback Dataset Training
 
-SpeakReady can train a private local feedback scoring model from reviewed interview answers. This is meant for answer scoring and coaching support, not question generation or general chat.
+SpeakReady can export reviewed interview answers and train a private local feedback model artifact for research or offline analysis. Final interview reports use hosted API providers only.
 
 Export approved/archived admin-reviewed feedback into JSONL:
 
@@ -508,10 +508,10 @@ sparse feature scaling, small-data confidence shrinkage, validation metrics
 when enough examples exist, and a lightweight ensemble for larger datasets.
 The predictor remains compatible with older schema v1 artifacts.
 
-After training, enable it for final interview feedback:
+Keep hosted providers configured for final interview feedback:
 
 ```env
-LOCAL_FEEDBACK_MODEL_ENABLED=true
+LOCAL_FEEDBACK_MODEL_ENABLED=false
 AI_FEEDBACK_PROVIDER_PRIORITY=openai,gemini,groq,cohere
 ```
 

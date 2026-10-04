@@ -905,50 +905,14 @@ class InterviewController extends Controller
  ->get();
  $answers = $this->ensureVoiceAnswersHaveFeedbackEvidence($session, $answers);
 
- $answersData = $answers->map(function ($answer) {
- return [
- 'id' => $answer->id,
- 'question' => $answer->question->question_text?? '',
- 'question_type' => $answer->question->type?? null,
- 'answer' => $this->answerTextForFeedback($answer),
- 'is_skipped' => (bool) $answer->is_skipped,
- 'expected_guide' => $answer->question->expected_guide?? null,
- 'mapped_skills' => $answer->question->mapped_skills?? [],
- ];
- })->toArray();
+ $answersData = $this->answersDataForFeedback($answers);
+ $sessionData = $this->feedbackSessionData($session, $gameLevel);
 
- $sessionData = [
- 'target_position' => $session->target_position,
- 'difficulty' => $session->difficulty,
- 'interview_focus' => $session->interview_focus,
- 'country' => 'General',
- 'ai_assistance_level' => $session->ai_assistance_level,
- 'assessment_mode' => $session->assessment_mode,
- 'accommodation_profile' => $session->accommodation_profile,
- 'target_language' => $this->currentLanguageConfig(),
- ];
-
- // Game Level specific modifiers
- if ($gameLevel) {
- if ($gameLevel->banned_words) {
- $sessionData['banned_words'] = $gameLevel->banned_words;
- }
- if ($gameLevel->target_tone) {
- $sessionData['target_tone'] = $gameLevel->target_tone;
- }
- $sessionData['game_skill_focus'] = $gameLevel->skill_focus;
- $sessionData['game_learning_objective'] = $gameLevel->learning_objective;
- $sessionData['game_success_criteria'] = $gameLevel->guidance_checklist_text;
- $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
- }
-
- $feedbackProvider = $gameLevel? null: $this->bestEvaluatedInterviewProvider(
+ $feedbackProvider = $this->bestEvaluatedInterviewProvider(
  'feedback_generation',
  session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
  );
- if (! $gameLevel) {
  session(['active_interview_feedback_provider' => $feedbackProvider]);
- }
  $aiFeedback = $this->safeInterviewFeedback($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($aiFeedback, $feedbackProvider);
  $assessment = app(TrustworthyAssessmentService::class);
@@ -1421,28 +1385,46 @@ class InterviewController extends Controller
  session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
  );
  session(['active_interview_feedback_provider' => $provider]);
+ $retry->setRelation('question', $answer->question);
  try {
- $feedback = AIService::generateFeedback([
- 'target_position' => $session->target_position,
- 'difficulty' => $session->difficulty,
- 'target_language' => $this->currentLanguageConfig(),
- ], [[
- 'id' => $retry->id,
- 'question' => $answer->question->question_text?? '',
- 'question_type' => $answer->question->type?? null,
- 'answer' => $retry->answer_text,
- 'is_skipped' => false,
- 'expected_guide' => $answer->question->expected_guide?? null,
- 'mapped_skills' => $answer->question->mapped_skills?? [],
- ]], $provider);
+ $feedback = AIService::generateFeedback(
+ $this->feedbackSessionData($session),
+ [$this->answerDataForFeedback($retry)],
+ $provider,
+ false,
+ false
+ );
+ } catch (AiFeedbackProviderFailureException $error) {
+ Log::warning('Retry answer feedback providers failed; no local retry feedback was generated.', [
+ 'answer_id' => $retry->id,
+ 'session_id' => $session->id,
+ 'provider' => $provider,
+ 'provider_count' => $error->providerCount(),
+ 'providers_attempted' => $error->attemptedProviders(),
+ ]);
+
+ return response()->json([
+ 'success' => false,
+ 'message' => $error->userMessage(),
+ 'error_code' => 'ai_feedback_providers_failed',
+ 'attempt_number' => $retry->attempt_number,
+ 'retry_after_ms' => 1500,
+ ], 503);
  } catch (\Throwable $error) {
- Log::warning('Retry answer feedback generation failed after answer save.', [
+ Log::warning('Retry answer feedback generation failed after answer save; no local retry feedback was generated.', [
  'answer_id' => $retry->id,
  'session_id' => $session->id,
  'provider' => $provider,
  'error_type' => $error::class,
  ]);
- $feedback = ['per_question_feedback' => []];
+
+ return response()->json([
+ 'success' => false,
+ 'message' => 'Retry saved, but hosted AI feedback could not be generated. Please retry the feedback request in a moment.',
+ 'error_code' => 'ai_feedback_generation_failed',
+ 'attempt_number' => $retry->attempt_number,
+ 'retry_after_ms' => 1500,
+ ], 503);
  }
 
  $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($feedback, $provider);
@@ -1537,8 +1519,8 @@ class InterviewController extends Controller
  'scoring_confidence' => $retry->scoring_confidence,
  'rubric_level' => $retry->rubric_level,
  'evidence_map' => $retry->evidence_map,
- 'ai_feedback' => $retry->ai_feedback?: 'Retry saved. The AI note was not available.',
- 'display_ai_feedback' => review_feedback_without_question_text($retry->ai_feedback?: 'Retry saved. The AI note was not available.', $answer->question),
+ 'ai_feedback' => $retry->ai_feedback?: '',
+ 'display_ai_feedback' => review_feedback_without_question_text($retry->ai_feedback?: '', $answer->question),
  'better_sample_answer' => $retry->better_sample_answer?: '',
  'follow_up_question' => $retry->follow_up_question?: '',
  'coaching_feedback' => $retry->coaching_feedback?? [],
@@ -1611,6 +1593,93 @@ class InterviewController extends Controller
  ->exists();
  }
 
+ private function answersDataForFeedback(Collection $answers): array
+ {
+ return $answers
+ ->map(fn (InterviewAnswer $answer): array => $this->answerDataForFeedback($answer))
+ ->values()
+ ->toArray();
+ }
+
+ private function answerDataForFeedback(InterviewAnswer $answer): array
+ {
+ $question = $answer->question;
+ $questionSource = [];
+ if ($question instanceof Question) {
+ $questionSource = array_filter([
+ 'source_name' => $question->source_name,
+ 'source_url' => $question->source_url,
+ 'source_type' => $question->source_type,
+ 'ai_provider' => $this->evidenceProviderKey($question->ai_provider),
+ ], static fn ($value): bool => is_array($value)? $value!== []: trim((string) $value)!== '');
+ }
+
+ return [
+ 'id' => $answer->id,
+ 'question' => $question instanceof Question? ($question->question_text?? ''): '',
+ 'question_type' => $question instanceof Question? ($question->type?? null): null,
+ 'answer' => $this->answerTextForFeedback($answer),
+ 'is_skipped' => (bool) $answer->is_skipped,
+ 'expected_guide' => $question instanceof Question? ($question->expected_guide?? null): null,
+ 'mapped_skills' => $question instanceof Question? ($question->mapped_skills?? []): [],
+ 'question_source' => $questionSource,
+ ];
+ }
+
+ private function feedbackSessionData(InterviewSession $session,?GameLevel $gameLevel = null): array
+ {
+ $session->loadMissing('category');
+ $dataset = $this->datasetForSession($session);
+ $data = [
+ 'target_position' => $session->target_position,
+ 'difficulty' => $session->difficulty,
+ 'interview_focus' => $session->interview_focus,
+ 'country' => $dataset['country']?? 'General',
+ 'ai_assistance_level' => $session->ai_assistance_level,
+ 'assessment_mode' => $session->assessment_mode,
+ 'accommodation_profile' => $session->accommodation_profile,
+ 'target_language' => $this->currentLanguageConfig(),
+ ];
+
+ if (is_array($dataset)) {
+ $sources = collect($dataset['sources']?? [])
+ ->filter(fn ($source): bool => is_array($source))
+ ->take(4)
+ ->map(fn (array $source): array => array_filter([
+ 'name' => $source['name']?? null,
+ 'url' => $source['url']?? null,
+ 'note' => $source['note']?? null,
+ ], static fn ($value): bool => trim((string) $value)!== ''))
+ ->values()
+ ->all();
+ $data['dataset'] = array_filter([
+ 'key' => $dataset['key']?? null,
+ 'name' => $dataset['name']?? null,
+ 'category' => $dataset['category']?? null,
+ 'country' => $dataset['country']?? null,
+ 'source_type' => $dataset['source_type']?? null,
+ 'description' => $dataset['description']?? null,
+ 'sources' => $sources,
+ ], static fn ($value): bool => is_array($value)? $value!== []: trim((string) $value)!== '');
+ $data['dataset_context'] = QuestionDatasetProvider::promptContext($dataset);
+ }
+
+ if ($gameLevel) {
+ if ($gameLevel->banned_words) {
+ $data['banned_words'] = $gameLevel->banned_words;
+ }
+ if ($gameLevel->target_tone) {
+ $data['target_tone'] = $gameLevel->target_tone;
+ }
+ $data['game_skill_focus'] = $gameLevel->skill_focus;
+ $data['game_learning_objective'] = $gameLevel->learning_objective;
+ $data['game_success_criteria'] = $gameLevel->guidance_checklist_text;
+ $data['game_retry_hint'] = $gameLevel->retry_hint;
+ }
+
+ return $data;
+ }
+
  private function refreshCompletedSessionFeedback(InterviewSession $session, $gameLevel = null): void
  {
  $answers = InterviewAnswer::with('question')
@@ -1619,47 +1688,14 @@ class InterviewController extends Controller
  ->get();
  $answers = $this->ensureVoiceAnswersHaveFeedbackEvidence($session, $answers);
 
- $answersData = $answers->map(fn ($answer) => [
- 'id' => $answer->id,
- 'question' => $answer->question->question_text?? '',
- 'question_type' => $answer->question->type?? null,
- 'answer' => $this->answerTextForFeedback($answer),
- 'is_skipped' => (bool) $answer->is_skipped,
- 'expected_guide' => $answer->question->expected_guide?? null,
- 'mapped_skills' => $answer->question->mapped_skills?? [],
- ])->toArray();
+ $answersData = $this->answersDataForFeedback($answers);
+ $sessionData = $this->feedbackSessionData($session, $gameLevel);
 
- $sessionData = [
- 'target_position' => $session->target_position,
- 'difficulty' => $session->difficulty,
- 'interview_focus' => $session->interview_focus,
- 'country' => 'General',
- 'ai_assistance_level' => $session->ai_assistance_level,
- 'assessment_mode' => $session->assessment_mode,
- 'accommodation_profile' => $session->accommodation_profile,
- 'target_language' => $this->currentLanguageConfig(),
- ];
-
- if ($gameLevel) {
- if ($gameLevel->banned_words) {
- $sessionData['banned_words'] = $gameLevel->banned_words;
- }
- if ($gameLevel->target_tone) {
- $sessionData['target_tone'] = $gameLevel->target_tone;
- }
- $sessionData['game_skill_focus'] = $gameLevel->skill_focus;
- $sessionData['game_learning_objective'] = $gameLevel->learning_objective;
- $sessionData['game_success_criteria'] = $gameLevel->guidance_checklist_text;
- $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
- }
-
- $feedbackProvider = $gameLevel? null: $this->bestEvaluatedInterviewProvider(
+ $feedbackProvider = $this->bestEvaluatedInterviewProvider(
  'feedback_generation',
  session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
  );
- if (! $gameLevel) {
  session(['active_interview_feedback_provider' => $feedbackProvider]);
- }
  $aiFeedback = $this->safeInterviewFeedback($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($aiFeedback, $feedbackProvider);
 
@@ -2249,6 +2285,17 @@ class InterviewController extends Controller
  $observationData
  );
  } catch (\Throwable $error) {
+ if (! empty($metrics['provider_coaching']?? [])) {
+ Log::warning('Interview answer provider coaching failed; no local answer-coaching fallback was generated.', [
+ 'stage' => $stage,
+ 'session_id' => $session->id,
+ 'question_id' => $this->questionIdFrom($question),
+ 'error_type' => $error::class,
+ 'message' => Str::limit($error->getMessage(), 300),
+ ]);
+ throw $error;
+ }
+
  $this->logAnswerAnalysisFallback($stage, $error, $session, $question);
 
  return $this->fallbackAnswerCoaching($answerText, $question, $metrics, $observationData);
@@ -2260,6 +2307,16 @@ class InterviewController extends Controller
  try {
  return app(EvidenceBasedCoachingService::class)->sessionSummary($answers->values());
  } catch (\Throwable $error) {
+ if ($this->answersContainHostedFeedback($answers)) {
+ Log::warning('Interview session provider coaching summary failed; no local summary fallback was generated.', [
+ 'session_id' => $session->id,
+ 'user_id' => $session->user_id,
+ 'error_type' => $error::class,
+ 'message' => Str::limit($error->getMessage(), 300),
+ ]);
+ throw $error;
+ }
+
  Log::warning('Interview session optional coaching summary failed; using fallback.', [
  'session_id' => $session->id,
  'user_id' => $session->user_id,
@@ -2269,6 +2326,19 @@ class InterviewController extends Controller
 
  return $this->fallbackSessionCoachingSummary($answers);
  }
+ }
+
+ private function answersContainHostedFeedback($answers): bool
+ {
+ return collect($answers)->contains(function ($answer): bool {
+ if (! $answer instanceof InterviewAnswer) {
+ return false;
+ }
+
+ $provider = $this->evidenceProviderKey($answer->ai_provider);
+
+ return $provider!== null && AIService::providerIsSupported($provider);
+ });
  }
 
  private function fallbackSessionCoachingSummary($answers): array
@@ -2764,6 +2834,16 @@ class InterviewController extends Controller
  try {
  return $this->buildActionPlan($session, $score, $feedback, $answers);
  } catch (\Throwable $error) {
+ if ($this->answersContainHostedFeedback($answers)) {
+ Log::warning('Interview action plan generation failed after hosted provider feedback; no local action-plan fallback was generated.', [
+ 'session_id' => $session->id,
+ 'user_id' => $session->user_id,
+ 'error_type' => $error::class,
+ 'message' => Str::limit($error->getMessage(), 300),
+ ]);
+ throw $error;
+ }
+
  Log::warning('Interview action plan generation failed; using fallback.', [
  'session_id' => $session->id,
  'user_id' => $session->user_id,
@@ -4582,13 +4662,17 @@ class InterviewController extends Controller
  array $answersData,?string $feedbackProvider = null
  ): array {
  if (! $gameLevel && ! SystemSettings::enabled('int_ai_eval', true)) {
- return AIService::generateLocalFeedback($sessionData, $answersData);
+ throw new AiFeedbackProviderFailureException(
+ [],
+ [],
+ 'AI evaluation is disabled. Your answers were saved, but no API provider feedback report was created.'
+ );
  }
 
  try {
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  } catch (AiFeedbackProviderFailureException $error) {
- Log::warning('AI feedback providers failed; using local evidence report fallback.', [
+ Log::warning('AI feedback providers failed; no local evidence report fallback was generated.', [
  'session_id' => $session->id,
  'user_id' => $session->user_id,
  'provider' => $feedbackProvider,
@@ -4596,9 +4680,9 @@ class InterviewController extends Controller
  'providers_attempted' => $error->attemptedProviders(),
  ]);
 
- return AIService::generateLocalFeedback($sessionData, $answersData);
+ throw $error;
  } catch (\Throwable $error) {
- Log::warning('Interview feedback generation failed; using local evidence report fallback.', [
+ Log::warning('Interview feedback generation failed; no local evidence report fallback was generated.', [
  'session_id' => $session->id,
  'user_id' => $session->user_id,
  'provider' => $feedbackProvider,
@@ -4606,21 +4690,7 @@ class InterviewController extends Controller
  'message' => Str::limit($error->getMessage(), 300),
  ]);
 
- try {
- return AIService::generateLocalFeedback($sessionData, $answersData);
- } catch (\Throwable $fallbackError) {
- Log::error('Local feedback fallback failed after AI feedback generation error.', [
- 'session_id' => $session->id,
- 'user_id' => $session->user_id,
- 'provider' => $feedbackProvider,
- 'original_error_type' => $error::class,
- 'original_message' => Str::limit($error->getMessage(), 300),
- 'fallback_error_type' => $fallbackError::class,
- 'fallback_message' => Str::limit($fallbackError->getMessage(), 300),
- ]);
-
  throw $error;
- }
  }
  }
 
@@ -4629,38 +4699,22 @@ class InterviewController extends Controller
  array $sessionData,
  array $answersData,?string $feedbackProvider = null
  ): array {
- if ($gameLevel) {
- return $this->learningGameFeedback($gameLevel, $sessionData, $answersData);
- }
-
  return AIService::generateFeedback(
  $sessionData,
  $answersData,
- $feedbackProvider?: $this->bestEvaluatedInterviewProvider('feedback_generation')
+ $feedbackProvider?: $this->bestEvaluatedInterviewProvider('feedback_generation'),
+ false,
+ false
  );
  }
 
  private function learningGameFeedback(GameLevel $gameLevel, array $sessionData, array $answersData): array
  {
- $perQuestion = collect($answersData)
- ->map(fn (array $answer) => $this->scoreLearningGameAnswer($answer, $gameLevel, $sessionData))
- ->values()
- ->all();
-
- $overall = (int) round(collect($perQuestion)->avg('score')?? 0);
- $starScore = (int) round(collect($perQuestion)->avg('star_method_score')?? 0);
- $lowestArea = $this->lowestGameScoreArea($perQuestion);
-
- return [
- 'per_question_feedback' => $perQuestion,
- 'session_feedback' => [
- 'overall_readiness_score' => $overall,
- 'star_method_score' => $starScore,
- 'strengths' => $overall >= 70? 'Your challenge answers had enough structure and useful detail to show progress.': 'You sent answers for the challenge, so there was material to review.',
- 'weaknesses' => 'The main area to improve is '.$lowestArea.'.',
- 'improvement_suggestions' => $gameLevel->retry_hint?: 'Answer each prompt directly, add your own action, and end with a clear result or lesson.',
- ],
- ];
+ throw new AiFeedbackProviderFailureException(
+ [],
+ [],
+ 'Offline learning-game feedback is disabled. Configure a hosted AI feedback provider and retry.'
+ );
  }
 
  private function scoreLearningGameAnswer(array $answer, GameLevel $gameLevel, array $sessionData): array
