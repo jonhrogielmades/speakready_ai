@@ -3729,6 +3729,85 @@ html body #mob-content #interview-modules-page .module-smart-panel .module-rec-g
         white-space: normal !important;
     }
 
+    body.user-mobile-shell #mob-content #interview-modules-page #moduleResults,
+    html body #mob-content #interview-modules-page #moduleResults {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page .module-entry-pager,
+    html body #mob-content #interview-modules-page .module-entry-pager {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 2px 0 4px !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page .module-entry-page-btn,
+    html body #mob-content #interview-modules-page .module-entry-page-btn {
+        min-height: 42px !important;
+        width: fit-content !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        padding: 0 12px !important;
+        border: 1px solid rgba(37, 99, 235, 0.24) !important;
+        border-radius: 12px !important;
+        background: rgba(37, 99, 235, 0.08) !important;
+        color: #2563eb !important;
+        -webkit-text-fill-color: #2563eb !important;
+        font-size: 0.86rem !important;
+        font-weight: 850 !important;
+        line-height: 1.2 !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        box-shadow: none !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page .module-entry-page-btn:last-child,
+    html body #mob-content #interview-modules-page .module-entry-page-btn:last-child {
+        justify-self: end !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page .module-entry-page-btn i,
+    html body #mob-content #interview-modules-page .module-entry-page-btn i {
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 0.86rem !important;
+        line-height: 1 !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page .module-entry-page-btn.is-disabled,
+    html body #mob-content #interview-modules-page .module-entry-page-btn.is-disabled {
+        pointer-events: none !important;
+        opacity: 0.5 !important;
+        color: var(--tx3, #64748b) !important;
+        -webkit-text-fill-color: var(--tx3, #64748b) !important;
+        background: var(--bg3, #f1f5f9) !important;
+        border-color: var(--bd, #dbe4f0) !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page .module-entry-page-status,
+    html body #mob-content #interview-modules-page .module-entry-page-status {
+        min-height: 36px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 12px !important;
+        border-radius: 999px !important;
+        background: var(--bg3, #f1f5f9) !important;
+        color: var(--tx2, #334155) !important;
+        -webkit-text-fill-color: var(--tx2, #334155) !important;
+        font-size: 0.82rem !important;
+        font-weight: 850 !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+
     body.user-mobile-shell #mob-content #interview-modules-page .page-link,
     html body #mob-content #interview-modules-page .page-link {
         min-width: 40px !important;
@@ -3746,5 +3825,22 @@ html body #mob-content #interview-modules-page .module-smart-panel .module-rec-g
     .module-position-modal .modal-footer .btn {
         font-size: 0.92rem !important;
         line-height: 1.25 !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.user-mobile-shell #mob-content #interview-modules-page .module-entry-pager,
+    html body #mob-content #interview-modules-page .module-entry-pager {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    body.user-mobile-shell #mob-content #interview-modules-page .module-entry-page-btn,
+    body.user-mobile-shell #mob-content #interview-modules-page .module-entry-page-btn:last-child,
+    body.user-mobile-shell #mob-content #interview-modules-page .module-entry-page-status,
+    html body #mob-content #interview-modules-page .module-entry-page-btn,
+    html body #mob-content #interview-modules-page .module-entry-page-btn:last-child,
+    html body #mob-content #interview-modules-page .module-entry-page-status {
+        width: 100% !important;
+        justify-self: stretch !important;
     }
 }
