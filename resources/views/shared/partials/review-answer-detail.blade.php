@@ -133,6 +133,8 @@
  $limitationNote = 'This review uses only the saved answer, question, and measurable practice data.';
  }
  $limitationNote = review_feedback_with_sentence_range($limitationNote, 'limitation');
+ $possibleAnswerModalId = 'possible-answer-modal-'.preg_replace('/[^A-Za-z0-9_-]/', '', (string) ($answer->id ?? uniqid()));
+ $possibleAnswerModalTitleId = $possibleAnswerModalId.'-title';
 @endphp
 
 <div class="review-answer-simple">
@@ -224,13 +226,26 @@
  </section>
  <section class="review-better-example">
  <div class="review-coaching-answer-head">
- <a href="{{ route('interview.setup', ['live_feedback_mode' => 'coaching']) }}" class="review-coaching-answer-btn">
+ <button type="button" class="review-coaching-answer-btn" data-bs-toggle="modal" data-bs-target="#{{ $possibleAnswerModalId }}">
  <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
- Coaching Mode
- </a>
+ Possible Answers
+ </button>
  </div>
- <p>{{ $betterAnswer }}</p>
  </section>
  </div>
 
+</div>
+
+<div class="modal fade review-possible-answer-modal" id="{{ $possibleAnswerModalId }}" tabindex="-1" aria-labelledby="{{ $possibleAnswerModalTitleId }}" aria-hidden="true">
+ <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h5 class="modal-title" id="{{ $possibleAnswerModalTitleId }}">Possible Answers</h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+ </div>
+ <div class="modal-body">
+ <p>{{ $betterAnswer }}</p>
+ </div>
+ </div>
+ </div>
 </div>
