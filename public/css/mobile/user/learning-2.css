@@ -3195,3 +3195,76 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
     min-height: 0 !important;
     margin-left: 0 !important;
 }
+
+body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-path-container.level-stepper-mode,
+html body #mob-content #learning-games-page #modules-list.level-path-container.level-stepper-mode,
+#learning-games-page #modules-list.level-path-container.level-stepper-mode {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    padding: 0 10px 20px !important;
+    margin-top: 10px !important;
+}
+
+body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode > .level-node,
+body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode > .level-node.active,
+html body #mob-content #learning-games-page #modules-list.level-stepper-mode > .level-node,
+html body #mob-content #learning-games-page #modules-list.level-stepper-mode > .level-node.active,
+#learning-games-page #modules-list.level-stepper-mode > .level-node,
+#learning-games-page #modules-list.level-stepper-mode > .level-node.active {
+    display: flex !important;
+    justify-content: center !important;
+    width: min(100%, 430px) !important;
+    max-width: 430px !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+}
+
+body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode > .level-node[hidden],
+html body #mob-content #learning-games-page #modules-list.level-stepper-mode > .level-node[hidden],
+#learning-games-page #modules-list.level-stepper-mode > .level-node[hidden] {
+    display: none !important;
+}
+
+body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card,
+html body #mob-content #learning-games-page #modules-list.level-stepper-mode > .level-node .level-card,
+#learning-games-page #modules-list.level-stepper-mode > .level-node .level-card {
+    width: 100% !important;
+    max-width: 430px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    padding: 22px 18px !important;
+    border-radius: 24px !important;
+    border: 1px solid rgba(191, 219, 254, 0.9) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, 0.13), 0 8px 22px rgba(37, 99, 235, 0.08) !important;
+    box-sizing: border-box !important;
+}
+
+body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card > .d-flex:first-child,
+html body #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card > .d-flex:first-child,
+body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card > .locked-card-main > .d-flex:first-child,
+html body #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card > .locked-card-main > .d-flex:first-child,
+#learning-games-page #modules-list.level-stepper-mode .level-card > .d-flex:first-child,
+#learning-games-page #modules-list.level-stepper-mode .level-card > .locked-card-main > .d-flex:first-child {
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card .d-flex.flex-wrap.gap-2,
+html body #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card .d-flex.flex-wrap.gap-2,
+#learning-games-page #modules-list.level-stepper-mode .level-card .d-flex.flex-wrap.gap-2 {
+    justify-content: center !important;
+}
+
+body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card form,
+body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card [style*="margin-top:15px"],
+html body #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card form,
+html body #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card [style*="margin-top:15px"],
+#learning-games-page #modules-list.level-stepper-mode .level-card form,
+#learning-games-page #modules-list.level-stepper-mode .level-card [style*="margin-top:15px"] {
+    width: 100% !important;
+}
