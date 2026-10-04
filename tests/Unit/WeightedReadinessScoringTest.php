@@ -91,6 +91,26 @@ class WeightedReadinessScoringTest extends TestCase
         }
     }
 
+    public function test_review_feedback_display_text_uses_three_to_six_grounded_sentences(): void
+    {
+        $expanded = review_feedback_with_sentence_range(
+            'Add the final customer result or lesson.',
+            'improve'
+        );
+
+        $this->assertStringContainsString('Add the final customer result or lesson.', $expanded);
+        $this->assertStringContainsString('Use only true details from your own experience', $expanded);
+        $this->assertGreaterThanOrEqual(3, review_feedback_sentence_count($expanded));
+        $this->assertLessThanOrEqual(6, review_feedback_sentence_count($expanded));
+        $this->assertStringNotContainsString('[', $expanded);
+
+        $long = 'One. Two. Three. Four. Five. Six. Seven.';
+        $limited = review_feedback_with_sentence_range($long);
+
+        $this->assertSame(6, review_feedback_sentence_count($limited));
+        $this->assertStringNotContainsString('Seven', $limited);
+    }
+
     public function test_review_better_answer_uses_provider_draft_or_answer_based_fallback(): void
     {
         $question = 'Please introduce yourself, including your name, location, and background.';

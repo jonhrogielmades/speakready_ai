@@ -493,6 +493,90 @@ if (! function_exists('review_better_answer_limit_sentences')) {
     }
 }
 
+if (! function_exists('review_feedback_sentence_count')) {
+    function review_feedback_sentence_count(string $text): int
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return 0;
+        }
+
+        preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', $text, $matches);
+
+        return count(array_filter(array_map(
+            fn (string $sentence): string => trim($sentence),
+            $matches[0] ?? []
+        )));
+    }
+}
+
+if (! function_exists('review_feedback_limit_sentences')) {
+    function review_feedback_limit_sentences(string $text, int $maxSentences = 6): string
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return '';
+        }
+
+        preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', $text, $matches);
+        $sentences = array_slice(array_values(array_filter(array_map(
+            fn (string $sentence): string => trim($sentence),
+            $matches[0] ?? []
+        ))), 0, max(1, $maxSentences));
+
+        return trim(implode(' ', array_map('review_sentence_text', $sentences)));
+    }
+}
+
+if (! function_exists('review_feedback_with_sentence_range')) {
+    function review_feedback_with_sentence_range(string $text, string $kind = 'feedback'): string
+    {
+        $text = review_feedback_limit_sentences($text, 6);
+        if ($text === '') {
+            return '';
+        }
+
+        $supplements = match ($kind) {
+            'worked' => [
+                'This point is based on the saved answer for this question.',
+                'Keep the same true detail and add only facts you can confirm.',
+            ],
+            'improve' => [
+                'Use only true details from your own experience when you retry.',
+                'A stronger answer should add a specific result, example, or role connection only when you can confirm it.',
+            ],
+            'impact' => [
+                'This matters because the interviewer can only judge what the answer clearly states.',
+                'Avoid adding numbers, outcomes, or achievements unless they are true.',
+            ],
+            'success' => [
+                'Use this as a quick check before retrying the answer.',
+                'The retry should stay grounded in the same real answer details.',
+            ],
+            'limitation' => [
+                'Treat the note as guidance based on the saved response.',
+                'Confirm any missing detail before using it in an interview.',
+            ],
+            default => [
+                'This is based on the saved answer for this question.',
+                'Add only details that are true and can be confirmed.',
+            ],
+        };
+
+        foreach ($supplements as $sentence) {
+            if (review_feedback_sentence_count($text) >= 3) {
+                break;
+            }
+
+            if (! str_contains(mb_strtolower($text, 'UTF-8'), mb_strtolower($sentence, 'UTF-8'))) {
+                $text .= ' '.review_sentence_text($sentence);
+            }
+        }
+
+        return review_feedback_limit_sentences($text, 6);
+    }
+}
+
 if (! function_exists('review_better_answer_uses_star_labels')) {
     function review_better_answer_uses_star_labels(string $text): bool
     {

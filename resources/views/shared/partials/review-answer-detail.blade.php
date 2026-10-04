@@ -36,8 +36,8 @@
  : ($isVoiceOnlyAnswer && $hasVoiceEvidence
  ? 'Voice answer saved. Feedback is based on the saved voice session.'
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
- $whatWorked = $reviewFeedbackText($contentAlignment['what_worked'] ?? '');
- $impactText = $reviewFeedbackText($contentAlignment['impact'] ?? $contentAlignment['observation'] ?? '');
+ $whatWorked = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['what_worked'] ?? ''), 'worked');
+ $impactText = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['impact'] ?? $contentAlignment['observation'] ?? ''), 'impact');
  $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
  $supportingExcerpts = $listItems($contentAlignment['evidence_quotes'] ?? ($evidenceMap['supporting_excerpts'] ?? []), 1);
  $improvementFocus = $reviewFeedbackText($contentAlignment['improvement_focus'] ?? '');
@@ -50,6 +50,7 @@
  if ($improvementFocus === '') {
  $improvementFocus = 'Add one specific example, action, or result.';
  }
+ $improvementFocus = review_feedback_with_sentence_range($improvementFocus, 'improve');
  $betterAnswer = review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $questionSource);
  $rubricLevel = trim((string) ($answer->rubric_level ?? ''));
  $alignmentStatus = strtolower(str_replace([' ', '-'], '_', trim((string) ($contentAlignment['status'] ?? ''))));
@@ -127,10 +128,12 @@
  if ($successCheck === '') {
  $successCheck = 'A reviewer can find the direct answer, the supporting detail, and the result or lesson.';
  }
+ $successCheck = review_feedback_with_sentence_range($successCheck, 'success');
  $limitationNote = $reviewFeedbackText($contentAlignment['limitation'] ?? '');
  if ($limitationNote === '') {
  $limitationNote = 'This review uses only the saved answer, question, and measurable practice data.';
  }
+ $limitationNote = review_feedback_with_sentence_range($limitationNote, 'limitation');
 @endphp
 
 <div class="review-answer-simple">
