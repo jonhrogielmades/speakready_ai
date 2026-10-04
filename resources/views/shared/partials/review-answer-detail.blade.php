@@ -35,6 +35,7 @@
  ? 'Voice answer saved. Feedback is based on the saved voice session.'
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
  $whatWorked = $reviewFeedbackText($contentAlignment['what_worked'] ?? '');
+ $impactText = $reviewFeedbackText($contentAlignment['impact'] ?? $contentAlignment['observation'] ?? '');
  $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
  $supportingExcerpts = $listItems($contentAlignment['evidence_quotes'] ?? ($evidenceMap['supporting_excerpts'] ?? []), 1);
  $improvementFocus = $reviewFeedbackText($contentAlignment['improvement_focus'] ?? '');
@@ -195,6 +196,13 @@
  <div class="review-block-title review-title-warning"><i class="fa-solid fa-bullseye"></i><span>What To Improve</span></div>
  <p>{{ $improvementFocus }}</p>
  </section>
+
+ @if($impactText !== '')
+ <section class="review-answer-section">
+ <div class="review-block-title"><i class="fa-solid fa-circle-info"></i><span>Why It Matters</span></div>
+ <p>{{ $impactText }}</p>
+ </section>
+ @endif
 
  @if($cameraVisible)
  <section class="review-answer-section review-answer-section-wide review-camera-card">

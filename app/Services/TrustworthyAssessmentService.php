@@ -110,7 +110,7 @@ class TrustworthyAssessmentService
  $resultPrompt = in_array('A clear result, effect, or lesson', $missing, true)? '[Add only a true result, or say that no number was recorded.]': '[Restate only the result already present in your answer.]';
 
  if ($evidence['star_applicable']?? false) {
- return "Answer draft based on your facts - keep only details you can check:\n"."Source answer: {$excerpt}\n"."Situation/Task: [Briefly identify the context and your responsibility using only facts in your answer.]\n"."Action: [Restate the specific action you personally took from the source answer.]\n"."Result: {$resultPrompt}";
+ return "Possible answer based on your details:\n"."Situation: [Briefly set the context from your answer.]\n"."Task: [State your responsibility using only details from your answer.]\n"."Action: [Restate the action you personally took: {$excerpt}]\n"."Result: {$resultPrompt}";
  }
 
  $questionText = trim((string) ($evidence['question_text']?? ''));

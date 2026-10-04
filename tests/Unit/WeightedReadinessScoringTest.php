@@ -121,6 +121,43 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString('[result or lesson]', $behavioralAnswer);
     }
 
+    public function test_provider_advice_style_better_answer_is_replaced_with_grounded_fallback(): void
+    {
+        $answer = [
+            'id' => 77,
+            'question' => 'Tell me about a time you helped a customer.',
+            'answer' => 'I listened to the customer, checked the account, and explained the next step.',
+            'question_type' => 'Behavioral',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 86, 'directly_addressed', true, 75);
+        $feedback['better_sample_answer'] = 'A stronger answer would add a clearer result.';
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertStringNotContainsString('A stronger answer would', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('Possible answer based on your details:', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('Situation:', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('Action:', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('I listened to the customer', $normalized['better_sample_answer']);
+    }
+
+    public function test_ai_coach_local_behavioral_possible_answer_uses_star_labels(): void
+    {
+        $answer = AIService::fallbackCoachPossibleAnswer(
+            ['target_position' => 'Customer Service Representative'],
+            [
+                'question_text' => 'Tell me about a time you helped a customer.',
+                'type' => 'Behavioral',
+            ]
+        );
+
+        $this->assertStringContainsString('Situation:', $answer);
+        $this->assertStringContainsString('Task:', $answer);
+        $this->assertStringContainsString('Action:', $answer);
+        $this->assertStringContainsString('Result:', $answer);
+        $this->assertStringContainsString('Customer Service Representative', $answer);
+    }
+
     public function test_it_uses_the_versioned_readiness_weights_for_relevance(): void
     {
         $score = AIService::calculateWeightedReadinessScore(
@@ -895,7 +932,7 @@ class WeightedReadinessScoringTest extends TestCase
             'star_applicable' => $starApplicable,
             'star_method_score' => $starScore,
             'ai_feedback' => 'The answer included specific evidence and identified both the action taken and the resulting outcome.',
-            'better_sample_answer' => 'A stronger answer would add constraints, personal ownership, and a measurable result.',
+            'better_sample_answer' => 'I explained the constraints, owned my action, and shared the measurable result from the work.',
             'follow_up_question' => 'What tradeoff had the largest effect on your decision?',
         ];
     }
