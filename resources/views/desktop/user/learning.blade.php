@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=26') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=27') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -784,6 +784,13 @@
 
  if (selectedStepIndex < 0 || !availableIndexes.includes(selectedStepIndex)) {
  selectedStepIndex = firstAvailable;
+ }
+
+ const selectedNode = challengeNodes[selectedStepIndex] || null;
+ const selectedStatus = selectedNode?.dataset.levelStatus || (selectedNode?.classList.contains('completed')? 'completed': (selectedNode?.classList.contains('active')? 'active': (selectedNode? 'locked': '')));
+ modulesList.classList.remove('selected-status-active', 'selected-status-completed', 'selected-status-locked');
+ if (selectedStatus) {
+ modulesList.classList.add(`selected-status-${selectedStatus}`);
  }
 
  challengeNodes.forEach((node, index) => {

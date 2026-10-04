@@ -3762,4 +3762,21 @@
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .learning-search-empty {
         grid-column: 1 / -1 !important;
     }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked {
+        align-items: start !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked > .challenge-level-stepper,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked > .level-node,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked > .level-node.locked,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked > .level-node .level-card {
+        align-self: start !important;
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked > .level-node .level-card {
+        display: block !important;
+    }
 }
