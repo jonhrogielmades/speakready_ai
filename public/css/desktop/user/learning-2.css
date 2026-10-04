@@ -3681,6 +3681,10 @@
         align-content: stretch;
         gap: 14px;
         box-sizing: border-box;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .challenge-level-stepper .challenge-level-stepper-track {
@@ -3749,6 +3753,10 @@
         height: 100% !important;
         min-height: 520px !important;
         margin: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode .learning-search-empty {
