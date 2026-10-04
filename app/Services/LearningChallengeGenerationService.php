@@ -77,7 +77,7 @@ class LearningChallengeGenerationService
  ]);
 
  if (! $category->exists) {
- $category->description = "AI-generated five-level interview challenge journey for {$position}.";
+ $category->description = "AI-generated nine-level interview challenge journey for {$position}.";
  $category->sort_order = ((int) Category::where('type', 'game')->max('sort_order')) + 1;
  }
 
@@ -302,20 +302,24 @@ class LearningChallengeGenerationService
  2 => "1. Tell me about a time you handled a challenge related to {$position} work.\n2. What was your responsibility in that situation?\n3. What specific action did you take?\n4. What result or lesson came from it?\n5. How will that experience help you in this role?",
  3 => "1. What tools, processes, or responsibilities are important for a {$position}?\n2. Describe a project, task, or training where you used a relevant skill.\n3. How do you check the quality of your work?\n4. How do you handle feedback or corrections?\n5. What skill do you want to strengthen next for this role?",
  4 => "1. What are your salary expectations for this {$position} role?\n2. Are you comfortable with the schedule, location, or work setup required?\n3. Tell me about a weakness you are actively improving.\n4. How do you handle pressure from customers, classmates, supervisors, or teammates?\n5. Why are you leaving or considering your current school, work, or training path?",
- default => "1. Please introduce yourself as if this were your final {$position} interview.\n2. Share your strongest example of role readiness.\n3. Answer one behavioral question using a clear situation, action, and result.\n4. Explain how you would handle a realistic problem in this role.\n5. Close by summarizing why you are a strong fit.",
+ 5 => "1. Tell me about a time you worked with others to complete a task related to {$position}.\n2. How did you communicate your ideas or updates?\n3. What conflict, misunderstanding, or delay came up?\n4. What did you do to keep the work moving?\n5. What did the experience teach you about teamwork in this role?",
+ 6 => "1. Describe a realistic customer, client, patient, student, or stakeholder problem a {$position} may face.\n2. What information would you gather first?\n3. What steps would you take to solve the issue?\n4. How would you explain your solution professionally?\n5. How would you prevent the same issue from happening again?",
+ 7 => "1. What is one achievement, project, training output, or work result that proves you can succeed as a {$position}?\n2. What was the goal or situation?\n3. What action did you personally take?\n4. What measurable or clear result came from it?\n5. How does that result connect to this job?",
+ 8 => "1. How would you answer if the interviewer questioned your experience level for this {$position} role?\n2. What gap are you still improving?\n3. What have you done recently to close that gap?\n4. How do you stay reliable when learning something new?\n5. What support or onboarding would help you perform quickly?",
+ default => "1. Please introduce yourself as if this were your final {$position} interview.\n2. Share your strongest example of role readiness.\n3. Answer one behavioral question using a clear situation, action, and result.\n4. Explain how you would handle a realistic problem in this role.\n5. Close by summarizing why you are a strong fit and ready to start.",
  };
  }
 
  private function topicForPosition(string $position): string
  {
- return "Target position: {$position}. Build a five-level Interview Challenge Journey for this exact role. Level 1: introduction and motivation. Level 2: behavioral STAR evidence. Level 3: role skills, tools, responsibilities, and problem solving. Level 4: HR curveballs including salary expectations, availability, work setup, weakness, and pressure. Level 5: final mock interview readiness.";
+ return "Target position: {$position}. Build a nine-level Interview Challenge Journey for this exact role. Level 1: introduction and motivation. Level 2: behavioral STAR evidence. Level 3: role skills, tools, responsibilities, and problem solving. Level 4: HR curveballs including salary expectations, availability, work setup, weakness, and pressure. Level 5: teamwork and communication. Level 6: role-specific scenario problem solving. Level 7: achievement and measurable impact. Level 8: handling experience gaps and learning readiness. Level 9: final mock interview readiness. The certificate is step 10 after all 9 playable levels are completed.";
  }
 
  private function difficultyForJourneyLevel(int $levelNumber): string
  {
  return match ($levelNumber) {
  1, 2 => 'beginner',
- 3, 4 => 'intermediate',
+ 3, 4, 5, 6 => 'intermediate',
  default => 'advanced',
  };
  }
@@ -327,6 +331,10 @@ class LearningChallengeGenerationService
  2 => "{$position} behavioral evidence using STAR structure",
  3 => "{$position} role skills, tools, responsibilities, and problem solving",
  4 => "{$position} HR curveballs, salary expectations, availability, and pressure",
+ 5 => "{$position} teamwork, collaboration, and communication",
+ 6 => "{$position} scenario-based problem solving and service recovery",
+ 7 => "{$position} achievements, measurable impact, and proof of readiness",
+ 8 => "{$position} experience gaps, learning readiness, and coachability",
  default => "{$position} final mock interview readiness",
  };
  }
@@ -338,6 +346,10 @@ class LearningChallengeGenerationService
  2 => 'STAR Method',
  3 => 'Problem Solving',
  4 => 'Professionalism',
+ 5 => 'Teamwork',
+ 6 => 'Decision Making',
+ 7 => 'Achievement Evidence',
+ 8 => 'Growth Mindset',
  default => 'Interview Readiness',
  };
  }
@@ -346,6 +358,9 @@ class LearningChallengeGenerationService
  {
  return match ($levelNumber) {
  3 => 'Problem Solving',
+ 5 => 'Teamwork',
+ 6 => 'Problem Solving',
+ 8 => 'Adaptability',
  default => 'Communication',
  };
  }

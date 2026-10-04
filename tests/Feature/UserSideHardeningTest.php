@@ -171,7 +171,7 @@ class UserSideHardeningTest extends TestCase
  ->orderBy('level_number')
  ->pluck('level_number')
  ->all();
- $this->assertSame(range(1, 5), $generatedLevelNumbers);
+ $this->assertSame(range(1, 9), $generatedLevelNumbers);
 
  $this->actingAs($user)
  ->withSession(['learning_challenge_position' => 'Data Analyst'])
@@ -179,16 +179,18 @@ class UserSideHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('Target Position')
  ->assertSee('Data Analyst')
- ->assertSee('Data Analyst Interview Level 5')
+ ->assertSee('Data Analyst Interview Level 9')
+ ->assertSee('data-level-number="10"', false)
+ ->assertSee('Completion Certificate')
  ->assertDontSee('Software Developer Screening');
  }
 
- public function test_challenge_journey_is_capped_at_level_five(): void
+ public function test_challenge_journey_has_nine_playable_levels_and_certificate_at_step_ten(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
- $category = $this->category(['type' => 'game', 'title' => 'Five Level Challenge Path']);
- $levels = collect(range(1, 6))->map(fn (int $levelNumber): GameLevel => $this->gameLevel($category, [
+ $category = $this->category(['type' => 'game', 'title' => 'Nine Level Challenge Path']);
+ $levels = collect(range(1, 10))->map(fn (int $levelNumber): GameLevel => $this->gameLevel($category, [
  'level_number' => $levelNumber,
  'title' => "Journey Level {$levelNumber}",
  'target_position' => 'Developer',
@@ -199,15 +201,17 @@ class UserSideHardeningTest extends TestCase
  ->withSession(['learning_challenge_position' => 'Developer'])
  ->get(route('user.learning', ['category_id' => $category->id]))
  ->assertOk()
- ->assertSee('Journey Level 5')
- ->assertDontSee('Journey Level 6');
+ ->assertSee('Journey Level 9')
+ ->assertSee('data-level-number="10"', false)
+ ->assertSee('Completion Certificate')
+ ->assertDontSee('Journey Level 10');
 
  $this->actingAs($user)
  ->withSession(['learning_challenge_position' => 'Developer'])
  ->post(route('user.game.start', $levels->last()))
- ->assertSessionHas('error', 'Only Levels 1-5 are available in the Challenge Journey.');
+ ->assertSessionHas('error', 'Only Levels 1-9 are available in the Challenge Journey.');
 
- $levels->take(5)->each(function (GameLevel $level) use ($user): void {
+ $levels->take(9)->each(function (GameLevel $level) use ($user): void {
  GameProgress::create([
  'user_id' => $user->id,
  'game_level_id' => $level->id,
@@ -224,7 +228,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertDatabaseHas('game_certificates', [
  'user_id' => $user->id,
  'category_id' => $category->id,
- 'final_game_level_id' => $levels->get(4)->id,
+ 'final_game_level_id' => $levels->get(8)->id,
  ]);
  }
 

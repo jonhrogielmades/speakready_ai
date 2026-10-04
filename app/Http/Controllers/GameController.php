@@ -93,7 +93,7 @@ class GameController extends Controller
  }
 
  if (! app(ChallengePositionService::class)->isJourneyLevel($level)) {
- return back()->with('error', 'Only Levels 1-5 are available in the Challenge Journey.');
+ return back()->with('error', 'Only Levels 1-'.ChallengePositionService::JOURNEY_MAX_LEVEL_NUMBER.' are available in the Challenge Journey.');
  }
 
  $this->refreshEnergyIfNeeded($profile);

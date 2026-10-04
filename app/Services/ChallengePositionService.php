@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class ChallengePositionService
 {
- public const JOURNEY_MAX_LEVEL_NUMBER = 5;
+ public const JOURNEY_MAX_LEVEL_NUMBER = 9;
 
  private const GENERIC_POSITIONS = [
  'general',
