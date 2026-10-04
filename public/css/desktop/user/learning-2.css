@@ -3780,3 +3780,26 @@
         display: block !important;
     }
 }
+
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .sr-learning-hero.sr-page-hero {
+        margin: 0 0 15px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .challenge-position-strip {
+        margin: 0 0 15px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #dashboard-stats {
+        margin: 0 0 15px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .journey-header {
+        margin: 0 0 15px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-path-container,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-path-container.level-stepper-mode {
+        margin-top: 0 !important;
+    }
+}
