@@ -3675,27 +3675,17 @@
         margin: 0 !important;
         padding: 18px !important;
         display: grid !important;
-        grid-template-columns: 44px 44px minmax(0, 1fr);
-        grid-template-rows: auto minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
         justify-content: stretch;
         align-content: stretch;
         gap: 14px;
         box-sizing: border-box;
     }
 
-    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .challenge-level-stepper .challenge-step-nav:first-child {
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .challenge-level-stepper .challenge-level-stepper-track {
         grid-column: 1;
         grid-row: 1;
-    }
-
-    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .challenge-level-stepper .challenge-step-nav:last-child {
-        grid-column: 2;
-        grid-row: 1;
-    }
-
-    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode > .challenge-level-stepper .challenge-level-stepper-track {
-        grid-column: 1 / -1;
-        grid-row: 2;
         display: flex !important;
         flex-direction: column !important;
         align-items: stretch !important;

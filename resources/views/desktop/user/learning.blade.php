@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=24') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=25') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -150,9 +150,7 @@
 
  @if($gameLevels && $gameLevels->count() > 0)
  <div class="challenge-level-stepper" id="challengeLevelStepper" aria-label="Challenge journey levels">
- <button type="button" class="challenge-step-nav" id="challengeStepPrev" aria-label="Previous challenge level"><i class="fa-solid fa-arrow-left"></i></button>
  <div class="challenge-level-stepper-track" id="challengeLevelStepperTrack" role="tablist" aria-label="Challenge levels"></div>
- <button type="button" class="challenge-step-nav" id="challengeStepNext" aria-label="Next challenge level"><i class="fa-solid fa-arrow-right"></i></button>
  </div>
  @endif
  
