@@ -3764,20 +3764,20 @@
     }
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked {
-        align-items: start !important;
+        align-items: stretch !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked > .challenge-level-stepper,
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked > .level-node,
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked > .level-node.locked,
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked > .level-node .level-card {
-        align-self: start !important;
-        height: auto !important;
-        min-height: 0 !important;
+        align-self: stretch !important;
+        height: 100% !important;
+        min-height: 520px !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-stepper-mode.selected-status-locked > .level-node .level-card {
-        display: block !important;
+        display: flex !important;
     }
 }
 
@@ -3819,5 +3819,45 @@
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-path-container,
     html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list.level-path-container.level-stepper-mode {
         margin-top: 0 !important;
+    }
+}
+
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-node.locked .level-card {
+        display: flex !important;
+        grid-template-columns: none !important;
+        opacity: 1 !important;
+        filter: none !important;
+        padding-right: 22px !important;
+        background: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-node.locked .level-card > .locked-card-main {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-node.locked .locked-status-pill,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .level-node.locked .locked-card-art {
+        display: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .locked-start-challenge-form {
+        margin-top: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .locked-start-challenge-btn,
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .locked-start-challenge-btn:disabled {
+        background: #94a3b8 !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+        cursor: not-allowed !important;
+        opacity: 0.9 !important;
+        pointer-events: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #modules-list .locked-unlock-note {
+        justify-content: center !important;
+        text-align: center !important;
     }
 }

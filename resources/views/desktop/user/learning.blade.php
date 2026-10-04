@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=30') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=31') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -204,8 +204,7 @@
  
  $score = $prog? $prog->best_score: 0;
  $successChecklist = $level->guidance_checklist;
- $lockedArtIcons = ['fa-lightbulb', 'fa-comment-dots', 'fa-chalkboard-user', 'fa-trophy'];
- $lockedArtIcon = $lockedArtIcons[$loop->index % count($lockedArtIcons)];
+
  $levelSearchText = strtolower(implode(' ', array_filter([
  'level '. $level->level_number,
  $level->title,
@@ -229,7 +228,7 @@
  $iconHtml = $level->level_number;
  } else {
  $nodeClass = 'locked';
- $iconHtml = '<i class="fa-solid fa-lock"></i>';
+ $iconHtml = $level->level_number;
  }
  @endphp
 
@@ -241,18 +240,14 @@
  <div class="{{ $status === 'locked'? 'locked-card-main': '' }}">
  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
  <div>
- <div style="font-size:0.75rem;color:{{ $status === 'completed'? '#34d399': ($status === 'active'? 'var(--pur)': 'var(--tx3)') }};font-weight:700;margin-bottom:5px;text-transform:uppercase">Level {{ $level->level_number }}</div>
+ <div style="font-size:0.75rem;color:{{ $status === 'completed'? '#34d399': ($status === 'active' || $status === 'locked'? 'var(--pur)': 'var(--tx3)') }};font-weight:700;margin-bottom:5px;text-transform:uppercase">Level {{ $level->level_number }}</div>
  <h5 style="color:var(--tx);font-weight:700;margin:0">{{ $level->title }}</h5>
- @if($status === 'locked')
- <div class="locked-status-pill"><i class="fa-solid fa-lock"></i> Locked</div>
- @endif
+
  </div>
  @if($status === 'completed')
  <div class="score-badge"><i class="fa-solid fa-star"></i> Score: {{ $score }}%</div>
- @elseif($status === 'active')
+ @elseif($status === 'active' || $status === 'locked')
  <div class="requirement-badge"><i class="fa-solid fa-bullseye"></i> Goal: {{ $level->required_score }}%+</div>
- @elseif($status!== 'locked')
- <div class="requirement-badge" style="background:var(--bg3);color:var(--tx3)"><i class="fa-solid fa-lock"></i> Locked</div>
  @endif
  </div>
  
@@ -269,8 +264,8 @@
  </div>
  @endif
  
- @if($status === 'active' || $status === 'completed')
- <div class="d-flex flex-wrap gap-2 learning-badge-row {{ $status === 'active'? 'learning-badge-row-active': '' }}">
+ @if($status === 'active' || $status === 'completed' || $status === 'locked')
+ <div class="d-flex flex-wrap gap-2 learning-badge-row {{ $status === 'active'? 'learning-badge-row-active': ($status === 'locked'? 'learning-badge-row-locked': '') }}">
  @if($level->skill_focus)
  <span class="badge border" style="background:var(--bg3); color:var(--tx);"><i class="fa-solid fa-graduation-cap text-info me-1"></i> {{ $level->skill_focus }}</span>
  @endif
@@ -295,7 +290,7 @@
  </div>
  @endif
 
- @if($status === 'active')
+ @if($status === 'active' || $status === 'locked')
  <div class="active-challenge-panel" style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
  <div style="font-size:0.85rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-list-check me-1 text-info"></i> Contains {{ count($level->parsed_questions) }} Questions</div>
  @if($successChecklist)
@@ -311,30 +306,32 @@
  @endif
  <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $level->energy_cost }} Energy</div>
  </div>
+ @if($status === 'active')
  <form action="{{ route('user.game.start', $level->id) }}" method="POST" class="start-challenge-form">
  @csrf
  <button type="submit" class="btn btn-shine start-challenge-btn" style="background:var(--dash-primary, #60a5fa);color:#fff;border:none;box-shadow:0 4px 15px rgba(96,165,250,0.4);border-radius:12px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
  </form>
- @elseif($status === 'completed')
- <div style="margin-top:15px;">
- <button class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-weight:600"><i class="fa-solid fa-check text-success me-1"></i> Completed</button>
+ @else
+ <div class="start-challenge-form locked-start-challenge-form">
+ <button type="button" class="btn btn-shine start-challenge-btn locked-start-challenge-btn" disabled aria-disabled="true" style="background:#94a3b8;color:#fff;border:none;box-shadow:none;border-radius:12px;font-weight:600;padding:10px 25px;cursor:not-allowed"><i class="fa-solid fa-lock me-2"></i> Start Challenge</button>
  </div>
- @elseif($status === 'locked')
  @if($level->prerequisite_level_id)
  @php $prereq = $gameLevels->where('id', $level->prerequisite_level_id)->first(); @endphp
  @if($prereq)
- <div style="margin-top:15px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:5px;">
+ <div class="locked-unlock-note" style="margin-top:15px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:5px;justify-content:center;">
  <i class="fa-solid fa-circle-info text-info"></i> Reach {{ $prereq->required_score }}% in Level {{ $prereq->level_number }} to unlock.
  </div>
  @endif
  @endif
  @endif
+ @elseif($status === 'completed')
+ <div style="margin-top:15px;">
+ <button class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-weight:600"><i class="fa-solid fa-check text-success me-1"></i> Completed</button>
  </div>
- @if($status === 'locked')
- <div class="locked-card-art" aria-hidden="true">
- <i class="fa-solid {{ $lockedArtIcon }}"></i>
- </div>
+
  @endif
+ </div>
+
  </div>
  </div>
  @endforeach
