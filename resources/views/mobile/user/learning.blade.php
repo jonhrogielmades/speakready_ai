@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=10') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=11') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -147,6 +147,14 @@
  <span class="learning-notice-message">{{ session('success') }}</span>
  </div>
  @endif
+
+ @if($gameLevels && $gameLevels->count() > 0)
+ <div class="challenge-level-stepper" id="challengeLevelStepper" aria-label="Challenge journey levels">
+ <button type="button" class="challenge-step-nav" id="challengeStepPrev" aria-label="Previous challenge level"><i class="fa-solid fa-arrow-left"></i></button>
+ <div class="challenge-level-stepper-track" id="challengeLevelStepperTrack" role="tablist" aria-label="Challenge levels"></div>
+ <button type="button" class="challenge-step-nav" id="challengeStepNext" aria-label="Next challenge level"><i class="fa-solid fa-arrow-right"></i></button>
+ </div>
+ @endif
  
  <!-- Path Line -->
  <div class="level-path-line">
@@ -227,7 +235,7 @@
  }
  @endphp
 
- <div class="level-node {{ $nodeClass }} animate-fade-up" data-search-text="{{ $levelSearchText }}" style="animation-delay: {{ $loop->index * 0.1 }}s">
+ <div class="level-node {{ $nodeClass }} animate-fade-up" data-level-number="{{ $level->level_number }}" data-level-title="{{ $level->title }}" data-level-status="{{ $status }}" data-search-text="{{ $levelSearchText }}" style="animation-delay: {{ $loop->index * 0.1 }}s">
  <div class="level-icon-wrapper">
  <div class="level-icon">{!! $iconHtml!!}</div>
  </div>
@@ -342,7 +350,7 @@
  return $progress && (int) $progress->best_score >= (int) $level->required_score;
  });
  @endphp
- <div class="level-node {{ $certificateUnlocked? 'completed': 'locked' }} animate-fade-up" data-search-text="final reward completion certificate pdf download unlock completed locked {{ strtolower($selectedCategory?->title?? '') }}" style="animation-delay: {{ $gameLevels->count() * 0.1 }}s">
+ <div class="level-node {{ $certificateUnlocked? 'completed': 'locked' }} animate-fade-up" data-level-number="{{ $gameLevels->count() + 1 }}" data-level-title="Completion Certificate" data-level-status="{{ $certificateUnlocked? 'completed': 'locked' }}" data-search-text="final reward completion certificate pdf download unlock completed locked {{ strtolower($selectedCategory?->title?? '') }}" style="animation-delay: {{ $gameLevels->count() * 0.1 }}s">
  <div class="level-icon-wrapper">
  <div class="level-icon">
  @if($certificateUnlocked)
@@ -725,31 +733,170 @@
  document.addEventListener('DOMContentLoaded', function () {
  const searchInput = document.getElementById('learningSearchInput');
  const searchEmpty = document.getElementById('learningSearchEmpty');
+ const modulesList = document.getElementById('modules-list');
+ const stepper = document.getElementById('challengeLevelStepper');
+ const stepperTrack = document.getElementById('challengeLevelStepperTrack');
+ const stepPrev = document.getElementById('challengeStepPrev');
+ const stepNext = document.getElementById('challengeStepNext');
  const challengeNodes = Array.from(document.querySelectorAll('#modules-list >.level-node'));
  const pathLines = Array.from(document.querySelectorAll('#modules-list >.level-path-line'));
+ let selectedStepIndex = challengeNodes.findIndex(node => node.classList.contains('active'));
+ if (selectedStepIndex < 0) selectedStepIndex = challengeNodes.findIndex(node => !node.classList.contains('locked'));
+ if (selectedStepIndex < 0) selectedStepIndex = 0;
+
+ const stepButtons = [];
+ const matchingStepIndexes = () => challengeNodes
+ .map((node, index) => node.dataset.stepMatches === 'false'? null: index)
+ .filter(index => index !== null);
+
+ const setSelectedChallengeStep = (index, focus = false) => {
+ const availableIndexes = matchingStepIndexes();
+ if (!availableIndexes.length) {
+ selectedStepIndex = -1;
+ updateChallengeStepper();
+ return;
+ }
+
+ selectedStepIndex = availableIndexes.includes(index)? index: availableIndexes[0];
+ updateChallengeStepper();
+
+ if (focus && selectedStepIndex >= 0) {
+ stepButtons[selectedStepIndex]?.focus({ preventScroll: true });
+ }
+ };
+
+ const updateChallengeStepper = () => {
+ const availableIndexes = matchingStepIndexes();
+ const firstAvailable = availableIndexes[0] ?? -1;
+ const lastAvailable = availableIndexes[availableIndexes.length - 1] ?? -1;
+
+ if (selectedStepIndex < 0 || !availableIndexes.includes(selectedStepIndex)) {
+ selectedStepIndex = firstAvailable;
+ }
+
+ challengeNodes.forEach((node, index) => {
+ const isMatch = node.dataset.stepMatches !== 'false';
+ node.hidden = !(isMatch && index === selectedStepIndex);
+ node.classList.toggle('is-step-selected', index === selectedStepIndex);
+ });
+
+ stepButtons.forEach((button, index) => {
+ const isMatch = challengeNodes[index]?.dataset.stepMatches !== 'false';
+ const isSelected = index === selectedStepIndex;
+ button.hidden = !isMatch;
+ button.classList.toggle('is-active', isSelected);
+ button.setAttribute('aria-selected', isSelected? 'true': 'false');
+ button.tabIndex = isSelected? 0: -1;
+ });
+
+ pathLines.forEach(line => {
+ line.hidden = true;
+ });
+
+ if (stepPrev) stepPrev.disabled = selectedStepIndex <= firstAvailable || firstAvailable < 0;
+ if (stepNext) stepNext.disabled = selectedStepIndex >= lastAvailable || lastAvailable < 0;
+ };
+
+ if (modulesList && stepper && stepperTrack && challengeNodes.length > 0) {
+ modulesList.classList.add('level-stepper-mode');
+ stepperTrack.innerHTML = '';
+
+ challengeNodes.forEach((node, index) => {
+ const status = node.dataset.levelStatus || (node.classList.contains('completed')? 'completed': (node.classList.contains('active')? 'active': 'locked'));
+ const title = node.dataset.levelTitle || `Level ${index + 1}`;
+ const number = node.dataset.levelNumber || String(index + 1);
+ const button = document.createElement('button');
+ button.type = 'button';
+ button.className = `challenge-step-dot status-${status}`;
+ button.dataset.levelStep = String(index);
+ button.setAttribute('role', 'tab');
+ button.setAttribute('aria-label', `${title} ${status}`);
+
+ const circle = document.createElement('span');
+ circle.className = 'challenge-step-circle';
+ if (status === 'completed') {
+ circle.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i>';
+ } else if (status === 'locked') {
+ circle.innerHTML = '<i class="fa-solid fa-lock" aria-hidden="true"></i>';
+ } else {
+ circle.textContent = number;
+ }
+
+ const label = document.createElement('span');
+ label.className = 'challenge-step-label';
+ label.textContent = title;
+
+ button.append(circle, label);
+ stepperTrack.appendChild(button);
+ stepButtons[index] = button;
+ });
+
+ stepperTrack.addEventListener('click', event => {
+ const button = event.target.closest('[data-level-step]');
+ if (!button) return;
+ setSelectedChallengeStep(Number(button.dataset.levelStep), true);
+ });
+
+ stepperTrack.addEventListener('keydown', event => {
+ if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+ event.preventDefault();
+ const availableIndexes = matchingStepIndexes();
+ if (!availableIndexes.length) return;
+ const currentVisibleIndex = Math.max(0, availableIndexes.indexOf(selectedStepIndex));
+ if (event.key === 'Home') return setSelectedChallengeStep(availableIndexes[0], true);
+ if (event.key === 'End') return setSelectedChallengeStep(availableIndexes[availableIndexes.length - 1], true);
+ const nextVisibleIndex = event.key === 'ArrowRight'
+ ? Math.min(availableIndexes.length - 1, currentVisibleIndex + 1)
+ : Math.max(0, currentVisibleIndex - 1);
+ setSelectedChallengeStep(availableIndexes[nextVisibleIndex], true);
+ });
+ }
+
+ stepPrev?.addEventListener('click', () => {
+ const availableIndexes = matchingStepIndexes();
+ const visibleIndex = availableIndexes.indexOf(selectedStepIndex);
+ if (visibleIndex > 0) setSelectedChallengeStep(availableIndexes[visibleIndex - 1], true);
+ });
+
+ stepNext?.addEventListener('click', () => {
+ const availableIndexes = matchingStepIndexes();
+ const visibleIndex = availableIndexes.indexOf(selectedStepIndex);
+ if (visibleIndex >= 0 && visibleIndex < availableIndexes.length - 1) {
+ setSelectedChallengeStep(availableIndexes[visibleIndex + 1], true);
+ }
+ });
 
  if (searchInput && challengeNodes.length > 0) {
  const applySearch = () => {
  const query = searchInput.value.trim().toLowerCase();
  let visibleCount = 0;
+ let firstVisibleIndex = -1;
 
- challengeNodes.forEach(node => {
+ challengeNodes.forEach((node, index) => {
  const isVisible =!query || (node.dataset.searchText || '').includes(query);
- node.hidden =!isVisible;
+ node.dataset.stepMatches = isVisible? 'true': 'false';
  if (isVisible) visibleCount++;
- });
-
- pathLines.forEach(line => {
- line.hidden = Boolean(query);
+ if (isVisible && firstVisibleIndex < 0) firstVisibleIndex = index;
  });
 
  if (searchEmpty) {
  searchEmpty.hidden =!query || visibleCount > 0;
  }
+
+ if (visibleCount > 0 && (selectedStepIndex < 0 || challengeNodes[selectedStepIndex]?.dataset.stepMatches === 'false')) {
+ selectedStepIndex = firstVisibleIndex;
+ }
+
+ updateChallengeStepper();
  };
 
  searchInput.addEventListener('input', applySearch);
  applySearch();
+ } else {
+ challengeNodes.forEach(node => {
+ node.dataset.stepMatches = 'true';
+ });
+ updateChallengeStepper();
  }
 
  document.querySelectorAll('.start-challenge-form').forEach(form => {
