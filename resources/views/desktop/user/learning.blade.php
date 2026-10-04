@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=31') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=32') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -347,35 +347,30 @@
  @endphp
  <div class="level-node {{ $certificateUnlocked? 'completed': 'locked' }} animate-fade-up" data-level-number="{{ $gameLevels->count() + 1 }}" data-level-title="Completion Certificate" data-level-status="{{ $certificateUnlocked? 'completed': 'locked' }}" data-search-text="final reward completion certificate pdf download unlock completed locked {{ strtolower($selectedCategory?->title?? '') }}" style="animation-delay: {{ $gameLevels->count() * 0.1 }}s">
  <div class="level-icon-wrapper">
- <div class="level-icon">
- @if($certificateUnlocked)
- <i class="fa-solid fa-medal"></i>
- @else
- <i class="fa-solid fa-lock"></i>
- @endif
- </div>
+ <div class="level-icon"><i class="fa-solid fa-medal"></i></div>
  </div>
  <div class="level-card">
  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
  <div>
- <div style="font-size:0.75rem;color:{{ $certificateUnlocked? '#34d399': 'var(--tx3)' }};font-weight:700;margin-bottom:5px;text-transform:uppercase">Final Reward</div>
+ <div style="font-size:0.75rem;color:{{ $certificateUnlocked? '#34d399': 'var(--pur)' }};font-weight:700;margin-bottom:5px;text-transform:uppercase">Final Reward</div>
  <h5 style="color:var(--tx);font-weight:700;margin:0">Completion Certificate</h5>
  </div>
  @if($certificateUnlocked)
  <div class="score-badge"><i class="fa-solid fa-circle-check"></i> Unlocked</div>
- @else
- <div class="requirement-badge" style="background:var(--bg3);color:var(--tx3)"><i class="fa-solid fa-lock"></i> Locked</div>
  @endif
  </div>
  <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:14px;line-height:1.5">
  Complete every level in this challenge path to unlock your downloadable PDF certificate.
  </p>
  @if($certificateUnlocked)
- <a href="{{ route('user.game.certificate.download', $selectedCategory->id) }}" class="btn btn-success" style="border-radius:12px;font-weight:700;padding:10px 18px;">
+ <a href="{{ route('user.game.certificate.download', $selectedCategory->id) }}" class="btn btn-success certificate-download-btn" style="border-radius:12px;font-weight:700;padding:10px 18px;">
  <i class="fa-solid fa-file-pdf me-2"></i> Download Certificate
  </a>
  @else
- <div style="margin-top:8px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:6px;">
+ <button type="button" class="btn btn-success certificate-download-btn locked-certificate-download-btn" disabled aria-disabled="true" style="border-radius:12px;font-weight:700;padding:10px 18px;box-shadow:none;cursor:not-allowed;">
+ <i class="fa-solid fa-lock me-2"></i> Download Certificate
+ </button>
+ <div class="locked-certificate-note" style="margin-top:12px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:6px;justify-content:center;">
  <i class="fa-solid fa-flag-checkered text-info"></i> Unlocks after the final level.
  </div>
  @endif
