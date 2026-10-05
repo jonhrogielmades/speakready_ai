@@ -67,6 +67,7 @@
  <p class="feedback-summary-headline">{{ $feedbackSummary->headline }}</p>
  @if($feedbackEvidence)
  <div class="feedback-proof-strip">
+ <span><i class="fa-solid fa-plug-circle-check"></i>{{ $feedbackEvidence->reliability->provider_label }}</span>
  <span style="--proof-color: {{ $feedbackEvidence->reliability->color }};"><i class="fa-solid fa-shield-check"></i>{{ $feedbackEvidence->reliability->label }}</span>
  <span><i class="fa-solid fa-quote-left"></i>{{ $feedbackEvidence->proof_stats->with_evidence }}/{{ $feedbackEvidence->proof_stats->answers }} answers with proof</span>
  <span><i class="fa-solid fa-triangle-exclamation"></i>{{ $feedbackEvidence->proof_stats->needs_practice }} need practice</span>
@@ -130,6 +131,7 @@
  </div>
  <p>{{ $feedbackEvidence->reliability->description }}</p>
  <div class="feedback-reliability-tags">
+ <span>{{ $feedbackEvidence->reliability->provider_label }}</span>
  <span>{{ $feedbackEvidence->reliability->version_label }}</span>
  <span>{{ $feedbackEvidence->reliability->quality_label }}</span>
  </div>

@@ -618,6 +618,7 @@ class UserController extends Controller
  'category',
  'score',
  'feedback',
+ 'gameLevel',
  'answers' => function ($query) {
  $query->whereNull('retry_of_answer_id')
  ->with('question')
@@ -629,6 +630,7 @@ class UserController extends Controller
  ->first();
 
  if ($latestFeedbackSession) {
+ $latestFeedbackSession = $this->ensureFeedbackCenterOpenAiEvidence($latestFeedbackSession);
  $latestFeedbackSession->practice_scenario = $this->practiceScenarioLabel($latestFeedbackSession);
  }
 
@@ -653,6 +655,47 @@ class UserController extends Controller
  ));
  }
 
+ private function ensureFeedbackCenterOpenAiEvidence(?InterviewSession $session): ?InterviewSession
+ {
+ if (! $session) {
+ return null;
+ }
+
+ $cacheKey = 'feedback-center-openai-evidence-refresh-failed:'.$session->id;
+ if (Cache::has($cacheKey)) {
+ return $session;
+ }
+
+ try {
+ $refreshed = app(InterviewController::class)
+ ->ensureCompletedSessionOpenAiFeedbackEvidence($session, $session->gameLevel);
+
+ if ($refreshed) {
+ $session->refresh()->load([
+ 'category',
+ 'score',
+ 'feedback',
+ 'gameLevel',
+ 'answers' => function ($query) {
+ $query->whereNull('retry_of_answer_id')
+ ->with('question')
+ ->orderBy('id');
+ },
+ ]);
+ }
+ } catch (\Throwable $exception) {
+ Cache::put($cacheKey, true, now()->addMinutes(10));
+ Log::warning('Feedback Center OpenAI evidence refresh failed; rendering saved report data.', [
+ 'session_id' => $session->id,
+ 'user_id' => Auth::id(),
+ 'error_type' => $exception::class,
+ 'message' => $exception->getMessage(),
+ ]);
+ }
+
+ return $session;
+ }
+
  private function feedbackCenterSummary(?InterviewSession $session):?object
  {
  if (! $session) {
@@ -669,7 +712,10 @@ class UserController extends Controller
  : null;
  $hasVoiceEvidence = $voiceAnswer && trim((string) ($voiceAnswer->delivery_transcript?? ''))!== '';
  $rating = $score?->readiness_band?: ($overall === null? 'Score pending': ($overall >= 90? 'Excellent': ($overall >= 70? 'Good': ($overall >= 50? 'Fair': 'Needs Practice'))));
+ $providerSummary = trim((string) data_get($session->feedback?->coaching_summary, 'overall_summary', ''));
+ $providerSummarySource = trim((string) data_get($session->feedback?->coaching_summary, 'overall_summary_source', ''));
  $headline = match (true) {
+ $providerSummary !== '' && $providerSummarySource === 'ai_provider_validated' => Str::limit($providerSummary, 220),
  $overall === null => 'Feedback is ready. Score is still pending.',
  $overall >= 85 => 'Strong readiness. Keep sharpening proof and pace.',
  $overall >= 70 => 'Good foundation. Focus on the next weak spot.',

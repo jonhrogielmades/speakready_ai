@@ -521,6 +521,121 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  && ! str_contains($evidence->answers->first()->evidence_quote, 'Explain a time you handled an irate customer'));
  }
 
+public function test_feedback_center_refreshes_summary_and_reliability_with_openai_evidence(): void
+{
+ AiProvider::create([
+ 'name' => 'OpenAI',
+ 'api_endpoint' => 'https://api.openai.com/v1',
+ 'api_key' => Crypt::encryptString('test-openai-key'),
+ 'status' => 'active',
+ 'is_primary' => true,
+ ]);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('BPO / Customer Support');
+ $session = $this->completedSessionFor($user, $category, 55, now(), [
+ 'target_position' => 'Customer Support Representative',
+ 'interview_focus' => 'customer support escalation',
+ ]);
+
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'Local saved strength.',
+ 'weaknesses' => 'Local saved weakness.',
+ 'improvement_suggestions' => 'Local saved action.',
+ ]);
+
+ $question = Question::create([
+ 'category_id' => $category->id,
+ 'question_text' => 'How do you calm an escalated customer?',
+ 'difficulty' => 'medium',
+ 'type' => 'Situational',
+ 'status' => 'active',
+ 'expected_guide' => 'Listen, acknowledge the concern, explain the next step, and confirm the result.',
+ ]);
+ $answerText = 'I listened to the customer, confirmed the billing concern, explained the next step, and followed up after the account was corrected.';
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => $answerText,
+ 'ai_feedback' => 'Local feedback before OpenAI refresh.',
+ 'score' => 55,
+ 'ai_provider' => 'local',
+ ]);
+
+ Http::fake([
+ 'api.openai.com/*' => Http::response([
+ 'choices' => [[
+ 'finish_reason' => 'stop',
+ 'message' => [
+ 'content' => json_encode([
+ 'per_question_feedback' => [[
+ 'id' => $answer->id,
+ 'score' => 84,
+ 'clarity_score' => 84,
+ 'relevance_score' => 84,
+ 'grammar_score' => 84,
+ 'professionalism_score' => 84,
+ 'star_applicable' => false,
+ 'star_method_score' => 0,
+ 'evidence_quotes' => [$answerText],
+ 'question_focus' => $question->question_text,
+ 'answer_alignment' => 'directly_addressed',
+ 'missing_criteria' => [],
+ 'ai_feedback' => 'For "'.$question->question_text.'", the exact answer evidence "'.$answerText.'" shows the billing concern, next step, and follow-up. This directly addressed the question and gives enough evidence for the score. The corrected account detail helps the interviewer understand the service result.',
+ 'better_sample_answer' => 'I listened to the customer, confirmed the billing concern, and explained the next step. I followed up after the account was corrected. I would state the final customer result clearly.',
+ 'follow_up_question' => 'What final customer result came after the account was corrected?',
+ 'coaching' => [
+ 'keep' => 'Keep the billing concern, next step, and follow-up details for "'.$question->question_text.'".',
+ 'improve' => 'Add the final customer reaction or measurable service result.',
+ 'impact' => 'The final result shows whether the calm response solved the customer concern.',
+ 'next_try' => 'Answer "'.$question->question_text.'" with the concern, your action, and the final result.',
+ 'next_attempt_steps' => [
+ 'Start by naming the customer concern.',
+ 'Use the billing follow-up as the proof.',
+ 'Close with the final customer result.',
+ ],
+ 'success_check' => 'The retry clearly connects the calm response to the customer result.',
+ ],
+ ]],
+ 'session_feedback' => [
+ 'overall_summary' => 'OpenAI checked the saved answer evidence and found a clear customer concern, next step, and follow-up. The next improvement is to add the final customer result.',
+ 'strengths' => 'OpenAI found clear service steps in the saved answer.',
+ 'weaknesses' => 'The final customer result still needs to be clearer.',
+ 'improvement_suggestions' => 'Add the true customer result after the billing concern was corrected.',
+ ],
+ ]),
+ ],
+ ]],
+ ], 200),
+ ]);
+
+ $response = $this->actingAs($user)->get(route('user.feedback'));
+
+ $response->assertOk()
+ ->assertSee('Evidence-Based Feedback Summary')
+ ->assertSee('Proof & Reliability', false)
+ ->assertSee('OpenAI evidence')
+ ->assertSee('OpenAI checked the saved answer')
+ ->assertSee('final customer result')
+ ->assertViewHas('feedbackEvidence', fn ($evidence) => $evidence
+ && $evidence->reliability->provider_label === 'OpenAI evidence'
+ && $evidence->answers->first()->provider_label === 'OpenAI evidence'
+ && str_contains($evidence->answers->first()->evidence_quote, 'billing concern'));
+
+ $answer->refresh();
+ $this->assertSame('openai', $answer->ai_provider);
+ $this->assertGreaterThan(55, (int) $answer->score);
+
+ Http::assertSent(function ($request) use ($question): bool {
+ $prompt = data_get($request->data(), 'messages.1.content', '');
+
+ return str_contains($request->url(), 'api.openai.com')
+ && str_contains($prompt, 'UNTRUSTED TRANSCRIPT DATA JSON')
+ && str_contains($prompt, $question->question_text);
+ });
+}
+
  public function test_feedback_center_answer_review_hides_prompt_text_inside_answer_feedback(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

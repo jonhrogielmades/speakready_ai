@@ -70,6 +70,7 @@ final class FeedbackEvidencePresenter
         $successCheck = self::cleanFeedback(data_get($alignment, 'success_check', ''), $question);
         $feedback = self::cleanFeedback($answer->ai_feedback ?: data_get($alignment, 'observation', ''), $question);
         $betterAnswer = self::betterAnswer((string) ($answer->better_sample_answer ?? ''), $answer, $question);
+        $providerKey = self::providerKey($answer->ai_provider ?? null);
         $hasVoiceRecording = trim((string) ($answer->voice_recording_path ?? '')) !== '';
         $typedAnswerText = self::cleanText((string) ($answer->answer_text ?? ''));
         $isVoiceOnlyAnswer = $hasVoiceRecording
@@ -94,6 +95,8 @@ final class FeedbackEvidencePresenter
             'quality_label' => $qualityPercent === null ? 'Checks pending' : $qualityPercent.'% checked',
             'rubric_level' => trim((string) ($answer->rubric_level ?? '')),
             'evaluation_source' => self::evaluationSource(data_get($alignment, 'evaluation_source')),
+            'provider_key' => $providerKey,
+            'provider_label' => self::providerLabel($providerKey),
             'evidence_quotes' => $evidenceQuotes,
             'evidence_quote' => $evidenceQuotes[0] ?? '',
             'missing_points' => $missingPoints,
@@ -125,6 +128,7 @@ final class FeedbackEvidencePresenter
         $answerCount = $answerCards->count();
         $coverage = is_array($session->feedback?->coaching_summary ?? null) ? $session->feedback->coaching_summary : [];
         $quality = self::scoreValue(data_get($coverage, 'feedback_quality.completeness_percent'));
+        $providerLabel = self::sessionProviderLabel($answerCards, $coverage);
 
         return (object) [
             'score' => $confidence,
@@ -132,6 +136,7 @@ final class FeedbackEvidencePresenter
             'color' => self::confidenceColor($confidence, $answerCount === 0 ? 'not_evaluated' : 'directly_answered'),
             'description' => self::sessionReliabilityDescription($confidence, $lowCount, $answerCount),
             'low_confidence_count' => $lowCount,
+            'provider_label' => $providerLabel,
             'quality_label' => $quality === null ? 'Quality checks pending' : $quality.'% quality checks',
             'version_label' => 'Rubric v'.(int) ($session->score?->score_version ?? 0),
         ];
@@ -393,6 +398,54 @@ final class FeedbackEvidencePresenter
             '' => 'Saved review',
             default => Str::headline(str_replace('_', ' ', $source)),
         };
+    }
+
+    private static function providerKey(mixed $provider): string
+    {
+        $provider = strtolower(trim((string) $provider));
+        $provider = str_replace([' ', '_', '-'], '', $provider);
+
+        return match ($provider) {
+            'openai', 'chatgpt', 'gpt' => 'openai',
+            'gemini', 'google', 'googlegemini' => 'gemini',
+            'groq' => 'groq',
+            'cohere' => 'cohere',
+            'local', 'localmodel' => 'local',
+            default => '',
+        };
+    }
+
+    private static function providerLabel(string $provider): string
+    {
+        return match ($provider) {
+            'openai' => 'OpenAI evidence',
+            'gemini' => 'Gemini evidence',
+            'groq' => 'Groq evidence',
+            'cohere' => 'Cohere evidence',
+            'local' => 'Local evidence',
+            default => 'Saved evidence',
+        };
+    }
+
+    private static function sessionProviderLabel(Collection $answerCards, array $coverage): string
+    {
+        $providers = $answerCards
+            ->pluck('provider_key')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($providers->contains('openai')) {
+            return 'OpenAI evidence';
+        }
+
+        if ($providers->isNotEmpty()) {
+            return self::providerLabel((string) $providers->first());
+        }
+
+        return data_get($coverage, 'overall_summary_source') === 'ai_provider_validated'
+            ? 'AI provider evidence'
+            : 'Saved evidence';
     }
 
     private static function answerDisplay(InterviewAnswer $answer, string $answerText, bool $hasVoiceRecording, bool $isVoiceOnlyAnswer): string

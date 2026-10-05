@@ -1563,6 +1563,36 @@ class InterviewController extends Controller
  return true;
  }
 
+ public function ensureCompletedSessionOpenAiFeedbackEvidence(InterviewSession $session, $gameLevel = null): bool
+ {
+ if ($gameLevel || ! AIService::providerIsConfigured('openai')) {
+ return false;
+ }
+
+ if (! $this->completedSessionNeedsOpenAiFeedbackEvidence($session)) {
+ return false;
+ }
+
+ $this->refreshCompletedSessionFeedback($session, $gameLevel, 'openai', 'openai');
+
+ return true;
+ }
+
+ private function completedSessionNeedsOpenAiFeedbackEvidence(InterviewSession $session): bool
+ {
+ if ($this->completedSessionFeedbackIsStale($session)) {
+ return true;
+ }
+
+ return InterviewAnswer::where('interview_session_id', $session->id)
+ ->whereNull('retry_of_answer_id')
+ ->where(function ($query) {
+ $query->whereNull('ai_provider')
+ ->orWhere('ai_provider', '!=', 'openai');
+ })
+ ->exists();
+ }
+
  private function completedSessionFeedbackIsStale(InterviewSession $session): bool
  {
  $session->loadMissing(['score', 'feedback']);
@@ -1611,7 +1641,7 @@ class InterviewController extends Controller
  ->exists();
  }
 
- private function refreshCompletedSessionFeedback(InterviewSession $session, $gameLevel = null): void
+ private function refreshCompletedSessionFeedback(InterviewSession $session, $gameLevel = null, ?string $forcedFeedbackProvider = null, ?string $requiredFeedbackProvider = null): void
  {
  $answers = InterviewAnswer::with('question')
  ->where('interview_session_id', $session->id)
@@ -1653,14 +1683,25 @@ class InterviewController extends Controller
  $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
  }
 
- $feedbackProvider = $gameLevel? null: $this->bestEvaluatedInterviewProvider(
+ $feedbackProvider = $gameLevel? null: ($forcedFeedbackProvider !== null
+ ? AIService::normalizeProviderKey($forcedFeedbackProvider)
+ : $this->bestEvaluatedInterviewProvider(
  'feedback_generation',
  session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
- );
+ ));
  if (! $gameLevel) {
  session(['active_interview_feedback_provider' => $feedbackProvider]);
  }
  $aiFeedback = $this->safeInterviewFeedback($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+ $requiredFeedbackProviderKey = AIService::normalizeProviderKey($requiredFeedbackProvider);
+ if ($requiredFeedbackProviderKey !== '' && AIService::normalizeProviderKey($aiFeedback['_provider_key']?? null)!== $requiredFeedbackProviderKey) {
+ throw new AiFeedbackProviderFailureException(
+ [$requiredFeedbackProviderKey],
+ (array) ($aiFeedback['_providers_attempted']?? []),
+ "Required {$requiredFeedbackProviderKey} feedback provider did not return validated feedback."
+ );
+ }
+
  $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($aiFeedback, $feedbackProvider);
 
  $assessment = app(TrustworthyAssessmentService::class);
