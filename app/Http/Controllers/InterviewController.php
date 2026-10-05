@@ -920,9 +920,7 @@ return response()->json([
  }
 
  if ($session->status === 'completed') {
- if ($fastFinish) {
- $this->deferCompletedSessionOpenAiFeedbackEvidence($session->id, 'finish_completed');
- } elseif ($this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
+ if (! $fastFinish && $this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
  $session->refresh()->load(['score', 'feedback']);
  }
 
@@ -1024,6 +1022,7 @@ return response()->json([
  }
  $aiFeedback = $this->safeInterviewFeedback($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($aiFeedback, $feedbackProvider);
+ $reviewSampleAnswerCaches = $this->reviewSampleAnswerCachesForAnalysis($answers, $aiFeedback, $feedbackEvidenceProvider, $feedbackProvider);
  $assessment = app(TrustworthyAssessmentService::class);
  DB::beginTransaction();
  $reportTransactionStarted = true;
@@ -1078,6 +1077,9 @@ return response()->json([
  is_array($answer->observation_data)? $answer->observation_data: [],
  'final_answer_coaching'
  );
+ if (isset($reviewSampleAnswerCaches[$answer->id])) {
+ data_set($coachingFeedback, 'review_sample_answer', $reviewSampleAnswerCaches[$answer->id]);
+ }
  $answer->update([
  'ai_feedback' => trim((string) ($qFeedback['ai_feedback']?? '')),
  'better_sample_answer' => trim((string) ($qFeedback['better_sample_answer']?? '')),
@@ -1298,9 +1300,6 @@ return response()->json([
  DB::commit();
  $reportTransactionStarted = false;
  $this->forgetCompletedSessionState($session, $gameLevel);
- if ($fastFinish) {
- $this->deferCompletedSessionOpenAiFeedbackEvidence($session->id, 'finish_fast');
- }
 
  $redirect = $this->completedSessionRedirect($session, $gameLevel, $gameStatus, $gameResultScore, [
  'xp_earned' => $xpEarned,
@@ -1821,10 +1820,11 @@ return response()->json([
  }
 
  $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($aiFeedback, $feedbackProvider);
+ $reviewSampleAnswerCaches = $this->reviewSampleAnswerCachesForAnalysis($answers, $aiFeedback, $feedbackEvidenceProvider, $feedbackProvider);
 
  $assessment = app(TrustworthyAssessmentService::class);
 
- DB::transaction(function () use ($session, $answers, $aiFeedback, $assessment, $feedbackEvidenceProvider) {
+ DB::transaction(function () use ($session, $answers, $aiFeedback, $assessment, $feedbackEvidenceProvider, $reviewSampleAnswerCaches) {
  $totalClarity = 0;
  $totalRelevance = 0;
  $totalGrammar = 0;
@@ -1869,6 +1869,9 @@ return response()->json([
  is_array($answer->observation_data)? $answer->observation_data: [],
  'refresh_answer_coaching'
  );
+ if (isset($reviewSampleAnswerCaches[$answer->id])) {
+ data_set($coachingFeedback, 'review_sample_answer', $reviewSampleAnswerCaches[$answer->id]);
+ }
 
  $answer->update([
  'ai_feedback' => trim((string) ($qFeedback['ai_feedback']?? '')),
@@ -4804,6 +4807,109 @@ return response()->json([
  false,
  false
  );
+ }
+
+ private function reviewSampleAnswerCachesForAnalysis(
+ Collection $answers,
+ array $aiFeedback,
+ string $feedbackEvidenceProvider,
+?string $feedbackProvider
+ ): array {
+ $perQuestionFeedback = collect($aiFeedback['per_question_feedback']?? []);
+ $provider = AIService::normalizeProviderKey($feedbackEvidenceProvider) ?: 'local';
+ $attemptedProvider = AIService::normalizeProviderKey($feedbackProvider) ?: $provider;
+ $providerSource = in_array($provider, ['local', 'localmodel'], true)? 'local': 'ai';
+ $caches = [];
+
+ foreach ($answers as $answer) {
+ if (! $answer instanceof InterviewAnswer ||! ($answer->question instanceof Question)) {
+ continue;
+ }
+
+ $qFeedback = $perQuestionFeedback->first(fn ($feedback): bool => is_array($feedback)
+ && isset($feedback['id'])
+ && (int) $feedback['id'] === (int) $answer->id);
+ if (! is_array($qFeedback)) {
+ continue;
+ }
+
+ $sampleAnswer = $this->reviewSampleAnswerFromGeneratedFeedback($answer, $qFeedback);
+ $source = $providerSource;
+ $sampleProvider = $provider;
+ if ($sampleAnswer === '') {
+ $sampleAnswer = $this->fallbackReviewQuestionSampleAnswer($answer->question);
+ $source = 'local';
+ $sampleProvider = 'local';
+ }
+
+ if ($sampleAnswer === '') {
+ continue;
+ }
+
+ $caches[$answer->id] = [
+ 'text' => $sampleAnswer,
+ 'source' => $source,
+ 'provider' => $sampleProvider,
+ 'attempted_provider' => $attemptedProvider,
+ 'question_id' => $answer->question_id,
+ 'generated_at' => now()->toIso8601String(),
+ ];
+ }
+
+ return $caches;
+ }
+
+ private function reviewSampleAnswerFromGeneratedFeedback(InterviewAnswer $answer, array $qFeedback): string
+ {
+ $question = $answer->question;
+ if (! $question instanceof Question) {
+ return '';
+ }
+
+ $raw = trim((string) ($qFeedback['better_sample_answer']?? ''));
+ if ($raw === '') {
+ return '';
+ }
+
+ $cleanRaw = $this->normalizedReviewSampleAnswerText($raw, $question, false);
+ if ($cleanRaw === '') {
+ return '';
+ }
+
+ return $cleanRaw;
+ }
+
+ private function fallbackReviewQuestionSampleAnswer(Question $question): string
+ {
+ return function_exists('review_question_sample_answer')
+ ? $this->normalizedReviewSampleAnswerText((string) review_question_sample_answer($question), $question, true)
+ : '';
+ }
+
+ private function normalizedReviewSampleAnswerText(string $text, mixed $questionSource, bool $allowPlaceholders): string
+ {
+ $clean = function_exists('review_feedback_without_question_text')
+ ? review_feedback_without_question_text($text, $questionSource)
+ : $text;
+ $clean = trim(preg_replace('/\s+/u', ' ', $clean)?? $clean);
+
+ if ($clean === '') {
+ return '';
+ }
+
+ if (function_exists('review_text_looks_like_question') && review_text_looks_like_question($clean, $questionSource)) {
+ return '';
+ }
+
+ if (! $allowPlaceholders && preg_match('/\[[^\]]+\]/u', $clean) === 1) {
+ return '';
+ }
+
+ if (preg_match('/\b(?:response-based possible answer is unavailable|saved answer is too short|does not contain enough response detail)\b/iu', $clean) === 1) {
+ return '';
+ }
+
+ return $clean;
  }
 
  private function learningGameFeedback(GameLevel $gameLevel, array $sessionData, array $answersData): array

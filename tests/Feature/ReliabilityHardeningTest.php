@@ -897,6 +897,10 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame('openai', $savedAnswer->ai_provider);
  $this->assertNotEmpty($savedAnswer->coaching_feedback);
  $this->assertSame('not_measured', data_get($savedAnswer->coaching_feedback, 'delivery.status'));
+ $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'review_sample_answer.text'));
+ $this->assertSame('ai', data_get($savedAnswer->coaching_feedback, 'review_sample_answer.source'));
+ $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'review_sample_answer.provider'));
+ $this->assertSame($question->id, data_get($savedAnswer->coaching_feedback, 'review_sample_answer.question_id'));
  $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'question.tip'));
  $this->assertSame($savedAnswer->id, data_get($savedAnswer->coaching_feedback, 'content_alignment.answer_id'));
  $this->assertSame($question->id, data_get($savedAnswer->coaching_feedback, 'content_alignment.question_id'));
@@ -915,6 +919,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame('ai_provider_validated', data_get($savedFeedback->coaching_summary, 'overall_summary_source'));
  $this->assertNotEmpty(data_get($savedFeedback->coaching_summary, 'content_overview'));
  $this->assertNotEmpty(data_get($savedFeedback->coaching_summary, 'question_improvements'));
+ Http::assertSentCount(1);
 
  $this->actingAs($user)
  ->get(route('user.review', $session))
@@ -926,6 +931,8 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('What To Improve')
  ->assertSee('Next Practice')
  ->assertDontSee('â€œ', false);
+
+ Http::assertSentCount(1);
 
  $profileAfterFirstFinish = Profile::where('user_id', $user->id)->firstOrFail();
  $this->actingAs($user)
@@ -979,7 +986,11 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
  $this->assertDatabaseHas('scores', ['interview_session_id' => $session->id]);
  $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
- $this->assertSame('local', $answer->fresh()->ai_provider);
+ $savedAnswer = $answer->fresh();
+ $this->assertSame('local', $savedAnswer->ai_provider);
+ $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'review_sample_answer.text'));
+ $this->assertSame('local', data_get($savedAnswer->coaching_feedback, 'review_sample_answer.source'));
+ $this->assertSame('local', data_get($savedAnswer->coaching_feedback, 'review_sample_answer.provider'));
  Http::assertNothingSent();
  }
 
