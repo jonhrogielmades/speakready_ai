@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\AiProvider;
 use App\Models\Feedback;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
@@ -14,7 +15,9 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class UserProgressFeedbackReportsAccuracyTest extends TestCase
@@ -717,6 +720,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('Possible Answers')
  ->assertDontSee('review-possible-answer-modal', false)
  ->assertDontSee('data-bs-toggle="modal"', false)
+ ->assertSee('Sample Answer')
+ ->assertSee('When a customer needed help with [issue]')
  ->assertDontSee('Coaching Mode')
  ->assertDontSee('Possible Answer Based on Your Response')
  ->assertDontSee('AI Coach STAR order, rewritten from your saved response as a paragraph')
@@ -756,6 +761,88 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('Answer Check Notes', false)
  ->assertDontSee('AI Feedback', false);
  }
+
+public function test_detailed_review_uses_openai_generated_sample_answer_when_configured(): void
+{
+ Http::fake([
+ '*' => Http::response([
+ 'choices' => [
+ [
+ 'message' => [
+ 'content' => 'I would listen first, confirm the customer concern, explain the next step clearly, and follow through until the issue is resolved.',
+ ],
+ ],
+ ],
+ ]),
+ ]);
+
+ AiProvider::create([
+ 'name' => 'OpenAI',
+ 'api_endpoint' => 'https://api.openai.com/v1',
+ 'api_key' => Crypt::encryptString('test-openai-key'),
+ 'status' => 'active',
+ 'is_primary' => true,
+ ]);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('BPO / Customer Support');
+ $session = $this->completedSessionFor($user, $category, 78, now(), [
+ 'status' => 'reviewed',
+ 'target_position' => 'Customer Support Representative',
+ ]);
+
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'The answer showed customer empathy.',
+ 'weaknesses' => 'The answer needs a clearer result.',
+ 'improvement_suggestions' => 'Add the final customer outcome.',
+ ]);
+
+ $question = Question::create([
+ 'category_id' => $category->id,
+ 'question_text' => 'How do you handle an angry customer?',
+ 'difficulty' => 'medium',
+ 'type' => 'Situational',
+ 'status' => 'active',
+ 'expected_guide' => 'Listen, acknowledge, explain the next action, and confirm the result.',
+ 'mapped_skills' => ['customer support', 'communication'],
+ ]);
+
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'I listened to the customer and explained the next step.',
+ 'ai_feedback' => 'The answer names listening and a next step but needs the final result.',
+ 'coaching_feedback' => [
+ 'content_alignment' => [
+ 'status' => 'partially_answered',
+ 'what_worked' => 'The saved answer shows listening and next-step communication.',
+ 'improvement_focus' => 'Add the final customer result.',
+ 'impact' => 'The result helps the interviewer judge service quality.',
+ ],
+ ],
+ 'score' => 70,
+ ]);
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('Sample Answer')
+ ->assertSee('I would listen first, confirm the customer concern')
+ ->assertDontSee('When a customer needed help with [issue]');
+
+ $answer->refresh();
+ $this->assertSame('ai', data_get($answer->coaching_feedback, 'review_sample_answer.source'));
+ $this->assertSame('openai', data_get($answer->coaching_feedback, 'review_sample_answer.provider'));
+
+ Http::assertSent(function ($request) use ($question): bool {
+ $prompt = data_get($request->data(), 'messages.1.content', '');
+
+ return str_contains($request->url(), 'api.openai.com')
+ && str_contains($prompt, 'Create one possible interview answer')
+ && str_contains($prompt, $question->question_text);
+ });
+}
 
  public function test_detailed_review_cleans_overall_review_feedback_but_shows_answer_review_question(): void
  {

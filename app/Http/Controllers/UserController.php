@@ -813,9 +813,99 @@ class UserController extends Controller
  }
 
  $comparisonRows = $this->comparisonRowsFor($sessionRecord);
+ if (! $sessionEndedEarly) {
+ $this->ensureReviewSampleAnswers($sessionRecord);
+ }
  $reviewEvidence = FeedbackEvidencePresenter::forSession($sessionRecord);
 
  return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence'));
+ }
+
+ private function ensureReviewSampleAnswers(InterviewSession $sessionRecord): void
+ {
+ $openAiConfigured = AIService::providerIsConfigured('openai');
+ $languageConfig = Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
+
+ foreach ($sessionRecord->answers as $answer) {
+ $question = $answer->question;
+ if (! $question) {
+ continue;
+ }
+
+ $coachingFeedback = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
+ $cachedText = trim((string) data_get($coachingFeedback, 'review_sample_answer.text', ''));
+ $cachedQuestionId = (int) data_get($coachingFeedback, 'review_sample_answer.question_id', 0);
+ $cachedSource = trim((string) data_get($coachingFeedback, 'review_sample_answer.source', ''));
+ $attemptedProvider = trim((string) data_get($coachingFeedback, 'review_sample_answer.attempted_provider', ''));
+ $generatedAt = data_get($coachingFeedback, 'review_sample_answer.generated_at');
+ $recentOpenAiFallback = false;
+
+ if ($generatedAt) {
+ try {
+ $recentOpenAiFallback = $cachedSource === 'local'
+ && $attemptedProvider === 'openai'
+ && Carbon::parse($generatedAt)->greaterThan(now()->subHours(6));
+ } catch (\Throwable) {
+ $recentOpenAiFallback = false;
+ }
+ }
+
+ if ($cachedText !== ''
+ && $cachedQuestionId === (int) $question->id
+ && ($cachedSource === 'ai' || ! $openAiConfigured || $recentOpenAiFallback)
+ ) {
+ continue;
+ }
+
+ $sampleAnswer = '';
+ $source = 'local';
+ $provider = 'local';
+ $attemptedProvider = $openAiConfigured? 'openai': 'local';
+
+ if ($openAiConfigured) {
+ try {
+ $generated = AIService::generateCoachPossibleAnswer(
+ $sessionRecord,
+ $question,
+ 'openai',
+ $languageConfig
+ );
+ $candidate = trim((string) ($generated['possible_answer']?? ''));
+ if ($candidate !== '' && ($generated['source']?? '') === 'ai') {
+ $sampleAnswer = $candidate;
+ $source = 'ai';
+ $provider = AIService::normalizeProviderKey($generated['provider']?? 'openai') ?: 'openai';
+ }
+ } catch (\Throwable $error) {
+ Log::warning('OpenAI review sample answer generation failed; using local fallback.', [
+ 'session_id' => $sessionRecord->id,
+ 'answer_id' => $answer->id,
+ 'question_id' => $question->id,
+ 'error_type' => $error::class,
+ ]);
+ }
+ }
+
+ if ($sampleAnswer === '') {
+ $sampleAnswer = review_question_sample_answer($question);
+ }
+
+ if ($sampleAnswer === '') {
+ continue;
+ }
+
+ data_set($coachingFeedback, 'review_sample_answer', [
+ 'text' => $sampleAnswer,
+ 'source' => $source,
+ 'provider' => $provider,
+ 'attempted_provider' => $attemptedProvider,
+ 'question_id' => $question->id,
+ 'generated_at' => now()->toIso8601String(),
+ ]);
+
+ $answer->coaching_feedback = $coachingFeedback;
+ $answer->save();
+ }
  }
 
  public function exportSession(InterviewSession $session)

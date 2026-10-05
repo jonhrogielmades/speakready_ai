@@ -329,6 +329,92 @@ if (! function_exists('review_answer_is_usable_for_better_answer')) {
     }
 }
 
+if (! function_exists('review_question_sample_answer')) {
+    function review_question_sample_answer(mixed $questionSource = null): string
+    {
+        $question = trim(preg_replace('/\s+/u', ' ', review_question_text($questionSource)) ?? review_question_text($questionSource));
+        if ($question === '') {
+            return '';
+        }
+
+        $lowerQuestion = mb_strtolower($question, 'UTF-8');
+        $questionType = mb_strtolower(trim((string) data_get($questionSource, 'question.type', data_get($questionSource, 'type', ''))), 'UTF-8');
+        $expectedGuide = trim(preg_replace(
+            '/\s+/u',
+            ' ',
+            (string) data_get($questionSource, 'question.expected_guide', data_get($questionSource, 'expected_guide', ''))
+        ) ?? '');
+
+        $guideTail = $expectedGuide !== ''
+            ? ' I would keep the answer focused on '.mb_strtolower(rtrim($expectedGuide, ". \t\n\r\0\x0B"), 'UTF-8').'.'
+            : '';
+
+        if (preg_match('/\b(?:introduce yourself|tell me about yourself|background)\b/iu', $question) === 1) {
+            return review_better_answer_limit_sentences(
+                'I am [name], and my background is in [field or experience]. I have worked on [relevant task], where I built strengths in [skill]. I am interested in this role because it connects to [role goal], and I can contribute by [specific contribution].'.$guideTail,
+                5
+            );
+        }
+
+        if (preg_match('/\b(?:irate|angry|upset|customer|client|complaint|concern)\b/iu', $question) === 1) {
+            return review_better_answer_limit_sentences(
+                'When a customer needed help with [issue], I first listened and confirmed the problem. I explained the next step clearly, followed the correct process, and kept the customer updated. The result was [honest outcome], and I learned to stay calm while solving the real concern.'.$guideTail,
+                5
+            );
+        }
+
+        if (str_contains($questionType, 'behavioral')
+            || str_contains($questionType, 'situational')
+            || preg_match('/\b(?:tell me about a time|describe a time|give an example|example of|challenge|conflict|handled|helped|solved|worked under pressure|difficult)\b/iu', $question) === 1
+        ) {
+            return review_better_answer_limit_sentences(
+                'In my previous experience, [situation] created a challenge for [team or customer]. My task was to [responsibility]. I [specific action] and communicated the next step clearly. As a result, [honest result or lesson].'.$guideTail,
+                5
+            );
+        }
+
+        if (preg_match('/\b(?:weakness|improving|improve)\b/iu', $lowerQuestion) === 1) {
+            return review_better_answer_limit_sentences(
+                'One area I am improving is [skill]. I noticed this when [brief example], so I started [specific action]. I now track my progress by [method], and it has helped me [improvement].'.$guideTail,
+                5
+            );
+        }
+
+        if (preg_match('/\b(?:strength|strongest|good at|best skill)\b/iu', $lowerQuestion) === 1) {
+            return review_better_answer_limit_sentences(
+                'One of my strongest skills is [skill]. For example, I used it when [situation]. I [specific action], which helped [team, customer, or result]. I would bring that same strength to this role.'.$guideTail,
+                5
+            );
+        }
+
+        if (preg_match('/\b(?:why do you want|why are you interested|why this role|why our company|motivation)\b/iu', $lowerQuestion) === 1) {
+            return review_better_answer_limit_sentences(
+                'I am interested in this role because it connects with my experience in [relevant work] and my goal to grow in [area]. I like that the role requires [responsibility]. I can contribute by using [specific skill or example] to support the team.'.$guideTail,
+                5
+            );
+        }
+
+        if (preg_match('/\b(?:why should we hire|hire you|best candidate)\b/iu', $lowerQuestion) === 1) {
+            return review_better_answer_limit_sentences(
+                'You should consider hiring me because I bring [skill], [experience], and a steady approach to learning. In [example], I [action and result]. I can use that same approach to support the team and handle the responsibilities of this role.'.$guideTail,
+                5
+            );
+        }
+
+        if (preg_match('/\b(?:how would you|how do you|diagnose|troubleshoot|process|approach|steps?)\b/iu', $lowerQuestion) === 1) {
+            return review_better_answer_limit_sentences(
+                'I would start by clarifying [goal or issue], then gather the important facts. Next, I would [step one], [step two], and check the result with [verification]. I would communicate updates clearly so the team or customer knows what happens next.'.$guideTail,
+                5
+            );
+        }
+
+        return review_better_answer_limit_sentences(
+            'I would answer directly by saying [main point]. Then I would support it with one real example from [experience]. I would explain my action, the result, and why it matters for this role.'.$guideTail,
+            5
+        );
+    }
+}
+
 if (! function_exists('review_question_based_better_answer')) {
     function review_question_based_better_answer(string $questionText, string $answerText = ''): string
     {

@@ -1,11 +1,15 @@
 @php
  $coachingFeedback = is_array($answer->coaching_feedback ?? null) ? $answer->coaching_feedback : [];
+ $reviewSampleAnswerCache = data_get($coachingFeedback, 'review_sample_answer');
  $coachingRepair = app(\App\Support\FeedbackCoachingRepair::class);
  if ($coachingRepair->answerCoachingNeedsRepair($coachingFeedback)) {
  $coachingFeedback = $coachingRepair->buildAnswerCoaching(
  $answer,
  (isset($sessionRecord) && $sessionRecord instanceof \App\Models\InterviewSession) ? $sessionRecord : null
  );
+ if (is_array($reviewSampleAnswerCache)) {
+ data_set($coachingFeedback, 'review_sample_answer', $reviewSampleAnswerCache);
+ }
  }
  $contentAlignment = is_array($coachingFeedback['content_alignment'] ?? null) ? $coachingFeedback['content_alignment'] : [];
  $evidenceMap = is_array($answer->evidence_map ?? null) ? $answer->evidence_map : [];
@@ -34,6 +38,10 @@
  : ($isVoiceOnlyAnswer && $hasVoiceEvidence
  ? 'Voice answer saved. Feedback is based on the saved voice session.'
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
+ $sampleAnswer = trim((string) data_get($coachingFeedback, 'review_sample_answer.text', ''));
+ if ($sampleAnswer === '') {
+ $sampleAnswer = review_question_sample_answer($questionSource);
+ }
  $whatWorked = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['what_worked'] ?? ''), 'worked');
  $impactText = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['impact'] ?? $contentAlignment['observation'] ?? ''), 'impact');
  $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
@@ -220,6 +228,12 @@
  <span>Your Answer</span>
  <p>{{ $answerDisplay }}</p>
  </section>
+ @if($sampleAnswer !== '')
+ <section>
+ <span>Sample Answer</span>
+ <p>{{ $sampleAnswer }}</p>
+ </section>
+ @endif
  </div>
 
 </div>
