@@ -62,11 +62,7 @@
   $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
   $isVoiceResponseMode = in_array($responseModeKey, ['voice', 'hybrid', 'voice_and_text'], true);
   $interviewerAvatarImages = [
-  'img/interviewers/Filipina_Interviewer_01.png',
-  'img/interviewers/Filipina_Interviewer_02.png',
-  'img/interviewers/Filipina_Interviewer_03.png',
-  'img/interviewers/Filipina_Interviewer_04.png',
-  'img/interviewers/Filipina_Interviewer_05.png',
+  'img/interviewers/Filipina_Interviewer_06.png',
   ];
   $interviewerAvatarIndex = abs(crc32((string) $sessionRecord->id)) % count($interviewerAvatarImages);
   $interviewerAvatarImage = $interviewerAvatarImages[$interviewerAvatarIndex];
@@ -107,6 +103,7 @@
  <source srcset="{{ asset($interviewerAvatarWebpImage) }}" type="image/webp">
  <img id="interviewerAvatarImage" src="{{ asset($interviewerAvatarImage) }}" alt="AI Interviewer" width="110" height="110" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover;">
  </picture>
+ <div id="interviewerAvatarMouth" class="avatar-mouth" aria-hidden="true"><span></span></div>
  </div>
  </div>
  
@@ -3868,6 +3865,26 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  resolve(status);
  }
 
+ function avatarMouthElement() {
+ return document.getElementById('interviewerAvatarMouth');
+ }
+
+ function setAvatarMouth(level = 0, state = 'idle') {
+ const mouth = avatarMouthElement();
+ if (!mouth) return;
+
+ const openLevel = Math.max(0, Math.min(1, Number(level) || 0));
+ const speaking = state === 'speaking' || openLevel > 0.08;
+ mouth.classList.toggle('is-speaking', speaking);
+ mouth.dataset.state = speaking? 'speaking': 'idle';
+ mouth.style.setProperty('--mouth-open', openLevel.toFixed(3));
+ mouth.style.setProperty('--mouth-wide', (0.28 + (openLevel * 0.72)).toFixed(3));
+ }
+
+ function resetAvatarMouth() {
+ setAvatarMouth(0, 'idle');
+ }
+
  function startSpeakingUi(text, boundaryAware = false) {
  clearCaptionInterval();
  document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
@@ -3878,6 +3895,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let currentWordIdx = words.length? 0: -1;
  let boundaryFired = false;
  renderQuestionCaption(words, currentWordIdx);
+ setAvatarMouth(0.42, 'speaking');
 
  captionInterval = setInterval(() => {
  if (boundaryAware && boundaryFired) return;
@@ -3895,6 +3913,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const bars = document.querySelectorAll('.spectrum-bar');
  visualizerInterval = setInterval(() => {
  currentAmplitude = Math.max(0.15, currentAmplitude - 0.1);
+ const mouthLevel = Math.max(0.12, Math.min(1, currentAmplitude * (0.72 + (Math.random() * 0.28))));
+ setAvatarMouth(mouthLevel, 'speaking');
  bars.forEach(bar => {
  let h = 8 + (Math.random() * 24 * currentAmplitude);
  bar.style.height = h + 'px';
@@ -3907,6 +3927,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  clearCaptionInterval();
  currentWordIdx = charIndex === null? Math.min(currentWordIdx + 1, words.length - 1): wordIndexFromChar(words, charIndex);
  renderQuestionCaption(words, currentWordIdx);
+ setAvatarMouth(1, 'speaking');
  },
  };
  }
@@ -3918,6 +3939,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  document.getElementById('aiAvatarHead')?.style.setProperty('--avatar-ring-color', '#8b5cf6');
  if (visualizerInterval) clearInterval(visualizerInterval);
  visualizerInterval = null;
+ resetAvatarMouth();
  clearCaptionInterval();
  renderStaticQuestionCaption(text);
  document.getElementById('aiQuestionText').innerText = text;
@@ -3948,6 +3970,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  renderQuestionCaption([], -1);
  if (visualizerInterval) clearInterval(visualizerInterval);
  visualizerInterval = null;
+ resetAvatarMouth();
  document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
  const avatarHead = document.getElementById('aiAvatarHead');
  if (avatarHead) avatarHead.style.borderColor = '#8b5cf6';

@@ -62,11 +62,7 @@
   $responseModeKey = strtolower((string) ($sessionRecord->response_mode?? 'text'));
   $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
   $interviewerAvatarImages = [
-  'img/interviewers/Filipina_Interviewer_01.png',
-  'img/interviewers/Filipina_Interviewer_02.png',
-  'img/interviewers/Filipina_Interviewer_03.png',
-  'img/interviewers/Filipina_Interviewer_04.png',
-  'img/interviewers/Filipina_Interviewer_05.png',
+  'img/interviewers/Filipina_Interviewer_06.png',
   ];
   $interviewerAvatarIndex = abs(crc32((string) $sessionRecord->id)) % count($interviewerAvatarImages);
   $interviewerAvatarImage = $interviewerAvatarImages[$interviewerAvatarIndex];
@@ -105,6 +101,7 @@
  <source srcset="{{ asset($interviewerAvatarWebpImage) }}" type="image/webp">
  <img id="interviewerAvatarImage" src="{{ asset($interviewerAvatarImage) }}" alt="AI Interviewer" width="110" height="110" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover;">
  </picture>
+ <div id="interviewerAvatarMouth" class="avatar-mouth" aria-hidden="true"><span></span></div>
  </div>
  </div>
  
@@ -3899,6 +3896,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const maxHeight = speechSpectrumMaxHeight();
  const averageLevel = levels.reduce((total, level) => total + (Number(level) || 0), 0) / levels.length;
  const movement = Math.max(0.48, Math.min(1, (averageLevel || currentAmplitude) * 1.35));
+ setAvatarMouth(movement, 'speaking');
 
  bars.forEach((bar, idx) => {
  const ripple = 0.66 + (((idx % 7) / 7) * 0.34);
@@ -4033,6 +4031,27 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function pulseSpeechSpectrum(amount = 1) {
  currentAmplitude = Math.max(currentAmplitude, Math.max(0.2, Math.min(1, amount)));
+ setAvatarMouth(currentAmplitude, 'speaking');
+ }
+
+ function avatarMouthElement() {
+ return document.getElementById('interviewerAvatarMouth');
+ }
+
+ function setAvatarMouth(level = 0, state = 'idle') {
+ const mouth = avatarMouthElement();
+ if (!mouth) return;
+
+ const openLevel = Math.max(0, Math.min(1, Number(level) || 0));
+ const speaking = state === 'speaking' || openLevel > 0.08;
+ mouth.classList.toggle('is-speaking', speaking);
+ mouth.dataset.state = speaking? 'speaking': 'idle';
+ mouth.style.setProperty('--mouth-open', openLevel.toFixed(3));
+ mouth.style.setProperty('--mouth-wide', (0.28 + (openLevel * 0.72)).toFixed(3));
+ }
+
+ function resetAvatarMouth() {
+ setAvatarMouth(0, 'idle');
  }
 
  function startSpeakingUi(text, options = {}) {
@@ -4047,6 +4066,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let currentWordIdx = words.length? 0: -1;
  let boundaryFired = false;
  renderQuestionCaption(words, currentWordIdx);
+ setAvatarMouth(0.42, 'speaking');
  startSpeechSpectrumVisualizer(speechOptions.audioElement || null, words);
 
  captionInterval = setInterval(() => {
@@ -4078,6 +4098,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
  document.getElementById('aiAvatarHead')?.style.setProperty('--avatar-ring-color', '#8b5cf6');
  stopSpeechSpectrumVisualizer();
+ resetAvatarMouth();
  clearCaptionInterval();
  renderStaticQuestionCaption(text);
  document.getElementById('aiQuestionText').innerText = text;
@@ -4107,6 +4128,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  clearCaptionInterval();
  renderQuestionCaption([], -1);
  stopSpeechSpectrumVisualizer();
+ resetAvatarMouth();
  document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
  const avatarHead = document.getElementById('aiAvatarHead');
  if (avatarHead) avatarHead.style.setProperty('--avatar-ring-color', '#8b5cf6');
