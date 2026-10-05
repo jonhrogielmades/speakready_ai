@@ -1003,6 +1003,82 @@ class ReliabilityHardeningTest extends TestCase
  Http::assertNothingSent();
  }
 
+ public function test_completed_local_fallback_report_syncs_with_provider_when_available(): void
+ {
+ $this->fakeOpenAiFeedback();
+ $this->aiProvider('OpenAI', [
+ 'api_endpoint' => 'https://api.openai.com/v1',
+ 'is_primary' => true,
+ ]);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, [
+ 'status' => 'completed',
+ 'target_position' => 'Account Manager',
+ 'interview_focus' => 'Account Management',
+ ]);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'How do you keep a client account healthy?',
+ 'expected_guide' => 'Explain communication, follow-up, risk tracking, and a clear client result.',
+ ]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'I tracked renewal risks, scheduled weekly client check-ins, and documented the final action plan after each call.',
+ 'ai_feedback' => 'Local fallback review should be replaced when a provider is available.',
+ 'better_sample_answer' => 'Local sample answer.',
+ 'coaching_feedback' => [
+ 'content_alignment' => [
+ 'status' => 'partially_answered',
+ 'what_worked' => 'Local fallback strength.',
+ 'improvement_focus' => 'Local fallback gap.',
+ ],
+ ],
+ 'score' => 52,
+ 'clarity_score' => 52,
+ 'relevance_score' => 52,
+ 'grammar_score' => 52,
+ 'ai_provider' => 'local',
+ ]);
+ Score::create([
+ 'interview_session_id' => $session->id,
+ 'score_version' => 0,
+ 'clarity_score' => 52,
+ 'relevance_score' => 52,
+ 'grammar_score' => 52,
+ 'professionalism_score' => 52,
+ 'overall_readiness_score' => 52,
+ 'rubric' => ['version' => 0],
+ ]);
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'Local fallback strength.',
+ 'weaknesses' => 'Local fallback weakness.',
+ 'improvement_suggestions' => 'Local fallback suggestion.',
+ 'coaching_summary' => [
+ 'version' => EvidenceBasedCoachingService::VERSION,
+ 'content_overview' => [],
+ ],
+ ]);
+
+ $synced = app(InterviewController::class)
+ ->ensureCompletedSessionOpenAiFeedbackEvidence($session->fresh());
+
+ $this->assertTrue($synced);
+ $savedAnswer = $answer->fresh();
+ $savedFeedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+
+ $this->assertSame('openai', $savedAnswer->ai_provider);
+ $this->assertStringNotContainsString('Local fallback review should be replaced', $savedAnswer->ai_feedback);
+ $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'review_sample_answer.text'));
+ $this->assertSame('ai', data_get($savedAnswer->coaching_feedback, 'review_sample_answer.source'));
+ $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'review_sample_answer.provider'));
+ $this->assertSame('ai_provider_validated', data_get($savedFeedback->coaching_summary, 'overall_summary_source'));
+ Http::assertSentCount(1);
+ }
+
  public function test_live_feedback_modes_control_final_feedback_and_readiness_updates(): void
  {
  foreach ([
