@@ -12062,9 +12062,12 @@ body.user-desktop-shell:not(.admin-shell) #dashboard #notifBadge {
 body.user-desktop-shell:not(.admin-shell) #dashboard .db-user-pill {
   min-height: 40px !important;
   height: 40px !important;
-  max-width: 190px !important;
-  padding: 4px 10px 4px 5px !important;
-  gap: 8px !important;
+  width: 58px !important;
+  min-width: 58px !important;
+  max-width: 58px !important;
+  padding: 4px 8px 4px 4px !important;
+  gap: 6px !important;
+  justify-content: space-between !important;
   border-radius: 11px !important;
   border-color: rgba(148, 163, 184, 0.28) !important;
   background: rgba(255, 255, 255, 0.82) !important;

@@ -55,7 +55,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=38') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=39') }}" />
       <style>
           :root,
           .lm {
@@ -237,7 +237,7 @@
                   </div>
 
                   <div style="position:relative" id="profileWrap">
-                     <button class="db-user-pill" id="userPill" type="button" aria-label="Open profile menu" aria-haspopup="true" aria-expanded="false" aria-controls="profileDropdown" onclick="toggleProfile(event)">
+                     <button class="db-user-pill db-user-pill-compact" id="userPill" type="button" aria-label="Open profile menu" aria-haspopup="true" aria-expanded="false" aria-controls="profileDropdown" onclick="toggleProfile(event)">
                         <span class="user-avatar-presence">
                     @if($desktopProfilePhotoUrl)
                            <span class="db-avatar user-avatar" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
@@ -247,10 +247,6 @@
                      @else
                            <span class="db-avatar user-avatar">{{ $desktopUserInitial }}</span>
                      @endif
-                        </span>
-                        <span class="d-none d-md-block">
-                           <span style="display:block;font-size:.85rem;font-weight:600;line-height:1.2" id="userName">{{ $desktopUserDisplayName }}</span>
-                           <span style="display:block;font-size:.72rem;color:var(--tx3)" id="userPlan">{{ $desktopUserAccountLabel }}</span>
                         </span>
                         <i class="fa-solid fa-chevron-down fa-xs" id="profileChevron" style="color:var(--tx3);margin-left:2px;transition:.3s"></i>
                      </button>
