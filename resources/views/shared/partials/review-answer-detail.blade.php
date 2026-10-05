@@ -26,8 +26,6 @@
  return array_values(array_filter(array_map($reviewFeedbackText, $listItems($items, $limit))));
  };
  $answerText = trim((string) ($answer->answer_text ?? ''));
- $starApplicable = \App\Services\QuestionIntentService::starApplicable($questionSource);
- $hasAnswerForBetterDraft = review_answer_is_usable_for_better_answer(review_answer_text($answer), $questionSource);
  $hasVoiceRecording = trim((string) ($answer->voice_recording_path ?? '')) !== '';
  $hasVoiceEvidence = trim((string) ($answer->delivery_transcript ?? '')) !== '';
  $isVoiceOnlyAnswer = strtolower((string) ($answer->response_mode ?? '')) === 'voice' && $hasVoiceRecording;
@@ -51,7 +49,6 @@
  $improvementFocus = 'Add one specific example, action, or result.';
  }
  $improvementFocus = review_feedback_with_sentence_range($improvementFocus, 'improve');
- $betterAnswer = review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $questionSource);
  $alignmentStatus = strtolower(str_replace([' ', '-'], '_', trim((string) ($contentAlignment['status'] ?? ''))));
  $scoreUnavailable = in_array($alignmentStatus, ['insufficient_evidence', 'not_evaluated', 'skipped'], true);
  $cameraDetectionOn = (isset($sessionRecord) && $sessionRecord instanceof \App\Models\InterviewSession)
@@ -134,8 +131,6 @@
  $limitationNote = 'This review uses only the saved answer, question, and measurable practice data.';
  }
  $limitationNote = review_feedback_with_sentence_range($limitationNote, 'limitation');
- $possibleAnswerModalId = 'possible-answer-modal-'.preg_replace('/[^A-Za-z0-9_-]/', '', (string) ($answer->id ?? uniqid()));
- $possibleAnswerModalTitleId = $possibleAnswerModalId.'-title';
 @endphp
 
 <div class="review-answer-simple">
@@ -225,28 +220,6 @@
  <span>Your Answer</span>
  <p>{{ $answerDisplay }}</p>
  </section>
- <section class="review-better-example">
- <div class="review-coaching-answer-head">
- <button type="button" class="review-coaching-answer-btn" data-bs-toggle="modal" data-bs-target="#{{ $possibleAnswerModalId }}">
- <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
- Possible Answers
- </button>
- </div>
- </section>
  </div>
 
-</div>
-
-<div class="modal fade review-possible-answer-modal" id="{{ $possibleAnswerModalId }}" tabindex="-1" aria-labelledby="{{ $possibleAnswerModalTitleId }}" aria-hidden="true">
- <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
- <div class="modal-content">
- <div class="modal-header">
- <h5 class="modal-title" id="{{ $possibleAnswerModalTitleId }}">Possible Answers</h5>
- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
- </div>
- <div class="modal-body">
- <p>{{ $betterAnswer }}</p>
- </div>
- </div>
- </div>
 </div>

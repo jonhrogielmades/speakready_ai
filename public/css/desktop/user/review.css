@@ -602,6 +602,9 @@
         gap: 12px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+    .review-answer-example-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
     .review-example-grid > div,
     .review-answer-example-grid > section {
         background: rgba(100, 116, 139, .025);
@@ -615,14 +618,6 @@
         font-weight: 900;
         margin-bottom: 6px;
         text-transform: uppercase;
-    }
-    .review-better-example {
-        background: rgba(16, 185, 129, .045);
-        border-color: rgba(16, 185, 129, .22) !important;
-    }
-
-    .review-better-example span {
-        color: #047857;
     }
     .review-camera-card {
         background: rgba(14, 165, 233, .045) !important;
@@ -863,7 +858,6 @@ html body.user-desktop-shell:not(.admin-shell) .review-quick-panel {
     box-shadow: none !important;
     overflow: hidden !important;
 }
-
 html body.user-desktop-shell:not(.admin-shell) .review-quick-head {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) minmax(118px, auto) !important;
@@ -1169,7 +1163,7 @@ html body.user-desktop-shell:not(.admin-shell) .review-answer-summary-grid {
 
 html body.user-desktop-shell:not(.admin-shell) .review-answer-example-grid {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 10px !important;
     min-width: 0 !important;
 }
@@ -1762,81 +1756,4 @@ html body.user-desktop-shell:not(.admin-shell) .retry-panel .btn {
     .review-evidence-badges {
         justify-content: flex-start;
     }
-}
-
-.review-coaching-answer-head {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-bottom: 2px;
-}
-
-.review-coaching-answer-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 38px;
-    border: 1px solid rgba(16, 185, 129, .26);
-    border-radius: 999px;
-    background: linear-gradient(135deg, rgba(16, 185, 129, .16), rgba(59, 130, 246, .10));
-    color: #047857;
-    -webkit-text-fill-color: #047857;
-    font-size: .84rem;
-    font-weight: 900;
-    line-height: 1.2;
-    padding: 8px 14px;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.review-coaching-answer-btn:hover,
-.review-coaching-answer-btn:focus {
-    color: #065f46;
-    -webkit-text-fill-color: #065f46;
-    text-decoration: none;
-    transform: translateY(-1px);
-}
-
-.review-coaching-answer-btn i {
-    color: currentColor;
-    -webkit-text-fill-color: currentColor;
-    font-size: .9rem;
-}
-
-.review-possible-answer-modal .modal-dialog {
-    max-width: min(92vw, 620px);
-}
-
-.review-possible-answer-modal .modal-content {
-    border: 1px solid var(--bd);
-    border-radius: 18px;
-    background: var(--sf);
-    color: var(--tx);
-    box-shadow: 0 24px 60px rgba(15, 23, 42, .24);
-    overflow: hidden;
-}
-
-.review-possible-answer-modal .modal-header {
-    border-bottom: 1px solid var(--bd);
-    padding: 16px 18px;
-}
-
-.review-possible-answer-modal .modal-title {
-    color: var(--tx);
-    font-size: 1rem;
-    font-weight: 900;
-    line-height: 1.25;
-}
-
-.review-possible-answer-modal .modal-body {
-    padding: 18px;
-}
-
-.review-possible-answer-modal .modal-body p {
-    color: var(--tx2);
-    font-size: .98rem;
-    line-height: 1.65;
-    margin: 0;
-    overflow-wrap: anywhere;
 }

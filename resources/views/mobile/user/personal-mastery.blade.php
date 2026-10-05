@@ -261,7 +261,7 @@
                 </div>
                 <div class="mastery-shortcut-grid">
                     @foreach($coachShortcuts as $shortcut)
-                        <a class="mastery-shortcut" href="{{ route('user.coach', ['ask' => $shortcut['prompt']]) }}">
+                        <a class="mastery-shortcut" href="{{ route('user.coach') }}">
                             <span class="mastery-row-icon" aria-hidden="true">
                                 <i class="fa-solid {{ $shortcut['icon'] }}"></i>
                             </span>

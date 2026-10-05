@@ -184,7 +184,6 @@
     <script>
         let coachChatHistory = [];
         let currentConversationId = null;
-        const initialCoachPrompt = @json((string) request('ask', ''));
         let coachSelectedFiles = [];
         let coachSending = false;
         let coachVoiceRecognition = null;
@@ -1107,16 +1106,6 @@
         document.addEventListener('DOMContentLoaded', function () {
             initializeCoachVoicePrompt();
 
-            const prompt = String(initialCoachPrompt || '').trim();
-            const input = document.getElementById('chatMsg');
-
-            if (!prompt || !input) {
-                return;
-            }
-
-            input.value = prompt;
-            resizeCoachTextarea(input);
-            window.setTimeout(sendMsg, 250);
         });
     </script>
 </div>
