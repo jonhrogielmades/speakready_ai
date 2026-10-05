@@ -997,6 +997,15 @@ public function test_detailed_review_refreshes_all_answer_summary_strengths_and_
  ->assertSee('Weaknesses')
  ->assertSee('OpenAI found the final customer result still needs to be clearer.')
  ->assertSee('OpenAI recommends closing with the true customer result.')
+ ->assertSee('Evidence & reliability', false)
+ ->assertSee('OpenAI evidence')
+ ->assertSee('Validated AI provider check')
+ ->assertSee('What Worked')
+ ->assertSee('Keep the billing concern, next step, and follow-up details.')
+ ->assertSee('What To Improve')
+ ->assertSee('Add the final customer reaction or clear service result.')
+ ->assertSee('Why It Matters')
+ ->assertSee('The final result shows whether the calm response solved the customer concern.')
  ->assertDontSee('Local saved strength should be replaced.')
  ->assertDontSee('Local answer review strength should not replace provider strengths.');
 

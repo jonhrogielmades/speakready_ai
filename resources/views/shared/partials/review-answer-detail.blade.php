@@ -129,6 +129,16 @@
  '' => 'Saved review',
  default => \Illuminate\Support\Str::headline(str_replace('_', ' ', $evaluationSource)),
  };
+ $answerProvider = strtolower(trim((string) ($answer->ai_provider ?? '')));
+ $answerProvider = str_replace([' ', '_', '-'], '', $answerProvider);
+ $answerProviderLabel = match ($answerProvider) {
+ 'openai', 'chatgpt', 'gpt' => 'OpenAI evidence',
+ 'gemini', 'google', 'googlegemini' => 'Gemini evidence',
+ 'groq' => 'Groq evidence',
+ 'cohere' => 'Cohere evidence',
+ 'local', 'localmodel' => 'Local evidence',
+ default => '',
+ };
  $successCheck = $reviewFeedbackText($contentAlignment['success_check'] ?? '');
  if ($successCheck === '') {
  $successCheck = 'A reviewer can find the direct answer, the supporting detail, and the result or lesson.';
@@ -160,6 +170,9 @@
  @endif
  @if($feedbackQuality !== null)
  <span>{{ $feedbackQuality }}% checked</span>
+ @endif
+ @if($answerProviderLabel !== '')
+ <span>{{ $answerProviderLabel }}</span>
  @endif
  <span>{{ $evaluationSourceLabel }}</span>
  </div>
