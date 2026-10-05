@@ -78,6 +78,37 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertAccountNotificationSchemaReady();
  }
 
+ public function test_account_target_position_options_match_interview_setup_positions(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $expectedPositions = collect(QuestionDatasetProvider::targetPositionOptionGroups())
+ ->flatten()
+ ->map(fn ($position): string => trim((string) $position))
+ ->filter()
+ ->unique(fn (string $position): string => strtolower($position))
+ ->values()
+ ->all();
+ $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+ $this->assertCount(20, $expectedPositions);
+
+ $desktopResponse = $this->actingAs($user)
+ ->get(route('user.account'))
+ ->assertOk();
+ $mobileResponse = $this->actingAs($user)
+ ->withHeader('User-Agent', $mobileUserAgent)
+ ->get(route('user.account'))
+ ->assertOk();
+
+ foreach ([$desktopResponse, $mobileResponse] as $response) {
+ $options = $this->accountTargetPositionOptions($response->getContent());
+
+ $this->assertSame($expectedPositions, $options);
+ $response->assertDontSee('Administrative Assistant / LGU Staff', false)
+ ->assertDontSee('Accounting Assistant', false);
+ }
+ }
+
  public function test_account_privacy_times_are_displayed_in_philippine_time(): void
  {
  $user = User::factory()->create([
@@ -533,5 +564,17 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  foreach (['is_admin', 'google_id', 'status', 'reactivation_requested_at', 'profile_photo_path', 'target_position', 'preferred_language', 'deleted_at'] as $column) {
  $this->assertTrue(Schema::hasColumn('users', $column), "Missing users.{$column}");
  }
+ }
+
+ private function accountTargetPositionOptions(string $content): array
+ {
+ $this->assertMatchesRegularExpression('/<select[^>]+id="accountTargetPosition"[^>]*>.*?<\/select>/s', $content);
+ preg_match('/<select[^>]+id="accountTargetPosition"[^>]*>(.*?)<\/select>/s', $content, $selectMatches);
+ preg_match_all('/<option\s+value="([^"]*)"/', $selectMatches[1], $optionMatches);
+
+ return collect($optionMatches[1]?? [])
+ ->filter(fn (string $position): bool => $position !== '')
+ ->values()
+ ->all();
  }
 }

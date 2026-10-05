@@ -12,7 +12,7 @@
     $accountUser = Auth::user();
     $accountPhotoUrl = $accountUser?->profile_photo_url;
     $accountTargetPosition = old('target_position', $accountUser?->target_position);
-    $accountJobPositionOptions = collect(config('speakready_scope.job_positions', []))
+    $accountJobPositionOptions = collect(\App\Services\QuestionDatasetProvider::targetPositionOptionGroups())
         ->flatten()
         ->map(fn ($position) => trim((string) $position))
         ->filter()
