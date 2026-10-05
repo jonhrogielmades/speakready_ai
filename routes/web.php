@@ -161,6 +161,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/interview/answer', [InterviewController::class, 'answer'])->name('interview.answer');
     Route::post('/interview/chat-reply', [InterviewController::class, 'chatReply'])->name('interview.chatReply');
     Route::post('/interview/coach-answer', [InterviewController::class, 'coachAnswer'])->name('interview.coachAnswer');
+    Route::post('/interview/closing', [InterviewController::class, 'closing'])->name('interview.closing');
     Route::post('/interview/speech', [InterviewController::class, 'speech'])->name('interview.speech');
     Route::post('/interview/transcribe', [InterviewController::class, 'transcribe'])->name('interview.transcribe');
     Route::post('/interview/save-state', [InterviewController::class, 'saveSessionState'])->name('interview.saveState');
