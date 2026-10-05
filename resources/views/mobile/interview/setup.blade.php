@@ -1532,6 +1532,285 @@
  }
 </script>
 
+<script>
+ (function() {
+ const setupDraftStorageKey = @json('speakready.interview.setupDraft.user.'.auth()->id());
+ const setupDraftHasServerInput = @json(session()->hasOldInput());
+ let setupDraftRestoreInProgress = false;
+ let setupDraftSaveTimer = null;
+
+ function setupDraftStorageAvailable() {
+ try {
+ const probeKey = `${setupDraftStorageKey}.probe`;
+ window.localStorage.setItem(probeKey, '1');
+ window.localStorage.removeItem(probeKey);
+ return true;
+ } catch (error) {
+ return false;
+ }
+ }
+
+ const setupDraftCanStore = setupDraftStorageAvailable();
+
+ function setupDraftInputsByName(name) {
+ return Array.from(document.querySelectorAll('input')).filter(input => input.name === name);
+ }
+
+ function setupDraftFieldValue(id) {
+ return String(document.getElementById(id)?.value || '').trim();
+ }
+
+ function setupDraftCheckedValue(name) {
+ return setupDraftInputsByName(name).find(input => input.checked)?.value || '';
+ }
+
+ function setupDraftCheckedValues(name) {
+ return setupDraftInputsByName(name).filter(input => input.checked).map(input => input.value);
+ }
+
+ function setupDraftTargetValue() {
+ const positionField = document.getElementById('valPosition');
+ if (typeof setupTargetFieldValue === 'function') {
+ return setupTargetFieldValue(positionField);
+ }
+
+ return String(positionField?.value || positionField?.dataset.selectedTarget || positionField?.getAttribute('value') || '').trim();
+ }
+
+ function setupDraftFields() {
+ return {
+ category_id: setupDraftFieldValue('valScenario'),
+ target_position: setupDraftTargetValue(),
+ difficulty: setupDraftCheckedValue('difficulty'),
+ num_questions: setupDraftFieldValue('valNumQuestions'),
+ time_limit: setupDraftFieldValue('valTimeLimit'),
+ camera_detection: setupDraftCheckedValue('camera_detection'),
+ ai_assistance_level: setupDraftFieldValue('valAssistance'),
+ live_feedback_mode: setupDraftFieldValue('valFeedbackMode'),
+ question_types: setupDraftCheckedValues('question_types[]'),
+ response_mode: setupDraftCheckedValue('response_mode'),
+ };
+ }
+
+ function setupDraftHasConfiguredData(fields) {
+ return [
+ fields.category_id,
+ fields.target_position,
+ fields.difficulty,
+ fields.num_questions,
+ fields.time_limit,
+ fields.camera_detection,
+ fields.ai_assistance_level,
+ fields.live_feedback_mode,
+ fields.response_mode,
+ ].some(value => String(value || '').trim() !== '') || (Array.isArray(fields.question_types) && fields.question_types.length > 0);
+ }
+
+ function setupDraftRead() {
+ if (!setupDraftCanStore) return null;
+
+ try {
+ const draft = JSON.parse(window.localStorage.getItem(setupDraftStorageKey) || 'null');
+ return draft && typeof draft === 'object'? draft: null;
+ } catch (error) {
+ return null;
+ }
+ }
+
+ function setupDraftWrite(draft) {
+ if (!setupDraftCanStore) return;
+
+ try {
+ window.localStorage.setItem(setupDraftStorageKey, JSON.stringify(draft));
+ } catch (error) {
+ console.warn('Unable to save interview setup draft:', error);
+ }
+ }
+
+ function setupDraftRemove() {
+ if (!setupDraftCanStore) return;
+
+ try {
+ window.localStorage.removeItem(setupDraftStorageKey);
+ } catch (error) {
+ //
+ }
+ }
+
+ function setupDraftStepIndex() {
+ if (typeof window.getInterviewSetupStepIndex === 'function') {
+ return window.getInterviewSetupStepIndex();
+ }
+
+ if (typeof setupStepState !== 'undefined' && Number.isInteger(setupStepState.index)) {
+ return setupStepState.index;
+ }
+
+ return 0;
+ }
+
+ function setupDraftVisitedSteps() {
+ if (typeof visitedSetupStepIds !== 'undefined' && visitedSetupStepIds instanceof Set) {
+ return Array.from(visitedSetupStepIds);
+ }
+
+ return [];
+ }
+
+ function saveInterviewSetupDraft() {
+ if (setupDraftRestoreInProgress) return;
+
+ const fields = setupDraftFields();
+ if (!setupDraftHasConfiguredData(fields)) {
+ setupDraftRemove();
+ return;
+ }
+
+ setupDraftWrite({
+ fields,
+ step_index: setupDraftStepIndex(),
+ visited_step_ids: setupDraftVisitedSteps(),
+ saved_at: new Date().toISOString(),
+ });
+ }
+
+ function queueInterviewSetupDraftSave() {
+ window.clearTimeout(setupDraftSaveTimer);
+ setupDraftSaveTimer = window.setTimeout(saveInterviewSetupDraft, 80);
+ }
+
+ function setupDraftSetSelect(id, value) {
+ const select = document.getElementById(id);
+ const nextValue = String(value || '');
+ if (!select || nextValue === '') return;
+
+ const hasOption = Array.from(select.options || []).some(option => option.value === nextValue && !option.disabled);
+ if (hasOption) {
+ select.value = nextValue;
+ }
+ }
+
+ function setupDraftSetChecked(name, value) {
+ const nextValue = String(value || '');
+ if (nextValue === '') return;
+
+ setupDraftInputsByName(name).forEach(input => {
+ input.checked = input.value === nextValue;
+ });
+ }
+
+ function setupDraftSetCheckedValues(name, values) {
+ const selectedValues = new Set(Array.isArray(values)? values.map(value => String(value)): []);
+ setupDraftInputsByName(name).forEach(input => {
+ input.checked = selectedValues.has(input.value);
+ });
+ }
+
+ function setupDraftSetTargetPosition(value) {
+ const positionField = document.getElementById('valPosition');
+ const nextValue = String(value || '').trim();
+ if (!positionField || nextValue === '') return;
+
+ if (typeof setSetupTargetInputValue === 'function') {
+ setSetupTargetInputValue(positionField, nextValue, 'job');
+ } else {
+ positionField.value = nextValue;
+ positionField.dataset.selectedTarget = nextValue;
+ positionField.dataset.targetKind = 'job';
+ positionField.setAttribute('value', nextValue);
+ }
+
+ if (typeof syncSetupTargetDropdown === 'function' && typeof currentSetupTargetFieldCopy === 'function') {
+ syncSetupTargetDropdown(positionField, 'job', currentSetupTargetFieldCopy());
+ }
+ }
+
+ function setupDraftRestoreStepProgress(draft) {
+ const requestedIndex = Number.parseInt(draft.step_index, 10);
+ const targetIndex = Number.isFinite(requestedIndex)? Math.max(0, requestedIndex): 0;
+
+ window.requestAnimationFrame(() => {
+ const steps = typeof getSetupSteps === 'function'? getSetupSteps(): [];
+ const safeIndex = steps.length > 0? Math.min(targetIndex, steps.length - 1): targetIndex;
+
+ if (typeof visitedSetupStepIds !== 'undefined' && visitedSetupStepIds instanceof Set) {
+ (Array.isArray(draft.visited_step_ids)? draft.visited_step_ids: []).forEach(stepId => visitedSetupStepIds.add(stepId));
+ steps.slice(0, safeIndex + 1).forEach(step => {
+ if (step?.id) visitedSetupStepIds.add(step.id);
+ });
+ }
+
+ if (typeof showSetupStep === 'function') {
+ showSetupStep(safeIndex);
+ } else if (typeof window.showInterviewSetupStep === 'function') {
+ window.showInterviewSetupStep(safeIndex);
+ }
+
+ if (typeof updateSummary === 'function') {
+ updateSummary();
+ }
+
+ saveInterviewSetupDraft();
+ });
+ }
+
+ function restoreInterviewSetupDraft() {
+ if (setupDraftHasServerInput) {
+ saveInterviewSetupDraft();
+ return;
+ }
+
+ const draft = setupDraftRead();
+ if (!draft || !draft.fields || !setupDraftHasConfiguredData(draft.fields)) return;
+
+ setupDraftRestoreInProgress = true;
+
+ setupDraftSetSelect('valScenario', draft.fields.category_id);
+ setupDraftSetTargetPosition(draft.fields.target_position);
+ setupDraftSetChecked('difficulty', draft.fields.difficulty);
+ setupDraftSetSelect('valNumQuestions', draft.fields.num_questions);
+ setupDraftSetSelect('valTimeLimit', draft.fields.time_limit);
+ setupDraftSetChecked('camera_detection', draft.fields.camera_detection);
+ setupDraftSetSelect('valAssistance', draft.fields.ai_assistance_level);
+ setupDraftSetSelect('valFeedbackMode', draft.fields.live_feedback_mode);
+ setupDraftSetCheckedValues('question_types[]', draft.fields.question_types);
+ setupDraftSetChecked('response_mode', draft.fields.response_mode);
+
+ if (typeof syncSetupTargetFieldCopy === 'function') {
+ syncSetupTargetFieldCopy();
+ }
+
+ if (typeof updateSummary === 'function') {
+ updateSummary();
+ }
+
+ setupDraftRestoreInProgress = false;
+ setupDraftRestoreStepProgress(draft);
+ }
+
+ function installInterviewSetupDraftPersistence() {
+ const form = document.getElementById('setupForm');
+ if (!form) return;
+
+ form.addEventListener('input', queueInterviewSetupDraftSave);
+ form.addEventListener('change', queueInterviewSetupDraftSave);
+ form.addEventListener('keyup', queueInterviewSetupDraftSave);
+ form.addEventListener('submit', saveInterviewSetupDraft);
+ window.addEventListener('beforeunload', saveInterviewSetupDraft);
+
+ document.addEventListener('click', (event) => {
+ if (!event.target.closest('#setupStepPrev, #setupStepNext, [data-setup-step], [data-target-dropdown-choice-value]')) return;
+ window.setTimeout(queueInterviewSetupDraftSave, 0);
+ });
+
+ restoreInterviewSetupDraft();
+ window.addEventListener('load', restoreInterviewSetupDraft, { once: true });
+ }
+
+ installInterviewSetupDraftPersistence();
+ })();
+</script>
+
 @push('scripts')
 <script>
  (function() {
