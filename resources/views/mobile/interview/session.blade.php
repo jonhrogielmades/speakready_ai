@@ -4345,9 +4345,134 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return '';
  }
 
+function submittedClosingAnswerText(answerState) {
+const text = cleanTranscriptText(answerState?.text || answerState?.speech_transcript || '');
+if (!text || /^\[user skipped the question\]$/i.test(text)) return '';
+if (/^voice(?:-only)? answer (?:recorded|saved)/i.test(text)) return '';
+return text;
+}
+
+function submittedClosingAnswers() {
+return answersData.map((answerState, index) => {
+const text = submittedClosingAnswerText(answerState);
+if (!text) return null;
+
+return {
+text,
+isOpening: isOpeningQuestion(questions[index])
+};
+}).filter(Boolean);
+}
+
+function humanList(items) {
+const cleanItems = items.map(item => String(item || '').trim()).filter(Boolean);
+if (cleanItems.length <= 1) return cleanItems[0] || '';
+if (cleanItems.length === 2) return `${cleanItems[0]} and ${cleanItems[1]}`;
+return `${cleanItems.slice(0, -1).join(', ')}, and ${cleanItems[cleanItems.length - 1]}`;
+}
+
+function closingThemeStopWords() {
+return new Set([
+'answer', 'answers', 'candidate', 'example', 'examples', 'experience', 'experiences', 'interview',
+'question', 'questions', 'response', 'responses', 'role', 'today', 'voice', 'recorded', 'transcript',
+'unavailable', 'skipped', 'company', 'organization', 'business', 'team', 'teams', 'time', 'times',
+'issue', 'issues', 'problem', 'problems', 'thing', 'things', 'stuff', 'someone', 'something', 'anything', 'everything',
+'basically', 'actually', 'really', 'very', 'just', 'maybe', 'probably', 'always', 'usually', 'already',
+'able', 'apply', 'applied', 'applying', 'make', 'made', 'making', 'used', 'using', 'work', 'worked', 'working', 'want', 'wanted',
+'need', 'needed', 'going', 'think', 'know', 'said', 'say', 'help', 'helped', 'helps',
+'achieved', 'analyzed', 'built', 'communicated', 'coordinate', 'coordinated', 'coordinating', 'created', 'delivered', 'designed',
+'developed', 'handled', 'implemented', 'improved', 'learned', 'managed', 'organized', 'prioritized',
+'reduced', 'reducing', 'resolved', 'testing', 'tested',
+...meaningfulWords(sessionTargetPosition || '')
+]);
+}
+
+function normalizedClosingWord(word) {
+return String(word || '').replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi, '').toLowerCase();
+}
+
+function closingWordTokensFrom(text, blockedWords) {
+return meaningfulWords(text)
+.map(normalizedClosingWord)
+.map(word => word.length > 2 &&!blockedWords.has(word)? word: '');
+}
+
+function closingThemesOverlap(firstTheme, secondTheme) {
+const firstWords = new Set(String(firstTheme || '').split(/\s+/).filter(Boolean));
+return String(secondTheme || '').split(/\s+/).some(word => firstWords.has(word));
+}
+
+function topClosingThemes(answerDetails, limit = 3) {
+const blockedWords = closingThemeStopWords();
+const scores = new Map();
+const firstSeen = new Map();
+let order = 0;
+
+answerDetails.forEach(detail => {
+const words = closingWordTokensFrom(detail.text, blockedWords);
+words.forEach((word, index) => {
+if (!word) return;
+if (!firstSeen.has(word)) firstSeen.set(word, order++);
+scores.set(word, (scores.get(word) || 0) + 1);
+
+const nextWord = words[index + 1];
+if (nextWord && nextWord!== word) {
+const phrase = `${word} ${nextWord}`;
+if (!firstSeen.has(phrase)) firstSeen.set(phrase, order++);
+scores.set(phrase, (scores.get(phrase) || 0) + 2);
+}
+});
+});
+
+const selected = [];
+[...scores.entries()]
+.sort((a, b) => {
+const scoreDiff = b[1] - a[1];
+return scoreDiff!== 0? scoreDiff: (firstSeen.get(a[0]) || 0) - (firstSeen.get(b[0]) || 0);
+})
+.forEach(([theme]) => {
+if (selected.length >= limit) return;
+const duplicatesExisting = selected.some(existing => existing.includes(theme) || theme.includes(existing) || closingThemesOverlap(existing, theme));
+if (!duplicatesExisting) selected.push(theme);
+});
+
+return selected;
+}
+
  function closingConversationText() {
- return `Thank you for walking me through your answers today. This ${sessionTargetPosition} interview is now complete, and your responses are being analyzed for feedback.`;
+const submittedAnswers = submittedClosingAnswers();
+const firstName = candidateFirstName(submittedAnswers[0]?.text || '');
+const greeting = firstName? `Thank you, ${firstName},`: 'Thank you';
+
+if (submittedAnswers.length === 0) {
+return `${greeting} for completing the session today. This ${sessionTargetPosition} interview is now complete, and your responses are being analyzed for feedback.`;
+}
+
+const responseLabel = submittedAnswers.length === 1? 'response': 'responses';
+const themeSourceAnswers = submittedAnswers.filter(answer => !answer.isOpening);
+const themes = topClosingThemes(themeSourceAnswers.length > 0? themeSourceAnswers: submittedAnswers);
+const detailSentence = themes.length > 0
+? ` I heard themes around ${humanList(themes)} in your ${responseLabel}.`
+: ` I appreciate the detail you shared across your ${responseLabel}.`;
+
+return `${greeting} for walking me through your ${responseLabel} today.${detailSentence} This ${sessionTargetPosition} interview is now complete, and your responses are being analyzed for feedback.`;
  }
+
+async function providerClosingConversationText() {
+const fallbackText = closingConversationText();
+const formData = new FormData();
+formData.append('_token', '{{ csrf_token() }}');
+formData.append('session_id', interviewSessionId);
+
+try {
+const data = await postFormJson('{{ route("interview.closing") }}', formData, 'AI closing could not be prepared right now.', 14000);
+const providerText = cleanTranscriptText(data.closing_text || '');
+return providerText || fallbackText;
+} catch (error) {
+console.warn('AI provider closing unavailable; using local closing fallback.', error);
+return fallbackText;
+}
+}
 
  function setAnswerInputEnabled(enabled) {
  answerInputEnabled = Boolean(enabled);
@@ -4375,7 +4500,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  async function playClosingConversationAndSubmit() {
- const closingText = closingConversationText();
+ const closingText = await providerClosingConversationText();
  const closingStartedAt = Date.now();
  setAnswerInputEnabled(false);
  appendChatMessage('interviewer', closingText);
