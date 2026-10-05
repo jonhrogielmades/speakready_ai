@@ -4609,7 +4609,20 @@ class InterviewController extends Controller
  return AIService::generateLocalFeedback($sessionData, $answersData);
  }
 
+ try {
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+ } catch (AiFeedbackProviderFailureException $error) {
+ Log::warning('AI feedback providers failed; completing report with local evidence fallback.', [
+ 'session_id' => $session->id,
+ 'user_id' => $session->user_id,
+ 'requested_provider' => AIService::normalizeProviderKey($feedbackProvider),
+ 'provider_count' => $error->providerCount(),
+ 'providers_configured' => $error->providers(),
+ 'providers_attempted' => $error->attemptedProviders(),
+ ]);
+
+ return AIService::generateLocalFeedback($sessionData, $answersData);
+ }
  }
 
  protected function generateInterviewFeedbackForSession(

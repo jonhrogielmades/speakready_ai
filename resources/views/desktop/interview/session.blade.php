@@ -6006,7 +6006,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  'X-Requested-With': 'XMLHttpRequest',
  'Accept': 'application/json'
  },
- timeoutMs: 45000
+ timeoutMs: 75000
  });
  const payload = await parseResponsePayload(response);
  const data = payload.data || {};
