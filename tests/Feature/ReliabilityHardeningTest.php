@@ -1468,7 +1468,7 @@ class ReliabilityHardeningTest extends TestCase
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
  $this->assertEmpty($savedAnswer->ai_feedback);
  $this->assertEmpty($savedAnswer->ai_provider);
- Http::assertSentCount(4);
+ Http::assertSentCount(1);
  }
 
  public function test_interview_finish_tolerates_missing_feedback_coaching_summary_column(): void

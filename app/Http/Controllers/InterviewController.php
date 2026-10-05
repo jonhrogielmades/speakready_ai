@@ -1009,10 +1009,7 @@ return response()->json([
  $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
  }
 
- $feedbackProvider = $gameLevel? null: $this->bestEvaluatedInterviewProvider(
- 'feedback_generation',
- session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
- );
+ $feedbackProvider = $gameLevel? null: $this->detailedReviewFeedbackProvider();
  if (! $gameLevel) {
  session(['active_interview_feedback_provider' => $feedbackProvider]);
  }
@@ -1487,10 +1484,7 @@ return response()->json([
  'question_id' => $answer->question_id,
  ], $answerPayload));
 
- $provider = $this->bestEvaluatedInterviewProvider(
- 'feedback_generation',
- session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
- );
+ $provider = $this->detailedReviewFeedbackProvider();
  session(['active_interview_feedback_provider' => $provider]);
  try {
  $feedback = AIService::generateFeedback([
@@ -1505,7 +1499,7 @@ return response()->json([
  'is_skipped' => false,
  'expected_guide' => $answer->question->expected_guide?? null,
  'mapped_skills' => $answer->question->mapped_skills?? [],
- ]], $provider, false, false);
+ ]], $provider, true, false);
  } catch (\Throwable $error) {
  Log::warning('Retry answer feedback generation failed after answer save.', [
  'answer_id' => $retry->id,
@@ -1753,7 +1747,7 @@ return response()->json([
 
  private function completedSessionFeedbackProviderForSync(): string
  {
- $provider = $this->bestEvaluatedInterviewProvider('feedback_generation', AIService::defaultProviderKey());
+ $provider = $this->detailedReviewFeedbackProvider();
  $provider = AIService::normalizeProviderKey($provider);
 
  if ($provider === '' || in_array($provider, ['local', 'localmodel'], true)) {
@@ -4416,6 +4410,11 @@ return response()->json([
  return $fallback;
  }
 
+ private function detailedReviewFeedbackProvider(): string
+ {
+ return 'openai';
+ }
+
  private function simulatedProviderFallbackIsAllowed(): bool
  {
  return app()->environment('testing')
@@ -4850,8 +4849,8 @@ return response()->json([
  return AIService::generateFeedback(
  $sessionData,
  $answersData,
- $feedbackProvider?: $this->bestEvaluatedInterviewProvider('feedback_generation'),
- false,
+ $feedbackProvider?: $this->detailedReviewFeedbackProvider(),
+ true,
  false
  );
  }
