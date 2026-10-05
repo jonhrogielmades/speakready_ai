@@ -330,8 +330,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
 
  $response->assertOk()
  ->assertSee('Job Interviews')
- ->assertSee('Score pending')
- ->assertSee('Not scored')
+ ->assertSee('No score')
  ->assertDontSee('Needs Work', false)
  ->assertViewHas('feedbackCategories', function ($categories) {
  return $categories->all() === ['Job Interviews'];
@@ -343,14 +342,14 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $job = $this->category('Job Interview');
 
- $this->completedSessionFor($user, $job, 70, now()->subDays(3), [
+ $olderSession = $this->completedSessionFor($user, $job, 70, now()->subDays(3), [
  'target_position' => 'Office Associate',
  ]);
  $matchingSession = $this->completedSessionFor($user, $job, 92, now()->subDays(2), [
  'target_position' => 'Customer Success Agent',
  'interview_focus' => 'job interview role fit',
  ]);
- $this->completedSessionFor($user, $job, 88, now()->subDay(), [
+ $newerSession = $this->completedSessionFor($user, $job, 88, now()->subDay(), [
  'target_position' => 'Sales Representative',
  'interview_focus' => 'job interview sales fit',
  ]);
@@ -362,12 +361,9 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ]));
 
  $response->assertOk()
- ->assertSee('name="scenario"', false)
- ->assertSee('value="Job Interviews" selected', false)
- ->assertSee('name="search"', false)
- ->assertSee('value="customer"', false)
- ->assertSee('Oldest First')
- ->assertSee('data-scenario="Job Interviews"', false)
+ ->assertSee('id="card-practice-history"', false)
+ ->assertSee('Practice History')
+ ->assertSee(route('user.review', $matchingSession->id), false)
  ->assertViewHas('sessions', fn ($sessions) => $sessions->total() === 1
  && $sessions->getCollection()->first()?->id === $matchingSession->id)
  ->assertViewHas('feedbackCategories', function ($categories) {
@@ -448,7 +444,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.feedback', ['search' => 'not-present']))
  ->assertOk()
- ->assertSee('No feedback records match your current filters.')
+ ->assertSee('No practice history matches your current filters.')
  ->assertDontSee('Complete a practice interview to generate feedback.');
  }
 
@@ -502,7 +498,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('Category Breakdown')
  ->assertSee('Practice again')
  ->assertDontSee('feedback-clear-form', false)
- ->assertDontSee('data-sr-confirm-title="Delete interview session"', false)
+ ->assertSee('data-sr-confirm-title="Delete this session?"', false)
+ ->assertSee(route('user.sessions.clear'), false)
  ->assertDontSee('Evidence-Based Answer Review')
  ->assertDontSee('Answer 1')
  ->assertDontSee('Evidence used')
@@ -1040,14 +1037,14 @@ public function test_game_detailed_review_uses_saved_sample_answer_without_opena
  $this->actingAs($user)
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/desktop/user/feedback.css?v=17', false)
+ ->assertSee('css/desktop/user/feedback.css?v=18', false)
  ->assertSee('data-page-style="user-feedback"', false);
 
  $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/mobile/user/feedback.css?v=16', false)
+ ->assertSee('css/mobile/user/feedback.css?v=17', false)
  ->assertSee('serverDetectedMobile: true', false);
 
  foreach (['desktop', 'mobile'] as $device) {
@@ -1058,11 +1055,11 @@ public function test_game_detailed_review_uses_saved_sample_answer_without_opena
  $this->assertStringContainsString('html[data-theme="dark"].feedback-shell', $css);
  $this->assertStringContainsString('overflow-wrap: anywhere', $css);
  $this->assertStringContainsString('word-break: normal', $css);
- $this->assertStringContainsString('feedback-score-badge-excellent', $css);
+ $this->assertStringContainsString('#card-practice-history', $css);
  }
  }
 
- public function test_feedback_history_uses_distinct_rating_badge_classes_on_desktop_and_mobile(): void
+ public function test_feedback_history_uses_reports_session_layout_on_desktop_and_mobile(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('Behavioral');
@@ -1076,22 +1073,26 @@ public function test_game_detailed_review_uses_saved_sample_answer_without_opena
  $this->actingAs($user)
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('feedback-score-badge-pending', false)
- ->assertSee('feedback-score-badge-excellent', false)
- ->assertSee('feedback-score-badge-good', false)
- ->assertSee('feedback-score-badge-fair', false)
- ->assertSee('feedback-score-badge-needs-work', false);
+ ->assertSee('id="card-practice-history"', false)
+ ->assertSee('report-sessions-card', false)
+ ->assertSee('sr-session-table-row', false)
+ ->assertSee('report-session-category-chip', false)
+ ->assertSee('report-session-score-value', false)
+ ->assertSee('No score')
+ ->assertSee('95%')
+ ->assertSee('34%');
 
  $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('feedback-mobile-history-row', false)
- ->assertSee('feedback-score-badge-pending', false)
- ->assertSee('feedback-score-badge-excellent', false)
- ->assertSee('feedback-score-badge-good', false)
- ->assertSee('feedback-score-badge-fair', false)
- ->assertSee('feedback-score-badge-needs-work', false);
+ ->assertSee('id="card-practice-history"', false)
+ ->assertSee('sr-session-card-polished', false)
+ ->assertSee('sr-session-score-pill', false)
+ ->assertSee('sr-session-score-bar', false)
+ ->assertSee('No score')
+ ->assertSee('95%')
+ ->assertSee('34%');
  }
 
  public function test_reports_do_not_render_placeholder_scores_for_unscored_sessions(): void
