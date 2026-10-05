@@ -48,13 +48,7 @@
  ];
  })
  ->values();
- $rememberedInterviewSetup = $rememberedInterviewSetup?? null;
- $rememberedQuestionTypes = json_decode($rememberedInterviewSetup->question_types?? '[]', true);
- $rememberedQuestionTypes = is_array($rememberedQuestionTypes)? array_values(array_filter($rememberedQuestionTypes)): [];
- $rememberedAccommodationProfile = is_array($rememberedInterviewSetup?->accommodation_profile)
- ? $rememberedInterviewSetup->accommodation_profile
- : [];
- $selectedCategoryId = old('category_id', $rememberedInterviewSetup?->category_id);
+ $selectedCategoryId = old('category_id');
  $selectedCategoryId = $selectedCategoryId === null || $selectedCategoryId === ''? null: (int) $selectedCategoryId;
  $selectedScenario = $selectedCategoryId? $scenarioOptions->first(fn ($scenario) => (int) $scenario['category_id'] === $selectedCategoryId): null;
  $targetFieldMode = 'job';
@@ -70,7 +64,7 @@
  $targetFieldCopy = $targetFieldCopies[$targetFieldMode];
  $targetPositionDefault = old(
  'target_position',
- $rememberedInterviewSetup?->target_position?? ''
+ ''
  );
  $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
  $maxQuestionSetting = (int) \App\Support\SystemSettings::value('int_max_questions', 20);
@@ -84,15 +78,15 @@
  $requestedLiveFeedbackMode = request()->query('live_feedback_mode');
  $requestedLiveFeedbackMode = in_array($requestedLiveFeedbackMode, ['coaching', 'real_interview'], true) ? $requestedLiveFeedbackMode : '';
  $setupDefaults = [
- 'difficulty' => old('difficulty', $rememberedInterviewSetup?->difficulty?? ''),
- 'num_questions' => (string) old('num_questions', $rememberedInterviewSetup?->num_questions?? ''),
- 'time_limit' => (string) old('time_limit', $rememberedInterviewSetup?->time_limit?? ''),
- 'interview_focus' => old('interview_focus', $rememberedInterviewSetup?->interview_focus?? ($selectedScenario['focus']?? '')),
- 'ai_assistance_level' => old('ai_assistance_level', $rememberedInterviewSetup?->ai_assistance_level?? ''),
- 'live_feedback_mode' => old('live_feedback_mode', $requestedLiveFeedbackMode ?: ($rememberedInterviewSetup?->live_feedback_mode?? '')),
- 'response_mode' => old('response_mode', $rememberedInterviewSetup?->response_mode?? ''),
+ 'difficulty' => old('difficulty', ''),
+ 'num_questions' => (string) old('num_questions', ''),
+ 'time_limit' => (string) old('time_limit', ''),
+ 'interview_focus' => old('interview_focus', $selectedScenario['focus']?? ''),
+ 'ai_assistance_level' => old('ai_assistance_level', ''),
+ 'live_feedback_mode' => old('live_feedback_mode', $requestedLiveFeedbackMode),
+ 'response_mode' => old('response_mode', ''),
  ];
- $selectedQuestionTypes = old('question_types', $rememberedQuestionTypes);
+ $selectedQuestionTypes = old('question_types', []);
  $selectedQuestionTypes = is_array($selectedQuestionTypes)? $selectedQuestionTypes: [];
  $hasScenarioOptions = $scenarioOptions->isNotEmpty();
 @endphp
@@ -323,8 +317,7 @@
  </div>
  <p class="setup-inclusive-copy">Turn camera-based body-language detection on or off for this interview.</p>
  @php
- $rememberedCameraDetectionValue = data_get($rememberedAccommodationProfile, 'camera_detection', data_get($rememberedAccommodationProfile, 'camera_coaching'));
- $cameraDetectionValue = old('camera_detection', old('camera_coaching', $rememberedCameraDetectionValue));
+ $cameraDetectionValue = old('camera_detection', old('camera_coaching', null));
  $cameraDetectionSelected = $cameraDetectionValue !== null && $cameraDetectionValue !== '';
  $cameraDetectionOn = $cameraDetectionSelected && filter_var($cameraDetectionValue, FILTER_VALIDATE_BOOLEAN);
  @endphp

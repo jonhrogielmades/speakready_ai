@@ -14,7 +14,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserMasteryController;
 use App\Http\Controllers\UserMissionController;
 use App\Models\Category;
-use App\Models\InterviewSession;
 use App\Services\LandingStatsService;
 use App\Services\QuestionDatasetProvider;
 use App\Support\InterviewAnswerSchema;
@@ -125,16 +124,8 @@ Route::middleware(['auth', 'user'])->group(function () {
         $sourceDatasets = QuestionDatasetProvider::all();
         $targetScopes = config('speakready_scope');
         $targetScopes['job_positions'] = QuestionDatasetProvider::targetPositionOptionGroups($sourceDatasets);
-        $rememberedInterviewSetup = Schema::hasTable('interview_sessions')
-            ? InterviewSession::where('user_id', Auth::id())
-                ->whereNull('game_level_id')
-                ->whereIn('status', ['in_progress', 'processing', 'completed', 'ended'])
-                ->latest('updated_at')
-                ->latest('id')
-                ->first()
-            : null;
 
-        return mobile_view('interview.setup', compact('categories', 'sourceDatasets', 'targetScopes', 'rememberedInterviewSetup'));
+        return mobile_view('interview.setup', compact('categories', 'sourceDatasets', 'targetScopes'));
     })->name('interview.setup');
 
     Route::get('/interview/session', function () {
