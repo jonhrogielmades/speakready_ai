@@ -1272,7 +1272,7 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  ->assertViewHas('hasScoreData', false);
  }
 
- public function test_reports_use_scored_sessions_for_readiness_trends_without_unrelated_learning_totals(): void
+ public function test_reports_use_scored_sessions_for_readiness_summary_without_unrelated_learning_totals(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $job = $this->category('Job Interview');
@@ -1289,8 +1289,8 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  ->assertSee('85%')
  ->assertSee('+15%')
  ->assertSee('Performance Comparison')
- ->assertSee('Readiness Score Trend')
- ->assertSee('Scenario Performance')
+ ->assertDontSee('Readiness Score Trend')
+ ->assertDontSee('Scenario Performance')
  ->assertDontSee('+13%')
  ->assertDontSee('Learning Progress Report')
  ->assertDontSee('Achievement Report')
@@ -1304,22 +1304,16 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  && $summary->previous === 70
  && $summary->delta === 15;
  })
- ->assertViewHas('scoreTrend', function ($trend) {
- return $trend->pluck('score')->all() === [50, 70, 85];
- })
- ->assertViewHas('categoryPerf', function ($categoryPerf) {
- return $categoryPerf === [
- 'Job Interviews' => 68,
- ];
- })
  ->assertViewHas('latestPerformanceMetrics', function ($metrics) {
  $labels = collect($metrics)->pluck('name');
 
  return! $labels->contains('Speaking Steadiness');
- });
+ })
+ ->assertViewMissing('scoreTrend')
+ ->assertViewMissing('categoryPerf');
  }
 
- public function test_reports_show_report_summary_question_analysis_improvements_and_exports(): void
+ public function test_reports_show_summary_score_breakdown_and_hide_removed_report_sections(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('Technical');
@@ -1399,19 +1393,22 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  $response->assertOk()
  ->assertSee('Report Summary')
  ->assertSee('Detailed Score Breakdown')
- ->assertSee('Question-by-Question Analysis')
- ->assertSee('Mistakes &amp; Improvement Areas', false)
- ->assertSee('Download / Export Report')
  ->assertSee('Job Interviews')
  ->assertSee('Frontend Developer')
  ->assertSee('6m 5s')
- ->assertSee('Tell me about a project you built.')
- ->assertSee('How would you debug a slow page?')
- ->assertSee('The answer needs a clearer debugging sequence')
- ->assertSee('Question 2 scored below target')
- ->assertSee('Filler words detected')
- ->assertSee(route('user.sessions.export', $session), false)
- ->assertDontSee('Performance Comparison')
+ ->assertDontSee('Feedback Summary Report')
+ ->assertDontSee('Question-by-Question Analysis')
+ ->assertDontSee('Answer review')
+ ->assertDontSee('Mistakes &amp; Improvement Areas', false)
+ ->assertDontSee('Priority fixes')
+ ->assertDontSee('Download / Export Report')
+ ->assertDontSee('Export options')
+ ->assertDontSee('Tell me about a project you built.')
+ ->assertDontSee('How would you debug a slow page?')
+ ->assertDontSee('The answer needs a clearer debugging sequence')
+ ->assertDontSee('Question 2 scored below target')
+ ->assertDontSee('Filler words detected')
+ ->assertDontSee(route('user.sessions.export', $session), false)
  ->assertDontSee('Readiness Score Trend')
  ->assertDontSee('Scenario Performance')
  ->assertDontSee('Learning Progress Report')
@@ -1422,14 +1419,14 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  && $summary->final_score === 74
  && $summary->target_role === 'Frontend Developer'
  && $summary->questions === 2)
- ->assertViewHas('questionReviews', fn ($reviews) => $reviews->count() === 2
- && $reviews->last()->score === 48
- && $reviews->last()->status_label === 'Partially answered')
- ->assertViewHas('improvementAreas', fn ($areas) => $areas->contains(fn ($area) => $area->issue === 'Question 2 scored below target')
- && $areas->contains(fn ($area) => $area->issue === 'Filler words detected'));
+ ->assertViewMissing('questionReviews')
+ ->assertViewMissing('improvementAreas')
+ ->assertViewMissing('feedbackSummary')
+ ->assertViewMissing('scoreTrend')
+ ->assertViewMissing('categoryPerf');
  }
 
- public function test_reports_use_saved_feedback_text_assets_and_export_controls_on_desktop_and_mobile(): void
+ public function test_reports_hide_saved_feedback_assets_and_export_controls_on_desktop_and_mobile(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('BPO / Customer Support');
@@ -1468,31 +1465,31 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  ->assertSee('css/desktop/user/reports-2.css?v=15', false)
  ->assertSee('data-page-style="user-reports"', false)
  ->assertSee('reports-hero-art', false)
- ->assertSee('report-feedback-box', false)
- ->assertSee('report-question-toggle', false)
- ->assertSee('data-bs-toggle="collapse"', false)
- ->assertSee('report-question-insight', false)
- ->assertSee('report-panel-kicker', false)
- ->assertSee('report-improvement-title', false)
- ->assertSee('report-export-choice-title', false)
- ->assertSee('Clear customer empathy')
- ->assertSee('Needs tighter closing')
- ->assertSee('Close with one measurable result')
- ->assertSee('id="exportPdfBtn"', false)
- ->assertSee('id="exportExcelBtn"', false)
- ->assertSee('id="reportExportStatus"', false)
- ->assertSee('const hasReportFinalScore', false)
- ->assertSee(route('user.sessions.export', $session), false)
- ->assertDontSee('Performance Comparison')
+ ->assertDontSee('Feedback Summary Report')
+ ->assertDontSee('Question-by-Question Analysis')
+ ->assertDontSee('Mistakes &amp; Improvement Areas', false)
+ ->assertDontSee('Download / Export Report')
+ ->assertDontSee('report-feedback-box', false)
+ ->assertDontSee('report-question-toggle', false)
+ ->assertDontSee('report-question-insight', false)
+ ->assertDontSee('report-panel-kicker', false)
+ ->assertDontSee('report-improvement-title', false)
+ ->assertDontSee('report-export-choice-title', false)
+ ->assertDontSee('Clear customer empathy')
+ ->assertDontSee('Needs tighter closing')
+ ->assertDontSee('Close with one measurable result')
+ ->assertDontSee('id="exportPdfBtn"', false)
+ ->assertDontSee('id="exportExcelBtn"', false)
+ ->assertDontSee('id="reportExportStatus"', false)
+ ->assertDontSee('const hasReportFinalScore', false)
+ ->assertDontSee(route('user.sessions.export', $session), false)
  ->assertDontSee('Learning Progress Report')
  ->assertDontSee('Achievement Report')
  ->assertDontSee('Skill Analysis Report')
  ->assertDontSee('Clear Sessions')
- ->assertViewHas('feedbackSummary', fn ($summary) => $summary
- && $summary->has_data === true
- && in_array('Clear customer empathy.', $summary->strengths, true)
- && in_array('Needs tighter closing.', $summary->weaknesses, true)
- && in_array('Close with one measurable result.', $summary->suggestions, true));
+ ->assertViewMissing('feedbackSummary')
+ ->assertViewMissing('questionReviews')
+ ->assertViewMissing('improvementAreas');
 
  $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
@@ -1502,15 +1499,18 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  ->assertSee('css/mobile/user/reports-2.css?v=9', false)
  ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('reports-hero-art', false)
- ->assertSee('report-feedback-box', false)
- ->assertSee('report-question-toggle', false)
- ->assertSee('data-bs-toggle="collapse"', false)
- ->assertSee('report-question-insight', false)
- ->assertSee('report-panel-kicker', false)
- ->assertSee('report-improvement-title', false)
- ->assertSee('report-export-choice-title', false)
- ->assertSee('Clear customer empathy')
- ->assertSee('Close with one measurable result')
+ ->assertDontSee('Feedback Summary Report')
+ ->assertDontSee('Question-by-Question Analysis')
+ ->assertDontSee('Mistakes &amp; Improvement Areas', false)
+ ->assertDontSee('Download / Export Report')
+ ->assertDontSee('report-feedback-box', false)
+ ->assertDontSee('report-question-toggle', false)
+ ->assertDontSee('report-question-insight', false)
+ ->assertDontSee('report-panel-kicker', false)
+ ->assertDontSee('report-improvement-title', false)
+ ->assertDontSee('report-export-choice-title', false)
+ ->assertDontSee('Clear customer empathy')
+ ->assertDontSee('Close with one measurable result')
  ->assertDontSee('Learning Progress Report')
  ->assertDontSee('Achievement Report')
  ->assertDontSee('Skill Analysis Report')
@@ -1546,8 +1546,8 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  $this->actingAs($user)
  ->get(route('user.reports'))
  ->assertOk()
- ->assertSee('typeof window.html2pdf!== \'function\'', false)
- ->assertSee('!window.XLSX', false);
+ ->assertDontSee('typeof window.html2pdf!== \'function\'', false)
+ ->assertDontSee('!window.XLSX', false);
  }
 
  private function category(string $title): Category

@@ -1506,144 +1506,6 @@ class UserController extends Controller
  ];
  }
 
- private function interviewReportQuestionReviewsFor(?InterviewSession $session)
- {
- if (! $session ||! $session->relationLoaded('answers')) {
- return collect();
- }
-
- return $session->answers
- ->values()
- ->map(function ($answer, int $index) use ($session) {
- $score = is_numeric($answer->score?? null)? max(0, min(100, (int) round($answer->score))): null;
- $coachingFeedback = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
- $alignmentStatus = trim((string) data_get($coachingFeedback, 'content_alignment.status', ''));
- $alignmentLabel = trim((string) data_get($coachingFeedback, 'content_alignment.status_label', ''));
- $alignmentLabel = $alignmentLabel!== ''? $alignmentLabel: match ($alignmentStatus) {
- 'directly_answered' => 'Directly answered',
- 'partially_answered' => 'Partially answered',
- 'low_relevance' => 'Low relevance',
- 'insufficient_evidence' => 'Needs more evidence',
- 'not_evaluated' => 'Not evaluated',
- 'skipped' => 'Skipped',
- default => '',
- };
- $whatWorked = trim((string) data_get($coachingFeedback, 'content_alignment.what_worked', ''));
- $improvementFocus = trim((string) data_get($coachingFeedback, 'content_alignment.improvement_focus', ''));
- $alignmentAction = trim((string) data_get($coachingFeedback, 'content_alignment.action', ''));
- $priorityAction = $this->feedbackCenterAnswerPriorityText($answer);
- $feedback = trim((string) ($answer->ai_feedback?? ''));
- $recommendation = trim((string) ($answer->recommendation_text?? ''));
- $revision = trim((string) ($answer->better_sample_answer?? ''));
- $answerText = trim((string) ($answer->answer_text?? ''));
- $hasVoiceRecording = trim((string) ($answer->voice_recording_path?? ''))!== '';
- $responseMode = strtolower((string) ($answer->response_mode?? ''));
- $isVoiceOnlyAnswer = $hasVoiceRecording && $responseMode === 'voice';
-
- $strength = $whatWorked;
- if ($strength === '') {
- $strength = $score!== null && $score >= 80? 'Strong answer quality for this question.': 'Answer captured for review.';
- }
-
- $improvement = collect([$recommendation, $alignmentAction, $improvementFocus, $priorityAction, $revision])
- ->first(fn ($item) => trim((string) $item)!== '');
-
- return (object) [
- 'number' => $index + 1,
- 'question' => trim((string) ($answer->question->question_text?? ''))?: 'Interview question '.($index + 1),
- 'answer' => $isVoiceOnlyAnswer? 'Voice answer recorded for feedback.': ($answerText!== ''? Str::limit($answerText, 260): ($hasVoiceRecording? 'Voice answer recorded. Open the detailed review to listen.': 'No answer text recorded.')),
- 'score' => $score,
- 'score_label' => $answer->is_skipped? 'Skipped': ($score === null? 'Not scored': $score.'%'),
- 'score_color' => $answer->is_skipped? '#ef4444': $this->reportScoreColor($score),
- 'status_label' => $answer->is_skipped? 'Skipped': ($alignmentLabel?: ($score === null? 'Pending review': 'Reviewed')),
- 'strength' => Str::limit($strength, 170),
- 'feedback' => Str::limit($feedback!== ''? $feedback: ($priorityAction?: 'No feedback was generated for this answer.'), 190),
- 'improvement' => Str::limit($improvement?: 'Use a direct opening, one specific example, and a clear result.', 190),
- 'review_url' => route('user.review', $session->id),
- 'has_voice_recording' => $hasVoiceRecording,
- 'is_voice_only_answer' => $isVoiceOnlyAnswer,
- 'voice_recording_url' => $hasVoiceRecording? route('interview.answer.voiceRecording', $answer): null,
- ];
- });
- }
-
- private function interviewReportImprovementAreasFor(?InterviewSession $session, object $feedbackSummary, $questionReviews)
- {
- $areas = collect();
-
- foreach ($feedbackSummary->weaknesses as $weakness) {
- $areas->push((object) [
- 'issue' => $weakness.' needs attention',
- 'evidence' => 'This metric is below the strong-performance range in the latest score breakdown.',
- 'fix' => 'Practice one answer focused only on '.Str::lower($weakness).' before the next interview.',
- 'color' => '#f59e0b',
- ]);
- }
-
- foreach ($questionReviews as $review) {
- if ($review->score!== null && $review->score < 70) {
- $areas->push((object) [
- 'issue' => 'Question '.$review->number.' scored below target',
- 'evidence' => $review->feedback,
- 'fix' => $review->improvement,
- 'color' => $review->score < 50? '#ef4444': '#f59e0b',
- ]);
- }
-
- if (in_array($review->status_label, ['Partially answered', 'Low relevance', 'Needs more evidence'], true)) {
- $areas->push((object) [
- 'issue' => 'Question '.$review->number.': '.$review->status_label,
- 'evidence' => $review->strength,
- 'fix' => $review->improvement,
- 'color' => $review->status_label === 'Low relevance'? '#ef4444': '#f59e0b',
- ]);
- }
- }
-
- if ($session && $session->relationLoaded('answers')) {
- foreach ($session->answers as $index => $answer) {
- $number = $index + 1;
-
- if ($answer->is_skipped) {
- $areas->push((object) [
- 'issue' => 'Question '.$number.' was skipped',
- 'evidence' => 'Skipped answers reduce the usefulness of the report and limit feedback quality.',
- 'fix' => 'Retry the question with a short, direct answer even if you are unsure.',
- 'color' => '#ef4444',
- ]);
- }
-
- if ((int) ($answer->filler_words_count?? 0) > 0) {
- $areas->push((object) [
- 'issue' => 'Filler words detected',
- 'evidence' => 'Question '.$number.' recorded '.(int) $answer->filler_words_count.' possible filler word matches.',
- 'fix' => 'Pause for one beat before answering, then speak in shorter sentences.',
- 'color' => '#f59e0b',
- ]);
- }
-
- $starAnalysis = is_array($answer->star_analysis?? null)? $answer->star_analysis: [];
- $missingStarParts = collect(['situation', 'task', 'action', 'result'])
- ->filter(fn ($part) => array_key_exists($part, $starAnalysis) &&! (bool) $starAnalysis[$part])
- ->map(fn ($part) => ucfirst($part))
- ->values();
- if ($missingStarParts->isNotEmpty()) {
- $areas->push((object) [
- 'issue' => 'Missing STAR details',
- 'evidence' => 'Question '.$number.' is missing: '.$missingStarParts->implode(', ').'.',
- 'fix' => trim((string) ($starAnalysis['suggestion']?? 'Add the missing STAR parts and end with a measurable result.')),
- 'color' => '#8b5cf6',
- ]);
- }
- }
- }
-
- return $areas
- ->unique(fn ($area) => $area->issue.'|'.$area->evidence)
- ->take(8)
- ->values();
- }
-
  private function skillComparisonFor($sessions): array
  {
  if ($sessions->count() < 2) {
@@ -3760,12 +3622,15 @@ class UserController extends Controller
  }
 
  $requestedCategory =! empty($validated['category_id'])? Category::where('status', 'active')->where('type', 'game')->find((int) $validated['category_id']): null;
- $journey = $challengeGenerator->ensureAiJourneyForPosition($requestedCategory, $position);
+ $journey = $challengeGenerator->savedJourneyForPosition($requestedCategory, $position)
+ ?? $challengeGenerator->ensureAiJourneyForPosition($requestedCategory, $position);
  $journeyCategory = $journey['category'];
 
  $request->session()->put('learning_challenge_category_id', $journeyCategory->id);
 
- $message = (int) ($journey['created_count']?? 0) > 0? "Generated {$journey['created_count']} AI challenge level(s) for {$position}.": "Showing interview challenges for {$position}.";
+ $message = (int) ($journey['created_count']?? 0) > 0
+ ? "Generated and saved {$journey['created_count']} AI challenge level(s) for {$position} in Admin."
+ : "Showing saved admin interview challenges for {$position}.";
 
  return redirect()
  ->route('user.learning', ['category_id' => $journeyCategory->id])
@@ -3831,29 +3696,12 @@ class UserController extends Controller
  $latestSession = $scoredSessions->last();
  $firstSession = $scoredSessions->first();
  $previousSession = $scoredSessions->count() > 1? $scoredSessions[$scoredSessions->count() - 2]: null;
- if ($latestSession) {
- $latestSession->load([
- 'feedback',
- 'answers' => function ($query) {
- $query->whereNull('retry_of_answer_id')
- ->with('question')
- ->orderBy('id');
- },
- ]);
- }
-
  $hasScoreData = $scoredSessions->isNotEmpty();
  $readinessSummary = $this->readinessSummaryFor($latestSession, $previousSession);
  $latestPerformanceMetrics = $this->scoreBreakdownFor($latestSession?->score);
  $comparisonRows = $this->scoreComparisonRowsFor($firstSession, $latestSession);
- $feedbackSummary = $this->skillSummaryFor($latestSession?->score, $latestSession?->feedback);
  $latestScenarioLabel = $this->practiceScenarioLabel($latestSession);
  $reportSummary = $this->interviewReportSummaryFor($latestSession, $readinessSummary, $latestScenarioLabel);
- $questionReviews = $this->interviewReportQuestionReviewsFor($latestSession);
- $improvementAreas = $this->interviewReportImprovementAreasFor($latestSession, $feedbackSummary, $questionReviews);
-
- $scoreTrend = $this->scoreTrendFor($scoredSessions);
- $categoryPerf = $this->categoryPerformanceFor($scoredSessions);
 
  return $this->mobileView('user.reports', compact(
  'user',
@@ -3866,12 +3714,7 @@ class UserController extends Controller
  'reportSummary',
  'readinessSummary',
  'latestPerformanceMetrics',
- 'questionReviews',
- 'improvementAreas',
  'comparisonRows',
- 'feedbackSummary',
- 'scoreTrend',
- 'categoryPerf',
  'latestScenarioLabel'
  ));
  }
@@ -4429,11 +4272,19 @@ class UserController extends Controller
  $user->save();
  }
 
+ $createdCount = 0;
+ $usedAi = false;
+
+ if (! $this->hasPublishedModulesForPosition($position)) {
  $generation = $moduleGenerator->ensureAiModulesForPosition($position);
  $createdCount = (int) ($generation['created_count']?? 0);
  $createdCount += $this->ensureFastRoleModuleTopUp($position);
  $usedAi = (bool) ($generation['used_ai']?? false);
- $message = $createdCount > 0? ($usedAi? "Generated {$createdCount} role-specific learning module(s) for {$position}.": "Generated {$createdCount} role-specific learning module(s) for {$position} with reliable fallback content while the AI provider was unavailable."): "Showing interview modules for {$position}.";
+ }
+
+ $message = $createdCount > 0
+ ? ($usedAi? "Generated and saved {$createdCount} role-specific learning module(s) for {$position} in Admin.": "Generated and saved {$createdCount} role-specific learning module(s) for {$position} in Admin with reliable fallback content while the AI provider was unavailable.")
+ : "Showing saved admin interview modules for {$position}.";
 
  $redirectParams = collect([
  'category' => (string) Str::of((string) ($validated['category']?? ''))->squish()->limit(120, ''),
@@ -4445,6 +4296,14 @@ class UserController extends Controller
  return redirect()
  ->route('user.modules.index', $redirectParams)
  ->with('success', $message);
+ }
+
+ private function hasPublishedModulesForPosition(string $position): bool
+ {
+ $query = LearningModule::where('status', 'published');
+ $this->whereModulesRelatedToPosition($query, $position);
+
+ return $query->exists();
  }
 
  private function ensureFastRoleModuleTopUp(string $position, int $targetCount = 6): int

@@ -276,9 +276,9 @@ class PageSmokeTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.reports'))
  ->assertOk()
- ->assertSee('id="exportPdfBtn"', false)
- ->assertSee('id="exportExcelBtn"', false)
- ->assertSee(route('user.sessions.export', $session), false)
+ ->assertDontSee('id="exportPdfBtn"', false)
+ ->assertDontSee('id="exportExcelBtn"', false)
+ ->assertDontSee(route('user.sessions.export', $session), false)
  ->assertSee(route('interview.setup'), false);
 
  $this->actingAs($user)

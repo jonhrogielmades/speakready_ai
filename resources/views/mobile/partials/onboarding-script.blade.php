@@ -931,17 +931,17 @@
             if (routeMatches(routeName, ['user.reports'])) {
                 return withDefaults({
                     heroTitle: 'Interview reports',
-                    heroDescription: 'Reports turn completed scored interviews into readiness summaries, question review, improvement themes, and exports.',
+                    heroDescription: 'Reports turn completed scored interviews into readiness summaries, score breakdowns, and performance comparisons.',
                     workspaceTitle: 'Report sections',
-                    workspaceDescription: 'Read the summary, comparison, feedback, question analysis, and interview-prep recommendations for the latest report.',
-                    metricsTitle: 'Question and improvement details',
-                    metricsDescription: 'Use question review and improvement areas to see what worked, what was missing, and what to practice next.',
-                    actionsTitle: 'Export tools',
-                    actionsDescription: 'Download PDF, Excel, or CSV files, or print the report for job interview review.',
+                    workspaceDescription: 'Read the summary, detailed score breakdown, and first-versus-latest comparison for the latest scored interview.',
+                    metricsTitle: 'Score details',
+                    metricsDescription: 'Use the metric rows to see how each saved score contributes to the latest report.',
+                    actionsTitle: 'Start practice',
+                    actionsDescription: 'When no scored report exists yet, start an interview to generate one.',
                     heroSelectors: ['#portfolioReport .sr-page-hero', '#report-readiness'],
-                    workspaceSelectors: ['#report-feedback', '#report-comparison', '#report-learning'],
-                    metricsSelectors: ['#report-question-review', '#report-improvements', '#report-empty-state'],
-                    actionSelectors: ['#report-export', '.js-export-pdf', '.js-export-excel', '.js-print-report'],
+                    workspaceSelectors: ['#report-score-breakdown', '#report-comparison'],
+                    metricsSelectors: ['.report-score-list', '#report-empty-state'],
+                    actionSelectors: ['.report-start-btn'],
                 });
             }
 
