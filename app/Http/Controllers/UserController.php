@@ -3481,7 +3481,7 @@ class UserController extends Controller
  $recentSessions = (clone $completedSessions)
  ->with(['category', 'score'])
  ->orderBy('created_at', 'desc')
- ->paginate(6, ['*'], 'recent_sessions_page')
+ ->paginate(3, ['*'], 'recent_sessions_page')
  ->withQueryString();
 
  $scoredSessions = $this->scoredSessions($sessions);

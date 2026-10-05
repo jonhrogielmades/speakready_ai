@@ -40,7 +40,7 @@
                         $sessionScoreLabel = $sessionScore === null ? 'No score' : $sessionScore.'%';
                         $sessionColor = $sessionScore === null ? '#64748b' : ($sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444'));
                     @endphp
-                    <tr style="--session-score-color: {{ $sessionColor }};">
+                    <tr class="sr-session-table-row" data-recent-session-entry="desktop" style="--session-score-color: {{ $sessionColor }};">
                         <td>{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</td>
                         <td><span class="report-session-category-chip">{{ $session->category ? $session->category->title : 'Interview' }}</span></td>
                         <td><span class="report-session-score-value">{{ $sessionScoreLabel }}</span></td>
@@ -74,7 +74,7 @@
                 $sessionScoreLabel = $sessionScore === null ? 'No score' : $sessionScore.'%';
                 $sessionColor = $sessionScore === null ? '#64748b' : ($sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444'));
             @endphp
-            <div class="sr-session-card-polished">
+            <div class="sr-session-card-polished" data-recent-session-entry="mobile">
                 <div class="sr-session-icon"><i class="fa-solid fa-briefcase"></i></div>
                 <div class="sr-session-meta">
                     <div class="sr-session-title">{{ $session->category ? $session->category->title : 'Interview' }}</div>

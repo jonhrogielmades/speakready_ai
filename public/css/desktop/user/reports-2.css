@@ -3318,7 +3318,7 @@
 /* Reports and Sessions recent session card. */
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-card {
     margin-top: 24px !important;
-    padding: 28px !important;
+    padding: 24px !important;
     border-radius: 24px !important;
     overflow: hidden !important;
 }
@@ -3364,7 +3364,7 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-session-
     justify-content: flex-end !important;
     align-items: center !important;
     gap: 10px !important;
-    margin-bottom: 16px !important;
+    margin-bottom: 12px !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-session-actions form {
@@ -3388,16 +3388,17 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-session-
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-card .sr-sessions-table {
     border: 1px solid rgba(148, 163, 184, 0.2) !important;
     border-radius: 18px !important;
-    overflow: auto !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-card .sr-sessions-table table {
-    min-width: 680px !important;
+    min-width: 0 !important;
     table-layout: fixed !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-card .sr-sessions-table :is(th, td) {
-    padding: 14px 16px !important;
+    padding: 12px 14px !important;
     vertical-align: middle !important;
     overflow-wrap: anywhere !important;
 }
@@ -3413,8 +3414,8 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-card .sr-sessions-table td {
     color: var(--tx) !important;
-    font-size: 0.92rem !important;
-    line-height: 1.35 !important;
+    font-size: 0.88rem !important;
+    line-height: 1.3 !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-card .sr-sessions-table :is(th:nth-child(1), td:nth-child(1)) {
@@ -3437,12 +3438,12 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-session-
     display: inline-flex !important;
     align-items: center !important;
     max-width: 100% !important;
-    min-height: 28px !important;
-    padding: 6px 10px !important;
+    min-height: 26px !important;
+    padding: 5px 9px !important;
     border-radius: 999px !important;
     color: #2563eb !important;
     background: rgba(59, 130, 246, 0.1) !important;
-    font-size: 0.82rem !important;
+    font-size: 0.78rem !important;
     font-weight: 850 !important;
     line-height: 1.15 !important;
     overflow-wrap: anywhere !important;
@@ -3465,17 +3466,17 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-row-
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-review-table {
-    min-height: 36px !important;
-    padding: 7px 12px !important;
+    min-height: 34px !important;
+    padding: 7px 11px !important;
     border-radius: 10px !important;
     font-size: 0.82rem !important;
     line-height: 1.2 !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-delete-table {
-    width: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
     padding: 0 !important;
     border-radius: 10px !important;
     color: #ef4444 !important;
@@ -3492,7 +3493,7 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-sessi
     align-items: center !important;
     justify-content: flex-end !important;
     gap: 10px !important;
-    margin-top: 16px !important;
+    margin-top: 12px !important;
     flex-wrap: wrap !important;
 }
 
@@ -3529,8 +3530,29 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-page-
 
 @media (max-width: 767.98px) {
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-card {
-        padding: 18px !important;
+        padding: 14px !important;
         border-radius: 18px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-header {
+        gap: 10px !important;
+        margin-bottom: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-icon {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        border-radius: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-title {
+        font-size: 0.98rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-sessions-subtitle {
+        font-size: 0.76rem !important;
+        line-height: 1.28 !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .report-session-actions,
@@ -3545,24 +3567,24 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-page-
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-sessions-mobile {
         display: grid !important;
-        gap: 12px !important;
+        gap: 10px !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-card-polished {
         display: grid !important;
-        grid-template-columns: 42px minmax(0, 1fr) auto !important;
-        gap: 10px !important;
+        grid-template-columns: 36px minmax(0, 1fr) 38px !important;
+        gap: 8px !important;
         align-items: center !important;
-        padding: 12px !important;
-        border: 1px solid rgba(148, 163, 184, 0.2) !important;
-        border-radius: 16px !important;
+        padding: 10px !important;
+        border: 1px solid rgba(148, 163, 184, 0.22) !important;
+        border-radius: 14px !important;
         background: rgba(148, 163, 184, 0.06) !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-icon {
-        width: 42px !important;
-        height: 42px !important;
-        border-radius: 12px !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 11px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -3576,34 +3598,34 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-page-
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-title {
         color: var(--tx) !important;
-        font-size: 0.92rem !important;
+        font-size: 0.82rem !important;
         font-weight: 900 !important;
-        line-height: 1.25 !important;
+        line-height: 1.18 !important;
         overflow-wrap: anywhere !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-date {
-        margin-top: 3px !important;
+        margin-top: 2px !important;
         color: var(--tx3) !important;
-        font-size: 0.78rem !important;
+        font-size: 0.68rem !important;
         font-weight: 700 !important;
-        line-height: 1.2 !important;
+        line-height: 1.15 !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-score-stack {
         grid-column: 2 / 4 !important;
         display: grid !important;
-        gap: 6px !important;
+        gap: 5px !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-score-pill {
         color: var(--score-color) !important;
-        font-size: 0.84rem !important;
+        font-size: 0.75rem !important;
         font-weight: 900 !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-score-bar {
-        height: 8px !important;
+        height: 6px !important;
         border-radius: 999px !important;
         overflow: hidden !important;
         background: rgba(148, 163, 184, 0.2) !important;
@@ -3619,8 +3641,10 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-page-
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-review-btn {
         grid-column: 1 / 3 !important;
-        min-height: 38px !important;
+        min-height: 34px !important;
         justify-content: center !important;
+        border-radius: 10px !important;
+        font-size: 0.76rem !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-card-polished > form {
@@ -3629,16 +3653,34 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-page-
     }
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-delete-btn {
-        width: 40px !important;
-        min-width: 40px !important;
-        min-height: 38px !important;
+        width: 38px !important;
+        min-width: 38px !important;
+        min-height: 34px !important;
         padding: 0 !important;
         color: #ef4444 !important;
         border-color: rgba(239, 68, 68, 0.34) !important;
+        border-radius: 10px !important;
     }
 
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-session-pager {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        justify-content: stretch !important;
+        gap: 8px !important;
+        margin-top: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-page-status {
+        grid-column: 1 / -1 !important;
+        order: -1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-page-btn,
+    html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-page-status {
         justify-content: center !important;
+        min-height: 36px !important;
+        padding: 8px 9px !important;
+        font-size: 0.76rem !important;
     }
 }
 

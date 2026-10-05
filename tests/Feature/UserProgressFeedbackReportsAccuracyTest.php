@@ -1169,6 +1169,48 @@ public function test_detailed_review_uses_saved_sample_answer_without_openai_gen
  ->assertViewMissing('categoryPerf');
  }
 
+ public function test_reports_recent_sessions_are_limited_to_three_entries_with_previous_next_pagination(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('Account Management');
+
+ $oldest = $this->completedSessionFor($user, $category, 61, now()->subDays(4));
+ $third = $this->completedSessionFor($user, $category, 72, now()->subDays(3));
+ $second = $this->completedSessionFor($user, $category, 83, now()->subDays(2));
+ $newest = $this->completedSessionFor($user, $category, 94, now()->subDay());
+
+ $response = $this->actingAs($user)->get(route('user.reports'));
+
+ $response->assertOk()
+ ->assertSee('sr-recent-session-pager', false)
+ ->assertSee('Page 1 of 2')
+ ->assertSee('Previous')
+ ->assertSee('Next')
+ ->assertSee('recent_sessions_page=2', false)
+ ->assertViewHas('recentSessions', function ($recentSessions) use ($newest, $second, $third) {
+ return $recentSessions->perPage() === 3
+ && $recentSessions->currentPage() === 1
+ && $recentSessions->lastPage() === 2
+ && $recentSessions->total() === 4
+ && $recentSessions->getCollection()->pluck('id')->all() === [$newest->id, $second->id, $third->id];
+ });
+
+ $pageTwo = $this->actingAs($user)->get(route('user.reports', ['recent_sessions_page' => 2]));
+
+ $pageTwo->assertOk()
+ ->assertSee('Page 2 of 2')
+ ->assertSee('Previous')
+ ->assertSee('Next')
+ ->assertSee('recent_sessions_page=1', false)
+ ->assertViewHas('recentSessions', function ($recentSessions) use ($oldest) {
+ return $recentSessions->perPage() === 3
+ && $recentSessions->currentPage() === 2
+ && $recentSessions->lastPage() === 2
+ && $recentSessions->total() === 4
+ && $recentSessions->getCollection()->pluck('id')->all() === [$oldest->id];
+ });
+ }
+
  public function test_reports_show_summary_score_breakdown_and_hide_removed_report_sections(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -1318,7 +1360,7 @@ public function test_detailed_review_uses_saved_sample_answer_without_openai_gen
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/desktop/user/reports.css?v=2', false)
- ->assertSee('css/desktop/user/reports-2.css?v=18', false)
+ ->assertSee('css/desktop/user/reports-2.css?v=19', false)
  ->assertSee('data-page-style="user-reports"', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')
@@ -1352,7 +1394,7 @@ public function test_detailed_review_uses_saved_sample_answer_without_openai_gen
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/mobile/user/reports.css?v=2', false)
- ->assertSee('css/mobile/user/reports-2.css?v=12', false)
+ ->assertSee('css/mobile/user/reports-2.css?v=13', false)
  ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')
