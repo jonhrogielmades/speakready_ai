@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\AiProvider;
 use App\Models\Feedback;
+use App\Models\GameLevel;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\LearningModule;
@@ -693,13 +694,14 @@ public function test_feedback_center_uses_saved_feedback_without_openai_refresh_
  && $evidence->next_action->area === 'Start with one complete answer');
  }
 
- public function test_detailed_feedback_report_uses_concise_non_repeated_sections(): void
+ public function test_game_detailed_feedback_report_uses_concise_non_repeated_sections(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('BPO / Customer Support');
  $session = $this->completedSessionFor($user, $category, 74, now(), [
  'target_position' => 'Customer Support Representative',
  ]);
+ $this->markAsGameReview($session);
 
  Score::where('interview_session_id', $session->id)->update([
  'score_version' => \App\Services\TrustworthyAssessmentService::SCORE_VERSION,
@@ -826,9 +828,9 @@ public function test_feedback_center_uses_saved_feedback_without_openai_refresh_
  ->assertDontSee('AI Feedback', false);
  }
 
-public function test_detailed_review_uses_saved_feedback_without_openai_refresh_on_open(): void
+public function test_detailed_review_hides_saved_local_feedback_when_openai_is_unavailable(): void
 {
- Http::preventStrayRequests();
+ Http::fake(['*' => Http::response(['error' => 'provider unavailable'], 503)]);
 
  AiProvider::create([
  'name' => 'OpenAI',
@@ -879,19 +881,12 @@ public function test_detailed_review_uses_saved_feedback_without_openai_refresh_
  $response = $this->actingAs($user)->get(route('user.review', $session));
 
  $response->assertOk()
- ->assertSee('All Answer Review Summary')
- ->assertSee('Strengths')
- ->assertSee('Local answer review strength should not replace provider strengths.')
- ->assertSee('Weaknesses')
- ->assertSee('Local answer review gap should not replace provider weaknesses.')
- ->assertSee('Evidence & reliability', false)
- ->assertSee('Local evidence')
- ->assertSee('What Worked')
- ->assertSee('Local answer review strength should not replace provider strengths.')
- ->assertSee('What To Improve')
- ->assertSee('Local answer review gap should not replace provider weaknesses.')
- ->assertDontSee('OpenAI reviewed every saved answer')
- ->assertDontSee('OpenAI evidence');
+ ->assertSee('AI review pending')
+ ->assertSee($answerText)
+ ->assertDontSee('All Answer Review Summary')
+ ->assertDontSee('Local answer review strength should not replace provider strengths.')
+ ->assertDontSee('Local answer review gap should not replace provider weaknesses.')
+ ->assertDontSee('Local saved strength should be replaced.');
 
  $answer->refresh();
  $this->assertSame('local', $answer->ai_provider);
@@ -899,10 +894,10 @@ public function test_detailed_review_uses_saved_feedback_without_openai_refresh_
  $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
  $this->assertSame('Local saved strength should be replaced.', $feedback->strengths);
  $this->assertNull(data_get($feedback->coaching_summary, 'overall_summary_source'));
- Http::assertNothingSent();
+ Http::assertSent(fn ($request): bool => str_contains($request->url(), 'api.openai.com'));
 }
 
-public function test_detailed_review_uses_saved_sample_answer_without_openai_generation(): void
+public function test_game_detailed_review_uses_saved_sample_answer_without_openai_generation(): void
 {
  Http::preventStrayRequests();
 
@@ -920,6 +915,7 @@ public function test_detailed_review_uses_saved_sample_answer_without_openai_gen
  'status' => 'reviewed',
  'target_position' => 'Customer Support Representative',
  ]);
+ $this->markAsGameReview($session);
 
  Feedback::create([
  'interview_session_id' => $session->id,
@@ -968,13 +964,14 @@ public function test_detailed_review_uses_saved_sample_answer_without_openai_gen
  Http::assertNothingSent();
 }
 
- public function test_detailed_review_cleans_overall_review_feedback_but_shows_answer_review_question(): void
+ public function test_game_detailed_review_cleans_overall_review_feedback_but_shows_answer_review_question(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('Personal');
  $session = $this->completedSessionFor($user, $category, 63, now(), [
  'target_position' => 'Customer Service Representative',
  ]);
+ $this->markAsGameReview($session);
  $leakedPrompt = 'Good morning! Thank you for joining me today. I would like to start by asking you to introduce yourself, including your name, where you currently reside, and a bit about your background.';
 
  Feedback::create([
@@ -1360,7 +1357,7 @@ public function test_detailed_review_uses_saved_sample_answer_without_openai_gen
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/desktop/user/reports.css?v=2', false)
- ->assertSee('css/desktop/user/reports-2.css?v=20', false)
+ ->assertSee('css/desktop/user/reports-2.css?v=21', false)
  ->assertSee('data-page-style="user-reports"', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')
@@ -1416,14 +1413,7 @@ public function test_detailed_review_uses_saved_sample_answer_without_openai_gen
 
  $export = $this->actingAs($user)->get(route('user.sessions.export', $session));
 
- $export->assertOk()
- ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
-
- $csv = $export->streamedContent();
- $this->assertStringContainsString('Customer Support Representative', $csv);
- $this->assertStringContainsString('How do you recover a frustrated customer?', $csv);
- $this->assertStringContainsString('Strong recovery structure.', $csv);
- $this->assertStringContainsString('88', $csv);
+ $export->assertStatus(409);
  }
 
  public function test_progress_uses_local_charts_and_reports_exports_are_guarded_when_cdn_scripts_are_unavailable(): void
@@ -1456,6 +1446,16 @@ public function test_detailed_review_uses_saved_sample_answer_without_openai_gen
  'status' => 'active',
  'type' => 'core',
  ]);
+ }
+
+ private function markAsGameReview(InterviewSession $session): void
+ {
+ $level = GameLevel::create([
+ 'category_id' => $session->category_id,
+ 'level_number' => (int) $session->id,
+ 'title' => 'Review layout fixture',
+ ]);
+ $session->forceFill(['game_level_id' => $level->id])->save();
  }
 
  private function completedSessionFor(User $user, Category $category,?int $score, $createdAt, array $overrides = []): InterviewSession

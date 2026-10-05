@@ -156,8 +156,7 @@ class PageSmokeTest extends TestCase
  ->assertRedirect(route('user.coach'));
 
  $export = $this->actingAs($user)->get(route('user.sessions.export', $session));
- $export->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
- $this->assertStringContainsString('Describe a difficult project.', $export->streamedContent());
+ $export->assertStatus(409);
 
  $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $this->actingAs($otherUser)

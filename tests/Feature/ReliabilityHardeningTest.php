@@ -935,6 +935,10 @@ class ReliabilityHardeningTest extends TestCase
  Http::assertSentCount(1);
 
  $savedFeedbackText = $savedAnswer->ai_feedback;
+ $export = $this->actingAs($user)->get(route('user.sessions.export', $session));
+ $export->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+ $csvRows = array_map('str_getcsv', preg_split('/\r\n|\r|\n/', trim($export->streamedContent())));
+ $this->assertSame($savedFeedbackText, $csvRows[1][11]);
  $savedScore = Score::where('interview_session_id', $session->id)->firstOrFail();
  $savedScore->forceFill([
  'score_version' => 0,
@@ -1125,6 +1129,14 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('AI review pending')
  ->assertDontSee('Local fallback feedback must stay hidden.');
 
+ $this->actingAs($user)
+ ->get(route('user.sessions.export', $session))
+ ->assertStatus(409);
+ $session->forceFill(['status' => 'reviewed'])->save();
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('AI review pending');
  $this->actingAs($user)
  ->get(route('user.sessions.export', $session))
  ->assertStatus(409);

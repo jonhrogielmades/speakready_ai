@@ -779,12 +779,12 @@ class UserController extends Controller
  ->firstOrFail();
 
  $coachingRepaired = false;
- $reviewPending = false;
  $sessionEndedEarly = $sessionRecord->status === 'ended'
  || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false);
- $reviewPending = ! $sessionEndedEarly && ! $sessionRecord->gameLevel && $sessionRecord->status !== 'completed';
+ $reviewPending = ! $sessionEndedEarly && ! $sessionRecord->gameLevel
+ && ! in_array($sessionRecord->status, ['completed', 'reviewed'], true);
 
- if (! $sessionEndedEarly && $sessionRecord->status === 'completed') {
+ if (! $sessionEndedEarly && in_array($sessionRecord->status, ['completed', 'reviewed'], true)) {
  $interviewController = app(InterviewController::class);
  if (! $sessionRecord->gameLevel) {
  try {
@@ -817,7 +817,6 @@ class UserController extends Controller
  'message' => $exception->getMessage(),
  ]);
  }
-
  }
  }
 
@@ -849,7 +848,8 @@ class UserController extends Controller
  abort_unless((int) $session->user_id === (int) Auth::id(), 403);
 
  $session->load(['category', 'score', 'feedback', 'answers.question']);
- if ($session->status === 'completed' && ! $session->game_level_id
+ if (! $session->game_level_id && $session->status !== 'ended'
+ && ($session->status === 'completed' || $session->score || $session->feedback)
  && ! app(InterviewController::class)->hasCompletedSessionProviderFeedback($session)) {
  abort(409, 'AI provider feedback is pending for this session.');
  }

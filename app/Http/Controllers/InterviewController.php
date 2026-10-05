@@ -918,7 +918,7 @@ return response()->json([
  }
 
  if ($session->status === 'completed') {
- if ($this->repairCompletedSessionFeedbackFromSavedData($session)) {
+ if ($gameLevel && $this->repairCompletedSessionFeedbackFromSavedData($session)) {
  $session->refresh()->load(['score', 'feedback']);
  }
 
@@ -1645,6 +1645,10 @@ return response()->json([
  return true;
  }
 
+ if (! $gameLevel && ! $session->game_level_id) {
+ return false;
+ }
+
  if (! $this->completedSessionFeedbackIsStale($session)) {
  return false;
  }
@@ -1662,7 +1666,7 @@ return response()->json([
  $session->loadMissing(['answers', 'score', 'feedback']);
  $answers = $session->answers->whereNull('retry_of_answer_id');
 
- return $session->status === 'completed'
+ return in_array($session->status, ['completed', 'reviewed'], true)
  && $session->score !== null
  && $session->feedback !== null
  && data_get($session->feedback->coaching_summary, 'overall_summary_source') === 'ai_provider_validated'
@@ -1736,7 +1740,7 @@ return response()->json([
 
  private function completedSessionShouldSyncFallbackWithProvider(InterviewSession $session, $gameLevel = null): bool
  {
- if ($session->status !== 'completed' || $gameLevel ||! SystemSettings::enabled('int_ai_eval', true)) {
+ if (! in_array($session->status, ['completed', 'reviewed'], true) || $gameLevel ||! SystemSettings::enabled('int_ai_eval', true)) {
  return false;
  }
 
