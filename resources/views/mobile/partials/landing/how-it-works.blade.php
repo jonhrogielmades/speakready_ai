@@ -18,7 +18,7 @@
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">2</div>
                         <h3 class="fs-5 fw-semibold mb-2">Set Your Interview Target</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Choose your role, category, difficulty, focus area, timer, resume details, and job context.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Choose your role, category, difficulty, focus area, timer, question types, and answer mode.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.2s">
@@ -45,8 +45,8 @@
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">6</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Track Progress And Share</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Follow readiness trends, reports, and private review links over time.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Track Progress</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Follow readiness trends and reports over time.</p>
                      </div>
                   </div>
                </div>

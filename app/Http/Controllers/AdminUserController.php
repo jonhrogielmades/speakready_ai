@@ -257,9 +257,6 @@ class AdminUserController extends Controller
         $retryAttemptCount = InterviewAnswer::whereNotNull('retry_of_answer_id')
             ->whereHas('interviewSession', fn ($query) => $query->where('user_id', $user->id))
             ->count();
-        $sharedReviewCount = InterviewSession::where('user_id', $user->id)
-            ->whereNotNull('share_token')
-            ->count();
 
         $learningProgress = LearningProgress::with('learningModule')
             ->where('user_id', $user->id)
@@ -342,22 +339,6 @@ class AdminUserController extends Controller
                 ];
             });
 
-        $sharedReviews = InterviewSession::with('category')
-            ->where('user_id', $user->id)
-            ->whereNotNull('share_token')
-            ->orderByDesc('updated_at')
-            ->take(5)
-            ->get()
-            ->map(function ($session) {
-                return [
-                    'session_id' => $session->id,
-                    'category' => $session->category?->title ?? 'Uncategorized',
-                    'is_public' => (bool) $session->is_public,
-                    'expires_at' => optional($session->share_expires_at)->format('M d, Y'),
-                    'updated' => optional($session->updated_at)->diffForHumans(),
-                ];
-            });
-
         $activities = ActivityLog::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->take(8)
@@ -416,7 +397,6 @@ class AdminUserController extends Controller
                 'coach_conversations' => $coachConversationCount,
                 'unlocked_perks' => $unlockedPerks->count(),
                 'retry_attempts' => $retryAttemptCount,
-                'shared_review_links' => $sharedReviewCount,
             ],
             'interviews' => $completedInterviews,
             'learning_progress' => $learningProgress,
@@ -425,7 +405,6 @@ class AdminUserController extends Controller
             'game_certificates' => $certificates,
             'unlocked_perks' => $unlockedPerks,
             'recent_retries' => $recentRetries,
-            'shared_reviews' => $sharedReviews,
             'activities' => $activities,
         ]);
     }

@@ -86,7 +86,6 @@ class PageSmokeTest extends TestCase
  route('user.modules.show', $module),
  route('user.skills'),
  route('user.review', $session),
- route('interview.review', $session),
  ];
 
  foreach ($routes as $url) {
@@ -130,6 +129,10 @@ class PageSmokeTest extends TestCase
  $this->assertStringContainsString('initInterviewSetupTour', $content);
  }
  }
+
+ $this->actingAs($user)
+ ->get(route('interview.review', $session))
+ ->assertRedirect(route('user.review', $session));
 
  $conversation = ChatbotConversation::create(['user_id' => $user->id, 'title' => 'Interview preparation']);
  ChatbotMessage::create([

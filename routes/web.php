@@ -9,7 +9,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\LegalPageController;
-use App\Http\Controllers\MentorReviewController;
 use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserMasteryController;
@@ -68,11 +67,6 @@ Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('a
 Route::get('/auth/google/login', [AuthController::class, 'redirectToGoogle'])->name('auth.google.login');
 Route::get('/auth/google/register', [AuthController::class, 'redirectToGoogleRegister'])->name('auth.google.register');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-
-// Public Shared Session Route
-Route::get('/shared/{token}', [InterviewController::class, 'sharedReview'])->name('shared.review');
-Route::post('/shared/{token}/unlock', [InterviewController::class, 'unlockSharedReview'])->name('shared.unlock');
-Route::post('/shared/{token}/mentor-comments', [MentorReviewController::class, 'store'])->name('shared.mentor-comments.store');
 
 // Contact Form Route
 Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
@@ -175,7 +169,6 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/interview/{id}/review', [InterviewController::class, 'review'])->name('interview.review');
     Route::get('/interview/answers/{answer}/voice-recording', [InterviewController::class, 'voiceRecording'])->name('interview.answer.voiceRecording');
     Route::post('/interview/answers/{answer}/retry', [InterviewController::class, 'retryAnswer'])->name('interview.answer.retry');
-    Route::post('/session/{id}/share', [InterviewController::class, 'toggleShare'])->name('interview.toggleShare');
 
     // User Side Features
     Route::get('/account', [UserController::class, 'account'])->name('user.account');

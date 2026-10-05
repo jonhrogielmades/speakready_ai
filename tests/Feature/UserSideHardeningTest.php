@@ -1590,31 +1590,6 @@ class UserSideHardeningTest extends TestCase
  );
  }
 
- public function test_public_shared_review_accepts_mentor_comment(): void
- {
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category();
- $session = $this->sessionFor($user, $category);
- $session->update([
- 'is_public' => true,
- 'share_token' => 'public-session-token',
- ]);
-
- $this->post(route('shared.mentor-comments.store', $session->share_token), [
- 'reviewer_name' => 'Mentor One',
- 'reviewer_email' => 'mentor@example.com',
- 'rating' => 5,
- 'comment' => 'Strong structure and clear examples. Keep tightening the measurable results.',
- ])
- ->assertRedirect(route('shared.review', $session->share_token));
-
- $this->assertDatabaseHas('mentor_review_comments', [
- 'interview_session_id' => $session->id,
- 'reviewer_name' => 'Mentor One',
- 'rating' => 5,
- ]);
- }
-
  public function test_interview_answer_recomputes_delivery_metrics_from_server_evidence(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -2045,7 +2020,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame('not_measured', data_get($savedAnswer->observation_data, 'delivery.status'));
  }
 
- public function test_interview_answer_cleans_adjacent_transcript_duplicates(): void
+ public function test_interview_answer_preserves_spoken_repetitions(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
@@ -2064,7 +2039,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertDatabaseHas('interview_answers', [
  'interview_session_id' => $session->id,
  'question_id' => $question->id,
- 'answer_text' => 'I led a migration and reduced downtime',
+ 'answer_text' => 'I led a migration I led a migration and reduced downtime downtime.',
  ]);
  }
 
@@ -2861,12 +2836,6 @@ class UserSideHardeningTest extends TestCase
  'action_plan',
  'is_archived',
  'flag_reason',
- 'share_token',
- 'share_expires_at',
- 'share_password_hash',
- 'share_permissions',
- 'share_hide_sensitive',
- 'is_public',
  'created_at',
  'updated_at',
  ] as $column) {

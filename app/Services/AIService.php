@@ -321,16 +321,6 @@ class AIService
  'log_modules' => ['feedback_generation'],
  ],
  [
- 'key' => 'mentor_review_commenting',
- 'label' => 'Mentor Review Commenting',
- 'group' => 'Review',
- 'connection' => 'Mapped with human review workflow',
- 'status' => 'mapped',
- 'icon' => 'fa-solid fa-user-check',
- 'description' => 'Human mentor or admin comments that sit beside AI feedback evidence.',
- 'log_modules' => ['feedback_generation'],
- ],
- [
  'key' => 'provider_evaluation',
  'label' => 'Provider Evaluation',
  'group' => 'Operations',

@@ -911,7 +911,7 @@
         if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return false;
         if (isUserNavigationFileOrDownloadPath(url.pathname)) return false;
 
-        var reloadPrefixes = ['/logout', '/login', '/register', '/auth/', '/shared/', '/admin'];
+        var reloadPrefixes = ['/logout', '/login', '/register', '/auth/', '/admin'];
         if (reloadPrefixes.some(function (prefix) { return url.pathname === prefix || url.pathname.startsWith(prefix); })) return false;
 
         var userPrefixes = [

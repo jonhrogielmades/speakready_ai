@@ -1222,7 +1222,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('height: var(--sr-visual-vh) !important', false)
             ->assertSee('css/mobile/style.css?v=33', false)
             ->assertSee('js/main.js?v=7', false)
-            ->assertSee('js/user-ui.js?v=21', false)
+            ->assertSee('js/user-ui.js?v=22', false)
             ->assertSee('body.user-mobile-shell #mob-header #mobFullscreenBtn', false)
             ->assertSee('display: inline-flex !important;', false)
             ->assertDontSee('body.user-mobile-shell #mob-header #mobFullscreenBtn {
@@ -1329,7 +1329,7 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('max-height: none !important;', $desktopSessionCss);
     }
 
-    public function test_voice_and_hybrid_interview_sessions_use_inline_transcript_field_without_manual_transcript_button(): void
+    public function test_voice_and_hybrid_interview_sessions_offer_saved_audio_playback_with_their_respective_answer_fields(): void
     {
         $user = User::factory()->create([
             'is_admin' => false,
@@ -1388,7 +1388,7 @@ class MobileLayoutTest extends TestCase
                     ->assertSee('pauseRecordingTimer();', false)
                     ->assertDontSee('recTimerSeconds++;', false)
                     ->assertSee('Recording ready - live transcript will appear in the answer box', false)
-                    ->assertSee('Recording stopped - transcript is ready to edit', false)
+                    ->assertSee('reconcileHybridTranscriptFromRecording', false)
                     ->assertSee('Full voice transcript added', false)
                     ->assertSee('await stopVoiceSessionRecorder();', false)
                     ->assertSee('async function transcribeVoiceSessionRecording', false)
@@ -1422,8 +1422,8 @@ class MobileLayoutTest extends TestCase
                         ->assertSee('class="answer-transcript-stage"', false)
                         ->assertSee('id="responseCountBar"', false)
                         ->assertSee('Speak your answer, then edit the transcript here if needed...', false)
-                        ->assertDontSee('id="voiceSessionPanel"', false)
-                        ->assertDontSee('<span>Download</span>', false);
+                        ->assertSee('id="voiceSessionPanel"', false)
+                        ->assertSee('<span>Download</span>', false);
                 }
             }
         }
@@ -1468,7 +1468,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=44', false)
+            ->assertSee('css/mobile/interview/session.css?v=50', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)

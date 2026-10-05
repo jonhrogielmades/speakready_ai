@@ -15,7 +15,7 @@ class LegalPageController extends Controller
             [
                 ['heading' => 'Information We Collect', 'body' => 'We collect the account details, contact form messages, interview setup details, practice answers, feedback records, and basic usage information needed to operate the service.'],
                 ['heading' => 'How We Use Information', 'body' => 'We use this information to authenticate users, run mock interviews, generate feedback, provide support, improve product quality, and protect the platform from abuse.'],
-                ['heading' => 'Sharing and Retention', 'body' => 'Interview records are private by default. Shared review links are controlled by the user settings available in the product. We keep information only as long as needed for the service, security, and legal requirements.'],
+                ['heading' => 'Access and Retention', 'body' => 'Interview records are tied to user accounts and access is checked by the application. We keep information only as long as needed for the service, security, and legal requirements.'],
                 ['heading' => 'Contact', 'body' => 'For privacy questions, contact admin@speakready.ai.'],
             ]
         );
@@ -41,10 +41,10 @@ class LegalPageController extends Controller
         return $this->render(
             'Security',
             'Security',
-            'How SpeakReady AI protects accounts, interview data, and shared reviews.',
+            'How SpeakReady AI protects accounts and interview data.',
             [
                 ['heading' => 'Account Protection', 'body' => 'Passwords are handled through the application authentication system, and password reset flows use secure reset links.'],
-                ['heading' => 'Private Records', 'body' => 'Interview records are private unless a user chooses to share a review link. Shared links can be protected by the options available in the product.'],
+                ['heading' => 'Private Records', 'body' => 'Interview records require account access, and the application checks session ownership before showing user reviews.'],
                 ['heading' => 'Operational Safeguards', 'body' => 'The platform validates user input, separates admin and user areas, and records important activity for support and audit needs.'],
                 ['heading' => 'Report an Issue', 'body' => 'Send security concerns to admin@speakready.ai with enough detail for the team to investigate.'],
             ]

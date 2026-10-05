@@ -912,7 +912,7 @@
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#6366f1;--feature-icon-bg:rgba(99,102,241,.14);--feature-icon-border:rgba(99,102,241,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-file-lines fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Reports</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Open scored interview reports, review summaries, and export or share practice results.</p>
+                        <p style="font-size:.85rem;color:var(--tx2)">Open scored interview reports, review summaries, and export practice results.</p>
                      </div>
                   </div>
                </div>
@@ -939,7 +939,7 @@
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">2</div>
                         <h3 class="fs-5 fw-semibold mb-2">Set Your Interview Target</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Choose your role, category, difficulty, focus area, timer, resume details, and job context.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Choose your role, category, difficulty, focus area, timer, question types, and answer mode.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.2s">
@@ -966,8 +966,8 @@
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">6</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Track Progress And Share</h3>
-                         <p style="font-size:.875rem;color:var(--tx2)">Follow readiness trends, reports, certificates, and private review links over time.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Track Progress</h3>
+                         <p style="font-size:.875rem;color:var(--tx2)">Follow readiness trends, reports, and certificates over time.</p>
                      </div>
                   </div>
                </div>
@@ -1054,7 +1054,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1" aria-expanded="true" aria-controls="f1">What is SpeakReady AI?</button></h2>
                            <div id="f1" class="accordion-collapse collapse show" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">SpeakReady AI is a role-focused interview practice system with AI mock interviews, role-based setup, learning modules, games, rubric feedback, progress tracking, reports, and private review sharing.</div>
+                              <div class="accordion-body">SpeakReady AI is a role-focused interview practice system with AI mock interviews, role-based setup, learning modules, games, rubric feedback, progress tracking, and reports.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
@@ -1066,19 +1066,19 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3" aria-expanded="false" aria-controls="f3">Is my data secure?</button></h2>
                            <div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                               <div class="accordion-body">Interview records are private by default. When you choose to share a review, you can set an expiry, optional password, reviewer permissions, and hide sensitive identity or interview context.</div>
+                               <div class="accordion-body">Interview records require account access. The application validates submitted data and checks that each user owns the session they open.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4" aria-expanded="false" aria-controls="f4">Can I practice multiple interview types?</button></h2>
                            <div id="f4" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Yes. You can practice job interviews, then adjust difficulty, focus area, timer, resume context, and role details.</div>
+                              <div class="accordion-body">Yes. You can practice job interviews, then adjust difficulty, focus area, timer, question types, and target role.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f5" aria-expanded="false" aria-controls="f5">What can I do after a practice session?</button></h2>
                            <div id="f5" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">You can review scores and coaching notes, revise weak answers, continue recommended lessons, play learning games, monitor readiness trends, generate reports, earn certificates, and share selected reviews privately.</div>
+                              <div class="accordion-body">You can review scores and coaching notes, study suggestions for weaker answers, continue recommended lessons, play learning games, monitor readiness trends, generate reports, and earn certificates.</div>
                            </div>
                         </div>
                      </div>
@@ -1183,7 +1183,7 @@
                         <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}" class="logo-i footer-logo">
                         <span>{{ $systemName ?? 'SpeakReady AI' }}</span>
                      </a>
-                     <p class="footer-copy">{{ $systemDescription ?? 'Your interview practice system for AI mock interviews, learning modules, progress reports, and private feedback sharing.' }}</p>
+                     <p class="footer-copy">{{ $systemDescription ?? 'Your interview practice system for AI mock interviews, learning modules, and progress reports.' }}</p>
                   </div>
                   <nav class="footer-nav-grid" aria-label="Footer navigation">
                      <div>

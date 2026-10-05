@@ -38,17 +38,10 @@ class InterviewSession extends Model
         'action_plan',
         'is_archived',
         'flag_reason',
-        'share_token',
-        'share_expires_at',
-        'share_password_hash',
-        'share_permissions',
-        'share_hide_sensitive',
-        'is_public',
     ];
 
     protected $casts = [
         'is_archived' => 'boolean',
-        'is_public' => 'boolean',
         'duration_seconds' => 'integer',
         'current_question_index' => 'integer',
         'num_questions' => 'integer',
@@ -56,9 +49,6 @@ class InterviewSession extends Model
         'action_plan' => 'array',
         'accommodation_profile' => 'array',
         'score_eligible' => 'boolean',
-        'share_expires_at' => 'datetime',
-        'share_permissions' => 'array',
-        'share_hide_sensitive' => 'boolean',
         'pressure_mode' => 'boolean',
     ];
 
@@ -150,15 +140,5 @@ class InterviewSession extends Model
     public function feedback()
     {
         return $this->hasOne(Feedback::class);
-    }
-
-    public function mentorReviewComments()
-    {
-        return $this->hasMany(MentorReviewComment::class);
-    }
-
-    public function shareIsActive(): bool
-    {
-        return $this->is_public && (!$this->share_expires_at || $this->share_expires_at->isFuture());
     }
 }

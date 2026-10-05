@@ -17,7 +17,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
 
         $this->assertStringContainsString('Um um um um', $cleaned);
         $this->assertStringContainsString('You know you know', $cleaned);
-        $this->assertStringContainsString('The result was verified.', $cleaned);
+        $this->assertStringContainsString('The result the result was verified.', $cleaned);
         $this->assertSame(6, TranscriptService::countFillerWords($cleaned));
     }
 

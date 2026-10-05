@@ -81,12 +81,6 @@ class InterviewSessionSchema
             $table->json('action_plan')->nullable();
             $table->boolean('is_archived')->default(false);
             $table->string('flag_reason')->nullable();
-            $table->string('share_token')->nullable()->unique();
-            $table->timestamp('share_expires_at')->nullable();
-            $table->string('share_password_hash')->nullable();
-            $table->json('share_permissions')->nullable();
-            $table->boolean('share_hide_sensitive')->default(true);
-            $table->boolean('is_public')->default(false);
             $table->timestamps();
         });
     }
@@ -177,24 +171,6 @@ class InterviewSessionSchema
         if (self::isMissing($missing, 'flag_reason')) {
             $table->string('flag_reason')->nullable();
         }
-        if (self::isMissing($missing, 'share_token')) {
-            $table->string('share_token')->nullable();
-        }
-        if (self::isMissing($missing, 'share_expires_at')) {
-            $table->timestamp('share_expires_at')->nullable();
-        }
-        if (self::isMissing($missing, 'share_password_hash')) {
-            $table->string('share_password_hash')->nullable();
-        }
-        if (self::isMissing($missing, 'share_permissions')) {
-            $table->json('share_permissions')->nullable();
-        }
-        if (self::isMissing($missing, 'share_hide_sensitive')) {
-            $table->boolean('share_hide_sensitive')->default(true);
-        }
-        if (self::isMissing($missing, 'is_public')) {
-            $table->boolean('is_public')->default(false);
-        }
         if (self::isMissing($missing, 'created_at')) {
             $table->timestamp('created_at')->nullable();
         }
@@ -267,12 +243,6 @@ class InterviewSessionSchema
             'action_plan',
             'is_archived',
             'flag_reason',
-            'share_token',
-            'share_expires_at',
-            'share_password_hash',
-            'share_permissions',
-            'share_hide_sensitive',
-            'is_public',
             'created_at',
             'updated_at',
         ];
@@ -298,8 +268,6 @@ class InterviewSessionSchema
             'duration_seconds' => 0,
             'current_question_index' => 0,
             'is_archived' => false,
-            'share_hide_sensitive' => true,
-            'is_public' => false,
         ];
     }
 

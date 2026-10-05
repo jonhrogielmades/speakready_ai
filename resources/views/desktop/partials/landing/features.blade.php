@@ -17,7 +17,7 @@
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(52,211,153,.15);color:#34d399"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">AI Mock Interviews</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Practice with a realistic AI interviewer using target role, difficulty, focus, resume context, and timed question settings.</p>
+                        <p style="font-size:.85rem;color:var(--tx2)">Practice with a realistic AI interviewer using target role, difficulty, focus, and timed question settings.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.1s">
@@ -65,8 +65,8 @@
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.45s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(14,165,233,.15);color:#0ea5e9"><i class="fa-solid fa-folder-open fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Reports &amp; Sharing</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Print detailed reviews and create expiring, password-protected links with reviewer permissions.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Reports &amp; Exports</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Review your progress, export session details as CSV, or print a detailed review.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.5s">

@@ -4,8 +4,6 @@ namespace App\Services;
 
 final class TranscriptService
 {
-    private const MAX_DUPLICATE_PHRASE_WORDS = 96;
-
     private const WORD_CORRECTIONS = [
         'i' => 'I',
         'im' => "I'm",
@@ -84,18 +82,16 @@ final class TranscriptService
         'vue' => 'Vue',
     ];
 
-    private const DUPLICATE_SAFE_WORDS = [
-        'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
-        'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like',
-    ];
-
     public static function clean(?string $transcript): string
     {
         $text = trim((string) $transcript);
         $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
         $text = self::correctWords($text);
 
-        return self::collapseAdjacentDuplicates($text);
+        // A repeated word or phrase can be exactly what the candidate said.
+        // Deduplicate overlapping live chunks at the chunk boundary instead of
+        // deleting adjacent speech from a complete transcript or typed answer.
+        return $text;
     }
 
     public static function correctWords(?string $transcript): string
@@ -183,38 +179,6 @@ final class TranscriptService
         };
     }
 
-    private static function collapseAdjacentDuplicates(string $text): string
-    {
-        $words = preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
-        if (! $words || count($words) < 2) {
-            return trim($text);
-        }
-
-        $index = 0;
-        while ($index < count($words)) {
-            $collapsed = false;
-            $maxWindow = min(self::MAX_DUPLICATE_PHRASE_WORDS, intdiv(count($words) - $index, 2));
-
-            for ($size = $maxWindow; $size >= 1; $size--) {
-                $first = self::phraseKey(array_slice($words, $index, $size));
-                $second = self::phraseKey(array_slice($words, $index + $size, $size));
-
-                if ($first !== '' && $first === $second && self::shouldCollapseDuplicate($size, $first)) {
-                    array_splice($words, $index + $size, $size);
-                    $index = max(0, $index - $size);
-                    $collapsed = true;
-                    break;
-                }
-            }
-
-            if (! $collapsed) {
-                $index++;
-            }
-        }
-
-        return trim(implode(' ', $words));
-    }
-
     private static function correctionKey(string $word): string
     {
         $normalized = str_replace("\xE2\x80\x99", "'", $word);
@@ -280,44 +244,5 @@ final class TranscriptService
         $upperFirst = function_exists('mb_strtoupper') ? mb_strtoupper($first, 'UTF-8') : strtoupper($first);
 
         return $upperFirst.$rest;
-    }
-
-    private static function phraseKey(array $words): string
-    {
-        $normalized = array_map(static function ($word): string {
-            $word = function_exists('mb_strtolower')
-                ? mb_strtolower((string) $word, 'UTF-8')
-                : strtolower((string) $word);
-
-            return preg_replace("/[^\p{L}\p{N}'\x{2019}]+/u", '', $word) ?? '';
-        }, $words);
-
-        return trim(implode(' ', array_filter($normalized, fn ($word) => $word !== '')));
-    }
-
-    private static function shouldCollapseDuplicate(int $wordCount, string $phraseKey): bool
-    {
-        // Repeated hesitation sounds and discourse markers can be genuine
-        // delivery evidence. Do not erase them while cleaning duplicated
-        // browser-recognition segments.
-        if (self::isFillerOnlyPhrase($phraseKey)) {
-            return false;
-        }
-
-        if ($wordCount >= 2) {
-            return true;
-        }
-
-        $characterCount = function_exists('mb_strlen') ? mb_strlen($phraseKey, 'UTF-8') : strlen($phraseKey);
-
-        return $characterCount > 2 || in_array($phraseKey, self::DUPLICATE_SAFE_WORDS, true);
-    }
-
-    private static function isFillerOnlyPhrase(string $phrase): bool
-    {
-        return preg_match(
-            '/^(?:(?:you know|i mean|sort of|kind of|um+|uh+|erm+|hmm+|like|actually|basically|literally)(?:\s+|$))+$/iu',
-            trim($phrase)
-        ) === 1;
     }
 }

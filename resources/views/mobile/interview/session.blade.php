@@ -60,6 +60,7 @@
   ][$assistanceLevelKey]?? 'Standard Assistance';
   $responseModeKey = strtolower((string) ($sessionRecord->response_mode?? 'text'));
   $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
+  $isVoiceResponseMode = in_array($responseModeKey, ['voice', 'hybrid', 'voice_and_text'], true);
   $interviewerAvatarImages = [
   'img/interviewers/Filipina_Interviewer_01.png',
   'img/interviewers/Filipina_Interviewer_02.png',
@@ -207,7 +208,7 @@
  <span id="autoSaveIndicator" class="text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
  </div>
 
- @if($isVoiceOnlyResponseMode)
+ @if($isVoiceResponseMode)
  <div id="voiceSessionPanel" class="voice-session-panel" hidden data-state="idle">
  <div class="voice-session-summary">
  <div class="voice-session-title">
@@ -549,6 +550,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  // Voice state and optional, non-scoring body-language state
  let recognition = null;
  let recognitionActive = false;
+ let browserRecognitionFinalizing = false;
+ let browserRecognitionStopResolver = null;
  let shouldAutoRestartRecognition = false;
  let isRecording = false;
  let isRecordingPaused = false;
@@ -559,6 +562,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let recordingStartPromise = null;
  let recordingStopPromise = null;
  let preRecordingText = '';
+ let recordingStartText = '';
+ let recordingManuallyEdited = false;
  let committedSpeechTranscript = '';
  let liveSpeechInterim = '';
  let lastCommittedSpeech = '';
@@ -631,7 +636,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const serverTranscriptionDrainTimeoutMs = {{ max(8000, min(60000, (int) config('services.ai_transcription.drain_timeout_ms', 20000))) }};
  const serverTranscriptionRequestTimeoutMs = {{ max(10000, min(60000, (int) config('services.ai_transcription.request_timeout_ms', 30000))) }};
  const voiceSessionTranscriptionMaxBytes = 25600 * 1024;
- const voiceSessionFullTranscriptionTimeoutMs = Math.max(serverTranscriptionRequestTimeoutMs, 60000);
+ const voiceSessionFullTranscriptionTimeoutMs = Math.max(serverTranscriptionRequestTimeoutMs, 120000);
  const serverTranscriptionMaxInFlight = {{ max(1, min(3, (int) config('services.ai_transcription.max_in_flight', 2))) }};
  const serverTranscriptionFailureLimit = 3;
  const serverTranscriptionSupported = serverTranscriptionEnabled
@@ -640,13 +645,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const displayRealtimeTranscriptInTextarea = true;
 
  let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null)): null;
- const duplicateSafeWordSet = new Set([
- 'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
- 'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
- ]);
- const transcriptDuplicatePhraseMaxWords = 96;
  const transcriptOverlapMaxWords = 240;
- const transcriptRecentDuplicateScanWords = 360;
  const voiceSessionRecordings = new Map();
  let voiceSessionRecorder = null;
  let voiceSessionStream = null;
@@ -807,45 +806,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return wordsForTranscript(value).map(normalizeTranscriptForMatch);
  }
 
- function normalizedWordsEqualAt(words, start, comparison) {
- for (let offset = 0; offset < comparison.length; offset++) {
- if (words[start + offset]!== comparison[offset]) {
- return false;
- }
- }
- return true;
- }
-
- function isRecentDuplicateTranscript(existingNormalized, additionNormalized) {
- if (additionNormalized.length === 0 || additionNormalized.length > existingNormalized.length) {
- return false;
- }
-
- const normalizedAddition = additionNormalized.join(' ');
- if (isFillerOnlySpeech(normalizedAddition)) {
- return false;
- }
-
- const additionChars = normalizedAddition.replace(/\s+/g, '').length;
- if (additionNormalized.length < 3 && additionChars < 12) {
- return false;
- }
-
- const scanSize = Math.min(
- existingNormalized.length,
- Math.max(transcriptRecentDuplicateScanWords, additionNormalized.length + transcriptOverlapMaxWords)
- );
- const scanStart = Math.max(0, existingNormalized.length - scanSize);
-
- for (let start = scanStart; start <= existingNormalized.length - additionNormalized.length; start++) {
- if (normalizedWordsEqualAt(existingNormalized, start, additionNormalized)) {
- return true;
- }
- }
-
- return false;
- }
-
  function appendWithoutOverlap(existing, addition) {
  const existingClean = cleanTranscriptText(existing);
  const additionClean = cleanTranscriptText(addition);
@@ -856,10 +816,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const additionWords = wordsForTranscript(additionClean);
  const existingNormalized = normalizedTranscriptWords(existingClean);
  const additionNormalized = normalizedTranscriptWords(additionClean);
- if (isRecentDuplicateTranscript(existingNormalized, additionNormalized)) {
- return existingClean;
- }
-
  const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, transcriptOverlapMaxWords);
  let overlap = 0;
 
@@ -876,49 +832,13 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return cleanTranscriptText(existingClean + (remainder? ' ' + remainder: ''));
  }
 
- function shouldCollapseDuplicateWindow(size, normalizedPhrase) {
- if (!normalizedPhrase) return false;
- if (isFillerOnlySpeech(normalizedPhrase)) {
- return false;
- }
- if (size >= 2) return true;
- return normalizedPhrase.length > 2 || duplicateSafeWordSet.has(normalizedPhrase);
- }
-
- function collapseRepeatedSpeech(text) {
- const words = wordsForTranscript(text);
- if (words.length < 2) return cleanTranscriptText(text);
-
- let index = 0;
- while (index < words.length) {
- let collapsed = false;
- const maxWindow = Math.min(transcriptDuplicatePhraseMaxWords, Math.floor((words.length - index) / 2));
-
- for (let size = maxWindow; size >= 1; size--) {
- const first = words.slice(index, index + size).map(normalizeTranscriptForMatch).join(' ');
- const second = words.slice(index + size, index + (size * 2)).map(normalizeTranscriptForMatch).join(' ');
-
- if (first && first === second && shouldCollapseDuplicateWindow(size, first)) {
- words.splice(index + size, size);
- index = Math.max(0, index - size);
- collapsed = true;
- break;
- }
- }
-
- if (!collapsed) index++;
- }
-
- return cleanTranscriptText(words.join(' '));
- }
-
  function mergeTranscriptParts(...parts) {
  let merged = '';
  parts.forEach(part => {
  const clean = cleanTranscriptText(part);
  if (clean) merged = appendWithoutOverlap(merged, clean);
  });
- return collapseRepeatedSpeech(merged);
+ return merged;
  }
 
  function bestSpeechAlternative(result) {
@@ -986,6 +906,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function handleAnswerInput() {
+ if (isHybridTranscriptionMode() && (isRecording || isRecordingPaused || recordingStopPromise || voiceSessionTranscriptPromise || voiceSessionRecordings.has(voiceSessionKeyFor()))) {
+ recordingManuallyEdited = true;
+ }
  syncSpeechRecognitionBufferFromManualEdit();
  triggerAnalysis();
  updateAnswerTranscriptionOverlay();
@@ -998,7 +921,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function commitSpeechSegment(segment) {
- const cleanSegment = stripInterviewerPromptEcho(collapseRepeatedSpeech(cleanTranscriptText(segment)));
+ const cleanSegment = stripInterviewerPromptEcho(cleanTranscriptText(segment));
  if (!cleanSegment) return false;
 
  const normalized = normalizeTranscriptForMatch(cleanSegment);
@@ -1011,10 +934,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  const appendSpeech = existing => fillerOnly? cleanTranscriptText(`${existing || ''} ${cleanSegment}`): appendWithoutOverlap(existing || '', cleanSegment);
  const answerState = answersData[currentQIdx] || defaultAnswerState();
- const nextCommittedTranscript = collapseRepeatedSpeech(appendSpeech(committedSpeechTranscript));
+ const nextCommittedTranscript = appendSpeech(committedSpeechTranscript);
  const shouldWriteLiveTranscript = displayRealtimeTranscriptInTextarea;
  const currentAnswerTranscript = cleanTranscriptText(answerState.speech_transcript);
- const nextAnswerTranscript = shouldWriteLiveTranscript? collapseRepeatedSpeech(appendSpeech(currentAnswerTranscript)): currentAnswerTranscript;
+ const nextAnswerTranscript = shouldWriteLiveTranscript? appendSpeech(currentAnswerTranscript): currentAnswerTranscript;
 
  if (!fillerOnly
  && normalizeTranscriptForMatch(nextCommittedTranscript) === normalizeTranscriptForMatch(committedSpeechTranscript)
@@ -1245,7 +1168,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const panel = document.getElementById('voiceSessionPanel');
  if (!panel) return;
 
- const shouldShow = isVoiceOnlyMode();
+ const shouldShow = isVoiceTranscriptionMode();
  panel.hidden =!shouldShow;
  if (!shouldShow) {
  updateVoiceSessionActionState(null);
@@ -1421,25 +1344,27 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  const answerState = answersData[currentQIdx] || defaultAnswerState();
- const generatedTranscript = cleanTranscriptText(answerState.speech_transcript || recording.transcript || '');
  const textarea = document.getElementById('answerTextarea');
  const currentText = textarea? String(textarea.value || ''): String(answerState.text || '');
+ const typedPrefix = String(recordingStartText || '').trim();
+ const generatedAnswer = [typedPrefix, cleanTranscriptText(recording.transcript || '')].filter(Boolean).join(' ');
  const canClearGeneratedText = isHybridTranscriptionMode()
- && generatedTranscript
- && normalizeTranscriptForMatch(currentText) === normalizeTranscriptForMatch(generatedTranscript);
+ && Boolean(recording.transcript)
+ &&!recordingManuallyEdited
+ && normalizeTranscriptForMatch(currentText) === normalizeTranscriptForMatch(generatedAnswer);
 
  clearVoiceSessionRecordingFor(key);
- answerState.speech_transcript = '';
  answerState.voice_duration = 0;
  answerState.wpm = 0;
  answerState.pronunciation_analysis = null;
 
  if (canClearGeneratedText) {
- if (textarea) textarea.value = '';
- answerState.text = '';
+ if (textarea) textarea.value = typedPrefix;
+ answerState.text = typedPrefix;
  } else {
  answerState.text = currentText;
  }
+ answerState.speech_transcript = isHybridTranscriptionMode()? cleanTranscriptText(answerState.text): '';
 
  answersData[currentQIdx] = answerState;
  resetSpeechRecognitionBufferFromTextarea();
@@ -1453,7 +1378,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  scheduleStateSave();
  }
 
- showSessionAlertModal(canClearGeneratedText? 'Voice session and generated transcript cleared.': 'Voice session cleared.', 'Voice Session Cleared', 'success');
+ const clearMessage = isVoiceOnlyMode()
+ ? 'Voice session cleared.'
+ : (canClearGeneratedText? 'Recording and generated transcript cleared. Your typed text was kept.': 'Recording cleared. Your answer text was kept.');
+ showSessionAlertModal(clearMessage, 'Voice Session Cleared', 'success');
  }
 
  function voiceSessionTranscriptionErrorMessage(error) {
@@ -1479,7 +1407,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (!existing) return transcript;
 
  if (previousSpeech && existing.includes(previousSpeech)) {
- return collapseRepeatedSpeech(cleanTranscriptText(existing.replace(previousSpeech, transcript)));
+ return cleanTranscriptText(existing.replace(previousSpeech, transcript));
  }
 
  const existingNorm = normalizeTranscriptForMatch(existing);
@@ -1504,11 +1432,15 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const answerState = answersData[index] || defaultAnswerState();
  const textarea = index === currentQIdx? document.getElementById('answerTextarea'): null;
  const existingText = textarea? String(textarea.value || ''): String(answerState.text || '');
- const mergedAnswerText = options.replaceAnswerText === true
+ const preservedManualEdits = options.reconcileFullRecording === true && index === currentQIdx && recordingManuallyEdited;
+ const recordingPrefix = String(options.recordingStartText || '').trim();
+ const mergedAnswerText = options.reconcileFullRecording === true
+ ? (preservedManualEdits? existingText: [recordingPrefix, cleanTranscript].filter(Boolean).join(' '))
+ : (options.replaceAnswerText === true
  ? cleanTranscript
  : (options.appendTranscript === true
  ? mergeTranscriptParts(existingText, cleanTranscript)
- : mergeFullVoiceTranscriptWithAnswer(existingText, answerState.speech_transcript || '', cleanTranscript));
+ : mergeFullVoiceTranscriptWithAnswer(existingText, answerState.speech_transcript || '', cleanTranscript)));
  const voiceDuration = Math.max(
  Number(answerState.voice_duration || 0),
  Number(recording?.durationSeconds || 0),
@@ -1635,19 +1567,22 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  setVoiceSessionUiState('transcribing', 'Transcribing full voice recording', key);
  setTranscriptionStatus('Transcribing full voice recording', '#fbbf24');
 
- const previousTranscript = Object.prototype.hasOwnProperty.call(options, 'previousTranscript')? options.previousTranscript: (answersData[index]?.speech_transcript || '');
+ const previousTranscript = Object.prototype.hasOwnProperty.call(options, 'previousTranscript')? options.previousTranscript: (index === currentQIdx? recordingStartText: '');
  const data = await requestFullVoiceSessionTranscript(recording, question, previousTranscript);
  const transcript = cleanTranscriptText(data.transcript || '');
  if (!transcript) {
  throw new Error('No speech was detected in the voice recording.');
  }
 
+ const preservedManualEdits = options.reconcileFullRecording === true && index === currentQIdx && recordingManuallyEdited;
  const appliedTranscript = applyVoiceSessionTranscript(index, transcript, data, recording, {
  appendTranscript: options.appendTranscript === true,
- replaceAnswerText: options.replaceAnswerText === true
+ replaceAnswerText: options.replaceAnswerText === true,
+ reconcileFullRecording: options.reconcileFullRecording === true,
+ recordingStartText: options.recordingStartText || ''
  });
- setVoiceSessionUiState('transcribed', 'Transcript added to answer', key);
- setTranscriptionStatus('Full voice transcript added', '#16a34a');
+ setVoiceSessionUiState('transcribed', preservedManualEdits? 'Full transcript ready; your edits were kept': 'Transcript added to answer', key);
+ setTranscriptionStatus(preservedManualEdits? 'Full transcript ready; your edits were kept. Review before sending.': 'Full voice transcript added', preservedManualEdits? '#fbbf24': '#16a34a');
  if (!silent) {
  showSessionNotice('Transcript added to your answer. You can edit it before sending for feedback.', 'success');
  }
@@ -1673,28 +1608,44 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return voiceSessionTranscriptPromise;
  }
 
- async function fillMissingHybridTranscriptFromRecording(index = currentQIdx) {
- if (!isHybridTranscriptionMode()) return false;
- if (!serverTranscriptionEnabled || serverTranscriptionUnavailable || microphoneRequiresSecureOrigin()) return false;
- const recording = voiceSessionRecordings.get(voiceSessionKeyFor(index));
- if (!recording?.blob || recording.blob.size < 128) return false;
-
- const currentTextBeforeTranscription = cleanTranscriptText(currentAnswerTextareaText());
- const recordingStartText = cleanTranscriptText(preRecordingText);
- if (currentTextBeforeTranscription && normalizeTranscriptForMatch(currentTextBeforeTranscription)!== normalizeTranscriptForMatch(recordingStartText)) {
- return false;
+ function warnFullRecordingTranscriptReview(message) {
+ const warning = `${message} Review and correct the live transcript before sending.`;
+ setTranscriptionStatus(warning, '#fbbf24');
+ showSessionNotice(warning, 'warning');
+ return { verified: false, warning };
  }
 
+ async function reconcileHybridTranscriptFromRecording(index = currentQIdx) {
+ if (!isHybridTranscriptionMode()) return { verified: false, warning: '' };
+
+ // A late live chunk must never replace the final full-recording result.
+ invalidateServerTranscriptionJobs();
+ const recording = voiceSessionRecordings.get(voiceSessionKeyFor(index));
+ if (!recording?.blob || recording.blob.size < 128) {
+ return warnFullRecordingTranscriptReview('The voice recording could not be saved.');
+ }
+ if (recording.blob.size > voiceSessionTranscriptionMaxBytes) {
+ recording.transcriptionStatus = 'failed';
+ updateAnswerVoiceRecordingMetadata(index, recording);
+ return warnFullRecordingTranscriptReview('The recording exceeds 25 MB and cannot be transcribed or attached. Record a shorter answer.');
+ }
+ if (!serverTranscriptionEnabled) {
+ return warnFullRecordingTranscriptReview('Full recording transcription is unavailable.');
+ }
+
+ const prefix = String(recordingStartText || '');
  const transcript = await transcribeVoiceSessionRecording(index, {
  silent: true,
  skipStopRecording: true,
- appendTranscript: Boolean(recordingStartText),
- replaceAnswerText: false,
- previousTranscript: recordingStartText || answersData[index]?.speech_transcript || ''
+ reconcileFullRecording: true,
+ recordingStartText: prefix,
+ previousTranscript: cleanTranscriptText(prefix)
  });
+ if (!cleanTranscriptText(transcript)) {
+ return warnFullRecordingTranscriptReview(currentTranscriptionStatusMessage() || 'Full recording transcription failed.');
+ }
 
- return cleanTranscriptText(transcript).trim() !== ''
- && normalizeTranscriptForMatch(currentAnswerTextareaText())!== normalizeTranscriptForMatch(currentTextBeforeTranscription);
+ return { verified: true, warning: '' };
  }
 
  async function startVoiceSessionRecorder() {
@@ -2463,6 +2414,17 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  });
  }
 
+ function invalidateServerTranscriptionJobs() {
+ serverTranscriptionSessionToken++;
+ serverTranscriptionQueue = [];
+ serverTranscriptionResults = new Map();
+ serverTranscriptionActiveRequests = 0;
+ serverTranscriptionProcessing = false;
+ serverTranscriptionNextSequence = 0;
+ serverTranscriptionNextCommitSequence = 0;
+ resolveServerTranscriptionDrain();
+ }
+
  function queueServerTranscriptionChunk(blob) {
  if (serverTranscriptionUnavailable ||!blob || blob.size < 128 ||!questions[currentQIdx]) return;
 
@@ -2479,12 +2441,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function disableServerTranscription(message) {
  serverTranscriptionUnavailable = true;
- serverTranscriptionSessionToken++;
- serverTranscriptionQueue = [];
- serverTranscriptionResults = new Map();
- serverTranscriptionNextSequence = 0;
- serverTranscriptionNextCommitSequence = 0;
- resolveServerTranscriptionDrain();
+ invalidateServerTranscriptionJobs();
 
  if (serverTranscriptionRecorder && serverTranscriptionRecorder.state!== 'inactive') {
  try {
@@ -2552,14 +2509,14 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  serverTranscriptionResults.set(job.sequence, { job, result });
  }
  }).catch(error => {
+ if (job.token!== serverTranscriptionSessionToken) return;
  if (error.name!== 'AbortError') {
  console.warn('Server transcription failed:', error);
  handleServerTranscriptionFailure(error);
  }
- if (job.token === serverTranscriptionSessionToken) {
- serverTranscriptionResults.set(job.sequence, { job, result: null });
- }
+ if (job.token === serverTranscriptionSessionToken) serverTranscriptionResults.set(job.sequence, { job, result: null });
  }).finally(() => {
+ if (job.token!== serverTranscriptionSessionToken) return;
  serverTranscriptionActiveRequests = Math.max(0, serverTranscriptionActiveRequests - 1);
  commitReadyServerTranscriptionResults();
  serverTranscriptionProcessing = serverTranscriptionQueue.length > 0 || serverTranscriptionActiveRequests > 0;
@@ -2821,6 +2778,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  recognition.maxAlternatives = 3;
 
  recognition.onstart = function() {
+ if (!isRecording || activeTranscriptionEngine!== 'browser') {
+ try { recognition.stop(); } catch (error) { console.warn('Stale speech recognition stop failed:', error); }
+ return;
+ }
  recognitionActive = true;
  setTranscriptionStatus('Listening - live transcript is updating');
  };
@@ -2841,6 +2802,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  };
 
  recognition.onresult = function(event) {
+ if ((!isRecording || activeTranscriptionEngine!== 'browser') &&!browserRecognitionFinalizing) return;
  const interimParts = [];
  let heardSpeech = false;
 
@@ -2867,6 +2829,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  recognition.onerror = function(event) {
  recognitionActive = false;
+ if (browserRecognitionStopResolver) browserRecognitionStopResolver();
+ if (!isRecording || activeTranscriptionEngine!== 'browser') return;
  const error = event.error || 'unknown';
  console.warn('Speech recognition error:', error);
 
@@ -2891,6 +2855,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  recognition.onend = function() {
  recognitionActive = false;
+ if (browserRecognitionStopResolver) browserRecognitionStopResolver();
  if (shouldAutoRestartRecognition && isRecording && activeTranscriptionEngine === 'browser') {
  setTimeout(startSpeechRecognitionEngine, mobileSpeechSurface? 650: 250);
  }
@@ -5029,6 +4994,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return false;
  }
 
+ if (!isRecordingPaused) {
+ recordingStartText = currentAnswerTextareaText();
+ recordingManuallyEdited = false;
+ }
+
  lastSpeechEnd = 0;
  shouldAutoRestartRecognition =!voiceOnly;
  isRecording = true;
@@ -5103,11 +5073,25 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  const usedServerTranscription = activeTranscriptionEngine === 'server';
  const usedBrowserTranscription = activeTranscriptionEngine === 'browser';
+ let browserFinalResultPromise = null;
  if(recognition && usedBrowserTranscription) {
+ browserRecognitionFinalizing = true;
+ browserFinalResultPromise = new Promise(resolve => {
+ let settled = false;
+ const finish = () => {
+ if (settled) return;
+ settled = true;
+ if (browserRecognitionStopResolver === finish) browserRecognitionStopResolver = null;
+ resolve();
+ };
+ browserRecognitionStopResolver = finish;
+ setTimeout(finish, 1500);
+ });
  try {
  recognition.stop();
  } catch (error) {
  console.error('Speech recognition failed to stop:', error);
+ if (browserRecognitionStopResolver) browserRecognitionStopResolver();
  }
  }
  isRecording = false;
@@ -5121,6 +5105,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  if (usedServerTranscription) {
  await stopServerTranscriptionEngine();
+ }
+ if (browserFinalResultPromise) {
+ await browserFinalResultPromise;
+ browserRecognitionFinalizing = false;
  }
 
  if (!interviewEnding &&!interviewTerminated) {
@@ -5145,11 +5133,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  async function stopRecordingInternal() {
  await pauseRecording();
  await stopVoiceSessionRecorder();
- let generatedFinalTranscript = false;
+ let fullTranscriptResult = { verified: false, warning: '' };
  if (isHybridTranscriptionMode()) {
- generatedFinalTranscript = await fillMissingHybridTranscriptFromRecording().catch(error => {
- console.warn('Final hybrid recording transcription failed:', error);
- return false;
+ fullTranscriptResult = await reconcileHybridTranscriptFromRecording().catch(error => {
+ console.warn('Full hybrid recording transcription failed:', error);
+ return warnFullRecordingTranscriptReview('Full recording transcription failed.');
  });
  }
  if (isHybridTranscriptionMode() && answersData[currentQIdx]) {
@@ -5165,7 +5153,12 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  updateAnswerTranscriptionOverlay();
  if (isHybridTranscriptionMode()) {
  const hasTranscriptText = currentAnswerTextareaText().trim() !== '';
- setTranscriptionStatus(hasTranscriptText? (generatedFinalTranscript? 'Recording stopped - transcript generated and ready to edit': 'Recording stopped - transcript is ready to edit'): '', hasTranscriptText? '#16a34a': undefined);
+ if (!fullTranscriptResult.warning) {
+ const message = recordingManuallyEdited
+ ? 'Recording stopped - full transcript checked; your edits were kept. Review before sending.'
+ : 'Recording stopped - full transcript is ready to edit';
+ setTranscriptionStatus(hasTranscriptText && fullTranscriptResult.verified? message: '', recordingManuallyEdited? '#fbbf24': '#16a34a');
+ }
  } else if (isVoiceOnlyMode()) {
  setTranscriptionStatus('Recording stopped');
  } else {
@@ -5352,8 +5345,14 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const hasLocalVoiceRecording = isVoiceTranscriptionMode()
  && Boolean(localVoiceRecording || answersData[currentQIdx]?.voice_recording?.available);
 
- if (isHybridTranscriptionMode() &&!answerText && hasLocalVoiceRecording &&!timedOut && options.skipped!== true) {
- await transcribeVoiceSessionRecording(currentQIdx, { silent: true });
+ if (isHybridTranscriptionMode() &&!answerText && hasLocalVoiceRecording &&!timedOut && options.skipped!== true
+ &&!recordingManuallyEdited) {
+ await transcribeVoiceSessionRecording(currentQIdx, {
+ silent: true,
+ reconcileFullRecording: true,
+ recordingStartText,
+ previousTranscript: cleanTranscriptText(recordingStartText)
+ });
  answerText = currentAnswerTextareaText().trim();
  }
 

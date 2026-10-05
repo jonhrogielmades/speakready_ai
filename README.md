@@ -1,6 +1,6 @@
 # SpeakReady AI
 
-SpeakReady AI is a Laravel-based job interview preparation platform. It combines mock interview sessions, AI-assisted feedback, interview coaching, progress reporting, mentor review links, and an admin console for managing the whole system.
+SpeakReady AI is a Laravel-based job interview preparation platform. It combines mock interview sessions, AI-assisted feedback, interview coaching, progress reporting, and an admin console for managing the system.
 
 The current system includes separate desktop and mobile Blade experiences, a redesigned guest/landing experience, legal and security pages, richer user dashboards, AI provider fallbacks, local speech assessment hooks, container startup hardening, and automated schema repair commands for production reliability.
 
@@ -18,12 +18,11 @@ The current system includes separate desktop and mobile Blade experiences, a red
 - Desktop preview images for the landing/product walkthrough in `public/img/desktop-preview`.
 - Email/password authentication, password reset, Google OAuth login/register, logout, and account reactivation requests.
 - User dashboard with interview history, progress summaries, recommendations, readiness metrics, notifications, and quick access to practice tools.
-- Mock interview setup and live interview session flow with text answers, speech transcription, answer retries, state saving, abort, finish, review, and share controls.
+- Mock interview setup and live interview session flow with text answers, speech transcription, state saving, abort, finish, and detailed review.
 - AI coaching, feedback generation, interview chat replies, and attachment/text extraction support.
 - Optional interview-prep modules with chapters, resources, quizzes, progress tracking, and personalized recommendations.
 - Optional job interview challenge flows with admin-generated levels, user sessions, answer scoring, progress, energy, and downloadable certificates.
 - Progress, feedback, reports, session exports, skills/perks, and account settings.
-- Public shared review pages with optional unlock flow and mentor comments.
 - Public contact form, newsletter subscription response, privacy policy, terms of service, security page, and cookie preferences page.
 - Admin console for users, job interview categories, questions, optional prep modules/challenges, interview sessions, contacts, feedback audits, AI providers, settings, notifications, and activity logs.
 - Container startup script that binds early, runs migrations, repairs known schema drift, links storage, seeds the admin account, and rebuilds Laravel caches.
@@ -65,20 +64,18 @@ Regular users can access:
 - `/interview/setup` and `/interview/session` for mock interview practice.
 - `/progress`, `/feedback`, `/reports`, and `/session/{id}/review` for results and reflection.
 - `/coach` for AI coaching conversations.
-- `/coach`, `/progress`, `/feedback`, and `/reports` for interview coaching, review, and readiness tracking.
 - `/notifications` and `/account` for utility workflows.
 
 ### Interviews And Feedback
 
 Interview sessions support:
 
-- Category, resume, and job-description context.
+- Category, target role, difficulty, focus, question type, timing, and response-mode preferences through the setup screen.
 - Live answer submission and saved in-progress session state.
 - Speech-to-text through OpenAI when configured, with browser speech APIs as no-key fallback behavior where the UI supports it.
 - Optional local speech assessment for ASR evidence, pronunciation evidence, alignment data, and GOP integration.
 - Evidence-based coaching and AI provider fallback handling when external providers are unavailable or return incomplete JSON.
 - Admin-side KNN readiness matching support, comparing a scored interview with similar historical scored sessions as a secondary readiness signal.
-- Shareable review links and mentor comments for external review.
 
 ### Question Generation Algorithm Evaluation
 

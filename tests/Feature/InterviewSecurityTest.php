@@ -749,7 +749,7 @@ class InterviewSecurityTest extends TestCase
 
         Http::fake([
             'https://api.openai.com/v1/audio/transcriptions' => Http::response([
-                'text' => 'teh api improovement helped alot because im responsable for qa.',
+                'text' => 'teh api improovement helped alot because im very very responsable for qa.',
             ], 200),
         ]);
 
@@ -774,7 +774,7 @@ class InterviewSecurityTest extends TestCase
             ])
             ->assertOk()
             ->assertJson([
-                'transcript' => "the API improvement helped a lot because I'm responsible for QA.",
+                'transcript' => "the API improvement helped a lot because I'm very very responsible for QA.",
                 'transcription_source' => 'openai',
             ]);
 

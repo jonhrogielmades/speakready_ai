@@ -829,7 +829,6 @@ class UserController extends Controller
  'score',
  'feedback',
  'gameLevel',
- 'mentorReviewComments',
  ])
  ->firstOrFail();
 
@@ -871,7 +870,6 @@ class UserController extends Controller
  'score',
  'feedback',
  'gameLevel',
- 'mentorReviewComments',
  ]);
  }
 

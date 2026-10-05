@@ -545,14 +545,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-6">
-                                <div class="premium-card p-3 h-100">
-                                    <h6 class="fw-bold mb-3">Shared Review Links</h6>
-                                    <div id="userDetailSharedReviews" class="timeline">
-                                        <div class="text-muted text-center py-3" style="font-size:0.9rem;">Select a user to load shared review links.</div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -941,15 +933,6 @@
                     </div>
                 `).join('');
                 document.getElementById('userDetailRetryHistory').innerHTML = retryRows || '<div class="text-muted text-center py-3" style="font-size:0.9rem;">No answer retries found.</div>';
-
-                const sharedRows = (data.shared_reviews || []).map(review => `
-                    <div class="timeline-item">
-                        <div style="font-size:0.85rem;"><strong>Session #${escapeHtml(review.session_id)} - ${escapeHtml(review.category)}</strong></div>
-                        <div style="font-size:0.78rem;color:var(--tx2);">${review.is_public ? 'Active' : 'Disabled'} shared review link</div>
-                        <div style="font-size:0.75rem;color:var(--tx3);">Expires ${escapeHtml(review.expires_at || '--')} - ${escapeHtml(review.updated || '--')}</div>
-                    </div>
-                `).join('');
-                document.getElementById('userDetailSharedReviews').innerHTML = sharedRows || '<div class="text-muted text-center py-3" style="font-size:0.9rem;">No shared review links found.</div>';
 
                 const activityRows = (data.activities || []).map(activity => `
                     <div class="timeline-item">
