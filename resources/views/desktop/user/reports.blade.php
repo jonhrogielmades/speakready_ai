@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/reports.css?v=2') }}" data-page-style="user-reports">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=15') }}" data-page-style="user-reports-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=16') }}" data-page-style="user-reports-2">
 @endpush
 
 @section('content')
@@ -136,9 +136,9 @@
  </div>
  </div>
 
- <div class="row g-4 mb-4">
+ <div class="row g-4 mb-4 report-score-comparison-row">
  <!-- Feature 2: Detailed Score Breakdown -->
- <div class="{{ $hasComparisonRows? 'col-lg-7': 'col-12' }}">
+ <div class="{{ $hasComparisonRows? 'col-lg-7': 'col-12' }} report-card-equal-col">
  <div id="report-score-breakdown" class="print-card" style="padding:32px;height:100%;">
  <div class="report-section-kicker">Score details</div>
  <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 20px;"><i class="fa-solid fa-chart-simple text-primary me-2"></i>Detailed Score Breakdown</h5>
@@ -185,14 +185,14 @@
 
  @if($hasComparisonRows)
  <!-- Feature 8: Performance Comparison Report -->
- <div class="col-lg-5">
- <div id="report-comparison" class="print-card" style="padding:32px;height:100%;">
- <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-code-compare text-warning me-2"></i>Performance Comparison</h5>
- <p style="color:var(--tx3);font-size:0.9rem;">Comparing First Interview vs. Latest Interview</p>
+ <div class="col-lg-5 report-card-equal-col">
+ <div id="report-comparison" class="print-card report-comparison-card" style="padding:32px;height:100%;">
+ <h5 class="report-comparison-title" style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-code-compare text-warning me-2"></i>Performance Comparison</h5>
+ <p class="report-comparison-copy" style="color:var(--tx3);font-size:0.9rem;">Comparing First Interview vs. Latest Interview</p>
 
  @if(count($comparisonRows) > 0)
- <div class="table-responsive">
- <table class="table table-borderless table-sm align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent; --bs-table-color: var(--tx);">
+ <div class="table-responsive report-comparison-table-wrap">
+ <table class="table table-borderless table-sm align-middle report-comparison-table" style="color:var(--tx); background: transparent; --bs-table-bg: transparent; --bs-table-color: var(--tx);">
  <thead style="border-bottom:1px solid var(--bd);">
  <tr>
  <th class="text-uppercase" style="font-size:0.8rem;color:var(--tx3);">Metric</th>

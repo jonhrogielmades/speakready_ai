@@ -2104,6 +2104,104 @@
     }
 }
 
+/* Equal-height score/report comparison row with expanded comparison text. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell #portfolioReport .report-score-comparison-row {
+        align-items: stretch !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport .report-score-comparison-row > .report-card-equal-col {
+        display: flex !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport .report-score-comparison-row > .report-card-equal-col > .print-card {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100% !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison.report-comparison-card {
+        max-height: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        gap: 10px !important;
+        padding: 18px !important;
+        border-radius: 9px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison .report-comparison-title {
+        margin: 0 !important;
+        font-size: 1.16rem !important;
+        line-height: 1.22 !important;
+        letter-spacing: 0 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison .report-comparison-title i {
+        font-size: 1.05rem !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison .report-comparison-copy {
+        margin: 0 !important;
+        font-size: 0.9rem !important;
+        line-height: 1.42 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison .report-comparison-table-wrap {
+        flex: 1 1 auto !important;
+        display: flex !important;
+        align-items: stretch !important;
+        overflow-x: auto !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison .report-comparison-table {
+        width: 100% !important;
+        min-width: 390px !important;
+        margin: 0 !important;
+        border-collapse: separate !important;
+        border-spacing: 0 6px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison .report-comparison-table th {
+        padding: 6px 5px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.22 !important;
+        letter-spacing: 0 !important;
+        white-space: normal !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison .report-comparison-table td {
+        padding: 8px 5px !important;
+        font-size: 0.95rem !important;
+        line-height: 1.36 !important;
+        vertical-align: middle !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison .report-comparison-table td:first-child {
+        font-size: 0.98rem !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    html body.user-desktop-shell #portfolioReport #report-comparison.report-comparison-card {
+        max-height: none !important;
+        padding: 14px !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison .report-comparison-title {
+        margin: 0 0 8px !important;
+        font-size: 0.94rem !important;
+        line-height: 1.24 !important;
+    }
+
+    html body.user-desktop-shell #portfolioReport #report-comparison .report-comparison-copy {
+        margin: 0 0 10px !important;
+        font-size: 0.8rem !important;
+        line-height: 1.38 !important;
+    }
+}
+
 /* Final desktop reports hero background and contrast. */
 @media (min-width: 992px) {
     html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero {

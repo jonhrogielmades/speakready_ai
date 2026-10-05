@@ -1922,6 +1922,70 @@
     }
 }
 
+/* Responsive comparison card sizing for Interview Reports. */
+html body #portfolioReport .report-score-comparison-row {
+    align-items: stretch !important;
+}
+
+html body #portfolioReport .report-score-comparison-row > .report-card-equal-col {
+    display: flex !important;
+}
+
+html body #portfolioReport .report-score-comparison-row > .report-card-equal-col > .print-card {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+}
+
+html body #portfolioReport #report-comparison.report-comparison-card {
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 12px !important;
+}
+
+html body #portfolioReport #report-comparison .report-comparison-title {
+    margin: 0 !important;
+    font-size: 0.96rem !important;
+    line-height: 1.24 !important;
+    letter-spacing: 0 !important;
+}
+
+html body #portfolioReport #report-comparison .report-comparison-copy {
+    margin: 0 !important;
+    font-size: 0.8rem !important;
+    line-height: 1.38 !important;
+}
+
+html body #portfolioReport #report-comparison .report-comparison-table-wrap {
+    flex: 1 1 auto !important;
+    overflow-x: auto !important;
+}
+
+html body #portfolioReport #report-comparison .report-comparison-table {
+    min-width: 430px !important;
+    margin: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 5px !important;
+}
+
+html body #portfolioReport #report-comparison .report-comparison-table th {
+    padding: 6px 5px !important;
+    font-size: 0.76rem !important;
+    line-height: 1.18 !important;
+    letter-spacing: 0 !important;
+    white-space: normal !important;
+}
+
+html body #portfolioReport #report-comparison .report-comparison-table td {
+    padding: 8px 5px !important;
+    font-size: 0.86rem !important;
+    line-height: 1.3 !important;
+    vertical-align: middle !important;
+    overflow-wrap: anywhere !important;
+}
+
 @media screen and (max-width: 767px) {
     html body #portfolioReport #report-feedback,
     html body #portfolioReport #report-question-review {
