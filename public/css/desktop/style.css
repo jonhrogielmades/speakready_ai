@@ -12280,6 +12280,59 @@ body.user-desktop-shell:not(.admin-shell) #dashboard .sr-search-highlight.is-cur
   }
 }
 
+@media (max-width: 991.98px) {
+  body.user-desktop-shell:not(.admin-shell) #dashboard {
+    --nav: 64px;
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-main {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    padding-top: 64px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-top {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    padding: 0 12px !important;
+    gap: 8px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-actions {
+    min-width: 0 !important;
+    height: 40px !important;
+    gap: 6px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-upgrade-card {
+    display: none !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar {
+    width: min(300px, calc(100vw - 24px)) !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 24px) !important;
+    transform: translateX(-105%);
+    transition: transform .24s ease;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar.mob-open {
+    transform: translateX(0);
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-content {
+    max-width: 100% !important;
+    padding: 18px 14px !important;
+  }
+}
+
 body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-menu-account {
   --profile-menu-accent: #1d4ed8;
   --profile-menu-accent-bg: rgba(37, 99, 235, 0.12);

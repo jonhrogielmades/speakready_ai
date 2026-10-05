@@ -22,7 +22,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=35') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=36') }}" />
       <style>
           :root,
           .lm {
@@ -187,7 +187,7 @@
          <div class="db-main">
             <!-- Top bar -->
             <div class="db-top">
-               <button class="boc db-sidebar-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" aria-expanded="true" onclick="toggleDashboardSidebar()">
+               <button class="boc db-sidebar-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" aria-controls="dbSidebar" aria-expanded="true" onclick="toggleDashboardSidebar()">
                <i class="fa-solid fa-bars"></i>
                </button>
                <form class="db-top-search db-top-admin-search" role="search" data-admin-page-search-form>
@@ -292,15 +292,26 @@
          function closeDashboardSidebar() {
             document.getElementById('dbSidebar')?.classList.remove('mob-open');
             document.body.classList.remove('sidebar-open');
+            syncSidebarToggleState();
          }
 
          function syncSidebarToggleState() {
             const toggle = document.querySelector('.db-sidebar-toggle');
-            const isDesktopCollapsed = window.innerWidth >= 992 && document.body.classList.contains('collapsed-sidebar');
+            const sidebar = document.getElementById('dbSidebar');
+            const isMobile = window.matchMedia ? window.matchMedia('(max-width: 991.98px)').matches : window.innerWidth < 992;
+            const isMobileOpen = Boolean(isMobile && sidebar?.classList.contains('mob-open'));
+            const isDesktopCollapsed = !isMobile && document.body.classList.contains('collapsed-sidebar');
+            const isExpanded = isMobile ? isMobileOpen : !isDesktopCollapsed;
+            const label = isMobile
+               ? (isMobileOpen ? 'Close navigation' : 'Open navigation')
+               : (isDesktopCollapsed ? 'Expand navigation' : 'Collapse navigation');
+            if (sidebar) {
+               sidebar.setAttribute('aria-hidden', isMobile && !isMobileOpen ? 'true' : 'false');
+            }
             if (toggle) {
-               toggle.setAttribute('aria-expanded', isDesktopCollapsed ? 'false' : 'true');
-               toggle.setAttribute('aria-label', isDesktopCollapsed ? 'Expand navigation' : 'Collapse navigation');
-               toggle.title = isDesktopCollapsed ? 'Expand navigation' : 'Collapse navigation';
+               toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+               toggle.setAttribute('aria-label', label);
+               toggle.title = label;
             }
          }
 
