@@ -832,8 +832,14 @@ class UserController extends Controller
 
  if (! $sessionEndedEarly && $sessionRecord->status === 'completed') {
  try {
- $feedbackRefreshed = app(InterviewController::class)
+ $interviewController = app(InterviewController::class);
+ $feedbackRefreshed = $interviewController
+ ->ensureCompletedSessionOpenAiFeedbackEvidence($sessionRecord, $sessionRecord->gameLevel);
+
+ if (! $feedbackRefreshed) {
+ $feedbackRefreshed = $interviewController
  ->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel);
+ }
  } catch (\Throwable $exception) {
  Log::warning('Detailed feedback refresh failed; rendering saved report data.', [
  'session_id' => $sessionRecord->id,

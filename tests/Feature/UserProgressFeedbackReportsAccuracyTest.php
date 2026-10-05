@@ -877,6 +877,145 @@ public function test_feedback_center_refreshes_summary_and_reliability_with_open
  ->assertDontSee('AI Feedback', false);
  }
 
+public function test_detailed_review_refreshes_all_answer_summary_strengths_and_weaknesses_with_openai(): void
+{
+ AiProvider::create([
+ 'name' => 'OpenAI',
+ 'api_endpoint' => 'https://api.openai.com/v1',
+ 'api_key' => Crypt::encryptString('test-openai-key'),
+ 'status' => 'active',
+ 'is_primary' => true,
+ ]);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('BPO / Customer Support');
+ $session = $this->completedSessionFor($user, $category, 56, now(), [
+ 'target_position' => 'Customer Support Representative',
+ 'interview_focus' => 'customer escalation',
+ ]);
+
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'Local saved strength should be replaced.',
+ 'weaknesses' => 'Local saved weakness should be replaced.',
+ 'improvement_suggestions' => 'Local saved suggestion should be replaced.',
+ ]);
+
+ $question = Question::create([
+ 'category_id' => $category->id,
+ 'question_text' => 'How do you calm an escalated customer?',
+ 'difficulty' => 'medium',
+ 'type' => 'Situational',
+ 'status' => 'active',
+ 'expected_guide' => 'Listen, acknowledge the concern, explain the next step, and confirm the result.',
+ ]);
+ $answerText = 'I listened to the customer, confirmed the billing concern, explained the next step, and followed up after the account was corrected.';
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => $answerText,
+ 'ai_feedback' => 'Local answer review feedback should be replaced.',
+ 'coaching_feedback' => [
+ 'content_alignment' => [
+ 'what_worked' => 'Local answer review strength should not replace provider strengths.',
+ 'improvement_focus' => 'Local answer review gap should not replace provider weaknesses.',
+ ],
+ ],
+ 'score' => 56,
+ 'ai_provider' => 'local',
+ ]);
+
+ Http::fake([
+ 'api.openai.com/*' => function ($request) use ($answer, $answerText, $question) {
+ $prompt = data_get($request->data(), 'messages.1.content', '');
+
+ if (str_contains($prompt, 'Create one possible interview answer')) {
+ return Http::response([
+ 'choices' => [[
+ 'message' => [
+ 'content' => 'I would listen first, confirm the billing concern, explain the next step, and follow up with the customer after the account is corrected.',
+ ],
+ ]],
+ ], 200);
+ }
+
+ return Http::response([
+ 'choices' => [[
+ 'finish_reason' => 'stop',
+ 'message' => [
+ 'content' => json_encode([
+ 'per_question_feedback' => [[
+ 'id' => $answer->id,
+ 'score' => 86,
+ 'clarity_score' => 86,
+ 'relevance_score' => 86,
+ 'grammar_score' => 86,
+ 'professionalism_score' => 86,
+ 'star_applicable' => false,
+ 'star_method_score' => 0,
+ 'evidence_quotes' => [$answerText],
+ 'question_focus' => $question->question_text,
+ 'answer_alignment' => 'directly_addressed',
+ 'missing_criteria' => [],
+ 'ai_feedback' => 'For "'.$question->question_text.'", the exact answer evidence "'.$answerText.'" shows the billing concern, next step, and follow-up. This directly addressed the question and gives enough evidence for the score. The corrected account detail helps the interviewer understand the service result.',
+ 'better_sample_answer' => 'I listened to the customer, confirmed the billing concern, and explained the next step. I followed up after the account was corrected. I would state the final customer result clearly.',
+ 'follow_up_question' => 'What final customer result came after the account was corrected?',
+ 'coaching' => [
+ 'keep' => 'Keep the billing concern, next step, and follow-up details.',
+ 'improve' => 'Add the final customer reaction or measurable service result.',
+ 'impact' => 'The final result shows whether the calm response solved the customer concern.',
+ 'next_try' => 'Answer with the concern, your action, and the final result.',
+ 'next_attempt_steps' => [
+ 'Start by naming the customer concern.',
+ 'Use the billing follow-up as the proof.',
+ 'Close with the final customer result.',
+ ],
+ 'success_check' => 'The retry clearly connects the calm response to the customer result.',
+ ],
+ ]],
+ 'session_feedback' => [
+ 'overall_summary' => 'OpenAI reviewed every saved answer and found a clear customer concern, next step, and follow-up. The next improvement is to add the final customer result.',
+ 'strengths' => 'OpenAI found clear customer concern and next-step detail.',
+ 'weaknesses' => 'OpenAI found the final customer result still needs to be clearer.',
+ 'improvement_suggestions' => 'OpenAI recommends closing with the true customer outcome.',
+ ],
+ ]),
+ ],
+ ]],
+ ], 200);
+ },
+ ]);
+
+ $response = $this->actingAs($user)->get(route('user.review', $session));
+
+ $response->assertOk()
+ ->assertSee('All Answer Review Summary')
+ ->assertSee('OpenAI reviewed every saved answer')
+ ->assertSee('final customer result')
+ ->assertSee('Strengths')
+ ->assertSee('OpenAI found clear customer concern and next-step detail.')
+ ->assertSee('Weaknesses')
+ ->assertSee('OpenAI found the final customer result still needs to be clearer.')
+ ->assertSee('OpenAI recommends closing with the true customer result.')
+ ->assertDontSee('Local saved strength should be replaced.')
+ ->assertDontSee('Local answer review strength should not replace provider strengths.');
+
+ $answer->refresh();
+ $this->assertSame('openai', $answer->ai_provider);
+
+ $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+ $this->assertSame('ai_provider_validated', data_get($feedback->coaching_summary, 'overall_summary_source'));
+ $this->assertStringContainsString('OpenAI found clear customer concern', $feedback->strengths);
+
+ Http::assertSent(function ($request) use ($question): bool {
+ $prompt = data_get($request->data(), 'messages.1.content', '');
+
+ return str_contains($request->url(), 'api.openai.com')
+ && str_contains($prompt, 'UNTRUSTED TRANSCRIPT DATA JSON')
+ && str_contains($prompt, $question->question_text);
+ });
+}
+
 public function test_detailed_review_uses_openai_generated_sample_answer_when_configured(): void
 {
  Http::fake([
