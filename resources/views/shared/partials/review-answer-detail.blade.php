@@ -40,6 +40,41 @@
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
  $sampleAnswer = trim((string) data_get($coachingFeedback, 'review_sample_answer.text', ''));
  if ($sampleAnswer === '') {
+ $savedSampleAnswer = trim((string) ($answer->better_sample_answer ?? ''));
+ if ($savedSampleAnswer !== '') {
+ $cleanSavedSampleAnswer = function_exists('review_feedback_without_question_text')
+ ? review_feedback_without_question_text($savedSampleAnswer, $questionSource)
+ : $savedSampleAnswer;
+ $cleanSavedSampleAnswer = trim(preg_replace('/\s+/u', ' ', $cleanSavedSampleAnswer) ?? $cleanSavedSampleAnswer);
+ $cleanSavedSampleLooksLikeQuestion = function_exists('review_text_looks_like_question')
+ ? review_text_looks_like_question($cleanSavedSampleAnswer, $questionSource)
+ : false;
+ $fallbackSampleAnswer = function_exists('review_better_answer_fallback')
+ ? trim((string) review_better_answer_fallback($answer, $questionSource))
+ : '';
+ if ($cleanSavedSampleLooksLikeQuestion) {
+ $sampleAnswer = '';
+ } else {
+ $sampleAnswer = function_exists('review_better_answer_text')
+ ? review_better_answer_text($savedSampleAnswer, $answer, $questionSource)
+ : $savedSampleAnswer;
+ $sampleAnswer = trim(preg_replace('/\s+/u', ' ', $sampleAnswer) ?? $sampleAnswer);
+ if ($fallbackSampleAnswer !== '' && $sampleAnswer === $fallbackSampleAnswer && $cleanSavedSampleAnswer !== '') {
+ $sampleAnswer = $cleanSavedSampleAnswer;
+ }
+ $sampleAnswerLooksLikeQuestion = function_exists('review_text_looks_like_question')
+ ? review_text_looks_like_question($sampleAnswer, $questionSource)
+ : false;
+ if ($sampleAnswer === ''
+ || $sampleAnswerLooksLikeQuestion
+ || preg_match('/\[[^\]]+\]/u', $sampleAnswer) === 1
+ || preg_match('/\b(?:response-based possible answer is unavailable|saved answer is too short|does not contain enough response detail)\b/iu', $sampleAnswer) === 1) {
+ $sampleAnswer = '';
+ }
+ }
+ }
+ }
+ if ($sampleAnswer === '') {
  $sampleAnswer = review_question_sample_answer($questionSource);
  }
  $whatWorked = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['what_worked'] ?? ''), 'worked');

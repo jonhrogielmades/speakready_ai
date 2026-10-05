@@ -1447,9 +1447,9 @@ class ReliabilityHardeningTest extends TestCase
  );
  }
 
- public function test_user_review_renders_saved_report_when_feedback_refresh_fails(): void
+ public function test_user_review_renders_saved_report_without_feedback_refresh_on_open(): void
  {
- Log::spy();
+ Http::preventStrayRequests();
 
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
@@ -1482,14 +1482,6 @@ class ReliabilityHardeningTest extends TestCase
  'score' => 62,
  ]);
 
- $this->app->instance(InterviewController::class, new class extends InterviewController
- {
- public function ensureCompletedSessionFeedbackIsCurrent(InterviewSession $session, $gameLevel = null): bool
- {
- throw new \RuntimeException('Simulated refresh failure.');
- }
- });
-
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
@@ -1502,11 +1494,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertDontSee('Score version', false)
  ->assertDontSee('Feedback checks', false);
 
- Log::shouldHaveReceived('warning')
- ->once()
- ->withArgs(fn (string $message, array $context): bool => $message === 'Detailed feedback refresh failed; rendering saved report data.'
- && (int) ($context['session_id']?? 0) === (int) $session->id
- && $context['error_type'] === \RuntimeException::class);
+ Http::assertNothingSent();
  }
 
  public function test_repair_feedback_coaching_command_backfills_missing_report_data(): void
@@ -1611,9 +1599,9 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('appendRetryAttempt(answerId, data);', false);
  }
 
- public function test_user_review_refreshes_stale_rubric_score_metadata_on_open(): void
+ public function test_user_review_does_not_refresh_stale_rubric_score_metadata_on_open(): void
  {
- $this->fakeOpenAiFeedback();
+ Http::preventStrayRequests();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
  $session = $this->sessionFor($user, $category, ['status' => 'completed']);
@@ -1657,11 +1645,12 @@ class ReliabilityHardeningTest extends TestCase
  $answer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
  $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
 
- $this->assertSame(TrustworthyAssessmentService::SCORE_VERSION, $score->score_version);
- $this->assertSame(TrustworthyAssessmentService::SCORE_VERSION, data_get($score->rubric, 'version'));
+ $this->assertSame(1, $score->score_version);
+ $this->assertSame(1, data_get($score->rubric, 'version'));
  $this->assertSame(EvidenceBasedCoachingService::VERSION, data_get($feedback->coaching_summary, 'version'));
- $this->assertNotEmpty($answer->evidence_map);
- $this->assertNotEmpty($answer->rubric_level);
+ $this->assertEmpty($answer->evidence_map);
+ $this->assertEmpty($answer->rubric_level);
+ Http::assertNothingSent();
  }
 
  public function test_review_page_does_not_render_unrecorded_delivery_or_comparison_metrics(): void

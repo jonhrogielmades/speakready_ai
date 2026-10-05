@@ -521,8 +521,10 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  && ! str_contains($evidence->answers->first()->evidence_quote, 'Explain a time you handled an irate customer'));
  }
 
-public function test_feedback_center_refreshes_summary_and_reliability_with_openai_evidence(): void
+public function test_feedback_center_uses_saved_feedback_without_openai_refresh_on_open(): void
 {
+ Http::preventStrayRequests();
+
  AiProvider::create([
  'name' => 'OpenAI',
  'api_endpoint' => 'https://api.openai.com/v1',
@@ -563,84 +565,24 @@ public function test_feedback_center_refreshes_summary_and_reliability_with_open
  'ai_provider' => 'local',
  ]);
 
- Http::fake([
- 'api.openai.com/*' => Http::response([
- 'choices' => [[
- 'finish_reason' => 'stop',
- 'message' => [
- 'content' => json_encode([
- 'per_question_feedback' => [[
- 'id' => $answer->id,
- 'score' => 84,
- 'clarity_score' => 84,
- 'relevance_score' => 84,
- 'grammar_score' => 84,
- 'professionalism_score' => 84,
- 'star_applicable' => false,
- 'star_method_score' => 0,
- 'evidence_quotes' => [$answerText],
- 'question_focus' => $question->question_text,
- 'answer_alignment' => 'directly_addressed',
- 'missing_criteria' => [],
- 'ai_feedback' => 'For "'.$question->question_text.'", the exact answer evidence "'.$answerText.'" shows the billing concern, next step, and follow-up. This directly addressed the question and gives enough evidence for the score. The corrected account detail helps the interviewer understand the service result.',
- 'better_sample_answer' => 'I listened to the customer, confirmed the billing concern, and explained the next step. I followed up after the account was corrected. I would state the final customer result clearly.',
- 'follow_up_question' => 'What final customer result came after the account was corrected?',
- 'coaching' => [
- 'keep' => 'Keep the billing concern, next step, and follow-up details for "'.$question->question_text.'".',
- 'improve' => 'Add the final customer reaction or measurable service result.',
- 'impact' => 'The final result shows whether the calm response solved the customer concern.',
- 'next_try' => 'Answer "'.$question->question_text.'" with the concern, your action, and the final result.',
- 'next_attempt_steps' => [
- 'Start by naming the customer concern.',
- 'Use the billing follow-up as the proof.',
- 'Close with the final customer result.',
- ],
- 'success_check' => 'The retry clearly connects the calm response to the customer result.',
- ],
- ]],
- 'session_feedback' => [
- 'overall_summary' => 'OpenAI checked the saved answer evidence and found a clear customer concern, next step, and follow-up. The next improvement is to add the final customer result.',
- 'strengths' => 'OpenAI found clear service steps in the saved answer.',
- 'weaknesses' => 'The final customer result still needs to be clearer.',
- 'improvement_suggestions' => 'Add the true customer result after the billing concern was corrected.',
- ],
- ]),
- ],
- ]],
- ], 200),
- ]);
-
  $response = $this->actingAs($user)->get(route('user.feedback'));
 
  $response->assertOk()
  ->assertSee('Evidence-Based Feedback Summary')
  ->assertSee('Proof & Reliability', false)
- ->assertSee('OpenAI evidence')
- ->assertSee('OpenAI checked the saved answer')
- ->assertSee('final customer result')
+ ->assertSee('Local evidence')
+ ->assertSee('Promising start')
+ ->assertDontSee('OpenAI evidence')
+ ->assertDontSee('OpenAI checked the saved answer')
  ->assertViewHas('feedbackEvidence', fn ($evidence) => $evidence
- && $evidence->reliability->provider_label === 'OpenAI evidence'
- && $evidence->answers->first()->provider_label === 'OpenAI evidence'
+ && $evidence->reliability->provider_label === 'Local evidence'
+ && $evidence->answers->first()->provider_label === 'Local evidence'
  && str_contains($evidence->answers->first()->evidence_quote, 'billing concern'));
 
  $answer->refresh();
- $this->assertSame('openai', $answer->ai_provider);
- $this->assertGreaterThan(55, (int) $answer->score);
-
- Http::assertSent(function ($request) use ($question): bool {
- $prompt = data_get($request->data(), 'messages.1.content', '');
-
- return str_contains($request->url(), 'api.openai.com')
- && str_contains($prompt, 'UNTRUSTED TRANSCRIPT DATA JSON')
- && str_contains($prompt, $question->question_text);
- });
-
- Http::assertNotSent(function ($request): bool {
- $prompt = data_get($request->data(), 'messages.1.content', '');
-
- return str_contains($request->url(), 'api.openai.com')
- && str_contains($prompt, 'Create one possible interview answer');
- });
+ $this->assertSame('local', $answer->ai_provider);
+ $this->assertSame(55, (int) $answer->score);
+ Http::assertNothingSent();
 }
 
  public function test_feedback_center_answer_review_hides_prompt_text_inside_answer_feedback(): void
@@ -884,8 +826,10 @@ public function test_feedback_center_refreshes_summary_and_reliability_with_open
  ->assertDontSee('AI Feedback', false);
  }
 
-public function test_detailed_review_refreshes_all_answer_summary_strengths_and_weaknesses_with_openai(): void
+public function test_detailed_review_uses_saved_feedback_without_openai_refresh_on_open(): void
 {
+ Http::preventStrayRequests();
+
  AiProvider::create([
  'name' => 'OpenAI',
  'api_endpoint' => 'https://api.openai.com/v1',
@@ -932,126 +876,35 @@ public function test_detailed_review_refreshes_all_answer_summary_strengths_and_
  'ai_provider' => 'local',
  ]);
 
- Http::fake([
- 'api.openai.com/*' => function ($request) use ($answer, $answerText, $question) {
- $prompt = data_get($request->data(), 'messages.1.content', '');
-
- if (str_contains($prompt, 'Create one possible interview answer')) {
- return Http::response([
- 'choices' => [[
- 'message' => [
- 'content' => 'I would listen first, confirm the billing concern, explain the next step, and follow up with the customer after the account is corrected.',
- ],
- ]],
- ], 200);
- }
-
- return Http::response([
- 'choices' => [[
- 'finish_reason' => 'stop',
- 'message' => [
- 'content' => json_encode([
- 'per_question_feedback' => [[
- 'id' => $answer->id,
- 'score' => 86,
- 'clarity_score' => 86,
- 'relevance_score' => 86,
- 'grammar_score' => 86,
- 'professionalism_score' => 86,
- 'star_applicable' => false,
- 'star_method_score' => 0,
- 'evidence_quotes' => [$answerText],
- 'question_focus' => $question->question_text,
- 'answer_alignment' => 'directly_addressed',
- 'missing_criteria' => [],
- 'ai_feedback' => 'For "'.$question->question_text.'", the exact answer evidence "'.$answerText.'" shows the billing concern, next step, and follow-up. This directly addressed the question and gives enough evidence for the score. The corrected account detail helps the interviewer understand the service result.',
- 'better_sample_answer' => 'I listened to the customer, confirmed the billing concern, and explained the next step. I followed up after the account was corrected. I would state the final customer result clearly.',
- 'follow_up_question' => 'What final customer result came after the account was corrected?',
- 'coaching' => [
- 'keep' => 'Keep the billing concern, next step, and follow-up details.',
- 'improve' => 'Add the final customer reaction or measurable service result.',
- 'impact' => 'The final result shows whether the calm response solved the customer concern.',
- 'next_try' => 'Answer with the concern, your action, and the final result.',
- 'next_attempt_steps' => [
- 'Start by naming the customer concern.',
- 'Use the billing follow-up as the proof.',
- 'Close with the final customer result.',
- ],
- 'success_check' => 'The retry clearly connects the calm response to the customer result.',
- ],
- ]],
- 'session_feedback' => [
- 'overall_summary' => 'OpenAI reviewed every saved answer and found a clear customer concern, next step, and follow-up. The next improvement is to add the final customer result.',
- 'strengths' => 'OpenAI found clear customer concern and next-step detail.',
- 'weaknesses' => 'OpenAI found the final customer result still needs to be clearer.',
- 'improvement_suggestions' => 'OpenAI recommends closing with the true customer outcome.',
- ],
- ]),
- ],
- ]],
- ], 200);
- },
- ]);
-
  $response = $this->actingAs($user)->get(route('user.review', $session));
 
  $response->assertOk()
  ->assertSee('All Answer Review Summary')
- ->assertSee('OpenAI reviewed every saved answer')
- ->assertSee('final customer result')
  ->assertSee('Strengths')
- ->assertSee('OpenAI found clear customer concern and next-step detail.')
+ ->assertSee('Local answer review strength should not replace provider strengths.')
  ->assertSee('Weaknesses')
- ->assertSee('OpenAI found the final customer result still needs to be clearer.')
- ->assertSee('OpenAI recommends closing with the true customer result.')
+ ->assertSee('Local answer review gap should not replace provider weaknesses.')
  ->assertSee('Evidence & reliability', false)
- ->assertSee('OpenAI evidence')
- ->assertSee('Validated AI provider check')
+ ->assertSee('Local evidence')
  ->assertSee('What Worked')
- ->assertSee('Keep the billing concern, next step, and follow-up details.')
+ ->assertSee('Local answer review strength should not replace provider strengths.')
  ->assertSee('What To Improve')
- ->assertSee('Add the final customer reaction or clear service result.')
- ->assertSee('Why It Matters')
- ->assertSee('The final result shows whether the calm response solved the customer concern.')
- ->assertDontSee('Local saved strength should be replaced.')
- ->assertDontSee('Local answer review strength should not replace provider strengths.');
+ ->assertSee('Local answer review gap should not replace provider weaknesses.')
+ ->assertDontSee('OpenAI reviewed every saved answer')
+ ->assertDontSee('OpenAI evidence');
 
  $answer->refresh();
- $this->assertSame('openai', $answer->ai_provider);
+ $this->assertSame('local', $answer->ai_provider);
 
  $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
- $this->assertSame('ai_provider_validated', data_get($feedback->coaching_summary, 'overall_summary_source'));
- $this->assertStringContainsString('OpenAI found clear customer concern', $feedback->strengths);
-
- Http::assertSent(function ($request) use ($question): bool {
- $prompt = data_get($request->data(), 'messages.1.content', '');
-
- return str_contains($request->url(), 'api.openai.com')
- && str_contains($prompt, 'UNTRUSTED TRANSCRIPT DATA JSON')
- && str_contains($prompt, $question->question_text);
- });
-
- Http::assertNotSent(function ($request): bool {
- $prompt = data_get($request->data(), 'messages.1.content', '');
-
- return str_contains($request->url(), 'api.openai.com')
- && str_contains($prompt, 'Create one possible interview answer');
- });
+ $this->assertSame('Local saved strength should be replaced.', $feedback->strengths);
+ $this->assertNull(data_get($feedback->coaching_summary, 'overall_summary_source'));
+ Http::assertNothingSent();
 }
 
-public function test_detailed_review_uses_openai_generated_sample_answer_when_configured(): void
+public function test_detailed_review_uses_saved_sample_answer_without_openai_generation(): void
 {
- Http::fake([
- '*' => Http::response([
- 'choices' => [
- [
- 'message' => [
- 'content' => 'I would listen first, confirm the customer concern, explain the next step clearly, and follow through until the issue is resolved.',
- ],
- ],
- ],
- ]),
- ]);
+ Http::preventStrayRequests();
 
  AiProvider::create([
  'name' => 'OpenAI',
@@ -1090,6 +943,7 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  'question_id' => $question->id,
  'answer_text' => 'I listened to the customer and explained the next step.',
  'ai_feedback' => 'The answer names listening and a next step but needs the final result.',
+ 'better_sample_answer' => 'I would listen first, confirm the customer concern, and explain the next step clearly. I would follow through until the issue is resolved. I would confirm the customer is satisfied before closing the conversation.',
  'coaching_feedback' => [
  'content_alignment' => [
  'status' => 'partially_answered',
@@ -1106,19 +960,12 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  ->assertOk()
  ->assertSee('Sample Answer')
  ->assertSee('I would listen first, confirm the customer concern')
+ ->assertSee('confirm the customer is satisfied')
  ->assertDontSee('When a customer needed help with [issue]');
 
  $answer->refresh();
- $this->assertSame('ai', data_get($answer->coaching_feedback, 'review_sample_answer.source'));
- $this->assertSame('openai', data_get($answer->coaching_feedback, 'review_sample_answer.provider'));
-
- Http::assertSent(function ($request) use ($question): bool {
- $prompt = data_get($request->data(), 'messages.1.content', '');
-
- return str_contains($request->url(), 'api.openai.com')
- && str_contains($prompt, 'Create one possible interview answer')
- && str_contains($prompt, $question->question_text);
- });
+ $this->assertNull(data_get($answer->coaching_feedback, 'review_sample_answer.source'));
+ Http::assertNothingSent();
 }
 
  public function test_detailed_review_cleans_overall_review_feedback_but_shows_answer_review_question(): void

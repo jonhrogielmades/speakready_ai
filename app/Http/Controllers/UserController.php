@@ -10,7 +10,6 @@ use App\Models\ChatbotMessage;
 use App\Models\Feedback;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
-use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\LearningModule;
 use App\Models\LearningProgress;
@@ -29,6 +28,7 @@ use App\Services\QuestionDatasetProvider;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\AccountNotificationSchema;
 use App\Support\ChatbotSchema;
+use App\Support\FeedbackCoachingRepair;
 use App\Support\FeedbackEvidencePresenter;
 use App\Support\GameSchema;
 use App\Support\LearningModuleSchema;
@@ -625,7 +625,6 @@ class UserController extends Controller
  ->first();
 
  if ($latestFeedbackSession) {
- $latestFeedbackSession = $this->ensureFeedbackCenterOpenAiEvidence($latestFeedbackSession);
  $latestFeedbackSession->practice_scenario = $this->practiceScenarioLabel($latestFeedbackSession);
  }
 
@@ -648,54 +647,6 @@ class UserController extends Controller
  'feedbackSummary',
  'feedbackEvidence'
  ));
- }
-
- private function ensureFeedbackCenterOpenAiEvidence(?InterviewSession $session): ?InterviewSession
- {
- if (! $session) {
- return null;
- }
-
- $cacheKey = 'feedback-center-openai-evidence-refresh-failed:'.$session->id;
- if (Cache::has($cacheKey)) {
- return $session;
- }
-
- try {
- $interviewController = app(InterviewController::class);
-
- if ($this->deferReviewOpenAiRefreshEnabled()) {
- $interviewController->deferCompletedSessionOpenAiFeedbackEvidence($session->id, 'feedback_center');
- return $session;
- }
-
- $refreshed = $interviewController
- ->ensureCompletedSessionOpenAiFeedbackEvidence($session, $session->gameLevel);
-
- if ($refreshed) {
- $session->refresh()->load([
- 'category',
- 'score',
- 'feedback',
- 'gameLevel',
- 'answers' => function ($query) {
- $query->whereNull('retry_of_answer_id')
- ->with('question')
- ->orderBy('id');
- },
- ]);
- }
- } catch (\Throwable $exception) {
- Cache::put($cacheKey, true, now()->addMinutes(10));
- Log::warning('Feedback Center OpenAI evidence refresh failed; rendering saved report data.', [
- 'session_id' => $session->id,
- 'user_id' => Auth::id(),
- 'error_type' => $exception::class,
- 'message' => $exception->getMessage(),
- ]);
- }
-
- return $session;
  }
 
  private function feedbackCenterSummary(?InterviewSession $session):?object
@@ -827,22 +778,15 @@ class UserController extends Controller
  ])
  ->firstOrFail();
 
- $feedbackRefreshed = false;
+ $coachingRepaired = false;
  $sessionEndedEarly = $sessionRecord->status === 'ended'
  || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false);
 
  if (! $sessionEndedEarly && $sessionRecord->status === 'completed') {
  try {
- $interviewController = app(InterviewController::class);
- $feedbackRefreshed = $interviewController
- ->ensureCompletedSessionOpenAiFeedbackEvidence($sessionRecord, $sessionRecord->gameLevel);
-
- if (! $feedbackRefreshed) {
- $feedbackRefreshed = $interviewController
- ->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel);
- }
+ $coachingRepaired = app(FeedbackCoachingRepair::class)->repairSession($sessionRecord);
  } catch (\Throwable $exception) {
- Log::warning('Detailed feedback refresh failed; rendering saved report data.', [
+ Log::warning('Detailed feedback local repair failed; rendering saved report data.', [
  'session_id' => $sessionRecord->id,
  'user_id' => Auth::id(),
  'error_type' => $exception::class,
@@ -851,25 +795,7 @@ class UserController extends Controller
  }
  }
 
- if ($feedbackRefreshed) {
- $sessionRecord->refresh()->load([
- 'category',
- 'answers' => function ($query) {
- $query->whereNull('retry_of_answer_id')
- ->with(['question', 'retryAttempts']);
- },
- 'score',
- 'feedback',
- 'gameLevel',
- ]);
- }
-
- $sampleAnswersRefreshed = false;
- if (! $sessionEndedEarly) {
- $sampleAnswersRefreshed = $this->ensureReviewSampleAnswers($sessionRecord);
- }
-
- if ($sampleAnswersRefreshed) {
+ if ($coachingRepaired) {
  $sessionRecord->refresh()->load([
  'category',
  'answers' => function ($query) {
@@ -886,143 +812,6 @@ class UserController extends Controller
  $reviewEvidence = FeedbackEvidencePresenter::forSession($sessionRecord);
 
  return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence'));
- }
-
- private function deferReviewOpenAiRefreshEnabled(): bool
- {
- return filter_var(config('services.interview_report.defer_review_openai_refresh', false), FILTER_VALIDATE_BOOLEAN);
- }
-
- private function ensureReviewSampleAnswers(InterviewSession $sessionRecord): bool
- {
- $openAiConfigured = AIService::providerIsConfigured('openai');
- $languageConfig = Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
- $updated = false;
-
- foreach ($sessionRecord->answers as $answer) {
- $question = $answer->question;
- if (! $question) {
- continue;
- }
-
- $coachingFeedback = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
- $cachedText = trim((string) data_get($coachingFeedback, 'review_sample_answer.text', ''));
- $cachedQuestionId = (int) data_get($coachingFeedback, 'review_sample_answer.question_id', 0);
- $cachedSource = trim((string) data_get($coachingFeedback, 'review_sample_answer.source', ''));
- $attemptedProvider = trim((string) data_get($coachingFeedback, 'review_sample_answer.attempted_provider', ''));
- $generatedAt = data_get($coachingFeedback, 'review_sample_answer.generated_at');
- $recentOpenAiFallback = false;
-
- if ($generatedAt) {
- try {
- $recentOpenAiFallback = $cachedSource === 'local'
- && $attemptedProvider === 'openai'
- && Carbon::parse($generatedAt)->greaterThan(now()->subHours(6));
- } catch (\Throwable) {
- $recentOpenAiFallback = false;
- }
- }
-
- if ($cachedText !== ''
- && $cachedQuestionId === (int) $question->id
- && ($cachedSource === 'ai' || ! $openAiConfigured || $recentOpenAiFallback)
- ) {
- continue;
- }
-
- $savedProvider = AIService::normalizeProviderKey($answer->ai_provider?? '');
- $savedProviderIsAi = $savedProvider !== '' &&! in_array($savedProvider, ['local', 'localmodel'], true);
- $savedFeedbackSampleAnswer = $this->reviewSampleAnswerFromSavedFeedback($answer, $question);
- if ($savedFeedbackSampleAnswer !== '' && ($savedProviderIsAi ||! $openAiConfigured)) {
- data_set($coachingFeedback, 'review_sample_answer', [
- 'text' => $savedFeedbackSampleAnswer,
- 'source' => $savedProviderIsAi? 'ai': 'local',
- 'provider' => $savedProviderIsAi? $savedProvider: 'local',
- 'attempted_provider' => $savedProviderIsAi? $savedProvider: 'local',
- 'question_id' => $question->id,
- 'generated_at' => now()->toIso8601String(),
- ]);
-
- $answer->coaching_feedback = $coachingFeedback;
- $answer->save();
- $updated = true;
- continue;
- }
-
- $sampleAnswer = '';
- $source = 'local';
- $provider = 'local';
- $attemptedProvider = $openAiConfigured? 'openai': 'local';
-
- if ($openAiConfigured) {
- try {
- $generated = AIService::generateCoachPossibleAnswer(
- $sessionRecord,
- $question,
- 'openai',
- $languageConfig
- );
- $candidate = trim((string) ($generated['possible_answer']?? ''));
- if ($candidate !== '' && ($generated['source']?? '') === 'ai') {
- $sampleAnswer = $candidate;
- $source = 'ai';
- $provider = AIService::normalizeProviderKey($generated['provider']?? 'openai') ?: 'openai';
- }
- } catch (\Throwable $error) {
- Log::warning('OpenAI review sample answer generation failed; using local fallback.', [
- 'session_id' => $sessionRecord->id,
- 'answer_id' => $answer->id,
- 'question_id' => $question->id,
- 'error_type' => $error::class,
- ]);
- }
- }
-
- if ($sampleAnswer === '') {
- $sampleAnswer = review_question_sample_answer($question);
- }
-
- if ($sampleAnswer === '') {
- continue;
- }
-
- data_set($coachingFeedback, 'review_sample_answer', [
- 'text' => $sampleAnswer,
- 'source' => $source,
- 'provider' => $provider,
- 'attempted_provider' => $attemptedProvider,
- 'question_id' => $question->id,
- 'generated_at' => now()->toIso8601String(),
- ]);
-
- $answer->coaching_feedback = $coachingFeedback;
- $answer->save();
- $updated = true;
- }
-
- return $updated;
- }
-
- private function reviewSampleAnswerFromSavedFeedback(InterviewAnswer $answer, mixed $question): string
- {
- $raw = trim((string) ($answer->better_sample_answer?? ''));
- if ($raw === '') {
- return '';
- }
-
- $sampleAnswer = function_exists('review_better_answer_text')
- ? review_better_answer_text($raw, $answer, $question)
- : $raw;
- $sampleAnswer = trim(preg_replace('/\s+/u', ' ', $sampleAnswer)?? $sampleAnswer);
-
- if ($sampleAnswer === ''
- || preg_match('/\[[^\]]+\]/u', $sampleAnswer) === 1
- || preg_match('/\b(?:response-based possible answer is unavailable|saved answer is too short|does not contain enough response detail)\b/iu', $sampleAnswer) === 1
- ) {
- return '';
- }
-
- return $sampleAnswer;
  }
 
  public function exportSession(InterviewSession $session)
