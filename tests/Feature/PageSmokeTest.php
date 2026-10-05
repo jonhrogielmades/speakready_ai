@@ -219,11 +219,15 @@ class PageSmokeTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('action="'.route('user.feedback').'"', false)
+ ->assertSee('id="card-practice-history"', false)
+ ->assertSee('Practice History')
+ ->assertSee('Review completed mock interviews and saved feedback.')
  ->assertSee(route('user.review', $session->id), false)
- ->assertSee('View Report')
- ->assertDontSee('data-sr-confirm-title="Delete interview session"', false)
- ->assertDontSee(route('user.sessions.clear'), false);
+ ->assertSee('Review')
+ ->assertSee(route('user.sessions.clear'), false)
+ ->assertSee(route('user.sessions.destroy', $session->id), false)
+ ->assertSee('data-sr-confirm-title="Clear all sessions?"', false)
+ ->assertSee('data-sr-confirm-title="Delete this session?"', false);
 
  $this->actingAs($user)
  ->get(route('user.modules.index'))

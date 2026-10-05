@@ -34,22 +34,21 @@ final class FeedbackEvidencePresenter
     {
         $coaching = is_array($answer->coaching_feedback ?? null) ? $answer->coaching_feedback : [];
         $alignment = is_array(data_get($coaching, 'content_alignment')) ? data_get($coaching, 'content_alignment') : [];
-        $evidenceMap = is_array($answer->evidence_map ?? null) ? $answer->evidence_map : [];
         $question = $answer->question ?? $answer;
         $answerText = self::answerContent($answer);
         $questionText = trim((string) ($answer->question->question_text ?? data_get($alignment, 'question', '')));
+        $providerKey = self::providerKey($answer->ai_provider ?? null);
+        $apiBacked = in_array($providerKey, ['openai', 'gemini', 'groq', 'cohere'], true)
+            || in_array((string) data_get($alignment, 'evaluation_source'), ['ai_evidence_validated', 'provider'], true);
         $status = self::alignmentStatus($answer, $alignment);
         $statusLabel = self::statusLabel($status, data_get($alignment, 'status_label'));
         $confidence = self::scoreValue(data_get($alignment, 'scoring_confidence', $answer->scoring_confidence));
         $qualityPercent = self::scoreValue(data_get($coaching, 'feedback_quality.completeness_percent'));
-        $evidenceQuotes = self::feedbackTextList(data_get($alignment, 'evidence_quotes', data_get($evidenceMap, 'supporting_excerpts', [])), $question, 3, 240);
-        if ($evidenceQuotes === [] && $answerText !== '' && ! (bool) ($answer->is_skipped ?? false)) {
-            $evidenceQuotes[] = self::limitText($answerText, 220);
-        }
+        $evidenceQuotes = self::feedbackTextList(data_get($alignment, 'evidence_quotes', []), $question, 3, 240);
 
-        $missingPoints = self::feedbackTextList(data_get($alignment, 'missing_points', data_get($evidenceMap, 'missing_evidence', [])), $question, 3, 180);
+        $missingPoints = self::feedbackTextList(data_get($alignment, 'missing_points', []), $question, 3, 180);
         $nextSteps = self::feedbackTextList(data_get($alignment, 'next_attempt_steps', []), $question, 4, 190);
-        $nextPractice = self::cleanFeedback(data_get($alignment, 'action', $answer->recommendation_text ?? ''), $question);
+        $nextPractice = self::cleanFeedback(data_get($alignment, 'action', ''), $question);
         if ($nextPractice === '' && $nextSteps !== []) {
             $nextPractice = $nextSteps[0];
         }
@@ -58,19 +57,12 @@ final class FeedbackEvidencePresenter
         if ($improvement === '' && $missingPoints !== []) {
             $improvement = $missingPoints[0];
         }
-        if ($improvement === '') {
-            $improvement = self::cleanFeedback($answer->recommendation_text ?? '', $question);
-        }
-        if ($improvement === '') {
-            $improvement = 'Add a direct answer, one specific detail, and a true result or lesson.';
-        }
 
         $whatWorked = self::cleanFeedback(data_get($alignment, 'what_worked', ''), $question);
         $impact = self::cleanFeedback(data_get($alignment, 'impact', ''), $question);
         $successCheck = self::cleanFeedback(data_get($alignment, 'success_check', ''), $question);
-        $feedback = self::cleanFeedback($answer->ai_feedback ?: data_get($alignment, 'observation', ''), $question);
-        $betterAnswer = self::betterAnswer((string) ($answer->better_sample_answer ?? ''), $answer, $question);
-        $providerKey = self::providerKey($answer->ai_provider ?? null);
+        $feedback = $apiBacked ? self::cleanFeedback($answer->ai_feedback ?: data_get($alignment, 'observation', ''), $question) : '';
+        $betterAnswer = $apiBacked ? self::betterAnswer((string) ($answer->better_sample_answer ?? ''), $answer, $question) : '';
         $hasVoiceRecording = trim((string) ($answer->voice_recording_path ?? '')) !== '';
         $typedAnswerText = self::cleanText((string) ($answer->answer_text ?? ''));
         $isVoiceOnlyAnswer = $hasVoiceRecording
@@ -102,12 +94,12 @@ final class FeedbackEvidencePresenter
             'missing_points' => $missingPoints,
             'next_steps' => $nextSteps,
             'what_worked' => $whatWorked,
-            'feedback' => $feedback !== '' ? $feedback : 'No feedback was generated for this answer yet.',
+            'feedback' => $feedback,
             'improvement' => $improvement,
             'impact' => $impact,
-            'next_practice' => $nextPractice !== '' ? $nextPractice : 'Try again with a direct opening and one true supporting detail.',
-            'success_check' => $successCheck !== '' ? $successCheck : 'A reviewer can find the direct answer, the supporting detail, and the result or lesson.',
-            'limitation' => self::cleanFeedback(data_get($alignment, 'limitation', ''), $question) ?: 'This review uses only the saved answer, question, and measurable practice data.',
+            'next_practice' => $nextPractice,
+            'success_check' => $successCheck,
+            'limitation' => self::cleanFeedback(data_get($alignment, 'limitation', ''), $question),
             'better_answer' => $betterAnswer,
             'review_url' => route('user.review', $session->id),
             'has_voice_recording' => $hasVoiceRecording,
@@ -392,8 +384,7 @@ final class FeedbackEvidencePresenter
 
         return match ($source) {
             'ai_evidence_validated' => 'Validated AI provider check',
-            'local_evidence' => 'Local evidence check',
-            'local_fallback' => 'Fallback evidence check',
+            'local_evidence', 'local_fallback', 'stored_evidence_assessment' => '',
             'provider' => 'AI provider check',
             '' => 'Saved review',
             default => Str::headline(str_replace('_', ' ', $source)),
@@ -422,7 +413,6 @@ final class FeedbackEvidencePresenter
             'gemini' => 'Gemini evidence',
             'groq' => 'Groq evidence',
             'cohere' => 'Cohere evidence',
-            'local' => 'Local evidence',
             default => 'Saved evidence',
         };
     }
@@ -529,11 +519,21 @@ final class FeedbackEvidencePresenter
     {
         $text = self::cleanText($text);
         if ($text === '') {
-            return 'No improved draft was generated. Retry with a direct answer, one specific detail, and a true result or lesson.';
+            return '';
         }
 
-        if (function_exists('review_better_answer_text')) {
-            return self::cleanText(review_better_answer_text($text, $answer, $questionSource));
+        if (function_exists('review_feedback_without_question_text')) {
+            $text = self::cleanText(review_feedback_without_question_text($text, $questionSource));
+        }
+
+        $looksLikeQuestion = function_exists('review_text_looks_like_question')
+            ? review_text_looks_like_question($text, $questionSource)
+            : false;
+        if ($text === ''
+            || $looksLikeQuestion
+            || preg_match('/\[[^\]]+\]/u', $text) === 1
+            || preg_match('/\b(?:response-based possible answer is unavailable|saved answer is too short|does not contain enough response detail)\b/iu', $text) === 1) {
+            return '';
         }
 
         return $text;

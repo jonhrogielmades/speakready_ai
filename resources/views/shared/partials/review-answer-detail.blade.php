@@ -1,15 +1,24 @@
 @php
  $coachingFeedback = is_array($answer->coaching_feedback ?? null) ? $answer->coaching_feedback : [];
- $reviewSampleAnswerCache = data_get($coachingFeedback, 'review_sample_answer');
- $coachingRepair = app(\App\Support\FeedbackCoachingRepair::class);
- if ($coachingRepair->answerCoachingNeedsRepair($coachingFeedback)) {
- $coachingFeedback = $coachingRepair->buildAnswerCoaching(
- $answer,
- (isset($sessionRecord) && $sessionRecord instanceof \App\Models\InterviewSession) ? $sessionRecord : null
- );
- if (is_array($reviewSampleAnswerCache)) {
- data_set($coachingFeedback, 'review_sample_answer', $reviewSampleAnswerCache);
- }
+ $normalizeReviewProviderKey = static function ($provider): string {
+ $provider = strtolower(trim((string) $provider));
+ $provider = str_replace([' ', '_', '-'], '', $provider);
+
+ return match ($provider) {
+ 'openai', 'chatgpt', 'gpt' => 'openai',
+ 'gemini', 'google', 'googlegemini' => 'gemini',
+ 'groq' => 'groq',
+ 'cohere' => 'cohere',
+ 'local', 'localmodel' => 'local',
+ default => '',
+ };
+ };
+ $answerProvider = $normalizeReviewProviderKey($answer->ai_provider ?? '');
+ $storedEvaluationSource = trim((string) data_get($coachingFeedback, 'content_alignment.evaluation_source', ''));
+ $reviewIsApiBacked = $storedEvaluationSource === 'ai_evidence_validated'
+ || in_array($answerProvider, ['openai', 'gemini', 'groq', 'cohere'], true);
+ if (! $reviewIsApiBacked && in_array($storedEvaluationSource, ['local_fallback', 'local_evidence', 'stored_evidence_assessment'], true)) {
+ $coachingFeedback = [];
  }
  $contentAlignment = is_array($coachingFeedback['content_alignment'] ?? null) ? $coachingFeedback['content_alignment'] : [];
  $evidenceMap = is_array($answer->evidence_map ?? null) ? $answer->evidence_map : [];
@@ -39,7 +48,12 @@
  ? 'Voice answer saved. Feedback is based on the saved voice session.'
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
  $sampleAnswer = trim((string) data_get($coachingFeedback, 'review_sample_answer.text', ''));
- if ($sampleAnswer === '') {
+ $sampleAnswerSource = trim((string) data_get($coachingFeedback, 'review_sample_answer.source', ''));
+ $sampleAnswerProvider = $normalizeReviewProviderKey(data_get($coachingFeedback, 'review_sample_answer.provider', $answerProvider));
+ if ($sampleAnswer !== '' && $sampleAnswerSource !== 'ai' && ! in_array($sampleAnswerProvider, ['openai', 'gemini', 'groq', 'cohere'], true)) {
+ $sampleAnswer = '';
+ }
+ if ($sampleAnswer === '' && $reviewIsApiBacked) {
  $savedSampleAnswer = trim((string) ($answer->better_sample_answer ?? ''));
  if ($savedSampleAnswer !== '') {
  $cleanSavedSampleAnswer = function_exists('review_feedback_without_question_text')
@@ -49,19 +63,11 @@
  $cleanSavedSampleLooksLikeQuestion = function_exists('review_text_looks_like_question')
  ? review_text_looks_like_question($cleanSavedSampleAnswer, $questionSource)
  : false;
- $fallbackSampleAnswer = function_exists('review_better_answer_fallback')
- ? trim((string) review_better_answer_fallback($answer, $questionSource))
- : '';
  if ($cleanSavedSampleLooksLikeQuestion) {
  $sampleAnswer = '';
  } else {
- $sampleAnswer = function_exists('review_better_answer_text')
- ? review_better_answer_text($savedSampleAnswer, $answer, $questionSource)
- : $savedSampleAnswer;
- $sampleAnswer = trim(preg_replace('/\s+/u', ' ', $sampleAnswer) ?? $sampleAnswer);
- if ($fallbackSampleAnswer !== '' && $sampleAnswer === $fallbackSampleAnswer && $cleanSavedSampleAnswer !== '') {
  $sampleAnswer = $cleanSavedSampleAnswer;
- }
+ $sampleAnswer = trim(preg_replace('/\s+/u', ' ', $sampleAnswer) ?? $sampleAnswer);
  $sampleAnswerLooksLikeQuestion = function_exists('review_text_looks_like_question')
  ? review_text_looks_like_question($sampleAnswer, $questionSource)
  : false;
@@ -74,22 +80,17 @@
  }
  }
  }
- if ($sampleAnswer === '') {
- $sampleAnswer = review_question_sample_answer($questionSource);
- }
  $whatWorked = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['what_worked'] ?? ''), 'worked');
+ $savedAiFeedbackText = $reviewIsApiBacked ? $reviewFeedbackText($answer->ai_feedback ?? '') : '';
+ if ($whatWorked === '' && $savedAiFeedbackText !== '') {
+ $whatWorked = review_feedback_with_sentence_range($savedAiFeedbackText, 'feedback');
+ }
  $impactText = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['impact'] ?? $contentAlignment['observation'] ?? ''), 'impact');
- $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
- $supportingExcerpts = $listItems($contentAlignment['evidence_quotes'] ?? ($evidenceMap['supporting_excerpts'] ?? []), 1);
+ $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? [], 2);
+ $supportingExcerpts = $listItems($contentAlignment['evidence_quotes'] ?? [], 1);
  $improvementFocus = $reviewFeedbackText($contentAlignment['improvement_focus'] ?? '');
  if ($improvementFocus === '' && ! empty($missingPoints)) {
  $improvementFocus = $missingPoints[0];
- }
- if ($improvementFocus === '') {
- $improvementFocus = $reviewFeedbackText($starAnalysis['suggestion'] ?? '');
- }
- if ($improvementFocus === '') {
- $improvementFocus = 'Add one specific example, action, or result.';
  }
  $improvementFocus = review_feedback_with_sentence_range($improvementFocus, 'improve');
  $alignmentStatus = strtolower(str_replace([' ', '-'], '_', trim((string) ($contentAlignment['status'] ?? ''))));
@@ -158,31 +159,21 @@
  $evaluationSource = trim((string) data_get($contentAlignment, 'evaluation_source', ''));
  $evaluationSourceLabel = match ($evaluationSource) {
  'ai_evidence_validated' => 'Validated AI provider check',
- 'local_evidence' => 'Local evidence check',
- 'local_fallback' => 'Fallback evidence check',
  'provider' => 'AI provider check',
- '' => 'Saved review',
+ 'local_evidence', 'local_fallback', 'stored_evidence_assessment' => '',
+ '' => $reviewIsApiBacked ? 'Saved AI review' : '',
  default => \Illuminate\Support\Str::headline(str_replace('_', ' ', $evaluationSource)),
  };
- $answerProvider = strtolower(trim((string) ($answer->ai_provider ?? '')));
- $answerProvider = str_replace([' ', '_', '-'], '', $answerProvider);
  $answerProviderLabel = match ($answerProvider) {
- 'openai', 'chatgpt', 'gpt' => 'OpenAI evidence',
- 'gemini', 'google', 'googlegemini' => 'Gemini evidence',
+ 'openai' => 'OpenAI evidence',
+ 'gemini' => 'Gemini evidence',
  'groq' => 'Groq evidence',
  'cohere' => 'Cohere evidence',
- 'local', 'localmodel' => 'Local evidence',
  default => '',
  };
  $successCheck = $reviewFeedbackText($contentAlignment['success_check'] ?? '');
- if ($successCheck === '') {
- $successCheck = 'A reviewer can find the direct answer, the supporting detail, and the result or lesson.';
- }
  $successCheck = review_feedback_with_sentence_range($successCheck, 'success');
  $limitationNote = $reviewFeedbackText($contentAlignment['limitation'] ?? '');
- if ($limitationNote === '') {
- $limitationNote = 'This review uses only the saved answer, question, and measurable practice data.';
- }
  $limitationNote = review_feedback_with_sentence_range($limitationNote, 'limitation');
 @endphp
 
@@ -209,7 +200,9 @@
  @if($answerProviderLabel !== '')
  <span>{{ $answerProviderLabel }}</span>
  @endif
+ @if($evaluationSourceLabel !== '')
  <span>{{ $evaluationSourceLabel }}</span>
+ @endif
  </div>
  </div>
  <p class="review-evidence-note">{{ $confidenceNote }}</p>
@@ -219,7 +212,7 @@
  @if(!empty($supportingExcerpts))
  <p>"{{ $supportingExcerpts[0] }}"</p>
  @else
- <p>No direct quote was saved for this answer. Use the full answer below as the review source.</p>
+ <p>No API evidence quote was saved for this answer. Use the full answer below as the saved source.</p>
  @endif
  </div>
  <div>
@@ -231,15 +224,19 @@
  @endforeach
  </ul>
  @else
- <p>No major missing point was stored. Keep the answer focused and add stronger proof if you retry.</p>
+ <p>No API-saved missing point was stored for this answer.</p>
  @endif
  </div>
+ @if($successCheck !== '')
  <div>
  <span>Success check</span>
  <p>{{ $successCheck }}</p>
  </div>
+ @endif
  </div>
+ @if($limitationNote !== '')
  <p class="review-evidence-limitation">{{ $limitationNote }}</p>
+ @endif
  </section>
 
  <div class="review-answer-summary-grid">
@@ -250,10 +247,12 @@
  </section>
  @endif
 
+ @if($improvementFocus !== '')
  <section class="review-answer-section">
  <div class="review-block-title review-title-warning"><i class="fa-solid fa-bullseye"></i><span>What To Improve</span></div>
  <p>{{ $improvementFocus }}</p>
  </section>
+ @endif
 
  @if($impactText !== '')
  <section class="review-answer-section">

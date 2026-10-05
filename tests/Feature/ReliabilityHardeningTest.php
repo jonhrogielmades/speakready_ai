@@ -948,10 +948,9 @@ class ReliabilityHardeningTest extends TestCase
  );
  }
 
- public function test_interview_fast_finish_uses_local_report_without_blocking_on_openai(): void
+ public function test_interview_fast_finish_still_uses_api_backed_report(): void
  {
  config(['services.interview_report.fast_finish' => true]);
- Http::fake(['api.openai.com/*' => Http::response(['choices' => []], 200)]);
  AiProvider::create([
  'name' => 'OpenAI',
  'api_endpoint' => 'https://api.openai.com/v1',
@@ -970,6 +969,7 @@ class ReliabilityHardeningTest extends TestCase
  'answer_text' => 'During a delayed release, I owned the checklist, coordinated approvals, and documented the final handoff result.',
  'response_mode' => 'text',
  ]);
+ $this->fakeOpenAiFeedback([$answer]);
 
  $this->actingAs($user)
  ->withSession([
@@ -987,11 +987,11 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertDatabaseHas('scores', ['interview_session_id' => $session->id]);
  $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
  $savedAnswer = $answer->fresh();
- $this->assertSame('local', $savedAnswer->ai_provider);
+ $this->assertSame('openai', $savedAnswer->ai_provider);
  $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'review_sample_answer.text'));
- $this->assertSame('local', data_get($savedAnswer->coaching_feedback, 'review_sample_answer.source'));
- $this->assertSame('local', data_get($savedAnswer->coaching_feedback, 'review_sample_answer.provider'));
- Http::assertNothingSent();
+ $this->assertSame('ai', data_get($savedAnswer->coaching_feedback, 'review_sample_answer.source'));
+ $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'review_sample_answer.provider'));
+ Http::assertSentCount(1);
  }
 
  public function test_live_feedback_modes_control_final_feedback_and_readiness_updates(): void
@@ -1273,7 +1273,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertEmpty($savedAnswer->ai_feedback);
  }
 
- public function test_interview_finish_completes_with_local_report_when_all_ai_feedback_providers_fail(): void
+ public function test_interview_finish_returns_retry_without_fallback_when_all_ai_feedback_providers_fail(): void
  {
  foreach ([
  'GEMINI_API_KEY' => 'gemini_test_token',
@@ -1313,20 +1313,18 @@ class ReliabilityHardeningTest extends TestCase
  'active_interview_provider' => 'gemini',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertOk()
- ->assertJsonPath('redirect_url', route('user.review', $session));
+ ->assertStatus(503)
+ ->assertJsonPath('error_code', 'ai_feedback_providers_failed')
+ ->assertJsonPath('provider_count', 4)
+ ->assertJsonPath('retry_after_ms', 1500);
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
- $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
+ $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
- $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
- $this->assertNotEmpty($savedAnswer->ai_feedback);
- $this->assertNotEmpty($savedAnswer->coaching_feedback);
- $this->assertNotEmpty($feedback->strengths);
- $this->assertNotEmpty($feedback->improvement_suggestions);
- $this->assertNotEmpty(data_get($feedback->coaching_summary, 'content_overview'));
- $this->assertSame('local', $savedAnswer->ai_provider);
+ $this->assertEmpty($savedAnswer->ai_feedback);
+ $this->assertEmpty($savedAnswer->coaching_feedback);
+ $this->assertEmpty($savedAnswer->ai_provider);
  Http::assertSentCount(4);
  }
 
@@ -1403,7 +1401,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
  }
 
- public function test_user_review_repairs_missing_coaching_report_data_without_ai_refresh(): void
+ public function test_user_review_renders_saved_report_without_local_coaching_repair_on_open(): void
  {
  Http::preventStrayRequests();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -1445,17 +1443,11 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('Feedback Detailed Review')
  ->assertSee('Answer Match')
- ->assertSee('What To Improve')
  ->assertSee($question->question_text);
 
- $this->assertSame(
- EvidenceBasedCoachingService::VERSION,
- data_get($answer->fresh()->coaching_feedback, 'version')
- );
- $this->assertSame(
- EvidenceBasedCoachingService::VERSION,
- data_get(Feedback::where('interview_session_id', $session->id)->firstOrFail()->coaching_summary, 'version')
- );
+ $this->assertEmpty($answer->fresh()->coaching_feedback);
+ $this->assertEmpty(Feedback::where('interview_session_id', $session->id)->firstOrFail()->coaching_summary);
+ Http::assertNothingSent();
  }
 
  public function test_user_review_renders_saved_report_without_feedback_refresh_on_open(): void

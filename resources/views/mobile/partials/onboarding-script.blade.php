@@ -880,17 +880,17 @@
             if (routeMatches(routeName, ['user.feedback'])) {
                 return withDefaults({
                     heroTitle: 'Feedback center',
-                    heroDescription: 'Review recent AI summaries and searchable interview history.',
+                    heroDescription: 'Review recent AI summaries and completed interview history.',
                     workspaceTitle: 'Feedback summary',
                     workspaceDescription: 'Use the latest summary and proof signals to understand the completed practice session.',
                     metricsTitle: 'Feedback history',
-                    metricsDescription: 'Filter and scan previous sessions by scenario, score, rating, feedback, and available follow-up actions.',
-                    actionsTitle: 'Filters and actions',
-                    actionsDescription: 'Search, filter, open details, retry answers, clear history, or continue practice from the controls here.',
+                    metricsDescription: 'Scan previous sessions by date, category, score, and available review actions.',
+                    actionsTitle: 'Session actions',
+                    actionsDescription: 'Open a saved review, delete an old session, clear history, or continue practice from the controls here.',
                     heroSelectors: ['#feedbackModulesLikeHero', '#feedbackAiSummary'],
                     workspaceSelectors: ['#feedbackAiSummary', '#feedbackReliability'],
-                    metricsSelectors: ['#feedbackTable', '#feedbackPagination', '#feedback-empty-state'],
-                    actionSelectors: ['#feedback-filters', '#feedbackSearch', '#scenarioFilter'],
+                    metricsSelectors: ['#card-practice-history', '#card-practice-history .sr-recent-session-pager', '#card-practice-history .sr-polished-empty'],
+                    actionSelectors: ['#card-practice-history .sr-session-card-polished', '#card-practice-history .report-session-actions'],
                 });
             }
 

@@ -2,7 +2,7 @@
 @section('title', 'Feedback Center')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/feedback.css?v=16') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/feedback.css?v=17') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')
@@ -147,158 +147,16 @@
 
  </div>
 
- <div class="premium-panel">
- <div class="feedback-history-head">
- <h5 class="feedback-history-title">Practice History</h5>
- <form id="feedbackFilterForm" action="{{ route('user.feedback') }}" method="GET" class="d-none"></form>
- <input form="feedbackFilterForm" type="hidden" name="sort" value="{{ $feedbackFilters['sort']?? 'desc' }}">
- <div id="feedback-filters">
- <select id="scenarioFilter" name="scenario" form="feedbackFilterForm" class="form-select db-filter-input">
- <option value="">All Scenarios</option>
- @foreach($feedbackCategories as $category)
- <option value="{{ $category }}" @selected(($feedbackFilters['scenario']?? '') === $category)>{{ $category }}</option>
- @endforeach
- </select>
- @php
- $nextFeedbackSort = ($feedbackFilters['sort']?? 'desc') === 'desc'? 'asc': 'desc';
- $feedbackSortQuery = array_filter([
- 'scenario' => $feedbackFilters['scenario']?? '',
- 'search' => $feedbackFilters['search']?? '',
- 'sort' => $nextFeedbackSort,
- ], fn ($value) => filled($value));
- @endphp
- <a class="btn btn-outline-secondary" id="sortDateBtn" href="{{ route('user.feedback', $feedbackSortQuery) }}">
- <i class="fa-solid {{ ($feedbackFilters['sort']?? 'desc') === 'desc'? 'fa-arrow-down-short-wide': 'fa-arrow-up-wide-short' }} me-2"></i>
- {{ ($feedbackFilters['sort']?? 'desc') === 'desc'? 'Newest First': 'Oldest First' }}
- </a>
- <label for="feedbackSearch" class="visually-hidden">Search feedback history</label>
- <div class="input-group db-filter-input feedback-search-wrap">
- <span class="input-group-text border-0"><i class="fa-solid fa-search"></i></span>
- <input type="text" id="feedbackSearch" name="search" form="feedbackFilterForm" class="form-control border-0" placeholder="Search practice history..." value="{{ $feedbackFilters['search']?? '' }}" aria-describedby="feedbackFilterStatus" autocomplete="off">
- </div>
- <div class="feedback-filter-status" id="feedbackFilterStatus" role="status" aria-live="polite" hidden>
- <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
- <span>Updating feedback...</span>
- </div>
- </div>
- </div>
-
- @if($sessions->count() == 0)
- <div class="feedback-empty-state">
- <i class="fa-solid fa-message" aria-hidden="true"></i>
- <div class="feedback-empty-copy">
- <span>{{ $hasFeedbackRecords? 'No feedback records match your current filters.': 'Complete a practice interview to generate feedback.' }}</span>
- @if($hasActiveFeedbackFilters)
- <a href="{{ route('user.feedback') }}" class="feedback-empty-reset">Clear filters</a>
- @endif
- </div>
- </div>
- @else
- <div class="table-responsive feedback-table-wrap">
- <table class="table custom-table align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent;" id="feedbackTable">
- <thead>
- <tr style="border-bottom: 2px solid var(--bd); color: var(--tx3);">
- <th class="border-0">Date</th>
- <th class="border-0">Practice Scenario</th>
- <th class="border-0">Score</th>
- <th class="border-0">Rating</th>
- <th class="border-0 text-end">Review</th>
- </tr>
- </thead>
- <tbody>
- @foreach($sessions as $session)
- <tr data-scenario="{{ $session->practice_scenario?? 'General Job Interview' }}" data-date="{{ $session->created_at->timestamp }}">
- <td class="border-0 py-3">{{ $session->created_at->format('M d, Y') }}</td>
- <td class="border-0 py-3 fw-bold">{{ $session->practice_scenario?? 'General Job Interview' }}</td>
- @php $sc = $session->score? $session->score->overall_readiness_score: null; @endphp
- <td class="border-0 py-3 feedback-mobile-history-cell" colspan="3">
- <div class="feedback-mobile-history-row">
- <div class="feedback-mobile-history-stat">
- <span>Score</span>
- <strong>
- @if($session->score)
- {{ $session->score->overall_readiness_score }}%
- @else
- Pending
- @endif
- </strong>
- </div>
- <div class="feedback-mobile-history-stat">
- <span>Rating</span>
- @if($sc === null) <span class="badge feedback-score-badge feedback-score-badge-pending" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Not scored</span>
- @elseif($sc >= 90) <span class="badge feedback-score-badge feedback-score-badge-excellent" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span>
- @elseif($sc >= 70) <span class="badge feedback-score-badge feedback-score-badge-good" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span>
- @elseif($sc >= 50) <span class="badge feedback-score-badge feedback-score-badge-fair" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Fair</span>
- @else <span class="badge feedback-score-badge feedback-score-badge-needs-work" style="background: rgba(245, 158, 11, 0.18); color: #b45309;">Needs Practice</span>
- @endif
- </div>
- <div class="d-flex justify-content-end gap-2 feedback-history-actions">
- <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary btn-shine"><i class="fa-solid fa-chart-simple"></i> View Report</a>
- </div>
- </div>
- </td>
- </tr>
- @endforeach
- </tbody>
- </table>
- </div>
- @endif
- 
- @if($sessions->hasPages())
- <div class="feedback-history-pager" id="feedbackPagination" aria-label="Practice history pagination">
- <a href="{{ $sessions->previousPageUrl() ?: '#' }}" class="feedback-page-btn {{ $sessions->onFirstPage()? 'disabled': '' }}" aria-disabled="{{ $sessions->onFirstPage()? 'true': 'false' }}" @if($sessions->onFirstPage()) tabindex="-1" @endif>
- <i class="fa-solid fa-arrow-left"></i>
- Previous
- </a>
- <span class="feedback-page-status">Page {{ $sessions->currentPage() }} of {{ $sessions->lastPage() }}</span>
- <a href="{{ $sessions->nextPageUrl() ?: '#' }}" class="feedback-page-btn {{ $sessions->hasMorePages()? '': 'disabled' }}" aria-disabled="{{ $sessions->hasMorePages()? 'false': 'true' }}" @unless($sessions->hasMorePages()) tabindex="-1" @endunless>
- Next
- <i class="fa-solid fa-arrow-right"></i>
- </a>
- </div>
- @endif
- </div>
+ @include('shared.user.recent-sessions-card', [
+ 'recentSessions' => $sessions,
+ 'recentSessionsCardId' => 'card-practice-history',
+ 'recentSessionsTitle' => 'Practice History',
+ 'recentSessionsSubtitle' => 'Review completed mock interviews and saved feedback.',
+ 'recentSessionsEmptyText' => $hasActiveFeedbackFilters
+ ? 'No practice history matches your current filters.'
+ : 'Complete a practice interview to generate feedback.',
+ ])
 </div>
-
-<script>
- document.addEventListener('DOMContentLoaded', function() {
- const searchInput = document.getElementById('feedbackSearch');
- const scenarioFilter = document.getElementById('scenarioFilter');
- const filterForm = document.getElementById('feedbackFilterForm');
- const filterStatus = document.getElementById('feedbackFilterStatus');
- const feedbackShell = document.querySelector('.feedback-shell');
- let searchTimer = null;
- let isSubmitting = false;
-
- function submitFilters() {
- if (!filterForm || isSubmitting) return;
- isSubmitting = true;
- feedbackShell?.classList.add('feedback-is-filtering');
- filterForm.setAttribute('aria-busy', 'true');
- if (filterStatus) {
- filterStatus.hidden = false;
- }
- filterForm.submit();
- }
-
- if (scenarioFilter) {
- scenarioFilter.addEventListener('change', submitFilters);
- }
-
- if (searchInput) {
- searchInput.addEventListener('input', function() {
- clearTimeout(searchTimer);
- searchTimer = setTimeout(submitFilters, 450);
- });
- searchInput.addEventListener('keydown', function(event) {
- if (event.key!== 'Enter') return;
- event.preventDefault();
- clearTimeout(searchTimer);
- submitFilters();
- });
- }
- });
-</script>
 
 @push('scripts')
 <script>
@@ -312,14 +170,9 @@
  { element: '#feedbackReliability', popover: { title: 'Proof And Reliability', description: 'Use this section to check reliability, evidence coverage, and missing points.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
- { element: '#feedback-filters', popover: { title: 'Filters And Search', description: 'Filter by scenario, sort by date, or search keywords to find a specific feedback record.', side: 'bottom', align: 'start' }},
- { element: '#scenarioFilter', popover: { title: 'Scenario Filter', description: 'Narrow the history to one interview scenario when you want targeted feedback.', side: 'bottom', align: 'start' }},
- { element: '#sortDateBtn', popover: { title: 'Sort History', description: 'Switch between newest and oldest records while reviewing past practice.', side: 'bottom', align: 'center' }},
- { element: '#feedbackSearch', popover: { title: 'Search Feedback', description: 'Search by scenario, notes, or keywords to quickly locate an interview.', side: 'bottom', align: 'start' }},
- { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past practice interviews, scores, ratings, and report actions.', side: 'top', align: 'center' }},
- { element: '.feedback-history-actions', popover: { title: 'Open Report', description: 'Use the action button to view the full report for a previous interview.', side: 'top', align: 'center' }},
- { element: '.feedback-empty-state', popover: { title: 'No Records Yet', description: 'If the history is empty, start a practice interview or clear filters to show available feedback.', side: 'top', align: 'start' }},
- { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'center' }}
+ { element: '#card-practice-history', popover: { title: 'Practice History', description: 'Review completed interviews, scores, and saved feedback using the same session layout as Reports.', side: 'top', align: 'start' }},
+ { element: '#card-practice-history .sr-session-card-polished', popover: { title: 'Open Review', description: 'Use each session card to open feedback or delete an old interview session.', side: 'top', align: 'center' }},
+ { element: '#card-practice-history .sr-recent-session-pager', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'center' }}
  ];
 
  const stepsDesktop = [
@@ -329,14 +182,9 @@
  { element: '#feedbackReliability', popover: { title: 'Proof And Reliability', description: 'Use this section to check reliability, evidence coverage, and missing points.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
- { element: '#feedback-filters', popover: { title: 'Filters And Search', description: 'Filter by scenario, sort by date, or search keywords to find a specific feedback record.', side: 'bottom', align: 'end' }},
- { element: '#scenarioFilter', popover: { title: 'Scenario Filter', description: 'Narrow the history to one interview scenario when you want targeted feedback.', side: 'bottom', align: 'start' }},
- { element: '#sortDateBtn', popover: { title: 'Sort History', description: 'Switch between newest and oldest records while reviewing past practice.', side: 'bottom', align: 'center' }},
- { element: '#feedbackSearch', popover: { title: 'Search Feedback', description: 'Search by scenario, notes, or keywords to quickly locate an interview.', side: 'bottom', align: 'end' }},
- { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past practice interviews, scores, ratings, and report actions.', side: 'top', align: 'center' }},
- { element: '.feedback-history-actions', popover: { title: 'Open Report', description: 'Use the action button to view the full report for a previous interview.', side: 'top', align: 'center' }},
- { element: '.feedback-empty-state', popover: { title: 'No Records Yet', description: 'If the history is empty, start a practice interview or clear filters to show available feedback.', side: 'top', align: 'start' }},
- { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'end' }}
+ { element: '#card-practice-history', popover: { title: 'Practice History', description: 'Review completed interviews, scores, and saved feedback using the same session layout as Reports.', side: 'top', align: 'start' }},
+ { element: '#card-practice-history .sr-session-card-polished', popover: { title: 'Open Review', description: 'Use each session card to open feedback or delete an old interview session.', side: 'top', align: 'center' }},
+ { element: '#card-practice-history .sr-recent-session-pager', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'end' }}
  ];
 
  const filterTourSteps = (steps) => steps.filter((step) => document.querySelector(step.element));
