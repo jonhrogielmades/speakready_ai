@@ -779,10 +779,34 @@ class UserController extends Controller
  ->firstOrFail();
 
  $coachingRepaired = false;
+ $reviewPending = false;
  $sessionEndedEarly = $sessionRecord->status === 'ended'
  || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false);
+ $reviewPending = ! $sessionEndedEarly && ! $sessionRecord->gameLevel && $sessionRecord->status !== 'completed';
 
  if (! $sessionEndedEarly && $sessionRecord->status === 'completed') {
+ $interviewController = app(InterviewController::class);
+ if (! $sessionRecord->gameLevel) {
+ try {
+ if ($interviewController->ensureCompletedSessionOpenAiFeedbackEvidence($sessionRecord, null)) {
+ $sessionRecord->refresh()->load([
+ 'category',
+ 'answers' => fn ($query) => $query->whereNull('retry_of_answer_id')->with(['question', 'retryAttempts']),
+ 'score', 'feedback', 'gameLevel',
+ ]);
+ }
+ } catch (\Throwable $exception) {
+ Log::warning('Detailed feedback provider sync failed; review is pending.', [
+ 'session_id' => $sessionRecord->id,
+ 'user_id' => Auth::id(),
+ 'error_type' => $exception::class,
+ ]);
+ }
+
+ $reviewPending = ! $interviewController->hasCompletedSessionProviderFeedback($sessionRecord);
+ }
+
+ if (! $reviewPending && $sessionRecord->gameLevel) {
  try {
  $coachingRepaired = app(FeedbackCoachingRepair::class)->repairSession($sessionRecord);
  } catch (\Throwable $exception) {
@@ -794,15 +818,6 @@ class UserController extends Controller
  ]);
  }
 
- try {
- app(InterviewController::class)->deferCompletedSessionOpenAiFeedbackEvidence((int) $sessionRecord->id, 'detailed_review');
- } catch (\Throwable $exception) {
- Log::warning('Detailed feedback provider sync scheduling failed; rendering saved report data.', [
- 'session_id' => $sessionRecord->id,
- 'user_id' => Auth::id(),
- 'error_type' => $exception::class,
- 'message' => $exception->getMessage(),
- ]);
  }
  }
 
@@ -819,10 +834,10 @@ class UserController extends Controller
  ]);
  }
 
- $comparisonRows = $this->comparisonRowsFor($sessionRecord);
- $reviewEvidence = FeedbackEvidencePresenter::forSession($sessionRecord);
+ $comparisonRows = $reviewPending? []: $this->comparisonRowsFor($sessionRecord);
+ $reviewEvidence = $reviewPending? null: FeedbackEvidencePresenter::forSession($sessionRecord);
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'reviewPending'));
  }
 
  public function exportSession(InterviewSession $session)
@@ -834,6 +849,10 @@ class UserController extends Controller
  abort_unless((int) $session->user_id === (int) Auth::id(), 403);
 
  $session->load(['category', 'score', 'feedback', 'answers.question']);
+ if ($session->status === 'completed' && ! $session->game_level_id
+ && ! app(InterviewController::class)->hasCompletedSessionProviderFeedback($session)) {
+ abort(409, 'AI provider feedback is pending for this session.');
+ }
  $answers = $session->answers->whereNull('retry_of_answer_id')->values();
  $fileName = 'interview_session_'.$session->id.'_'.now()->format('Ymd_His').'.csv';
  $user = Auth::user();

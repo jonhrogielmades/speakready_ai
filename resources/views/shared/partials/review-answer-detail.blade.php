@@ -25,6 +25,10 @@
  ))), 0, $limit);
  };
  $questionSource = $answer->question ?? $answer;
+ $providerBackedReview = isset($sessionRecord)
+ && $sessionRecord instanceof \App\Models\InterviewSession
+ && ! $sessionRecord->gameLevel
+ && \App\Services\AIService::providerIsSupported($answer->ai_provider);
  $reviewFeedbackText = static fn ($value): string => review_feedback_without_question_text(is_scalar($value) ? (string) $value : '', $questionSource);
  $reviewFeedbackItems = static function ($items, int $limit = 2) use ($listItems, $reviewFeedbackText): array {
  return array_values(array_filter(array_map($reviewFeedbackText, $listItems($items, $limit))));
@@ -38,8 +42,10 @@
  : ($isVoiceOnlyAnswer && $hasVoiceEvidence
  ? 'Voice answer saved. Feedback is based on the saved voice session.'
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
- $sampleAnswer = trim((string) data_get($coachingFeedback, 'review_sample_answer.text', ''));
- if ($sampleAnswer === '') {
+ $sampleAnswer = $providerBackedReview
+ ? (data_get($reviewSampleAnswerCache, 'source') === 'ai' ? trim((string) data_get($reviewSampleAnswerCache, 'text', '')) : '')
+ : trim((string) data_get($coachingFeedback, 'review_sample_answer.text', ''));
+ if (! $providerBackedReview && $sampleAnswer === '') {
  $savedSampleAnswer = trim((string) ($answer->better_sample_answer ?? ''));
  if ($savedSampleAnswer !== '') {
  $cleanSavedSampleAnswer = function_exists('review_feedback_without_question_text')
@@ -74,11 +80,13 @@
  }
  }
  }
- if ($sampleAnswer === '') {
+ if (! $providerBackedReview && $sampleAnswer === '') {
  $sampleAnswer = review_question_sample_answer($questionSource);
  }
- $whatWorked = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['what_worked'] ?? ''), 'worked');
- $impactText = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['impact'] ?? $contentAlignment['observation'] ?? ''), 'impact');
+ $whatWorkedText = $reviewFeedbackText($contentAlignment['what_worked'] ?? '');
+ $impactReviewText = $reviewFeedbackText($contentAlignment['impact'] ?? $contentAlignment['observation'] ?? '');
+ $whatWorked = $providerBackedReview ? $whatWorkedText : review_feedback_with_sentence_range($whatWorkedText, 'worked');
+ $impactText = $providerBackedReview ? $impactReviewText : review_feedback_with_sentence_range($impactReviewText, 'impact');
  $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
  $supportingExcerpts = $listItems($contentAlignment['evidence_quotes'] ?? ($evidenceMap['supporting_excerpts'] ?? []), 1);
  $improvementFocus = $reviewFeedbackText($contentAlignment['improvement_focus'] ?? '');
@@ -88,10 +96,10 @@
  if ($improvementFocus === '') {
  $improvementFocus = $reviewFeedbackText($starAnalysis['suggestion'] ?? '');
  }
- if ($improvementFocus === '') {
+ if (! $providerBackedReview && $improvementFocus === '') {
  $improvementFocus = 'Add one specific example, action, or result.';
  }
- $improvementFocus = review_feedback_with_sentence_range($improvementFocus, 'improve');
+ $improvementFocus = $providerBackedReview ? $improvementFocus : review_feedback_with_sentence_range($improvementFocus, 'improve');
  $alignmentStatus = strtolower(str_replace([' ', '-'], '_', trim((string) ($contentAlignment['status'] ?? ''))));
  $scoreUnavailable = in_array($alignmentStatus, ['insufficient_evidence', 'not_evaluated', 'skipped'], true);
  $cameraDetectionOn = (isset($sessionRecord) && $sessionRecord instanceof \App\Models\InterviewSession)
@@ -175,10 +183,10 @@
  default => '',
  };
  $successCheck = $reviewFeedbackText($contentAlignment['success_check'] ?? '');
- if ($successCheck === '') {
+ if ($successCheck === '' && ! $providerBackedReview) {
  $successCheck = 'A reviewer can find the direct answer, the supporting detail, and the result or lesson.';
  }
- $successCheck = review_feedback_with_sentence_range($successCheck, 'success');
+ $successCheck = $providerBackedReview ? $successCheck : review_feedback_with_sentence_range($successCheck, 'success');
  $limitationNote = $reviewFeedbackText($contentAlignment['limitation'] ?? '');
  if ($limitationNote === '') {
  $limitationNote = 'This review uses only the saved answer, question, and measurable practice data.';

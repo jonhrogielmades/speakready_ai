@@ -5363,7 +5363,7 @@ PROMPT;
  || self::isGenericFeedback($aiFeedback)
  ) {
  $aiFeedback = self::evidenceGroundedFeedback($answerText, $questionText, $evidenceProfile, $hadProviderScores);
- } elseif (self::englishSignalCount($aiFeedback) >= 4) {
+ } elseif (! $requireAiGenerated && self::englishSignalCount($aiFeedback) >= 4) {
  $nextStep = self::answerSpecificNextStep($evidenceProfile, $questionText);
  if ($nextStep!== '' &&! str_contains(self::normalizeEvidenceText($aiFeedback), self::normalizeEvidenceText($nextStep))) {
  $aiFeedback.= ' Next step: '.$nextStep;

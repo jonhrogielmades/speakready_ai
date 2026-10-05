@@ -6,6 +6,9 @@
 @endpush
 
 @section('content')
+@if(!empty($reviewPending))
+@include('shared.partials.review-provider-pending', ['sessionRecord' => $sessionRecord])
+@else
 
 <div class="db-section active animate-fade-up review-shell">
  @php
@@ -466,4 +469,5 @@ function submitRetry(answerId) {
  });
 }
 </script>
+@endif
 @endsection
