@@ -3754,3 +3754,111 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparis
     margin-right: 2px !important;
     font-size: 0.62rem !important;
 }
+
+/* Recent Sessions final fit pass: keep all 3 paginated rows and controls visible. */
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions.report-sessions-card {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 18px !important;
+    overflow: visible !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .report-sessions-header {
+    margin-bottom: 12px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .report-sessions-icon {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .report-sessions-title {
+    font-size: 1rem !important;
+    line-height: 1.15 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .report-sessions-subtitle {
+    font-size: 0.82rem !important;
+    line-height: 1.3 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .report-session-actions {
+    margin-bottom: 10px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .report-session-actions .sr-section-action {
+    min-height: 34px !important;
+    padding: 7px 10px !important;
+    font-size: 0.78rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-sessions-table {
+    max-height: none !important;
+    overflow: visible !important;
+    border-radius: 16px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-sessions-table table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-sessions-table th {
+    height: 30px !important;
+    padding: 8px 12px !important;
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-sessions-table td {
+    height: 52px !important;
+    padding: 8px 12px !important;
+    font-size: 0.82rem !important;
+    line-height: 1.15 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .report-session-category-chip {
+    min-height: 24px !important;
+    padding: 4px 9px !important;
+    font-size: 0.74rem !important;
+    line-height: 1.05 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-session-row-actions {
+    gap: 6px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-session-review-table {
+    width: auto !important;
+    min-width: 70px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 6px 10px !important;
+    font-size: 0.74rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-session-delete-table {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    border-radius: 9px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-recent-session-pager {
+    margin-top: 10px !important;
+    padding-top: 0 !important;
+    border-top: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-recent-page-btn,
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-recent-page-status {
+    min-height: 34px !important;
+    padding: 7px 10px !important;
+    font-size: 0.78rem !important;
+}
