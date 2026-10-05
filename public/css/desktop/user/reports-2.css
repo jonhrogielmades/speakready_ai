@@ -3467,10 +3467,19 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-row-
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-review-table {
     min-height: 34px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     padding: 7px 11px !important;
+    border: 1px solid rgba(37, 99, 235, 0.25) !important;
     border-radius: 10px !important;
+    background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     font-size: 0.82rem !important;
+    font-weight: 850 !important;
     line-height: 1.2 !important;
+    text-decoration: none !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-session-delete-table {
