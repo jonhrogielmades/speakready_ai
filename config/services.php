@@ -167,7 +167,6 @@ return [
  'interview_report' => [
  'fast_finish' => env('INTERVIEW_FAST_FINISH', false),
  'defer_review_openai_refresh' => env('INTERVIEW_DEFER_REVIEW_OPENAI_REFRESH', false),
- 'defer_review_sample_answers' => env('INTERVIEW_DEFER_REVIEW_SAMPLE_ANSWERS', false),
  ],
 
  'question_generation_rag' => [

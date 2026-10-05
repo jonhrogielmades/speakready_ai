@@ -118,6 +118,10 @@ class FeedbackReportPresenter
  private static function bulletItems(string $text, string $fallback, int $limit = 4, ?int $characterLimit = 150): array
  {
  $clean = self::cleanText($text);
+ if (function_exists('review_feedback_without_question_text')) {
+ $clean = self::cleanText(review_feedback_without_question_text($clean));
+ }
+
  if ($clean === '') {
  return [$fallback];
  }

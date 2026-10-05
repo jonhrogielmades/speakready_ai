@@ -839,16 +839,12 @@ class UserController extends Controller
  if (! $sessionEndedEarly && $sessionRecord->status === 'completed') {
  try {
  $interviewController = app(InterviewController::class);
- if ($this->deferReviewOpenAiRefreshEnabled()) {
- $interviewController->deferCompletedSessionOpenAiFeedbackEvidence($sessionRecord->id, 'detailed_review');
- } else {
  $feedbackRefreshed = $interviewController
  ->ensureCompletedSessionOpenAiFeedbackEvidence($sessionRecord, $sessionRecord->gameLevel);
 
  if (! $feedbackRefreshed) {
  $feedbackRefreshed = $interviewController
  ->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel);
- }
  }
  } catch (\Throwable $exception) {
  Log::warning('Detailed feedback refresh failed; rendering saved report data.', [
@@ -873,14 +869,25 @@ class UserController extends Controller
  ]);
  }
 
- $comparisonRows = $this->comparisonRowsFor($sessionRecord);
+ $sampleAnswersRefreshed = false;
  if (! $sessionEndedEarly) {
- if ($this->deferReviewSampleAnswersEnabled()) {
- $this->deferReviewSampleAnswers($sessionRecord);
- } else {
- $this->ensureReviewSampleAnswers($sessionRecord);
+ $sampleAnswersRefreshed = $this->ensureReviewSampleAnswers($sessionRecord);
  }
+
+ if ($sampleAnswersRefreshed) {
+ $sessionRecord->refresh()->load([
+ 'category',
+ 'answers' => function ($query) {
+ $query->whereNull('retry_of_answer_id')
+ ->with(['question', 'retryAttempts']);
+ },
+ 'score',
+ 'feedback',
+ 'gameLevel',
+ ]);
  }
+
+ $comparisonRows = $this->comparisonRowsFor($sessionRecord);
  $reviewEvidence = FeedbackEvidencePresenter::forSession($sessionRecord);
 
  return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence'));
@@ -891,54 +898,11 @@ class UserController extends Controller
  return filter_var(config('services.interview_report.defer_review_openai_refresh', false), FILTER_VALIDATE_BOOLEAN);
  }
 
- private function deferReviewSampleAnswersEnabled(): bool
- {
- return filter_var(config('services.interview_report.defer_review_sample_answers', false), FILTER_VALIDATE_BOOLEAN);
- }
-
- private function deferReviewSampleAnswers(InterviewSession $sessionRecord): bool
- {
- if (app()->runningInConsole() || ! AIService::providerIsConfigured('openai')) {
- return false;
- }
-
- $cacheKey = 'review-sample-answers-openai:'.$sessionRecord->id;
- if (! Cache::add($cacheKey, now()->toIso8601String(), now()->addMinutes(10))) {
- return false;
- }
-
- app()->terminating(function () use ($sessionRecord, $cacheKey): void {
- try {
- $session = InterviewSession::with([
- 'answers' => function ($query) {
- $query->whereNull('retry_of_answer_id')
- ->with('question')
- ->orderBy('id');
- },
- ])->find($sessionRecord->id);
-
- if ($session && $session->status === 'completed') {
- $this->ensureReviewSampleAnswers($session);
- }
- } catch (\Throwable $error) {
- Log::warning('Deferred OpenAI review sample answer generation failed.', [
- 'session_id' => $sessionRecord->id,
- 'user_id' => Auth::id(),
- 'error_type' => $error::class,
- 'message' => Str::limit($error->getMessage(), 300),
- ]);
- } finally {
- Cache::forget($cacheKey);
- }
- });
-
- return true;
- }
-
- private function ensureReviewSampleAnswers(InterviewSession $sessionRecord): void
+ private function ensureReviewSampleAnswers(InterviewSession $sessionRecord): bool
  {
  $openAiConfigured = AIService::providerIsConfigured('openai');
  $languageConfig = Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
+ $updated = false;
 
  foreach ($sessionRecord->answers as $answer) {
  $question = $answer->question;
@@ -1019,7 +983,10 @@ class UserController extends Controller
 
  $answer->coaching_feedback = $coachingFeedback;
  $answer->save();
+ $updated = true;
  }
+
+ return $updated;
  }
 
  public function exportSession(InterviewSession $session)
