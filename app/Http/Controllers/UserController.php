@@ -28,6 +28,7 @@ use App\Services\QuestionDatasetProvider;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\AccountNotificationSchema;
 use App\Support\ChatbotSchema;
+use App\Support\FeedbackCoachingRepair;
 use App\Support\FeedbackEvidencePresenter;
 use App\Support\GameSchema;
 use App\Support\LearningModuleSchema;
@@ -777,8 +778,35 @@ class UserController extends Controller
  ])
  ->firstOrFail();
 
+ $coachingRepaired = false;
  $sessionEndedEarly = $sessionRecord->status === 'ended'
  || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false);
+
+ if (! $sessionEndedEarly && $sessionRecord->status === 'completed') {
+ try {
+ $coachingRepaired = app(FeedbackCoachingRepair::class)->repairSession($sessionRecord);
+ } catch (\Throwable $exception) {
+ Log::warning('Detailed feedback local repair failed; rendering saved report data.', [
+ 'session_id' => $sessionRecord->id,
+ 'user_id' => Auth::id(),
+ 'error_type' => $exception::class,
+ 'message' => $exception->getMessage(),
+ ]);
+ }
+ }
+
+ if ($coachingRepaired) {
+ $sessionRecord->refresh()->load([
+ 'category',
+ 'answers' => function ($query) {
+ $query->whereNull('retry_of_answer_id')
+ ->with(['question', 'retryAttempts']);
+ },
+ 'score',
+ 'feedback',
+ 'gameLevel',
+ ]);
+ }
 
  $comparisonRows = $this->comparisonRowsFor($sessionRecord);
  $reviewEvidence = FeedbackEvidencePresenter::forSession($sessionRecord);

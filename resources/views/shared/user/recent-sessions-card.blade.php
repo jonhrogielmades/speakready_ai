@@ -1,18 +1,13 @@
 @php
     $recentSessionsForCard = $recentSessions ?? collect();
-    $recentSessionsCardId = $recentSessionsCardId ?? 'card-recent-sessions';
-    $recentSessionsTitle = $recentSessionsTitle ?? 'Recent Sessions';
-    $recentSessionsSubtitle = $recentSessionsSubtitle ?? 'Review the latest completed local mock interviews.';
-    $recentSessionsEmptyText = $recentSessionsEmptyText ?? 'No recent sessions found. Start interview practice when you are ready.';
-    $recentSessionsActionLabel = $recentSessionsActionLabel ?? 'Review';
 @endphp
 
-<section id="{{ $recentSessionsCardId }}" class="print-card report-sessions-card btn-no-print" style="--report-session-accent:#06b6d4">
+<section id="card-recent-sessions" class="print-card report-sessions-card btn-no-print" style="--report-session-accent:#06b6d4">
     <div class="sr-polished-header report-sessions-header">
         <div class="sr-polished-icon report-sessions-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
         <div class="min-w-0 flex-grow-1">
-            <h5 class="sr-polished-title report-sessions-title">{{ $recentSessionsTitle }}</h5>
-            <p class="sr-polished-subtitle report-sessions-subtitle">{{ $recentSessionsSubtitle }}</p>
+            <h5 class="sr-polished-title report-sessions-title">Recent Sessions</h5>
+            <p class="sr-polished-subtitle report-sessions-subtitle">Review the latest completed local mock interviews.</p>
         </div>
     </div>
 
@@ -44,15 +39,14 @@
                         $sessionScore = $session->score ? (int) $session->score->overall_readiness_score : null;
                         $sessionScoreLabel = $sessionScore === null ? 'No score' : $sessionScore.'%';
                         $sessionColor = $sessionScore === null ? '#64748b' : ($sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444'));
-                        $sessionCategoryLabel = $session->category ? $session->category->title : ($session->practice_scenario ?? 'Interview');
                     @endphp
                     <tr class="sr-session-table-row" data-recent-session-entry="desktop" style="--session-score-color: {{ $sessionColor }};">
                         <td>{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</td>
-                        <td><span class="report-session-category-chip">{{ $sessionCategoryLabel }}</span></td>
+                        <td><span class="report-session-category-chip">{{ $session->category ? $session->category->title : 'Interview' }}</span></td>
                         <td><span class="report-session-score-value">{{ $sessionScoreLabel }}</span></td>
                         <td class="text-end sr-session-action-cell">
                             <div class="sr-session-row-actions">
-                                <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary sr-session-review-table">{{ $recentSessionsActionLabel }}</a>
+                                <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary sr-session-review-table">Review</a>
                                 <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Delete this session?" data-sr-confirm-message="This interview session and its saved feedback will be permanently deleted." data-sr-confirm-action="Delete Session" data-sr-confirm-variant="danger">
                                     @csrf
                                     @method('DELETE')
@@ -65,7 +59,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="text-center py-4" style="color:var(--tx3)">{{ $recentSessionsEmptyText }}</td>
+                        <td colspan="4" class="text-center py-4" style="color:var(--tx3)">No recent sessions found. Start interview practice when you are ready.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -79,19 +73,18 @@
                 $sessionScoreBarValue = $sessionScore === null ? '0' : $sessionScore.'%';
                 $sessionScoreLabel = $sessionScore === null ? 'No score' : $sessionScore.'%';
                 $sessionColor = $sessionScore === null ? '#64748b' : ($sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444'));
-                $sessionCategoryLabel = $session->category ? $session->category->title : ($session->practice_scenario ?? 'Interview');
             @endphp
             <div class="sr-session-card-polished" data-recent-session-entry="mobile">
                 <div class="sr-session-icon"><i class="fa-solid fa-briefcase"></i></div>
                 <div class="sr-session-meta">
-                    <div class="sr-session-title">{{ $sessionCategoryLabel }}</div>
+                    <div class="sr-session-title">{{ $session->category ? $session->category->title : 'Interview' }}</div>
                     <div class="sr-session-date">{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</div>
                 </div>
                 <div class="sr-session-score-stack" style="--score-color: {{ $sessionColor }}">
                     <span class="sr-session-score-pill">{{ $sessionScoreLabel }}</span>
                     <div class="sr-session-score-bar"><span style="--score-value: {{ $sessionScoreBarValue }}"></span></div>
                 </div>
-                <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary sr-session-review-btn">{{ $recentSessionsActionLabel }}</a>
+                <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary sr-session-review-btn">Review</a>
                 <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Delete this session?" data-sr-confirm-message="This interview session and its saved feedback will be permanently deleted." data-sr-confirm-action="Delete Session" data-sr-confirm-variant="danger">
                     @csrf
                     @method('DELETE')
@@ -104,7 +97,7 @@
             <div class="sr-polished-empty">
                 <div class="sr-polished-empty-inner">
                     <div class="sr-empty-visual"><i class="fa-solid fa-calendar-plus"></i></div>
-                    <p class="sr-polished-empty-text">{{ $recentSessionsEmptyText }}</p>
+                    <p class="sr-polished-empty-text">No recent sessions found. Start interview practice when you are ready.</p>
                 </div>
             </div>
         @endforelse

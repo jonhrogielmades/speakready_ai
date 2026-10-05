@@ -154,59 +154,37 @@ class UserSideHardeningTest extends TestCase
  'target_position' => 'Data Analyst',
  ]);
 
+ $generatedCategory = Category::where('title', 'Interview Challenges - Data Analyst')
+ ->where('type', 'game')
+ ->firstOrFail();
+
  $response
- ->assertRedirect(route('user.learning', ['category_id' => $category->id]))
+ ->assertRedirect(route('user.learning', ['category_id' => $generatedCategory->id]))
  ->assertSessionHas('learning_challenge_position', 'Data Analyst')
- ->assertSessionHas('learning_challenge_category_id', $category->id)
- ->assertSessionHas('success', 'Showing saved admin interview challenges for Data Analyst.');
+ ->assertSessionHas('learning_challenge_category_id', $generatedCategory->id);
 
  $this->assertDatabaseHas('users', [
  'id' => $user->id,
  'target_position' => 'Data Analyst',
  ]);
 
- $this->assertDatabaseMissing('categories', [
- 'title' => 'Interview Challenges - Data Analyst',
- 'type' => 'game',
- ]);
- $this->assertSame(2, GameLevel::count());
-
- $this->actingAs($user)
- ->withSession(['learning_challenge_position' => 'Data Analyst'])
- ->get(route('user.learning', ['category_id' => $category->id]))
- ->assertOk()
- ->assertSee('Target Position')
- ->assertSee('Data Analyst')
- ->assertSee('Data Analyst Screening')
- ->assertSee('Completion Certificate')
- ->assertDontSee('Software Developer Screening');
- }
-
- public function test_learning_position_choice_generates_saved_admin_challenges_when_no_position_path_exists(): void
- {
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
-
- $this->actingAs($user)
- ->post(route('user.learning.position'), [
- 'target_position' => 'Data Analyst',
- ])
- ->assertRedirect()
- ->assertSessionHas('learning_challenge_position', 'Data Analyst')
- ->assertSessionHas('success', 'Generated and saved 9 AI challenge level(s) for Data Analyst in Admin.');
-
- $generatedCategory = Category::where('title', 'Interview Challenges - Data Analyst')
- ->where('type', 'game')
- ->firstOrFail();
-
- $this->assertSame(
- range(1, 9),
- GameLevel::where('category_id', $generatedCategory->id)
+ $generatedLevelNumbers = GameLevel::where('category_id', $generatedCategory->id)
  ->where('target_position', 'Data Analyst')
  ->orderBy('level_number')
  ->pluck('level_number')
- ->all()
- );
+ ->all();
+ $this->assertSame(range(1, 9), $generatedLevelNumbers);
+
+ $this->actingAs($user)
+ ->withSession(['learning_challenge_position' => 'Data Analyst'])
+ ->get(route('user.learning', ['category_id' => $generatedCategory->id]))
+ ->assertOk()
+ ->assertSee('Target Position')
+ ->assertSee('Data Analyst')
+ ->assertSee('Data Analyst Interview Level 9')
+ ->assertSee('data-level-number="10"', false)
+ ->assertSee('Completion Certificate')
+ ->assertDontSee('Software Developer Screening');
  }
 
  public function test_challenge_journey_has_nine_playable_levels_and_certificate_at_step_ten(): void

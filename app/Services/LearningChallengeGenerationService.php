@@ -15,33 +15,6 @@ class LearningChallengeGenerationService
 
  private?array $gameLevelColumns = null;
 
- public function savedJourneyForPosition(?Category $requestedCategory, string $position): ?array
- {
- $challengePositions = app(ChallengePositionService::class);
- $position = $challengePositions->clean($position);
-
- if ($position === '') {
- return null;
- }
-
- foreach ($this->savedJourneyCandidateCategories($requestedCategory, $position) as $category) {
- $levels = $this->specificJourneyLevels($category, $position);
-
- if ($levels->isEmpty()) {
- continue;
- }
-
- return [
- 'category' => $category->fresh()?? $category,
- 'levels' => $levels,
- 'created_count' => 0,
- 'from_saved_admin_content' => true,
- ];
- }
-
- return null;
- }
-
  public function ensureAiJourneyForPosition(?Category $requestedCategory, string $position): array
  {
  @set_time_limit(300);
@@ -67,47 +40,6 @@ class LearningChallengeGenerationService
  }
 
  return $this->findOrCreatePositionCategory($position);
- }
-
- private function savedJourneyCandidateCategories(?Category $requestedCategory, string $position): Collection
- {
- $categories = collect();
-
- if ($requestedCategory && $requestedCategory->type === 'game' && $requestedCategory->status === 'active') {
- $categories->push($requestedCategory);
- }
-
- $positionCategoryTitle = Str::lower($this->positionCategoryTitle($position));
- $positionCategory = Category::where('type', 'game')
- ->where('status', 'active')
- ->whereRaw('LOWER(title) =?', [$positionCategoryTitle])
- ->first();
-
- if ($positionCategory) {
- $categories->push($positionCategory);
- }
-
- return $categories
- ->concat(
- Category::where('type', 'game')
- ->where('status', 'active')
- ->orderBy('sort_order')
- ->orderBy('title')
- ->get()
- )
- ->filter(fn ($category): bool => $category instanceof Category && $category->exists)
- ->unique(fn (Category $category): int => (int) $category->id)
- ->values();
- }
-
- private function specificJourneyLevels(Category $category, string $position): Collection
- {
- $levels = $this->visibleLevels($category);
- $challengePositions = app(ChallengePositionService::class);
-
- return $challengePositions->journeyLevels(
- $challengePositions->specificMatchingLevels($levels, $position)
- );
  }
 
  private function canUseRequestedCategory(Category $category, string $position): bool

@@ -79,6 +79,7 @@
  'delivery' => 'Speaking',
  'professionalism' => 'Tone',
  'relevance' => 'Answer match',
+ 'delivery stability' => 'Pacing',
  default => $area,
  };
  };

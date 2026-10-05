@@ -900,6 +900,7 @@ return response()->json([
  if ($gameLevel) {
  GameSchema::ensure();
  }
+ $fastFinish = ! $gameLevel && $this->fastInterviewFinishEnabled();
 
  try {
  $this->ensureInterviewReportSchema();
@@ -919,6 +920,10 @@ return response()->json([
  }
 
  if ($session->status === 'completed') {
+ if (! $fastFinish && $this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
+ $session->refresh()->load(['score', 'feedback']);
+ }
+
  $this->forgetCompletedSessionState($session, $gameLevel);
  $redirect = $this->completedSessionRedirect($session, $gameLevel);
 
@@ -1006,10 +1011,12 @@ return response()->json([
  $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
  }
 
- $feedbackProvider = $gameLevel? null: $this->bestEvaluatedInterviewProvider(
+ $feedbackProvider = $gameLevel? null: ($fastFinish
+ ? 'local'
+ : $this->bestEvaluatedInterviewProvider(
  'feedback_generation',
  session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
- );
+ ));
  if (! $gameLevel) {
  session(['active_interview_feedback_provider' => $feedbackProvider]);
  }
@@ -1681,6 +1688,11 @@ return response()->json([
  });
 
  return true;
+ }
+
+ private function fastInterviewFinishEnabled(): bool
+ {
+ return filter_var(config('services.interview_report.fast_finish', false), FILTER_VALIDATE_BOOLEAN);
  }
 
  private function completedSessionNeedsOpenAiFeedbackEvidence(InterviewSession $session): bool
@@ -4760,17 +4772,13 @@ return response()->json([
  $feedbackProviderKey = AIService::normalizeProviderKey($feedbackProvider);
  if (! SystemSettings::enabled('int_ai_eval', true)
  || in_array($feedbackProviderKey, ['local', 'localmodel'], true)) {
- throw new AiFeedbackProviderFailureException(
- $feedbackProviderKey === '' ? [] : [$feedbackProviderKey],
- [],
- 'AI feedback evaluation is disabled or no remote AI feedback provider is selected. Your answers were saved, but no AI feedback report was created.'
- );
+ return AIService::generateLocalFeedback($sessionData, $answersData);
  }
 
  try {
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  } catch (AiFeedbackProviderFailureException $error) {
- Log::warning('AI feedback providers failed; report was not finalized with fallback data.', [
+ Log::warning('AI feedback providers failed; completing report with local evidence fallback.', [
  'session_id' => $session->id,
  'user_id' => $session->user_id,
  'requested_provider' => AIService::normalizeProviderKey($feedbackProvider),
@@ -4779,7 +4787,7 @@ return response()->json([
  'providers_attempted' => $error->attemptedProviders(),
  ]);
 
- throw $error;
+ return AIService::generateLocalFeedback($sessionData, $answersData);
  }
  }
 
@@ -4828,6 +4836,11 @@ return response()->json([
  $sampleAnswer = $this->reviewSampleAnswerFromGeneratedFeedback($answer, $qFeedback);
  $source = $providerSource;
  $sampleProvider = $provider;
+ if ($sampleAnswer === '') {
+ $sampleAnswer = $this->fallbackReviewQuestionSampleAnswer($answer->question);
+ $source = 'local';
+ $sampleProvider = 'local';
+ }
 
  if ($sampleAnswer === '') {
  continue;
@@ -4864,6 +4877,13 @@ return response()->json([
  }
 
  return $cleanRaw;
+ }
+
+ private function fallbackReviewQuestionSampleAnswer(Question $question): string
+ {
+ return function_exists('review_question_sample_answer')
+ ? $this->normalizedReviewSampleAnswerText((string) review_question_sample_answer($question), $question, true)
+ : '';
  }
 
  private function normalizedReviewSampleAnswerText(string $text, mixed $questionSource, bool $allowPlaceholders): string

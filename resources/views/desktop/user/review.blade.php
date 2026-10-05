@@ -23,6 +23,7 @@
  'clarity' => 'Fluency & Clarity',
  'relevance' => 'Answer Match',
  'professionalism', 'tone' => 'Professional Tone',
+ 'delivery stability', 'speaking steadiness' => 'Pacing',
  default => $label!== ''? $label: 'Skill',
  };
  };
@@ -310,6 +311,12 @@ function retryRenderedCoachingHtml(data) {
  return retryCoachingHtml(data?.coaching_feedback);
 }
 
+function retryDeliveryChip(data) {
+ return data.delivery_stability_score === null || data.delivery_stability_score === undefined
+ ? ''
+ : `<span class="retry-chip">Pacing ${retryEscape(data.delivery_stability_score)}%</span>`;
+}
+
 function retryResultCard(data) {
  const coachingHtml = retryRenderedCoachingHtml(data);
  return `
@@ -317,6 +324,7 @@ function retryResultCard(data) {
  <div class="d-flex flex-wrap gap-2 mb-2">
  <span class="retry-chip">Attempt ${retryEscape(data.attempt_number)}</span>
  <span class="retry-chip">Score ${retryEscape(data.score)}%</span>
+ ${retryDeliveryChip(data)}
  </div>
  <p style="margin:0;color:var(--tx2);line-height:1.6;">${retryEscape(data.display_ai_feedback || 'Feedback is ready for this attempt.')}</p>
  ${coachingHtml}
@@ -335,6 +343,7 @@ function retryAttemptHistoryHtml(data) {
  </div>
  <div class="retry-meta">
  <span class="retry-chip">Score ${retryEscape(data.score)}%</span>
+ ${retryDeliveryChip(data)}
  </div>
  </div>
  <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">${retryEscape(data.display_ai_feedback || 'Feedback is ready for this attempt.')}</p>

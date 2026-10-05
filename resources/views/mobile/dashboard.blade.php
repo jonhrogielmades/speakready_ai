@@ -720,17 +720,18 @@ document.addEventListener("DOMContentLoaded", function() {
             {{ (int) ($radarData['clarity'] ?? 0) }},
             {{ (int) ($radarData['relevance'] ?? 0) }},
             {{ (int) ($radarData['grammar'] ?? 0) }},
-            {{ (int) ($radarData['professionalism'] ?? 0) }}
+            {{ (int) ($radarData['professionalism'] ?? 0) }},
+            {{ (int) ($radarData['delivery_stability'] ?? 0) }}
         ];
         const hasRadarScores = radarScores.some((value) => Number(value) > 0);
         dashboardHasRadarScores = hasRadarScores;
-        const radarDisplayScores = hasRadarScores ? radarScores : [0, 0, 0, 0];
+        const radarDisplayScores = hasRadarScores ? radarScores : [0, 0, 0, 0, 0];
         const radarColors = getRadarDatasetColors(hasRadarScores, initialPalette);
 
         radarChart = new Chart(radarCanvas.getContext('2d'), {
             type: 'radar',
             data: {
-                labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism'],
+                labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism', 'Delivery Stability'],
                 datasets: [{
                     label: 'Score Level',
                     data: radarDisplayScores,
