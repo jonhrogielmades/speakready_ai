@@ -1007,6 +1007,91 @@ class ReliabilityHardeningTest extends TestCase
  Http::assertSentCount(1);
  }
 
+ public function test_interview_finish_repairs_reachable_openai_feedback_that_fails_strict_validation(): void
+ {
+ Http::fake([
+ 'api.openai.com/*' => Http::response([
+ 'choices' => [[
+ 'finish_reason' => 'stop',
+ 'message' => [
+ 'content' => json_encode([
+ 'per_question_feedback' => [[
+ 'id' => 57,
+ 'score' => 80,
+ 'clarity_score' => 80,
+ 'relevance_score' => 80,
+ 'grammar_score' => 80,
+ 'professionalism_score' => 80,
+ 'star_applicable' => true,
+ 'star_method_score' => 75,
+ 'evidence_quotes' => ['Okay.'],
+ 'question_focus' => 'Tell me about a time you improved a support handoff.',
+ 'answer_alignment' => 'directly_addressed',
+ 'missing_criteria' => [],
+ 'ai_feedback' => 'Good answer, but add more details next time.',
+ 'better_sample_answer' => 'Tell me about a time you improved a support handoff.',
+ 'follow_up_question' => 'Can you add more detail?',
+ 'coaching' => [
+ 'keep' => 'Good answer.',
+ 'improve' => 'Add more details.',
+ 'impact' => 'It will be better.',
+ 'next_try' => 'Try again.',
+ 'next_attempt_steps' => ['Add more details.'],
+ 'success_check' => 'It sounds good.',
+ ],
+ ]],
+ 'session_feedback' => [
+ 'overall_summary' => 'Good answer.',
+ 'strengths' => 'Good answer.',
+ 'weaknesses' => 'Add more details.',
+ 'improvement_suggestions' => 'Try to be more specific.',
+ ],
+ ]),
+ ],
+ ]],
+ ], 200),
+ ]);
+ $this->aiProvider('OpenAI', [
+ 'api_endpoint' => 'https://api.openai.com/v1',
+ 'is_primary' => true,
+ ]);
+ 
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Tell me about a time you improved a support handoff.',
+ 'type' => 'Behavioral',
+ ]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'Okay.',
+ 'response_mode' => 'text',
+ ]);
+ 
+ $this->actingAs($user)
+ ->withSession([
+ 'active_interview_id' => $session->id,
+ 'active_interview_provider' => 'openai',
+ ])
+ ->postJson(route('interview.finish'), [
+ 'session_id' => $session->id,
+ 'duration_seconds' => 75,
+ ])
+ ->assertOk()
+ ->assertJsonPath('redirect_url', route('user.review', $session));
+ 
+ $savedAnswer = $answer->fresh();
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+ $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
+ $this->assertSame('openai', $savedAnswer->ai_provider);
+ $this->assertLessThanOrEqual(10, $savedAnswer->score);
+ $this->assertStringContainsString('too short', strtolower((string) $savedAnswer->ai_feedback));
+ Http::assertSentCount(1);
+ }
+ 
  public function test_completed_local_fallback_report_syncs_with_provider_when_available(): void
  {
  $this->fakeOpenAiFeedback();

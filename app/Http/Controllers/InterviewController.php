@@ -1499,7 +1499,7 @@ return response()->json([
  'is_skipped' => false,
  'expected_guide' => $answer->question->expected_guide?? null,
  'mapped_skills' => $answer->question->mapped_skills?? [],
- ]], $provider, true, false);
+ ]], $provider, true, true);
  } catch (\Throwable $error) {
  Log::warning('Retry answer feedback generation failed after answer save.', [
  'answer_id' => $retry->id,
@@ -4851,7 +4851,7 @@ return response()->json([
  $answersData,
  $feedbackProvider?: $this->detailedReviewFeedbackProvider(),
  true,
- false
+ true
  );
  }
 
