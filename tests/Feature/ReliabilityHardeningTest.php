@@ -954,6 +954,48 @@ class ReliabilityHardeningTest extends TestCase
  );
  }
 
+ public function test_interview_fast_finish_uses_local_report_without_blocking_on_openai(): void
+ {
+ config(['services.interview_report.fast_finish' => true]);
+ Http::fake(['api.openai.com/*' => Http::response(['choices' => []], 200)]);
+ AiProvider::create([
+ 'name' => 'OpenAI',
+ 'api_endpoint' => 'https://api.openai.com/v1',
+ 'api_key' => Crypt::encryptString('test-openai-key'),
+ 'status' => 'active',
+ 'is_primary' => true,
+ ]);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category);
+ $question = $this->question($category, ['interview_session_id' => $session->id]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'During a delayed release, I owned the checklist, coordinated approvals, and documented the final handoff result.',
+ 'response_mode' => 'text',
+ ]);
+
+ $this->actingAs($user)
+ ->withSession([
+ 'active_interview_id' => $session->id,
+ 'active_interview_provider' => 'openai',
+ ])
+ ->postJson(route('interview.finish'), [
+ 'session_id' => $session->id,
+ 'duration_seconds' => 75,
+ ])
+ ->assertOk()
+ ->assertJsonPath('redirect_url', route('user.review', $session));
+
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+ $this->assertDatabaseHas('scores', ['interview_session_id' => $session->id]);
+ $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
+ $this->assertSame('local', $answer->fresh()->ai_provider);
+ Http::assertNothingSent();
+ }
+
  public function test_live_feedback_modes_control_final_feedback_and_readiness_updates(): void
  {
  foreach ([
@@ -1286,7 +1328,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertNotEmpty($feedback->strengths);
  $this->assertNotEmpty($feedback->improvement_suggestions);
  $this->assertNotEmpty(data_get($feedback->coaching_summary, 'content_overview'));
- $this->assertNull($savedAnswer->ai_provider);
+ $this->assertSame('local', $savedAnswer->ai_provider);
  Http::assertSentCount(4);
  }
 

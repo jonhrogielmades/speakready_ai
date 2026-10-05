@@ -164,6 +164,12 @@ return [
  'max_providers' => env('AI_INTERVIEW_FOLLOW_UP_MAX_PROVIDERS', 1),
  ],
 
+ 'interview_report' => [
+ 'fast_finish' => env('INTERVIEW_FAST_FINISH', false),
+ 'defer_review_openai_refresh' => env('INTERVIEW_DEFER_REVIEW_OPENAI_REFRESH', false),
+ 'defer_review_sample_answers' => env('INTERVIEW_DEFER_REVIEW_SAMPLE_ANSWERS', false),
+ ],
+
  'question_generation_rag' => [
  'enabled' => env('QUESTION_GENERATION_RAG_ENABLED', true),
  'example_limit' => env('QUESTION_GENERATION_RAG_EXAMPLE_LIMIT', 6),

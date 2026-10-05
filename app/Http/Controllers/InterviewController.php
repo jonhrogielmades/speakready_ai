@@ -38,6 +38,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -832,6 +833,7 @@ class InterviewController extends Controller
  if ($gameLevel) {
  GameSchema::ensure();
  }
+ $fastFinish = ! $gameLevel && $this->fastInterviewFinishEnabled();
 
  try {
  $this->ensureInterviewReportSchema();
@@ -851,7 +853,9 @@ class InterviewController extends Controller
  }
 
  if ($session->status === 'completed') {
- if ($this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
+ if ($fastFinish) {
+ $this->deferCompletedSessionOpenAiFeedbackEvidence($session->id, 'finish_completed');
+ } elseif ($this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
  $session->refresh()->load(['score', 'feedback']);
  }
 
@@ -942,10 +946,12 @@ class InterviewController extends Controller
  $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
  }
 
- $feedbackProvider = $gameLevel? null: $this->bestEvaluatedInterviewProvider(
+ $feedbackProvider = $gameLevel? null: ($fastFinish
+ ? 'local'
+ : $this->bestEvaluatedInterviewProvider(
  'feedback_generation',
  session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
- );
+ ));
  if (! $gameLevel) {
  session(['active_interview_feedback_provider' => $feedbackProvider]);
  }
@@ -1225,6 +1231,9 @@ class InterviewController extends Controller
  DB::commit();
  $reportTransactionStarted = false;
  $this->forgetCompletedSessionState($session, $gameLevel);
+ if ($fastFinish) {
+ $this->deferCompletedSessionOpenAiFeedbackEvidence($session->id, 'finish_fast');
+ }
 
  $redirect = $this->completedSessionRedirect($session, $gameLevel, $gameStatus, $gameResultScore, [
  'xp_earned' => $xpEarned,
@@ -1576,6 +1585,48 @@ class InterviewController extends Controller
  $this->refreshCompletedSessionFeedback($session, $gameLevel, 'openai', 'openai');
 
  return true;
+ }
+
+ public function deferCompletedSessionOpenAiFeedbackEvidence(int $sessionId, string $source = 'response'): bool
+ {
+ if (app()->runningInConsole() || ! AIService::providerIsConfigured('openai')) {
+ return false;
+ }
+
+ $cacheKey = 'interview-openai-feedback-refresh:'.$sessionId;
+ if (! Cache::add($cacheKey, [
+ 'source' => $source,
+ 'started_at' => now()->toIso8601String(),
+ ], now()->addMinutes(10))) {
+ return false;
+ }
+
+ app()->terminating(function () use ($sessionId, $source, $cacheKey): void {
+ try {
+ $session = InterviewSession::with('gameLevel')->find($sessionId);
+ if (! $session || $session->status !== 'completed') {
+ return;
+ }
+
+ $this->ensureCompletedSessionOpenAiFeedbackEvidence($session, $session->gameLevel);
+ } catch (\Throwable $error) {
+ Log::warning('Deferred OpenAI feedback evidence refresh failed.', [
+ 'session_id' => $sessionId,
+ 'source' => $source,
+ 'error_type' => $error::class,
+ 'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
+ ]);
+ } finally {
+ Cache::forget($cacheKey);
+ }
+ });
+
+ return true;
+ }
+
+ private function fastInterviewFinishEnabled(): bool
+ {
+ return filter_var(config('services.interview_report.fast_finish', false), FILTER_VALIDATE_BOOLEAN);
  }
 
  private function completedSessionNeedsOpenAiFeedbackEvidence(InterviewSession $session): bool
@@ -4247,6 +4298,10 @@ class InterviewController extends Controller
  private function evidenceProviderKey(?string $provider):?string
  {
  $providerKey = AIService::normalizeProviderKey($provider);
+
+ if (in_array($providerKey, ['local', 'localmodel'], true)) {
+ return 'local';
+ }
 
  if ($providerKey === '' ||! AIService::providerIsSupported($providerKey)) {
  return null;
