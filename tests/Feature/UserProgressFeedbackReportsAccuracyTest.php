@@ -634,6 +634,13 @@ public function test_feedback_center_refreshes_summary_and_reliability_with_open
  && str_contains($prompt, 'UNTRUSTED TRANSCRIPT DATA JSON')
  && str_contains($prompt, $question->question_text);
  });
+
+ Http::assertNotSent(function ($request): bool {
+ $prompt = data_get($request->data(), 'messages.1.content', '');
+
+ return str_contains($request->url(), 'api.openai.com')
+ && str_contains($prompt, 'Create one possible interview answer');
+ });
 }
 
  public function test_feedback_center_answer_review_hides_prompt_text_inside_answer_feedback(): void
@@ -1023,6 +1030,13 @@ public function test_detailed_review_refreshes_all_answer_summary_strengths_and_
  && str_contains($prompt, 'UNTRUSTED TRANSCRIPT DATA JSON')
  && str_contains($prompt, $question->question_text);
  });
+
+ Http::assertNotSent(function ($request): bool {
+ $prompt = data_get($request->data(), 'messages.1.content', '');
+
+ return str_contains($request->url(), 'api.openai.com')
+ && str_contains($prompt, 'Create one possible interview answer');
+ });
 }
 
 public function test_detailed_review_uses_openai_generated_sample_answer_when_configured(): void
@@ -1189,7 +1203,7 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/mobile/user/feedback.css?v=15', false)
+ ->assertSee('css/mobile/user/feedback.css?v=16', false)
  ->assertSee('serverDetectedMobile: true', false);
 
  foreach (['desktop', 'mobile'] as $device) {
@@ -1451,7 +1465,7 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/desktop/user/reports.css?v=2', false)
- ->assertSee('css/desktop/user/reports-2.css?v=10', false)
+ ->assertSee('css/desktop/user/reports-2.css?v=15', false)
  ->assertSee('data-page-style="user-reports"', false)
  ->assertSee('reports-hero-art', false)
  ->assertSee('report-feedback-box', false)
@@ -1485,7 +1499,7 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/mobile/user/reports.css?v=2', false)
- ->assertSee('css/mobile/user/reports-2.css?v=6', false)
+ ->assertSee('css/mobile/user/reports-2.css?v=9', false)
  ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('reports-hero-art', false)
  ->assertSee('report-feedback-box', false)

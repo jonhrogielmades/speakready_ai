@@ -10,6 +10,7 @@ use App\Models\ChatbotMessage;
 use App\Models\Feedback;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
+use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\LearningModule;
 use App\Models\LearningProgress;
@@ -935,6 +936,25 @@ class UserController extends Controller
  continue;
  }
 
+ $savedProvider = AIService::normalizeProviderKey($answer->ai_provider?? '');
+ $savedProviderIsAi = $savedProvider !== '' &&! in_array($savedProvider, ['local', 'localmodel'], true);
+ $savedFeedbackSampleAnswer = $this->reviewSampleAnswerFromSavedFeedback($answer, $question);
+ if ($savedFeedbackSampleAnswer !== '' && ($savedProviderIsAi ||! $openAiConfigured)) {
+ data_set($coachingFeedback, 'review_sample_answer', [
+ 'text' => $savedFeedbackSampleAnswer,
+ 'source' => $savedProviderIsAi? 'ai': 'local',
+ 'provider' => $savedProviderIsAi? $savedProvider: 'local',
+ 'attempted_provider' => $savedProviderIsAi? $savedProvider: 'local',
+ 'question_id' => $question->id,
+ 'generated_at' => now()->toIso8601String(),
+ ]);
+
+ $answer->coaching_feedback = $coachingFeedback;
+ $answer->save();
+ $updated = true;
+ continue;
+ }
+
  $sampleAnswer = '';
  $source = 'local';
  $provider = 'local';
@@ -987,6 +1007,28 @@ class UserController extends Controller
  }
 
  return $updated;
+ }
+
+ private function reviewSampleAnswerFromSavedFeedback(InterviewAnswer $answer, mixed $question): string
+ {
+ $raw = trim((string) ($answer->better_sample_answer?? ''));
+ if ($raw === '') {
+ return '';
+ }
+
+ $sampleAnswer = function_exists('review_better_answer_text')
+ ? review_better_answer_text($raw, $answer, $question)
+ : $raw;
+ $sampleAnswer = trim(preg_replace('/\s+/u', ' ', $sampleAnswer)?? $sampleAnswer);
+
+ if ($sampleAnswer === ''
+ || preg_match('/\[[^\]]+\]/u', $sampleAnswer) === 1
+ || preg_match('/\b(?:response-based possible answer is unavailable|saved answer is too short|does not contain enough response detail)\b/iu', $sampleAnswer) === 1
+ ) {
+ return '';
+ }
+
+ return $sampleAnswer;
  }
 
  public function exportSession(InterviewSession $session)

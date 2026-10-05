@@ -3,6 +3,12 @@
    $userPartialPageTitle = trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview');
    $desktopAuthUser = Auth::user();
    $desktopProfilePhotoUrl = $desktopAuthUser?->profile_photo_url;
+   $desktopUserDisplayName = trim((string) ($desktopAuthUser?->name ?? '')) ?: 'User';
+   $desktopUserInitial = strtoupper(substr($desktopUserDisplayName, 0, 1));
+   $desktopUserHasVerifiedEmail = (bool) $desktopAuthUser?->email_verified_at;
+   $desktopUserAccountLabel = $desktopUserHasVerifiedEmail
+      ? (trim((string) ($desktopAuthUser?->email ?? '')) ?: 'Gmail verified')
+      : ($desktopAuthUser?->is_admin ? 'ADMIN' : 'USER');
 @endphp
 @if($isUserPartialNavigation)
 <!DOCTYPE html>
@@ -49,7 +55,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=36') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=37') }}" />
       <style>
           :root,
           .lm {
@@ -144,6 +150,29 @@
                <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback', 'user.review') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
             </div>
+            <div class="db-bottom db-sidebar-profile-bottom d-none d-lg-block">
+               <a href="{{ route('user.account') }}" class="db-sidebar-profile-card {{ request()->routeIs('user.account') ? 'active' : '' }}" title="{{ $desktopUserDisplayName }}" aria-label="Open account profile">
+                  <span class="user-avatar-presence db-sidebar-profile-presence">
+                     @if($desktopProfilePhotoUrl)
+                        <span class="db-avatar user-avatar" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
+                           <img src="{{ $desktopProfilePhotoUrl }}" alt="Avatar" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='';">
+                           <span style="display:none;">{{ $desktopUserInitial }}</span>
+                        </span>
+                     @else
+                        <span class="db-avatar user-avatar">{{ $desktopUserInitial }}</span>
+                     @endif
+                  </span>
+                  <span class="db-sidebar-profile-copy">
+                     <span class="db-sidebar-profile-name">{{ $desktopUserDisplayName }}</span>
+                     <span class="db-sidebar-profile-meta {{ $desktopUserHasVerifiedEmail ? 'is-verified' : '' }}">
+                        @if($desktopUserHasVerifiedEmail)
+                           <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                        @endif
+                        <span>{{ $desktopUserAccountLabel }}</span>
+                     </span>
+                  </span>
+               </a>
+            </div>
          </div>
          <button class="db-sidebar-backdrop" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()"></button>
          <!-- Main Content Area -->
@@ -213,15 +242,15 @@
                     @if($desktopProfilePhotoUrl)
                            <span class="db-avatar user-avatar" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
                               <img src="{{ $desktopProfilePhotoUrl }}" alt="Avatar" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='';">
-                              <span style="display:none;">{{ $desktopAuthUser ? strtoupper(substr($desktopAuthUser->name, 0, 1)) : 'U' }}</span>
+                              <span style="display:none;">{{ $desktopUserInitial }}</span>
                            </span>
                      @else
-                           <span class="db-avatar user-avatar">{{ $desktopAuthUser ? strtoupper(substr($desktopAuthUser->name, 0, 1)) : 'U' }}</span>
+                           <span class="db-avatar user-avatar">{{ $desktopUserInitial }}</span>
                      @endif
                         </span>
                         <span class="d-none d-md-block">
-                           <span style="display:block;font-size:.85rem;font-weight:600;line-height:1.2" id="userName">{{ Auth::user()->name ?? 'User' }}</span>
-                           <span style="display:block;font-size:.72rem;color:var(--tx3)" id="userPlan">{{ Auth::check() && Auth::user()->is_admin ? 'ADMIN' : 'USER' }}</span>
+                           <span style="display:block;font-size:.85rem;font-weight:600;line-height:1.2" id="userName">{{ $desktopUserDisplayName }}</span>
+                           <span style="display:block;font-size:.72rem;color:var(--tx3)" id="userPlan">{{ $desktopUserAccountLabel }}</span>
                         </span>
                         <i class="fa-solid fa-chevron-down fa-xs" id="profileChevron" style="color:var(--tx3);margin-left:2px;transition:.3s"></i>
                      </button>

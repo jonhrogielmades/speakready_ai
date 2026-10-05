@@ -12386,3 +12386,165 @@ html:not(.lm) body.user-desktop-shell:not(.admin-shell) #profileDropdown .profil
 html:not(.lm) body.user-desktop-shell:not(.admin-shell) #profileDropdown .profile-menu-item.active i {
   background: color-mix(in srgb, var(--profile-menu-accent-bg, rgba(96, 165, 250, 0.18)) 84%, #0f172a 16%) !important;
 }
+
+/* Desktop sidebar account footer */
+@media (min-width: 992px) {
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-bottom {
+    padding: 12px 16px 16px !important;
+    border-top: 1px solid rgba(125, 211, 252, 0.13) !important;
+    background: color-mix(in srgb, var(--user-side-bg, var(--bg2)) 88%, transparent) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 8px 9px !important;
+    border: 1px solid rgba(37, 99, 235, 0.18) !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.82) !important;
+    color: var(--tx) !important;
+    text-decoration: none !important;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08) !important;
+    overflow: hidden !important;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
+  }
+
+  html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card {
+    border-color: rgba(148, 163, 184, 0.2) !important;
+    background: rgba(15, 23, 42, 0.72) !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18) !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card:hover,
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card:focus-visible,
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card.active {
+    border-color: rgba(37, 99, 235, 0.34) !important;
+    background: rgba(239, 246, 255, 0.96) !important;
+    color: var(--tx) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card:hover,
+  html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card:focus-visible,
+  html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card.active {
+    border-color: rgba(96, 165, 250, 0.34) !important;
+    background: rgba(30, 41, 59, 0.9) !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card .db-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 11px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card .user-avatar-presence::after {
+    width: 9px !important;
+    height: 9px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-copy {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-name {
+    display: block !important;
+    color: var(--tx) !important;
+    font-size: 0.82rem !important;
+    font-weight: 850 !important;
+    line-height: 1.18 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-meta {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 5px !important;
+    color: var(--tx3) !important;
+    font-size: 0.64rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-meta.is-verified {
+    color: #1d4ed8 !important;
+    text-transform: none !important;
+  }
+
+  html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-meta.is-verified {
+    color: #93c5fd !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-meta i {
+    flex: 0 0 auto !important;
+    margin-top: 1px !important;
+    color: #22c55e !important;
+    font-size: 0.66rem !important;
+  }
+
+  body.user-desktop-shell.collapsed-sidebar:not(.admin-shell) #dashboard .db-sidebar-profile-bottom {
+    padding: 12px 12px 16px !important;
+  }
+
+  body.user-desktop-shell.collapsed-sidebar:not(.admin-shell) #dashboard .db-sidebar-profile-card {
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    min-height: 48px !important;
+    margin: 0 auto !important;
+    padding: 5px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0 !important;
+  }
+
+  body.user-desktop-shell.collapsed-sidebar:not(.admin-shell) #dashboard .db-sidebar-profile-card .db-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+
+  body.user-desktop-shell.collapsed-sidebar:not(.admin-shell) #dashboard .db-sidebar-profile-copy {
+    display: none !important;
+  }
+}
+
+@media (min-width: 992px) and (max-height: 820px) {
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-bottom {
+    padding-block: 10px 12px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card {
+    padding: 7px 8px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card .db-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-name {
+    font-size: 0.76rem !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-meta {
+    font-size: 0.6rem !important;
+  }
+}
