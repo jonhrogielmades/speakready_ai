@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=52') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=53') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -246,9 +246,14 @@
  <i class="fa-solid fa-head-side-brain" aria-hidden="true"></i>
  <span>AI Coach</span>
  </div>
+ <div class="ai-coach-answer-actions">
+ <button type="button" id="aiCoachCopyButton" class="ai-coach-copy-button" onclick="copyAiCoachPossibleAnswer()" aria-label="Copy possible answer" title="Generate a possible answer first" disabled aria-disabled="true">
+ <i class="fa-solid fa-copy" aria-hidden="true"></i>
+ </button>
  <button type="button" class="ai-coach-close-button" onclick="closeAiCoachPanel()" aria-label="Close AI Coach" title="Close AI Coach">
  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
  </button>
+ </div>
  </div>
  <div id="aiCoachStatus" class="ai-coach-answer-meta">Possible answer</div>
  <div id="aiCoachAnswerText" class="ai-coach-answer-text" aria-live="polite" aria-label="AI Coach possible answer" draggable="false" oncopy="return false" oncut="return false" onpaste="return false" oncontextmenu="return false" ondragstart="return false" onselectstart="return false"></div>
@@ -3516,6 +3521,58 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  button.classList.toggle('is-active', expanded);
  }
 
+ function updateAiCoachCopyButtonState(state = null) {
+ const button = document.getElementById('aiCoachCopyButton');
+ if (!button) return;
+ const answer = String(aiCoachCurrentAnswer || '').trim();
+ const disabled = !answer || state === 'loading' || state === 'error';
+ button.disabled = disabled;
+ button.setAttribute('aria-disabled', String(disabled));
+ button.setAttribute('title', disabled? 'Generate a possible answer first': 'Copy possible answer');
+ }
+
+ function fallbackCopyTextToClipboard(text) {
+ const textarea = document.createElement('textarea');
+ textarea.value = text;
+ textarea.setAttribute('readonly', 'readonly');
+ textarea.style.position = 'fixed';
+ textarea.style.top = '-1000px';
+ textarea.style.left = '-1000px';
+ textarea.style.opacity = '0';
+ document.body.appendChild(textarea);
+ textarea.select();
+ textarea.setSelectionRange(0, textarea.value.length);
+ const copied = document.execCommand('copy');
+ textarea.remove();
+ return copied;
+ }
+
+ async function copyAiCoachPossibleAnswer() {
+ const answer = String(aiCoachCurrentAnswer || '').trim();
+ if (!answer) {
+ updateAiCoachCopyButtonState();
+ showSessionNotice('Generate a possible answer before copying.', 'warning');
+ return;
+ }
+
+ try {
+ if (navigator.clipboard && window.isSecureContext) {
+ await navigator.clipboard.writeText(answer);
+ } else if (!fallbackCopyTextToClipboard(answer)) {
+ throw new Error('Copy failed.');
+ }
+
+ const button = document.getElementById('aiCoachCopyButton');
+ if (button) {
+ button.setAttribute('title', 'Copied');
+ window.setTimeout(() => updateAiCoachCopyButtonState('ready'), 1400);
+ }
+ showSessionNotice('Possible answer copied.', 'success');
+ } catch (error) {
+ showSessionNotice('Could not copy the possible answer. Try again.', 'warning');
+ }
+ }
+
  function protectAiCoachPossibleAnswer() {
  const text = document.getElementById('aiCoachAnswerText');
  if (!text || text.dataset.copyGuardBound === '1') return;
@@ -3563,6 +3620,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  button.disabled = state === 'loading';
  button.classList.toggle('is-loading', state === 'loading');
  }
+ updateAiCoachCopyButtonState(state);
  }
 
  function resetAiCoachPanel() {
@@ -3577,6 +3635,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  panel.dataset.questionId = '';
  }
  setAiCoachButtonExpanded(false);
+ updateAiCoachCopyButtonState('idle');
  }
 
  function closeAiCoachPanel() {

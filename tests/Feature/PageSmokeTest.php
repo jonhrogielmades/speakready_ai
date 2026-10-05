@@ -210,6 +210,8 @@ class PageSmokeTest extends TestCase
  ->assertSee(route('interview.finish'), false)
  ->assertSee(route('interview.abort'), false)
  ->assertSee('onclick="submitAnswer()"', false)
+ ->assertSee('id="aiCoachCopyButton"', false)
+ ->assertSee('function copyAiCoachPossibleAnswer()', false)
  ->assertSee('function clearSubmittedAnswerInput()', false)
  ->assertSee("chatContainer.innerHTML = ''", false)
  ->assertSee('if (!isSubmittingAnswer)', false);

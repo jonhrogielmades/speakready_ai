@@ -334,6 +334,13 @@
     .ai-coach-answer-title i {
         color: #0891b2;
     }
+    .ai-coach-answer-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex: 0 0 auto;
+    }
+    .ai-coach-copy-button,
     .ai-coach-close-button {
         width: 28px;
         height: 28px;
@@ -347,6 +354,15 @@
         justify-content: center;
         padding: 0;
         line-height: 1;
+    }
+    .ai-coach-copy-button:hover:not(:disabled),
+    .ai-coach-copy-button:focus:not(:disabled) {
+        color: #0891b2;
+        border-color: rgba(8, 145, 178, 0.35);
+    }
+    .ai-coach-copy-button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
     }
     .ai-coach-close-button:hover,
     .ai-coach-close-button:focus {
