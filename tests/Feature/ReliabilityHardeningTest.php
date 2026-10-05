@@ -934,6 +934,13 @@ class ReliabilityHardeningTest extends TestCase
 
  Http::assertSentCount(1);
 
+ $savedFeedbackText = $savedAnswer->ai_feedback;
+ $savedScore = Score::where('interview_session_id', $session->id)->firstOrFail();
+ $savedScore->forceFill([
+ 'score_version' => 0,
+ 'rubric' => ['version' => 0],
+ ])->save();
+
  $profileAfterFirstFinish = Profile::where('user_id', $user->id)->firstOrFail();
  $this->actingAs($user)
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
@@ -946,6 +953,8 @@ class ReliabilityHardeningTest extends TestCase
  $profileAfterFirstFinish->total_sessions,
  Profile::where('user_id', $user->id)->value('total_sessions')
  );
+ $this->assertSame($savedFeedbackText, $savedAnswer->fresh()->ai_feedback);
+ Http::assertSentCount(1);
  }
 
  public function test_interview_fast_finish_uses_local_report_without_blocking_on_openai(): void
