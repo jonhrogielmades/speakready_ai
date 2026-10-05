@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=42') }}" data-page-style="dashboard-v42">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=43') }}" data-page-style="dashboard-v43">
 @endpush
 
 @section('content')
@@ -145,15 +145,18 @@
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-graduation-cap"></i></span></span>
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-star"></i></span></span>
                     </div>
-                    <a
-                        href="{{ route('user.coach') }}"
+                    <button
+                        type="button"
                         class="sr-image-robot sr-image-coach-trigger"
                         id="dashboardCoachImageTrigger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#dashboardCoachModal"
+                        aria-controls="dashboardCoachModal"
                         aria-label="Open AI Coach"
                         title="AI Coach"
                     >
                         <img src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" draggable="false">
-                    </a>
+                    </button>
                 </div>
             </section>
 
@@ -324,6 +327,32 @@
                 </div>
             </section>
 
+            <section id="card-achievements" class="sr-card sr-card-pad sr-side-feature sr-achievements-main" style="--side-accent:#f59e0b">
+                <div class="sr-side-feature-header">
+                    <div class="sr-side-title-row">
+                        <div class="sr-side-icon"><i class="fa-solid fa-trophy"></i></div>
+                        <div>
+                            <h5 class="sr-side-title">Achievements</h5>
+                            <p class="sr-side-subtitle">Milestones earned through practice.</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('user.progress') }}" class="sr-side-detail-btn">View All <i class="fa-solid fa-chevron-right"></i></a>
+                </div>
+                <div class="sr-achievement-showcase">
+                    @foreach($achievementCatalog as $achievement)
+                        @php $earned = (bool) $achievement['earned']; @endphp
+                        <div class="sr-achievement-tile" style="--accent: {{ $achievement['accent'] }}">
+                            <div class="sr-achievement-tile-icon"><i class="fa-solid {{ $achievement['icon'] }}"></i></div>
+                            <div class="sr-achievement-tile-title">{{ $achievement['label'] }}</div>
+                            <div class="sr-achievement-status">
+                                @if(! $earned && $achievement['status'] === 'Locked')<i class="fa-solid fa-lock"></i>@endif
+                                {{ $earned ? 'Earned' : $achievement['status'] }}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+
         </main>
 
         <aside class="sr-side-stack">
@@ -403,36 +432,11 @@
                 @endif
             </section>
 
-            <section id="card-achievements" class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#f59e0b">
-                <div class="sr-side-feature-header">
-                    <div class="sr-side-title-row">
-                        <div class="sr-side-icon"><i class="fa-solid fa-trophy"></i></div>
-                        <div>
-                            <h5 class="sr-side-title">Achievements</h5>
-                            <p class="sr-side-subtitle">Milestones earned through practice.</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('user.progress') }}" class="sr-side-detail-btn">View All <i class="fa-solid fa-chevron-right"></i></a>
-                </div>
-                <div class="sr-achievement-showcase">
-                    @foreach($achievementCatalog as $achievement)
-                        @php $earned = (bool) $achievement['earned']; @endphp
-                        <div class="sr-achievement-tile" style="--accent: {{ $achievement['accent'] }}">
-                            <div class="sr-achievement-tile-icon"><i class="fa-solid {{ $achievement['icon'] }}"></i></div>
-                            <div class="sr-achievement-tile-title">{{ $achievement['label'] }}</div>
-                            <div class="sr-achievement-status">
-                                @if(! $earned && $achievement['status'] === 'Locked')<i class="fa-solid fa-lock"></i>@endif
-                                {{ $earned ? 'Earned' : $achievement['status'] }}
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </section>
-
         </aside>
     </div>
 </div>
 
+@include('shared.user.dashboard-coach-modal')
 @include('shared.user.dashboard-setup-tools-modal')
 
 

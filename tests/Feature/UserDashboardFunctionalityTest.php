@@ -100,13 +100,13 @@ class UserDashboardFunctionalityTest extends TestCase
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => [],
                 'shell' => 'class="user-desktop-shell desktop-shell',
-                'css' => 'css/desktop/dashboard.css?v=50',
+                'css' => 'css/desktop/dashboard.css?v=51',
             ],
             [
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => ['User-Agent' => $iphoneUserAgent],
                 'shell' => 'class="user-mobile-shell mobile-shell',
-                'css' => 'css/mobile/dashboard.css?v=42',
+                'css' => 'css/mobile/dashboard.css?v=43',
             ],
         ];
 
