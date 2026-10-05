@@ -3641,3 +3641,74 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-page-
         justify-content: center !important;
     }
 }
+
+/* Final compact comparison table pass to avoid inner scrolling. */
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison.report-comparison-card {
+    gap: 7px !important;
+    padding: 16px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-title {
+    font-size: 1rem !important;
+    line-height: 1.16 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-copy {
+    font-size: 0.74rem !important;
+    line-height: 1.22 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table-wrap {
+    max-height: none !important;
+    overflow: hidden !important;
+    width: 100% !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-spacing: 0 3px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table :is(th, td) {
+    padding: 3px 3px !important;
+    vertical-align: middle !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table th {
+    font-size: 0.52rem !important;
+    line-height: 1.08 !important;
+    white-space: nowrap !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table td {
+    font-size: 0.66rem !important;
+    line-height: 1.16 !important;
+    white-space: nowrap !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table :is(th:first-child, td:first-child) {
+    width: 36% !important;
+    text-align: left !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table td:first-child {
+    font-size: 0.68rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(2), td:nth-child(2)),
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(3), td:nth-child(3)) {
+    width: 22% !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(4), td:nth-child(4)) {
+    width: 20% !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table td i {
+    margin-right: 2px !important;
+    font-size: 0.62rem !important;
+}

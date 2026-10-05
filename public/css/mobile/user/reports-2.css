@@ -3256,3 +3256,88 @@ html body #portfolioReport .sr-recent-page-status {
     color: var(--tx3) !important;
     background: rgba(148, 163, 184, 0.1) !important;
 }
+
+/* Final compact comparison table pass to avoid inner scrolling. */
+html body #mob-content #portfolioReport #report-comparison.report-comparison-card,
+html body #portfolioReport #report-comparison.report-comparison-card {
+    gap: 7px !important;
+    padding: 10px !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-title,
+html body #portfolioReport #report-comparison .report-comparison-title {
+    font-size: 0.82rem !important;
+    line-height: 1.14 !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-copy,
+html body #portfolioReport #report-comparison .report-comparison-copy {
+    font-size: 0.62rem !important;
+    line-height: 1.2 !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table-wrap,
+html body #portfolioReport #report-comparison .report-comparison-table-wrap {
+    max-height: none !important;
+    overflow: hidden !important;
+    width: 100% !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table,
+html body #portfolioReport #report-comparison .report-comparison-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-spacing: 0 2px !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table :is(th, td),
+html body #portfolioReport #report-comparison .report-comparison-table :is(th, td) {
+    padding: 3px 2px !important;
+    vertical-align: middle !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table th,
+html body #portfolioReport #report-comparison .report-comparison-table th {
+    font-size: 0.45rem !important;
+    line-height: 1.05 !important;
+    white-space: nowrap !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table td,
+html body #portfolioReport #report-comparison .report-comparison-table td {
+    font-size: 0.58rem !important;
+    line-height: 1.12 !important;
+    white-space: nowrap !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table :is(th:first-child, td:first-child),
+html body #portfolioReport #report-comparison .report-comparison-table :is(th:first-child, td:first-child) {
+    width: 36% !important;
+    text-align: left !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table td:first-child,
+html body #portfolioReport #report-comparison .report-comparison-table td:first-child {
+    font-size: 0.6rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(2), td:nth-child(2)),
+html body #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(2), td:nth-child(2)),
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(3), td:nth-child(3)),
+html body #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(3), td:nth-child(3)) {
+    width: 22% !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(4), td:nth-child(4)),
+html body #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(4), td:nth-child(4)) {
+    width: 20% !important;
+}
+
+html body #mob-content #portfolioReport #report-comparison .report-comparison-table td i,
+html body #portfolioReport #report-comparison .report-comparison-table td i {
+    margin-right: 1px !important;
+    font-size: 0.54rem !important;
+}
