@@ -1394,7 +1394,7 @@ public function test_detailed_review_uses_saved_sample_answer_without_openai_gen
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/mobile/user/reports.css?v=2', false)
- ->assertSee('css/mobile/user/reports-2.css?v=14', false)
+ ->assertSee('css/mobile/user/reports-2.css?v=15', false)
  ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')

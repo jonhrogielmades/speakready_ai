@@ -3353,17 +3353,30 @@ html body #portfolioReport #card-recent-sessions.report-sessions-card {
 
 html body #mob-content #portfolioReport #card-recent-sessions .sr-session-card-polished,
 html body #portfolioReport #card-recent-sessions .sr-session-card-polished {
-    grid-template-columns: 34px minmax(0, 1fr) 36px !important;
-    gap: 7px !important;
+    grid-template-columns: 34px minmax(0, 1fr) 72px 36px !important;
+    grid-template-areas:
+        "icon meta meta meta"
+        ". score score score"
+        ". . review delete" !important;
+    column-gap: 7px !important;
+    row-gap: 7px !important;
+    align-items: center !important;
     padding: 9px !important;
     border-radius: 13px !important;
 }
 
 html body #mob-content #portfolioReport #card-recent-sessions .sr-session-icon,
 html body #portfolioReport #card-recent-sessions .sr-session-icon {
+    grid-area: icon !important;
     width: 34px !important;
     height: 34px !important;
     border-radius: 10px !important;
+}
+
+html body #mob-content #portfolioReport #card-recent-sessions .sr-session-meta,
+html body #portfolioReport #card-recent-sessions .sr-session-meta {
+    grid-area: meta !important;
+    min-width: 0 !important;
 }
 
 html body #mob-content #portfolioReport #card-recent-sessions .sr-session-title,
@@ -3380,20 +3393,54 @@ html body #portfolioReport #card-recent-sessions .sr-session-date {
 
 html body #mob-content #portfolioReport #card-recent-sessions .sr-session-score-stack,
 html body #portfolioReport #card-recent-sessions .sr-session-score-stack {
+    grid-area: score !important;
+    width: 100% !important;
     gap: 4px !important;
 }
 
 html body #mob-content #portfolioReport #card-recent-sessions .sr-session-review-btn,
 html body #portfolioReport #card-recent-sessions .sr-session-review-btn {
-    min-height: 32px !important;
+    grid-area: review !important;
+    width: 100% !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 10px !important;
+    border: 1px solid rgba(37, 99, 235, 0.25) !important;
+    border-radius: 10px !important;
+    background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     font-size: 0.72rem !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+}
+
+html body #mob-content #portfolioReport #card-recent-sessions .sr-session-card-polished > form,
+html body #portfolioReport #card-recent-sessions .sr-session-card-polished > form {
+    grid-area: delete !important;
+    width: 36px !important;
+    height: 34px !important;
+    min-width: 36px !important;
+    min-height: 34px !important;
+    display: flex !important;
+    margin: 0 !important;
 }
 
 html body #mob-content #portfolioReport #card-recent-sessions .sr-session-delete-btn,
 html body #portfolioReport #card-recent-sessions .sr-session-delete-btn {
     width: 36px !important;
     min-width: 36px !important;
-    min-height: 32px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
 }
 
 html body #mob-content #portfolioReport #card-recent-sessions .sr-recent-session-pager,
