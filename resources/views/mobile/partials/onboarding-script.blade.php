@@ -831,13 +831,13 @@
                     heroTitle: 'Readiness workspace',
                     heroDescription: 'This dashboard ties together your latest interview readiness, practice history, and next recommended actions.',
                     workspaceTitle: 'Practice next steps',
-                    workspaceDescription: 'Use recent sessions and coach prompts to decide which job interview skill to practice next.',
+                    workspaceDescription: 'Use readiness trends and coach prompts to decide which job interview skill to practice next.',
                     metricsTitle: 'Readiness snapshot',
                     metricsDescription: 'Your score, streak, rating, and trend summarize recent job interview practice.',
                     actionsTitle: 'Start practice',
                     actionsDescription: 'Jump into a mock interview or interview coach prompt from the visible action buttons.',
                     heroSelectors: ['.sr-hero-image-panel', '.sr-score-panel', '#srDashboardTitle'],
-                    workspaceSelectors: ['#card-recent-sessions', '#dashboardCoachForm'],
+                    workspaceSelectors: ['#card-progress-chart', '#dashboardCoachForm'],
                     metricsSelectors: ['.sr-mobile-stat-grid', '.sr-stats-desktop', '#card-progress-chart', '#card-skill-radar'],
                     actionSelectors: ['#card-daily-challenge', '.sr-challenge-cta', '.sr-btn-primary'],
                 });
@@ -930,16 +930,16 @@
 
             if (routeMatches(routeName, ['user.reports'])) {
                 return withDefaults({
-                    heroTitle: 'Interview reports',
-                    heroDescription: 'Reports turn completed scored interviews into readiness summaries, score breakdowns, and performance comparisons.',
+                    heroTitle: 'Reports and Sessions',
+                    heroDescription: 'Reports turn completed scored interviews into readiness summaries, score breakdowns, performance comparisons, and session history.',
                     workspaceTitle: 'Report sections',
-                    workspaceDescription: 'Read the summary, detailed score breakdown, and first-versus-latest comparison for the latest scored interview.',
+                    workspaceDescription: 'Read the summary, detailed score breakdown, first-versus-latest comparison, and recent completed sessions.',
                     metricsTitle: 'Score details',
                     metricsDescription: 'Use the metric rows to see how each saved score contributes to the latest report.',
                     actionsTitle: 'Start practice',
                     actionsDescription: 'When no scored report exists yet, start an interview to generate one.',
                     heroSelectors: ['#portfolioReport .sr-page-hero', '#report-readiness'],
-                    workspaceSelectors: ['#report-score-breakdown', '#report-comparison'],
+                    workspaceSelectors: ['#report-score-breakdown', '#report-comparison', '#card-recent-sessions'],
                     metricsSelectors: ['.report-score-list', '#report-empty-state'],
                     actionSelectors: ['.report-start-btn'],
                 });

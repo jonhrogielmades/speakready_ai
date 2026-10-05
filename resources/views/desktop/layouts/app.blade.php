@@ -148,7 +148,7 @@
                <div class="db-nav-section">Growth</div>
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>
                <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback', 'user.review') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
-               <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
+               <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports and Sessions"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports and Sessions</span></a>
             </div>
             <div class="db-bottom db-sidebar-profile-bottom d-none d-lg-block">
                <a href="{{ route('user.account') }}" class="db-sidebar-profile-card {{ request()->routeIs('user.account') ? 'active' : '' }}" title="{{ $desktopUserDisplayName }}" aria-label="Open account profile">

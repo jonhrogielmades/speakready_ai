@@ -145,12 +145,6 @@ class UserController extends Controller
 
  $totalSessions = $completedSessions->count();
 
- $recentSessions = (clone $completedSessions)
- ->with(['category', 'score'])
- ->orderBy('created_at', 'desc')
- ->paginate(6, ['*'], 'recent_sessions_page')
- ->withQueryString();
-
  // Calculate Average Scores
  $scoresQuery = Score::whereHas('session', function ($q) use ($user_id) {
  $q->where('user_id', $user_id)
@@ -310,7 +304,7 @@ class UserController extends Controller
  ]);
 
  return $this->mobileView('dashboard', compact(
- 'profile', 'totalSessions', 'avgScore', 'recentSessions', 'scoreTrend',
+ 'profile', 'totalSessions', 'avgScore', 'scoreTrend',
  'radarData', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
  'learningLabProgress', 'recentNotifications', 'upcomingGoal',
  'dashboardMockScenarios', 'dashboardBubbleMessages'
@@ -3685,12 +3679,22 @@ class UserController extends Controller
  public function reports()
  {
  $user = Auth::user();
+ $userId = Auth::id();
 
- $sessions = InterviewSession::where('user_id', Auth::id())
- ->where('interview_sessions.status', 'completed')
+ $completedSessions = InterviewSession::where('user_id', $userId)
+ ->where('interview_sessions.status', 'completed');
+
+ $sessions = (clone $completedSessions)
  ->with(['score', 'category'])
  ->orderBy('created_at', 'asc')
  ->get();
+
+ $recentSessions = (clone $completedSessions)
+ ->with(['category', 'score'])
+ ->orderBy('created_at', 'desc')
+ ->paginate(6, ['*'], 'recent_sessions_page')
+ ->withQueryString();
+
  $scoredSessions = $this->scoredSessions($sessions);
 
  $latestSession = $scoredSessions->last();
@@ -3706,6 +3710,7 @@ class UserController extends Controller
  return $this->mobileView('user.reports', compact(
  'user',
  'sessions',
+ 'recentSessions',
  'scoredSessions',
  'hasScoreData',
  'latestSession',

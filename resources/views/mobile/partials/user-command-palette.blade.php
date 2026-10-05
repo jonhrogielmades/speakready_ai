@@ -132,7 +132,7 @@
 
                 <a id="ucp-destination-reports" class="ucp-result" href="{{ route('user.reports') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-cyan"><i class="fa-solid fa-folder-open" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Reports</strong><small>Open your interview records and results</small></span>
+                    <span class="ucp-result-copy"><strong>Reports and Sessions</strong><small>Open your interview records and results</small></span>
                     <span class="ucp-result-group">Insights</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>

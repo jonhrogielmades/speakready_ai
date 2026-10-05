@@ -1,9 +1,9 @@
 @extends('desktop.layouts.app')
-@section('title', 'Interview Reports')
+@section('title', 'Reports and Sessions')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/reports.css?v=2') }}" data-page-style="user-reports">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=16') }}" data-page-style="user-reports-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=17') }}" data-page-style="user-reports-2">
 @endpush
 
 @section('content')
@@ -27,7 +27,7 @@
  <div>
  <h4 class="sr-page-hero-title text-gradient-primary">
  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5V3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15 3v5h5M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
- Interview Reports
+ Reports and Sessions
  </h4>
  <p class="sr-page-hero-subtitle">Review readiness, scores, and comparisons.</p>
  </div>
@@ -246,6 +246,8 @@
  <a href="{{ route('interview.setup') }}" class="btn btn-primary btn-shine report-start-btn" style="font-weight:700;"><i class="fa-solid fa-play"></i>Start Interview</a>
  </div>
  @endif
+
+ @include('shared.user.recent-sessions-card')
 </div>
 
 @push('scripts')
@@ -254,20 +256,22 @@
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const stepsMobile = [
- { element: '#portfolioReport .sr-page-hero', popover: { title: 'Interview Reports', description: 'Use reports to review readiness, scores, and comparisons from scored interviews.', side: 'bottom', align: 'start' }},
+ { element: '#portfolioReport .sr-page-hero', popover: { title: 'Reports and Sessions', description: 'Use reports to review readiness, scores, comparisons, and recent completed sessions.', side: 'bottom', align: 'start' }},
  { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, previous score, readiness change, result level, target role, and question count.', side: 'bottom', align: 'start' }},
  { element: '#report-score-breakdown', popover: { title: 'Score Breakdown', description: 'Review metric-level scores for the latest interview, including scenario, date, difficulty, and question count.', side: 'bottom', align: 'start' }},
  { element: '.report-score-list', popover: { title: 'Metric Rows', description: 'Each row shows one scored skill so you can see where the final score came from.', side: 'top', align: 'start' }},
  { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare first and latest scores to see which skills are moving up or down.', side: 'top', align: 'start' }},
+ { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records from this report area.', side: 'top', align: 'start' }},
  { element: '#report-empty-state', popover: { title: 'No Report Yet', description: 'Complete a scored interview to unlock report summaries and score breakdowns.', side: 'top', align: 'start' }}
  ];
 
  const stepsDesktop = [
- { element: '#portfolioReport .sr-page-hero', popover: { title: 'Interview Reports', description: 'Use reports to review readiness, scores, and comparisons from scored interviews.', side: 'bottom', align: 'start' }},
+ { element: '#portfolioReport .sr-page-hero', popover: { title: 'Reports and Sessions', description: 'Use reports to review readiness, scores, comparisons, and recent completed sessions.', side: 'bottom', align: 'start' }},
  { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, previous score, readiness change, result level, target role, and question count.', side: 'bottom', align: 'start' }},
  { element: '#report-score-breakdown', popover: { title: 'Score Breakdown', description: 'Review metric-level scores for the latest interview, including scenario, date, difficulty, and question count.', side: 'bottom', align: 'start' }},
  { element: '.report-score-list', popover: { title: 'Metric Rows', description: 'Each row shows one scored skill so you can see where the final score came from.', side: 'top', align: 'start' }},
  { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare first and latest scores to see which skills are moving up or down.', side: 'top', align: 'start' }},
+ { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records from this report area.', side: 'top', align: 'start' }},
  { element: '#report-empty-state', popover: { title: 'No Report Yet', description: 'Complete a scored interview to unlock report summaries and score breakdowns.', side: 'top', align: 'center' }}
  ];
 

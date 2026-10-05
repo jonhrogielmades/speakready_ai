@@ -324,121 +324,6 @@
                 </div>
             </section>
 
-            <section id="card-recent-sessions" class="sr-card sr-card-pad sr-polished-card" style="--polish-accent:#06b6d4">
-                <div class="sr-polished-header">
-                    <div class="sr-polished-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                    <div class="min-w-0 flex-grow-1">
-                        <div class="d-flex align-items-start justify-content-between gap-2">
-                            <h5 class="sr-polished-title">Recent Sessions</h5>
-                            <a href="{{ route('user.reports') }}" class="sr-plan-cta" style="margin-top:0;color:#2563eb">View All <i class="fa-solid fa-chevron-right"></i></a>
-                        </div>
-                        <p class="sr-polished-subtitle">Review the latest completed local mock interviews.</p>
-                    </div>
-                </div>
-                <div class="sr-section-actions">
-                    <a href="{{ route('user.reports') }}" class="sr-btn sr-section-action"><i class="fa-regular fa-rectangle-list"></i> View Reports</a>
-                    @if(isset($recentSessions) && $recentSessions->count() > 0)
-                        <form action="{{ route('user.sessions.clear') }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Clear all sessions?" data-sr-confirm-message="This will permanently clear all completed interview sessions. This cannot be undone." data-sr-confirm-action="Clear All" data-sr-confirm-variant="danger">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="sr-btn sr-section-action danger w-100">
-                                <i class="fa-solid fa-trash-can"></i> Clear All
-                            </button>
-                        </form>
-                    @endif
-                </div>
-
-                <div class="table-responsive sr-sessions-table">
-                    <table class="table custom-table mb-0 w-100">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Category</th>
-                                <th>Score</th>
-                                <th class="text-end">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($recentSessions ?? [] as $session)
-                                @php
-                                    $sessionScore = $session->score ? (int) $session->score->overall_readiness_score : 0;
-                                    $sessionColor = $sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444');
-                                @endphp
-                                <tr>
-                                    <td>{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</td>
-                                    <td><span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">{{ $session->category ? $session->category->title : 'Interview' }}</span></td>
-                                    <td><span style="color:{{ $sessionColor }};font-weight:900">{{ $sessionScore }}%</span></td>
-                                    <td class="text-end">
-                                        <div class="d-flex justify-content-end gap-2">
-                                            <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary" style="min-height:34px;padding:6px 11px;font-size:.78rem">Review</a>
-                                            <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Delete this session?" data-sr-confirm-message="This interview session and its saved feedback will be permanently deleted." data-sr-confirm-action="Delete Session" data-sr-confirm-variant="danger">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="sr-btn" title="Delete session" aria-label="Delete session from {{ $session->created_at ? $session->created_at->format('M d, Y') : 'recent sessions' }}" style="width:34px;min-height:34px;padding:0;color:#ef4444;border-color:rgba(239,68,68,.35)">
-                                                    <i class="fa-solid fa-trash-can"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center py-4" style="color:var(--tx3)">No recent sessions found. Start interview practice when you are ready.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="sr-sessions-mobile sr-session-list">
-                    @forelse($recentSessions ?? [] as $session)
-                        @php
-                            $sessionScore = $session->score ? (int) $session->score->overall_readiness_score : 0;
-                            $sessionColor = $sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444');
-                        @endphp
-                        <div class="sr-session-card-polished">
-                            <div class="sr-session-icon"><i class="fa-solid fa-briefcase"></i></div>
-                            <div class="sr-session-meta">
-                                <div class="sr-session-title">{{ $session->category ? $session->category->title : 'Interview' }}</div>
-                                <div class="sr-session-date">{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</div>
-                            </div>
-                            <div class="sr-session-score-stack" style="--score-color: {{ $sessionColor }}">
-                                <span class="sr-session-score-pill">{{ $sessionScore }}%</span>
-                                <div class="sr-session-score-bar"><span style="--score-value: {{ $sessionScore }}%"></span></div>
-                            </div>
-                            <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary sr-session-review-btn">Review</a>
-                            <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Delete this session?" data-sr-confirm-message="This interview session and its saved feedback will be permanently deleted." data-sr-confirm-action="Delete Session" data-sr-confirm-variant="danger">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="sr-btn sr-session-delete-btn" title="Delete session" aria-label="Delete session from {{ $session->created_at ? $session->created_at->format('M d, Y') : 'recent sessions' }}">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </form>
-                        </div>
-                    @empty
-                        <div class="sr-polished-empty">
-                            <div class="sr-polished-empty-inner">
-                                <div class="sr-empty-visual"><i class="fa-solid fa-calendar-plus"></i></div>
-                                <p class="sr-polished-empty-text">No recent sessions found. Start interview practice when you are ready.</p>
-                            </div>
-                        </div>
-                    @endforelse
-                </div>
-
-                @if(isset($recentSessions) && method_exists($recentSessions, 'hasPages') && $recentSessions->hasPages())
-                    <div class="sr-recent-session-pager" aria-label="Recent sessions pagination">
-                        <a href="{{ $recentSessions->previousPageUrl() ?: '#' }}" class="sr-recent-page-btn {{ $recentSessions->onFirstPage() ? 'disabled' : '' }}" aria-disabled="{{ $recentSessions->onFirstPage() ? 'true' : 'false' }}" @if($recentSessions->onFirstPage()) tabindex="-1" @endif>
-                            <i class="fa-solid fa-arrow-left"></i>
-                            Previous
-                        </a>
-                        <span class="sr-recent-page-status">Page {{ $recentSessions->currentPage() }} of {{ $recentSessions->lastPage() }}</span>
-                        <a href="{{ $recentSessions->nextPageUrl() ?: '#' }}" class="sr-recent-page-btn {{ $recentSessions->hasMorePages() ? '' : 'disabled' }}" aria-disabled="{{ $recentSessions->hasMorePages() ? 'false' : 'true' }}" @unless($recentSessions->hasMorePages()) tabindex="-1" @endunless>
-                            Next
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-                @endif
-            </section>
         </main>
 
         <aside class="sr-side-stack">
@@ -1022,7 +907,6 @@ document.addEventListener("DOMContentLoaded", function() {
             { element: '.sr-readiness-card-grid', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
             { element: '.sr-mobile-stat-grid:not(.sr-readiness-card-grid)', popover: { title: 'Practice Snapshot', description: 'Track interviews, ratings, XP, and streaks without opening a report.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
             { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused interview task for XP, streak progress, and sharper answer structure.', side: 'top', align: 'start' }},
             { element: '#mobThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable view.', side: 'bottom', align: 'end' }}
         ];
@@ -1033,7 +917,6 @@ document.addEventListener("DOMContentLoaded", function() {
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed interviews, ratings, XP, streaks, and active practice days at a glance.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
             { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused interview task for XP, streak progress, and sharper answer structure.', side: 'left', align: 'start' }},
             { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: 'bottom', align: 'center' }},
             { element: '#profileWrap', popover: { title: 'Account And Language', description: 'Manage profile settings, language translation, notifications, and sign-out options.', side: 'bottom', align: 'end' }}

@@ -1260,6 +1260,9 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  $response = $this->actingAs($user)->get(route('user.reports'));
 
  $response->assertOk()
+ ->assertSee('Reports and Sessions')
+ ->assertSee('Recent Sessions')
+ ->assertSee('No score')
  ->assertSee('No Scored Interview Report Available')
  ->assertSee('none of them have score data yet')
  ->assertSee('css/desktop/user/reports.css?v=2', false)
@@ -1286,6 +1289,9 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  $response = $this->actingAs($user)->get(route('user.reports'));
 
  $response->assertOk()
+ ->assertSee('Reports and Sessions')
+ ->assertSee('Recent Sessions')
+ ->assertSee('card-recent-sessions', false)
  ->assertSee('85%')
  ->assertSee('+15%')
  ->assertSee('Performance Comparison')
@@ -1465,7 +1471,7 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/desktop/user/reports.css?v=2', false)
- ->assertSee('css/desktop/user/reports-2.css?v=16', false)
+ ->assertSee('css/desktop/user/reports-2.css?v=17', false)
  ->assertSee('data-page-style="user-reports"', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')
@@ -1499,7 +1505,7 @@ public function test_detailed_review_uses_openai_generated_sample_answer_when_co
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/mobile/user/reports.css?v=2', false)
- ->assertSee('css/mobile/user/reports-2.css?v=10', false)
+ ->assertSee('css/mobile/user/reports-2.css?v=11', false)
  ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')

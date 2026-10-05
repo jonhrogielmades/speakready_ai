@@ -517,6 +517,11 @@
             white-space: normal;
          }
 
+         .mob-profile-link.mob-profile-link-wide span {
+            line-height: 1.12;
+            overflow-wrap: anywhere;
+         }
+
          .mob-profile-action {
             width: 100%;
             border-color: var(--bd2);
@@ -3760,6 +3765,12 @@
                white-space: nowrap !important;
                line-height: 1 !important;
             }
+
+            body.user-mobile-shell .mob-profile-dropdown[data-mode="pages"] .mob-profile-link.mob-profile-link-wide span {
+               overflow-wrap: anywhere !important;
+               white-space: normal !important;
+               line-height: 1.08 !important;
+            }
          }
 
          @media (max-width: 420px) {
@@ -4563,7 +4574,7 @@
                 <div class="mob-profile-grid">
                <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>Interview Coach</span></a>
                <a href="{{ route('user.practice.calendar') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}"><i class="fa-regular fa-calendar-days"></i><span>Calendar</span></a>
-               <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>Reports</span></a>
+               <a href="{{ route('user.reports') }}" class="mob-profile-link mob-profile-link-wide profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports and Sessions"><i class="fa-solid fa-folder-open"></i><span>Reports and Sessions</span></a>
                </div>
             </div>
 
