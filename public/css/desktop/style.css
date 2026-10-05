@@ -12389,12 +12389,46 @@ html:not(.lm) body.user-desktop-shell:not(.admin-shell) #profileDropdown .profil
 
 /* Desktop sidebar account footer */
 @media (min-width: 992px) {
+  body.user-desktop-shell:not(.admin-shell) #dashboard {
+    --sidebar-account-footer-bg: rgba(2, 13, 34, 0.38);
+    --sidebar-account-card-bg: linear-gradient(135deg, var(--user-ref-sidebar-soft, rgba(15, 44, 88, 0.74)), rgba(2, 13, 34, 0.56));
+    --sidebar-account-card-hover-bg: linear-gradient(135deg, var(--user-ref-sidebar-soft-strong, rgba(28, 77, 151, 0.82)), rgba(15, 44, 88, 0.76));
+    --sidebar-account-card-border: rgba(147, 197, 253, 0.16);
+    --sidebar-account-card-hover-border: var(--user-ref-sidebar-line-strong, rgba(147, 197, 253, 0.4));
+    --sidebar-account-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 28px rgba(2, 13, 34, 0.24);
+    --sidebar-account-card-hover-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 16px 34px rgba(37, 99, 235, 0.2);
+    --sidebar-account-name-color: var(--user-ref-sidebar-ink, #f8fbff);
+    --sidebar-account-meta-color: var(--user-ref-sidebar-muted, #8bb9f5);
+    --sidebar-account-verified-color: #93c5fd;
+    --sidebar-account-hover-color: #ffffff;
+  }
+
+  :is(html.lm, html[data-theme="light"]) body.user-desktop-shell:not(.admin-shell) #dashboard {
+    --sidebar-account-footer-bg: rgba(4, 21, 50, 0.44);
+    --sidebar-account-card-bg: linear-gradient(135deg, rgba(28, 77, 151, 0.78), rgba(8, 34, 74, 0.68));
+    --sidebar-account-card-hover-bg: linear-gradient(135deg, rgba(37, 99, 235, 0.84), rgba(28, 77, 151, 0.78));
+    --sidebar-account-card-border: rgba(147, 197, 253, 0.22);
+    --sidebar-account-card-hover-border: rgba(191, 219, 254, 0.46);
+    --sidebar-account-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 12px 28px rgba(15, 44, 88, 0.22);
+    --sidebar-account-card-hover-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 16px 34px rgba(37, 99, 235, 0.24);
+  }
+
+  :is(html:not(.lm), html[data-theme="dark"]) body.user-desktop-shell:not(.admin-shell) #dashboard {
+    --sidebar-account-footer-bg: rgba(1, 8, 24, 0.58);
+    --sidebar-account-card-bg: linear-gradient(135deg, rgba(15, 44, 88, 0.82), rgba(2, 13, 34, 0.76));
+    --sidebar-account-card-hover-bg: linear-gradient(135deg, rgba(28, 77, 151, 0.86), rgba(8, 34, 74, 0.82));
+    --sidebar-account-card-border: rgba(125, 211, 252, 0.18);
+    --sidebar-account-card-hover-border: rgba(147, 197, 253, 0.42);
+    --sidebar-account-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 28px rgba(0, 0, 0, 0.24);
+    --sidebar-account-card-hover-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 34px rgba(37, 99, 235, 0.22);
+  }
+
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-bottom {
     position: relative !important;
     z-index: 1 !important;
     padding: 12px 16px 16px !important;
     border-top: 1px solid var(--user-ref-sidebar-line, rgba(125, 211, 252, 0.16)) !important;
-    background: rgba(2, 13, 34, 0.38) !important;
+    background: var(--sidebar-account-footer-bg) !important;
     backdrop-filter: blur(14px) !important;
     -webkit-backdrop-filter: blur(14px) !important;
   }
@@ -12408,46 +12442,34 @@ html:not(.lm) body.user-desktop-shell:not(.admin-shell) #profileDropdown .profil
     width: 100% !important;
     min-width: 0 !important;
     padding: 8px 9px !important;
-    border: 1px solid rgba(147, 197, 253, 0.16) !important;
+    border: 1px solid var(--sidebar-account-card-border) !important;
     border-radius: 8px !important;
-    background: linear-gradient(135deg,
-      var(--user-ref-sidebar-soft, rgba(15, 44, 88, 0.74)),
-      rgba(2, 13, 34, 0.56)) !important;
-    color: var(--user-ref-sidebar-ink, #f8fbff) !important;
+    background: var(--sidebar-account-card-bg) !important;
+    color: var(--sidebar-account-name-color) !important;
     text-decoration: none !important;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 12px 28px rgba(2, 13, 34, 0.24) !important;
+    box-shadow: var(--sidebar-account-card-shadow) !important;
     overflow: hidden !important;
     transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
   }
 
   html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 12px 28px rgba(2, 13, 34, 0.24) !important;
+    box-shadow: var(--sidebar-account-card-shadow) !important;
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card:hover,
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card:focus-visible,
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card.active {
-    border-color: var(--user-ref-sidebar-line-strong, rgba(147, 197, 253, 0.4)) !important;
-    background: linear-gradient(135deg,
-      var(--user-ref-sidebar-soft-strong, rgba(28, 77, 151, 0.82)),
-      rgba(15, 44, 88, 0.76)) !important;
-    color: #ffffff !important;
+    border-color: var(--sidebar-account-card-hover-border) !important;
+    background: var(--sidebar-account-card-hover-bg) !important;
+    color: var(--sidebar-account-hover-color) !important;
     transform: translateY(-1px) !important;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 16px 34px rgba(37, 99, 235, 0.2) !important;
+    box-shadow: var(--sidebar-account-card-hover-shadow) !important;
   }
 
   html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card:hover,
   html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card:focus-visible,
   html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card.active {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 18px 34px rgba(37, 99, 235, 0.22) !important;
+    box-shadow: var(--sidebar-account-card-hover-shadow) !important;
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-card .db-avatar {
@@ -12472,7 +12494,7 @@ html:not(.lm) body.user-desktop-shell:not(.admin-shell) #profileDropdown .profil
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-name {
     display: block !important;
-    color: var(--user-ref-sidebar-ink, #f8fbff) !important;
+    color: var(--sidebar-account-name-color) !important;
     font-size: 0.82rem !important;
     font-weight: 850 !important;
     line-height: 1.18 !important;
@@ -12487,7 +12509,7 @@ html:not(.lm) body.user-desktop-shell:not(.admin-shell) #profileDropdown .profil
     display: flex !important;
     align-items: flex-start !important;
     gap: 5px !important;
-    color: var(--user-ref-sidebar-muted, #8bb9f5) !important;
+    color: var(--sidebar-account-meta-color) !important;
     font-size: 0.64rem !important;
     font-weight: 800 !important;
     line-height: 1.2 !important;
@@ -12497,12 +12519,12 @@ html:not(.lm) body.user-desktop-shell:not(.admin-shell) #profileDropdown .profil
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-meta.is-verified {
-    color: #93c5fd !important;
+    color: var(--sidebar-account-verified-color) !important;
     text-transform: none !important;
   }
 
   html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-meta.is-verified {
-    color: #93c5fd !important;
+    color: var(--sidebar-account-verified-color) !important;
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar-profile-meta i {

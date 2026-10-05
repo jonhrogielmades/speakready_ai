@@ -55,7 +55,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=37') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=38') }}" />
       <style>
           :root,
           .lm {
