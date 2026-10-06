@@ -4614,6 +4614,10 @@ return response()->json([
  return $this->learningGameFeedback($gameLevel, $sessionData, $answersData);
  }
 
+ $answerCount = max(1, count($answersData));
+ $defaultFinalizationTimeout = max(30, min(60, 10 + ($answerCount * 2)));
+ $defaultFinalizationDeadline = max(90, min(180, 30 + ($answerCount * 6)));
+
  return AIService::generateFeedback(
  $sessionData,
  $answersData,
@@ -4621,8 +4625,8 @@ return response()->json([
  false,
  true,
  [
- 'timeout_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', 30)),
- 'deadline_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', 90)),
+ 'timeout_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', $defaultFinalizationTimeout)),
+ 'deadline_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', $defaultFinalizationDeadline)),
  'max_attempts' => (int) env('AI_FEEDBACK_FINALIZATION_ATTEMPTS', 2),
  'http_attempts' => (int) env('AI_FEEDBACK_FINALIZATION_HTTP_ATTEMPTS', env('AI_FEEDBACK_HTTP_ATTEMPTS', 2)),
  'retry_delay_ms' => (int) env('AI_FEEDBACK_FINALIZATION_RETRY_DELAY_MS', env('AI_FEEDBACK_RETRY_DELAY_MS', 250)),

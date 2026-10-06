@@ -1021,7 +1021,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Validated AI provider check');
  }
 
- public function test_interview_finish_retries_ai_provider_for_every_selected_answer_when_batch_misses_later_items(): void
+ public function test_interview_finish_retries_ai_provider_for_all_twenty_selected_answers_when_batch_misses_later_items(): void
  {
  $requestCount = 0;
  Http::fake([
@@ -1062,42 +1062,42 @@ class ReliabilityHardeningTest extends TestCase
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
  $session = $this->sessionFor($user, $category, [
- 'num_questions' => 5,
+ 'num_questions' => 20,
  ]);
- $questions = [
- $this->question($category, [
- 'interview_session_id' => $session->id,
- 'question_text' => 'Tell me about a release checklist process you improved.',
- 'type' => 'Behavioral',
- ]),
- $this->question($category, [
- 'interview_session_id' => $session->id,
- 'question_text' => 'How would you diagnose a slow database query?',
- 'type' => 'Technical',
- ]),
- $this->question($category, [
- 'interview_session_id' => $session->id,
- 'question_text' => 'Tell me about a time you handled conflicting priorities.',
- 'type' => 'Behavioral',
- ]),
- $this->question($category, [
- 'interview_session_id' => $session->id,
- 'question_text' => 'What is your greatest strength for this role?',
- 'type' => 'Personal',
- ]),
- $this->question($category, [
- 'interview_session_id' => $session->id,
- 'question_text' => 'How would you verify a production fix before closing the issue?',
- 'type' => 'Technical',
- ]),
+ $cases = [
+ ['type' => 'Behavioral', 'question' => 'Tell me about a release checklist process you improved.', 'answer' => 'During a delayed release, I owned the release checklist, coordinated missing approvals, and delivered the deployment after documenting the final result.'],
+ ['type' => 'Technical', 'question' => 'How would you diagnose a slow database query?', 'answer' => 'I would diagnose the slow database query by inspecting the query plan, comparing row estimates, checking indexes and locks, then verifying the same workload before changing the query.'],
+ ['type' => 'Behavioral', 'question' => 'Tell me about a time you handled conflicting priorities.', 'answer' => 'When I handled conflicting priorities during a release, I listed the risks, confirmed the deadline with my lead, updated the team, and finished the customer-impacting task first.'],
+ ['type' => 'Personal', 'question' => 'What is your greatest strength for this role?', 'answer' => 'My greatest strength for this role is organizing support work clearly because I document repeat issues, coordinate handoffs, and help the team resolve requests faster.'],
+ ['type' => 'Technical', 'question' => 'How would you verify a production fix before closing the issue?', 'answer' => 'I would verify the production fix by reproducing the issue, applying the smallest safe change, running regression checks, monitoring the affected metric, and confirming the user-facing issue is resolved.'],
+ ['type' => 'Behavioral', 'question' => 'Tell me about a time you helped a difficult customer.', 'answer' => 'I helped a difficult customer by listening to the complaint, checking the order status, giving a clear update, and confirming the customer received the replacement the next day.'],
+ ['type' => 'Technical', 'question' => 'How would you investigate a data quality issue?', 'answer' => 'For a data quality issue, I would compare the source records, identify the bad transformation step, fix the validation rule, rerun a small sample, and document the corrected data.'],
+ ['type' => 'Behavioral', 'question' => 'Describe how you responded to a security incident.', 'answer' => 'During a security incident, I escalated the alert, preserved the logs, helped isolate the affected account, communicated status updates, and joined the review to prevent the same issue.'],
+ ['type' => 'Behavioral', 'question' => 'How did you onboard a new teammate successfully?', 'answer' => 'I onboarded a new teammate by preparing a task checklist, explaining our support workflow, pairing on two tickets, and checking in daily until they could resolve requests independently.'],
+ ['type' => 'Behavioral', 'question' => 'Tell me about a missed deadline and what you changed.', 'answer' => 'When I missed a deadline, I explained the blocker early, split the remaining work into smaller milestones, sent daily progress notes, and changed my planning checklist for the next sprint.'],
+ ['type' => 'Technical', 'question' => 'How would you troubleshoot an API timeout?', 'answer' => 'I would troubleshoot the API timeout by checking logs, measuring upstream latency, reproducing the request with the same payload, reviewing retry behavior, and confirming the timeout stops after the fix.'],
+ ['type' => 'Technical', 'question' => 'How would you fix an accessibility bug?', 'answer' => 'I would fix the accessibility bug by reproducing the screen reader issue, checking labels and focus order, updating the markup, testing keyboard navigation, and asking for another accessibility review.'],
+ ['type' => 'Behavioral', 'question' => 'How do you handle unclear requirements?', 'answer' => 'When requirements were unclear, I wrote down the open questions, confirmed the user goal with the product owner, shared a small example, and only started after the acceptance criteria were clear.'],
+ ['type' => 'Technical', 'question' => 'Describe a performance dashboard you would build.', 'answer' => 'I would build the performance dashboard with response time, error rate, deployment markers, and customer-impact filters so the team can see whether a release improves or hurts service health.'],
+ ['type' => 'Behavioral', 'question' => 'Tell me about handling a payment error.', 'answer' => 'I handled a payment error by checking the transaction log, explaining the failed step to the customer, coordinating with billing, and confirming the refund or retry result in writing.'],
+ ['type' => 'Behavioral', 'question' => 'How did you close a documentation gap?', 'answer' => 'I closed a documentation gap by collecting repeated support questions, writing the missing setup steps, adding screenshots, asking a teammate to test the guide, and tracking fewer repeat tickets.'],
+ ['type' => 'Behavioral', 'question' => 'Describe a team disagreement you helped resolve.', 'answer' => 'During a team disagreement, I summarized both options, named the customer impact, suggested a short test, and helped the group choose the approach with lower release risk.'],
+ ['type' => 'Personal', 'question' => 'How do you learn a new tool quickly?', 'answer' => 'I learn a new tool quickly by reading the core workflow, building a small practice task, writing notes about mistakes, and asking a teammate to review my first real use.'],
+ ['type' => 'Behavioral', 'question' => 'How would you prepare a handoff plan?', 'answer' => 'I would prepare a handoff plan with the current status, owner, risks, next deadline, links to evidence, and a short meeting to confirm the receiver understands the open actions.'],
+ ['type' => 'Behavioral', 'question' => 'Tell me about leading an incident retrospective.', 'answer' => 'When leading an incident retrospective, I gathered the timeline, separated facts from blame, captured the root cause, assigned prevention actions, and followed up until the owners completed them.'],
  ];
- $answerTexts = [
- 'During a delayed release, I owned the checklist, coordinated missing approvals, and delivered the deployment after documenting the final result.',
- 'I would inspect the query plan, compare row estimates, check indexes and locks, then verify the same workload before changing the query.',
- 'When I handled conflicting priorities during a release, I listed the risks, confirmed the deadline with my lead, updated the team, and finished the customer-impacting task first.',
- 'My strongest skill is organizing support work clearly because I document repeat issues, coordinate handoffs, and help the team resolve requests faster.',
- 'I would reproduce the issue, apply the smallest safe change, run regression checks, monitor the affected metric, and confirm the user-facing issue is resolved.',
- ];
+ $this->assertCount(20, $cases);
+ $questions = [];
+ $answerTexts = [];
+
+ foreach ($cases as $case) {
+ $questions[] = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => $case['question'],
+ 'type' => $case['type'],
+ ]);
+ $answerTexts[] = $case['answer'];
+ }
 
  foreach ($questions as $index => $question) {
  InterviewAnswer::create([
@@ -1131,8 +1131,17 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame('openai', $savedAnswer->ai_provider, 'Answer '.($index + 1).' should keep the API provider after per-answer retry.');
  $this->assertSame('ai_evidence_validated', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'), 'Answer '.($index + 1).' should keep provider review source after per-answer retry.');
  $this->assertSame('ai_provider', data_get($savedAnswer->coaching_feedback, 'content_alignment.possible_answer_source'), 'Answer '.($index + 1).' should keep provider possible answer source after per-answer retry.');
+ foreach (['score', 'clarity_score', 'relevance_score', 'grammar_score'] as $scoreField) {
+ $this->assertTrue(is_numeric($savedAnswer->{$scoreField}), 'Answer '.($index + 1).' should save numeric '.$scoreField.'.');
+ $this->assertGreaterThan(0, (int) $savedAnswer->{$scoreField}, 'Answer '.($index + 1).' should save a positive '.$scoreField.'.');
+ }
  $this->assertStringContainsString(mb_substr($answerTexts[$index], 0, 35), $savedAnswer->ai_feedback);
  $this->assertStringContainsString(mb_substr($answerTexts[$index], 0, 35), $savedAnswer->better_sample_answer);
+ }
+
+ $sessionScore = Score::where('interview_session_id', $session->id)->firstOrFail();
+ foreach (['overall_readiness_score', 'clarity_score', 'relevance_score', 'grammar_score', 'professionalism_score'] as $scoreField) {
+ $this->assertGreaterThan(0, (int) $sessionScore->{$scoreField}, 'The completed 20-answer session should save a positive '.$scoreField.'.');
  }
  }
 
