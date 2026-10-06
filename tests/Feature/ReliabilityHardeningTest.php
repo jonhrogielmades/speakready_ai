@@ -1070,6 +1070,8 @@ class ReliabilityHardeningTest extends TestCase
  'answer_text' => 'Okay.',
  'response_mode' => 'text',
  ]);
+
+ Log::spy();
  
  $this->actingAs($user)
  ->withSession([
@@ -1089,6 +1091,11 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame('openai', $savedAnswer->ai_provider);
  $this->assertLessThanOrEqual(10, $savedAnswer->score);
  $this->assertStringContainsString('too short', strtolower((string) $savedAnswer->ai_feedback));
+ Log::shouldHaveReceived('info')
+ ->withArgs(fn (string $message, array $context = []): bool => $message === 'AI feedback provider response was accepted after local evidence repair.'
+ && ($context['provider']?? null) === 'openai')
+ ->once();
+ Log::shouldNotHaveReceived('warning');
  Http::assertSentCount(1);
  }
  
