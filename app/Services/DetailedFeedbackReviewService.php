@@ -42,7 +42,14 @@ class DetailedFeedbackReviewService
  $answersData = $this->answersData($answers);
 
  try {
- $feedback = AIService::generateFeedback($sessionData, $answersData, $provider, false, false);
+ $feedback = AIService::generateFeedback(
+ $sessionData,
+ $answersData,
+ $provider,
+ false,
+ false,
+ $this->reviewRefreshRuntimeOptions()
+ );
  } catch (AiFeedbackProviderFailureException $error) {
  Log::warning('Detailed review API provider refresh failed; keeping saved feedback.', [
  'session_id' => $session->id,
@@ -262,6 +269,17 @@ class DetailedFeedbackReviewService
  }
 
  return null;
+ }
+
+ private function reviewRefreshRuntimeOptions(): array
+ {
+ return [
+ 'timeout_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 12),
+ 'deadline_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 24),
+ 'max_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', 1),
+ 'http_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', 1),
+ 'retry_delay_ms' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', 150),
+ ];
  }
 
  private function answerNeedsApiProviderPossibleAnswer(InterviewAnswer $answer): bool

@@ -1797,7 +1797,7 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  ];
  }
 
- public static function generateFeedback($sessionData, $answersData, $provider, bool $providerOnly = false, bool $allowLocalRepair = true)
+ public static function generateFeedback($sessionData, $answersData, $provider, bool $providerOnly = false, bool $allowLocalRepair = true, array $runtimeOptions = [])
  {
  if ($answersData === []) {
  throw new \RuntimeException('No saved answers were available for AI feedback.');
@@ -2174,7 +2174,14 @@ EOT;
  $prompt.= "\nREQUIRED ANSWER IDS: ".implode(', ', array_column($answersData, 'id'))."\n";
  $prompt.= "You must return one per_question_feedback item for every required answer id and no extra ids.\n";
 
- $maxAttempts = max(1, min(2, (int) env('AI_FEEDBACK_ATTEMPTS', 1)));
+ $runtimeInt = static function (string $optionKey, string $envKey, int $default, int $min, int $max) use ($runtimeOptions): int {
+ $value = array_key_exists($optionKey, $runtimeOptions)
+ ? $runtimeOptions[$optionKey]
+ : env($envKey, $default);
+
+ return max($min, min($max, (int) $value));
+ };
+ $maxAttempts = $runtimeInt('max_attempts', 'AI_FEEDBACK_ATTEMPTS', 1, 1, 2);
  $providers = $providerOnly? array_values(array_filter(
  [self::normalizeProviderName($provider)],
  fn (string $providerName): bool => $providerName!== '' && self::feedbackProviderCanRun($providerName)
@@ -2184,12 +2191,13 @@ EOT;
  }
  $requestOptions = [
  'module' => 'feedback_generation',
- 'timeout_seconds' => max(2, min(60, (int) env('AI_FEEDBACK_TIMEOUT', 6))),
- 'attempts' => max(1, min(2, (int) env('AI_FEEDBACK_HTTP_ATTEMPTS', 1))),
+ 'timeout_seconds' => $runtimeInt('timeout_seconds', 'AI_FEEDBACK_TIMEOUT', 6, 2, 60),
+ 'attempts' => $runtimeInt('http_attempts', 'AI_FEEDBACK_HTTP_ATTEMPTS', 1, 1, 2),
  'response_format' => self::feedbackResponseFormat(),
  'model' => trim((string) env('OPENAI_FEEDBACK_MODEL', env('OPENAI_MODEL', 'gpt-4o-mini'))),
  ];
- $deadlineSeconds = max(3, min(180, (int) env('AI_FEEDBACK_DEADLINE_SECONDS', 10)));
+ $deadlineSeconds = $runtimeInt('deadline_seconds', 'AI_FEEDBACK_DEADLINE_SECONDS', 10, 3, 180);
+ $retryDelayMs = $runtimeInt('retry_delay_ms', 'AI_FEEDBACK_RETRY_DELAY_MS', 200, 0, 1000);
  $deadlineAt = microtime(true) + $deadlineSeconds;
  $attemptedProviders = [];
  $repairableProviderResponse = null;
@@ -2249,7 +2257,7 @@ EOT;
  }
 
  if ($attempt < $maxAttempts) {
- usleep(max(0, min(1000, (int) env('AI_FEEDBACK_RETRY_DELAY_MS', 200))) * 1000);
+ usleep($retryDelayMs * 1000);
  }
  }
  }
