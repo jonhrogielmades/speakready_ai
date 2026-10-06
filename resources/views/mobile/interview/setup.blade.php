@@ -88,6 +88,7 @@
  $selectedQuestionTypes = old('question_types', []);
  $selectedQuestionTypes = is_array($selectedQuestionTypes)? $selectedQuestionTypes: [];
  $hasScenarioOptions = $scenarioOptions->isNotEmpty();
+ $interviewSetupDraftKey = 'speakready.interview.setupDraft.'.auth()->id();
 @endphp
 
 <div class="db-section active setup-step-mode" id="sec-interview-setup">
@@ -140,7 +141,7 @@
  </div>
  @endif
 
- <form action="{{ route('interview.start') }}" method="POST" id="setupForm" data-sr-no-transition="true">
+ <form action="{{ route('interview.start') }}" method="POST" id="setupForm" data-sr-no-transition="true" data-setup-draft-key="{{ $interviewSetupDraftKey }}">
  @csrf
  <div class="row g-4">
  <!-- Left Column: Form Settings -->
@@ -580,6 +581,10 @@
  </div>
 </div>
 
+<script>
+ window.SpeakReadyInterviewSetupDraftConfig = { storageKey: @json($interviewSetupDraftKey) };
+</script>
+<script src="{{ asset('js/interview-setup-draft.js?v=1') }}"></script>
 <script>
  const setupRequiredFieldIds = [
  'valScenario',
@@ -1313,6 +1318,13 @@
  ],
  };
  const visitedSetupStepIds = new Set();
+ const setupDraftApi = window.SpeakReadyInterviewSetupDraft;
+ const setupDraftFormElement = document.getElementById('setupForm');
+ const restoredSetupDraft = setupDraftApi?.restore(setupDraftFormElement);
+ if (Array.isArray(restoredSetupDraft?.visited_step_ids)) {
+ restoredSetupDraft.visited_step_ids.forEach(stepId => visitedSetupStepIds.add(stepId));
+ }
+ let initialSetupStepIndex = Number.isFinite(Number(restoredSetupDraft?.active_step_index))? Number(restoredSetupDraft.active_step_index): 0;
 
  document.querySelectorAll('input[name="camera_detection"]').forEach(el => {
  el.addEventListener('change', () => {
@@ -1452,6 +1464,10 @@
  }
 
  updateSummary();
+ setupDraftApi?.save(setupDraftFormElement, {
+ activeStepIndex: setupStepState.index,
+ visitedStepIds: Array.from(visitedSetupStepIds),
+ });
 
  }
 
@@ -1512,7 +1528,7 @@
  });
 
  function initializeInterviewSetupPage() {
- showSetupStep(0);
+ showSetupStep(initialSetupStepIndex);
  }
 
  initializeInterviewSetupPage();
@@ -1523,6 +1539,11 @@
  const startInterviewButton = document.getElementById('btn-start-interview');
  const setupAutoFullscreenPreferenceKey = 'speakready.interview.autoFullscreen';
  let setupFormSubmitting = false;
+ setupDraftApi?.watch(setupForm, {
+ activeStepIndex: () => setupStepState.index,
+ visitedStepIds: () => Array.from(visitedSetupStepIds),
+ beforeSave: () => syncSetupTargetFieldCopy(),
+ });
 
  function rememberSetupAutoFullscreenPreference() {
  try {
@@ -1709,6 +1730,10 @@
  setupForm.addEventListener('submit', function(event) {
  if (setupFormSubmitting) return;
  updateStartInterviewState();
+ setupDraftApi?.save(setupForm, {
+ activeStepIndex: setupStepState.index,
+ visitedStepIds: Array.from(visitedSetupStepIds),
+ });
  if (!validateSetupForm(true) || startInterviewButton?.disabled) {
  event.preventDefault();
  return;

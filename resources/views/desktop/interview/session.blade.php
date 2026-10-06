@@ -431,6 +431,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  @endphp
  <script>
+ window.SpeakReadyInterviewSetupDraftConfig = { storageKey: @json('speakready.interview.setupDraft.'.auth()->id()) };
+ </script>
+ <script src="{{ asset('js/interview-setup-draft.js?v=1') }}"></script>
+ <script>
  const savedSessionState = @json($clientSavedStateForUi);
  const initialQuestions = @json($clientQuestionsForUi);
  const savedQuestionSequence = Array.isArray(savedSessionState.questions)? savedSessionState.questions.filter(question => question && question.id && question.question_text): [];
@@ -6109,6 +6113,9 @@ return fallbackText;
  headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
  });
  const data = response.ok? await response.json(): {};
+ if (response.ok) {
+ window.SpeakReadyInterviewSetupDraft?.clear();
+ }
  await exitAutoInterviewFullscreen();
  window.location.href = data.redirect_url || '{{ route("interview.setup") }}';
  } catch (error) {
@@ -6310,6 +6317,7 @@ return fallbackText;
  throw error;
  }
 
+ window.SpeakReadyInterviewSetupDraft?.clear();
  await exitAutoInterviewFullscreen();
  window.location.replace(data.redirect_url);
  return true;
