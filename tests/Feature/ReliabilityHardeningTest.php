@@ -1570,6 +1570,52 @@ class ReliabilityHardeningTest extends TestCase
  ->assertDontSee('AI review pending');
  }
 
+ public function test_user_review_recovers_stuck_pending_report_with_local_fallback_when_providers_fail(): void
+ {
+ foreach ([
+ 'GEMINI_API_KEY' => 'gemini_test_token',
+ 'GROQ_API_KEY' => 'groq_test_token',
+ 'COHERE_API_KEY' => 'cohere_test_token',
+ 'OPENAI_API_KEY' => 'openai_test_token',
+ 'AI_FEEDBACK_PROVIDER_PRIORITY' => 'gemini,groq,cohere,openai',
+ 'AI_FEEDBACK_MAX_PROVIDERS' => '4',
+ 'AI_FEEDBACK_ATTEMPTS' => '1',
+ 'AI_FEEDBACK_HTTP_ATTEMPTS' => '1',
+ 'AI_FEEDBACK_DEADLINE_SECONDS' => '30',
+ ] as $key => $value) {
+ $this->setEnvValue($key, $value);
+ }
+
+ Http::fake(['*' => Http::response(['error' => 'provider unavailable'], 500)]);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Tell me about a time you improved a support handoff.',
+ ]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'I owned the support handoff, documented repeated issues, coordinated the update, and confirmed the final result with my supervisor.',
+ 'response_mode' => 'text',
+ ]);
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('Feedback Detailed Review')
+ ->assertDontSee('AI review pending');
+
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+ $this->assertSame('local', $answer->fresh()->ai_provider);
+ $this->assertNotEmpty($answer->fresh()->ai_feedback);
+ $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+ Http::assertSentCount(4);
+ }
+
  public function test_interview_finish_tolerates_missing_feedback_coaching_summary_column(): void
  {
  $this->fakeOpenAiFeedback();

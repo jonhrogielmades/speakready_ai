@@ -783,10 +783,21 @@ class UserController extends Controller
  || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false);
  $reviewPending = ! $sessionEndedEarly && ! $sessionRecord->gameLevel
  && ! in_array($sessionRecord->status, ['completed', 'reviewed'], true);
+ $interviewController = app(InterviewController::class);
+ $pendingReviewRecovered = false;
+
+ if (! $sessionEndedEarly && ! $sessionRecord->gameLevel && $interviewController->recoverPendingDetailedReview($sessionRecord)) {
+ $sessionRecord->refresh()->load([
+ 'category',
+ 'answers' => fn ($query) => $query->whereNull('retry_of_answer_id')->with(['question', 'retryAttempts']),
+ 'score', 'feedback', 'gameLevel',
+ ]);
+ $reviewPending = false;
+ $pendingReviewRecovered = true;
+ }
 
  if (! $sessionEndedEarly && in_array($sessionRecord->status, ['completed', 'reviewed'], true)) {
- $interviewController = app(InterviewController::class);
- if (! $sessionRecord->gameLevel) {
+ if (! $sessionRecord->gameLevel && ! $pendingReviewRecovered) {
  try {
  if ($interviewController->ensureCompletedSessionOpenAiFeedbackEvidence($sessionRecord, null)) {
  $sessionRecord->refresh()->load([

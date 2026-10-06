@@ -1679,6 +1679,76 @@ return response()->json([
  && trim((string) data_get($answer->coaching_feedback, 'content_alignment.improvement_focus')) !== '');
  }
 
+ public function recoverPendingDetailedReview(InterviewSession $session): bool
+ {
+ if ((int) $session->user_id !== (int) Auth::id() || $session->game_level_id) {
+ return false;
+ }
+
+ $session->refresh();
+ if ($session->status === 'processing' && $session->updated_at?->lte(now()->subMinutes(2))) {
+ InterviewSession::whereKey($session->id)
+ ->where('status', 'processing')
+ ->where('updated_at', '<=', now()->subMinutes(2))
+ ->update(['status' => 'in_progress']);
+ $session->refresh();
+ }
+
+ if ($session->status !== 'in_progress') {
+ return false;
+ }
+
+ $answerCount = InterviewAnswer::where('interview_session_id', $session->id)
+ ->whereNull('retry_of_answer_id')
+ ->count();
+ $expectedAnswerCount = max(1, (int) ($session->num_questions?? 1));
+ if ($answerCount < $expectedAnswerCount) {
+ return false;
+ }
+
+ $finalizeRequest = Request::create(
+ route('interview.finish', [], false),
+ 'POST',
+ array_filter([
+ 'session_id' => $session->id,
+ 'duration_seconds' => $session->duration_seconds,
+ 'notes' => $session->notes,
+ ], fn ($value): bool => $value !== null),
+ [],
+ [],
+ [
+ 'HTTP_ACCEPT' => 'application/json',
+ 'REMOTE_ADDR' => request()->ip(),
+ ]
+ );
+ $finalizeRequest->setUserResolver(fn () => Auth::user());
+ try {
+ if (request()->hasSession()) {
+ $finalizeRequest->setLaravelSession(request()->session());
+ }
+ } catch (\Throwable) {
+ //
+ }
+
+ try {
+ $response = $this->finish($finalizeRequest);
+ $status = method_exists($response, 'getStatusCode')? (int) $response->getStatusCode(): 200;
+
+ return $status >= 200
+ && $status < 400
+ && in_array((string) $session->fresh()?->status, ['completed', 'reviewed'], true);
+ } catch (\Throwable $error) {
+ Log::warning('Pending detailed review recovery failed.', [
+ 'session_id' => $session->id,
+ 'user_id' => $session->user_id,
+ 'error_type' => $error::class,
+ 'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
+ ]);
+
+ return false;
+ }
+ }
+
  public function hasCompletedSessionRenderableFeedback(InterviewSession $session): bool
  {
  if ($this->hasCompletedSessionProviderFeedback($session)) {
