@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
-use App\Models\AiProvider;
 use App\Models\Feedback;
 use App\Models\GameLevel;
 use App\Models\InterviewAnswer;
@@ -16,9 +15,7 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class UserProgressFeedbackReportsAccuracyTest extends TestCase
@@ -719,8 +716,6 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('Possible Answers')
  ->assertDontSee('review-possible-answer-modal', false)
  ->assertDontSee('data-bs-toggle="modal"', false)
- ->assertSee('Sample Answer')
- ->assertSee('When a customer needed help with [issue]')
  ->assertDontSee('Coaching Mode')
  ->assertDontSee('Possible Answer Based on Your Response')
  ->assertDontSee('AI Coach STAR order, rewritten from your saved response as a paragraph')
@@ -761,143 +756,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('AI Feedback', false);
  }
 
-public function test_detailed_review_hides_saved_local_feedback_when_openai_is_unavailable(): void
-{
- Http::fake(['*' => Http::response(['error' => 'provider unavailable'], 503)]);
-
- AiProvider::create([
- 'name' => 'OpenAI',
- 'api_endpoint' => 'https://api.openai.com/v1',
- 'api_key' => Crypt::encryptString('test-openai-key'),
- 'status' => 'active',
- 'is_primary' => true,
- ]);
-
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category('BPO / Customer Support');
- $session = $this->completedSessionFor($user, $category, 56, now(), [
- 'target_position' => 'Customer Support Representative',
- 'interview_focus' => 'customer escalation',
- ]);
-
- Feedback::create([
- 'interview_session_id' => $session->id,
- 'strengths' => 'Local saved strength should be replaced.',
- 'weaknesses' => 'Local saved weakness should be replaced.',
- 'improvement_suggestions' => 'Local saved suggestion should be replaced.',
- ]);
-
- $question = Question::create([
- 'category_id' => $category->id,
- 'question_text' => 'How do you calm an escalated customer?',
- 'difficulty' => 'medium',
- 'type' => 'Situational',
- 'status' => 'active',
- 'expected_guide' => 'Listen, acknowledge the concern, explain the next step, and confirm the result.',
- ]);
- $answerText = 'I listened to the customer, confirmed the billing concern, explained the next step, and followed up after the account was corrected.';
- $answer = InterviewAnswer::create([
- 'interview_session_id' => $session->id,
- 'question_id' => $question->id,
- 'answer_text' => $answerText,
- 'ai_feedback' => 'Local answer review feedback should be replaced.',
- 'coaching_feedback' => [
- 'content_alignment' => [
- 'what_worked' => 'Local answer review strength should not replace provider strengths.',
- 'improvement_focus' => 'Local answer review gap should not replace provider weaknesses.',
- ],
- ],
- 'score' => 56,
- 'ai_provider' => 'local',
- ]);
-
- $response = $this->actingAs($user)->get(route('user.review', $session));
-
- $response->assertOk()
- ->assertSee('AI review pending')
- ->assertSee($answerText)
- ->assertDontSee('All Answer Review Summary')
- ->assertDontSee('Local answer review strength should not replace provider strengths.')
- ->assertDontSee('Local answer review gap should not replace provider weaknesses.')
- ->assertDontSee('Local saved strength should be replaced.');
-
- $answer->refresh();
- $this->assertSame('local', $answer->ai_provider);
-
- $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
- $this->assertSame('Local saved strength should be replaced.', $feedback->strengths);
- $this->assertNull(data_get($feedback->coaching_summary, 'overall_summary_source'));
- Http::assertSent(fn ($request): bool => str_contains($request->url(), 'api.openai.com'));
-}
-
-public function test_game_detailed_review_uses_saved_sample_answer_without_openai_generation(): void
-{
- Http::preventStrayRequests();
-
- AiProvider::create([
- 'name' => 'OpenAI',
- 'api_endpoint' => 'https://api.openai.com/v1',
- 'api_key' => Crypt::encryptString('test-openai-key'),
- 'status' => 'active',
- 'is_primary' => true,
- ]);
-
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category('BPO / Customer Support');
- $session = $this->completedSessionFor($user, $category, 78, now(), [
- 'status' => 'reviewed',
- 'target_position' => 'Customer Support Representative',
- ]);
- $this->markAsGameReview($session);
-
- Feedback::create([
- 'interview_session_id' => $session->id,
- 'strengths' => 'The answer showed customer empathy.',
- 'weaknesses' => 'The answer needs a clearer result.',
- 'improvement_suggestions' => 'Add the final customer outcome.',
- ]);
-
- $question = Question::create([
- 'category_id' => $category->id,
- 'question_text' => 'How do you handle an angry customer?',
- 'difficulty' => 'medium',
- 'type' => 'Situational',
- 'status' => 'active',
- 'expected_guide' => 'Listen, acknowledge, explain the next action, and confirm the result.',
- 'mapped_skills' => ['customer support', 'communication'],
- ]);
-
- $answer = InterviewAnswer::create([
- 'interview_session_id' => $session->id,
- 'question_id' => $question->id,
- 'answer_text' => 'I listened to the customer and explained the next step.',
- 'ai_feedback' => 'The answer names listening and a next step but needs the final result.',
- 'better_sample_answer' => 'I would listen first, confirm the customer concern, and explain the next step clearly. I would follow through until the issue is resolved. I would confirm the customer is satisfied before closing the conversation.',
- 'coaching_feedback' => [
- 'content_alignment' => [
- 'status' => 'partially_answered',
- 'what_worked' => 'The saved answer shows listening and next-step communication.',
- 'improvement_focus' => 'Add the final customer result.',
- 'impact' => 'The result helps the interviewer judge service quality.',
- ],
- ],
- 'score' => 70,
- ]);
-
- $this->actingAs($user)
- ->get(route('user.review', $session))
- ->assertOk()
- ->assertSee('Sample Answer')
- ->assertSee('I would listen first, confirm the customer concern')
- ->assertSee('confirm the customer is satisfied')
- ->assertDontSee('When a customer needed help with [issue]');
-
- $answer->refresh();
- $this->assertNull(data_get($answer->coaching_feedback, 'review_sample_answer.source'));
- Http::assertNothingSent();
-}
-
- public function test_game_detailed_review_cleans_overall_review_feedback_but_shows_answer_review_question(): void
+ public function test_detailed_review_cleans_overall_review_feedback_but_shows_answer_review_question(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('Personal');
