@@ -899,6 +899,7 @@ return response()->json([
  if ($gameLevel) {
  GameSchema::ensure();
  }
+ $fastFinish = ! $gameLevel && $this->fastInterviewFinishEnabled();
 
  try {
  $this->ensureInterviewReportSchema();
@@ -1011,10 +1012,12 @@ return response()->json([
  $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
  }
 
- $feedbackProvider = $gameLevel? null: $this->bestEvaluatedInterviewProvider(
+ $feedbackProvider = $gameLevel? null: ($fastFinish
+ ? 'local'
+ : $this->bestEvaluatedInterviewProvider(
  'feedback_generation',
  session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
- );
+ ));
  if (! $gameLevel) {
  session(['active_interview_feedback_provider' => $feedbackProvider]);
  }
@@ -1115,7 +1118,7 @@ return response()->json([
  $overall = is_array($sFeedback) && array_key_exists('overall_readiness_score', $sFeedback)? $this->scoreValue($sFeedback['overall_readiness_score']): $metadata['overall'];
  $metadata['overall'] = $overall;
  $metadata['readiness_band'] = $assessment->readinessBand($overall);
- $coachingSummary = $this->sessionCoachingSummaryWithProviderFeedback($evaluatedAnswers, $session, $sFeedback, $feedbackEvidenceProvider);
+ $coachingSummary = $this->sessionCoachingSummaryWithProviderFeedback($evaluatedAnswers, $session, $sFeedback);
 
  // Game perks affect game progression, never the stored assessment score.
  $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
@@ -1477,7 +1480,7 @@ return response()->json([
  ]);
 
  $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
- $answerPayload = $this->answerPersistencePayload($session, $answer->question, $validated, $answerText, false);
+ $answerPayload = $this->answerPersistencePayload($session, $answer->question, $validated, $answerText);
  $nextAttempt = ((int) InterviewAnswer::where('retry_of_answer_id', $answer->id)->max('attempt_number')) + 1;
  $nextAttempt = max(2, $nextAttempt);
 
@@ -1506,7 +1509,7 @@ return response()->json([
  'is_skipped' => false,
  'expected_guide' => $answer->question->expected_guide?? null,
  'mapped_skills' => $answer->question->mapped_skills?? [],
- ]], $provider, false, false);
+ ]], $provider);
  } catch (\Throwable $error) {
  Log::warning('Retry answer feedback generation failed after answer save.', [
  'answer_id' => $retry->id,
@@ -1514,21 +1517,11 @@ return response()->json([
  'provider' => $provider,
  'error_type' => $error::class,
  ]);
-
- return response()->json([
- 'message' => 'Your retry answer was saved, but the AI provider did not return validated feedback. Try again when the provider is available.',
- 'retry_saved' => true,
- ], 503);
+ $feedback = ['per_question_feedback' => []];
  }
 
  $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($feedback, $provider);
  $qFeedback = $feedback['per_question_feedback'][0]?? null;
- if (! is_array($qFeedback) || ! $feedbackEvidenceProvider) {
- return response()->json([
- 'message' => 'Your retry answer was saved, but validated AI feedback is unavailable.',
- 'retry_saved' => true,
- ], 503);
- }
  if ($qFeedback) {
  $retryScore = $this->scoreValue($qFeedback['score']?? 0);
  $betterAnswer = trim((string) ($qFeedback['better_sample_answer']?? ''));
@@ -1546,12 +1539,12 @@ return response()->json([
  'session_id' => $session->id,
  'error_type' => $error::class,
  ]);
- return response()->json([
- 'message' => 'Your retry answer was saved, but the review could not be validated. Try again when feedback is available.',
- 'retry_saved' => true,
- ], 503);
+ $evidence = $this->fallbackAnswerEvidence((string) ($retry->answer_text?? ''), $answer->question);
+ $rubric = [
+ 'level' => 'Not scored',
+ 'next_level' => 'Retry the evaluation when feedback services are available.',
+ ];
  }
- try {
  $coachingFeedback = $this->safeCoachingFeedback(
  $session,
  $answer->question,
@@ -1565,12 +1558,6 @@ return response()->json([
  is_array($retry->observation_data)? $retry->observation_data: [],
  'retry_feedback'
  );
- } catch (\Throwable $error) {
- return response()->json([
- 'message' => 'Your retry answer was saved, but the AI review could not be completed. Try again when feedback is available.',
- 'retry_saved' => true,
- ], 503);
- }
  try {
  $retry->update([
  'ai_feedback' => $qFeedback['ai_feedback']?? '',
@@ -1594,11 +1581,6 @@ return response()->json([
  'session_id' => $session->id,
  'error_type' => $error::class,
  ]);
-
- return response()->json([
- 'message' => 'Your retry answer was saved, but its AI review could not be saved. Try again in a moment.',
- 'retry_saved' => true,
- ], 503);
  }
  }
 
@@ -1642,14 +1624,6 @@ return response()->json([
 
  public function ensureCompletedSessionFeedbackIsCurrent(InterviewSession $session, $gameLevel = null): bool
  {
- if ($this->ensureCompletedSessionOpenAiFeedbackEvidence($session, $gameLevel)) {
- return true;
- }
-
- if (! $gameLevel && ! $session->game_level_id) {
- return false;
- }
-
  if (! $this->completedSessionFeedbackIsStale($session)) {
  return false;
  }
@@ -1659,54 +1633,12 @@ return response()->json([
 
  public function ensureCompletedSessionOpenAiFeedbackEvidence(InterviewSession $session, $gameLevel = null): bool
  {
- return $this->syncCompletedFallbackFeedbackWithProvider($session, $gameLevel);
+ return $this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel);
  }
 
- public function hasCompletedSessionProviderFeedback(InterviewSession $session): bool
+ public function deferCompletedSessionOpenAiFeedbackEvidence(int $sessionId, string $source = 'response'): bool
  {
- $session->loadMissing(['answers', 'score', 'feedback']);
- $answers = $session->answers->whereNull('retry_of_answer_id');
-
- return in_array($session->status, ['completed', 'reviewed'], true)
- && $session->score !== null
- && $session->feedback !== null
- && data_get($session->feedback->coaching_summary, 'overall_summary_source') === 'ai_provider_validated'
- && trim((string) data_get($session->feedback->coaching_summary, 'overall_summary')) !== ''
- && trim((string) $session->feedback->strengths) !== ''
- && trim((string) $session->feedback->weaknesses) !== ''
- && trim((string) $session->feedback->improvement_suggestions) !== ''
- && $answers->isNotEmpty()
- && $answers->every(fn (InterviewAnswer $answer): bool => AIService::providerIsSupported($answer->ai_provider)
- && trim((string) $answer->ai_feedback) !== ''
- && data_get($answer->coaching_feedback, 'content_alignment.evaluation_source') === 'ai_evidence_validated'
- && trim((string) data_get($answer->coaching_feedback, 'content_alignment.improvement_focus')) !== '');
- }
-
- public function hasCompletedSessionRenderableFeedback(InterviewSession $session): bool
- {
- if ($this->hasCompletedSessionProviderFeedback($session)) {
- return true;
- }
-
- $session->loadMissing(['answers', 'score', 'feedback']);
- $answers = $session->answers->whereNull('retry_of_answer_id');
- $summary = is_array($session->feedback?->coaching_summary?? null)
- ? $session->feedback->coaching_summary
- : [];
-
- return in_array($session->status, ['completed', 'reviewed'], true)
- && $session->score !== null
- && $session->feedback !== null
- && trim((string) $session->feedback->strengths) !== ''
- && trim((string) $session->feedback->weaknesses) !== ''
- && trim((string) $session->feedback->improvement_suggestions) !== ''
- && $summary !== []
- && $answers->isNotEmpty()
- && $answers->every(fn (InterviewAnswer $answer): bool => in_array(AIService::normalizeProviderKey($answer->ai_provider), ['local', 'localmodel'], true)
- && trim((string) $answer->ai_feedback) !== ''
- && $answer->score !== null
- && is_array($answer->coaching_feedback)
- && $answer->coaching_feedback !== []);
+ return false;
  }
 
  private function repairCompletedSessionFeedbackFromSavedData(InterviewSession $session): bool
@@ -1725,70 +1657,9 @@ return response()->json([
  }
  }
 
- private function syncCompletedFallbackFeedbackWithProvider(InterviewSession $session, $gameLevel = null, string $source = 'response'): bool
+ private function fastInterviewFinishEnabled(): bool
  {
- $gameLevel = $gameLevel?: ($session->relationLoaded('gameLevel')? $session->gameLevel: $this->gameLevelForSession($session));
-
- if (! $this->completedSessionShouldSyncFallbackWithProvider($session, $gameLevel)) {
- return false;
- }
-
- $provider = $this->completedSessionFeedbackProviderForSync();
- if ($provider === '') {
- return false;
- }
-
- try {
- $this->persistCompletedSessionProviderFeedback($session, $gameLevel, $provider);
-
- return true;
- } catch (AiFeedbackProviderFailureException $error) {
- Log::warning('Completed fallback report provider sync failed; keeping saved local report.', [
- 'session_id' => $session->id,
- 'user_id' => $session->user_id,
- 'source' => $source,
- 'requested_provider' => $provider,
- 'provider_count' => $error->providerCount(),
- 'providers_configured' => $error->providers(),
- 'providers_attempted' => $error->attemptedProviders(),
- ]);
- } catch (\Throwable $error) {
- Log::warning('Completed fallback report provider sync failed; keeping saved local report.', [
- 'session_id' => $session->id,
- 'user_id' => $session->user_id,
- 'source' => $source,
- 'requested_provider' => $provider,
- 'error_type' => $error::class,
- 'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
- ]);
- }
-
- return false;
- }
-
- private function completedSessionShouldSyncFallbackWithProvider(InterviewSession $session, $gameLevel = null): bool
- {
- if (! in_array($session->status, ['completed', 'reviewed'], true) || $gameLevel ||! SystemSettings::enabled('int_ai_eval', true)) {
- return false;
- }
-
- if ($this->completedSessionFeedbackProviderForSync() === '') {
- return false;
- }
-
- return ! $this->hasCompletedSessionProviderFeedback($session);
- }
-
- private function completedSessionFeedbackProviderForSync(): string
- {
- $provider = $this->bestEvaluatedInterviewProvider('feedback_generation', AIService::defaultProviderKey());
- $provider = AIService::normalizeProviderKey($provider);
-
- if ($provider === '' || in_array($provider, ['local', 'localmodel'], true)) {
- return '';
- }
-
- return AIService::providerIsConfigured($provider)? $provider: '';
+ return filter_var(config('services.interview_report.fast_finish', false), FILTER_VALIDATE_BOOLEAN);
  }
 
  private function completedSessionFeedbackIsStale(InterviewSession $session): bool
@@ -1839,177 +1710,9 @@ return response()->json([
  ->exists();
  }
 
- private function persistCompletedSessionProviderFeedback(InterviewSession $session, $gameLevel, string $feedbackProvider, ?string $requiredFeedbackProvider = null): void
+ private function refreshCompletedSessionFeedback(InterviewSession $session, $gameLevel = null, ?string $forcedFeedbackProvider = null, ?string $requiredFeedbackProvider = null): void
  {
- $answers = InterviewAnswer::with('question')
- ->where('interview_session_id', $session->id)
- ->whereNull('retry_of_answer_id')
- ->get();
- $answers = $this->ensureVoiceAnswersHaveFeedbackEvidence($session, $answers);
-
- $answersData = $answers->map(fn ($answer) => [
- 'id' => $answer->id,
- 'question' => $answer->question->question_text?? '',
- 'question_type' => $answer->question->type?? null,
- 'answer' => $this->answerTextForFeedback($answer),
- 'is_skipped' => (bool) $answer->is_skipped,
- 'expected_guide' => $answer->question->expected_guide?? null,
- 'mapped_skills' => $answer->question->mapped_skills?? [],
- ])->toArray();
-
- $sessionData = [
- 'target_position' => $session->target_position,
- 'difficulty' => $session->difficulty,
- 'interview_focus' => $session->interview_focus,
- 'country' => 'General',
- 'ai_assistance_level' => $session->ai_assistance_level,
- 'assessment_mode' => $session->assessment_mode,
- 'accommodation_profile' => $session->accommodation_profile,
- 'target_language' => $this->languageConfigForSession($session),
- ];
-
- if ($gameLevel) {
- if ($gameLevel->banned_words) {
- $sessionData['banned_words'] = $gameLevel->banned_words;
- }
- if ($gameLevel->target_tone) {
- $sessionData['target_tone'] = $gameLevel->target_tone;
- }
- $sessionData['game_skill_focus'] = $gameLevel->skill_focus;
- $sessionData['game_learning_objective'] = $gameLevel->learning_objective;
- $sessionData['game_success_criteria'] = $gameLevel->guidance_checklist_text;
- $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
- }
-
- $aiFeedback = $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
- $requiredFeedbackProviderKey = AIService::normalizeProviderKey($requiredFeedbackProvider);
- if ($requiredFeedbackProviderKey !== '' && AIService::normalizeProviderKey($aiFeedback['_provider_key']?? null)!== $requiredFeedbackProviderKey) {
- throw new AiFeedbackProviderFailureException(
- [$requiredFeedbackProviderKey],
- (array) ($aiFeedback['_providers_attempted']?? []),
- "Required {$requiredFeedbackProviderKey} feedback provider did not return validated feedback."
- );
- }
-
- $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($aiFeedback, $feedbackProvider);
- $assessment = app(TrustworthyAssessmentService::class);
-
- DB::transaction(function () use ($session, $answers, $aiFeedback, $assessment, $feedbackEvidenceProvider) {
- $totalClarity = 0;
- $totalRelevance = 0;
- $totalGrammar = 0;
- $totalProf = 0;
-
- foreach ($answers as $answer) {
- $qFeedback = collect($aiFeedback['per_question_feedback']?? [])
- ->first(fn ($pf) => isset($pf['id']) && (int) $pf['id'] === (int) $answer->id);
- if (! $qFeedback) {
- throw new \RuntimeException("Missing validated AI feedback for answer {$answer->id}.");
- }
-
- $c = $this->scoreValue($qFeedback['clarity_score']?? 0);
- $r = $this->scoreValue($qFeedback['relevance_score']?? 0);
- $g = $this->scoreValue($qFeedback['grammar_score']?? 0);
- $p = $this->scoreValue($qFeedback['professionalism_score']?? 0);
- $qScore = $this->scoreValue($qFeedback['score']?? round(($c + $r + $g + $p) / 4));
-
- $totalClarity += $c;
- $totalRelevance += $r;
- $totalGrammar += $g;
- $totalProf += $p;
-
- $evidence = $this->safeAssessmentAnswerEvidence(
- $assessment,
- $session,
- $answer,
- $qFeedback['ai_feedback']?? null,
- 'provider_sync_answer_evidence'
- );
- $rubric = $assessment->rubricLevel($qScore);
- $coachingFeedback = $this->safeCoachingFeedback(
- $session,
- $answer->question,
- $this->answerContentForAssessment($answer),
- $this->coachingMetricsFromAnswer(
- $answer,
- $this->scoreValue($qFeedback['scoring_confidence']?? ($qFeedback? 80: 0)),
- $session,
- $this->coachingEvaluationMetrics($qFeedback?? [])
- ),
- is_array($answer->observation_data)? $answer->observation_data: [],
- 'provider_sync_answer_coaching'
- );
-
- $answer->update([
- 'ai_feedback' => trim((string) ($qFeedback['ai_feedback']?? '')),
- 'better_sample_answer' => trim((string) ($qFeedback['better_sample_answer']?? '')),
- 'follow_up_question' => $qFeedback['follow_up_question']?? '',
- 'clarity_score' => $c,
- 'relevance_score' => $r,
- 'grammar_score' => $g,
- 'score' => $qScore,
- 'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence']?? ($qFeedback? 80: 0)),
- 'evidence_map' => $evidence,
- 'rubric_level' => $rubric['level'],
- 'recommendation_text' => $rubric['next_level'],
- 'improved_answer_source' => 'candidate_facts',
- 'coaching_feedback' => $coachingFeedback,
- 'ai_provider' => $feedbackEvidenceProvider,
- ]);
- }
-
- $count = $answers->count() > 0? $answers->count(): 1;
- $clarity = round($totalClarity / $count);
- $relevance = round($totalRelevance / $count);
- $grammar = round($totalGrammar / $count);
- $prof = round($totalProf / $count);
- $sFeedback = $aiFeedback['session_feedback']?? null;
- $starScore = $this->scoreValue($sFeedback['star_method_score']?? 0);
- $evaluatedAnswers = $answers->fresh(['question']);
- $metadata = $this->safeSessionMetadata($assessment, $session, $evaluatedAnswers, [
- 'clarity' => $clarity,
- 'relevance' => $relevance,
- 'grammar' => $grammar,
- 'professionalism' => $prof,
- ], $starScore);
- $overall = is_array($sFeedback) && array_key_exists('overall_readiness_score', $sFeedback)? $this->scoreValue($sFeedback['overall_readiness_score']): $metadata['overall'];
- $metadata['overall'] = $overall;
- $metadata['readiness_band'] = $assessment->readinessBand($overall);
-
- $scoreRecord = Score::updateOrCreate([
- 'interview_session_id' => $session->id,
- ], [
- 'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
- 'assessment_mode' => $session->assessment_mode,
- 'clarity_score' => $clarity,
- 'relevance_score' => $relevance,
- 'grammar_score' => $grammar,
- 'professionalism_score' => $prof,
- 'body_language_score' => 0,
- 'confidence_score' => 0,
- 'delivery_stability_score' => $metadata['delivery_stability'],
- 'overall_readiness_score' => $overall,
- 'readiness_band' => $metadata['readiness_band'],
- 'scoring_confidence' => $metadata['scoring_confidence'],
- 'star_method_score' => $starScore,
- 'evidence_map' => $metadata['evidence_map'],
- 'rubric' => $metadata['rubric'],
- 'body_language_included' => false,
- ]);
-
- $feedbackRecord = Feedback::updateOrCreate([
- 'interview_session_id' => $session->id,
- ], [
- 'strengths' => trim((string) ($sFeedback['strengths']?? '')),
- 'weaknesses' => trim((string) ($sFeedback['weaknesses']?? '')),
- 'improvement_suggestions' => trim((string) ($sFeedback['improvement_suggestions']?? '')),
- 'coaching_summary' => $this->sessionCoachingSummaryWithProviderFeedback($evaluatedAnswers, $session, $sFeedback, $feedbackEvidenceProvider),
- ]);
-
- $session->update([
- 'action_plan' => $this->safeActionPlan($session, $scoreRecord, $feedbackRecord, $evaluatedAnswers),
- ]);
- });
+ $this->repairCompletedSessionFeedbackFromSavedData($session);
  }
 
  private function persistInterviewAnswer(InterviewSession $session, Question $question, array $validated,?string $answerText = null): InterviewAnswer
@@ -2359,7 +2062,7 @@ return response()->json([
  return $status!== ''? Str::limit($status, 40, ''): null;
  }
 
- private function answerPersistencePayload(InterviewSession $session, Question $question, array $validated,?string $answerText = null, bool $includeCoaching = true): array
+ private function answerPersistencePayload(InterviewSession $session, Question $question, array $validated,?string $answerText = null): array
  {
  $responseMode = $this->normalizeResponseMode($validated['response_mode']?? $session->response_mode?? 'text');
  $validated['response_mode'] = $responseMode;
@@ -2405,14 +2108,14 @@ return response()->json([
  $deliveryTranscript,
  $metrics
  );
- $coachingFeedback = $includeCoaching ? $this->safeCoachingFeedback(
+ $coachingFeedback = $this->safeCoachingFeedback(
  $session,
  $question,
  $assessmentAnswerText,
  $metrics,
  $observationData,
  'answer_coaching'
- ) : [];
+ );
 
  return array_merge([
  'answer_text' => $answerText,
@@ -2480,15 +2183,11 @@ return response()->json([
  } catch (\Throwable $error) {
  $this->logAnswerAnalysisFallback($stage, $error, $session, $question);
 
- if (! $session->game_level_id && in_array($stage, ['final_answer_coaching', 'provider_sync_answer_coaching', 'retry_feedback'], true)) {
- throw $error;
- }
-
  return $this->fallbackAnswerCoaching($answerText, $question, $metrics, $observationData);
  }
  }
 
- private function sessionCoachingSummaryWithProviderFeedback($answers, InterviewSession $session, mixed $sessionFeedback, ?string $provider): array
+ private function sessionCoachingSummaryWithProviderFeedback($answers, InterviewSession $session, mixed $sessionFeedback): array
  {
  $summary = $this->safeSessionCoachingSummary($answers, $session);
  if (! is_array($sessionFeedback)) {
@@ -2496,7 +2195,7 @@ return response()->json([
  }
 
  $overallSummary = trim((string) ($sessionFeedback['overall_summary']?? ''));
- if ($overallSummary === '' || ! AIService::providerIsSupported($provider)) {
+ if ($overallSummary === '') {
  return $summary;
  }
 
@@ -2517,10 +2216,6 @@ return response()->json([
  'error_type' => $error::class,
  'message' => Str::limit($error->getMessage(), 300),
  ]);
-
- if (! $session->game_level_id) {
- throw $error;
- }
 
  return $this->fallbackSessionCoachingSummary($answers);
  }
@@ -3115,13 +2810,6 @@ return response()->json([
  private function currentLanguageConfig(): array
  {
  return Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
- }
-
- private function languageConfigForSession(InterviewSession $session): array
- {
- $session->loadMissing('user');
-
- return Setting::languageConfig(Setting::preferredLanguageFor($session->user));
  }
 
  private function normalizeResponseMode(mixed $mode): string
@@ -4851,11 +4539,26 @@ return response()->json([
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  }
 
- if (! SystemSettings::enabled('int_ai_eval', true)) {
- throw new AiFeedbackProviderFailureException([], [], 'AI feedback is disabled.');
+ $feedbackProviderKey = AIService::normalizeProviderKey($feedbackProvider);
+ if (! SystemSettings::enabled('int_ai_eval', true)
+ || in_array($feedbackProviderKey, ['local', 'localmodel'], true)) {
+ return AIService::generateLocalFeedback($sessionData, $answersData);
  }
 
+ try {
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+ } catch (AiFeedbackProviderFailureException $error) {
+ Log::warning('AI feedback providers failed; completing report with local evidence fallback.', [
+ 'session_id' => $session->id,
+ 'user_id' => $session->user_id,
+ 'requested_provider' => AIService::normalizeProviderKey($feedbackProvider),
+ 'provider_count' => $error->providerCount(),
+ 'providers_configured' => $error->providers(),
+ 'providers_attempted' => $error->attemptedProviders(),
+ ]);
+
+ return AIService::generateLocalFeedback($sessionData, $answersData);
+ }
  }
 
  protected function generateInterviewFeedbackForSession(
