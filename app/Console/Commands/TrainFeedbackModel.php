@@ -86,7 +86,7 @@ class TrainFeedbackModel extends Command
 
  $this->line(trim($process->getOutput()));
  $this->info("Model saved to {$outputPath}");
- $this->line('Enable it with LOCAL_FEEDBACK_MODEL_ENABLED=true. Keep AI_FEEDBACK_PROVIDER_PRIORITY openai-first unless you intentionally want localmodel to run before hosted feedback.');
+ $this->line('The trained model is used for local feedback fallback when LOCAL_FEEDBACK_MODEL_ENABLED=true, which is the default. Keep AI_FEEDBACK_PROVIDER_PRIORITY openai-first so hosted providers run before local fallback.');
 
  return self::SUCCESS;
  }

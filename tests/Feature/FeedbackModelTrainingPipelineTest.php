@@ -197,7 +197,7 @@ class FeedbackModelTrainingPipelineTest extends TestCase
  $this->assertSame('localmodel', $feedback['_provider_key']);
  $this->assertSame(['localmodel'], $feedback['_providers_attempted']);
  $this->assertSame(1, data_get($feedback, 'per_question_feedback.0.id'));
- $this->assertSame('ai_evidence_validated', data_get($feedback, 'per_question_feedback.0.evaluation_source'));
+ $this->assertSame('local_trained_model', data_get($feedback, 'per_question_feedback.0.evaluation_source'));
  $this->assertSame('verified', data_get($feedback, 'feedback_quality.status'));
  }
 

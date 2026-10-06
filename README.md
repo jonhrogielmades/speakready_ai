@@ -505,7 +505,7 @@ sparse feature scaling, small-data confidence shrinkage, validation metrics
 when enough examples exist, and a lightweight ensemble for larger datasets.
 The predictor remains compatible with older schema v1 artifacts.
 
-After training, enable it for final interview feedback:
+After training, the local model is used as the final interview feedback fallback when API providers fail. Keep hosted providers first so detailed reviews try API providers before the local model:
 
 ```env
 LOCAL_FEEDBACK_MODEL_ENABLED=true

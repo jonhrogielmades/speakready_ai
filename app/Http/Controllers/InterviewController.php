@@ -1113,7 +1113,7 @@ return response()->json([
  $overall = is_array($sFeedback) && array_key_exists('overall_readiness_score', $sFeedback)? $this->scoreValue($sFeedback['overall_readiness_score']): $metadata['overall'];
  $metadata['overall'] = $overall;
  $metadata['readiness_band'] = $assessment->readinessBand($overall);
- $coachingSummary = $this->sessionCoachingSummaryWithProviderFeedback($evaluatedAnswers, $session, $sFeedback);
+ $coachingSummary = $this->sessionCoachingSummaryWithProviderFeedback($evaluatedAnswers, $session, $sFeedback, $feedbackEvidenceProvider);
 
  // Game perks affect game progression, never the stored assessment score.
  $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
@@ -2181,7 +2181,7 @@ return response()->json([
  }
  }
 
- private function sessionCoachingSummaryWithProviderFeedback($answers, InterviewSession $session, mixed $sessionFeedback): array
+ private function sessionCoachingSummaryWithProviderFeedback($answers, InterviewSession $session, mixed $sessionFeedback,?string $feedbackSource = null): array
  {
  $summary = $this->safeSessionCoachingSummary($answers, $session);
  if (! is_array($sessionFeedback)) {
@@ -2194,7 +2194,11 @@ return response()->json([
  }
 
  $summary['overall_summary'] = Str::limit($overallSummary, 700, '');
- $summary['overall_summary_source'] = 'ai_provider_validated';
+ $summary['overall_summary_source'] = match (AIService::normalizeProviderKey($feedbackSource)) {
+ 'localmodel' => 'local_trained_model',
+ 'local' => 'local_evidence',
+ default => 'ai_provider_validated',
+ };
 
  return $summary;
  }
@@ -4133,6 +4137,10 @@ return response()->json([
  {
  $providerKey = AIService::normalizeProviderKey($provider);
 
+ if (in_array($providerKey, ['local', 'localmodel'], true)) {
+ return $providerKey;
+ }
+
  if ($providerKey === '' ||! AIService::providerIsSupported($providerKey)) {
  return null;
  }
@@ -4538,16 +4546,18 @@ return response()->json([
  try {
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  } catch (AiFeedbackProviderFailureException $error) {
- Log::warning('AI feedback providers failed; completing report with local evidence fallback.', [
+ $fallbackFeedback = AIService::generateLocalFeedback($sessionData, $answersData);
+ Log::warning('AI feedback providers failed; completing report with local feedback fallback.', [
  'session_id' => $session->id,
  'user_id' => $session->user_id,
  'requested_provider' => AIService::normalizeProviderKey($feedbackProvider),
  'provider_count' => $error->providerCount(),
  'providers_configured' => $error->providers(),
  'providers_attempted' => $error->attemptedProviders(),
+ 'fallback_provider' => AIService::normalizeProviderKey($fallbackFeedback['_provider_key']?? null),
  ]);
 
- return AIService::generateLocalFeedback($sessionData, $answersData);
+ return $fallbackFeedback;
  }
  }
 

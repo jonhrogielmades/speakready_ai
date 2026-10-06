@@ -387,6 +387,7 @@ final class FeedbackEvidencePresenter
 
         return match ($source) {
             'ai_evidence_validated' => 'Validated AI provider check',
+            'local_trained_model' => 'Trained local model check',
             'local_evidence' => 'Local evidence check',
             'local_fallback' => 'Fallback evidence check',
             'provider' => 'AI provider check',

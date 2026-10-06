@@ -112,7 +112,7 @@ return [
  ],
 
  'local_feedback_model' => [
- 'enabled' => env('LOCAL_FEEDBACK_MODEL_ENABLED', false),
+ 'enabled' => env('LOCAL_FEEDBACK_MODEL_ENABLED', true),
  'python' => env('LOCAL_FEEDBACK_MODEL_PYTHON', env('LOCAL_SPEECH_PYTHON', 'python')),
  'train_script' => env('LOCAL_FEEDBACK_MODEL_TRAIN_SCRIPT', 'scripts/train_feedback_model.py'),
  'predict_script' => env('LOCAL_FEEDBACK_MODEL_PREDICT_SCRIPT', 'scripts/predict_feedback.py'),

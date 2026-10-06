@@ -17,6 +17,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
 use App\Services\EvidenceBasedCoachingService;
+use App\Services\LocalFeedbackModelService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
 use App\Services\TrustworthyAssessmentService;
@@ -1223,7 +1224,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertEmpty($savedAnswer->ai_feedback);
  }
 
- public function test_interview_finish_returns_provider_error_when_all_ai_feedback_providers_fail(): void
+ public function test_interview_finish_uses_trained_local_model_when_all_ai_feedback_providers_fail(): void
  {
  foreach ([
  'GEMINI_API_KEY' => 'gemini_test_token',
@@ -1257,23 +1258,84 @@ class ReliabilityHardeningTest extends TestCase
  'response_mode' => 'text',
  ]);
 
+ $this->app->instance(LocalFeedbackModelService::class, new class($question->question_text) extends LocalFeedbackModelService
+ {
+ public function __construct(private readonly string $questionText)
+ {
+ }
+
+ public function available(): bool
+ {
+ return true;
+ }
+
+ public function generateFeedback(array $sessionData, array $answersData): array
+ {
+ $quote = 'I owned the support handoff, documented repeated issues, coordinated the update, and confirmed the final result with my supervisor.';
+
+ return [
+ 'per_question_feedback' => [[
+ 'id' => (int) ($answersData[0]['id']?? 0),
+ 'score' => 82,
+ 'clarity_score' => 82,
+ 'relevance_score' => 86,
+ 'grammar_score' => 80,
+ 'professionalism_score' => 84,
+ 'star_applicable' => true,
+ 'star_method_score' => 75,
+ 'evidence_quotes' => [$quote],
+ 'question_focus' => $this->questionText,
+ 'answer_alignment' => 'directly_addressed',
+ 'missing_criteria' => [],
+ 'ai_feedback' => 'For the question "'.$this->questionText.'", you said "'.$quote.'". That answered the support handoff question directly because it gave your action and final check. Keep that detail and add one measurable result if you have one.',
+ 'better_sample_answer' => $quote,
+ 'follow_up_question' => 'What measurable result did the support handoff improve?',
+ 'coaching' => [
+ 'keep' => 'Keep the support handoff detail because it answers the question with your action.',
+ 'improve' => 'Add a measurable support handoff result if you have one.',
+ 'impact' => 'The support handoff result helps the interviewer judge how much the update improved the work.',
+ 'next_try' => 'Retell the support handoff answer with the result after your final check.',
+ 'next_attempt_steps' => [
+ 'Start with the support handoff problem.',
+ 'Explain your documented update and coordination.',
+ 'End with the support handoff result or lesson.',
+ ],
+ 'success_check' => 'The support handoff answer works when the action and result are easy to find.',
+ ],
+ ]],
+ 'session_feedback' => [
+ 'overall_summary' => 'The support handoff answer gave a clear action and final check. The next focus is to add one measurable result.',
+ 'strengths' => 'The answer gave a clear support handoff action.',
+ 'weaknesses' => 'It could add one measurable result.',
+ 'improvement_suggestions' => 'Add the result or effect of the support handoff change.',
+ ],
+ ];
+ }
+ });
+
  $this->actingAs($user)
  ->withSession([
  'active_interview_id' => $session->id,
  'active_interview_provider' => 'gemini',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertStatus(503)
- ->assertJsonPath('error_code', 'ai_feedback_providers_failed')
- ->assertJsonPath('provider_count', 4)
- ->assertJsonPath('providers_attempted', ['gemini', 'groq', 'cohere', 'openai'])
- ->assertJsonPath('retry_after_ms', 1500);
+ ->assertOk()
+ ->assertJsonPath('redirect_url', route('user.review', $session));
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
- $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+ $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
- $this->assertEmpty($savedAnswer->ai_feedback);
+ $this->assertSame('localmodel', $savedAnswer->ai_provider);
+ $this->assertNotEmpty($savedAnswer->ai_feedback);
+ $this->assertSame('local_trained_model', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+ $this->assertSame('local_trained_model', data_get(Feedback::where('interview_session_id', $session->id)->firstOrFail()->coaching_summary, 'overall_summary_source'));
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('Feedback Detailed Review')
+ ->assertSee('Trained local model check');
  Http::assertSentCount(4);
  }
 

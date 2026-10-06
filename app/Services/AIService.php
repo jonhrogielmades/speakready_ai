@@ -2230,7 +2230,7 @@ EOT;
  $validationErrors = self::feedbackResponseValidationErrors($response, $answersData);
  if ($validationErrors === []) {
  return self::withFeedbackProviderMetadata(
- self::normalizeFeedbackResponse($response, $answersData, $sessionData, true),
+ self::normalizeFeedbackResponse($response, $answersData, $sessionData, true, $currentProvider),
  $currentProvider,
  $attemptedProviders
  );
@@ -2263,7 +2263,7 @@ EOT;
  ]);
 
  return self::withFeedbackProviderMetadata(
- self::normalizeFeedbackResponse($repairableProviderResponse, $answersData, $sessionData, false),
+ self::normalizeFeedbackResponse($repairableProviderResponse, $answersData, $sessionData, false, $repairableProvider),
  $repairableProvider,
  $attemptedProviders
  );
@@ -2276,7 +2276,7 @@ EOT;
  }
  }
 
- Log::warning('AI feedback providers were unavailable or incomplete; report was not finalized.', [
+ Log::warning('AI feedback providers were unavailable or incomplete; handing off to local feedback fallback.', [
  'providers_attempted' => $providers,
  'providers_reached' => $attemptedProviders,
  ]);
@@ -2296,7 +2296,7 @@ EOT;
  $modelFeedback = $localModel->generateFeedback($sessionData, $answersData);
  if (is_array($modelFeedback) && ! empty($modelFeedback['per_question_feedback']?? [])) {
  return self::withFeedbackProviderMetadata(
- self::normalizeFeedbackResponse($modelFeedback, $answersData, $sessionData, false),
+ self::normalizeFeedbackResponse($modelFeedback, $answersData, $sessionData, false, 'localmodel'),
  'localmodel',
  ['localmodel']
  );
@@ -2312,7 +2312,7 @@ EOT;
  return self::withFeedbackProviderMetadata(self::normalizeFeedbackResponse([
  'per_question_feedback' => [],
  'session_feedback' => [],
- ], $answersData, $sessionData, false), 'local', ['local']);
+ ], $answersData, $sessionData, false, 'local'), 'local', ['local']);
  }
 
  private static function withFeedbackProviderMetadata(array $feedback,?string $provider, array $attemptedProviders = []): array
@@ -5020,7 +5020,7 @@ PROMPT;
  return self::normalizeEvidenceText(implode(' ', $parts));
  }
 
- private static function normalizeFeedbackResponse(array $response, array $answersData, array $sessionData, bool $requireAiGenerated = false): array
+ private static function normalizeFeedbackResponse(array $response, array $answersData, array $sessionData, bool $requireAiGenerated = false,?string $feedbackSource = null): array
  {
  $feedbackById = [];
  $duplicatedTemplateIds = self::duplicatedFeedbackTemplateIds(
@@ -5040,7 +5040,8 @@ PROMPT;
  $feedbackById[$id]?? [],
  $answer,
  $sessionData,
- $requireAiGenerated
+ $requireAiGenerated,
+ $feedbackSource
  );
  }
 
@@ -5219,7 +5220,7 @@ PROMPT;
  return trim($plain);
  }
 
- private static function normalizeQuestionFeedback(array $feedback, array $answer, array $sessionData, bool $requireAiGenerated = false): array
+ private static function normalizeQuestionFeedback(array $feedback, array $answer, array $sessionData, bool $requireAiGenerated = false,?string $feedbackSource = null): array
  {
  $id = (int) ($answer['id']?? ($feedback['id']?? 0));
  $answerText = self::candidateAnswerText($answer);
@@ -5314,6 +5315,10 @@ PROMPT;
  $questionText,
  $providerMissingCriteria
  );
+ if (self::normalizeProviderKey($feedbackSource) === 'localmodel') {
+ $scoreCalibration['source'] = 'local_trained_model_with_deterministic_cross_check';
+ $scoreCalibration['limitation'] = 'Trained local model scores were checked against local answer-detail checks. This helps recovery when API providers are unavailable, but it is not a human review.';
+ }
  } else {
  $scoreCalibration = self::localScoreCalibration($localScores, $starMethodScore, $starApplicable);
  }
@@ -5417,7 +5422,7 @@ PROMPT;
  },
  'missing_criteria' => $hasProviderScores? $providerMissingCriteria: [],
  'missing_evidence' => $missingEvidence,
- 'evaluation_source' => $hasProviderScores? 'ai_evidence_validated': 'local_evidence',
+ 'evaluation_source' => $hasProviderScores? self::feedbackEvaluationSource($feedbackSource): 'local_evidence',
  'is_skipped' => $isSkipped,
  'is_too_short' => $isTooShort,
  'has_personal_action' => (bool) ($evidenceProfile['has_personal_action']?? false),
@@ -5433,6 +5438,13 @@ PROMPT;
  );
 
  return $normalizedFeedback;
+ }
+
+ private static function feedbackEvaluationSource(?string $feedbackSource): string
+ {
+ return self::normalizeProviderKey($feedbackSource) === 'localmodel'
+ ? 'local_trained_model'
+ : 'ai_evidence_validated';
  }
 
  private static function normalizedFeedbackQuality(array $feedback, string $answerText, string $questionText): array
@@ -5473,7 +5485,7 @@ PROMPT;
  'score_calibration_recorded' => is_array($feedback['score_calibration']?? null)
  && trim((string) data_get($feedback, 'score_calibration.source', ''))!== '',
  'alignment_cross_checked' => $alignmentChecked,
- 'uncertainty_reported' => in_array((string) ($feedback['evaluation_source']?? ''), ['ai_evidence_validated', 'local_evidence'], true),
+ 'uncertainty_reported' => in_array((string) ($feedback['evaluation_source']?? ''), ['ai_evidence_validated', 'local_trained_model', 'local_evidence'], true),
  'next_attempt_actionable' => trim((string) ($feedback['ai_feedback']?? ''))!== ''
  && trim((string) ($feedback['follow_up_question']?? ''))!== ''
  && ($isSkipped || trim((string) ($feedback['better_sample_answer']?? ''))!== ''),

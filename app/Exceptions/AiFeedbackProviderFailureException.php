@@ -54,10 +54,10 @@ class AiFeedbackProviderFailureException extends RuntimeException
         $count = $this->providerCount();
 
         if ($count <= 0) {
-            return 'No configured AI feedback provider is available. Your answers were saved, but no AI feedback report was created.';
+            return 'No configured AI feedback provider is available. Your answers were saved, and the app will use local feedback when it can.';
         }
 
-        return "All {$count} configured AI feedback providers failed, timed out, or returned invalid feedback. Your answers were saved, but no AI feedback report was created. Please retry after checking the AI provider connections.";
+        return "All {$count} configured AI feedback providers failed, timed out, or returned invalid feedback. Your answers were saved, and the app will use local feedback when it can.";
     }
 
     /**

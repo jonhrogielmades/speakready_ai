@@ -193,6 +193,63 @@ def feedback_text(question: str, quote: str, alignment: str, missing: list[str],
     )
 
 
+def coaching_for(question: str, quote: str, alignment: str, missing: list[str], skipped: bool, too_short: bool) -> dict[str, Any]:
+    question_label = excerpt(question, 140) or "this question"
+    quote_label = quote or question_label
+    missing_label = missing[0] if missing else "a clearer action, result, or lesson"
+
+    if skipped:
+        return {
+            "keep": f'For "{question_label}", the saved record clearly shows the question was skipped.',
+            "improve": f'For "{question_label}", submit a complete answer with one true detail.',
+            "impact": f'Skipping "{question_label}" gives the interviewer no answer detail to judge, so the next attempt needs a clear response.',
+            "next_try": f'Answer "{question_label}" first, then add one specific example or result.',
+            "next_attempt_steps": [
+                f'Start with a direct answer to "{question_label}".',
+                f'Add one true detail that fits "{question_label}".',
+                f'Close with the result, effect, or lesson for "{question_label}".',
+            ],
+            "success_check": f'The retry works when it gives a complete answer to "{question_label}" with one true detail.',
+        }
+
+    if too_short:
+        return {
+            "keep": f'For "{question_label}", keep the answer idea from "{quote_label}" if it is true.',
+            "improve": f'For "{question_label}", expand "{quote_label}" with your exact action and result.',
+            "impact": f'The short answer "{quote_label}" is not enough for the interviewer to judge the answer to "{question_label}" well.',
+            "next_try": f'Turn "{quote_label}" into a full answer to "{question_label}".',
+            "next_attempt_steps": [
+                f'Start with a full sentence that answers "{question_label}".',
+                f'Explain what you personally did after "{quote_label}".',
+                f'Add the result, effect, or lesson for "{question_label}".',
+            ],
+            "success_check": f'The retry works when "{quote_label}" is supported by an action and result.',
+        }
+
+    if alignment == "directly_addressed":
+        keep = f'Keep the detail "{quote_label}" because it helps answer "{question_label}".'
+        improve = f'Add {missing_label} for "{question_label}".'
+    elif alignment == "partially_addressed":
+        keep = f'Keep the useful part "{quote_label}" because it gives some detail for "{question_label}".'
+        improve = f'Cover the missing point "{missing_label}" so "{question_label}" is answered more fully.'
+    else:
+        keep = f'Use "{quote_label}" only if it truly supports "{question_label}".'
+        improve = f'Make the answer connect directly to "{question_label}" and add {missing_label}.'
+
+    return {
+        "keep": keep,
+        "improve": improve,
+        "impact": f'The interviewer can judge "{question_label}" better when "{quote_label}" is linked to a clear action and result.',
+        "next_try": f'Rewrite the answer so "{quote_label}" clearly supports "{question_label}".',
+        "next_attempt_steps": [
+            f'Open with a direct answer to "{question_label}".',
+            f'Use "{quote_label}" as the proof point only if it is true.',
+            f'Add {missing_label} before ending the answer.',
+        ],
+        "success_check": f'The retry works when "{question_label}" is answered directly and "{quote_label}" supports the main point.',
+    }
+
+
 def fallback_answer(answer_text: str) -> str:
     quote = best_quote(answer_text)
     if not quote:
@@ -278,6 +335,7 @@ def main() -> int:
                 "ai_feedback": text,
                 "better_sample_answer": "" if skipped else fallback_answer(answer_text),
                 "follow_up_question": f'What result or lesson would you add to strengthen your answer to "{question}"?',
+                "coaching": coaching_for(question, quote, alignment, gaps, skipped, too_short),
                 "evaluation_source": "local_trained_model",
             }
         )
