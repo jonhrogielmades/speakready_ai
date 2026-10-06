@@ -13,7 +13,7 @@ class TrustworthyAssessmentService
 
  private const ACTION_VERB_PATTERN = '(?:lead|led|own|owned|build|built|create|created|resolve|resolved|solve|solved|fix|fixed|improve|improved|reduce|reduced|increase|increased|deliver|delivered|design|designed|implement|implemented|organize|organized|manage|managed|test|tested|analyze|analyzed|coordinate|coordinated|decide|decided|handle|handled|support|supported|communicate|communicated|verify|verified|check|checked|plan|planned|inspect|inspected|diagnose|diagnosed|review|reviewed|prioritize|prioritized|explain|explained|validate|validated|measure|measured|compare|compared|document|documented|escalate|escalated|write|wrote|prepare|prepared|train|trained|assist|assisted|propose|proposed|research|researched|configure|configured|deploy|deployed|investigate|investigated|monitor|monitored|report|reported|present|presented|negotiate|negotiated|mentor|mentored|facilitate|facilitated|maintain|maintained|migrate|migrated|automate|automated|optimize|optimized|launch|launched|process|processed|schedule|scheduled|delegate|delegated|select|selected|evaluate|evaluated|gather|gathered|contact|contacted|collaborate|collaborated|update|updated|identify|identified|recommend|recommended)';
 
- private const RESULT_SIGNAL_PATTERN = '(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded)';
+ private const RESULT_SIGNAL_PATTERN = '(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|receiv(?:e|ed)|thank(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded)';
 
  public function deliveryStability(string $answerText, int $wpm, int $fillerWords, int $pauseCount, int $voiceDuration):?int
  {
@@ -105,11 +105,14 @@ class TrustworthyAssessmentService
  }
 
  $evidence??= $this->answerEvidence($clean);
- $answerSentence = $this->sentenceText(mb_substr($clean, 0, 700), ($evidence['star_applicable']?? false)? 2: 4);
+ $sentences = $this->answerSentences($clean);
+ $resultSentence = $this->resultSentenceFrom($sentences);
+ $actionSentence = $this->actionSentenceFrom($sentences, $resultSentence);
+ $answerSentence = $this->sentenceText($actionSentence !== ''? $actionSentence: mb_substr($clean, 0, 700), ($evidence['star_applicable']?? false)? 2: 4);
  $questionText = trim((string) ($evidence['question_text']?? ''));
 
  if ($evidence['star_applicable']?? false) {
- return $this->starParagraphRevision($answerSentence, $questionText);
+ return $this->starParagraphRevision($answerSentence, $questionText, $resultSentence, $evidence);
  }
 
  $intent = (string) ($evidence['question_intent']?? 'direct_evidence');
@@ -144,12 +147,14 @@ class TrustworthyAssessmentService
  'I would connect it to the next step I am aiming for without adding details I did not share.',
  ],
  'technical' => [
- 'This shows the steps I would take before changing the solution.',
- 'I would explain each check clearly so the interviewer can follow my reasoning.',
+ 'This answers the question by showing the checks I would make before changing the solution.',
+ 'I would explain what each check tells me and how I would confirm the issue is resolved.',
  ],
  'situational' => [
- 'This shows the first action I would take and keeps the response practical.',
- 'I would explain how I would check progress without adding details I cannot support.',
+ 'This shows the action I would take and keeps the response practical.',
+ $resultSentence !== ''
+ ? 'I would keep the true result clear so the interviewer can see what happened next.'
+ : 'I would finish by adding the true result or next step, because my saved answer does not include it yet.',
  ],
  default => [
  'This keeps the main point clear and easy to follow.',
@@ -157,19 +162,38 @@ class TrustworthyAssessmentService
  ],
  };
 
+ if ($resultSentence !== '' && ! str_contains($answerSentence, $resultSentence)) {
+ return trim($answerSentence.' '.$support.' '.$resultSentence.' '.$closing);
+ }
+
  return trim($answerSentence.' '.$support.' '.$closing);
  }
 
- private function starParagraphRevision(string $answerSentence, string $questionText): string
+ private function starParagraphRevision(string $answerSentence, string $questionText, string $resultSentence = '', array $evidence = []): string
  {
  $context = $this->starContextSentence($questionText);
- $task = 'My task was to understand the situation, take responsibility for my part, and respond clearly.';
+ $task = $this->starTaskSentence($questionText);
  $action = preg_match('/\b(?:I|we|my|our)\b/iu', $answerSentence) === 1
  ? $answerSentence
  : 'I would explain it this way: '.$answerSentence;
- $result = $this->starResultSentence($questionText);
+ $result = $resultSentence !== ''
+ ? $this->sentenceText($resultSentence)
+ : $this->starResultSentence($questionText, (bool) ($evidence['result_required']?? true));
 
  return trim($context.' '.$task.' '.$action.' '.$result);
+ }
+
+ private function starTaskSentence(string $questionText): string
+ {
+ $question = mb_strtolower($questionText, 'UTF-8');
+
+ return match (true) {
+ preg_match('/\b(?:customer|client|complaint|concern|upset|angry|irate)\b/u', $question) === 1 => 'My task was to understand the concern, take responsibility for my part, and give a clear next step.',
+ preg_match('/\b(?:team|collaborat|coworker|colleague)\b/u', $question) === 1 => 'My task was to work with the team, keep the goal clear, and help move the work forward.',
+ preg_match('/\b(?:project|assignment|task|deadline)\b/u', $question) === 1 => 'My task was to organize the work, choose the next useful step, and keep the outcome clear.',
+ preg_match('/\b(?:conflict|difficult|challenge|problem)\b/u', $question) === 1 => 'My task was to understand the problem, stay calm, and respond with a clear action.',
+ default => 'My task was to understand the situation, take responsibility for my part, and respond clearly.',
+ };
  }
 
  private function starContextSentence(string $questionText): string
@@ -186,9 +210,18 @@ class TrustworthyAssessmentService
  };
  }
 
- private function starResultSentence(string $questionText): string
+ private function starResultSentence(string $questionText, bool $resultRequired = true): string
  {
  $question = mb_strtolower($questionText, 'UTF-8');
+
+ if ($resultRequired) {
+ return match (true) {
+ preg_match('/\b(?:customer|client|complaint|concern|upset|angry|irate)\b/u', $question) === 1 => 'I would finish by adding the true customer result or lesson, because my saved answer does not include it yet.',
+ preg_match('/\b(?:team|collaborat|coworker|colleague)\b/u', $question) === 1 => 'I would finish by adding the true team result or lesson, because my saved answer does not include it yet.',
+ preg_match('/\b(?:project|assignment|task|deadline)\b/u', $question) === 1 => 'I would finish by adding the true project result or lesson, because my saved answer does not include it yet.',
+ default => 'I would finish by adding the true result or lesson, because my saved answer does not include it yet.',
+ };
+ }
 
  return match (true) {
  preg_match('/\b(?:customer|client|complaint|concern|upset|angry|irate)\b/u', $question) === 1 => 'This helped me give a clearer next step and handle the concern in an organized way.',
@@ -198,6 +231,54 @@ class TrustworthyAssessmentService
  preg_match('/\b(?:conflict|difficult|challenge|problem)\b/u', $question) === 1 => 'This helped me handle the challenge with a clearer process and a better lesson for next time.',
  default => 'This helped me turn the situation into a clearer lesson about how I work.',
  };
+ }
+
+ /**
+  * @return array<int, string>
+  */
+ private function answerSentences(string $text): array
+ {
+ preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', trim($text), $matches);
+
+ return array_values(array_filter(array_map(
+ fn (string $sentence): string => trim($sentence),
+ $matches[0]?? []
+ )));
+ }
+
+ private function resultSentenceFrom(array $sentences): string
+ {
+ foreach (array_reverse($sentences) as $sentence) {
+ if (preg_match('/\b(?:'.self::RESULT_SIGNAL_PATTERN.'|\d+(?:\.\d+)?%?|percent|hours?|days?|minutes?|seconds?)\b/i', $sentence) === 1) {
+ return $this->sentenceText($sentence);
+ }
+ }
+
+ return '';
+ }
+
+ private function actionSentenceFrom(array $sentences, string $resultSentence = ''): string
+ {
+ $resultKey = mb_strtolower(trim($resultSentence), 'UTF-8');
+ $actionSentences = [];
+
+ foreach ($sentences as $sentence) {
+ $clean = $this->sentenceText($sentence);
+ if ($clean === '' || ($resultKey !== '' && mb_strtolower($clean, 'UTF-8') === $resultKey)) {
+ continue;
+ }
+
+ $actionSentences[] = $clean;
+ if (count($actionSentences) >= 2) {
+ break;
+ }
+ }
+
+ if ($actionSentences === [] && $sentences !== []) {
+ $actionSentences[] = $this->sentenceText($sentences[0]);
+ }
+
+ return trim(implode(' ', $actionSentences));
  }
 
  private function sentenceText(string $text, int $maxSentences = 1): string

@@ -1154,9 +1154,17 @@ return response()->json([
  'coaching_summary' => $coachingSummary,
  ]);
 
+ $actionPlan = $this->safeActionPlan($session, $scoreRecord, $feedbackRecord, $evaluatedAnswers);
+ if (filled($aiFeedback['_api_refresh_blocked_until']?? null)) {
+ $actionPlan['_provider_refresh'] = [
+ 'reason' => 'api_provider_failure',
+ 'blocked_until' => (string) $aiFeedback['_api_refresh_blocked_until'],
+ ];
+ }
+
  $session->update([
  'status' => 'completed',
- 'action_plan' => $this->safeActionPlan($session, $scoreRecord, $feedbackRecord, $evaluatedAnswers),
+ 'action_plan' => $actionPlan,
  'current_question_index' => max(0, $answers->count() - 1),
  'session_state' => null,
  ]);
@@ -4569,6 +4577,9 @@ return response()->json([
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  } catch (AiFeedbackProviderFailureException $error) {
  $fallbackFeedback = AIService::generateLocalFeedback($sessionData, $answersData);
+ $fallbackFeedback['_api_refresh_blocked_until'] = now()
+ ->addMinutes(max(1, (int) env('AI_FEEDBACK_REVIEW_RETRY_COOLDOWN_MINUTES', 10)))
+ ->toIso8601String();
  Log::warning('AI feedback providers failed; completing report with local feedback fallback.', [
  'session_id' => $session->id,
  'user_id' => $session->user_id,
@@ -4599,11 +4610,11 @@ return response()->json([
  false,
  true,
  [
- 'timeout_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_TIMEOUT', 30),
- 'deadline_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', 90),
+ 'timeout_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', 30)),
+ 'deadline_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', 90)),
  'max_attempts' => (int) env('AI_FEEDBACK_FINALIZATION_ATTEMPTS', 2),
- 'http_attempts' => (int) env('AI_FEEDBACK_FINALIZATION_HTTP_ATTEMPTS', 2),
- 'retry_delay_ms' => (int) env('AI_FEEDBACK_FINALIZATION_RETRY_DELAY_MS', 250),
+ 'http_attempts' => (int) env('AI_FEEDBACK_FINALIZATION_HTTP_ATTEMPTS', env('AI_FEEDBACK_HTTP_ATTEMPTS', 2)),
+ 'retry_delay_ms' => (int) env('AI_FEEDBACK_FINALIZATION_RETRY_DELAY_MS', env('AI_FEEDBACK_RETRY_DELAY_MS', 250)),
  ]
  );
  }

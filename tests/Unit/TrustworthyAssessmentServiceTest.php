@@ -90,10 +90,52 @@ class TrustworthyAssessmentServiceTest extends TestCase
 
         $this->assertFalse($evidence['result_required']);
         $this->assertNotContains('A clear result, effect, or lesson', $evidence['missing_evidence']);
-        $this->assertStringContainsString('I would explain each check clearly', $revision);
+        $this->assertStringContainsString('I would explain what each check tells me', $revision);
         $this->assertGreaterThanOrEqual(3, $this->sentenceCount($revision));
         $this->assertLessThanOrEqual(6, $this->sentenceCount($revision));
         $this->assertStringNotContainsString('Situation/Task:', $revision);
+    }
+
+    public function test_customer_revision_keeps_real_result_from_candidate_answer(): void
+    {
+        $service = new TrustworthyAssessmentService;
+        $question = new Question([
+            'type' => 'Behavioral',
+            'question_text' => 'Tell me about a time you handled a difficult customer.',
+        ]);
+        $answer = 'I listened to an upset customer, checked the order status, and gave a clear update. The customer received the item the next day and thanked us for the quick update.';
+
+        $evidence = $service->answerEvidence($answer, null, $question);
+        $revision = $service->groundedRevisionTemplate($answer, $evidence);
+
+        $this->assertTrue($evidence['has_result']);
+        $this->assertStringContainsString('I listened to an upset customer', $revision);
+        $this->assertStringContainsString('The customer received the item the next day and thanked us for the quick update.', $revision);
+        $this->assertStringNotContainsString('add the true customer result', $revision);
+        $this->assertStringNotContainsString('[', $revision);
+        $this->assertGreaterThanOrEqual(3, $this->sentenceCount($revision));
+        $this->assertLessThanOrEqual(6, $this->sentenceCount($revision));
+    }
+
+    public function test_customer_revision_coaches_for_missing_result_without_inventing_one(): void
+    {
+        $service = new TrustworthyAssessmentService;
+        $question = new Question([
+            'type' => 'Behavioral',
+            'question_text' => 'Tell me about a time you handled a difficult customer.',
+        ]);
+        $answer = 'I listened to the customer, checked the account, and explained the next step clearly.';
+
+        $evidence = $service->answerEvidence($answer, null, $question);
+        $revision = $service->groundedRevisionTemplate($answer, $evidence);
+
+        $this->assertFalse($evidence['has_result']);
+        $this->assertStringContainsString('I listened to the customer', $revision);
+        $this->assertStringContainsString('adding the true customer result or lesson', $revision);
+        $this->assertStringNotContainsString('customer was satisfied', mb_strtolower($revision, 'UTF-8'));
+        $this->assertStringNotContainsString('[', $revision);
+        $this->assertGreaterThanOrEqual(3, $this->sentenceCount($revision));
+        $this->assertLessThanOrEqual(6, $this->sentenceCount($revision));
     }
 
     public function test_role_fit_question_with_behavioral_label_does_not_require_star_or_personal_action(): void

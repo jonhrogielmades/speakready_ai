@@ -338,6 +338,7 @@ if (! function_exists('review_question_based_better_answer')) {
         if ($baseAnswer !== '' && preg_match('/^\s*(?:I|we|my|our)\b/iu', $baseAnswer) !== 1) {
             $baseAnswer = 'I would answer: ' . $baseAnswer;
         }
+        $hasResult = preg_match('/\b(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|receiv(?:e|ed)|thank(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded|\d+(?:\.\d+)?%?|percent|hours?|days?|minutes?|seconds?)\b/iu', $baseAnswer) === 1;
 
         if (preg_match('/\b(?:introduce yourself|tell me about yourself|background)\b/iu', $question) === 1) {
             $draft = $baseAnswer !== ''
@@ -349,7 +350,7 @@ if (! function_exists('review_question_based_better_answer')) {
 
         if (preg_match('/\b(?:irate|angry|upset|customer|client|complaint|concern)\b/iu', $question) === 1) {
             $draft = $baseAnswer !== ''
-                ? $baseAnswer . ' I would present this as a calm, organized response. This helps the customer understand the next step without adding details I cannot support.'
+                ? $baseAnswer . ' This shows how I responded to the customer and kept the next step clear. ' . ($hasResult ? 'I would keep the true customer result clear so the interviewer can see what happened next.' : 'I would add the true final customer result or lesson before using this answer.')
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
 
             return review_better_answer_limit_sentences($draft);
@@ -357,7 +358,7 @@ if (! function_exists('review_question_based_better_answer')) {
 
         if (preg_match('/\b(?:tell me about a time|describe a time|give an example|example of|challenge|conflict|handled|helped|solved|worked under pressure|difficult)\b/iu', $question) === 1) {
             $draft = $baseAnswer !== ''
-                ? $baseAnswer . ' I would keep the story in STAR order. I would make the situation, task, action, and honest result clear in one connected answer.'
+                ? $baseAnswer . ' I would keep this in situation, task, action, and result order. ' . ($hasResult ? 'I would keep the real result connected to the action I already described.' : 'I would add the true result or lesson if it is missing before using this answer.')
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
 
             return review_better_answer_limit_sentences($draft);
@@ -397,7 +398,7 @@ if (! function_exists('review_question_based_better_answer')) {
 
         if (preg_match('/\b(?:how would you|how do you|diagnose|troubleshoot|process|approach|steps?)\b/iu', $lowerQuestion) === 1) {
             $draft = $baseAnswer !== ''
-                ? $baseAnswer . ' I would explain why each step matters. I would also explain how I would check that the issue is resolved.'
+                ? $baseAnswer . ' I would explain what each check tells me. I would also explain how I would confirm that the issue is resolved.'
                 : 'A response-based possible answer is unavailable because no usable answer text was saved.';
 
             return review_better_answer_limit_sentences($draft);

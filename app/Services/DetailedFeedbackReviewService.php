@@ -10,6 +10,7 @@ use App\Models\Profile;
 use App\Models\Score;
 use App\Models\Setting;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -89,6 +90,10 @@ class DetailedFeedbackReviewService
  }
 
  $session->loadMissing(['answers.question', 'feedback', 'score']);
+
+ if ($this->apiProviderRefreshBlocked($session)) {
+ return false;
+ }
 
  if (! $session->feedback instanceof Feedback || ! $session->score instanceof Score) {
  return true;
@@ -274,12 +279,26 @@ class DetailedFeedbackReviewService
  private function reviewRefreshRuntimeOptions(): array
  {
  return [
- 'timeout_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 30),
- 'deadline_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 60),
- 'max_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', 2),
- 'http_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', 2),
- 'retry_delay_ms' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', 250),
+ 'timeout_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', 30)),
+ 'deadline_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', 60)),
+ 'max_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', env('AI_FEEDBACK_ATTEMPTS', 2)),
+ 'http_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', env('AI_FEEDBACK_HTTP_ATTEMPTS', 2)),
+ 'retry_delay_ms' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', env('AI_FEEDBACK_RETRY_DELAY_MS', 250)),
  ];
+ }
+
+ private function apiProviderRefreshBlocked(InterviewSession $session): bool
+ {
+ $blockedUntil = trim((string) data_get($session->action_plan?? [], '_provider_refresh.blocked_until', ''));
+ if ($blockedUntil === '') {
+ return false;
+ }
+
+ try {
+ return now()->lt(Carbon::parse($blockedUntil));
+ } catch (\Throwable) {
+ return false;
+ }
  }
 
  private function answerNeedsApiProviderPossibleAnswer(InterviewAnswer $answer): bool

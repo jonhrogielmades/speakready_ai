@@ -41,7 +41,7 @@ class AIService
 
  private const ACTION_VERB_PATTERN = '(?:lead|led|own|owned|build|built|create|created|resolve|resolved|solve|solved|fix|fixed|improve|improved|reduce|reduced|increase|increased|deliver|delivered|design|designed|implement|implemented|organize|organized|manage|managed|test|tested|analyze|analyzed|coordinate|coordinated|decide|decided|handle|handled|support|supported|communicate|communicated|verify|verified|check|checked|plan|planned|inspect|inspected|diagnose|diagnosed|review|reviewed|prioritize|prioritized|explain|explained|validate|validated|measure|measured|compare|compared|document|documented|escalate|escalated|write|wrote|prepare|prepared|train|trained|assist|assisted|propose|proposed|research|researched|configure|configured|deploy|deployed|investigate|investigated|monitor|monitored|report|reported|present|presented|negotiate|negotiated|mentor|mentored|facilitate|facilitated|maintain|maintained|migrate|migrated|automate|automated|optimize|optimized|launch|launched|process|processed|schedule|scheduled|delegate|delegated|select|selected|evaluate|evaluated|gather|gathered|contact|contacted|collaborate|collaborated|update|updated|identify|identified|recommend|recommended)';
 
- private const RESULT_SIGNAL_PATTERN = '(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded)';
+ private const RESULT_SIGNAL_PATTERN = '(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|receiv(?:e|ed)|thank(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded)';
 
  private const INTERVIEWER_DISPLAY_NAME = 'Karyl';
 
@@ -1112,31 +1112,31 @@ return [
  private static function aiCoachPossibleAnswerWritingRules(?bool $starApplicable, bool $groundInCandidateAnswer): string
  {
  $sourceRule = $groundInCandidateAnswer
- ? 'Base the answer on candidate_answer for the same item. Use the question, target role, answer guide, and mapped skills only for context.'
+ ? 'Write a realistic possible answer the candidate can adapt for this exact question. Base it on candidate_answer for the same item. Use the question, target role, answer guide, and mapped skills only for context.'
  : 'Base the answer on the question, target role, answer guide, resume excerpt, and job description excerpt when present.';
 
  $starRule = match ($starApplicable) {
  true => $groundInCandidateAnswer
- ? 'For STAR applicable items, write one natural paragraph in Situation, Task, Action, Result order. Do not use STAR labels or bracketed placeholders. If a STAR detail is missing from candidate_answer, keep that part general and truthful instead of inventing an outcome.'
+ ? 'For STAR applicable items, write one natural paragraph in Situation, Task, Action, Result order. Do not use STAR labels or bracketed placeholders. If the result or another STAR detail is missing from candidate_answer, say that the candidate should add the true result or detail instead of inventing an outcome.'
  : 'Use the exact labels Situation:, Task:, Action:, and Result: in this order, with one section per line. Use placeholders for unknown personal facts.',
  false => 'Do not force STAR labels unless the question asks for a past example.',
  default => $groundInCandidateAnswer
- ? 'When the supplied star_applicable value is true, write one natural paragraph in Situation, Task, Action, Result order without STAR labels or bracketed placeholders. When star_applicable is false, do not force STAR labels.'
+ ? 'When the supplied star_applicable value is true, write one natural paragraph in Situation, Task, Action, Result order without STAR labels or bracketed placeholders. If the result is missing, say that the candidate should add the true result. When star_applicable is false, do not force STAR labels.'
  : 'When the supplied star_applicable value is true, use the exact labels Situation:, Task:, Action:, and Result: in this order, with one section per line. Use placeholders for unknown personal facts. When star_applicable is false, do not force STAR labels.',
  };
 
  $groundingRule = $groundInCandidateAnswer
- ? 'Keep every personal detail grounded in candidate_answer. Do not add invented achievements, employers, tools, numbers, results, names, schools, dates, awards, certifications, or intentions.'
+ ? 'Keep every personal detail grounded in candidate_answer, preserve the candidate_answer details that answer the question, and do not add invented achievements, employers, tools, numbers, results, names, schools, dates, awards, certifications, or intentions.'
  : 'Do not invent names, employers, schools, dates, numbers, awards, tools, certifications, achievements, or other personal facts that are not provided.';
 
  $missingFactRule = $groundInCandidateAnswer
- ? 'Do not use bracketed placeholders. When a personal fact or result is missing, omit it or use a cautious sentence that stays within candidate_answer.'
+ ? 'Do not use bracketed placeholders. When a personal fact or result is missing, write the answer with the available true facts and explicitly say the true detail or result should be added before using it.'
  : 'When a personal fact or result is needed but missing, use a short bracketed placeholder such as [specific project], [your action], or [result].';
  $sentenceCountRule = $groundInCandidateAnswer
  ? 'Use a minimum of 3 sentences and a maximum of 6 sentences.'
  : '';
 
- return trim($sourceRule.' '.$starRule.' '.$groundingRule.' '.$missingFactRule.' '.$sentenceCountRule.' Write the answer itself, not advice. Do not include markdown, bullets, greetings, scoring, coaching explanation, or text before or after the answer.');
+ return trim($sourceRule.' '.$starRule.' '.$groundingRule.' '.$missingFactRule.' '.$sentenceCountRule.' Write the answer itself as a spoken draft, not advice only. Do not include markdown, bullets, greetings, scoring, coaching explanation, or text before or after the answer.');
  }
 
  public static function fallbackCoachPossibleAnswer($session, $question): string

@@ -136,6 +136,12 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringNotContainsString('Situation:', $unstructuredStarDraft);
         $this->assertStringNotContainsString('[', $unstructuredStarDraft);
 
+        $starAnswerWithResult = ['answer_text' => 'I listened to an upset customer, checked the order status, and gave a clear update. The customer received the item the next day and thanked us for the quick update.'];
+        $starDraftWithResult = review_better_answer_text('', $starAnswerWithResult, ['question_text' => 'Tell me about a time you handled a difficult customer.']);
+        $this->assertStringContainsString('I listened to an upset customer', $starDraftWithResult);
+        $this->assertStringContainsString('The customer received the item the next day and thanked us for the quick update.', $starDraftWithResult);
+        $this->assertStringNotContainsString('add the true customer result', $starDraftWithResult);
+
         $questionOnly = review_better_answer_text($question, $answer, ['question_text' => $question]);
         $this->assertStringContainsString('Karyl from Cebu', $questionOnly);
         $this->assertStringNotContainsString($question, $questionOnly);
@@ -209,9 +215,12 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$missingResult, $answer]));
 
         $rules = $this->invokePrivate('aiCoachPossibleAnswerWritingRules', [true, true]);
+        $this->assertStringContainsString('realistic possible answer', $rules);
         $this->assertStringContainsString('one natural paragraph', $rules);
         $this->assertStringContainsString('candidate_answer', $rules);
         $this->assertStringContainsString('Do not use bracketed placeholders', $rules);
+        $this->assertStringContainsString('should add the true result', $rules);
+        $this->assertStringContainsString('spoken draft', $rules);
         $this->assertStringContainsString('minimum of 3 sentences and a maximum of 6 sentences', $rules);
         $batchRules = $this->invokePrivate('aiCoachPossibleAnswerWritingRules', [null, true]);
         $this->assertStringContainsString('When the supplied star_applicable value is true, write one natural paragraph', $batchRules);
