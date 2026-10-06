@@ -375,7 +375,7 @@
         top: 18px;
         width: 174px;
         height: 174px;
-        border: 1.5px solid rgba(249, 115, 22, 0.42);
+        border: 1.5px solid rgba(14, 165, 233, 0.36);
         border-radius: 50%;
         animation: prepFloat 3.2s ease-in-out infinite;
     }
@@ -434,7 +434,7 @@
         width: 13px;
         height: 13px;
         border-radius: 50%;
-        background: #fb923c;
+        background: #38bdf8;
         box-shadow: 0 0 0 2px #ffffff;
     }
     .prep-art-line {
@@ -481,7 +481,7 @@
     }
     .prep-art-bars span:nth-child(3) {
         height: 42px;
-        background: #fb923c;
+        background: #38bdf8;
     }
     .prep-art-lens {
         position: absolute;
@@ -494,7 +494,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: #f97316;
+        color: #0ea5e9;
         background: rgba(255, 255, 255, 0.9);
         box-shadow: 0 16px 26px rgba(15, 23, 42, 0.14);
         font-size: 2rem;
@@ -525,7 +525,7 @@
     .prep-art-badge-left {
         left: 16px;
         top: 88px;
-        background: #fb923c;
+        background: #0ea5e9;
     }
     .prep-art-badge-right {
         right: 0;
@@ -550,7 +550,7 @@
     }
     .finish-transition-overlay .interview-prep-title span {
         display: block;
-        color: #f2632f;
+        color: #0ea5e9;
     }
     .finish-transition-overlay .interview-prep-subtitle {
         margin: 0;
@@ -578,11 +578,11 @@
         width: 19%;
         height: 100%;
         border-radius: inherit;
-        background: linear-gradient(90deg, #f2632f, #fb923c);
+        background: linear-gradient(90deg, #2563eb, #38bdf8);
         transition: width 0.28s ease;
     }
     .interview-prep-progress-percent {
-        color: #f2632f;
+        color: #2563eb;
         font-size: 1.1rem;
         line-height: 1;
         font-weight: 800;
@@ -604,9 +604,14 @@
         padding: 10px 0;
         border-bottom: 1px solid rgba(226, 232, 240, 0.9);
         text-align: left;
+        transition: background 0.24s ease, transform 0.24s ease;
     }
     .interview-prep-check-row:last-child {
         border-bottom: 0;
+    }
+    .interview-prep-check-row.is-checking {
+        background: linear-gradient(90deg, rgba(224, 242, 254, 0.48), rgba(255, 255, 255, 0));
+        transform: translateX(2px);
     }
     .interview-prep-row-icon,
     .interview-prep-row-check {
@@ -619,9 +624,16 @@
         width: 36px;
         height: 36px;
         border-radius: 8px;
-        color: #f2632f;
-        background: #fff4ed;
+        color: #0ea5e9;
+        background: #e0f2fe;
         font-size: 1rem;
+        transition: background 0.24s ease, color 0.24s ease, transform 0.24s ease;
+    }
+    .interview-prep-check-row.is-checking .interview-prep-row-icon,
+    .interview-prep-check-row.is-complete .interview-prep-row-icon {
+        color: #2563eb;
+        background: #dbeafe;
+        transform: scale(1.04);
     }
     .interview-prep-row-copy {
         min-width: 0;
@@ -645,10 +657,32 @@
         width: 28px;
         height: 28px;
         border-radius: 50%;
+        color: transparent;
+        background: #e2e8f0;
+        font-size: 0.84rem;
+        box-shadow: none;
+        transform: scale(0.82);
+        transition: background 0.24s ease, color 0.18s ease, transform 0.24s ease, box-shadow 0.24s ease;
+    }
+    .interview-prep-row-check i {
+        opacity: 0;
+        transform: scale(0.45) rotate(-18deg);
+        transition: opacity 0.18s ease, transform 0.24s ease;
+    }
+    .interview-prep-check-row.is-checking .interview-prep-row-check {
+        background: #bfdbfe;
+        transform: scale(0.94);
+    }
+    .interview-prep-check-row.is-complete .interview-prep-row-check {
         color: #ffffff;
         background: #16a34a;
-        font-size: 0.84rem;
         box-shadow: 0 8px 14px rgba(22, 163, 74, 0.2);
+        transform: scale(1);
+    }
+    .interview-prep-check-row.is-complete .interview-prep-row-check i {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+        animation: prepCheckPop 0.34s cubic-bezier(0.2, 0.9, 0.2, 1.2);
     }
     .interview-prep-tip {
         width: min(100%, 560px);
@@ -665,7 +699,7 @@
     }
     .interview-prep-tip i,
     .interview-prep-tip strong {
-        color: #f2632f;
+        color: #0ea5e9;
     }
     .interview-prep-tip span {
         min-width: 0;
@@ -736,6 +770,11 @@
     @keyframes prepFloat {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-8px); }
+    }
+    @keyframes prepCheckPop {
+        0% { transform: scale(0.45) rotate(-18deg); }
+        65% { transform: scale(1.18) rotate(0deg); }
+        100% { transform: scale(1) rotate(0deg); }
     }
     :root:not(.lm) #panel-summary {
         background:

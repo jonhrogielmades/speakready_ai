@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=20') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=22') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=11') }}" data-page-style="interview-setup-2">
 @endpush
 
@@ -519,7 +519,7 @@
  <strong data-loading-title>Details configured</strong>
  <small data-loading-detail>Scenario and target role ready</small>
  </span>
- <span class="interview-prep-row-check" aria-label="Complete"><i class="fa-solid fa-check"></i></span>
+ <span class="interview-prep-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
  </div>
  <div class="interview-prep-check-row" data-loading-item="structure">
  <span class="interview-prep-row-icon"><i class="fa-solid fa-list-check"></i></span>
@@ -527,7 +527,7 @@
  <strong data-loading-title>Structure configured</strong>
  <small data-loading-detail>Question count and timing ready</small>
  </span>
- <span class="interview-prep-row-check" aria-label="Complete"><i class="fa-solid fa-check"></i></span>
+ <span class="interview-prep-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
  </div>
  <div class="interview-prep-check-row" data-loading-item="camera">
  <span class="interview-prep-row-icon"><i class="fa-solid fa-video"></i></span>
@@ -535,7 +535,7 @@
  <strong data-loading-title>Camera configured</strong>
  <small data-loading-detail>Camera preference confirmed</small>
  </span>
- <span class="interview-prep-row-check" aria-label="Complete"><i class="fa-solid fa-check"></i></span>
+ <span class="interview-prep-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
  </div>
  <div class="interview-prep-check-row" data-loading-item="coaching">
  <span class="interview-prep-row-icon"><i class="fa-solid fa-comments"></i></span>
@@ -543,7 +543,7 @@
  <strong data-loading-title>Coaching configured</strong>
  <small data-loading-detail>Feedback mode and question mix ready</small>
  </span>
- <span class="interview-prep-row-check" aria-label="Complete"><i class="fa-solid fa-check"></i></span>
+ <span class="interview-prep-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
  </div>
  <div class="interview-prep-check-row" data-loading-item="response">
  <span class="interview-prep-row-icon"><i class="fa-solid fa-microphone-lines"></i></span>
@@ -551,7 +551,7 @@
  <strong data-loading-title>Response configured</strong>
  <small data-loading-detail>Answer mode ready</small>
  </span>
- <span class="interview-prep-row-check" aria-label="Complete"><i class="fa-solid fa-check"></i></span>
+ <span class="interview-prep-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
  </div>
  </div>
 
@@ -1547,6 +1547,7 @@
  }
 
  let setupLoadingProgressTimer = null;
+ let setupLoadingChecklistTimers = [];
 
  function setupLoadingSelectedOptionText(selectId) {
  const select = document.getElementById(selectId);
@@ -1629,6 +1630,40 @@
  if (track) track.setAttribute('aria-valuenow', String(progress));
  }
 
+ function clearSetupLoadingChecklistTimers() {
+ setupLoadingChecklistTimers.forEach(timerId => window.clearTimeout(timerId));
+ setupLoadingChecklistTimers = [];
+ }
+
+ function resetSetupLoadingChecklist() {
+ clearSetupLoadingChecklistTimers();
+ setupTransitionOverlay?.querySelectorAll('.interview-prep-check-row').forEach(row => {
+ row.classList.remove('is-checking', 'is-complete');
+ row.querySelector('.interview-prep-row-check')?.setAttribute('aria-label', 'Pending');
+ });
+ }
+
+ function startSetupLoadingChecklist() {
+ resetSetupLoadingChecklist();
+ const rows = Array.from(setupTransitionOverlay?.querySelectorAll('.interview-prep-check-row') || []);
+ rows.forEach((row, index) => {
+ const checkingTimer = window.setTimeout(() => {
+ row.classList.add('is-checking');
+ row.querySelector('.interview-prep-row-check')?.setAttribute('aria-label', 'Checking');
+
+ const completeTimer = window.setTimeout(() => {
+ row.classList.remove('is-checking');
+ row.classList.add('is-complete');
+ row.querySelector('.interview-prep-row-check')?.setAttribute('aria-label', 'Complete');
+ }, 260);
+
+ setupLoadingChecklistTimers.push(completeTimer);
+ }, 180 + (index * 430));
+
+ setupLoadingChecklistTimers.push(checkingTimer);
+ });
+ }
+
  function startSetupLoadingProgress() {
  window.clearInterval(setupLoadingProgressTimer);
  let progress = 19;
@@ -1647,12 +1682,14 @@
  function prepareSetupTransitionOverlay() {
  updateSetupTransitionDetails();
  startSetupLoadingProgress();
+ startSetupLoadingChecklist();
  }
 
  function resetSetupTransitionOverlay() {
  window.clearInterval(setupLoadingProgressTimer);
  setupLoadingProgressTimer = null;
  setSetupLoadingProgress(19);
+ resetSetupLoadingChecklist();
  }
 
  if (setupForm && setupTransitionOverlay) {
