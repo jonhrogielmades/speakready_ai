@@ -778,39 +778,26 @@ class UserController extends Controller
  ])
  ->firstOrFail();
 
- $coachingRepaired = false;
+ $feedbackRefreshed = false;
  $sessionEndedEarly = $sessionRecord->status === 'ended'
  || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false);
- $reviewPending = ! $sessionEndedEarly && ! $sessionRecord->gameLevel
- && ! in_array($sessionRecord->status, ['completed', 'reviewed'], true);
 
- if (! $sessionEndedEarly && in_array($sessionRecord->status, ['completed', 'reviewed'], true)) {
+ if (! $sessionEndedEarly && $sessionRecord->status === 'completed') {
+ try {
  $interviewController = app(InterviewController::class);
- if (! $sessionRecord->gameLevel) {
- try {
- if ($interviewController->ensureCompletedSessionOpenAiFeedbackEvidence($sessionRecord, null)) {
- $sessionRecord->refresh()->load([
- 'category',
- 'answers' => fn ($query) => $query->whereNull('retry_of_answer_id')->with(['question', 'retryAttempts']),
- 'score', 'feedback', 'gameLevel',
- ]);
+ if ($this->deferReviewOpenAiRefreshEnabled()) {
+ $interviewController->deferCompletedSessionOpenAiFeedbackEvidence($sessionRecord->id, 'detailed_review');
+ } else {
+ $feedbackRefreshed = $interviewController
+ ->ensureCompletedSessionOpenAiFeedbackEvidence($sessionRecord, $sessionRecord->gameLevel);
+
+ if (! $feedbackRefreshed) {
+ $feedbackRefreshed = $interviewController
+ ->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel);
+ }
  }
  } catch (\Throwable $exception) {
- Log::warning('Detailed feedback provider sync failed; review is pending.', [
- 'session_id' => $sessionRecord->id,
- 'user_id' => Auth::id(),
- 'error_type' => $exception::class,
- ]);
- }
-
- $reviewPending = ! $interviewController->hasCompletedSessionRenderableFeedback($sessionRecord);
- }
-
- if (! $reviewPending && $sessionRecord->gameLevel) {
- try {
- $coachingRepaired = app(FeedbackCoachingRepair::class)->repairSession($sessionRecord);
- } catch (\Throwable $exception) {
- Log::warning('Detailed feedback local repair failed; rendering saved report data.', [
+ Log::warning('Detailed feedback refresh failed; rendering saved report data.', [
  'session_id' => $sessionRecord->id,
  'user_id' => Auth::id(),
  'error_type' => $exception::class,
@@ -818,9 +805,8 @@ class UserController extends Controller
  ]);
  }
  }
- }
 
- if ($coachingRepaired) {
+ if ($feedbackRefreshed) {
  $sessionRecord->refresh()->load([
  'category',
  'answers' => function ($query) {
@@ -833,10 +819,153 @@ class UserController extends Controller
  ]);
  }
 
- $comparisonRows = $reviewPending? []: $this->comparisonRowsFor($sessionRecord);
- $reviewEvidence = $reviewPending? null: FeedbackEvidencePresenter::forSession($sessionRecord);
+ $comparisonRows = $this->comparisonRowsFor($sessionRecord);
+ if (! $sessionEndedEarly) {
+ if ($this->deferReviewSampleAnswersEnabled()) {
+ $this->deferReviewSampleAnswers($sessionRecord);
+ } else {
+ $this->ensureReviewSampleAnswers($sessionRecord);
+ }
+ }
+ $reviewEvidence = FeedbackEvidencePresenter::forSession($sessionRecord);
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'reviewPending'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence'));
+ }
+
+ private function deferReviewOpenAiRefreshEnabled(): bool
+ {
+ return filter_var(config('services.interview_report.defer_review_openai_refresh', false), FILTER_VALIDATE_BOOLEAN);
+ }
+
+ private function deferReviewSampleAnswersEnabled(): bool
+ {
+ return filter_var(config('services.interview_report.defer_review_sample_answers', false), FILTER_VALIDATE_BOOLEAN);
+ }
+
+ private function deferReviewSampleAnswers(InterviewSession $sessionRecord): bool
+ {
+ if (app()->runningInConsole() || ! AIService::providerIsConfigured('openai')) {
+ return false;
+ }
+
+ $cacheKey = 'review-sample-answers-openai:'.$sessionRecord->id;
+ if (! Cache::add($cacheKey, now()->toIso8601String(), now()->addMinutes(10))) {
+ return false;
+ }
+
+ app()->terminating(function () use ($sessionRecord, $cacheKey): void {
+ try {
+ $session = InterviewSession::with([
+ 'answers' => function ($query) {
+ $query->whereNull('retry_of_answer_id')
+ ->with('question')
+ ->orderBy('id');
+ },
+ ])->find($sessionRecord->id);
+
+ if ($session && $session->status === 'completed') {
+ $this->ensureReviewSampleAnswers($session);
+ }
+ } catch (\Throwable $error) {
+ Log::warning('Deferred OpenAI review sample answer generation failed.', [
+ 'session_id' => $sessionRecord->id,
+ 'user_id' => Auth::id(),
+ 'error_type' => $error::class,
+ 'message' => Str::limit($error->getMessage(), 300),
+ ]);
+ } finally {
+ Cache::forget($cacheKey);
+ }
+ });
+
+ return true;
+ }
+
+ private function ensureReviewSampleAnswers(InterviewSession $sessionRecord): void
+ {
+ $openAiConfigured = AIService::providerIsConfigured('openai');
+ $languageConfig = Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
+
+ foreach ($sessionRecord->answers as $answer) {
+ $question = $answer->question;
+ if (! $question) {
+ continue;
+ }
+
+ $coachingFeedback = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
+ $cachedText = trim((string) data_get($coachingFeedback, 'review_sample_answer.text', ''));
+ $cachedQuestionId = (int) data_get($coachingFeedback, 'review_sample_answer.question_id', 0);
+ $cachedSource = trim((string) data_get($coachingFeedback, 'review_sample_answer.source', ''));
+ $attemptedProvider = trim((string) data_get($coachingFeedback, 'review_sample_answer.attempted_provider', ''));
+ $generatedAt = data_get($coachingFeedback, 'review_sample_answer.generated_at');
+ $recentOpenAiFallback = false;
+
+ if ($generatedAt) {
+ try {
+ $recentOpenAiFallback = $cachedSource === 'local'
+ && $attemptedProvider === 'openai'
+ && Carbon::parse($generatedAt)->greaterThan(now()->subHours(6));
+ } catch (\Throwable) {
+ $recentOpenAiFallback = false;
+ }
+ }
+
+ if ($cachedText !== ''
+ && $cachedQuestionId === (int) $question->id
+ && ($cachedSource === 'ai' || ! $openAiConfigured || $recentOpenAiFallback)
+ ) {
+ continue;
+ }
+
+ $sampleAnswer = '';
+ $source = 'local';
+ $provider = 'local';
+ $attemptedProvider = $openAiConfigured? 'openai': 'local';
+
+ if ($openAiConfigured) {
+ try {
+ $generated = AIService::generateCoachPossibleAnswer(
+ $sessionRecord,
+ $question,
+ 'openai',
+ $languageConfig
+ );
+ $candidate = trim((string) ($generated['possible_answer']?? ''));
+ if ($candidate !== '' && ($generated['source']?? '') === 'ai') {
+ $sampleAnswer = $candidate;
+ $source = 'ai';
+ $provider = AIService::normalizeProviderKey($generated['provider']?? 'openai') ?: 'openai';
+ }
+ } catch (\Throwable $error) {
+ Log::warning('OpenAI review sample answer generation failed; using local fallback.', [
+ 'session_id' => $sessionRecord->id,
+ 'answer_id' => $answer->id,
+ 'question_id' => $question->id,
+ 'error_type' => $error::class,
+ ]);
+ }
+ }
+
+ if ($sampleAnswer === '') {
+ $sampleAnswer = review_question_sample_answer($question);
+ }
+
+ if ($sampleAnswer === '') {
+ continue;
+ }
+
+ data_set($coachingFeedback, 'review_sample_answer', [
+ 'text' => $sampleAnswer,
+ 'source' => $source,
+ 'provider' => $provider,
+ 'attempted_provider' => $attemptedProvider,
+ 'question_id' => $question->id,
+ 'generated_at' => now()->toIso8601String(),
+ ]);
+
+ $answer->coaching_feedback = $coachingFeedback;
+ $answer->save();
+ }
  }
 
  public function exportSession(InterviewSession $session)
