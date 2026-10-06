@@ -1607,9 +1607,11 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Strengths')
  ->assertSee('Weaknesses')
  ->assertSee('Validated AI provider check')
- ->assertSee('What Worked')
  ->assertSee('What To Improve')
- ->assertSee('Why It Matters')
+ ->assertDontSee('What Worked')
+ ->assertDontSee('Why It Matters')
+ ->assertDontSee('Success check')
+ ->assertDontSee('This note checks only')
  ->assertSee('Possible Answer');
 
  $savedAnswer = $answer->fresh();

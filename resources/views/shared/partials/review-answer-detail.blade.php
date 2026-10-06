@@ -35,8 +35,6 @@
  ? 'Voice answer saved. Feedback is based on the saved voice session.'
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
  $possibleAnswer = review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $questionSource);
- $whatWorked = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['what_worked'] ?? ''), 'worked');
- $impactText = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['impact'] ?? $contentAlignment['observation'] ?? ''), 'impact');
  $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
  $supportingExcerpts = $listItems($contentAlignment['evidence_quotes'] ?? ($evidenceMap['supporting_excerpts'] ?? []), 1);
  $improvementFocus = $reviewFeedbackText($contentAlignment['improvement_focus'] ?? '');
@@ -123,16 +121,6 @@
  '' => 'Saved review',
  default => \Illuminate\Support\Str::headline(str_replace('_', ' ', $evaluationSource)),
  };
- $successCheck = $reviewFeedbackText($contentAlignment['success_check'] ?? '');
- if ($successCheck === '') {
- $successCheck = 'A reviewer can find the direct answer, the supporting detail, and the result or lesson.';
- }
- $successCheck = review_feedback_with_sentence_range($successCheck, 'success');
- $limitationNote = $reviewFeedbackText($contentAlignment['limitation'] ?? '');
- if ($limitationNote === '') {
- $limitationNote = 'This review uses only the saved answer, question, and measurable practice data.';
- }
- $limitationNote = review_feedback_with_sentence_range($limitationNote, 'limitation');
 @endphp
 
 <div class="review-answer-simple">
@@ -180,33 +168,14 @@
  <p>No major missing point was stored. Keep the answer focused and add stronger proof if you retry.</p>
  @endif
  </div>
- <div>
- <span>Success check</span>
- <p>{{ $successCheck }}</p>
  </div>
- </div>
- <p class="review-evidence-limitation">{{ $limitationNote }}</p>
  </section>
 
  <div class="review-answer-summary-grid">
- @if($whatWorked !== '')
- <section class="review-answer-section">
- <div class="review-block-title review-title-success"><i class="fa-solid fa-circle-check"></i><span>What Worked</span></div>
- <p>{{ $whatWorked }}</p>
- </section>
- @endif
-
  <section class="review-answer-section">
  <div class="review-block-title review-title-warning"><i class="fa-solid fa-bullseye"></i><span>What To Improve</span></div>
  <p>{{ $improvementFocus }}</p>
  </section>
-
- @if($impactText !== '')
- <section class="review-answer-section">
- <div class="review-block-title"><i class="fa-solid fa-circle-info"></i><span>Why It Matters</span></div>
- <p>{{ $impactText }}</p>
- </section>
- @endif
 
  @if($cameraVisible)
  <section class="review-answer-section review-answer-section-wide review-camera-card">

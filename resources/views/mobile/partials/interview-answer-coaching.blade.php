@@ -251,11 +251,8 @@
  $hasQuestionGuidance = false;
  $alignmentQuestion = '';
  $alignmentObservation = $reviewCoachingText($contentAlignment['observation']?? '');
- $alignmentWhatWorked = $reviewCoachingText($contentAlignment['what_worked']?? '');
  $alignmentImprovementFocus = $reviewCoachingText($contentAlignment['improvement_focus']?? '');
  $alignmentAction = $reviewCoachingText($contentAlignment['action']?? '');
- $alignmentSuccessCheck = $reviewCoachingText($contentAlignment['success_check']?? '');
- $alignmentLimitation = $reviewCoachingText($contentAlignment['limitation']?? '');
  $alignmentStatusLabel = trim((string) ($contentAlignment['status_label']?? ''));
  $alignmentStatusLabel = match (strtolower($alignmentStatusLabel)) {
  'directly answered' => 'Answered directly',
@@ -269,10 +266,8 @@
  $hasContentAlignment = $alignmentStatus!== ''
  || $alignmentQuestion!== ''
  || $alignmentObservation!== ''
- || $alignmentWhatWorked!== ''
  || $alignmentImprovementFocus!== ''
  || $alignmentAction!== ''
- || $alignmentSuccessCheck!== ''
  ||! empty($alignmentEvidence)
  ||! empty($alignmentMissing)
  ||! empty($alignmentNextSteps);
@@ -333,7 +328,6 @@
  $alignmentEvidenceSupportsFocus = in_array($alignmentStatus, ['directly_answered', 'partially_answered'], true);
  $alignmentEvidenceLabel = $alignmentEvidenceSupportsFocus? 'Answer detail to keep': 'Answer part reviewed';
  $alignmentEvidenceBorder = $alignmentEvidenceSupportsFocus? '#10b981': '#64748b';
- $alignmentStartingColors = $alignmentEvidenceSupportsFocus? ['#10b981', 'rgba(16,185,129,.055)', 'rgba(16,185,129,.18)']: ['#64748b', 'rgba(100,116,139,.055)', 'rgba(100,116,139,.18)'];
  @endphp
  <div class="mb-3 p-3 p-md-4" style="background:rgba(14,165,233,.06);border:1px solid rgba(14,165,233,.24);border-radius:12px;">
  <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
@@ -354,24 +348,12 @@
  <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 12px;"><strong style="color:var(--tx);">Why:</strong> {{ $alignmentObservation }}</p>
  @endif
 
- @if($alignmentWhatWorked!== '' || $alignmentImprovementFocus!== '')
- <div class="row g-2 mb-3">
- @if($alignmentWhatWorked!== '')
- <div class="{{ $alignmentImprovementFocus!== ''? 'col-md-6': 'col-12' }}">
- <div class="h-100 p-3" style="background:{{ $alignmentStartingColors[1] }};border:1px solid {{ $alignmentStartingColors[2] }};border-radius:9px;">
- <div style="color:{{ $alignmentStartingColors[0] }};font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:6px;"><i class="fa-solid fa-bookmark me-1"></i>Good start</div>
- <div style="color:var(--tx2);font-size:.87rem;line-height:1.55;">{{ $alignmentWhatWorked }}</div>
- </div>
- </div>
- @endif
  @if($alignmentImprovementFocus!== '')
- <div class="{{ $alignmentWhatWorked!== ''? 'col-md-6': 'col-12' }}">
- <div class="h-100 p-3" style="background:rgba(245,158,11,.055);border:1px solid rgba(245,158,11,.20);border-radius:9px;">
+ <div class="mb-3">
+ <div class="p-3" style="background:rgba(245,158,11,.055);border:1px solid rgba(245,158,11,.20);border-radius:9px;">
  <div style="color:#f59e0b;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:6px;"><i class="fa-solid fa-screwdriver-wrench me-1"></i>Improve</div>
  <div style="color:var(--tx2);font-size:.87rem;line-height:1.55;">{{ $alignmentImprovementFocus }}</div>
  </div>
- </div>
- @endif
  </div>
  @endif
 
@@ -410,13 +392,6 @@
  </div>
  @endif
 
- @if($alignmentSuccessCheck!== '')
- <div class="mt-3" style="color:var(--tx2);font-size:.86rem;line-height:1.55;padding:9px 11px;background:rgba(59,130,246,.05);border:1px dashed rgba(59,130,246,.25);border-radius:9px;"><strong style="color:#3b82f6;">Done when:</strong> {{ $alignmentSuccessCheck }}</div>
- @endif
-
- @if($alignmentLimitation!== '')
- <div style="color:var(--tx3);font-size:.75rem;line-height:1.45;margin-top:9px;"><i class="fa-solid fa-circle-info me-1"></i>{{ $alignmentLimitation }}</div>
- @endif
  </div>
  @endif
 
