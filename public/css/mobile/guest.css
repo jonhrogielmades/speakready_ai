@@ -5699,3 +5699,70 @@ html, body {
           50% { transform: scale(1.1); opacity: 1; }
           100% { transform: scale(0.9); opacity: 0.8; }
       }
+
+      /* Developers section contrast: keep headings and cards readable in day and night themes. */
+      #developers.sp {
+          --developers-section-bg: #eef4fb;
+          --developers-heading: #0f172a;
+          --developers-copy: #334155;
+          --developers-muted-strong: #475569;
+          --developers-card-bg: rgba(255, 255, 255, 0.97);
+          --developers-card-border: rgba(37, 99, 235, 0.16);
+          --developers-card-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
+          background: var(--developers-section-bg) !important;
+      }
+
+      html:not(.lm) #developers.sp {
+          --developers-section-bg: #020617;
+          --developers-heading: #f8fafc;
+          --developers-copy: #dbeafe;
+          --developers-muted-strong: #cbd5e1;
+          --developers-card-bg: rgba(15, 23, 42, 0.9);
+          --developers-card-border: rgba(96, 165, 250, 0.26);
+          --developers-card-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+      }
+
+      #developers .slbl {
+          color: #2563eb !important;
+          -webkit-text-fill-color: #2563eb !important;
+      }
+
+      html:not(.lm) #developers .slbl {
+          color: #93c5fd !important;
+          -webkit-text-fill-color: #93c5fd !important;
+      }
+
+      #developers .stitle {
+          color: var(--developers-heading) !important;
+          -webkit-text-fill-color: var(--developers-heading) !important;
+          text-shadow: 0 10px 18px rgba(15, 23, 42, 0.1);
+      }
+
+      html:not(.lm) #developers .stitle {
+          text-shadow: 0 10px 22px rgba(0, 0, 0, 0.34);
+      }
+
+      #developers .stitle .gt {
+          -webkit-text-fill-color: transparent !important;
+      }
+
+      #developers .developer-card {
+          background: var(--developers-card-bg) !important;
+          border: 1px solid var(--developers-card-border) !important;
+          box-shadow: var(--developers-card-shadow) !important;
+      }
+
+      #developers .developer-card h6 {
+          color: var(--developers-heading) !important;
+          -webkit-text-fill-color: var(--developers-heading) !important;
+      }
+
+      #developers .developer-role {
+          color: var(--developers-muted-strong) !important;
+          -webkit-text-fill-color: var(--developers-muted-strong) !important;
+      }
+
+      #developers .developer-bio {
+          color: var(--developers-copy) !important;
+          -webkit-text-fill-color: var(--developers-copy) !important;
+      }

@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=19') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=20') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
