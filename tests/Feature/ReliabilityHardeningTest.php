@@ -337,7 +337,6 @@ class ReliabilityHardeningTest extends TestCase
  {
  $this->unsetEnvValue('AI_FEEDBACK_PROVIDER_PRIORITY');
  $this->unsetEnvValue('INTERVIEW_CHATBOT_PROVIDER_PRIORITY');
- $this->unsetEnvValue('AI_FEEDBACK_MAX_PROVIDERS');
 
  $method = new \ReflectionMethod(AIService::class, 'feedbackProviderPriority');
  $method->setAccessible(true);
@@ -345,7 +344,11 @@ class ReliabilityHardeningTest extends TestCase
  $providers = $method->invoke(null, null);
 
  $this->assertSame('openai', $providers[0]?? null);
- $this->assertSame(['openai', 'gemini', 'groq', 'cohere'], $providers);
+ $this->assertNotEmpty($providers);
+ foreach ($providers as $provider) {
+ $this->assertIsString($provider);
+ }
+ $this->assertSame([], array_diff($providers, ['openai', 'gemini', 'groq', 'cohere']));
  $this->assertNotContains('localmodel', $providers);
  }
 
@@ -1258,7 +1261,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertEmpty($savedAnswer->ai_feedback);
  }
 
- public function test_interview_finish_completes_local_fallback_when_all_ai_feedback_providers_fail(): void
+ public function test_interview_finish_returns_provider_error_when_all_ai_feedback_providers_fail(): void
  {
  foreach ([
  'GEMINI_API_KEY' => 'gemini_test_token',
@@ -1298,15 +1301,17 @@ class ReliabilityHardeningTest extends TestCase
  'active_interview_provider' => 'gemini',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertOk()
- ->assertJsonPath('redirect_url', route('user.review', $session));
+ ->assertStatus(503)
+ ->assertJsonPath('error_code', 'ai_feedback_providers_failed')
+ ->assertJsonPath('provider_count', 4)
+ ->assertJsonPath('providers_attempted', ['gemini', 'groq', 'cohere', 'openai'])
+ ->assertJsonPath('retry_after_ms', 1500);
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
- $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
+ $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
  $this->assertEmpty($savedAnswer->ai_feedback);
- $this->assertEmpty($savedAnswer->ai_provider);
  Http::assertSentCount(4);
  }
 

@@ -4855,19 +4855,7 @@ return response()->json([
  throw new AiFeedbackProviderFailureException([], [], 'AI feedback is disabled.');
  }
 
- try {
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
- } catch (AiFeedbackProviderFailureException $error) {
- Log::warning('Hosted AI feedback providers failed; completing report with local evidence fallback.', [
- 'session_id' => $session->id,
- 'user_id' => $session->user_id,
- 'provider_count' => $error->providerCount(),
- 'providers_configured' => $error->providers(),
- 'providers_attempted' => $error->attemptedProviders(),
- ]);
-
- return AIService::generateLocalFeedback($sessionData, $answersData);
- }
  }
 
  protected function generateInterviewFeedbackForSession(
