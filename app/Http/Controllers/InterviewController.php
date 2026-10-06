@@ -917,13 +917,7 @@ return response()->json([
  ], 503): back()->with('error', $message);
  }
 
- if (in_array($session->status, ['completed', 'reviewed'], true)) {
- if (! $gameLevel && ! $this->hasCompletedSessionRenderableFeedback($session)) {
- InterviewSession::whereKey($session->id)
- ->whereIn('status', ['completed', 'reviewed'])
- ->update(['status' => 'in_progress']);
- $session->refresh();
- } else {
+ if ($session->status === 'completed') {
  if ($gameLevel && $this->repairCompletedSessionFeedbackFromSavedData($session)) {
  $session->refresh()->load(['score', 'feedback']);
  }
@@ -932,7 +926,6 @@ return response()->json([
  $redirect = $this->completedSessionRedirect($session, $gameLevel);
 
  return $request->expectsJson()? response()->json(['redirect_url' => $redirect->getTargetUrl()]): $redirect;
- }
  }
 
  if ($session->status === 'processing' && $session->updated_at?->lte(now()->subMinutes(2))) {
@@ -1016,7 +1009,8 @@ return response()->json([
  $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
  }
 
- $feedbackProvider = $gameLevel? null: $this->detailedReviewFeedbackProvider(
+ $feedbackProvider = $gameLevel? null: $this->bestEvaluatedInterviewProvider(
+ 'feedback_generation',
  session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
  );
  if (! $gameLevel) {
@@ -1493,7 +1487,8 @@ return response()->json([
  'question_id' => $answer->question_id,
  ], $answerPayload));
 
- $provider = $this->detailedReviewFeedbackProvider(
+ $provider = $this->bestEvaluatedInterviewProvider(
+ 'feedback_generation',
  session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
  );
  session(['active_interview_feedback_provider' => $provider]);
@@ -1510,7 +1505,7 @@ return response()->json([
  'is_skipped' => false,
  'expected_guide' => $answer->question->expected_guide?? null,
  'mapped_skills' => $answer->question->mapped_skills?? [],
- ]], $provider, false, true);
+ ]], $provider, false, false);
  } catch (\Throwable $error) {
  Log::warning('Retry answer feedback generation failed after answer save.', [
  'answer_id' => $retry->id,
@@ -1686,112 +1681,6 @@ return response()->json([
  && trim((string) data_get($answer->coaching_feedback, 'content_alignment.improvement_focus')) !== '');
  }
 
- public function recoverPendingDetailedReview(InterviewSession $session): bool
- {
- if ((int) $session->user_id !== (int) Auth::id() || $session->game_level_id) {
- return false;
- }
-
- $session->refresh();
- if ($session->status === 'processing' && $session->updated_at?->lte(now()->subMinutes(2))) {
- InterviewSession::whereKey($session->id)
- ->where('status', 'processing')
- ->where('updated_at', '<=', now()->subMinutes(2))
- ->update(['status' => 'in_progress']);
- $session->refresh();
- }
-
- $answerCount = InterviewAnswer::where('interview_session_id', $session->id)
- ->whereNull('retry_of_answer_id')
- ->count();
- if ($answerCount < 1) {
- return false;
- }
-
- $originalStatus = (string) $session->status;
- $recoverableMissingReport = false;
- if (in_array($originalStatus, ['completed', 'reviewed'], true)) {
- $session->loadMissing(['score', 'feedback']);
- $recoverableMissingReport = $session->score === null || $session->feedback === null;
- }
-
- if ($originalStatus !== 'in_progress' && ! $recoverableMissingReport) {
- return false;
- }
-
- $statusWasChanged = false;
- if ($recoverableMissingReport) {
- $statusWasChanged = InterviewSession::whereKey($session->id)
- ->where('status', $originalStatus)
- ->update(['status' => 'in_progress']) === 1;
- if (! $statusWasChanged) {
- return false;
- }
- $session->refresh();
- }
-
- $finalizeRequest = Request::create(
- route('interview.finish', [], false),
- 'POST',
- array_filter([
- 'session_id' => $session->id,
- 'duration_seconds' => $session->duration_seconds,
- 'notes' => $session->notes,
- ], fn ($value): bool => $value !== null),
- [],
- [],
- [
- 'HTTP_ACCEPT' => 'application/json',
- 'REMOTE_ADDR' => request()->ip(),
- ]
- );
- $finalizeRequest->setUserResolver(fn () => Auth::user());
- try {
- if (request()->hasSession()) {
- $finalizeRequest->setLaravelSession(request()->session());
- }
- } catch (\Throwable) {
- //
- }
-
- try {
- $response = $this->finish($finalizeRequest);
- $status = method_exists($response, 'getStatusCode')? (int) $response->getStatusCode(): 200;
- $recovered = $status >= 200
- && $status < 400
- && in_array((string) $session->fresh()?->status, ['completed', 'reviewed'], true);
-
- if ($recovered && $originalStatus === 'reviewed') {
- InterviewSession::whereKey($session->id)
- ->where('status', 'completed')
- ->update(['status' => 'reviewed']);
- }
-
- if (! $recovered && $statusWasChanged) {
- InterviewSession::whereKey($session->id)
- ->whereIn('status', ['in_progress', 'processing'])
- ->update(['status' => $originalStatus]);
- }
-
- return $recovered;
- } catch (\Throwable $error) {
- if ($statusWasChanged) {
- InterviewSession::whereKey($session->id)
- ->whereIn('status', ['in_progress', 'processing'])
- ->update(['status' => $originalStatus]);
- }
-
- Log::warning('Pending detailed review recovery failed.', [
- 'session_id' => $session->id,
- 'user_id' => $session->user_id,
- 'error_type' => $error::class,
- 'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
- ]);
-
- return false;
- }
- }
-
  public function hasCompletedSessionRenderableFeedback(InterviewSession $session): bool
  {
  if ($this->hasCompletedSessionProviderFeedback($session)) {
@@ -1891,7 +1780,7 @@ return response()->json([
 
  private function completedSessionFeedbackProviderForSync(): string
  {
- $provider = $this->detailedReviewFeedbackProvider(AIService::defaultProviderKey());
+ $provider = $this->bestEvaluatedInterviewProvider('feedback_generation', AIService::defaultProviderKey());
  $provider = AIService::normalizeProviderKey($provider);
 
  if ($provider === '' || in_array($provider, ['local', 'localmodel'], true)) {
@@ -4554,14 +4443,6 @@ return response()->json([
  return $fallback;
  }
 
- private function detailedReviewFeedbackProvider(?string $fallbackProvider = null): string
- {
- return $this->bestEvaluatedInterviewProvider(
- 'feedback_generation',
- $fallbackProvider ?: AIService::defaultProviderKey()
- );
- }
-
  private function simulatedProviderFallbackIsAllowed(): bool
  {
  return app()->environment('testing')
@@ -5008,9 +4889,9 @@ return response()->json([
  return AIService::generateFeedback(
  $sessionData,
  $answersData,
- $feedbackProvider?: $this->detailedReviewFeedbackProvider(),
+ $feedbackProvider?: $this->bestEvaluatedInterviewProvider('feedback_generation'),
  false,
- true
+ false
  );
  }
 

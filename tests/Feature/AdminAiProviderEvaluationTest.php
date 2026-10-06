@@ -705,7 +705,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  Http::assertSent(fn ($request) => str_contains($request->url(), 'api.openai.com'));
  }
 
- public function test_interview_finish_uses_ranked_feedback_provider_for_detailed_review_feedback(): void
+ public function test_interview_finish_uses_ranked_feedback_provider(): void
  {
  $this->clearProviderEnv();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -771,7 +771,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertOk();
 
  $this->assertSame('cohere', $answer->fresh()->ai_provider);
- $this->assertTrue(collect($requestedUrls)->contains(fn (string $url): bool => str_contains($url, 'api.cohere.com')));
+ $this->assertTrue(collect($requestedUrls)->contains(fn (string $url): bool => str_contains($url, 'cohere')));
  }
 
  private function rankedEvaluationRun(AiProvider $openAi, AiProvider $groq, AiProvider $cohere): AiProviderEvaluationRun

@@ -4,12 +4,7 @@
  <div class="alert alert-warning" role="status">
  <strong>AI review pending</strong>
  <p class="mb-3">Your answers are saved. The AI provider has not returned a validated review yet, so scores and coaching are unavailable.</p>
- <form method="POST" action="{{ route('interview.finish') }}" class="m-0">
- @csrf
- <input type="hidden" name="session_id" value="{{ $sessionRecord->id }}">
- <input type="hidden" name="duration_seconds" value="{{ max(0, (int) ($sessionRecord->duration_seconds ?? 0)) }}">
- <button type="submit" class="btn btn-outline-dark"><i class="fa-solid fa-rotate me-2"></i>Retry AI Review</button>
- </form>
+ <a class="btn btn-outline-dark" href="{{ route('user.review', $sessionRecord->id) }}"><i class="fa-solid fa-rotate me-2"></i>Retry AI Review</a>
  </div>
  <h5 class="mt-4 mb-3">Saved answers</h5>
  @forelse($sessionRecord->answers as $index => $answer)

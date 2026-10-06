@@ -1533,7 +1533,7 @@ class ReliabilityHardeningTest extends TestCase
 
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
- $session = $this->sessionFor($user, $category, ['num_questions' => 5]);
+ $session = $this->sessionFor($user, $category);
  $question = $this->question($category, [
  'interview_session_id' => $session->id,
  'question_text' => 'Tell me about a time you improved a support handoff.',
@@ -1558,122 +1558,8 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
  $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
- $this->assertSame('local', $savedAnswer->ai_provider);
- $this->assertNotEmpty($savedAnswer->ai_feedback);
- $this->assertNotEmpty($savedAnswer->coaching_feedback);
- Http::assertSentCount(4);
-
- $this->actingAs($user)
- ->get(route('user.review', $session))
- ->assertOk()
- ->assertSee('Feedback Detailed Review')
- ->assertDontSee('AI review pending');
- }
-
- public function test_user_review_recovers_stuck_pending_report_with_local_fallback_when_providers_fail(): void
- {
- foreach ([
- 'GEMINI_API_KEY' => 'gemini_test_token',
- 'GROQ_API_KEY' => 'groq_test_token',
- 'COHERE_API_KEY' => 'cohere_test_token',
- 'OPENAI_API_KEY' => 'openai_test_token',
- 'AI_FEEDBACK_PROVIDER_PRIORITY' => 'gemini,groq,cohere,openai',
- 'AI_FEEDBACK_MAX_PROVIDERS' => '4',
- 'AI_FEEDBACK_ATTEMPTS' => '1',
- 'AI_FEEDBACK_HTTP_ATTEMPTS' => '1',
- 'AI_FEEDBACK_DEADLINE_SECONDS' => '30',
- ] as $key => $value) {
- $this->setEnvValue($key, $value);
- }
-
- Http::fake(['*' => Http::response(['error' => 'provider unavailable'], 500)]);
-
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category();
- $session = $this->sessionFor($user, $category);
- $question = $this->question($category, [
- 'interview_session_id' => $session->id,
- 'question_text' => 'Tell me about a time you improved a support handoff.',
- ]);
- $answer = InterviewAnswer::create([
- 'interview_session_id' => $session->id,
- 'question_id' => $question->id,
- 'answer_text' => 'I owned the support handoff, documented repeated issues, coordinated the update, and confirmed the final result with my supervisor.',
- 'response_mode' => 'text',
- ]);
-
- $this->actingAs($user)
- ->get(route('user.review', $session))
- ->assertOk()
- ->assertSee('Feedback Detailed Review')
- ->assertDontSee('AI review pending');
-
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
- $this->assertSame('local', $answer->fresh()->ai_provider);
- $this->assertNotEmpty($answer->fresh()->ai_feedback);
- $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
- Http::assertSentCount(4);
- }
-
- public function test_user_review_recovers_completed_session_missing_report_rows_with_saved_answers(): void
- {
- foreach ([
- 'GEMINI_API_KEY' => 'gemini_test_token',
- 'GROQ_API_KEY' => 'groq_test_token',
- 'COHERE_API_KEY' => 'cohere_test_token',
- 'OPENAI_API_KEY' => 'openai_test_token',
- 'AI_FEEDBACK_PROVIDER_PRIORITY' => 'gemini,groq,cohere,openai',
- 'AI_FEEDBACK_MAX_PROVIDERS' => '4',
- 'AI_FEEDBACK_ATTEMPTS' => '1',
- 'AI_FEEDBACK_HTTP_ATTEMPTS' => '1',
- 'AI_FEEDBACK_DEADLINE_SECONDS' => '30',
- ] as $key => $value) {
- $this->setEnvValue($key, $value);
- }
-
- Http::fake(['*' => Http::response(['error' => 'provider unavailable'], 500)]);
-
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category();
- $session = $this->sessionFor($user, $category, [
- 'status' => 'completed',
- 'num_questions' => 5,
- 'target_position' => 'Call Center Agent',
- ]);
- $firstQuestion = $this->question($category, [
- 'interview_session_id' => $session->id,
- 'question_text' => 'Tell me about yourself.',
- ]);
- $secondQuestion = $this->question($category, [
- 'interview_session_id' => $session->id,
- 'question_text' => 'What makes you a strong fit for the Call Center Agent role?',
- ]);
- $firstAnswer = InterviewAnswer::create([
- 'interview_session_id' => $session->id,
- 'question_id' => $firstQuestion->id,
- 'answer_text' => "I'm Rogiel.",
- 'response_mode' => 'text',
- ]);
- InterviewAnswer::create([
- 'interview_session_id' => $session->id,
- 'question_id' => $secondQuestion->id,
- 'answer_text' => 'No experiences.',
- 'response_mode' => 'text',
- ]);
-
- $this->actingAs($user)
- ->get(route('user.review', $session))
- ->assertOk()
- ->assertSee('Feedback Detailed Review')
- ->assertSee("I'm Rogiel")
- ->assertDontSee('AI review pending');
-
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
- $this->assertSame('local', $firstAnswer->fresh()->ai_provider);
- $this->assertNotEmpty($firstAnswer->fresh()->ai_feedback);
- $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+ $this->assertEmpty($savedAnswer->ai_feedback);
+ $this->assertEmpty($savedAnswer->ai_provider);
  Http::assertSentCount(4);
  }
 
@@ -1800,7 +1686,7 @@ class ReliabilityHardeningTest extends TestCase
  Http::assertNothingSent();
  }
 
- public function test_user_review_recovers_unverified_completed_session_without_report_rows_on_open(): void
+ public function test_user_review_hides_unverified_saved_report_without_feedback_refresh_on_open(): void
  {
  Http::preventStrayRequests();
 
@@ -1838,20 +1724,15 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Feedback Detailed Review')
+ ->assertSee('Detailed Review')
  ->assertSee('I reviewed the process')
- ->assertDontSee('AI review pending')
+ ->assertSee('AI review pending')
  ->assertDontSee('Saved feedback remains visible.')
- ->assertSee('Score Breakdown')
+ ->assertDontSee('Score Breakdown')
  ->assertDontSee('>Clarity</strong>', false)
  ->assertDontSee('Score version', false)
  ->assertDontSee('Feedback checks', false);
 
- $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
- $this->assertSame('local', $savedAnswer->ai_provider);
- $this->assertNotEmpty($savedAnswer->ai_feedback);
- $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
  Http::assertNothingSent();
  }
 
