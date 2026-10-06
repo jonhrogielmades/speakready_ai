@@ -917,7 +917,13 @@ return response()->json([
  ], 503): back()->with('error', $message);
  }
 
- if ($session->status === 'completed') {
+ if (in_array($session->status, ['completed', 'reviewed'], true)) {
+ if (! $gameLevel && ! $this->hasCompletedSessionRenderableFeedback($session)) {
+ InterviewSession::whereKey($session->id)
+ ->whereIn('status', ['completed', 'reviewed'])
+ ->update(['status' => 'in_progress']);
+ $session->refresh();
+ } else {
  if ($gameLevel && $this->repairCompletedSessionFeedbackFromSavedData($session)) {
  $session->refresh()->load(['score', 'feedback']);
  }
@@ -926,6 +932,7 @@ return response()->json([
  $redirect = $this->completedSessionRedirect($session, $gameLevel);
 
  return $request->expectsJson()? response()->json(['redirect_url' => $redirect->getTargetUrl()]): $redirect;
+ }
  }
 
  if ($session->status === 'processing' && $session->updated_at?->lte(now()->subMinutes(2))) {
@@ -1694,16 +1701,33 @@ return response()->json([
  $session->refresh();
  }
 
- if ($session->status !== 'in_progress') {
- return false;
- }
-
  $answerCount = InterviewAnswer::where('interview_session_id', $session->id)
  ->whereNull('retry_of_answer_id')
  ->count();
- $expectedAnswerCount = max(1, (int) ($session->num_questions?? 1));
- if ($answerCount < $expectedAnswerCount) {
+ if ($answerCount < 1) {
  return false;
+ }
+
+ $originalStatus = (string) $session->status;
+ $recoverableMissingReport = false;
+ if (in_array($originalStatus, ['completed', 'reviewed'], true)) {
+ $session->loadMissing(['score', 'feedback']);
+ $recoverableMissingReport = $session->score === null || $session->feedback === null;
+ }
+
+ if ($originalStatus !== 'in_progress' && ! $recoverableMissingReport) {
+ return false;
+ }
+
+ $statusWasChanged = false;
+ if ($recoverableMissingReport) {
+ $statusWasChanged = InterviewSession::whereKey($session->id)
+ ->where('status', $originalStatus)
+ ->update(['status' => 'in_progress']) === 1;
+ if (! $statusWasChanged) {
+ return false;
+ }
+ $session->refresh();
  }
 
  $finalizeRequest = Request::create(
@@ -1733,11 +1757,30 @@ return response()->json([
  try {
  $response = $this->finish($finalizeRequest);
  $status = method_exists($response, 'getStatusCode')? (int) $response->getStatusCode(): 200;
-
- return $status >= 200
+ $recovered = $status >= 200
  && $status < 400
  && in_array((string) $session->fresh()?->status, ['completed', 'reviewed'], true);
+
+ if ($recovered && $originalStatus === 'reviewed') {
+ InterviewSession::whereKey($session->id)
+ ->where('status', 'completed')
+ ->update(['status' => 'reviewed']);
+ }
+
+ if (! $recovered && $statusWasChanged) {
+ InterviewSession::whereKey($session->id)
+ ->whereIn('status', ['in_progress', 'processing'])
+ ->update(['status' => $originalStatus]);
+ }
+
+ return $recovered;
  } catch (\Throwable $error) {
+ if ($statusWasChanged) {
+ InterviewSession::whereKey($session->id)
+ ->whereIn('status', ['in_progress', 'processing'])
+ ->update(['status' => $originalStatus]);
+ }
+
  Log::warning('Pending detailed review recovery failed.', [
  'session_id' => $session->id,
  'user_id' => $session->user_id,
