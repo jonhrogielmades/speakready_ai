@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\InterviewSession;
+use App\Services\AIService;
 use Illuminate\Support\Collection;
 
 class FeedbackReportPresenter
@@ -18,20 +19,24 @@ class FeedbackReportPresenter
  $focus = self::primaryFocus($session);
  $categoryBreakdown = self::categoryBreakdown($session);
  $answers = self::answers($session);
+ $providerSessionFeedbackTrusted = self::hasTrustedProviderSessionFeedback($feedback)
+ && self::providerSessionFeedbackIsUsable($feedback, $answers);
+ $providerStrengthItems = self::nonEmptyItems(self::bulletItems($strengths, '', 4, null));
  $answerStrengthItems = self::generalizedAnswerReviewItems(self::answerReviewStrengthItems($answers));
- $strengthItems = $answerStrengthItems!== []
- ? $answerStrengthItems
- : self::bulletItems($strengths, '', 4, null);
+ $strengthItems = $providerSessionFeedbackTrusted && $providerStrengthItems!== []
+ ? $providerStrengthItems
+ : ($answerStrengthItems!== []? $answerStrengthItems: $providerStrengthItems);
  if ($strengthItems === []) {
  $strengthItems = ['No answer-level strength is reliable yet. Add a complete answer so the review can identify what worked.'];
  }
- $answerWeaknessItems = self::generalizedAnswerReviewItems(self::answerReviewWeaknessItems($answers));
- $weaknessItems = $answerWeaknessItems!== []
- ? $answerWeaknessItems
- : self::mergedItems(
+ $providerWeaknessItems = self::nonEmptyItems(self::mergedItems(
  self::bulletItems($weaknesses, '', 4, null),
  self::bulletItems($suggestions, '', 2, null)
- );
+ ));
+ $answerWeaknessItems = self::generalizedAnswerReviewItems(self::answerReviewWeaknessItems($answers));
+ $weaknessItems = $providerSessionFeedbackTrusted && $providerWeaknessItems!== []
+ ? $providerWeaknessItems
+ : ($answerWeaknessItems!== []? $answerWeaknessItems: $providerWeaknessItems);
  if ($weaknessItems === []) {
  $weaknessItems = ['Add one direct answer, one specific detail, and one true result or lesson.'];
  }
@@ -46,7 +51,7 @@ class FeedbackReportPresenter
  'weakness_items' => $weaknessItems,
  'suggestion_items' => $suggestionItems,
  'overview' => [
- 'summary' => self::overallSummary($session, $overall, $categoryBreakdown, $strengthItems, $weaknessItems, $suggestions, $focus),
+ 'summary' => self::overallSummary($session, $overall, $categoryBreakdown, $strengthItems, $weaknessItems, $suggestions, $focus, $providerSessionFeedbackTrusted),
  'focus_label' => $focus['label'],
  'focus_score' => $focus['score'],
  'focus_advice' => $focus['advice'],
@@ -142,6 +147,52 @@ class FeedbackReportPresenter
  }
 
  return $items!== []? $items: [$characterLimit === null? $clean: self::limitText($clean, $characterLimit)];
+ }
+
+ private static function nonEmptyItems(array $items): array
+ {
+ return array_values(array_filter(array_map(
+ fn ($item): string => self::cleanText((string) $item),
+ $items
+ ), fn (string $item): bool => $item!== ''));
+ }
+
+ private static function hasTrustedProviderSessionFeedback(mixed $feedback): bool
+ {
+ if (! is_object($feedback)) {
+ return false;
+ }
+
+ $summary = is_array($feedback->coaching_summary?? null)? $feedback->coaching_summary: [];
+ $source = trim((string) data_get($summary, 'overall_summary_source', ''));
+ if ($source !== 'ai_provider_validated') {
+ return false;
+ }
+
+ $providerKey = strtolower(trim((string) data_get($summary, 'review_context.provider_key', '')));
+ if (in_array($providerKey, ['local', 'localmodel'], true)) {
+ return false;
+ }
+
+ $providerSource = trim((string) data_get($summary, 'review_context.provider_source', ''));
+
+ return $providerSource === '' || $providerSource === 'ai_provider';
+ }
+
+ private static function providerSessionFeedbackIsUsable(mixed $feedback, Collection $answers): bool
+ {
+ if (! is_object($feedback)) {
+ return false;
+ }
+
+ $summary = is_array($feedback->coaching_summary?? null)? $feedback->coaching_summary: [];
+
+ return AIService::visibleSessionFeedbackIsProviderUsable([
+ 'overall_summary' => data_get($summary, 'overall_summary', ''),
+ 'strengths' => $feedback->strengths?? '',
+ 'weaknesses' => $feedback->weaknesses?? '',
+ 'improvement_suggestions' => $feedback->improvement_suggestions?? '',
+ ], self::providerAnswerData($answers));
  }
 
  private static function mergedItems(array ...$groups): array
@@ -364,7 +415,8 @@ class FeedbackReportPresenter
  array $strengthItems,
  array $weaknessItems,
  string $suggestions,
- array $focus
+ array $focus,
+ bool $providerSessionFeedbackTrusted = false
  ): string {
  $answers = self::answers($session);
  $answerCount = $answers->count();
@@ -374,7 +426,7 @@ class FeedbackReportPresenter
 
  $summary = is_array($session->feedback?->coaching_summary?? null)? $session->feedback->coaching_summary: [];
  $providerSummary = self::reviewText(data_get($summary, 'overall_summary'), null, 700);
- if ($providerSummary!== '') {
+ if ($providerSummary!== '' && $providerSessionFeedbackTrusted) {
  return $providerSummary;
  }
 
@@ -704,6 +756,20 @@ class FeedbackReportPresenter
  }
 
  return trim((string) ($answer->delivery_transcript?? ''));
+ }
+
+ private static function providerAnswerData(Collection $answers): array
+ {
+ return $answers->values()->map(fn ($answer): array => [
+ 'id' => $answer->id?? null,
+ 'question' => $answer->question->question_text?? '',
+ 'question_text' => $answer->question->question_text?? '',
+ 'question_type' => $answer->question->type?? null,
+ 'answer' => self::answerContent($answer) ?: ((bool) ($answer->is_skipped?? false)? '(Skipped or no answer)': ''),
+ 'is_skipped' => (bool) ($answer->is_skipped?? false),
+ 'expected_guide' => $answer->question->expected_guide?? null,
+ 'mapped_skills' => $answer->question->mapped_skills?? [],
+ ])->all();
  }
 
  private static function answers(InterviewSession $session): Collection

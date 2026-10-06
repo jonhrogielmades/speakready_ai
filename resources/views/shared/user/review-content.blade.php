@@ -125,63 +125,16 @@
  <div class="accordion" id="answersAccordion">
  @foreach($sessionRecord->answers as $index => $answer)
  @php
- $answerEvidenceCard = ($reviewEvidence?->answers ?? collect())->firstWhere('number', $index + 1);
- $headerAlignmentStatus = trim((string) data_get($answer->coaching_feedback?? [], 'content_alignment.status', ''));
- $headerAlignmentLabel = trim((string) data_get($answer->coaching_feedback?? [], 'content_alignment.status_label', ''));
- $headerAlignmentLabel = $headerAlignmentLabel!== ''? $headerAlignmentLabel: match ($headerAlignmentStatus) {
- 'directly_answered' => 'Answered directly',
- 'partially_answered' => 'Answered partly',
- 'low_relevance' => 'Low match',
- 'insufficient_evidence' => 'Not enough detail',
- 'not_evaluated' => 'Not checked',
- 'skipped' => 'Skipped',
- default => '',
- };
- $headerAlignmentLabel = match (strtolower($headerAlignmentLabel)) {
- 'directly answered' => 'Answered directly',
- 'partially answered' => 'Answered partly',
- 'low relevance' => 'Low match',
- 'not enough evidence' => 'Not enough detail',
- 'not evaluated' => 'Not checked',
- default => $headerAlignmentLabel,
- };
- $headerAlignmentColor = match ($headerAlignmentStatus) {
- 'directly_answered' => '#10b981',
- 'partially_answered', 'insufficient_evidence' => '#f59e0b',
- 'low_relevance' => '#f59e0b',
- default => '#64748b',
- };
- $headerHasEvaluatedScore = in_array($headerAlignmentStatus, ['directly_answered', 'partially_answered', 'low_relevance'], true);
  $headerQuestionText = trim((string) ($answer->question->question_text?? ''));
  @endphp
  <div class="accordion-item premium-panel animate-fade-up answer-review-card" style="margin-bottom:20px;overflow:hidden; animation-delay: {{ 0.5 + ($loop->index * 0.1) }}s; transform: none; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
  <h2 class="accordion-header">
  <button class="accordion-button collapsed answer-review-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" style="background:transparent;color:var(--tx);box-shadow:none;padding:20px;">
- <div class="d-flex justify-content-between align-items-center w-100 pe-3 flex-wrap gap-3 answer-review-header">
+ <div class="d-flex align-items-center w-100 pe-3 answer-review-header">
  <span class="answer-review-title" style="font-size:1.1rem;">
  <strong>Question {{ $index + 1 }}</strong>
  <small class="answer-review-question-text" style="display:block;color:var(--tx3);font-size:.85rem;font-weight:500;line-height:1.45;margin-top:4px;">{{ $headerQuestionText!== ''? $headerQuestionText: 'Question text unavailable.' }}</small>
  </span>
- <div class="d-flex gap-2 align-items-center answer-review-score">
- @if($sessionEndedEarly)
- <span class="badge" style="background:rgba(100, 116, 139, 0.12);color:#64748b;font-size:0.9rem;padding:8px 12px;">No feedback</span>
- @elseif($answer->is_skipped)
- <span class="badge" style="background:rgba(245, 158, 11, 0.12);color:#b45309;font-size:0.9rem;padding:8px 12px;">Skipped</span>
- @elseif($headerAlignmentStatus!== '')
- <span class="badge" style="background:color-mix(in srgb, {{ $headerAlignmentColor }} 12%, transparent);color:{{ $headerAlignmentColor }};border:1px solid color-mix(in srgb, {{ $headerAlignmentColor }} 28%, transparent);font-size:.82rem;padding:8px 12px;">{{ $headerAlignmentLabel }}</span>
- @if($headerHasEvaluatedScore)
- <span class="badge" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6;font-size:0.9rem;padding:8px 12px;">Score: {{ $answer->score?? 0 }}</span>
- @endif
- @if($answerEvidenceCard)
- <span class="badge" style="background:color-mix(in srgb, {{ $answerEvidenceCard->confidence_color }} 12%, transparent);color:{{ $answerEvidenceCard->confidence_color }};border:1px solid color-mix(in srgb, {{ $answerEvidenceCard->confidence_color }} 28%, transparent);font-size:.82rem;padding:8px 12px;">{{ $answerEvidenceCard->confidence_label }}</span>
- @endif
- @else
- <span class="badge" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6;font-size:0.9rem;padding:8px 12px;">Score: {{ $answer->score?? 0 }}</span>
- @if($answerEvidenceCard)
- <span class="badge" style="background:color-mix(in srgb, {{ $answerEvidenceCard->confidence_color }} 12%, transparent);color:{{ $answerEvidenceCard->confidence_color }};border:1px solid color-mix(in srgb, {{ $answerEvidenceCard->confidence_color }} 28%, transparent);font-size:.82rem;padding:8px 12px;">{{ $answerEvidenceCard->confidence_label }}</span>
- @endif
- @endif
- </div>
  </div>
  </button>
  </h2>

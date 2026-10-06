@@ -104,6 +104,10 @@ class DetailedFeedbackReviewService
  return true;
  }
 
+ if ($this->sessionNeedsApiProviderVisibleSummary($session)) {
+ return true;
+ }
+
  foreach ($this->originalAnswers($session) as $answer) {
  if (! $answer instanceof InterviewAnswer) {
  continue;
@@ -114,6 +118,7 @@ class DetailedFeedbackReviewService
  if ($answerProvider === ''
  || in_array($answerProvider, ['local', 'localmodel'], true)
  || $evaluationSource !== 'ai_evidence_validated'
+ || $this->answerNeedsApiProviderVisibleFeedback($answer)
  || $this->answerNeedsApiProviderPossibleAnswer($answer)
  || trim((string) ($answer->ai_feedback?? '')) === ''
  ) {
@@ -338,6 +343,24 @@ class DetailedFeedbackReviewService
  }
  }
 
+ private function answerNeedsApiProviderVisibleFeedback(InterviewAnswer $answer): bool
+ {
+ if ((bool) ($answer->is_skipped?? false) || $this->answerContent($answer) === '') {
+ return false;
+ }
+
+ $coachingFeedback = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
+ $source = trim((string) data_get($coachingFeedback, 'content_alignment.answer_review_source', ''));
+ $provider = AIService::normalizeProviderKey(data_get($coachingFeedback, 'content_alignment.answer_review_provider', $answer->ai_provider));
+
+ return $source !== 'ai_provider'
+ || ! $this->isApiProviderKey($provider)
+ || ! AIService::visibleReviewFeedbackIsProviderUsable(
+ (string) ($answer->ai_feedback?? ''),
+ $this->answerData($answer)
+ );
+ }
+
  private function answerNeedsApiProviderPossibleAnswer(InterviewAnswer $answer): bool
  {
  if ((bool) ($answer->is_skipped?? false) || $this->answerContent($answer) === '') {
@@ -352,7 +375,38 @@ class DetailedFeedbackReviewService
  $source = trim((string) data_get($coachingFeedback, 'content_alignment.possible_answer_source', ''));
  $provider = AIService::normalizeProviderKey(data_get($coachingFeedback, 'content_alignment.possible_answer_provider', $answer->ai_provider));
 
- return $source !== 'ai_provider' || ! $this->isApiProviderKey($provider);
+ return $source !== 'ai_provider'
+ || ! $this->isApiProviderKey($provider)
+ || ! AIService::visibleReviewPossibleAnswerIsProviderUsable(
+ (string) ($answer->better_sample_answer?? ''),
+ $this->answerData($answer)
+ );
+ }
+
+ private function sessionNeedsApiProviderVisibleSummary(InterviewSession $session): bool
+ {
+ if (! $session->feedback instanceof Feedback) {
+ return true;
+ }
+
+ $summary = is_array($session->feedback->coaching_summary?? null)? $session->feedback->coaching_summary: [];
+ $providerSource = trim((string) data_get($summary, 'review_context.provider_source', ''));
+ $providerKey = AIService::normalizeProviderKey(data_get($summary, 'review_context.provider_key', null));
+
+ if ($providerSource !== '' && $providerSource !== 'ai_provider') {
+ return true;
+ }
+
+ if ($providerKey !== '' && ! $this->isApiProviderKey($providerKey)) {
+ return true;
+ }
+
+ return ! AIService::visibleSessionFeedbackIsProviderUsable([
+ 'overall_summary' => data_get($summary, 'overall_summary', ''),
+ 'strengths' => $session->feedback->strengths,
+ 'weaknesses' => $session->feedback->weaknesses,
+ 'improvement_suggestions' => $session->feedback->improvement_suggestions,
+ ], $this->answersData($this->originalAnswers($session)));
  }
 
  private function isApiProviderKey(?string $provider): bool
@@ -428,7 +482,12 @@ class DetailedFeedbackReviewService
 
  private function answersData(Collection $answers): array
  {
- return $answers->map(fn (InterviewAnswer $answer): array => [
+ return $answers->map(fn (InterviewAnswer $answer): array => $this->answerData($answer))->values()->all();
+ }
+
+ private function answerData(InterviewAnswer $answer): array
+ {
+ return [
  'id' => $answer->id,
  'question' => $answer->question->question_text?? '',
  'question_type' => $answer->question->type?? null,
@@ -436,7 +495,7 @@ class DetailedFeedbackReviewService
  'is_skipped' => (bool) ($answer->is_skipped?? false),
  'expected_guide' => $answer->question->expected_guide?? null,
  'mapped_skills' => $answer->question->mapped_skills?? [],
- ])->values()->all();
+ ];
  }
 
  private function originalAnswers(InterviewSession $session): Collection

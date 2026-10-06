@@ -1740,6 +1740,171 @@ class ReliabilityHardeningTest extends TestCase
  Http::assertSentCount(1);
  }
 
+ public function test_user_review_refreshes_stale_visible_answer_feedback_with_api_provider_feedback(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('AI_FEEDBACK_PROVIDER_PRIORITY', 'openai');
+ $this->setEnvValue('AI_FEEDBACK_MAX_PROVIDERS', '1');
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Describe how you improved a support handoff.',
+ 'expected_guide' => 'Explain the handoff issue, your action, and the final result.',
+ ]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'I mapped the support handoff issue, documented repeated missed approvals, coordinated the checklist update, and confirmed the final handoff result with my supervisor.',
+ 'response_mode' => 'text',
+ 'ai_feedback' => 'Saved generic feedback.',
+ 'better_sample_answer' => 'I mapped the support handoff issue and documented repeated missed approvals. I coordinated the checklist update with the team. I confirmed the final handoff result with my supervisor.',
+ 'score' => 82,
+ 'clarity_score' => 82,
+ 'relevance_score' => 82,
+ 'grammar_score' => 82,
+ 'scoring_confidence' => 82,
+ 'ai_provider' => 'openai',
+ 'coaching_feedback' => [
+ 'content_alignment' => [
+ 'evaluation_source' => 'ai_evidence_validated',
+ 'possible_answer_source' => 'ai_provider',
+ 'possible_answer_provider' => 'openai',
+ 'answer_review_source' => 'local_evidence',
+ 'answer_review_provider' => 'local',
+ ],
+ ],
+ ]);
+ Score::create([
+ 'interview_session_id' => $session->id,
+ 'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+ 'clarity_score' => 82,
+ 'relevance_score' => 82,
+ 'grammar_score' => 82,
+ 'professionalism_score' => 82,
+ 'overall_readiness_score' => 82,
+ 'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
+ ]);
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'API provider strength.',
+ 'weaknesses' => 'API provider weakness.',
+ 'improvement_suggestions' => 'API provider suggestion.',
+ 'coaching_summary' => [
+ 'version' => EvidenceBasedCoachingService::VERSION,
+ 'overall_summary_source' => 'ai_provider_validated',
+ 'overall_summary' => 'API provider summary.',
+ ],
+ ]);
+
+ $this->fakeOpenAiFeedback([$answer]);
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
+ ->assertSee('Possible Answer')
+ ->assertDontSee('Saved generic feedback.');
+
+ $savedAnswer = $answer->fresh();
+
+ $this->assertSame('openai', $savedAnswer->ai_provider);
+ $this->assertSame('ai_provider', data_get($savedAnswer->coaching_feedback, 'content_alignment.answer_review_source'));
+ $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'content_alignment.answer_review_provider'));
+ $this->assertStringContainsString('support handoff', $savedAnswer->ai_feedback);
+ $this->assertNotSame('Saved generic feedback.', $savedAnswer->ai_feedback);
+ Http::assertSentCount(1);
+ }
+
+ public function test_user_review_refreshes_stale_visible_session_summary_with_api_provider_feedback(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('AI_FEEDBACK_PROVIDER_PRIORITY', 'openai');
+ $this->setEnvValue('AI_FEEDBACK_MAX_PROVIDERS', '1');
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Describe how you improved a support handoff.',
+ 'expected_guide' => 'Explain the handoff issue, your action, and the final result.',
+ ]);
+ $answerText = 'I mapped the support handoff issue, documented repeated missed approvals, coordinated the checklist update, and confirmed the final handoff result with my supervisor.';
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => $answerText,
+ 'response_mode' => 'text',
+ 'ai_feedback' => 'For "Describe how you improved a support handoff.", you stated "'.$answerText.'", which directly answers the support handoff question. This helps the interviewer judge your action and result from the saved answer.',
+ 'better_sample_answer' => 'I mapped the support handoff issue and documented repeated missed approvals. I coordinated the checklist update. I confirmed the final handoff result with my supervisor.',
+ 'score' => 82,
+ 'clarity_score' => 82,
+ 'relevance_score' => 82,
+ 'grammar_score' => 82,
+ 'scoring_confidence' => 82,
+ 'ai_provider' => 'openai',
+ 'coaching_feedback' => [
+ 'content_alignment' => [
+ 'evaluation_source' => 'ai_evidence_validated',
+ 'possible_answer_source' => 'ai_provider',
+ 'possible_answer_provider' => 'openai',
+ 'answer_review_source' => 'ai_provider',
+ 'answer_review_provider' => 'openai',
+ ],
+ ],
+ ]);
+ Score::create([
+ 'interview_session_id' => $session->id,
+ 'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+ 'clarity_score' => 82,
+ 'relevance_score' => 82,
+ 'grammar_score' => 82,
+ 'professionalism_score' => 82,
+ 'overall_readiness_score' => 82,
+ 'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
+ ]);
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'Good provider strength.',
+ 'weaknesses' => 'Needs work.',
+ 'improvement_suggestions' => 'Try again.',
+ 'coaching_summary' => [
+ 'version' => EvidenceBasedCoachingService::VERSION,
+ 'overall_summary_source' => 'ai_provider_validated',
+ 'overall_summary' => 'Generic provider summary.',
+ 'review_context' => [
+ 'provider_key' => 'openai',
+ 'provider_source' => 'ai_provider',
+ ],
+ ],
+ ]);
+
+ $this->fakeOpenAiFeedback([$answer]);
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('All Answer Review Summary')
+ ->assertSee('Strengths')
+ ->assertSee('Weaknesses')
+ ->assertSee('AI review used saved answer details')
+ ->assertDontSee('Generic provider summary.')
+ ->assertDontSee('Good provider strength.')
+ ->assertDontSee('Needs work.');
+
+ $savedFeedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+
+ $this->assertSame('ai_provider_validated', data_get($savedFeedback->coaching_summary, 'overall_summary_source'));
+ $this->assertStringContainsString('AI review used details', (string) data_get($savedFeedback->coaching_summary, 'overall_summary'));
+ $this->assertStringContainsString('AI review used saved answer details', $savedFeedback->strengths);
+ $this->assertStringContainsString('Some responses need', $savedFeedback->weaknesses);
+ Http::assertSentCount(1);
+ }
+
  public function test_interview_finish_tolerates_missing_feedback_coaching_summary_column(): void
  {
  $this->fakeOpenAiFeedback();
@@ -2341,10 +2506,10 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Not enough detail')
  ->assertSee('Feedback')
  ->assertSee('Your Answer')
  ->assertSee('Possible Answer')
+ ->assertDontSee('Not enough detail')
  ->assertDontSee('Not scored')
  ->assertDontSee('Score: 0')
  ->assertDontSee('0% relevance');

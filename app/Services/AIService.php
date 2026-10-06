@@ -1936,6 +1936,11 @@ If the candidate did not mention something, explicitly state that it was missing
 
 AI-ONLY VISIBLE FEEDBACK REQUIREMENTS:
 You MUST return the visible coaching text for every answer. The app will not create local substitute feedback when your response is missing, generic, duplicated, or unsupported.
+The detailed review page displays only three answer-level fields: Feedback, Your Answer, and Possible Answer.
+Your Answer is saved by the app from candidate_answer; do not rewrite it.
+Feedback must be final user-facing feedback for this exact answer, not an internal scoring note. It must say whether this answer directly answered, partly answered, or did not clearly answer the question, and it must include one exact evidence quote from candidate_answer when the answer was not skipped.
+Possible Answer must be a safe spoken draft for this same question using only facts from candidate_answer. Keep useful candidate facts, improve structure, and never invent missing results, numbers, employers, tools, credentials, names, dates, or intentions.
+If the answer is too short or missing a needed result, the Possible Answer may say the true missing detail should be added before using the answer.
 For each item, return:
 
 * ai_feedback: 3-4 short sentences tied to the exact question and exact answer evidence. Include what the detail changes for the score or interviewer understanding.
@@ -2167,9 +2172,14 @@ SESSION FEEDBACK REQUIREMENTS:
 
 Return session_feedback with overall_summary, strengths, weaknesses, and improvement_suggestions.
 Base session_feedback only on the candidate answers and the per_question_feedback you returned.
+The app displays session_feedback.overall_summary as "All Answer Review Summary", session_feedback.strengths as "Strengths", and session_feedback.weaknesses as "Weaknesses".
+These three visible sections must be provider-written, specific to the saved answers, and safe for many users. Do not rely on local fallback wording.
 Mention patterns from the actual answers without copying the same sentence repeatedly.
 Each field must be 1-2 short sentences.
 overall_summary must summarize the user's full performance across all saved answers. Mention at least one real pattern from the candidate answers or questions, the main repeated strength, the main repeated gap, and the next practice focus. Do not use a fixed template or vague wording that could fit any user.
+strengths must name only observed patterns from the saved answers or per-question evidence. If there is too little detail, say that clearly instead of inventing a strength.
+weaknesses must name the clearest repeated missing point or next priority from the saved answers. Do not mention a weakness that is not supported by the answers, questions, or missing_criteria.
+Do not copy the exact per-answer Feedback text into session_feedback. Summarize across answers.
 Do not include score numbers in session_feedback.
 If every answer was skipped or too short, say there was not enough answer detail to name a clear strength.
 
@@ -5874,6 +5884,57 @@ PROMPT;
  return self::normalizeProviderKey($feedbackSource) === 'localmodel'
  ? 'local_trained_model'
  : 'ai_evidence_validated';
+ }
+
+ public static function visibleReviewFeedbackIsProviderUsable(?string $feedback, array $answer): bool
+ {
+ $text = trim((string) $feedback);
+ if ($text === '') {
+ return false;
+ }
+
+ if (self::feedbackInfersForbiddenTrait($text) || self::feedbackClaimsPerfectCertainty($text)) {
+ return false;
+ }
+
+ $answerText = self::candidateAnswerText($answer);
+ if ($answerText !== '' && self::feedbackHasUnsupportedNumbers($text, $answerText)) {
+ return false;
+ }
+
+ if (self::isSkippedAnswer($answer)) {
+ return true;
+ }
+
+ if (self::isGenericFeedback($text)) {
+ return false;
+ }
+
+ if (self::isTooShortAnswer($answerText)) {
+ return preg_match('/\b(?:too short|not enough|more detail|full direct answer|saved answer|clear detail)\b/i', $text) === 1;
+ }
+
+ $questionText = trim((string) ($answer['question']?? $answer['question_text']?? ''));
+
+ return self::feedbackExplainsImpact($text, $answerText, $questionText);
+ }
+
+ public static function visibleReviewPossibleAnswerIsProviderUsable(?string $possibleAnswer, array $answer): bool
+ {
+ if (self::isSkippedAnswer($answer)) {
+ return trim((string) $possibleAnswer) === '';
+ }
+
+ if (self::isTooShortAnswer(self::candidateAnswerText($answer))) {
+ return true;
+ }
+
+ return self::providerBetterSampleAnswerIsValid((string) $possibleAnswer, $answer);
+ }
+
+ public static function visibleSessionFeedbackIsProviderUsable(array $sessionFeedback, array $answersData): bool
+ {
+ return self::sessionFeedbackValidationErrors($sessionFeedback, $answersData) === [];
  }
 
  private static function normalizedFeedbackQuality(array $feedback, string $answerText, string $questionText): array

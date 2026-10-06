@@ -146,14 +146,22 @@ class FeedbackReportPresenterTest extends TestCase
     {
         $session = new InterviewSession();
         $providerSummary = 'Across the customer process answers, the response kept a useful support action but still needs the final customer result. Next practice focus: add the true outcome after the coordinated action.';
+        $providerStrength = 'Provider strength: the answer kept the customer process action and coordinated next step.';
+        $providerWeakness = 'Provider weakness: the answer still needs the final customer result.';
+        $providerSuggestion = 'Provider suggestion: add the true outcome after the coordinated action.';
 
         $feedback = new Feedback();
         $feedback->setRawAttributes([
-            'strengths' => 'Fallback strength should not replace the provider summary.',
-            'weaknesses' => 'Fallback weakness should not replace the provider summary.',
-            'improvement_suggestions' => 'Fallback suggestion should not replace the provider summary.',
+            'strengths' => $providerStrength,
+            'weaknesses' => $providerWeakness,
+            'improvement_suggestions' => $providerSuggestion,
             'coaching_summary' => json_encode([
                 'overall_summary' => $providerSummary,
+                'overall_summary_source' => 'ai_provider_validated',
+                'review_context' => [
+                    'provider_key' => 'openai',
+                    'provider_source' => 'ai_provider',
+                ],
                 'content_overview' => ['partially_answered' => 1],
             ]),
         ], true);
@@ -175,6 +183,8 @@ class FeedbackReportPresenterTest extends TestCase
         $report = FeedbackReportPresenter::forSession($session);
 
         $this->assertSame($providerSummary, $report['overview']['summary']);
+        $this->assertSame([$providerStrength], $report['strength_items']);
+        $this->assertSame([$providerWeakness, $providerSuggestion], $report['weakness_items']);
         $this->assertStringNotContainsString('This overall review is based on', $report['overview']['summary']);
     }
 }
