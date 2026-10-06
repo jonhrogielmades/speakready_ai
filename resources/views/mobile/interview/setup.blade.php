@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=22') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=23') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=11') }}" data-page-style="interview-setup-2">
 @endpush
 
@@ -1522,6 +1522,7 @@
  const setupTransitionOverlay = document.getElementById('setupTransitionOverlay');
  const startInterviewButton = document.getElementById('btn-start-interview');
  const setupAutoFullscreenPreferenceKey = 'speakready.interview.autoFullscreen';
+ let setupFormSubmitting = false;
 
  function rememberSetupAutoFullscreenPreference() {
  try {
@@ -1536,8 +1537,9 @@
 
  const root = document.documentElement;
  if (!document.fullscreenElement && root && typeof root.requestFullscreen === 'function') {
- root.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+ return root.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
  }
+ return Promise.resolve();
  }
 
  function ensureSetupTransitionFullscreenOverlay() {
@@ -1692,29 +1694,47 @@
  resetSetupLoadingChecklist();
  }
 
+ function submitSetupFormAfterLoadingFrame() {
+ window.setTimeout(() => {
+ if (typeof HTMLFormElement !== 'undefined' && HTMLFormElement.prototype.submit) {
+ HTMLFormElement.prototype.submit.call(setupForm);
+ return;
+ }
+ setupForm.submit();
+ }, 420);
+ }
+
  if (setupForm && setupTransitionOverlay) {
  ensureSetupTransitionFullscreenOverlay();
  setupForm.addEventListener('submit', function(event) {
+ if (setupFormSubmitting) return;
  updateStartInterviewState();
  if (!validateSetupForm(true) || startInterviewButton?.disabled) {
  event.preventDefault();
  return;
  }
 
+ event.preventDefault();
+ setupFormSubmitting = true;
  ensureSetupTransitionFullscreenOverlay();
- requestSetupBrowserFullscreen();
  prepareSetupTransitionOverlay();
  setupTransitionOverlay.classList.add('active');
+ document.documentElement.classList.add('finish-transition-active');
  document.body.classList.add('finish-transition-active');
+ requestSetupBrowserFullscreen();
 
  if (startInterviewButton) {
  startInterviewButton.disabled = true;
  startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'Starting Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>';
  }
+
+ submitSetupFormAfterLoadingFrame();
  });
 
  window.addEventListener('pageshow', function() {
+ setupFormSubmitting = false;
  setupTransitionOverlay.classList.remove('active');
+ document.documentElement.classList.remove('finish-transition-active');
  document.body.classList.remove('finish-transition-active');
  resetSetupTransitionOverlay();
 

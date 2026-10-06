@@ -334,6 +334,7 @@
         visibility: visible;
         pointer-events: auto;
     }
+    html.finish-transition-active,
     body.finish-transition-active {
         overflow: hidden !important;
         touch-action: none;

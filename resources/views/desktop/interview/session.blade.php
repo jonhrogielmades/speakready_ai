@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=52') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=53') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -296,6 +296,48 @@
  </div>
  <h4 id="finishTransitionTitle">Analyzing your response...</h4>
  <p id="finishTransitionMessage">Please wait while we finalize your interview report.</p>
+ <div id="finishReviewChecklist" class="finish-review-checklist" aria-label="Feedback detailed review preparation">
+ <div class="finish-review-check-row" data-feedback-step="responses">
+ <span class="finish-review-row-icon"><i class="fa-solid fa-file-lines"></i></span>
+ <span class="finish-review-row-copy">
+ <strong>Responses reviewed</strong>
+ <small data-feedback-detail>Saved answers and transcripts ready</small>
+ </span>
+ <span class="finish-review-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="finish-review-check-row" data-feedback-step="alignment">
+ <span class="finish-review-row-icon"><i class="fa-solid fa-bullseye"></i></span>
+ <span class="finish-review-row-copy">
+ <strong>Role match checked</strong>
+ <small data-feedback-detail>Matching answers to the target role</small>
+ </span>
+ <span class="finish-review-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="finish-review-check-row" data-feedback-step="delivery">
+ <span class="finish-review-row-icon"><i class="fa-solid fa-microphone-lines"></i></span>
+ <span class="finish-review-row-copy">
+ <strong>Delivery evidence checked</strong>
+ <small data-feedback-detail>Voice, text, and camera signals prepared</small>
+ </span>
+ <span class="finish-review-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="finish-review-check-row" data-feedback-step="coaching">
+ <span class="finish-review-row-icon"><i class="fa-solid fa-comments"></i></span>
+ <span class="finish-review-row-copy">
+ <strong>Feedback coaching built</strong>
+ <small data-feedback-detail>Strengths, gaps, and better-answer notes</small>
+ </span>
+ <span class="finish-review-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="finish-review-check-row" data-feedback-step="review">
+ <span class="finish-review-row-icon"><i class="fa-solid fa-chart-line"></i></span>
+ <span class="finish-review-row-copy">
+ <strong>Detailed review prepared</strong>
+ <small data-feedback-detail>Scores, coaching notes, and next steps</small>
+ </span>
+ <span class="finish-review-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
+ </div>
+ </div>
  <div id="finishFailureAlert" class="finish-failure-alert" role="alert" aria-live="assertive" hidden></div>
  <div class="finish-recovery-actions">
  <button type="button" id="finishRetryButton" class="finish-retry-button" style="display:none;" onclick="retryFinishInterview()"><i class="fa-solid fa-rotate-right me-1"></i>Retry report</button>
@@ -6135,6 +6177,71 @@ return fallbackText;
  return new Promise(resolve => setTimeout(resolve, Math.max(250, Math.min(2500, delayMs || 1000))));
  }
 
+ let finishReviewChecklistTimers = [];
+
+ function clearFinishReviewChecklistTimers() {
+ finishReviewChecklistTimers.forEach(timerId => window.clearTimeout(timerId));
+ finishReviewChecklistTimers = [];
+ }
+
+ function finishReviewResponseModeLabel() {
+ const labels = {
+ text: 'Text',
+ voice: 'Voice',
+ hybrid: 'Hybrid'
+ };
+ return labels[canonicalResponseMode] || 'Text';
+ }
+
+ function setFinishReviewDetail(step, detail) {
+ const row = document.querySelector(`[data-feedback-step="${step}"]`);
+ const detailElement = row?.querySelector('[data-feedback-detail]');
+ if (detailElement) detailElement.textContent = detail;
+ }
+
+ function updateFinishReviewChecklistDetails() {
+ const questionLabel = `${targetQuestionCount} ${targetQuestionCount === 1? 'answer': 'answers'}`;
+ const responseLabel = finishReviewResponseModeLabel();
+ const feedbackModeLabel = liveFeedbackMode === 'real_interview'? 'Real Interview Mode': 'Coaching On';
+ const cameraLabel = cameraDetectionEnabled? 'camera evidence included': 'camera off';
+
+ setFinishReviewDetail('responses', `${questionLabel} captured in ${responseLabel} mode`);
+ setFinishReviewDetail('alignment', `${sessionTargetPosition || 'Target role'} relevance and question alignment`);
+ setFinishReviewDetail('delivery', `${responseLabel} delivery signals checked; ${cameraLabel}`);
+ setFinishReviewDetail('coaching', `${feedbackModeLabel} notes, strengths, and better-answer guidance`);
+ setFinishReviewDetail('review', 'Detailed scores, coaching notes, and next steps ready');
+ }
+
+ function resetFinishReviewChecklist() {
+ clearFinishReviewChecklistTimers();
+ document.querySelectorAll('.finish-review-check-row').forEach(row => {
+ row.classList.remove('is-checking', 'is-complete');
+ row.querySelector('.finish-review-row-check')?.setAttribute('aria-label', 'Pending');
+ });
+ }
+
+ function startFinishReviewChecklist() {
+ updateFinishReviewChecklistDetails();
+ resetFinishReviewChecklist();
+ const rows = Array.from(document.querySelectorAll('.finish-review-check-row'));
+ rows.forEach((row, index) => {
+ const checkingTimer = window.setTimeout(() => {
+ row.classList.add('is-checking');
+ row.querySelector('.finish-review-row-check')?.setAttribute('aria-label', 'Checking');
+
+ const completeTimer = window.setTimeout(() => {
+ row.classList.remove('is-checking');
+ row.classList.add('is-complete');
+ row.querySelector('.finish-review-row-check')?.setAttribute('aria-label', 'Complete');
+ }, 280);
+
+ finishReviewChecklistTimers.push(completeTimer);
+ }, 220 + (index * 520));
+
+ finishReviewChecklistTimers.push(checkingTimer);
+ });
+ }
+
  function setFinishTransitionVisible(visible) {
  const overlay = document.getElementById('finishTransitionOverlay');
  if (!overlay) return;
@@ -6143,6 +6250,7 @@ return fallbackText;
  }
  if (!visible) {
  overlay.classList.remove('finish-transition-error');
+ resetFinishReviewChecklist();
  }
  overlay.classList.toggle('active', visible);
  document.body.classList.toggle('finish-transition-active', visible);
@@ -6172,6 +6280,7 @@ return fallbackText;
  overlay?.setAttribute('aria-live', 'polite');
  if (retryButton) retryButton.style.display = 'none';
  if (backButton) backButton.style.display = 'none';
+ startFinishReviewChecklist();
  setFinishTransitionVisible(true);
  const form = document.getElementById('finishForm');
  const formData = new FormData(form);
@@ -6217,6 +6326,7 @@ return fallbackText;
  const retryButton = document.getElementById('finishRetryButton');
  const backButton = document.getElementById('finishBackButton');
  const overlay = document.getElementById('finishTransitionOverlay');
+ clearFinishReviewChecklistTimers();
  overlay?.classList.add('finish-transition-error');
  if (title) title.textContent = 'Report not finished';
  if (message) message.textContent = 'Your answers are saved. Retry the report or return to your answer.';

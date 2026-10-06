@@ -843,9 +843,12 @@
         min-height: 100dvh;
         margin: 0;
         padding: max(24px, env(safe-area-inset-top, 0px)) 20px max(24px, env(safe-area-inset-bottom, 0px));
-        background: var(--bg, #ffffff);
+        background:
+            linear-gradient(135deg, rgba(219, 234, 254, 0.36) 0 1px, transparent 1px) 0 0 / 44px 44px,
+            linear-gradient(180deg, #f8fbff 0%, #eef5ff 58%, #f8fbff 100%);
         box-sizing: border-box;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
@@ -911,6 +914,104 @@
         line-height: 1.45;
         max-width: min(100%, 420px);
         overflow-wrap: anywhere;
+    }
+    .finish-review-checklist {
+        width: min(100%, 620px);
+        margin-top: 22px;
+        padding: 12px 16px;
+        border: 1px solid rgba(203, 213, 225, 0.86);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
+    }
+    .finish-review-check-row {
+        min-height: 62px;
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) 34px;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 0;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+        text-align: left;
+        transition: background 0.24s ease, transform 0.24s ease;
+    }
+    .finish-review-check-row:last-child {
+        border-bottom: 0;
+    }
+    .finish-review-check-row.is-checking {
+        background: linear-gradient(90deg, rgba(224, 242, 254, 0.54), rgba(255, 255, 255, 0));
+        transform: translateX(2px);
+    }
+    .finish-review-row-icon,
+    .finish-review-row-check {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    .finish-review-row-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        color: #0ea5e9;
+        background: #e0f2fe;
+        font-size: 1rem;
+        transition: background 0.24s ease, color 0.24s ease, transform 0.24s ease;
+    }
+    .finish-review-check-row.is-checking .finish-review-row-icon,
+    .finish-review-check-row.is-complete .finish-review-row-icon {
+        color: #2563eb;
+        background: #dbeafe;
+        transform: scale(1.04);
+    }
+    .finish-review-row-copy {
+        min-width: 0;
+        display: grid;
+        gap: 4px;
+    }
+    .finish-review-row-copy strong {
+        color: #14214c;
+        font-size: 0.94rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+    .finish-review-row-copy small {
+        color: #64748b;
+        font-size: 0.8rem;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+    .finish-review-row-check {
+        justify-self: end;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        color: transparent;
+        background: #e2e8f0;
+        font-size: 0.84rem;
+        box-shadow: none;
+        transform: scale(0.82);
+        transition: background 0.24s ease, color 0.18s ease, transform 0.24s ease, box-shadow 0.24s ease;
+    }
+    .finish-review-row-check i {
+        opacity: 0;
+        transform: scale(0.45) rotate(-18deg);
+        transition: opacity 0.18s ease, transform 0.24s ease;
+    }
+    .finish-review-check-row.is-checking .finish-review-row-check {
+        background: #bfdbfe;
+        transform: scale(0.94);
+    }
+    .finish-review-check-row.is-complete .finish-review-row-check {
+        color: #ffffff;
+        background: #16a34a;
+        box-shadow: 0 8px 14px rgba(22, 163, 74, 0.2);
+        transform: scale(1);
+    }
+    .finish-review-check-row.is-complete .finish-review-row-check i {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+        animation: finishReviewCheckPop 0.34s cubic-bezier(0.2, 0.9, 0.2, 1.2);
     }
     .finish-failure-alert {
         margin-top: 14px;
@@ -1192,6 +1293,9 @@
     .finish-transition-overlay.finish-transition-error .finish-loading-wrapper {
         display: none;
     }
+    .finish-transition-overlay.finish-transition-error .finish-review-checklist {
+        display: none;
+    }
     .finish-transition-overlay.finish-transition-error h4 {
         color: #0f172a;
         font-size: 1.12rem;
@@ -1315,6 +1419,11 @@
         0% { transform: scale(0.9); opacity: 0.8; }
         50% { transform: scale(1.1); opacity: 1; }
         100% { transform: scale(0.9); opacity: 0.8; }
+    }
+    @keyframes finishReviewCheckPop {
+        0% { transform: scale(0.45) rotate(-18deg); }
+        65% { transform: scale(1.18) rotate(0deg); }
+        100% { transform: scale(1) rotate(0deg); }
     }
     .mobile-camera-pip { position:absolute; top:15px; right:15px; width:80px; height:80px; border-radius:12px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6); background:#111827; }
     .mobile-camera-placeholder { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72);background:linear-gradient(135deg,#111827,#312e81);font-size:1rem;z-index:3; }
@@ -1884,6 +1993,33 @@
         .finish-transition-overlay p {
             max-width: 300px;
             font-size: 0.82rem;
+        }
+        .finish-review-checklist {
+            width: min(100%, 360px);
+            margin-top: 16px;
+            padding: 8px 12px;
+        }
+        .finish-review-check-row {
+            min-height: 54px;
+            grid-template-columns: 34px minmax(0, 1fr) 28px;
+            gap: 10px;
+            padding: 8px 0;
+        }
+        .finish-review-row-icon {
+            width: 30px;
+            height: 30px;
+            font-size: 0.84rem;
+        }
+        .finish-review-row-copy strong {
+            font-size: 0.84rem;
+        }
+        .finish-review-row-copy small {
+            font-size: 0.7rem;
+        }
+        .finish-review-row-check {
+            width: 24px;
+            height: 24px;
+            font-size: 0.72rem;
         }
         .finish-failure-alert {
             max-width: 300px;
