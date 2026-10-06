@@ -803,7 +803,7 @@ class UserController extends Controller
  ]);
  }
 
- $reviewPending = ! $interviewController->hasCompletedSessionProviderFeedback($sessionRecord);
+ $reviewPending = ! $interviewController->hasCompletedSessionRenderableFeedback($sessionRecord);
  }
 
  if (! $reviewPending && $sessionRecord->gameLevel) {
@@ -850,7 +850,7 @@ class UserController extends Controller
  $session->load(['category', 'score', 'feedback', 'answers.question']);
  if (! $session->game_level_id && $session->status !== 'ended'
  && ($session->status === 'completed' || $session->score || $session->feedback)
- && ! app(InterviewController::class)->hasCompletedSessionProviderFeedback($session)) {
+ && ! app(InterviewController::class)->hasCompletedSessionRenderableFeedback($session)) {
  abort(409, 'AI provider feedback is pending for this session.');
  }
  $answers = $session->answers->whereNull('retry_of_answer_id')->values();

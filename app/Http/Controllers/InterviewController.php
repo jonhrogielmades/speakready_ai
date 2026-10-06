@@ -1009,7 +1009,9 @@ return response()->json([
  $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
  }
 
- $feedbackProvider = $gameLevel? null: $this->detailedReviewFeedbackProvider();
+ $feedbackProvider = $gameLevel? null: $this->detailedReviewFeedbackProvider(
+ session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
+ );
  if (! $gameLevel) {
  session(['active_interview_feedback_provider' => $feedbackProvider]);
  }
@@ -1484,7 +1486,9 @@ return response()->json([
  'question_id' => $answer->question_id,
  ], $answerPayload));
 
- $provider = $this->detailedReviewFeedbackProvider();
+ $provider = $this->detailedReviewFeedbackProvider(
+ session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
+ );
  session(['active_interview_feedback_provider' => $provider]);
  try {
  $feedback = AIService::generateFeedback([
@@ -1499,7 +1503,7 @@ return response()->json([
  'is_skipped' => false,
  'expected_guide' => $answer->question->expected_guide?? null,
  'mapped_skills' => $answer->question->mapped_skills?? [],
- ]], $provider, true, true);
+ ]], $provider, false, true);
  } catch (\Throwable $error) {
  Log::warning('Retry answer feedback generation failed after answer save.', [
  'answer_id' => $retry->id,
@@ -1675,6 +1679,33 @@ return response()->json([
  && trim((string) data_get($answer->coaching_feedback, 'content_alignment.improvement_focus')) !== '');
  }
 
+ public function hasCompletedSessionRenderableFeedback(InterviewSession $session): bool
+ {
+ if ($this->hasCompletedSessionProviderFeedback($session)) {
+ return true;
+ }
+
+ $session->loadMissing(['answers', 'score', 'feedback']);
+ $answers = $session->answers->whereNull('retry_of_answer_id');
+ $summary = is_array($session->feedback?->coaching_summary?? null)
+ ? $session->feedback->coaching_summary
+ : [];
+
+ return in_array($session->status, ['completed', 'reviewed'], true)
+ && $session->score !== null
+ && $session->feedback !== null
+ && trim((string) $session->feedback->strengths) !== ''
+ && trim((string) $session->feedback->weaknesses) !== ''
+ && trim((string) $session->feedback->improvement_suggestions) !== ''
+ && $summary !== []
+ && $answers->isNotEmpty()
+ && $answers->every(fn (InterviewAnswer $answer): bool => in_array(AIService::normalizeProviderKey($answer->ai_provider), ['local', 'localmodel'], true)
+ && trim((string) $answer->ai_feedback) !== ''
+ && $answer->score !== null
+ && is_array($answer->coaching_feedback)
+ && $answer->coaching_feedback !== []);
+ }
+
  private function repairCompletedSessionFeedbackFromSavedData(InterviewSession $session): bool
  {
  try {
@@ -1747,7 +1778,7 @@ return response()->json([
 
  private function completedSessionFeedbackProviderForSync(): string
  {
- $provider = $this->detailedReviewFeedbackProvider();
+ $provider = $this->detailedReviewFeedbackProvider(AIService::defaultProviderKey());
  $provider = AIService::normalizeProviderKey($provider);
 
  if ($provider === '' || in_array($provider, ['local', 'localmodel'], true)) {
@@ -4410,9 +4441,12 @@ return response()->json([
  return $fallback;
  }
 
- private function detailedReviewFeedbackProvider(): string
+ private function detailedReviewFeedbackProvider(?string $fallbackProvider = null): string
  {
- return 'openai';
+ return $this->bestEvaluatedInterviewProvider(
+ 'feedback_generation',
+ $fallbackProvider ?: AIService::defaultProviderKey()
+ );
  }
 
  private function simulatedProviderFallbackIsAllowed(): bool
@@ -4834,7 +4868,19 @@ return response()->json([
  throw new AiFeedbackProviderFailureException([], [], 'AI feedback is disabled.');
  }
 
+ try {
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+ } catch (AiFeedbackProviderFailureException $error) {
+ Log::warning('Hosted AI feedback providers failed; completing report with local evidence fallback.', [
+ 'session_id' => $session->id,
+ 'user_id' => $session->user_id,
+ 'provider_count' => $error->providerCount(),
+ 'providers_configured' => $error->providers(),
+ 'providers_attempted' => $error->attemptedProviders(),
+ ]);
+
+ return AIService::generateLocalFeedback($sessionData, $answersData);
+ }
  }
 
  protected function generateInterviewFeedbackForSession(
@@ -4850,7 +4896,7 @@ return response()->json([
  $sessionData,
  $answersData,
  $feedbackProvider?: $this->detailedReviewFeedbackProvider(),
- true,
+ false,
  true
  );
  }

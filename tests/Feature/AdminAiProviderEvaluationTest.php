@@ -705,7 +705,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  Http::assertSent(fn ($request) => str_contains($request->url(), 'api.openai.com'));
  }
 
- public function test_interview_finish_uses_openai_for_detailed_review_feedback(): void
+ public function test_interview_finish_uses_ranked_feedback_provider_for_detailed_review_feedback(): void
  {
  $this->clearProviderEnv();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -748,7 +748,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  Http::fake(function ($request) use (&$requestedUrls, $answer, $question) {
  $requestedUrls[] = (string) $request->url();
 
- $providerLabel = 'OpenAI';
+ $providerLabel = str_contains((string) $request->url(), 'cohere')? 'Cohere': 'OpenAI';
 
  return Http::response($this->providerJsonResponse($providerLabel, $this->validFeedbackBenchmarkResponse(
  $providerLabel,
@@ -770,8 +770,8 @@ class AdminAiProviderEvaluationTest extends TestCase
  ])
  ->assertOk();
 
- $this->assertSame('openai', $answer->fresh()->ai_provider);
- $this->assertTrue(collect($requestedUrls)->every(fn (string $url): bool => str_contains($url, 'api.openai.com')));
+ $this->assertSame('cohere', $answer->fresh()->ai_provider);
+ $this->assertTrue(collect($requestedUrls)->contains(fn (string $url): bool => str_contains($url, 'api.cohere.com')));
  }
 
  private function rankedEvaluationRun(AiProvider $openAi, AiProvider $groq, AiProvider $cohere): AiProviderEvaluationRun
