@@ -1072,6 +1072,7 @@ return response()->json([
  is_array($answer->observation_data)? $answer->observation_data: [],
  'final_answer_coaching'
  );
+ $coachingFeedback = $this->withPossibleAnswerProviderMetadata($coachingFeedback, $feedbackEvidenceProvider);
  $answer->update([
  'ai_feedback' => trim((string) ($qFeedback['ai_feedback']?? '')),
  'better_sample_answer' => trim((string) ($qFeedback['better_sample_answer']?? '')),
@@ -1550,6 +1551,7 @@ return response()->json([
  is_array($retry->observation_data)? $retry->observation_data: [],
  'retry_feedback'
  );
+ $coachingFeedback = $this->withPossibleAnswerProviderMetadata($coachingFeedback, $feedbackEvidenceProvider);
  try {
  $retry->update([
  'ai_feedback' => $qFeedback['ai_feedback']?? '',
@@ -4131,6 +4133,26 @@ return response()->json([
  private function feedbackEvidenceProvider(array $feedback,?string $requestedProvider = null):?string
  {
  return $this->evidenceProviderKey($feedback['_provider_key']?? $requestedProvider);
+ }
+
+ private function withPossibleAnswerProviderMetadata(array $coachingFeedback,?string $providerKey): array
+ {
+ $providerKey = AIService::normalizeProviderKey($providerKey);
+ $source = match ($providerKey) {
+ 'localmodel' => 'local_trained_model',
+ 'local' => 'local_evidence',
+ '' => 'unknown',
+ default => 'ai_provider',
+ };
+
+ if (! is_array($coachingFeedback['content_alignment']?? null)) {
+ $coachingFeedback['content_alignment'] = [];
+ }
+
+ $coachingFeedback['content_alignment']['possible_answer_source'] = $source;
+ $coachingFeedback['content_alignment']['possible_answer_provider'] = $providerKey;
+
+ return $coachingFeedback;
  }
 
  private function evidenceProviderKey(?string $provider):?string

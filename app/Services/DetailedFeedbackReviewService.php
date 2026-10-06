@@ -102,8 +102,8 @@ class DetailedFeedbackReviewService
  if ($answerProvider === ''
  || in_array($answerProvider, ['local', 'localmodel'], true)
  || $evaluationSource !== 'ai_evidence_validated'
+ || $this->answerNeedsApiProviderPossibleAnswer($answer)
  || trim((string) ($answer->ai_feedback?? '')) === ''
- || trim((string) ($answer->better_sample_answer?? '')) === ''
  ) {
  return true;
  }
@@ -156,6 +156,7 @@ class DetailedFeedbackReviewService
  $this->coachingMetricsFromAnswer($answer, $item),
  is_array($answer->observation_data)? $answer->observation_data: []
  );
+ $coachingFeedback = $this->withPossibleAnswerProviderMetadata($coachingFeedback, $providerKey);
 
  $answer->forceFill([
  'ai_feedback' => trim((string) ($item['ai_feedback']?? '')),
@@ -261,6 +262,51 @@ class DetailedFeedbackReviewService
  }
 
  return null;
+ }
+
+ private function answerNeedsApiProviderPossibleAnswer(InterviewAnswer $answer): bool
+ {
+ if ((bool) ($answer->is_skipped?? false) || $this->answerContent($answer) === '') {
+ return false;
+ }
+
+ if (trim((string) ($answer->better_sample_answer?? '')) === '') {
+ return true;
+ }
+
+ $coachingFeedback = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
+ $source = trim((string) data_get($coachingFeedback, 'content_alignment.possible_answer_source', ''));
+ $provider = AIService::normalizeProviderKey(data_get($coachingFeedback, 'content_alignment.possible_answer_provider', $answer->ai_provider));
+
+ return $source !== 'ai_provider' || ! $this->isApiProviderKey($provider);
+ }
+
+ private function isApiProviderKey(?string $provider): bool
+ {
+ $provider = AIService::normalizeProviderKey($provider);
+
+ return $provider !== ''
+ && ! in_array($provider, ['local', 'localmodel'], true)
+ && AIService::providerIsSupported($provider);
+ }
+
+ private function withPossibleAnswerProviderMetadata(array $coachingFeedback, string $providerKey): array
+ {
+ $providerKey = AIService::normalizeProviderKey($providerKey);
+ $source = match ($providerKey) {
+ 'localmodel' => 'local_trained_model',
+ 'local' => 'local_evidence',
+ default => 'ai_provider',
+ };
+
+ if (! is_array($coachingFeedback['content_alignment']?? null)) {
+ $coachingFeedback['content_alignment'] = [];
+ }
+
+ $coachingFeedback['content_alignment']['possible_answer_source'] = $source;
+ $coachingFeedback['content_alignment']['possible_answer_provider'] = $providerKey;
+
+ return $coachingFeedback;
  }
 
  private function canCallApiProvider(?string $provider): bool

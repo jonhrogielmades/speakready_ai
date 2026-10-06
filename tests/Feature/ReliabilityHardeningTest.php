@@ -1417,9 +1417,90 @@ class ReliabilityHardeningTest extends TestCase
 
  $this->assertSame('openai', $savedAnswer->ai_provider);
  $this->assertSame('ai_evidence_validated', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+ $this->assertSame('ai_provider', data_get($savedAnswer->coaching_feedback, 'content_alignment.possible_answer_source'));
+ $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'content_alignment.possible_answer_provider'));
  $this->assertNotSame('Local possible answer.', $savedAnswer->better_sample_answer);
  $this->assertSame('ai_provider_validated', data_get($savedFeedback->coaching_summary, 'overall_summary_source'));
  $this->assertStringContainsString('AI review used details', (string) data_get($savedFeedback->coaching_summary, 'overall_summary'));
+ Http::assertSentCount(1);
+ }
+
+ public function test_user_review_refreshes_stale_local_possible_answer_with_api_provider_feedback(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('AI_FEEDBACK_PROVIDER_PRIORITY', 'openai');
+ $this->setEnvValue('AI_FEEDBACK_MAX_PROVIDERS', '1');
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Describe how you improved a support handoff.',
+ 'expected_guide' => 'Explain the handoff issue, your action, and the final result.',
+ ]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'I mapped the support handoff issue, documented repeated missed approvals, coordinated the checklist update, and confirmed the final handoff result with my supervisor.',
+ 'response_mode' => 'text',
+ 'ai_feedback' => 'API provider feedback was already saved for this answer.',
+ 'better_sample_answer' => 'Local possible answer.',
+ 'score' => 82,
+ 'clarity_score' => 82,
+ 'relevance_score' => 82,
+ 'grammar_score' => 82,
+ 'scoring_confidence' => 82,
+ 'ai_provider' => 'openai',
+ 'coaching_feedback' => [
+ 'content_alignment' => [
+ 'evaluation_source' => 'ai_evidence_validated',
+ 'possible_answer_source' => 'local_trained_model',
+ 'possible_answer_provider' => 'localmodel',
+ 'what_worked' => 'The saved API review found a useful handoff detail.',
+ 'improvement_focus' => 'Add a clearer result.',
+ 'impact' => 'The result helps the interviewer judge the handoff change.',
+ ],
+ ],
+ ]);
+ Score::create([
+ 'interview_session_id' => $session->id,
+ 'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+ 'clarity_score' => 82,
+ 'relevance_score' => 82,
+ 'grammar_score' => 82,
+ 'professionalism_score' => 82,
+ 'overall_readiness_score' => 82,
+ 'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
+ ]);
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'API provider strength.',
+ 'weaknesses' => 'API provider weakness.',
+ 'improvement_suggestions' => 'API provider suggestion.',
+ 'coaching_summary' => [
+ 'version' => EvidenceBasedCoachingService::VERSION,
+ 'overall_summary_source' => 'ai_provider_validated',
+ 'overall_summary' => 'API provider summary.',
+ ],
+ ]);
+
+ $this->fakeOpenAiFeedback([$answer]);
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('Validated AI provider check')
+ ->assertSee('Possible Answer');
+
+ $savedAnswer = $answer->fresh();
+
+ $this->assertSame('openai', $savedAnswer->ai_provider);
+ $this->assertSame('ai_evidence_validated', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+ $this->assertSame('ai_provider', data_get($savedAnswer->coaching_feedback, 'content_alignment.possible_answer_source'));
+ $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'content_alignment.possible_answer_provider'));
+ $this->assertNotSame('Local possible answer.', $savedAnswer->better_sample_answer);
+ $this->assertStringContainsString('support handoff', $savedAnswer->better_sample_answer);
  Http::assertSentCount(1);
  }
 
