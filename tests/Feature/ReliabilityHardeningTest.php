@@ -1021,7 +1021,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Validated AI provider check');
  }
 
- public function test_interview_finish_retries_ai_provider_for_each_answer_when_batch_misses_later_item(): void
+ public function test_interview_finish_retries_ai_provider_for_every_selected_answer_when_batch_misses_later_items(): void
  {
  $requestCount = 0;
  Http::fake([
@@ -1062,7 +1062,7 @@ class ReliabilityHardeningTest extends TestCase
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
  $session = $this->sessionFor($user, $category, [
- 'num_questions' => 2,
+ 'num_questions' => 5,
  ]);
  $questions = [
  $this->question($category, [
@@ -1075,10 +1075,28 @@ class ReliabilityHardeningTest extends TestCase
  'question_text' => 'How would you diagnose a slow database query?',
  'type' => 'Technical',
  ]),
+ $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Tell me about a time you handled conflicting priorities.',
+ 'type' => 'Behavioral',
+ ]),
+ $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'What is your greatest strength for this role?',
+ 'type' => 'Personal',
+ ]),
+ $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'How would you verify a production fix before closing the issue?',
+ 'type' => 'Technical',
+ ]),
  ];
  $answerTexts = [
  'During a delayed release, I owned the checklist, coordinated missing approvals, and delivered the deployment after documenting the final result.',
  'I would inspect the query plan, compare row estimates, check indexes and locks, then verify the same workload before changing the query.',
+ 'When I handled conflicting priorities during a release, I listed the risks, confirmed the deadline with my lead, updated the team, and finished the customer-impacting task first.',
+ 'My strongest skill is organizing support work clearly because I document repeat issues, coordinate handoffs, and help the team resolve requests faster.',
+ 'I would reproduce the issue, apply the smallest safe change, run regression checks, monitor the affected metric, and confirm the user-facing issue is resolved.',
  ];
 
  foreach ($questions as $index => $question) {
@@ -1102,13 +1120,13 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertJsonPath('redirect_url', route('user.review', $session));
 
- $this->assertGreaterThanOrEqual(2, $requestCount);
+ $this->assertGreaterThanOrEqual(count($answerTexts), $requestCount);
  $savedAnswers = InterviewAnswer::where('interview_session_id', $session->id)
  ->whereNull('retry_of_answer_id')
  ->orderBy('id')
  ->get();
 
- $this->assertCount(2, $savedAnswers);
+ $this->assertCount(count($answerTexts), $savedAnswers);
  foreach ($savedAnswers as $index => $savedAnswer) {
  $this->assertSame('openai', $savedAnswer->ai_provider, 'Answer '.($index + 1).' should keep the API provider after per-answer retry.');
  $this->assertSame('ai_evidence_validated', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'), 'Answer '.($index + 1).' should keep provider review source after per-answer retry.');
