@@ -345,6 +345,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/evaluation', [\App\Http\Controllers\AdminAiController::class, 'evaluation'])->name('evaluation');
         Route::get('/evaluation/realtime', [\App\Http\Controllers\AdminAiController::class, 'evaluationRealtime'])->name('evaluation.realtime');
         Route::post('/evaluation/run', [\App\Http\Controllers\AdminAiController::class, 'runEvaluation'])->name('evaluation.run');
+        Route::post('/evaluation/smoke-test', [\App\Http\Controllers\AdminAiController::class, 'smokeEvaluation'])->name('evaluation.smoke');
         Route::get('/evaluation/export', [\App\Http\Controllers\AdminAiController::class, 'exportEvaluation'])->name('evaluation.export');
         Route::post('/evaluation/clear', [\App\Http\Controllers\AdminAiController::class, 'clearEvaluation'])->name('evaluation.clear');
         Route::get('/evaluation/report', [\App\Http\Controllers\AdminAiController::class, 'evaluationReport'])->name('evaluation.report');

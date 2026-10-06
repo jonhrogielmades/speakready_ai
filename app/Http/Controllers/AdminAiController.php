@@ -10,6 +10,7 @@ use App\Services\CsvExportService;
 use App\Support\AiProviderSchema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
 
 class AdminAiController extends Controller
 {
@@ -174,6 +175,89 @@ class AdminAiController extends Controller
  return redirect()
  ->route('admin.ai.evaluation', ['run' => $run->id])
  ->with('message', $message);
+ }
+
+ public function smokeEvaluation()
+ {
+ AiProviderSchema::ensure(createIfMissing: true);
+
+ $providers = collect(AIService::supportedProviderOptions())
+ ->filter(fn (array $provider): bool => (bool) ($provider['enabled']?? false))
+ ->pluck('key')
+ ->values();
+
+ if ($providers->isEmpty()) {
+ return redirect()
+ ->route('admin.ai.evaluation')
+ ->with('error', 'No configured AI API key is available for the live feedback smoke test.');
+ }
+
+ $sessionData = [
+ 'target_position' => 'Customer Service Representative',
+ 'difficulty' => 'Medium',
+ 'target_language' => 'en',
+ ];
+ $answersData = [[
+ 'id' => 1,
+ 'question' => 'Tell me about a time you handled a difficult customer.',
+ 'question_type' => 'behavioral',
+ 'answer' => 'In my previous role, I listened to an upset customer, apologized for the delay, checked the order status, and coordinated with our delivery team. The customer received the item the next day and thanked us for the quick update.',
+ 'is_skipped' => false,
+ 'expected_guide' => 'Explain the situation, your action, and result.',
+ 'mapped_skills' => ['customer service', 'communication'],
+ ]];
+ $runtimeOptions = [
+ 'timeout_seconds' => (int) env('AI_PROVIDER_SMOKE_TIMEOUT', 20),
+ 'deadline_seconds' => (int) env('AI_PROVIDER_SMOKE_DEADLINE_SECONDS', 45),
+ 'max_attempts' => 1,
+ 'http_attempts' => 1,
+ 'retry_delay_ms' => 0,
+ ];
+
+ $results = $providers->map(function (string $provider) use ($sessionData, $answersData, $runtimeOptions): array {
+ $startedAt = microtime(true);
+
+ try {
+ $feedback = AIService::generateFeedback($sessionData, $answersData, $provider, true, true, $runtimeOptions);
+ $item = $feedback['per_question_feedback'][0]?? [];
+ $quality = $feedback['feedback_quality']?? [];
+
+ return [
+ 'provider' => $provider,
+ 'status' => 'ok',
+ 'api_reachable' => true,
+ 'json_parse_passed' => true,
+ 'strict_schema_passed' => (bool) ($feedback['_strict_validation_passed']?? false),
+ 'repair_applied' => (bool) ($feedback['_repair_applied']?? false),
+ 'final_usable' => (($item['evaluation_source']?? '') === 'ai_evidence_validated'),
+ 'score' => $item['score']?? null,
+ 'quality' => $quality['completeness_percent']?? null,
+ 'latency_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+ 'errors' => array_values((array) ($feedback['_validation_errors']?? [])),
+ ];
+ } catch (\Throwable $error) {
+ return [
+ 'provider' => $provider,
+ 'status' => 'failed',
+ 'api_reachable' => false,
+ 'json_parse_passed' => false,
+ 'strict_schema_passed' => false,
+ 'repair_applied' => false,
+ 'final_usable' => false,
+ 'score' => null,
+ 'quality' => null,
+ 'latency_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+ 'errors' => [Str::limit($error->getMessage(), 220)],
+ ];
+ }
+ })->values()->all();
+
+ $usable = collect($results)->where('final_usable', true)->count();
+
+ return redirect()
+ ->route('admin.ai.evaluation')
+ ->with('message', sprintf('AI provider live feedback smoke test completed: %d/%d provider(s) produced usable feedback.', $usable, count($results)))
+ ->with('ai_provider_smoke_results', $results);
  }
 
  public function exportEvaluation(Request $request, AiProviderEvaluationService $evaluationService)

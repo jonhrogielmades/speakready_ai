@@ -76,6 +76,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertDontSee('Run Benchmark')
  ->assertSee('Excel CSV')
  ->assertSee('Clear All')
+ ->assertSee('Live Smoke Test')
  ->assertDontSee('PDF Report')
  ->assertSee('Human Audit Evidence')
  ->assertSee('Ranked User-Requested Generated Questions and Feedback by AI Provider')
@@ -84,6 +85,17 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSee('No user-requested output yet')
  ->assertDontSee('How would you handle a customer complaint during a live service call?')
  ->assertDontSee('For Tell me about a time you solved a customer issue.');
+ }
+
+ public function test_admin_live_smoke_test_requires_configured_provider(): void
+ {
+ $this->clearProviderEnv();
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+ $this->actingAs($admin)
+ ->post(route('admin.ai.evaluation.smoke'))
+ ->assertRedirect(route('admin.ai.evaluation'))
+ ->assertSessionHas('error', 'No configured AI API key is available for the live feedback smoke test.');
  }
 
  public function test_admin_provider_dashboard_shows_openai_process_connections(): void

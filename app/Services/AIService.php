@@ -2237,8 +2237,12 @@ EOT;
 
  $validationErrors = self::feedbackResponseValidationErrors($response, $answersData);
  if ($validationErrors === []) {
+ $normalized = self::normalizeFeedbackResponse($response, $answersData, $sessionData, true, $currentProvider);
+ $normalized['_strict_validation_passed'] = true;
+ $normalized['_repair_applied'] = false;
+
  return self::withFeedbackProviderMetadata(
- self::normalizeFeedbackResponse($response, $answersData, $sessionData, true, $currentProvider),
+ $normalized,
  $currentProvider,
  $attemptedProviders
  );
@@ -2247,6 +2251,33 @@ EOT;
  Log::warning("AI Feedback Generation rejected an untrusted response from {$currentProvider} on attempt {$attempt}.", [
  'validation_errors' => array_slice($validationErrors, 0, 10),
  ]);
+
+ if ($allowLocalRepair) {
+ try {
+ $repaired = self::normalizeFeedbackResponse($response, $answersData, $sessionData, true, $currentProvider);
+ $repaired['_strict_validation_passed'] = false;
+ $repaired['_repair_applied'] = true;
+ $repaired['_validation_errors'] = array_slice($validationErrors, 0, 10);
+ Log::warning('AI feedback provider response was accepted after local evidence repair.', [
+ 'provider' => $currentProvider,
+ 'attempt' => $attempt,
+ 'validation_errors' => array_slice($validationErrors, 0, 10),
+ ]);
+
+ return self::withFeedbackProviderMetadata(
+ $repaired,
+ $currentProvider,
+ $attemptedProviders
+ );
+ } catch (\Throwable $repairError) {
+ Log::warning('AI feedback provider response repair was not enough; trying the next provider.', [
+ 'provider' => $currentProvider,
+ 'attempt' => $attempt,
+ 'error_type' => $repairError::class,
+ 'message' => self::safeProviderErrorMessage($repairError),
+ ]);
+ }
+ }
 
  if ($repairableProviderResponse === null) {
  $repairableProviderResponse = $response;
@@ -2269,9 +2300,12 @@ EOT;
  'providers_attempted' => $providers,
  'providers_reached' => $attemptedProviders,
  ]);
+ $repaired = self::normalizeFeedbackResponse($repairableProviderResponse, $answersData, $sessionData, true, $repairableProvider);
+ $repaired['_strict_validation_passed'] = false;
+ $repaired['_repair_applied'] = true;
 
  return self::withFeedbackProviderMetadata(
- self::normalizeFeedbackResponse($repairableProviderResponse, $answersData, $sessionData, false, $repairableProvider),
+ $repaired,
  $repairableProvider,
  $attemptedProviders
  );
@@ -4571,11 +4605,8 @@ PROMPT;
  } elseif (self::feedbackClaimsPerfectCertainty($aiFeedback)) {
  $errors[] = "Feedback ID {$id} claims perfect accuracy or certainty.";
  }
- $questionFocus = self::validatedQuestionFocus($item, $answer);
- if ($questionFocus === null) {
+ if (self::validatedQuestionFocus($item, $answer) === null) {
  $errors[] = "Feedback ID {$id} does not contain an exact question_focus excerpt.";
- } elseif (! str_contains($aiFeedback, $questionFocus)) {
- $errors[] = "Feedback ID {$id} does not cite question_focus verbatim.";
  }
  $alignment = $item['answer_alignment']?? null;
  $validAlignments = [
@@ -5232,7 +5263,7 @@ PROMPT;
  {
  $id = (int) ($answer['id']?? ($feedback['id']?? 0));
  $answerText = self::candidateAnswerText($answer);
- $questionText = trim((string) ($answer['question']?? ''));
+ $questionText = trim((string) ($answer['question']?? $answer['question_text']?? ''));
  $isSkipped = self::isSkippedAnswer($answer);
  $isTooShort =! $isSkipped && self::isTooShortAnswer($answerText);
  $starApplicable = self::questionUsesStar($answer);
@@ -5244,9 +5275,9 @@ PROMPT;
  $providerCoaching = self::validatedProviderCoaching($feedback, $answer);
  $evidenceQuotes = self::validatedEvidenceQuotes($feedback, $answer);
  $feedbackContext = self::feedbackQuestionContext($answer);
- $questionFocus = self::validatedQuestionFocus($feedback, $answer);
+ $questionFocus = self::validatedQuestionFocus($feedback, $answer)
+ ?? (self::normalizeEvidenceText($questionText)?: null);
  $providerMissingCriteria = self::validatedMissingCriteria($feedback, $answer);
- $providerAlignment = is_string($feedback['answer_alignment']?? null)? $feedback['answer_alignment']: null;
  $evidenceProfile = self::answerEvidenceProfile($answerText, $questionText, $starApplicable, $answer);
  $localScores = self::localEvidenceScores($answerText, $questionText, $starApplicable, $evidenceProfile);
  $validAlignments = [
@@ -5254,6 +5285,17 @@ PROMPT;
  'insufficient_evidence', 'skipped',
  ];
  $providerRelevance = self::normalizeScore($feedback['relevance_score']?? 0);
+ $providerAlignment = is_string($feedback['answer_alignment']?? null)? $feedback['answer_alignment']: null;
+ $expectedProviderAlignment = match (true) {
+ $isSkipped => 'skipped',
+ $isTooShort => 'insufficient_evidence',
+ $providerRelevance >= 75 => 'directly_addressed',
+ $providerRelevance >= 50 => 'partially_addressed',
+ default => 'not_addressed',
+ };
+ if (! in_array($providerAlignment, $validAlignments, true) || $providerAlignment !== $expectedProviderAlignment) {
+ $providerAlignment = $expectedProviderAlignment;
+ }
  $alignmentIsValid = in_array($providerAlignment, $validAlignments, true)
  && (! $isSkipped || $providerAlignment === 'skipped')
  && (! $isTooShort || $providerAlignment === 'insufficient_evidence')
@@ -5261,21 +5303,34 @@ PROMPT;
  && ($isSkipped || $isTooShort || $providerRelevance < 75 || $providerAlignment === 'directly_addressed')
  && ($isSkipped || $isTooShort || $providerRelevance < 50 || $providerRelevance >= 75 || $providerAlignment === 'partially_addressed')
  && ($isSkipped || $isTooShort || $providerRelevance >= 50 || $providerAlignment === 'not_addressed');
+ if (! $isSkipped && $evidenceQuotes === []) {
+ $fallbackQuote = trim((string) ($evidenceProfile['supporting_excerpt']?? ''));
+ $evidenceQuotes = $fallbackQuote!== ''? [$fallbackQuote]: [];
+ }
+ $repairedFeedback = array_merge($feedback, [
+ 'question_focus' => $questionFocus,
+ 'evidence_quotes' => $evidenceQuotes,
+ 'answer_alignment' => $providerAlignment,
+ 'missing_criteria' => $providerMissingCriteria,
+ 'star_applicable' => $starApplicable,
+ 'star_method_score' => $starApplicable? self::normalizeScore($feedback['star_method_score']?? 0): 0,
+ ]);
+ $providerFeedbackIsUsable = ! $isSkipped
+ && ! $isTooShort
+ && $providerFeedback!== ''
+ &&! self::isGenericFeedback($providerFeedback)
+ && self::feedbackHasAnswerSpecificCommentary($providerFeedback, $repairedFeedback, $answer)
+ &&! self::feedbackInfersForbiddenTrait($providerFeedback)
+ &&! self::feedbackClaimsPerfectCertainty($providerFeedback)
+ &&! self::feedbackHasUnsupportedNumbers($providerFeedback, $answerText);
  $hadProviderScores = self::hasUsableQuestionScores($feedback);
  $hasProviderScores = $hadProviderScores
  && ($isSkipped || $evidenceQuotes!== [])
- && ($isSkipped || self::feedbackReferencesEvidenceQuote($providerFeedback, $evidenceQuotes))
  && $questionFocus!== null
- && str_contains($providerFeedback, $questionFocus)
  && $alignmentIsValid
- && self::providerRelevanceIsPlausible($feedback, $answer, $evidenceProfile)
- && self::missingCriteriaAreValid($feedback, $answer)
- &&! self::isGenericFeedback($providerFeedback)
- && ($isSkipped || $isTooShort || self::feedbackHasAnswerSpecificCommentary($providerFeedback, $feedback, $answer))
- &&! self::feedbackInfersForbiddenTrait($providerFeedback)
- &&! self::feedbackClaimsPerfectCertainty($providerFeedback)
- && ($isSkipped ||! self::feedbackHasUnsupportedNumbers($providerFeedback, $answerText));
- if ($requireAiGenerated && (! $hasProviderScores ||! $providerBetterAnswerIsValid ||! $providerFollowUpQuestionIsValid || $providerCoaching === [])) {
+ && ($isSkipped || $isTooShort || $providerFeedbackIsUsable)
+ && self::providerRelevanceIsPlausible($repairedFeedback, $answer, $evidenceProfile);
+ if ($requireAiGenerated && ! $hasProviderScores) {
  throw new \RuntimeException("AI feedback for answer {$id} did not pass evidence validation.");
  }
 
@@ -5361,9 +5416,9 @@ PROMPT;
  }
 
  $aiFeedback = $providerFeedback;
- if ($isSkipped &&! $hasProviderScores) {
+ if ($isSkipped) {
  $aiFeedback = 'No answer was submitted, so there is no response to check. Skipping makes it hard for the interviewer to judge the skill or experience. Next attempt: give a direct answer, then add one true detail.';
- } elseif ($isTooShort &&! $hasProviderScores) {
+ } elseif ($isTooShort) {
  $required = 'The answer was too short to check your communication skills, knowledge, and interview readiness.';
  $shortEvidence = trim((string) ($evidenceQuotes[0]?? self::excerpt($answerText, 80)));
  $evidenceExplanation = $shortEvidence!== ''
@@ -5371,8 +5426,7 @@ PROMPT;
  : ' The answer did not give enough clear detail to evaluate the response.';
  $aiFeedback = $required.$evidenceExplanation.' Next attempt: give a full direct answer, then add one true detail.';
  } elseif (! $hasProviderScores
- || $aiFeedback === ''
- || self::isGenericFeedback($aiFeedback)
+ || ! $providerFeedbackIsUsable
  ) {
  $aiFeedback = self::evidenceGroundedFeedback($answerText, $questionText, $evidenceProfile, $hadProviderScores);
  } elseif (self::englishSignalCount($aiFeedback) >= 4) {
@@ -6733,16 +6787,6 @@ PROMPT;
  $providerStrengths = self::providerSessionFeedbackText($sessionFeedback['strengths']?? null);
  $providerWeaknesses = self::providerSessionFeedbackText($sessionFeedback['weaknesses']?? null);
  $providerSuggestions = self::providerSessionFeedbackText($sessionFeedback['improvement_suggestions']?? null);
-
- if ($requireAiGenerated && (
- $providerOverallSummary === null
- ||
- $providerStrengths === null
- || $providerWeaknesses === null
- || $providerSuggestions === null
- )) {
- throw new \RuntimeException('AI session feedback is incomplete.');
- }
 
  return [
  'overall_readiness_score' => $readinessScore,

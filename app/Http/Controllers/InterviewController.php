@@ -4597,7 +4597,14 @@ return response()->json([
  $answersData,
  $feedbackProvider?: $this->bestEvaluatedInterviewProvider('feedback_generation'),
  false,
- false
+ true,
+ [
+ 'timeout_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_TIMEOUT', 30),
+ 'deadline_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', 90),
+ 'max_attempts' => (int) env('AI_FEEDBACK_FINALIZATION_ATTEMPTS', 2),
+ 'http_attempts' => (int) env('AI_FEEDBACK_FINALIZATION_HTTP_ATTEMPTS', 2),
+ 'retry_delay_ms' => (int) env('AI_FEEDBACK_FINALIZATION_RETRY_DELAY_MS', 250),
+ ]
  );
  }
 

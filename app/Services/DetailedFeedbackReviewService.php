@@ -47,7 +47,7 @@ class DetailedFeedbackReviewService
  $answersData,
  $provider,
  false,
- false,
+ true,
  $this->reviewRefreshRuntimeOptions()
  );
  } catch (AiFeedbackProviderFailureException $error) {
@@ -274,11 +274,11 @@ class DetailedFeedbackReviewService
  private function reviewRefreshRuntimeOptions(): array
  {
  return [
- 'timeout_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 12),
- 'deadline_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 24),
- 'max_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', 1),
- 'http_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', 1),
- 'retry_delay_ms' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', 150),
+ 'timeout_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 30),
+ 'deadline_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 60),
+ 'max_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', 2),
+ 'http_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', 2),
+ 'retry_delay_ms' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', 250),
  ];
  }
 

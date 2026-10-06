@@ -959,6 +959,58 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame('The retry meets the strength points when the result is clear.', $normalized['provider_coaching']['success_check']);
     }
 
+    public function test_provider_feedback_does_not_need_to_repeat_the_full_question(): void
+    {
+        $answer = [
+            'id' => 716,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I would inspect the query plan, compare row estimates with actual rows, check indexes, and test the same workload again.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 90, 'directly_addressed');
+        $feedback['ai_feedback'] = 'The exact answer evidence "'.$answer['answer'].'" gives a direct diagnosis path. It names the query plan, row estimates, indexes, and retesting, so the interviewer can follow the troubleshooting order.';
+
+        $errors = $this->invokePrivate('feedbackResponseValidationErrors', [[
+            'per_question_feedback' => [$feedback],
+        ], [$answer], false]);
+
+        $this->assertNotContains('Feedback ID 716 does not cite question_focus verbatim.', $errors);
+    }
+
+    public function test_provider_output_is_repaired_instead_of_discarded_when_safe_scores_exist(): void
+    {
+        $answer = [
+            'id' => 717,
+            'question_type' => 'Behavioral',
+            'question' => 'Tell me about a time you handled a difficult customer.',
+            'answer' => 'In my previous role, I listened to an upset customer, apologized for the delay, checked the order status, and coordinated with our delivery team. The customer received the item the next day and thanked us for the quick update.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 88, 'directly_addressed', true, 75);
+        $feedback['question_focus'] = 'customer question';
+        $feedback['evidence_quotes'] = ['not an exact answer quote'];
+        $feedback['ai_feedback'] = 'The answer explains that you listened to an upset customer, checked the order status, coordinated with the delivery team, and the customer received the item the next day. That gives the interviewer a clear action and result for the customer issue.';
+        $feedback['better_sample_answer'] = '';
+        $feedback['follow_up_question'] = '';
+        $feedback['coaching'] = [
+            'keep' => 'Good answer.',
+            'improve' => 'Add more details.',
+            'impact' => 'Try again.',
+            'next_try' => 'Be more specific.',
+            'next_attempt_steps' => ['Add more detail.'],
+            'success_check' => 'Good answer.',
+        ];
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, [], true, 'openai']);
+
+        $this->assertSame('ai_evidence_validated', $normalized['evaluation_source']);
+        $this->assertSame($answer['question'], $normalized['question_focus']);
+        $this->assertNotEmpty($normalized['evidence_quotes']);
+        $this->assertStringContainsString('listened to an upset customer', $normalized['evidence_quotes'][0]);
+        $this->assertSame([], $normalized['provider_coaching']);
+        $this->assertNotSame('', $normalized['better_sample_answer']);
+        $this->assertNotSame('', $normalized['follow_up_question']);
+    }
+
     public function test_local_feedback_changes_with_the_users_actual_answer_details(): void
     {
         $question = 'Tell me about a time you improved a support process.';

@@ -41,6 +41,47 @@
         </div>
     @endif
 
+    @if(session('ai_provider_smoke_results'))
+        <div class="alert alert-info mb-4" role="alert">
+            <strong>Live Provider Smoke Test</strong>
+            <div class="table-responsive mt-3">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Provider</th>
+                            <th>API</th>
+                            <th>JSON</th>
+                            <th>Strict Schema</th>
+                            <th>Repair</th>
+                            <th>Final Feedback</th>
+                            <th>Score</th>
+                            <th>Latency</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(session('ai_provider_smoke_results', []) as $result)
+                            @php
+                                $errors = array_values((array) ($result['errors'] ?? []));
+                            @endphp
+                            <tr>
+                                <td>{{ strtoupper($result['provider'] ?? '') }}</td>
+                                <td>{{ !empty($result['api_reachable']) ? 'OK' : 'Fail' }}</td>
+                                <td>{{ !empty($result['json_parse_passed']) ? 'OK' : 'Fail' }}</td>
+                                <td>{{ !empty($result['strict_schema_passed']) ? 'OK' : 'Repaired' }}</td>
+                                <td>{{ !empty($result['repair_applied']) ? 'Used' : 'No' }}</td>
+                                <td>{{ !empty($result['final_usable']) ? 'Usable' : 'Failed' }}</td>
+                                <td>{{ $result['score'] ?? '-' }}</td>
+                                <td>{{ $result['latency_ms'] ?? 0 }}ms</td>
+                                <td>{{ $errors !== [] ? \Illuminate\Support\Str::limit(implode(' | ', $errors), 180) : 'Ready' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
     <div class="ai-eval-header">
         <div>
             <h4 class="fw-bold mb-1"><i class="fa-solid fa-chart-simple me-2"></i>AI Provider Evaluation</h4>
@@ -57,6 +98,12 @@
                     @disabled(!$panelistReady)
                     title="{{ $panelistReady ? 'Compare all active configured AI providers.' : 'Configure at least '.$minimumProviders.' active AI providers before running the panelist comparison.' }}">
                     <i class="fa-solid fa-layer-group me-2"></i>Compare All Providers
+                </button>
+            </form>
+            <form action="{{ route('admin.ai.evaluation.smoke') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-warning">
+                    <i class="fa-solid fa-vial-circle-check me-2"></i>Live Smoke Test
                 </button>
             </form>
             <a href="{{ route('admin.ai.evaluation.export', $exportQuery) }}" class="btn btn-success">
