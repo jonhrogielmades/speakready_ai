@@ -613,7 +613,6 @@ class UserController extends Controller
  'category',
  'score',
  'feedback',
- 'gameLevel',
  'answers' => function ($query) {
  $query->whereNull('retry_of_answer_id')
  ->with('question')
@@ -665,10 +664,7 @@ class UserController extends Controller
  : null;
  $hasVoiceEvidence = $voiceAnswer && trim((string) ($voiceAnswer->delivery_transcript?? ''))!== '';
  $rating = $score?->readiness_band?: ($overall === null? 'Score pending': ($overall >= 90? 'Excellent': ($overall >= 70? 'Good': ($overall >= 50? 'Fair': 'Needs Practice'))));
- $providerSummary = trim((string) data_get($session->feedback?->coaching_summary, 'overall_summary', ''));
- $providerSummarySource = trim((string) data_get($session->feedback?->coaching_summary, 'overall_summary_source', ''));
  $headline = match (true) {
- $providerSummary !== '' && $providerSummarySource === 'ai_provider_validated' => Str::limit($providerSummary, 220),
  $overall === null => 'Feedback is ready. Score is still pending.',
  $overall >= 85 => 'Strong readiness. Keep sharpening proof and pace.',
  $overall >= 70 => 'Good foundation. Focus on the next weak spot.',

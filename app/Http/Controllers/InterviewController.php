@@ -1728,7 +1728,7 @@ return response()->json([
  ->exists();
  }
 
- private function refreshCompletedSessionFeedback(InterviewSession $session, $gameLevel = null, ?string $forcedFeedbackProvider = null, ?string $requiredFeedbackProvider = null): void
+ private function refreshCompletedSessionFeedback(InterviewSession $session, $gameLevel = null): void
  {
  $this->repairCompletedSessionFeedbackFromSavedData($session);
  }
