@@ -2236,37 +2236,9 @@ EOT;
  );
  }
 
- if ($allowLocalRepair) {
- try {
- $repairedResponse = self::normalizeFeedbackResponse($response, $answersData, $sessionData, false);
-
- Log::info('AI feedback provider response was accepted after local evidence repair.', [
- 'provider' => $currentProvider,
- 'attempt' => $attempt,
- 'providers_attempted' => $providers,
- 'providers_reached' => $attemptedProviders,
- 'validation_errors' => array_slice($validationErrors, 0, 10),
- ]);
-
- return self::withFeedbackProviderMetadata(
- $repairedResponse,
- $currentProvider,
- $attemptedProviders
- );
- } catch (\Throwable $repairError) {
- Log::warning('AI feedback provider response could not be repaired immediately.', [
- 'provider' => $currentProvider,
- 'attempt' => $attempt,
- 'error_type' => $repairError::class,
- 'message' => self::safeProviderErrorMessage($repairError),
- 'validation_errors' => array_slice($validationErrors, 0, 10),
- ]);
- }
- } else {
  Log::warning("AI Feedback Generation rejected an untrusted response from {$currentProvider} on attempt {$attempt}.", [
  'validation_errors' => array_slice($validationErrors, 0, 10),
  ]);
- }
 
  if ($repairableProviderResponse === null) {
  $repairableProviderResponse = $response;
@@ -2284,16 +2256,14 @@ EOT;
 
  if ($allowLocalRepair && is_array($repairableProviderResponse)) {
  try {
- $repairedResponse = self::normalizeFeedbackResponse($repairableProviderResponse, $answersData, $sessionData, false);
-
- Log::info('AI feedback provider response was accepted after deferred local evidence repair.', [
+ Log::warning('AI feedback provider response was repaired with local evidence safeguards.', [
  'provider' => $repairableProvider,
  'providers_attempted' => $providers,
  'providers_reached' => $attemptedProviders,
  ]);
 
  return self::withFeedbackProviderMetadata(
- $repairedResponse,
+ self::normalizeFeedbackResponse($repairableProviderResponse, $answersData, $sessionData, false),
  $repairableProvider,
  $attemptedProviders
  );
