@@ -162,6 +162,7 @@ class DetailedFeedbackReviewService
  $answerText = $this->answerContent($answer);
  $evidence = $this->assessment->answerEvidence($answerText, $item['ai_feedback']?? null, $answer->question);
  $rubric = $this->assessment->rubricLevel($answerScore);
+ $answerProviderKey = AIService::normalizeProviderKey($item['evaluation_provider']?? $providerKey)?: $providerKey;
  $coachingFeedback = $this->coaching->forAnswer(
  $answerText,
  $answer->question,
@@ -170,7 +171,7 @@ class DetailedFeedbackReviewService
  );
  $coachingFeedback = $this->withPossibleAnswerProviderMetadata(
  $coachingFeedback,
- $providerKey,
+ $answerProviderKey,
  is_scalar($item['better_sample_answer_source']?? null)? (string) $item['better_sample_answer_source']: null,
  is_scalar($item['better_sample_answer_provider']?? null)? (string) $item['better_sample_answer_provider']: null
  );
@@ -189,7 +190,7 @@ class DetailedFeedbackReviewService
  'recommendation_text' => $rubric['next_level'],
  'improved_answer_source' => 'candidate_facts',
  'coaching_feedback' => $coachingFeedback,
- 'ai_provider' => $providerKey,
+ 'ai_provider' => $answerProviderKey,
  ])->save();
  }
 

@@ -32,6 +32,23 @@
  $rating = $score?->readiness_band ?: ($overallScore === null ? 'Pending' : ($overallScore >= 80 ? 'Ready for Simulation' : ($overallScore >= 60 ? 'Nearly Ready' : 'Developing')));
  $scoreColor = $overallScore === null ? '#64748b' : ($overallScore >= 80 ? '#10b981' : ($overallScore >= 60 ? '#3b82f6' : '#f59e0b'));
  $answers = $sessionRecord->relationLoaded('answers') ? $sessionRecord->answers : collect();
+ $answerCount = $answers->count();
+ $answerEvidenceCount = $answers->filter(function ($answer): bool {
+ $coachingFeedback = is_array($answer->coaching_feedback ?? null) ? $answer->coaching_feedback : [];
+ $contentAlignment = is_array($coachingFeedback['content_alignment'] ?? null) ? $coachingFeedback['content_alignment'] : [];
+ $evidenceMap = is_array($answer->evidence_map ?? null) ? $answer->evidence_map : [];
+ $quotes = $contentAlignment['evidence_quotes'] ?? ($evidenceMap['supporting_excerpts'] ?? []);
+
+ return is_array($quotes) && count(array_filter($quotes, 'is_scalar')) > 0;
+ })->count();
+ $answerMissingCount = $answers->filter(function ($answer): bool {
+ $coachingFeedback = is_array($answer->coaching_feedback ?? null) ? $answer->coaching_feedback : [];
+ $contentAlignment = is_array($coachingFeedback['content_alignment'] ?? null) ? $coachingFeedback['content_alignment'] : [];
+ $evidenceMap = is_array($answer->evidence_map ?? null) ? $answer->evidence_map : [];
+ $missing = $contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []);
+
+ return is_array($missing) && count(array_filter($missing, 'is_scalar')) > 0;
+ })->count();
  $removeHandFeedback = static function (string $text): string {
  $clean = preg_replace('/(?:^|\s+)[^.!?]*(?:hand|hands|gesture|gestures)[^.!?]*[.!?]/iu', ' ', $text) ?? $text;
 
@@ -78,6 +95,42 @@
  ];
  }
  $overallSummary = trim(preg_replace('/\s+/u', ' ', $fallbackSummary) ?? '');
+ $skillLabeler = (isset($feedbackReportSkillLabel) && is_callable($feedbackReportSkillLabel))
+ ? $feedbackReportSkillLabel
+ : static fn ($skill): string => is_scalar($skill) && trim((string) $skill) !== '' ? trim((string) $skill) : 'Practice focus';
+ $priorityItems = collect($actionPriorities ?? [])
+ ->filter(fn ($item): bool => is_array($item))
+ ->map(function (array $item) use ($skillLabeler, $limitText): array {
+ $area = $skillLabeler($item['area'] ?? $item['skill'] ?? $item['title'] ?? $item['label'] ?? 'Practice focus');
+ $action = '';
+ foreach (['action', 'practice', 'recommendation', 'description', 'next_step', 'focus'] as $key) {
+ if (is_scalar($item[$key] ?? null)) {
+ $action = trim(preg_replace('/\s+/u', ' ', review_feedback_without_question_text((string) $item[$key])) ?? '');
+ if ($action !== '') {
+ break;
+ }
+ }
+ }
+ if ($action === '' && is_array($item['steps'] ?? null)) {
+ $firstStep = collect($item['steps'])->first(fn ($step) => is_scalar($step) && trim((string) $step) !== '');
+ $action = is_scalar($firstStep) ? trim(preg_replace('/\s+/u', ' ', review_feedback_without_question_text((string) $firstStep)) ?? '') : '';
+ }
+
+ return [
+ 'area' => $limitText($area, 54),
+ 'action' => $limitText($action, 150),
+ ];
+ })
+ ->filter(fn (array $item): bool => $item['action'] !== '')
+ ->take(3)
+ ->values()
+ ->all();
+ if (empty($priorityItems)) {
+ $priorityItems = array_map(
+ fn (string $item): array => ['area' => 'Practice priority', 'action' => $limitText($item, 150)],
+ array_slice($weaknessItems, 0, 3)
+ );
+ }
 @endphp
 
 <section class="review-quick-panel premium-panel animate-fade-up" aria-labelledby="review-quick-title" style="animation-delay:.1s;">
@@ -85,6 +138,7 @@
  <div>
  <div class="review-kicker">Feedback Detailed Review</div>
  <h5 id="review-quick-title">Overall Review</h5>
+ <p class="review-quick-subtitle">{{ $answerCount }} {{ \Illuminate\Support\Str::plural('answer', $answerCount) }} checked across summary, evidence, and practice priorities.</p>
  </div>
  <div class="review-overall-score" style="--review-score-color: {{ $scoreColor }};">
  <strong>{{ $overallScore === null ? 'Pending' : $overallScore.'%' }}</strong>
@@ -92,10 +146,67 @@
  </div>
  </div>
 
+ <div class="review-proof-strip" aria-label="Review coverage">
+ <div>
+ <span>Answers</span>
+ <strong>{{ $answerCount }}</strong>
+ </div>
+ <div>
+ <span>Evidence-backed</span>
+ <strong>{{ $answerEvidenceCount }}</strong>
+ </div>
+ <div>
+ <span>Needs detail</span>
+ <strong>{{ $answerMissingCount }}</strong>
+ </div>
+ </div>
+
  <div class="review-quick-grid">
  <section class="review-quick-block review-quick-block-wide">
  <div class="review-block-title"><i class="fa-solid fa-clipboard-check"></i><span>All Answer Review Summary</span></div>
  <p>{{ $overallSummary }}</p>
+ </section>
+
+ <section class="review-quick-block review-priority-card">
+ <div class="review-block-title review-title-warning"><i class="fa-solid fa-list-check"></i><span>Top Priorities</span></div>
+ @if(!empty($priorityItems))
+ <ol class="review-priority-list">
+ @foreach($priorityItems as $item)
+ <li class="review-priority-item">
+ <strong>{{ $item['area'] }}</strong>
+ <span>{{ $item['action'] }}</span>
+ </li>
+ @endforeach
+ </ol>
+ @else
+ <p>Add one specific action, example, or result in the next attempt.</p>
+ @endif
+ </section>
+
+ <section class="review-quick-block">
+ <div class="review-block-title review-title-success"><i class="fa-solid fa-circle-check"></i><span>Main Strengths</span></div>
+ @if(!empty($strengthItems))
+ <ul class="review-short-list">
+ @foreach($strengthItems as $item)
+ <li>{{ $item }}</li>
+ @endforeach
+ </ul>
+ @else
+ <p>Keep your clearest answer style.</p>
+ @endif
+ </section>
+
+ <section class="review-quick-block">
+ <div class="review-block-title review-title-warning"><i class="fa-solid fa-bullseye"></i><span>Main Weaknesses</span></div>
+ @if(!empty($weaknessItems))
+ <ul class="review-short-list">
+ @foreach($weaknessItems as $item)
+ <li>{{ $item }}</li>
+ @endforeach
+ </ul>
+ @else
+ <p>Add one specific action, example, or result.</p>
+ @endif
  </section>
 
  <section class="review-quick-block review-score-breakdown">
@@ -111,32 +222,6 @@
  </div>
  @else
  <p>No score breakdown yet.</p>
- @endif
- </section>
-
- <section class="review-quick-block">
- <div class="review-block-title review-title-success"><i class="fa-solid fa-circle-check"></i><span>Strengths</span></div>
- @if(!empty($strengthItems))
- <ul class="review-short-list">
- @foreach($strengthItems as $item)
- <li>{{ $item }}</li>
- @endforeach
- </ul>
- @else
- <p>Keep your clearest answer style.</p>
- @endif
- </section>
-
- <section class="review-quick-block">
- <div class="review-block-title review-title-warning"><i class="fa-solid fa-bullseye"></i><span>Weaknesses</span></div>
- @if(!empty($weaknessItems))
- <ul class="review-short-list">
- @foreach($weaknessItems as $item)
- <li>{{ $item }}</li>
- @endforeach
- </ul>
- @else
- <p>Add one specific action, example, or result.</p>
  @endif
  </section>
 

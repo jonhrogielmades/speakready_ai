@@ -2,7 +2,7 @@
 @section('title', 'Detailed Review')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=14') }}" data-page-style="user-review">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=15') }}" data-page-style="user-review">
 @endpush
 
 @section('content')
@@ -122,7 +122,10 @@
  @endif
 
  <!-- Answer Breakdown -->
- <h4 class="answer-review-heading" style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Answer Review</h4>
+ <div class="answer-review-section-head">
+ <h4 class="answer-review-heading" style="color:var(--tx);font-weight:700;margin-bottom:6px;margin-top:40px;">Answer Review by Question</h4>
+ <p>{{ $sessionRecord->answers->count() }} {{ \Illuminate\Support\Str::plural('answer', $sessionRecord->answers->count()) }} reviewed with saved response evidence and practice targets.</p>
+ </div>
  <div class="accordion" id="answersAccordion">
  @foreach($sessionRecord->answers as $index => $answer)
  @php

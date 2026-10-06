@@ -181,12 +181,27 @@
  @endif
  </div>
  <div>
+ <span>Next step</span>
+ <p>{{ $improvementFocus }}</p>
+ </div>
+ </div>
+ <div class="review-success-check">
  <span>Success check</span>
  <p>{{ $successCheck }}</p>
  </div>
- </div>
  <p class="review-evidence-limitation">{{ $limitationNote }}</p>
  </section>
+
+ <div class="review-answer-example-grid review-answer-example-primary">
+ <section>
+ <span>Your Answer</span>
+ <p>{{ $answerDisplay }}</p>
+ </section>
+ <section>
+ <span>Possible Answer</span>
+ <p>{{ $possibleAnswer }}</p>
+ </section>
+ </div>
 
  <div class="review-answer-summary-grid">
  @if($whatWorked !== '')
@@ -215,17 +230,6 @@
  <p class="review-camera-note">{{ $cameraTip }} Browser estimate only. Not part of readiness score.</p>
  </section>
  @endif
- </div>
-
- <div class="review-answer-example-grid">
- <section>
- <span>Your Answer</span>
- <p>{{ $answerDisplay }}</p>
- </section>
- <section>
- <span>Possible Answer</span>
- <p>{{ $possibleAnswer }}</p>
- </section>
  </div>
 
 </div>
