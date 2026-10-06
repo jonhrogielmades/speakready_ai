@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=19') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=20') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=11') }}" data-page-style="interview-setup-2">
 @endpush
 
@@ -482,13 +482,84 @@
  </div>
  </form>
 
- <div id="setupTransitionOverlay" class="finish-transition-overlay" role="status" aria-live="polite" aria-atomic="true">
- <div class="finish-loading-wrapper">
- <div class="finish-loading-circle"></div>
- <img src="{{ asset('img/logo.png') }}" alt="Loading interview">
+ <div id="setupTransitionOverlay" class="finish-transition-overlay interview-prep-overlay" role="status" aria-live="polite" aria-atomic="true">
+ <div class="interview-prep-shell">
+ <div class="interview-prep-art" aria-hidden="true">
+ <span class="prep-art-ring"></span>
+ <span class="prep-art-doc">
+ <span class="prep-art-clip"></span>
+ <span class="prep-art-avatar"><i class="fa-solid fa-user"></i></span>
+ <span class="prep-art-line prep-art-line-1"></span>
+ <span class="prep-art-line prep-art-line-2"></span>
+ <span class="prep-art-line prep-art-line-3"></span>
+ <span class="prep-art-bars"><span></span><span></span><span></span></span>
+ </span>
+ <span class="prep-art-badge prep-art-badge-left"><i class="fa-solid fa-brain"></i></span>
+ <span class="prep-art-badge prep-art-badge-right"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+ <span class="prep-art-lens"><i class="fa-solid fa-check"></i></span>
+ <span class="prep-art-handle"></span>
  </div>
- <h4>Interview Ready</h4>
- <p>Please wait while we begin or resume your customized interview session.</p>
+
+ <div class="interview-prep-copy">
+ <h4 class="interview-prep-title">Preparing Your <span>Interview...</span></h4>
+ <p class="interview-prep-subtitle">This will just take a few moments.</p>
+ </div>
+
+ <div class="interview-prep-progress" aria-label="Preparing interview progress">
+ <div class="interview-prep-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="19">
+ <span id="setupLoadingProgressBar" class="interview-prep-progress-bar"></span>
+ </div>
+ <strong id="setupLoadingPercent" class="interview-prep-progress-percent">19%</strong>
+ </div>
+
+ <div class="interview-prep-checklist" id="setupLoadingChecklist" aria-label="Configured interview setup">
+ <div class="interview-prep-check-row" data-loading-item="details">
+ <span class="interview-prep-row-icon"><i class="fa-regular fa-file-lines"></i></span>
+ <span class="interview-prep-row-copy">
+ <strong data-loading-title>Details configured</strong>
+ <small data-loading-detail>Scenario and target role ready</small>
+ </span>
+ <span class="interview-prep-row-check" aria-label="Complete"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="interview-prep-check-row" data-loading-item="structure">
+ <span class="interview-prep-row-icon"><i class="fa-solid fa-list-check"></i></span>
+ <span class="interview-prep-row-copy">
+ <strong data-loading-title>Structure configured</strong>
+ <small data-loading-detail>Question count and timing ready</small>
+ </span>
+ <span class="interview-prep-row-check" aria-label="Complete"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="interview-prep-check-row" data-loading-item="camera">
+ <span class="interview-prep-row-icon"><i class="fa-solid fa-video"></i></span>
+ <span class="interview-prep-row-copy">
+ <strong data-loading-title>Camera configured</strong>
+ <small data-loading-detail>Camera preference confirmed</small>
+ </span>
+ <span class="interview-prep-row-check" aria-label="Complete"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="interview-prep-check-row" data-loading-item="coaching">
+ <span class="interview-prep-row-icon"><i class="fa-solid fa-comments"></i></span>
+ <span class="interview-prep-row-copy">
+ <strong data-loading-title>Coaching configured</strong>
+ <small data-loading-detail>Feedback mode and question mix ready</small>
+ </span>
+ <span class="interview-prep-row-check" aria-label="Complete"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="interview-prep-check-row" data-loading-item="response">
+ <span class="interview-prep-row-icon"><i class="fa-solid fa-microphone-lines"></i></span>
+ <span class="interview-prep-row-copy">
+ <strong data-loading-title>Response configured</strong>
+ <small data-loading-detail>Answer mode ready</small>
+ </span>
+ <span class="interview-prep-row-check" aria-label="Complete"><i class="fa-solid fa-check"></i></span>
+ </div>
+ </div>
+
+ <div class="interview-prep-tip">
+ <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+ <span>Great practice leads to <strong>great performance!</strong></span>
+ </div>
+ </div>
  </div>
 
  <div class="modal fade setup-alert-modal" id="targetPositionAlertModal" tabindex="-1" aria-labelledby="targetPositionAlertTitle" aria-hidden="true">
@@ -1475,6 +1546,115 @@
  }
  }
 
+ let setupLoadingProgressTimer = null;
+
+ function setupLoadingSelectedOptionText(selectId) {
+ const select = document.getElementById(selectId);
+ if (!select || !select.value) return '';
+ const option = select.options[select.selectedIndex];
+ return String(option?.dataset.contextLabel || option?.text || select.value || '').trim();
+ }
+
+ function setupLoadingTargetValue() {
+ const field = document.getElementById('valPosition');
+ if (!field) return '';
+ if (typeof setupTargetFieldValue === 'function') {
+ return setupTargetFieldValue(field);
+ }
+ return String(field.value || '').trim();
+ }
+
+ function setupLoadingCheckedLabel(name) {
+ const input = document.querySelector(`input[name="${name}"]:checked`);
+ if (!input) return '';
+ return input.dataset.summaryLabel
+ || input.closest('label')?.querySelector('strong')?.textContent
+ || input.closest('label')?.querySelector('.structure-difficulty-title, .response-mode-title')?.textContent
+ || titleizeSetupValue(input.value);
+ }
+
+ function setupLoadingFeedbackModeLabel() {
+ const radioLabel = setupLoadingCheckedLabel('live_feedback_mode');
+ if (radioLabel) return radioLabel;
+ return setupLoadingSelectedOptionText('valFeedbackMode');
+ }
+
+ function setupLoadingTimeLimitLabel() {
+ const select = document.getElementById('valTimeLimit');
+ if (!select || select.value === '') return '';
+ const optionText = select.options[select.selectedIndex]?.text || '';
+ return optionText.replace(/\s+per\s+Question/i, '/question');
+ }
+
+ function setupLoadingQuestionCountLabel() {
+ const count = String(document.getElementById('valNumQuestions')?.value || '').trim();
+ if (!count) return '';
+ return `${count} ${Number(count) === 1? 'question': 'questions'}`;
+ }
+
+ function setSetupLoadingItem(key, title, detail) {
+ const item = setupTransitionOverlay?.querySelector(`[data-loading-item="${key}"]`);
+ if (!item) return;
+ const titleEl = item.querySelector('[data-loading-title]');
+ const detailEl = item.querySelector('[data-loading-detail]');
+ if (titleEl) titleEl.textContent = title;
+ if (detailEl) detailEl.textContent = detail;
+ }
+
+ function updateSetupTransitionDetails() {
+ const scenario = setupLoadingSelectedOptionText('valScenario') || 'Interview scenario';
+ const target = setupLoadingTargetValue() || 'Target role';
+ const difficulty = setupLoadingCheckedLabel('difficulty') || 'Difficulty';
+ const questions = setupLoadingQuestionCountLabel() || 'Questions';
+ const timeLimit = setupLoadingTimeLimitLabel() || 'Timing';
+ const camera = setupLoadingCheckedLabel('camera_detection') || (document.querySelector('input[name="camera_detection"]:checked')?.value === '1'? 'Camera On': 'Camera Off');
+ const feedback = setupLoadingFeedbackModeLabel() || 'Feedback mode';
+ const questionTypes = Array.from(document.querySelectorAll('input[name="question_types[]"]:checked')).map(input => input.value).join(', ') || 'Question mix';
+ const response = setupLoadingCheckedLabel('response_mode') || 'Response mode';
+
+ setSetupLoadingItem('details', 'Details configured', `${scenario} - ${target}`);
+ setSetupLoadingItem('structure', 'Structure configured', `${difficulty} - ${questions} - ${timeLimit}`);
+ setSetupLoadingItem('camera', 'Camera configured', camera);
+ setSetupLoadingItem('coaching', 'Coaching configured', `${feedback} - ${questionTypes}`);
+ setSetupLoadingItem('response', 'Response configured', `${response} answers ready`);
+ }
+
+ function setSetupLoadingProgress(value) {
+ const progress = Math.max(0, Math.min(99, Math.round(Number(value) || 0)));
+ const bar = document.getElementById('setupLoadingProgressBar');
+ const percent = document.getElementById('setupLoadingPercent');
+ const track = setupTransitionOverlay?.querySelector('.interview-prep-progress-track');
+ if (bar) bar.style.width = `${progress}%`;
+ if (percent) percent.textContent = `${progress}%`;
+ if (track) track.setAttribute('aria-valuenow', String(progress));
+ }
+
+ function startSetupLoadingProgress() {
+ window.clearInterval(setupLoadingProgressTimer);
+ let progress = 19;
+ setSetupLoadingProgress(progress);
+ setupLoadingProgressTimer = window.setInterval(() => {
+ const step = progress < 48? 7: (progress < 78? 4: 1);
+ progress = Math.min(95, progress + step);
+ setSetupLoadingProgress(progress);
+ if (progress >= 95) {
+ window.clearInterval(setupLoadingProgressTimer);
+ setupLoadingProgressTimer = null;
+ }
+ }, 260);
+ }
+
+ function prepareSetupTransitionOverlay() {
+ updateSetupTransitionDetails();
+ startSetupLoadingProgress();
+ }
+
+ function resetSetupTransitionOverlay() {
+ window.clearInterval(setupLoadingProgressTimer);
+ setupLoadingProgressTimer = null;
+ setSetupLoadingProgress(19);
+ }
+
  if (setupForm && setupTransitionOverlay) {
  ensureSetupTransitionFullscreenOverlay();
  setupForm.addEventListener('submit', function(event) {
@@ -1486,6 +1666,7 @@
 
  ensureSetupTransitionFullscreenOverlay();
  requestSetupBrowserFullscreen();
+ prepareSetupTransitionOverlay();
  setupTransitionOverlay.classList.add('active');
  document.body.classList.add('finish-transition-active');
 
@@ -1498,6 +1679,7 @@
  window.addEventListener('pageshow', function() {
  setupTransitionOverlay.classList.remove('active');
  document.body.classList.remove('finish-transition-active');
+ resetSetupTransitionOverlay();
 
  if (startInterviewButton) {
  startInterviewButton.innerHTML = startInterviewButton.dataset.defaultLabel || 'Start <i class="fa-solid fa-play ms-2"></i>';
