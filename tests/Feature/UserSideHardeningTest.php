@@ -897,6 +897,8 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('.setup-stepper-item.is-locked', $mobileSetupCss);
  $this->assertStringContainsString('.camera-mode-list.setup-field-invalid', $desktopSetupCss);
  $this->assertStringContainsString('.camera-mode-list.setup-field-invalid', $mobileSetupCss);
+ $this->assertStringContainsString('.live-feedback-mode-list.setup-field-invalid', $desktopSetupCss);
+ $this->assertStringContainsString('#panel-content .assistance-feedback-field', $desktopSetupCss);
  }
 
  public function test_interview_setup_shows_added_question_count_options_on_desktop_and_mobile(): void
