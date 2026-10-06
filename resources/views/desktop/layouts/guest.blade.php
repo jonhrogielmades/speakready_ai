@@ -785,11 +785,11 @@
             <div class="container position-relative" style="z-index:1">
                <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">About the System</span>
-                  <h2 class="stitle">Empowering you to <span class="gt">shine in interviews</span></h2>
+                  <h2 class="stitle">Built for focused <span class="gt">job interview practice</span></h2>
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an intelligent job-interview practice system built around scenario setup, target-position calibration, live coaching controls, and evidence-linked feedback. It keeps delivery and camera observations as coaching support while readiness scores focus on answer quality.</p>
+                     <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI guides users through a complete job-interview practice flow: choose the Job Interviews scenario, select a target position, set the interview structure, choose support controls, answer by text, voice, or hybrid mode, and review evidence-based feedback. Coaching On and optional Camera Detection support practice, while Real Interview Mode keeps the session quieter and readiness scoring focused on answer quality.</p>
 
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
                      <div class="target-users-grid d-flex flex-wrap gap-2 mb-4">
@@ -846,21 +846,21 @@
             <div class="container">
                <div class="text-center mb-5 rv">
                   <span class="slbl">Core Features</span>
-                  <h2 class="stitle">Updated tools for <span class="gt">job interview practice</span></h2>
+                  <h2 class="stitle">Built around the <span class="gt">latest practice flow</span></h2>
                </div>
                <div class="row g-4">
                   <div class="col-md-3 col-sm-6 rv">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#2563eb;--feature-icon-bg:rgba(37,99,235,.14);--feature-icon-border:rgba(37,99,235,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-gauge-high fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Readiness Dashboard</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">See readiness, recent sessions, practice streaks, weak areas, and next recommended actions from one workspace.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#2563eb;--feature-icon-bg:rgba(37,99,235,.14);--feature-icon-border:rgba(37,99,235,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-clipboard-list fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Scenario Setup</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Start with the Job Interviews scenario, then anchor practice to a specific target position.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.05s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#10b981;--feature-icon-bg:rgba(16,185,129,.14);--feature-icon-border:rgba(16,185,129,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Scenario Setup</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Choose the Job Interviews scenario, target position, difficulty, question count, timer, and question types.</p>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#10b981;--feature-icon-bg:rgba(16,185,129,.14);--feature-icon-border:rgba(16,185,129,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-layer-group fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Interview Structure</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Set difficulty, question count, timer, and question types before the session starts.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">
@@ -880,15 +880,15 @@
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#06b6d4;--feature-icon-bg:rgba(6,182,212,.14);--feature-icon-border:rgba(6,182,212,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-robot fa-lg"></i></div>
-                         <h3 class="fs-6 fw-bold mb-2">Live Feedback Modes</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Use Coaching On for live help, or Real Interview Mode for quiet practice that keeps readiness scoring clean.</p>
+                         <h3 class="fs-6 fw-bold mb-2">Coaching Or Real Mode</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Choose Coaching On for live help, or Real Interview Mode for a quieter practice run.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.35s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ec4899;--feature-icon-bg:rgba(236,72,153,.14);--feature-icon-border:rgba(236,72,153,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-trophy fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Challenges</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Build skill through challenge journeys with levels, XP, lives, streaks, and score goals.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Modules And Challenges</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Build skill through lessons, quizzes, challenge journeys, XP, streaks, and score goals.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.4s">
@@ -908,8 +908,8 @@
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#6366f1;--feature-icon-bg:rgba(99,102,241,.14);--feature-icon-border:rgba(99,102,241,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-file-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Reports</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Open interview reports with scenario, difficulty, question count, scores, and exported practice results.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Reports And History</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Open session records with scenario, difficulty, question count, scores, and exportable results.</p>
                      </div>
                   </div>
                </div>
@@ -921,50 +921,50 @@
             <div class="container">
                <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">How It Works</span>
-                  <h2 class="stitle">Set up, practice, and <span class="gt">improve with evidence</span></h2>
+                  <h2 class="stitle">From setup to <span class="gt">stronger answers</span></h2>
                </div>
 
                <div class="row g-4 justify-content-center">
                   <div class="col-md-4 col-sm-6 rv">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">1</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Open Your Workspace</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Register or log in, then start from a dashboard with sessions, progress, and recommendations.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Open Interview Setup</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Start from your workspace and open the guided setup for a job-interview practice session.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">2</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Choose Scenario And Role</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Select Job Interviews, then pick the target position so questions match your hiring goal.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Pick Scenario And Role</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Select Job Interviews, then choose a target position so prompts match your hiring goal.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">3</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Configure Structure</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Set difficulty, question count, timer, question types, and your preferred response mode.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Set Interview Structure</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Choose difficulty, question count, timer, question types, and response mode before starting.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">4</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Choose Coaching Style</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Turn camera detection on or off, then choose Coaching On or Real Interview Mode.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Select Support Controls</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Set Camera Detection, then choose Coaching On for help or Real Interview Mode for quiet practice.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.4s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">5</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Answer The Interview</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Respond by text, voice, or hybrid input while the session follows your selected setup.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Practice The Session</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Answer each prompt by text, voice, or hybrid input while the system records your responses.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">6</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Review And Improve</h3>
-                         <p style="font-size:.875rem;color:var(--tx2)">Study evidence-based feedback, reports, recommended modules, challenges, and readiness trends.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Review Next Steps</h3>
+                         <p style="font-size:.875rem;color:var(--tx2)">Use evidence feedback, reports, modules, challenges, and trends to plan your next practice.</p>
                      </div>
                   </div>
                </div>
@@ -979,35 +979,35 @@
                   <div class="col-lg-10 rv">
                      <div class="landing-section-heading mb-4">
                         <span class="slbl">Interview Categories</span>
-                        <h2 class="stitle">Practice coverage for <span class="gt">job interviews</span></h2>
+                        <h2 class="stitle">One scenario with <span class="gt">flexible practice paths</span></h2>
                      </div>
                      <div class="row g-3 justify-content-center">
                         <div class="col-md-3 col-sm-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid var(--pur);">
                               <div style="font-size:2rem; margin-bottom:15px; color:var(--pur)"><i class="fa-solid fa-briefcase"></i></div>
-                              <h4 class="fs-5 fw-bold">Job Interview Scenario</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Practice local HR screening, behavioral, situational, role-fit, and salary expectation questions.</p>
+                              <h4 class="fs-5 fw-bold">Job Interviews</h4>
+                              <p style="font-size:.85rem;color:var(--tx2)">Practice HR screening, behavioral, situational, role-fit, and salary expectation questions.</p>
                            </div>
                         </div>
                         <div class="col-md-3 col-sm-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #f59e0b;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-bullseye"></i></div>
-                              <h4 class="fs-5 fw-bold">Target Position Practice</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Choose a target role so questions use role-calibrated wording and source-backed examples.</p>
+                              <h4 class="fs-5 fw-bold">Target Roles</h4>
+                              <p style="font-size:.85rem;color:var(--tx2)">Choose your target position so prompts match the role, difficulty, and hiring context.</p>
                            </div>
                         </div>
                         <div class="col-md-3 col-sm-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #10b981;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#10b981"><i class="fa-solid fa-comments"></i></div>
-                              <h4 class="fs-5 fw-bold">Coaching Practice</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Use Coaching On for live help while coaching-only delivery notes stay out of readiness scores.</p>
+                              <h4 class="fs-5 fw-bold">Coaching On</h4>
+                              <p style="font-size:.85rem;color:var(--tx2)">Get live guidance during practice while coaching-only delivery notes stay out of readiness scores.</p>
                            </div>
                         </div>
                         <div class="col-md-3 col-sm-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#3b82f6"><i class="fa-solid fa-user-tie"></i></div>
                               <h4 class="fs-5 fw-bold">Real Interview Mode</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Run a quieter session for a closer interview feel and readiness scoring after completion.</p>
+                              <p style="font-size:.85rem;color:var(--tx2)">Run a quieter practice session for a closer interview feel and scoring after completion.</p>
                            </div>
                         </div>
                      </div>
@@ -1057,7 +1057,7 @@
             <div class="container">
                <div class="text-center mb-5 rv">
                   <span class="slbl">FAQ</span>
-                  <h2 class="stitle">Common <span class="gt">Questions</span></h2>
+                  <h2 class="stitle">Practice <span class="gt">Questions</span></h2>
                </div>
                <div class="row justify-content-center rv">
                   <div class="col-lg-8">
@@ -1065,31 +1065,37 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1" aria-expanded="true" aria-controls="f1">What is SpeakReady AI?</button></h2>
                            <div id="f1" class="accordion-collapse collapse show" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">SpeakReady AI is a job-interview practice system with scenario setup, Coaching On and Real Interview Mode, camera detection, learning modules, challenges, evidence-based feedback, progress tracking, and reports.</div>
+                              <div class="accordion-body">SpeakReady AI is a job-interview practice system for setting up a scenario, choosing a target role, answering mock interview prompts, and reviewing evidence-based feedback, progress, and reports.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2" aria-expanded="false" aria-controls="f2">How does AI feedback work?</button></h2>
+                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2" aria-expanded="false" aria-controls="f2">What can I customize before starting?</button></h2>
                            <div id="f2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                               <div class="accordion-body">SpeakReady evaluates answer relevance, clarity, professionalism, and applicable STAR evidence using a versioned rubric. Delivery signals and optional body-language detection notes do not affect readiness scores and do not infer confidence, honesty, or personality.</div>
+                               <div class="accordion-body">You can choose the Job Interviews scenario, target position, difficulty, question count, timer, question types, response mode, live feedback mode, and Camera Detection setting.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3" aria-expanded="false" aria-controls="f3">Is my data secure?</button></h2>
+                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3" aria-expanded="false" aria-controls="f3">What is Coaching On vs Real Interview Mode?</button></h2>
                            <div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                               <div class="accordion-body">Interview records require account access. The application validates submitted data and checks that each user owns the session they open.</div>
+                               <div class="accordion-body">Coaching On gives live help during practice. Real Interview Mode keeps the session quieter so the experience feels closer to an actual interview before scoring and review.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4" aria-expanded="false" aria-controls="f4">What scenario can I practice?</button></h2>
+                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4" aria-expanded="false" aria-controls="f4">How does Camera Detection work?</button></h2>
                            <div id="f4" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">The active scenario is Job Interviews. You can still adjust the target position, difficulty, timer, question types, response mode, live feedback mode, and camera detection.</div>
+                              <div class="accordion-body">Camera Detection is optional. When enabled, it supports coaching notes for delivery and movement, while readiness scoring stays focused on answer quality and does not infer confidence, honesty, or personality.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f5" aria-expanded="false" aria-controls="f5">What can I do after a practice session?</button></h2>
+                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f5" aria-expanded="false" aria-controls="f5">Is my data secure?</button></h2>
                            <div id="f5" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">You can review scores and coaching notes, retry weaker answers, continue recommended lessons, play challenge journeys, monitor readiness trends, generate reports, and earn certificates.</div>
+                              <div class="accordion-body">Interview records require account access. The application validates submitted data and checks that each user owns the session they open.</div>
+                           </div>
+                        </div>
+                        <div class="accordion-item">
+                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f6" aria-expanded="false" aria-controls="f6">What happens after a practice session?</button></h2>
+                           <div id="f6" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+                              <div class="accordion-body">You can review scores, answer evidence, coaching notes, recommended modules, challenge paths, readiness trends, reports, and session history.</div>
                            </div>
                         </div>
                      </div>
