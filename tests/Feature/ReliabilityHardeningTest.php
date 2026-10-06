@@ -944,10 +944,10 @@ class ReliabilityHardeningTest extends TestCase
  );
  }
 
- public function test_interview_fast_finish_still_requires_provider_feedback(): void
+ public function test_interview_fast_finish_uses_local_report_without_blocking_on_openai(): void
  {
  config(['services.interview_report.fast_finish' => true]);
- $this->fakeOpenAiFeedback();
+ Http::fake(['api.openai.com/*' => Http::response(['choices' => []], 200)]);
  AiProvider::create([
  'name' => 'OpenAI',
  'api_endpoint' => 'https://api.openai.com/v1',
@@ -1046,7 +1046,7 @@ class ReliabilityHardeningTest extends TestCase
  }
  }
 
- public function test_interview_finish_waits_when_report_coaching_analysis_fails(): void
+ public function test_interview_finish_completes_with_fallback_when_report_coaching_analysis_fails(): void
  {
  $this->fakeOpenAiFeedback();
  $this->app->instance(EvidenceBasedCoachingService::class, new class
@@ -1079,13 +1079,17 @@ class ReliabilityHardeningTest extends TestCase
  'active_interview_provider' => 'openai',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertStatus(503);
+ ->assertOk()
+ ->assertJsonPath('redirect_url', route('user.review', $session));
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
  $savedAnswer = $answer->fresh();
- $this->assertEmpty($savedAnswer->ai_feedback);
- $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
- $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+ $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+
+ $this->assertSame('local_fallback', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+ $this->assertSame('limited', data_get($feedback->coaching_summary, 'feedback_quality.status'));
+ $this->assertNotEmpty(data_get($feedback->coaching_summary, 'content_overview'));
+ $this->assertNotEmpty(data_get($feedback->coaching_summary, 'question_improvements'));
  }
 
  public function test_interview_finish_completes_with_fallback_when_assessment_helpers_fail(): void
@@ -1388,7 +1392,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
  }
 
- public function test_user_review_keeps_unverified_report_pending_without_ai_refresh(): void
+ public function test_user_review_repairs_missing_coaching_report_data_without_ai_refresh(): void
  {
  Http::preventStrayRequests();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -1428,17 +1432,22 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('AI review pending')
- ->assertDontSee('Feedback Detailed Review')
- ->assertDontSee('The answer included relevant ownership and handoff evidence.')
+ ->assertSee('Feedback Detailed Review')
+ ->assertSee('Answer Match')
+ ->assertSee('What To Improve')
  ->assertSee($question->question_text);
 
- $this->assertEmpty($answer->fresh()->coaching_feedback);
- $this->assertEmpty(Feedback::where('interview_session_id', $session->id)->firstOrFail()->coaching_summary);
- Http::assertNothingSent();
+ $this->assertSame(
+ EvidenceBasedCoachingService::VERSION,
+ data_get($answer->fresh()->coaching_feedback, 'version')
+ );
+ $this->assertSame(
+ EvidenceBasedCoachingService::VERSION,
+ data_get(Feedback::where('interview_session_id', $session->id)->firstOrFail()->coaching_summary, 'version')
+ );
  }
 
- public function test_user_review_hides_unverified_saved_report_without_feedback_refresh_on_open(): void
+ public function test_user_review_renders_saved_report_without_feedback_refresh_on_open(): void
  {
  Http::preventStrayRequests();
 
@@ -1478,9 +1487,9 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('Detailed Review')
  ->assertSee('I reviewed the process')
- ->assertSee('AI review pending')
- ->assertDontSee('Saved feedback remains visible.')
- ->assertDontSee('Score Breakdown')
+ ->assertSee('Feedback Detailed Review')
+ ->assertSee('Next Practice')
+ ->assertSee('Score Breakdown')
  ->assertDontSee('>Clarity</strong>', false)
  ->assertDontSee('Score version', false)
  ->assertDontSee('Feedback checks', false);
@@ -1590,41 +1599,6 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('appendRetryAttempt(answerId, data);', false);
  }
 
- public function test_retry_keeps_saved_answer_pending_when_provider_feedback_fails(): void
- {
- $this->setEnvValue('AI_FEEDBACK_MAX_PROVIDERS', '1');
- Http::fake(['*' => Http::response(['error' => 'provider unavailable'], 500)]);
- $this->aiProvider('OpenAI', [
- 'api_endpoint' => 'https://api.openai.com/v1',
- 'is_primary' => true,
- ]);
-
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $category = $this->category();
- $session = $this->sessionFor($user, $category, ['status' => 'completed']);
- $question = $this->question($category, ['interview_session_id' => $session->id]);
- $answer = InterviewAnswer::create([
- 'interview_session_id' => $session->id,
- 'question_id' => $question->id,
- 'answer_text' => 'My original answer had too little detail.',
- ]);
-
- $this->actingAs($user)
- ->withSession(['active_interview_provider' => 'openai'])
- ->postJson(route('interview.answer.retry', $answer), [
- 'answer_text' => 'I reviewed the release checklist, coordinated the missing approvals, and documented the final handoff result.',
- 'response_mode' => 'text',
- ])
- ->assertStatus(503)
- ->assertJsonPath('retry_saved', true);
-
- $retry = InterviewAnswer::where('retry_of_answer_id', $answer->id)->firstOrFail();
- $this->assertEmpty($retry->ai_provider);
- $this->assertEmpty($retry->ai_feedback);
- $this->assertEmpty($retry->coaching_feedback);
- Http::assertSent(fn ($request): bool => str_contains($request->url(), 'api.openai.com'));
- }
-
  public function test_user_review_does_not_refresh_stale_rubric_score_metadata_on_open(): void
  {
  Http::preventStrayRequests();
@@ -1713,7 +1687,6 @@ class ReliabilityHardeningTest extends TestCase
  'coverage' => ['answers' => 1, 'delivery_measured' => 0],
  ],
  ]);
- $this->markReviewFixtureAsProviderBacked($session);
 
  $this->actingAs($user)
  ->get(route('user.review', $session))
@@ -1772,7 +1745,6 @@ class ReliabilityHardeningTest extends TestCase
  'coverage' => ['answers' => 1, 'delivery_measured' => 0],
  ],
  ]);
- $this->markReviewFixtureAsProviderBacked($session);
 
  $this->actingAs($user)
  ->get(route('user.review', $session))
@@ -1797,7 +1769,6 @@ class ReliabilityHardeningTest extends TestCase
  'coverage' => ['answers' => 1, 'delivery_measured' => 1],
  ],
  ]);
- $this->markReviewFixtureAsProviderBacked($session);
 
  $this->actingAs($user)
  ->get(route('user.review', $session))
@@ -1874,7 +1845,6 @@ class ReliabilityHardeningTest extends TestCase
  'coverage' => ['answers' => 1, 'delivery_measured' => 0, 'camera_measured' => 1],
  ],
  ]);
- $this->markReviewFixtureAsProviderBacked($session);
 
  $this->actingAs($user)
  ->get(route('user.review', $session))
@@ -1935,7 +1905,6 @@ class ReliabilityHardeningTest extends TestCase
  'weaknesses' => 'The response needs more evidence.',
  'improvement_suggestions' => 'Expand the response before relying on a score.',
  ]);
- $this->markReviewFixtureAsProviderBacked($session);
 
  $this->actingAs($user)
  ->get(route('user.review', $session))
@@ -2015,33 +1984,6 @@ class ReliabilityHardeningTest extends TestCase
  'response_mode' => 'text',
  'status' => 'in_progress',
  ], $overrides));
- }
-
- private function markReviewFixtureAsProviderBacked(InterviewSession $session): void
- {
- foreach (InterviewAnswer::where('interview_session_id', $session->id)->whereNull('retry_of_answer_id')->get() as $answer) {
- $coaching = is_array($answer->coaching_feedback) ? $answer->coaching_feedback : [];
- $alignment = is_array($coaching['content_alignment'] ?? null) ? $coaching['content_alignment'] : [];
- $alignment['evaluation_source'] = 'ai_evidence_validated';
- $alignment['improvement_focus'] = trim((string) ($alignment['improvement_focus'] ?? '')) ?: 'Add one true detail.';
- $coaching['content_alignment'] = $alignment;
- $answer->forceFill([
- 'ai_provider' => 'openai',
- 'ai_feedback' => trim((string) $answer->ai_feedback) ?: 'The saved answer was reviewed by the provider.',
- 'coaching_feedback' => $coaching,
- ])->save();
- }
-
- $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
- $summary = is_array($feedback->coaching_summary) ? $feedback->coaching_summary : [];
- $summary['overall_summary'] = 'The provider reviewed the saved answers and identified one practice focus.';
- $summary['overall_summary_source'] = 'ai_provider_validated';
- $feedback->forceFill([
- 'strengths' => trim((string) $feedback->strengths) ?: 'The answer included a useful detail.',
- 'weaknesses' => trim((string) $feedback->weaknesses) ?: 'The answer needs more detail.',
- 'improvement_suggestions' => trim((string) $feedback->improvement_suggestions) ?: 'Add one true result.',
- 'coaching_summary' => $summary,
- ])->save();
  }
 
  private function fakeOpenAiFeedback(array $answers = []): void

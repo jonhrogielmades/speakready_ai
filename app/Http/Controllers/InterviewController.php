@@ -38,6 +38,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -1655,6 +1656,23 @@ return response()->json([
 
  return false;
  }
+ }
+
+ private function fastInterviewFinishEnabled(): bool
+ {
+ return filter_var(config('services.interview_report.fast_finish', false), FILTER_VALIDATE_BOOLEAN);
+ }
+
+ private function completedSessionHasLocalFallbackFeedback(InterviewSession $session): bool
+ {
+ return InterviewAnswer::where('interview_session_id', $session->id)
+ ->whereNull('retry_of_answer_id')
+ ->where(function ($query) {
+ $query->whereNull('ai_provider')
+ ->orWhere('ai_provider', '')
+ ->orWhereIn('ai_provider', ['local', 'localmodel']);
+ })
+ ->exists();
  }
 
  private function fastInterviewFinishEnabled(): bool
