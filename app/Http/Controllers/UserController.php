@@ -20,7 +20,6 @@ use App\Models\Setting;
 use App\Services\AIService;
 use App\Services\ChallengePositionService;
 use App\Services\CoachLanguageService;
-use App\Services\CsvExportService;
 use App\Services\LearningChallengeGenerationService;
 use App\Services\LearningModuleGenerationService;
 use App\Services\LearningRecommendationService;
@@ -818,62 +817,7 @@ class UserController extends Controller
 
  abort_unless((int) $session->user_id === (int) Auth::id(), 403);
 
- $session->load(['category', 'score', 'feedback', 'answers.question']);
- $answers = $session->answers->whereNull('retry_of_answer_id')->values();
- $fileName = 'interview_session_'.$session->id.'_'.now()->format('Ymd_His').'.csv';
- $user = Auth::user();
-
- ActivityLogger::log(
- $user,
- 'interview_session_exported',
- "{$user->name} exported interview session #{$session->id}.",
- request()->ip(),
- false
- );
-
- return response()->stream(function () use ($session, $answers) {
- $stream = fopen('php://output', 'w');
- $scenarioLabel = $this->practiceScenarioLabel($session);
- CsvExportService::writeRow($stream, [
- 'Session ID', 'Date', 'Position', 'Scenario', 'Question', 'Answer', 'Answer Score',
- 'Clarity', 'Relevance', 'Grammar', 'Overall Readiness', 'AI Feedback',
- ]);
-
- if ($answers->isEmpty()) {
- CsvExportService::writeRow($stream, [
- $session->id,
- optional($session->created_at)->toDateTimeString(),
- $session->target_position,
- $scenarioLabel,
- '', '', '', '', '', '',
- $session->score?->overall_readiness_score,
- '',
- ]);
- } else {
- foreach ($answers as $answer) {
- CsvExportService::writeRow($stream, [
- $session->id,
- optional($session->created_at)->toDateTimeString(),
- $session->target_position,
- $scenarioLabel,
- $answer->question?->question_text,
- $answer->answer_text,
- $answer->score,
- $answer->clarity_score,
- $answer->relevance_score,
- $answer->grammar_score,
- $session->score?->overall_readiness_score,
- $answer->ai_feedback,
- ]);
- }
- }
-
- fclose($stream);
- }, 200, [
- 'Content-Type' => 'text/csv; charset=UTF-8',
- 'Content-Disposition' => "attachment; filename={$fileName}",
- 'Cache-Control' => 'no-store, no-cache, must-revalidate',
- ]);
+ abort(409, 'Session CSV export is no longer available from the user reports area.');
  }
 
  public function destroySession(Request $request, $id)

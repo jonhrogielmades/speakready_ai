@@ -10,9 +10,9 @@ class FeedbackReportPresenter
  public static function forSession(InterviewSession $session): array
  {
  $feedback = $session->feedback;
- $strengths = trim((string) ($feedback->strengths?? ''));
- $weaknesses = trim((string) ($feedback->weaknesses?? ''));
- $suggestions = trim((string) ($feedback->improvement_suggestions?? ''));
+ $strengths = self::reviewText($feedback->strengths?? '');
+ $weaknesses = self::reviewText($feedback->weaknesses?? '');
+ $suggestions = self::reviewText($feedback->improvement_suggestions?? '');
  $score = $session->score;
  $overall = is_numeric($score?->overall_readiness_score?? null)? self::score($score->overall_readiness_score): null;
  $focus = self::primaryFocus($session);
