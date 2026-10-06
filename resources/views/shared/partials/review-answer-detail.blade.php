@@ -34,7 +34,6 @@
  : ($isVoiceOnlyAnswer && $hasVoiceEvidence
  ? 'Voice answer saved. Feedback is based on the saved voice session.'
  : ($hasVoiceRecording ? 'Transcript unavailable. Listen to the saved voice answer above.' : 'No answer text was saved.'));
- $sampleAnswer = review_question_sample_answer($questionSource);
  $whatWorked = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['what_worked'] ?? ''), 'worked');
  $impactText = review_feedback_with_sentence_range($reviewFeedbackText($contentAlignment['impact'] ?? $contentAlignment['observation'] ?? ''), 'impact');
  $missingPoints = $reviewFeedbackItems($contentAlignment['missing_points'] ?? ($evidenceMap['missing_evidence'] ?? []), 2);
