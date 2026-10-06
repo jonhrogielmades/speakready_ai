@@ -945,6 +945,82 @@ class ReliabilityHardeningTest extends TestCase
  );
  }
 
+ public function test_interview_finish_keeps_ai_provider_review_for_every_answer(): void
+ {
+ $this->fakeOpenAiFeedback();
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, [
+ 'num_questions' => 3,
+ ]);
+ $questions = [
+ $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Tell me about a release checklist process you improved.',
+ 'type' => 'Behavioral',
+ ]),
+ $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Tell me about a time you helped a difficult customer.',
+ 'type' => 'Behavioral',
+ ]),
+ $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'How would you diagnose a slow database query?',
+ 'type' => 'Technical',
+ ]),
+ ];
+ $answerTexts = [
+ 'During a delayed release, I owned the checklist, coordinated missing approvals, and delivered the deployment after documenting the final result.',
+ 'I listened to an upset customer, checked the order status, gave a clear update, and the customer received the item the next day.',
+ 'I would inspect the query plan, compare row estimates, check indexes and locks, then verify the same workload before changing the query.',
+ ];
+
+ foreach ($questions as $index => $question) {
+ InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => $answerTexts[$index],
+ 'response_mode' => 'text',
+ ]);
+ }
+
+ $this->actingAs($user)
+ ->withSession([
+ 'active_interview_id' => $session->id,
+ 'active_interview_provider' => 'openai',
+ ])
+ ->postJson(route('interview.finish'), [
+ 'session_id' => $session->id,
+ 'duration_seconds' => 120,
+ ])
+ ->assertOk()
+ ->assertJsonPath('redirect_url', route('user.review', $session));
+
+ $savedAnswers = InterviewAnswer::where('interview_session_id', $session->id)
+ ->whereNull('retry_of_answer_id')
+ ->orderBy('id')
+ ->get();
+
+ $this->assertCount(3, $savedAnswers);
+ foreach ($savedAnswers as $index => $savedAnswer) {
+ $this->assertSame('openai', $savedAnswer->ai_provider, 'Answer '.($index + 1).' should keep the API provider.');
+ $this->assertSame('ai_evidence_validated', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'), 'Answer '.($index + 1).' should keep provider review source.');
+ $this->assertSame('ai_provider', data_get($savedAnswer->coaching_feedback, 'content_alignment.possible_answer_source'), 'Answer '.($index + 1).' should keep provider possible answer source.');
+ $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'content_alignment.possible_answer_provider'), 'Answer '.($index + 1).' should keep provider possible answer key.');
+ $this->assertStringContainsString(mb_substr($answerTexts[$index], 0, 35), $savedAnswer->better_sample_answer);
+ }
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('Feedback Detailed Review')
+ ->assertSee($questions[0]->question_text)
+ ->assertSee($questions[1]->question_text)
+ ->assertSee($questions[2]->question_text)
+ ->assertSee('Validated AI provider check');
+ }
+
  public function test_live_feedback_modes_control_final_feedback_and_readiness_updates(): void
  {
  foreach ([
