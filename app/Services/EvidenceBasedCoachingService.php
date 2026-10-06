@@ -1016,6 +1016,8 @@ final class EvidenceBasedCoachingService
  && ((int) ($metrics['scoring_confidence']?? 0)) > 0;
  $score = $hasScore? $this->boundedInt($metrics['relevance_score'], 0, 100): null;
  $evaluatedAlignment = is_scalar($metrics['answer_alignment']?? null)? trim((string) $metrics['answer_alignment']): '';
+ $evaluationSource = is_scalar($metrics['evaluation_source']?? null)? trim((string) $metrics['evaluation_source']): null;
+ $usesApiProviderEvaluation = $evaluationSource === 'ai_evidence_validated';
 
  $status = match (true) {
  $isSkipped => 'skipped',
@@ -1059,6 +1061,7 @@ final class EvidenceBasedCoachingService
  break;
  }
  }
+ $hasProviderMissingPoints = $usesApiProviderEvaluation && $missingPoints !== [];
 
  $coverageTargets = $this->questionCoverageTargets($questionText, $questionTip);
 
@@ -1158,9 +1161,18 @@ final class EvidenceBasedCoachingService
  };
 
  $providerCoaching = $this->providerCoaching($metrics['provider_coaching']?? []);
+ $missingPointsSource = $hasProviderMissingPoints? 'ai_provider': 'local_evidence';
+ $improvementFocusSource = 'local_evidence';
  if ($providerCoaching!== []) {
  $whatWorked = $providerCoaching['keep'];
  $improvementFocus = $providerCoaching['improve'];
+ if ($usesApiProviderEvaluation) {
+ $improvementFocusSource = 'ai_provider';
+ if (! $hasProviderMissingPoints) {
+ $missingPoints = [$providerCoaching['improve']];
+ }
+ $missingPointsSource = 'ai_provider';
+ }
  if (isset($providerCoaching['impact'])) {
  $impact = $providerCoaching['impact'];
  }
@@ -1186,13 +1198,15 @@ final class EvidenceBasedCoachingService
  'observation' => $observation,
  'evidence_quotes' => $evidenceQuotes,
  'missing_points' => $missingPoints,
+ 'missing_points_source' => $missingPointsSource,
  'what_worked' => $whatWorked,
  'improvement_focus' => $improvementFocus,
+ 'improvement_focus_source' => $improvementFocusSource,
  'impact' => $impact,
  'action' => $action,
  'next_attempt_steps' => $nextAttemptSteps,
  'success_check' => $successCheck,
- 'evaluation_source' => is_scalar($metrics['evaluation_source']?? null)? trim((string) $metrics['evaluation_source']): null,
+ 'evaluation_source' => $evaluationSource,
  'scoring_confidence' => $hasScore
  && in_array($status, ['directly_answered', 'partially_answered', 'low_relevance'], true)? $this->boundedInt($metrics['scoring_confidence'], 0, 100): null,
  'limitation' => 'This note checks only the saved answer, question, and quoted detail. It may miss unstated context and cannot prove every claim is true.',

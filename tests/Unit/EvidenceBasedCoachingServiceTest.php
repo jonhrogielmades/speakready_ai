@@ -519,7 +519,10 @@ class EvidenceBasedCoachingServiceTest extends TestCase
 
         $alignment = data_get($coaching, 'content_alignment');
         $this->assertSame($providerCoaching['keep'], $alignment['what_worked']);
+        $this->assertSame([$providerCoaching['improve']], $alignment['missing_points']);
+        $this->assertSame('ai_provider', $alignment['missing_points_source']);
         $this->assertSame($providerCoaching['improve'], $alignment['improvement_focus']);
+        $this->assertSame('ai_provider', $alignment['improvement_focus_source']);
         $this->assertSame($providerCoaching['impact'], $alignment['impact']);
         $this->assertSame($providerCoaching['next_try'], $alignment['action']);
         $this->assertSame($providerCoaching['next_attempt_steps'], $alignment['next_attempt_steps']);

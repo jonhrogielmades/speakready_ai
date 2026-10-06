@@ -4170,6 +4170,22 @@ return response()->json([
 
  $coachingFeedback['content_alignment']['possible_answer_source'] = $source;
  $coachingFeedback['content_alignment']['possible_answer_provider'] = $providerKey;
+ $evaluationSource = trim((string) ($coachingFeedback['content_alignment']['evaluation_source']?? ''));
+ $answerReviewSource = match ($evaluationSource) {
+ 'ai_evidence_validated' => 'ai_provider',
+ 'local_trained_model' => 'local_trained_model',
+ 'local_evidence', 'local_fallback' => 'local_evidence',
+ default => $source,
+ };
+ if ($answerReviewSource === 'ai_provider') {
+ $coachingFeedback['content_alignment']['answer_review_source'] = $answerReviewSource;
+ $coachingFeedback['content_alignment']['answer_review_provider'] = $providerKey;
+ foreach (['missing_points', 'improvement_focus'] as $field) {
+ if (($coachingFeedback['content_alignment'][$field.'_source']?? null) === 'ai_provider') {
+ $coachingFeedback['content_alignment'][$field.'_provider'] = $providerKey;
+ }
+ }
+ }
 
  return $coachingFeedback;
  }

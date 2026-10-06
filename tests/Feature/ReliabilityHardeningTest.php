@@ -1130,6 +1130,14 @@ class ReliabilityHardeningTest extends TestCase
  foreach ($savedAnswers as $index => $savedAnswer) {
  $this->assertSame('openai', $savedAnswer->ai_provider, 'Answer '.($index + 1).' should keep the API provider after per-answer retry.');
  $this->assertSame('ai_evidence_validated', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'), 'Answer '.($index + 1).' should keep provider review source after per-answer retry.');
+ $this->assertSame('ai_provider', data_get($savedAnswer->coaching_feedback, 'content_alignment.answer_review_source'), 'Answer '.($index + 1).' should keep API provider answer review source.');
+ $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'content_alignment.answer_review_provider'), 'Answer '.($index + 1).' should keep answer review provider.');
+ $this->assertSame('ai_provider', data_get($savedAnswer->coaching_feedback, 'content_alignment.missing_points_source'), 'Answer '.($index + 1).' should use provider missing-or-weak guidance.');
+ $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'content_alignment.missing_points_provider'), 'Answer '.($index + 1).' should keep provider for missing-or-weak guidance.');
+ $this->assertSame('ai_provider', data_get($savedAnswer->coaching_feedback, 'content_alignment.improvement_focus_source'), 'Answer '.($index + 1).' should use provider improvement guidance.');
+ $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'content_alignment.improvement_focus_provider'), 'Answer '.($index + 1).' should keep provider for improvement guidance.');
+ $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'content_alignment.missing_points'), 'Answer '.($index + 1).' should save provider missing-or-weak guidance.');
+ $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'content_alignment.improvement_focus'), 'Answer '.($index + 1).' should save provider improvement guidance.');
  $this->assertSame('ai_provider', data_get($savedAnswer->coaching_feedback, 'content_alignment.possible_answer_source'), 'Answer '.($index + 1).' should keep provider possible answer source after per-answer retry.');
  foreach (['score', 'clarity_score', 'relevance_score', 'grammar_score'] as $scoreField) {
  $this->assertTrue(is_numeric($savedAnswer->{$scoreField}), 'Answer '.($index + 1).' should save numeric '.$scoreField.'.');
