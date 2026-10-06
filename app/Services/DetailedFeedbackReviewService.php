@@ -238,7 +238,11 @@ class DetailedFeedbackReviewService
  'strengths' => trim((string) ($sessionFeedback['strengths']?? '')),
  'weaknesses' => trim((string) ($sessionFeedback['weaknesses']?? '')),
  'improvement_suggestions' => trim((string) ($sessionFeedback['improvement_suggestions']?? '')),
- 'coaching_summary' => $this->sessionCoachingSummary($evaluatedAnswers, $sessionFeedback),
+ 'coaching_summary' => $this->sessionCoachingSummary(
+ $evaluatedAnswers,
+ $sessionFeedback,
+ is_array($feedback['review_context']?? null)? $feedback['review_context']: []
+ ),
  ]);
 
  if ($session->readinessScoreEligible()) {
@@ -247,9 +251,12 @@ class DetailedFeedbackReviewService
  });
  }
 
- private function sessionCoachingSummary(Collection $answers, array $sessionFeedback): array
+ private function sessionCoachingSummary(Collection $answers, array $sessionFeedback, array $reviewContext = []): array
  {
  $summary = $this->coaching->sessionSummary($answers->values());
+ if ($reviewContext !== []) {
+ $summary['review_context'] = $this->summaryReviewContext($reviewContext);
+ }
  $overallSummary = trim((string) ($sessionFeedback['overall_summary']?? ''));
  if ($overallSummary !== '') {
  $summary['overall_summary'] = Str::limit($overallSummary, 700, '');
@@ -257,6 +264,31 @@ class DetailedFeedbackReviewService
  }
 
  return $summary;
+ }
+
+ private function summaryReviewContext(array $reviewContext): array
+ {
+ return [
+ 'schema_version' => trim((string) ($reviewContext['schema_version']?? 'interview_feedback_v9')),
+ 'rubric_name' => trim((string) ($reviewContext['rubric_name']?? 'SpeakReady detailed interview feedback rubric')),
+ 'rubric_version' => trim((string) ($reviewContext['rubric_version']?? 'score-v'.TrustworthyAssessmentService::SCORE_VERSION)),
+ 'score_version' => (int) ($reviewContext['score_version']?? TrustworthyAssessmentService::SCORE_VERSION),
+ 'coaching_version' => (int) ($reviewContext['coaching_version']?? EvidenceBasedCoachingService::VERSION),
+ 'provider_key' => AIService::normalizeProviderKey($reviewContext['provider_key']?? null),
+ 'provider_source' => trim((string) ($reviewContext['provider_source']?? 'ai_provider')),
+ 'provider_confidence' => trim((string) ($reviewContext['provider_confidence']?? 'medium')),
+ 'insufficient_data' => (bool) ($reviewContext['insufficient_data']?? false),
+ 'evidence_policy' => trim((string) ($reviewContext['evidence_policy']?? 'Scores and comments use only saved answer evidence, the exact question, and explicit missing requirements.')),
+ 'confidence_policy' => trim((string) ($reviewContext['confidence_policy']?? 'Confidence is based on answer detail, evidence quotes, missing data, and score checks.')),
+ 'rubric_dimensions' => is_array($reviewContext['rubric_dimensions']?? null)? $reviewContext['rubric_dimensions']: [],
+ 'coverage' => is_array($reviewContext['coverage']?? null)? $reviewContext['coverage']: [],
+ 'risk_flags' => array_values(array_filter(array_map(
+ fn ($flag): string => is_scalar($flag)? trim((string) $flag): '',
+ (array) ($reviewContext['risk_flags']?? [])
+ ))),
+ 'feedback_quality' => is_array($reviewContext['feedback_quality']?? null)? $reviewContext['feedback_quality']: [],
+ 'limitation' => trim((string) ($reviewContext['limitation']?? 'This is AI coaching feedback checked against saved answer evidence, not a human hiring decision.')),
+ ];
  }
 
  private function configuredProvider(?string $preferredProvider):?string

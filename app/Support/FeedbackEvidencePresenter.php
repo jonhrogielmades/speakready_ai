@@ -124,13 +124,15 @@ final class FeedbackEvidencePresenter
         $lowCount = $answerCards->filter(fn (object $answer): bool => $answer->confidence === null || $answer->confidence < 55)->count();
         $answerCount = $answerCards->count();
         $coverage = is_array($session->feedback?->coaching_summary ?? null) ? $session->feedback->coaching_summary : [];
-        $quality = self::scoreValue(data_get($coverage, 'feedback_quality.completeness_percent'));
+        $reviewContext = is_array(data_get($coverage, 'review_context')) ? data_get($coverage, 'review_context') : [];
+        $quality = self::scoreValue(data_get($reviewContext, 'feedback_quality.completeness_percent', data_get($coverage, 'feedback_quality.completeness_percent')));
 
         return (object) [
             'score' => $confidence,
             'label' => self::confidenceLabel($confidence, $answerCount === 0 ? 'not_evaluated' : 'directly_answered'),
             'color' => self::confidenceColor($confidence, $answerCount === 0 ? 'not_evaluated' : 'directly_answered'),
             'description' => self::sessionReliabilityDescription($confidence, $lowCount, $answerCount),
+            'context_label' => self::reviewContextLabel($reviewContext),
             'low_confidence_count' => $lowCount,
             'quality_label' => $quality === null ? 'Quality checks pending' : $quality.'% quality checks',
             'version_label' => 'Rubric v'.(int) ($session->score?->score_version ?? 0),
@@ -368,6 +370,33 @@ final class FeedbackEvidencePresenter
         }
 
         return $prefix.' Every answer has enough evidence for the displayed coaching notes.';
+    }
+
+    private static function reviewContextLabel(array $context): string
+    {
+        if ($context === []) {
+            return '';
+        }
+
+        $provider = trim((string) ($context['provider_source'] ?? ''));
+        $confidence = trim((string) ($context['provider_confidence'] ?? ''));
+        $rubric = trim((string) ($context['rubric_version'] ?? ''));
+        $parts = [];
+
+        if ($provider !== '') {
+            $parts[] = Str::headline(str_replace('_', ' ', $provider));
+        }
+        if ($confidence !== '') {
+            $parts[] = Str::headline($confidence).' provider confidence';
+        }
+        if ($rubric !== '') {
+            $parts[] = 'Rubric '.$rubric;
+        }
+        if ((bool) ($context['insufficient_data'] ?? false)) {
+            $parts[] = 'limited answer detail';
+        }
+
+        return implode(' - ', array_values(array_unique($parts)));
     }
 
     private static function scoreLabel(InterviewAnswer $answer, string $status): string

@@ -1118,7 +1118,13 @@ return response()->json([
  $overall = is_array($sFeedback) && array_key_exists('overall_readiness_score', $sFeedback)? $this->scoreValue($sFeedback['overall_readiness_score']): $metadata['overall'];
  $metadata['overall'] = $overall;
  $metadata['readiness_band'] = $assessment->readinessBand($overall);
- $coachingSummary = $this->sessionCoachingSummaryWithProviderFeedback($evaluatedAnswers, $session, $sFeedback, $feedbackEvidenceProvider);
+ $coachingSummary = $this->sessionCoachingSummaryWithProviderFeedback(
+ $evaluatedAnswers,
+ $session,
+ $sFeedback,
+ $feedbackEvidenceProvider,
+ is_array($aiFeedback['review_context']?? null)? $aiFeedback['review_context']: null
+ );
 
  // Game perks affect game progression, never the stored assessment score.
  $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
@@ -2200,9 +2206,19 @@ return response()->json([
  }
  }
 
- private function sessionCoachingSummaryWithProviderFeedback($answers, InterviewSession $session, mixed $sessionFeedback,?string $feedbackSource = null): array
+ private function sessionCoachingSummaryWithProviderFeedback(
+ $answers,
+ InterviewSession $session,
+ mixed $sessionFeedback,
+?string $feedbackSource = null,
+?array $reviewContext = null
+ ): array
  {
  $summary = $this->safeSessionCoachingSummary($answers, $session);
+ $reviewContext = is_array($reviewContext)? $reviewContext: [];
+ if ($reviewContext!== []) {
+ $summary['review_context'] = $this->summaryReviewContext($reviewContext, $feedbackSource);
+ }
  if (! is_array($sessionFeedback)) {
  return $summary;
  }
@@ -2220,6 +2236,37 @@ return response()->json([
  };
 
  return $summary;
+ }
+
+ private function summaryReviewContext(array $reviewContext,?string $feedbackSource = null): array
+ {
+ $providerKey = AIService::normalizeProviderKey($feedbackSource)?: (string) ($reviewContext['provider_key']?? 'local');
+
+ return [
+ 'schema_version' => trim((string) ($reviewContext['schema_version']?? 'interview_feedback_v9')),
+ 'rubric_name' => trim((string) ($reviewContext['rubric_name']?? 'SpeakReady detailed interview feedback rubric')),
+ 'rubric_version' => trim((string) ($reviewContext['rubric_version']?? 'score-v'.TrustworthyAssessmentService::SCORE_VERSION)),
+ 'score_version' => (int) ($reviewContext['score_version']?? TrustworthyAssessmentService::SCORE_VERSION),
+ 'coaching_version' => (int) ($reviewContext['coaching_version']?? EvidenceBasedCoachingService::VERSION),
+ 'provider_key' => $providerKey,
+ 'provider_source' => trim((string) ($reviewContext['provider_source']?? match ($providerKey) {
+ 'localmodel' => 'local_trained_model',
+ 'local' => 'local_evidence',
+ default => 'ai_provider',
+ })),
+ 'provider_confidence' => trim((string) ($reviewContext['provider_confidence']?? 'medium')),
+ 'insufficient_data' => (bool) ($reviewContext['insufficient_data']?? false),
+ 'evidence_policy' => trim((string) ($reviewContext['evidence_policy']?? 'Scores and comments use only saved answer evidence, the exact question, and explicit missing requirements.')),
+ 'confidence_policy' => trim((string) ($reviewContext['confidence_policy']?? 'Confidence is based on answer detail, evidence quotes, missing data, and score checks.')),
+ 'rubric_dimensions' => is_array($reviewContext['rubric_dimensions']?? null)? $reviewContext['rubric_dimensions']: [],
+ 'coverage' => is_array($reviewContext['coverage']?? null)? $reviewContext['coverage']: [],
+ 'risk_flags' => array_values(array_filter(array_map(
+ fn ($flag): string => is_scalar($flag)? trim((string) $flag): '',
+ (array) ($reviewContext['risk_flags']?? [])
+ ))),
+ 'feedback_quality' => is_array($reviewContext['feedback_quality']?? null)? $reviewContext['feedback_quality']: [],
+ 'limitation' => trim((string) ($reviewContext['limitation']?? 'This is AI coaching feedback checked against saved answer evidence, not a human hiring decision.')),
+ ];
  }
 
  private function safeSessionCoachingSummary($answers, InterviewSession $session): array

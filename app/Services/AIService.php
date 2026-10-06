@@ -1705,8 +1705,8 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  return [
  'type' => 'json_schema',
  'json_schema' => [
- 'name' => 'interview_feedback_v8',
- 'description' => 'Question-linked, evidence-linked interview scores and AI-generated coaching feedback.',
+ 'name' => 'interview_feedback_v9',
+ 'description' => 'Question-linked, evidence-linked interview scores, reliability context, and AI-generated coaching feedback.',
  'strict' => true,
  'schema' => [
  'type' => 'object',
@@ -1745,6 +1745,11 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  'type' => 'array',
  'items' => ['type' => 'string'],
  ],
+ 'insufficient_data' => ['type' => 'boolean'],
+ 'confidence_level' => [
+ 'type' => 'string',
+ 'enum' => ['high', 'medium', 'low'],
+ ],
  'ai_feedback' => ['type' => 'string'],
  'better_sample_answer' => ['type' => 'string'],
  'follow_up_question' => ['type' => 'string'],
@@ -1773,7 +1778,8 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  self::FEEDBACK_SCORE_FIELDS,
  [
  'star_applicable', 'star_method_score', 'evidence_quotes',
- 'question_focus', 'answer_alignment', 'missing_criteria', 'ai_feedback',
+ 'question_focus', 'answer_alignment', 'missing_criteria',
+ 'insufficient_data', 'confidence_level', 'ai_feedback',
  'better_sample_answer', 'follow_up_question', 'coaching',
  ]
  ),
@@ -1790,8 +1796,32 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  ],
  'required' => ['overall_summary', 'strengths', 'weaknesses', 'improvement_suggestions'],
  ],
+ 'review_context' => [
+ 'type' => 'object',
+ 'additionalProperties' => false,
+ 'properties' => [
+ 'rubric_name' => ['type' => 'string'],
+ 'rubric_version' => ['type' => 'string'],
+ 'evidence_policy' => ['type' => 'string'],
+ 'confidence_policy' => ['type' => 'string'],
+ 'provider_confidence' => [
+ 'type' => 'string',
+ 'enum' => ['high', 'medium', 'low'],
  ],
- 'required' => ['per_question_feedback', 'session_feedback'],
+ 'insufficient_data' => ['type' => 'boolean'],
+ 'risk_flags' => [
+ 'type' => 'array',
+ 'items' => ['type' => 'string'],
+ ],
+ ],
+ 'required' => [
+ 'rubric_name', 'rubric_version', 'evidence_policy',
+ 'confidence_policy', 'provider_confidence', 'insufficient_data',
+ 'risk_flags',
+ ],
+ ],
+ ],
+ 'required' => ['per_question_feedback', 'session_feedback', 'review_context'],
  ],
  ],
  ];
@@ -1869,6 +1899,19 @@ ACCURACY REQUIREMENTS (HIGHEST PRIORITY):
 You MUST check ONLY the Candidate Answer provided.
 You MUST NOT invent information, assumptions, achievements, skills, experiences, results, or intentions that were not explicitly stated by the candidate.
 
+FULL DETAILED REVIEW CONTEXT:
+Use one stable rubric for every provider and every user:
+clarity checks organization and flow;
+relevance checks whether the answer addresses the exact question;
+grammar checks sentence quality and word use;
+professionalism checks work-ready tone and role-appropriate ownership;
+STAR applies only when star_applicable is true.
+Every score, strength, gap, and next step must be tied to the exact question, exact answer, evidence_quotes, or explicit missing_criteria.
+If the answer has too little information, set insufficient_data to true, use low confidence, and explain that the review cannot be strongly trusted yet.
+If evidence is usable but limited, use medium confidence. Use high confidence only when the answer has enough exact detail, the score is well supported, and no major missing detail blocks the review.
+Return review_context to describe the rubric, evidence policy, confidence policy, overall provider confidence, insufficient-data status, and risk flags for the full review.
+Use risk_flags such as "skipped_answers", "short_answers", "missing_results", "weak_question_match", "provider_uncertainty", or "none".
+
 PLAIN LANGUAGE REQUIREMENTS:
 Write all user-facing text in short, simple sentences.
 Keep ai_feedback to 3-4 short sentences. Avoid repeated wording and do not restate the same advice twice.
@@ -1900,6 +1943,8 @@ EOT;
  $prompt.= '* better_sample_answer: '.self::aiCoachPossibleAnswerWritingRules(null, true).' If the answer is skipped, use an empty string.'."\n";
  $prompt.= <<<'EOT'
 * follow_up_question: one short interviewer question for the same answer that asks for a missing detail or clearer result.
+* insufficient_data: true when the answer was skipped, too short, blank, unclear, or does not contain enough usable detail for a reliable answer-level review.
+* confidence_level: "high", "medium", or "low" based on evidence strength and answer completeness, not on the candidate's personality.
 * coaching: the exact visible text for the compact report sections. These fields replace local wording in the user report, so do not use canned or repeated sentences.
 
 For coaching:
@@ -2147,6 +2192,8 @@ OUTPUT SCHEMA:
 "question_focus": "exact full question text from this item",
 "answer_alignment": "directly_addressed",
 "missing_criteria": [],
+"insufficient_data": false,
+"confidence_level": "medium",
 "ai_feedback": "",
 "better_sample_answer": "",
 "follow_up_question": "",
@@ -2165,6 +2212,15 @@ OUTPUT SCHEMA:
 "strengths": "",
 "weaknesses": "",
 "improvement_suggestions": ""
+},
+"review_context": {
+"rubric_name": "SpeakReady detailed interview feedback rubric",
+"rubric_version": "v9",
+"evidence_policy": "Scores and comments use only exact candidate-answer evidence and explicit missing question requirements.",
+"confidence_policy": "Confidence is based on answer detail, evidence quotes, missing data, and score support.",
+"provider_confidence": "medium",
+"insufficient_data": false,
+"risk_flags": ["none"]
 }
 }
 
@@ -5208,6 +5264,8 @@ PROMPT;
  }
  }
 
+ $feedbackQuality = self::aggregateFeedbackQuality($normalizedItems);
+
  return [
  'per_question_feedback' => $normalizedItems,
  'session_feedback' => self::normalizeSessionFeedback(
@@ -5215,8 +5273,187 @@ PROMPT;
  $normalizedItems,
  $requireAiGenerated
  ),
- 'feedback_quality' => self::aggregateFeedbackQuality($normalizedItems),
+ 'review_context' => self::normalizeReviewContext(
+ $response['review_context']?? [],
+ $normalizedItems,
+ $answersData,
+ $sessionData,
+ $feedbackQuality,
+ $feedbackSource
+ ),
+ 'feedback_quality' => $feedbackQuality,
  ];
+ }
+
+ private static function normalizeReviewContext(
+ mixed $reviewContext,
+ array $feedbackItems,
+ array $answersData,
+ array $sessionData,
+ array $feedbackQuality,
+?string $feedbackSource = null
+ ): array {
+ $reviewContext = is_array($reviewContext)? $reviewContext: [];
+ $providerKey = self::normalizeProviderKey($feedbackSource)?: 'local';
+ $answerCount = count($answersData);
+ $insufficientCount = 0;
+ $skippedCount = 0;
+ $tooShortCount = 0;
+ $evidenceQuoteCount = 0;
+ $lowConfidenceCount = 0;
+ $providerValidatedCount = 0;
+ $riskFlags = [];
+
+ foreach ((array) ($reviewContext['risk_flags']?? []) as $flag) {
+ if (! is_scalar($flag)) {
+ continue;
+ }
+
+ $flag = self::normalizedRiskFlag((string) $flag);
+ if ($flag !== '' && $flag !== 'none') {
+ $riskFlags[] = $flag;
+ }
+ }
+
+ foreach ($feedbackItems as $item) {
+ if (! is_array($item)) {
+ continue;
+ }
+
+ if ((bool) ($item['insufficient_data']?? false)) {
+ $insufficientCount++;
+ }
+ if ((bool) ($item['is_skipped']?? false)) {
+ $skippedCount++;
+ }
+ if ((bool) ($item['is_too_short']?? false)) {
+ $tooShortCount++;
+ }
+ $evidenceQuoteCount += count((array) ($item['evidence_quotes']?? []));
+ if (self::normalizeScore($item['scoring_confidence']?? 0) < 55) {
+ $lowConfidenceCount++;
+ }
+ if (($item['evaluation_source']?? null) === 'ai_evidence_validated') {
+ $providerValidatedCount++;
+ }
+
+ foreach ((array) data_get($item, 'score_calibration.risk_flags', []) as $flag) {
+ if (is_scalar($flag)) {
+ $riskFlags[] = self::normalizedRiskFlag((string) $flag);
+ }
+ }
+ foreach ((array) data_get($item, 'score_calibration.coverage_flags', []) as $flag) {
+ if (is_scalar($flag)) {
+ $riskFlags[] = self::normalizedRiskFlag((string) $flag);
+ }
+ }
+ if ((array) ($item['missing_evidence']?? [])!== []) {
+ $riskFlags[] = 'missing_required_detail';
+ }
+ }
+
+ if ($skippedCount > 0) {
+ $riskFlags[] = 'skipped_answers';
+ }
+ if ($tooShortCount > 0) {
+ $riskFlags[] = 'short_answers';
+ }
+ if ($insufficientCount > 0) {
+ $riskFlags[] = 'insufficient_answer_detail';
+ }
+ if ($lowConfidenceCount > 0) {
+ $riskFlags[] = 'provider_uncertainty';
+ }
+ if (in_array($providerKey, ['local', 'localmodel'], true)) {
+ $riskFlags[] = $providerKey === 'localmodel'? 'local_model_review': 'local_evidence_review';
+ }
+
+ $riskFlags = array_values(array_unique(array_filter($riskFlags)));
+ if ($riskFlags === []) {
+ $riskFlags[] = 'none';
+ }
+
+ $providerConfidence = strtolower(trim((string) ($reviewContext['provider_confidence']?? '')));
+ if (! in_array($providerConfidence, ['high', 'medium', 'low'], true)) {
+ $providerConfidence = self::feedbackConfidenceLevel(
+ is_numeric($feedbackQuality['reliability_percent']?? null)
+ ? self::normalizeScore($feedbackQuality['reliability_percent'])
+ : self::normalizeScore($feedbackQuality['completeness_percent']?? 0)
+ );
+ }
+
+ return [
+ 'schema_version' => 'interview_feedback_v9',
+ 'rubric_name' => self::reviewContextText(
+ $reviewContext['rubric_name']?? null,
+ 'SpeakReady detailed interview feedback rubric',
+ 140
+ ),
+ 'rubric_version' => self::reviewContextText(
+ $reviewContext['rubric_version']?? null,
+ 'score-v'.TrustworthyAssessmentService::SCORE_VERSION,
+ 80
+ ),
+ 'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+ 'coaching_version' => EvidenceBasedCoachingService::VERSION,
+ 'provider_key' => $providerKey,
+ 'provider_source' => match ($providerKey) {
+ 'localmodel' => 'local_trained_model',
+ 'local' => 'local_evidence',
+ default => 'ai_provider',
+ },
+ 'target_position' => trim((string) ($sessionData['target_position']?? 'General')),
+ 'rubric_dimensions' => [
+ 'clarity' => 'Organization, understandability, and flow.',
+ 'relevance' => 'Direct match to the exact interview question.',
+ 'grammar' => 'Sentence quality, grammar, and word use.',
+ 'professionalism' => 'Work-ready tone and role-appropriate ownership.',
+ 'star_when_applicable' => 'Situation, task, action, and result only when the question calls for it.',
+ ],
+ 'evidence_policy' => self::reviewContextText(
+ $reviewContext['evidence_policy']?? null,
+ 'Scores and comments use only exact candidate-answer evidence, the exact question, and explicit missing question requirements.',
+ 360
+ ),
+ 'confidence_policy' => self::reviewContextText(
+ $reviewContext['confidence_policy']?? null,
+ 'Confidence is based on answer detail, evidence quotes, missing data, and score cross-checks. It is not a personality judgment.',
+ 360
+ ),
+ 'provider_confidence' => $providerConfidence,
+ 'insufficient_data' => $insufficientCount > 0 || filter_var($reviewContext['insufficient_data']?? false, FILTER_VALIDATE_BOOLEAN),
+ 'coverage' => [
+ 'answer_count' => $answerCount,
+ 'provider_validated_count' => $providerValidatedCount,
+ 'evidence_quote_count' => $evidenceQuoteCount,
+ 'insufficient_answer_count' => $insufficientCount,
+ 'skipped_answer_count' => $skippedCount,
+ 'short_answer_count' => $tooShortCount,
+ 'low_confidence_answer_count' => $lowConfidenceCount,
+ ],
+ 'risk_flags' => $riskFlags,
+ 'feedback_quality' => $feedbackQuality,
+ 'limitation' => 'This AI review is checked against saved answer evidence and rubric rules, but it is still coaching feedback, not a human hiring decision.',
+ ];
+ }
+
+ private static function reviewContextText(mixed $value, string $fallback, int $limit): string
+ {
+ $text = is_scalar($value)? self::normalizeEvidenceText((string) $value): '';
+ if ($text === '') {
+ $text = $fallback;
+ }
+
+ return mb_strlen($text) > $limit? rtrim(mb_substr($text, 0, max(1, $limit - 3))).'...': $text;
+ }
+
+ private static function normalizedRiskFlag(string $flag): string
+ {
+ $flag = mb_strtolower(trim($flag));
+ $flag = preg_replace('/[^a-z0-9]+/u', '_', $flag)?? $flag;
+ $flag = trim($flag, '_');
+
+ return mb_strlen($flag) > 80? mb_substr($flag, 0, 80): $flag;
  }
 
  public static function calculateWeightedReadinessScore($clarityScore, $relevanceScore, $grammarScore, $professionalismScore, $starMethodScore, bool $starApplicable = true): int
@@ -5594,6 +5831,8 @@ PROMPT;
  'star_applicable' => $starApplicable,
  'star_method_score' => $starMethodScore,
  'scoring_confidence' => $scoringConfidence,
+ 'confidence_level' => self::feedbackConfidenceLevel($scoringConfidence),
+ 'insufficient_data' => $isSkipped || $isTooShort || ($answerText!== '' && $evidenceQuotes === []),
  'ai_feedback' => $aiFeedback,
  'better_sample_answer' => $betterAnswer,
  'better_sample_answer_source' => $betterAnswerSource,
@@ -5773,6 +6012,15 @@ PROMPT;
  $percent >= 85 => 'Medium',
  $percent > 0 => 'Limited',
  default => 'Not available',
+ };
+ }
+
+ private static function feedbackConfidenceLevel(int $percent): string
+ {
+ return match (true) {
+ $percent >= 85 => 'high',
+ $percent >= 55 => 'medium',
+ default => 'low',
  };
  }
 

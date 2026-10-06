@@ -95,6 +95,15 @@ class ReliabilityHardeningTest extends TestCase
  'weaknesses' => 'The answer could add the final result from the same database work.',
  'improvement_suggestions' => 'Keep the diagnostic steps and add the outcome only if it is true.',
  ],
+ 'review_context' => [
+ 'rubric_name' => 'SpeakReady detailed interview feedback rubric',
+ 'rubric_version' => 'v9',
+ 'evidence_policy' => 'Scores and comments use only exact candidate-answer evidence and explicit missing question requirements.',
+ 'confidence_policy' => 'Confidence is based on answer detail, evidence quotes, missing data, and score support.',
+ 'provider_confidence' => 'high',
+ 'insufficient_data' => false,
+ 'risk_flags' => ['missing_results'],
+ ],
  ]),
  ],
  ]],
@@ -123,15 +132,21 @@ class ReliabilityHardeningTest extends TestCase
  'question_type' => 'Technical',
  'question' => 'How would you diagnose a slow database query?',
  'answer' => $answerText,
- ]], []]);
+ ]], [], false, 'openai']);
 
  $this->assertSame('ai_evidence_validated', $feedback['per_question_feedback'][0]['evaluation_source']);
+ $this->assertFalse($feedback['per_question_feedback'][0]['insufficient_data']);
+ $this->assertSame('high', $feedback['review_context']['provider_confidence']);
+ $this->assertSame('openai', $feedback['review_context']['provider_key']);
+ $this->assertSame('interview_feedback_v9', $feedback['review_context']['schema_version']);
+ $this->assertContains('missing_results', $feedback['review_context']['risk_flags']);
  Http::assertSent(function ($request): bool {
  $payload = $request->data();
 
  return data_get($payload, 'response_format.type') === 'json_schema'
  && data_get($payload, 'response_format.json_schema.strict') === true
  && data_get($payload, 'response_format.json_schema.schema.additionalProperties') === false
+ && in_array('review_context', (array) data_get($payload, 'response_format.json_schema.schema.required'), true)
  && str_contains((string) data_get($payload, 'messages.1.content'), 'evidence_quotes')
  && str_contains((string) data_get($payload, 'messages.1.content'), 'UNTRUSTED TRANSCRIPT DATA JSON');
  });
@@ -926,9 +941,11 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Answer Match')
  ->assertSee($question->question_text)
  ->assertSee('Feedback Detailed Review')
- ->assertSee('Validated AI provider check')
- ->assertSee('What To Improve')
- ->assertSee('Next Practice')
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
+ ->assertSee('Possible Answer')
+ ->assertDontSee('What To Improve')
+ ->assertDontSee('Next Practice')
  ->assertDontSee('â€œ', false);
 
  $profileAfterFirstFinish = Profile::where('user_id', $user->id)->firstOrFail();
@@ -1018,7 +1035,9 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee($questions[0]->question_text)
  ->assertSee($questions[1]->question_text)
  ->assertSee($questions[2]->question_text)
- ->assertSee('Validated AI provider check');
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
+ ->assertSee('Possible Answer');
  }
 
  public function test_interview_finish_retries_ai_provider_for_all_twenty_selected_answers_when_batch_misses_later_items(): void
@@ -1543,7 +1562,9 @@ class ReliabilityHardeningTest extends TestCase
  ->get(route('user.review', $session))
  ->assertOk()
  ->assertSee('Feedback Detailed Review')
- ->assertSee('Trained local model check');
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
+ ->assertSee('Possible Answer');
  Http::assertSentCount(8);
  }
 
@@ -1614,8 +1635,9 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('All Answer Review Summary')
  ->assertSee('Strengths')
  ->assertSee('Weaknesses')
- ->assertSee('Validated AI provider check')
- ->assertSee('What To Improve')
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
+ ->assertDontSee('What To Improve')
  ->assertDontSee('What Worked')
  ->assertDontSee('Why It Matters')
  ->assertDontSee('Success check')
@@ -1631,6 +1653,9 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame('openai', data_get($savedAnswer->coaching_feedback, 'content_alignment.possible_answer_provider'));
  $this->assertNotSame('Local possible answer.', $savedAnswer->better_sample_answer);
  $this->assertSame('ai_provider_validated', data_get($savedFeedback->coaching_summary, 'overall_summary_source'));
+ $this->assertSame('interview_feedback_v9', data_get($savedFeedback->coaching_summary, 'review_context.schema_version'));
+ $this->assertSame('openai', data_get($savedFeedback->coaching_summary, 'review_context.provider_key'));
+ $this->assertSame('ai_provider', data_get($savedFeedback->coaching_summary, 'review_context.provider_source'));
  $this->assertStringContainsString('AI review used details', (string) data_get($savedFeedback->coaching_summary, 'overall_summary'));
  Http::assertSentCount(1);
  }
@@ -1700,7 +1725,8 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Validated AI provider check')
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
  ->assertSee('Possible Answer');
 
  $savedAnswer = $answer->fresh();
@@ -1829,7 +1855,10 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('Feedback Detailed Review')
  ->assertSee('Answer Match')
- ->assertSee('What To Improve')
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
+ ->assertSee('Possible Answer')
+ ->assertDontSee('What To Improve')
  ->assertSee($question->question_text);
 
  $this->assertSame(
@@ -1883,7 +1912,10 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Detailed Review')
  ->assertSee('I reviewed the process')
  ->assertSee('Feedback Detailed Review')
- ->assertSee('Next Practice')
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
+ ->assertSee('Possible Answer')
+ ->assertDontSee('Next Practice')
  ->assertSee('Score Breakdown')
  ->assertDontSee('>Clarity</strong>', false)
  ->assertDontSee('Score version', false)
@@ -1982,16 +2014,21 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('const coachingHtml = retryRenderedCoachingHtml(data);', false)
- ->assertSee('appendRetryAttempt(answerId, data);', false)
- ->assertSee('${coachingHtml}', false);
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
+ ->assertSee('Possible Answer')
+ ->assertDontSee('retryRenderedCoachingHtml', false)
+ ->assertDontSee('appendRetryAttempt', false);
 
  $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
  ->get(route('user.review', $session))
  ->assertOk()
  ->assertSee('serverDetectedMobile: true', false)
- ->assertSee('appendRetryAttempt(answerId, data);', false);
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
+ ->assertSee('Possible Answer')
+ ->assertDontSee('appendRetryAttempt', false);
  }
 
  public function test_user_review_does_not_refresh_stale_rubric_score_metadata_on_open(): void
@@ -2305,7 +2342,10 @@ class ReliabilityHardeningTest extends TestCase
  ->get(route('user.review', $session))
  ->assertOk()
  ->assertSee('Not enough detail')
- ->assertSee('Not scored')
+ ->assertSee('Feedback')
+ ->assertSee('Your Answer')
+ ->assertSee('Possible Answer')
+ ->assertDontSee('Not scored')
  ->assertDontSee('Score: 0')
  ->assertDontSee('0% relevance');
  }
