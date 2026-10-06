@@ -789,17 +789,6 @@ class UserController extends Controller
  'message' => $exception->getMessage(),
  ]);
  }
-
- try {
- app(InterviewController::class)->deferCompletedSessionOpenAiFeedbackEvidence((int) $sessionRecord->id, 'detailed_review');
- } catch (\Throwable $exception) {
- Log::warning('Detailed feedback provider sync scheduling failed; rendering saved report data.', [
- 'session_id' => $sessionRecord->id,
- 'user_id' => Auth::id(),
- 'error_type' => $exception::class,
- 'message' => $exception->getMessage(),
- ]);
- }
  }
 
  if ($coachingRepaired) {

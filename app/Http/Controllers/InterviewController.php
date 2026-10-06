@@ -38,7 +38,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -900,7 +899,6 @@ return response()->json([
  if ($gameLevel) {
  GameSchema::ensure();
  }
- $fastFinish = ! $gameLevel && $this->fastInterviewFinishEnabled();
 
  try {
  $this->ensureInterviewReportSchema();
@@ -920,9 +918,7 @@ return response()->json([
  }
 
  if ($session->status === 'completed') {
- if ($fastFinish) {
- $this->deferCompletedSessionOpenAiFeedbackEvidence($session->id, 'finish_completed');
- } elseif ($this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
+ if ($this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
  $session->refresh()->load(['score', 'feedback']);
  }
 
@@ -1013,12 +1009,10 @@ return response()->json([
  $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
  }
 
- $feedbackProvider = $gameLevel? null: ($fastFinish
- ? 'local'
- : $this->bestEvaluatedInterviewProvider(
+ $feedbackProvider = $gameLevel? null: $this->bestEvaluatedInterviewProvider(
  'feedback_generation',
  session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
- ));
+ );
  if (! $gameLevel) {
  session(['active_interview_feedback_provider' => $feedbackProvider]);
  }
@@ -1298,9 +1292,6 @@ return response()->json([
  DB::commit();
  $reportTransactionStarted = false;
  $this->forgetCompletedSessionState($session, $gameLevel);
- if ($fastFinish) {
- $this->deferCompletedSessionOpenAiFeedbackEvidence($session->id, 'finish_fast');
- }
 
  $redirect = $this->completedSessionRedirect($session, $gameLevel, $gameStatus, $gameResultScore, [
  'xp_earned' => $xpEarned,
@@ -1637,11 +1628,6 @@ return response()->json([
  return $this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel);
  }
 
- public function deferCompletedSessionOpenAiFeedbackEvidence(int $sessionId, string $source = 'response'): bool
- {
- return false;
- }
-
  private function repairCompletedSessionFeedbackFromSavedData(InterviewSession $session): bool
  {
  try {
@@ -1658,11 +1644,6 @@ return response()->json([
  }
  }
 
- private function fastInterviewFinishEnabled(): bool
- {
- return filter_var(config('services.interview_report.fast_finish', false), FILTER_VALIDATE_BOOLEAN);
- }
-
  private function completedSessionHasLocalFallbackFeedback(InterviewSession $session): bool
  {
  return InterviewAnswer::where('interview_session_id', $session->id)
@@ -1673,11 +1654,6 @@ return response()->json([
  ->orWhereIn('ai_provider', ['local', 'localmodel']);
  })
  ->exists();
- }
-
- private function fastInterviewFinishEnabled(): bool
- {
- return filter_var(config('services.interview_report.fast_finish', false), FILTER_VALIDATE_BOOLEAN);
  }
 
  private function completedSessionFeedbackIsStale(InterviewSession $session): bool
@@ -4156,10 +4132,6 @@ return response()->json([
  private function evidenceProviderKey(?string $provider):?string
  {
  $providerKey = AIService::normalizeProviderKey($provider);
-
- if (in_array($providerKey, ['local', 'localmodel'], true)) {
- return 'local';
- }
 
  if ($providerKey === '' ||! AIService::providerIsSupported($providerKey)) {
  return null;
