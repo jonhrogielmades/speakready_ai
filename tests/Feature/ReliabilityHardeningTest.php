@@ -1021,6 +1021,103 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Validated AI provider check');
  }
 
+ public function test_interview_finish_retries_ai_provider_for_each_answer_when_batch_misses_later_item(): void
+ {
+ $requestCount = 0;
+ Http::fake([
+ 'api.openai.com/*' => function ($request) use (&$requestCount) {
+ $requestCount++;
+ $transcript = $this->feedbackTranscriptFromPrompt((string) collect(data_get($request->data(), 'messages', []))
+ ->pluck('content')
+ ->filter()
+ ->implode("\n"));
+ $items = array_map(fn (array $answer): array => $this->fakeFeedbackItem($answer), $transcript);
+ if ($requestCount === 1 && count($items) > 1) {
+ $items = array_slice($items, 0, 1);
+ }
+ $firstQuote = collect($items)
+ ->flatMap(fn (array $item): array => $item['evidence_quotes']?? [])
+ ->filter()
+ ->first();
+
+ return Http::response([
+ 'choices' => [[
+ 'finish_reason' => 'stop',
+ 'message' => [
+ 'content' => json_encode([
+ 'per_question_feedback' => $items,
+ 'session_feedback' => [
+ 'overall_summary' => $firstQuote? 'Across the saved answers, the AI review used details such as "'.$firstQuote.'" to identify what worked. The next focus is to add clearer results or missing details from the same saved answers.': 'Across the saved answers, answer detail was limited.',
+ 'strengths' => $firstQuote? 'The AI review used saved answer details such as "'.$firstQuote.'" to identify what worked.': 'The AI review found limited answer detail.',
+ 'weaknesses' => 'Some responses need a clearer result or missing detail from the same saved answer.',
+ 'improvement_suggestions' => 'Keep each answer direct and add the final result only when it is true.',
+ ],
+ ]),
+ ],
+ ]],
+ ], 200);
+ },
+ ]);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, [
+ 'num_questions' => 2,
+ ]);
+ $questions = [
+ $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Tell me about a release checklist process you improved.',
+ 'type' => 'Behavioral',
+ ]),
+ $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'How would you diagnose a slow database query?',
+ 'type' => 'Technical',
+ ]),
+ ];
+ $answerTexts = [
+ 'During a delayed release, I owned the checklist, coordinated missing approvals, and delivered the deployment after documenting the final result.',
+ 'I would inspect the query plan, compare row estimates, check indexes and locks, then verify the same workload before changing the query.',
+ ];
+
+ foreach ($questions as $index => $question) {
+ InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => $answerTexts[$index],
+ 'response_mode' => 'text',
+ ]);
+ }
+
+ $this->actingAs($user)
+ ->withSession([
+ 'active_interview_id' => $session->id,
+ 'active_interview_provider' => 'openai',
+ ])
+ ->postJson(route('interview.finish'), [
+ 'session_id' => $session->id,
+ 'duration_seconds' => 90,
+ ])
+ ->assertOk()
+ ->assertJsonPath('redirect_url', route('user.review', $session));
+
+ $this->assertGreaterThanOrEqual(2, $requestCount);
+ $savedAnswers = InterviewAnswer::where('interview_session_id', $session->id)
+ ->whereNull('retry_of_answer_id')
+ ->orderBy('id')
+ ->get();
+
+ $this->assertCount(2, $savedAnswers);
+ foreach ($savedAnswers as $index => $savedAnswer) {
+ $this->assertSame('openai', $savedAnswer->ai_provider, 'Answer '.($index + 1).' should keep the API provider after per-answer retry.');
+ $this->assertSame('ai_evidence_validated', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'), 'Answer '.($index + 1).' should keep provider review source after per-answer retry.');
+ $this->assertSame('ai_provider', data_get($savedAnswer->coaching_feedback, 'content_alignment.possible_answer_source'), 'Answer '.($index + 1).' should keep provider possible answer source after per-answer retry.');
+ $this->assertStringContainsString(mb_substr($answerTexts[$index], 0, 35), $savedAnswer->ai_feedback);
+ $this->assertStringContainsString(mb_substr($answerTexts[$index], 0, 35), $savedAnswer->better_sample_answer);
+ }
+ }
+
  public function test_live_feedback_modes_control_final_feedback_and_readiness_updates(): void
  {
  foreach ([

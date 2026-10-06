@@ -2254,6 +2254,42 @@ EOT;
 
  if ($allowLocalRepair) {
  try {
+ $perAnswerResponse = self::completeProviderFeedbackPerAnswer(
+ $currentProvider,
+ $response,
+ $sessionData,
+ $answersData,
+ $currentRequestOptions,
+ $deadlineAt
+ );
+ if ($perAnswerResponse !== null) {
+ $repaired = self::normalizeFeedbackResponse($perAnswerResponse, $answersData, $sessionData, true, $currentProvider);
+ $repaired['_strict_validation_passed'] = false;
+ $repaired['_repair_applied'] = true;
+ $repaired['_validation_errors'] = array_slice($validationErrors, 0, 10);
+ $repaired['_per_answer_provider_retry'] = true;
+ Log::warning('AI feedback provider response was completed with per-answer provider retries.', [
+ 'provider' => $currentProvider,
+ 'attempt' => $attempt,
+ 'validation_errors' => array_slice($validationErrors, 0, 10),
+ ]);
+
+ return self::withFeedbackProviderMetadata(
+ $repaired,
+ $currentProvider,
+ $attemptedProviders
+ );
+ }
+ } catch (\Throwable $perAnswerRepairError) {
+ Log::warning('AI feedback per-answer provider retry failed; trying local evidence repair.', [
+ 'provider' => $currentProvider,
+ 'attempt' => $attempt,
+ 'error_type' => $perAnswerRepairError::class,
+ 'message' => self::safeProviderErrorMessage($perAnswerRepairError),
+ ]);
+ }
+
+ try {
  $repaired = self::normalizeFeedbackResponse($response, $answersData, $sessionData, true, $currentProvider);
  $repaired['_strict_validation_passed'] = false;
  $repaired['_repair_applied'] = true;
@@ -2324,6 +2360,68 @@ EOT;
  ]);
 
  throw new AiFeedbackProviderFailureException($providers, $attemptedProviders);
+ }
+
+ private static function completeProviderFeedbackPerAnswer(
+ string $provider,
+ array $response,
+ array $sessionData,
+ array $answersData,
+ array $requestOptions,
+ float $deadlineAt
+ ):?array {
+ $validItems = self::validFeedbackSubset($response, $answersData);
+ $itemsById = [];
+ foreach ($validItems as $item) {
+ if (is_array($item) && isset($item['id'])) {
+ $itemsById[(string) $item['id']] = $item;
+ }
+ }
+
+ foreach ($answersData as $answer) {
+ $id = (string) ($answer['id']?? '');
+ if ($id === '' || isset($itemsById[$id])) {
+ continue;
+ }
+
+ $remainingSeconds = $deadlineAt - microtime(true);
+ if ($remainingSeconds < 3) {
+ return null;
+ }
+
+ $singleTimeout = max(2, min((int) ($requestOptions['timeout_seconds']?? 6), (int) floor($remainingSeconds)));
+ $singleDeadline = max(3, min(30, (int) floor($remainingSeconds)));
+ $singleFeedback = self::generateFeedback($sessionData, [$answer], $provider, true, false, [
+ 'timeout_seconds' => $singleTimeout,
+ 'deadline_seconds' => $singleDeadline,
+ 'max_attempts' => 1,
+ 'http_attempts' => max(1, min(2, (int) ($requestOptions['attempts']?? 1))),
+ 'retry_delay_ms' => 0,
+ ]);
+
+ $singleItem = $singleFeedback['per_question_feedback'][0]?? null;
+ if (! is_array($singleItem) || (string) ($singleItem['id']?? '') !== $id) {
+ return null;
+ }
+
+ if (($singleItem['evaluation_source']?? null)!== self::feedbackEvaluationSource($provider)) {
+ return null;
+ }
+
+ $itemsById[$id] = $singleItem;
+ }
+
+ if (count($itemsById)!== count($answersData)) {
+ return null;
+ }
+
+ return [
+ 'per_question_feedback' => array_map(
+ fn (array $answer): array => $itemsById[(string) ($answer['id']?? '')],
+ $answersData
+ ),
+ 'session_feedback' => is_array($response['session_feedback']?? null)? $response['session_feedback']: [],
+ ];
  }
 
  public static function generateLocalFeedback(array $sessionData, array $answersData): array
@@ -5291,6 +5389,9 @@ PROMPT;
  $providerBetterAnswerIsValid = self::providerBetterSampleAnswerIsValid($providerBetterAnswer, $answer);
  $providerFollowUpQuestionIsValid = self::providerFollowUpQuestionIsValid($providerFollowUpQuestion, $answer);
  $providerCoaching = self::validatedProviderCoaching($feedback, $answer);
+ if ($providerCoaching === [] && is_array($feedback['provider_coaching']?? null)) {
+ $providerCoaching = self::validatedProviderCoaching(['coaching' => $feedback['provider_coaching']], $answer);
+ }
  $evidenceQuotes = self::validatedEvidenceQuotes($feedback, $answer);
  $feedbackContext = self::feedbackQuestionContext($answer);
  $questionFocus = self::validatedQuestionFocus($feedback, $answer)
