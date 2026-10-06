@@ -1336,7 +1336,91 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('Feedback Detailed Review')
  ->assertSee('Trained local model check');
- Http::assertSentCount(4);
+ Http::assertSentCount(8);
+ }
+
+ public function test_user_review_refreshes_local_detailed_review_with_api_provider_feedback(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('AI_FEEDBACK_PROVIDER_PRIORITY', 'openai');
+ $this->setEnvValue('AI_FEEDBACK_MAX_PROVIDERS', '1');
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Describe how you improved a support handoff.',
+ 'expected_guide' => 'Explain the handoff issue, your action, and the final result.',
+ ]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'I mapped the support handoff issue, documented repeated missed approvals, coordinated the checklist update, and confirmed the final handoff result with my supervisor.',
+ 'response_mode' => 'text',
+ 'ai_feedback' => 'Local model feedback is saved until an API provider is available.',
+ 'better_sample_answer' => 'Local possible answer.',
+ 'score' => 68,
+ 'clarity_score' => 68,
+ 'relevance_score' => 68,
+ 'grammar_score' => 68,
+ 'scoring_confidence' => 60,
+ 'ai_provider' => 'localmodel',
+ 'coaching_feedback' => [
+ 'content_alignment' => [
+ 'evaluation_source' => 'local_trained_model',
+ 'what_worked' => 'Local model found a useful handoff detail.',
+ 'improvement_focus' => 'Local model asked for a clearer result.',
+ 'impact' => 'Local model impact text.',
+ ],
+ ],
+ ]);
+ Score::create([
+ 'interview_session_id' => $session->id,
+ 'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+ 'clarity_score' => 68,
+ 'relevance_score' => 68,
+ 'grammar_score' => 68,
+ 'professionalism_score' => 68,
+ 'overall_readiness_score' => 68,
+ 'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
+ ]);
+ Feedback::create([
+ 'interview_session_id' => $session->id,
+ 'strengths' => 'Local model strength.',
+ 'weaknesses' => 'Local model weakness.',
+ 'improvement_suggestions' => 'Local model suggestion.',
+ 'coaching_summary' => [
+ 'version' => EvidenceBasedCoachingService::VERSION,
+ 'overall_summary_source' => 'local_trained_model',
+ 'overall_summary' => 'Local model summary.',
+ ],
+ ]);
+
+ $this->fakeOpenAiFeedback([$answer]);
+
+ $this->actingAs($user)
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('Feedback Detailed Review')
+ ->assertSee('All Answer Review Summary')
+ ->assertSee('Strengths')
+ ->assertSee('Weaknesses')
+ ->assertSee('Validated AI provider check')
+ ->assertSee('What Worked')
+ ->assertSee('What To Improve')
+ ->assertSee('Why It Matters')
+ ->assertSee('Possible Answer');
+
+ $savedAnswer = $answer->fresh();
+ $savedFeedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+
+ $this->assertSame('openai', $savedAnswer->ai_provider);
+ $this->assertSame('ai_evidence_validated', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+ $this->assertNotSame('Local possible answer.', $savedAnswer->better_sample_answer);
+ $this->assertSame('ai_provider_validated', data_get($savedFeedback->coaching_summary, 'overall_summary_source'));
+ $this->assertStringContainsString('AI review used details', (string) data_get($savedFeedback->coaching_summary, 'overall_summary'));
+ Http::assertSentCount(1);
  }
 
  public function test_interview_finish_tolerates_missing_feedback_coaching_summary_column(): void

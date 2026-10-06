@@ -20,6 +20,7 @@ use App\Models\Setting;
 use App\Services\AIService;
 use App\Services\ChallengePositionService;
 use App\Services\CoachLanguageService;
+use App\Services\DetailedFeedbackReviewService;
 use App\Services\LearningChallengeGenerationService;
 use App\Services\LearningModuleGenerationService;
 use App\Services\LearningRecommendationService;
@@ -774,10 +775,23 @@ class UserController extends Controller
  ->firstOrFail();
 
  $coachingRepaired = false;
+ $providerRefreshed = false;
  $sessionEndedEarly = $sessionRecord->status === 'ended'
  || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false);
 
  if (! $sessionEndedEarly && $sessionRecord->status === 'completed') {
+ try {
+ $providerRefreshed = app(DetailedFeedbackReviewService::class)->refreshWithProvidersIfNeeded($sessionRecord);
+ } catch (\Throwable $exception) {
+ Log::warning('Detailed feedback API provider refresh failed; rendering saved report data.', [
+ 'session_id' => $sessionRecord->id,
+ 'user_id' => Auth::id(),
+ 'error_type' => $exception::class,
+ 'message' => $exception->getMessage(),
+ ]);
+ }
+
+ if (! $providerRefreshed) {
  try {
  $coachingRepaired = app(FeedbackCoachingRepair::class)->repairSession($sessionRecord);
  } catch (\Throwable $exception) {
@@ -789,8 +803,9 @@ class UserController extends Controller
  ]);
  }
  }
+ }
 
- if ($coachingRepaired) {
+ if ($coachingRepaired || $providerRefreshed) {
  $sessionRecord->refresh()->load([
  'category',
  'answers' => function ($query) {
