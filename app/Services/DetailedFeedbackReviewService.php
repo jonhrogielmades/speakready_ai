@@ -168,7 +168,12 @@ class DetailedFeedbackReviewService
  $this->coachingMetricsFromAnswer($answer, $item),
  is_array($answer->observation_data)? $answer->observation_data: []
  );
- $coachingFeedback = $this->withPossibleAnswerProviderMetadata($coachingFeedback, $providerKey);
+ $coachingFeedback = $this->withPossibleAnswerProviderMetadata(
+ $coachingFeedback,
+ $providerKey,
+ is_scalar($item['better_sample_answer_source']?? null)? (string) $item['better_sample_answer_source']: null,
+ is_scalar($item['better_sample_answer_provider']?? null)? (string) $item['better_sample_answer_provider']: null
+ );
 
  $answer->forceFill([
  'ai_feedback' => trim((string) ($item['ai_feedback']?? '')),
@@ -327,13 +332,15 @@ class DetailedFeedbackReviewService
  && AIService::providerIsSupported($provider);
  }
 
- private function withPossibleAnswerProviderMetadata(array $coachingFeedback, string $providerKey): array
+ private function withPossibleAnswerProviderMetadata(array $coachingFeedback, string $providerKey,?string $sourceKey = null,?string $answerProviderKey = null): array
  {
- $providerKey = AIService::normalizeProviderKey($providerKey);
- $source = match ($providerKey) {
- 'localmodel' => 'local_trained_model',
- 'local' => 'local_evidence',
- default => 'ai_provider',
+ $providerKey = AIService::normalizeProviderKey($answerProviderKey?: $providerKey);
+ $sourceKey = trim((string) $sourceKey);
+ $source = match ($sourceKey !== ''? $sourceKey: $providerKey) {
+ 'ai_provider', 'ai_evidence_validated' => 'ai_provider',
+ 'local_trained_model', 'localmodel' => 'local_trained_model',
+ 'local_evidence', 'local' => 'local_evidence',
+ default => $providerKey!== '' && ! in_array($providerKey, ['local', 'localmodel'], true)? 'ai_provider': 'local_evidence',
  };
 
  if (! is_array($coachingFeedback['content_alignment']?? null)) {

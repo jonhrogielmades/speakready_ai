@@ -4484,12 +4484,20 @@ PROMPT;
  continue;
  }
  $templateFingerprint = self::feedbackTemplateFingerprint((string) ($item['ai_feedback']?? ''), $item, $answer);
- if ($templateFingerprint!== '' && isset($templateFingerprints[$templateFingerprint])) {
+ $unsafeTemplateReuse = false;
+ foreach ($templateFingerprints[$templateFingerprint]?? [] as $ownerAnswer) {
+ if (is_array($ownerAnswer) && self::feedbackTemplateReuseIsUnsafe($ownerAnswer, $answer)) {
+ $unsafeTemplateReuse = true;
+ break;
+ }
+ }
+ if ($unsafeTemplateReuse) {
  continue;
  }
  $commentaryFingerprints[$fingerprint] = true;
  if ($templateFingerprint!== '') {
- $templateFingerprints[$templateFingerprint] = true;
+ $templateFingerprints[$templateFingerprint]??= [];
+ $templateFingerprints[$templateFingerprint][] = $answer;
  }
  $valid[] = $item;
  }
@@ -4660,23 +4668,33 @@ PROMPT;
  }
 
  $templateFingerprint = self::feedbackTemplateFingerprint($aiFeedback, $item, $answer);
- if ($templateFingerprint!== ''
- && isset($templateOwners[$templateFingerprint])
- && $templateOwners[$templateFingerprint]!== $id) {
- $errors[] = "Feedback IDs {$templateOwners[$templateFingerprint]} and {$id} reused the same feedback template.";
- } elseif ($templateFingerprint!== '') {
- $templateOwners[$templateFingerprint] = $id;
+ if ($templateFingerprint!== '') {
+ foreach ($templateOwners[$templateFingerprint]?? [] as $owner) {
+ $ownerId = (string) ($owner['id']?? '');
+ $ownerAnswer = is_array($owner['answer']?? null)? $owner['answer']: [];
+ if ($ownerId!== '' && $ownerId!== $id && self::feedbackTemplateReuseIsUnsafe($ownerAnswer, $answer)) {
+ $errors[] = "Feedback IDs {$ownerId} and {$id} reused the same feedback template.";
+ break;
+ }
+ }
+ $templateOwners[$templateFingerprint]??= [];
+ $templateOwners[$templateFingerprint][] = ['id' => $id, 'answer' => $answer];
  }
  }
  if (! $isSkipped && $providerCoaching!== []) {
  $coachingText = self::providerCoachingRawText($providerCoaching);
  $coachingTemplateFingerprint = self::feedbackTemplateFingerprint($coachingText, $item, $answer);
- if ($coachingTemplateFingerprint!== ''
- && isset($templateOwners[$coachingTemplateFingerprint])
- && $templateOwners[$coachingTemplateFingerprint]!== $id) {
- $errors[] = "Feedback IDs {$templateOwners[$coachingTemplateFingerprint]} and {$id} reused the same visible coaching template.";
- } elseif ($coachingTemplateFingerprint!== '') {
- $templateOwners[$coachingTemplateFingerprint] = $id;
+ if ($coachingTemplateFingerprint!== '') {
+ foreach ($templateOwners[$coachingTemplateFingerprint]?? [] as $owner) {
+ $ownerId = (string) ($owner['id']?? '');
+ $ownerAnswer = is_array($owner['answer']?? null)? $owner['answer']: [];
+ if ($ownerId!== '' && $ownerId!== $id && self::feedbackTemplateReuseIsUnsafe($ownerAnswer, $answer)) {
+ $errors[] = "Feedback IDs {$ownerId} and {$id} reused the same visible coaching template.";
+ break;
+ }
+ }
+ $templateOwners[$coachingTemplateFingerprint]??= [];
+ $templateOwners[$coachingTemplateFingerprint][] = ['id' => $id, 'answer' => $answer];
  }
  }
  }
@@ -5437,6 +5455,13 @@ PROMPT;
  }
 
  $betterAnswer = $providerBetterAnswerIsValid? self::plainUserFeedbackText($providerBetterAnswer, [$questionText, $answerText]): self::fallbackBetterAnswer($answerText, $questionText, $starApplicable);
+ $betterAnswerProvider = self::normalizeProviderKey($feedbackSource);
+ $betterAnswerSource = match (true) {
+ $isSkipped => 'none',
+ $providerBetterAnswerIsValid && $betterAnswerProvider === 'localmodel' => 'local_trained_model',
+ $providerBetterAnswerIsValid && $betterAnswerProvider!== '' && $betterAnswerProvider!== 'local' => 'ai_provider',
+ default => 'local_evidence',
+ };
  $followUpQuestion = $providerFollowUpQuestionIsValid? self::plainUserFeedbackText($providerFollowUpQuestion, [$questionText, $answerText]): self::fallbackFeedbackFollowUp(
  $evidenceProfile,
  $starApplicable,
@@ -5470,6 +5495,8 @@ PROMPT;
  'scoring_confidence' => $scoringConfidence,
  'ai_feedback' => $aiFeedback,
  'better_sample_answer' => $betterAnswer,
+ 'better_sample_answer_source' => $betterAnswerSource,
+ 'better_sample_answer_provider' => $betterAnswerProvider,
  'follow_up_question' => $followUpQuestion,
  'provider_coaching' => $hasProviderScores? $providerCoaching: [],
  'evidence_quotes' => $evidenceQuotes,
@@ -5813,22 +5840,53 @@ PROMPT;
  }
 
  $owners[$fingerprint]??= [];
- $owners[$fingerprint][] = $id;
+ $owners[$fingerprint][] = ['id' => $id, 'answer' => $answersById[$id]];
  }
 
  $duplicated = [];
- foreach ($owners as $ids) {
- $ids = array_values(array_unique($ids));
- if (count($ids) < 2) {
+ foreach ($owners as $ownerGroup) {
+ $ownerGroup = array_values($ownerGroup);
+ if (count($ownerGroup) < 2) {
  continue;
  }
 
- foreach ($ids as $id) {
- $duplicated[$id] = true;
+ for ($leftIndex = 0; $leftIndex < count($ownerGroup); $leftIndex++) {
+ for ($rightIndex = $leftIndex + 1; $rightIndex < count($ownerGroup); $rightIndex++) {
+ $left = $ownerGroup[$leftIndex];
+ $right = $ownerGroup[$rightIndex];
+ $leftAnswer = is_array($left['answer']?? null)? $left['answer']: [];
+ $rightAnswer = is_array($right['answer']?? null)? $right['answer']: [];
+ if (! self::feedbackTemplateReuseIsUnsafe($leftAnswer, $rightAnswer)) {
+ continue;
+ }
+
+ $leftId = (string) ($left['id']?? '');
+ $rightId = (string) ($right['id']?? '');
+ if ($leftId!== '') {
+ $duplicated[$leftId] = true;
+ }
+ if ($rightId!== '') {
+ $duplicated[$rightId] = true;
+ }
+ }
  }
  }
 
  return $duplicated;
+ }
+
+ private static function feedbackTemplateReuseIsUnsafe(array $leftAnswer, array $rightAnswer): bool
+ {
+ $leftKeywords = self::meaningfulKeywords(self::candidateAnswerText($leftAnswer));
+ $rightKeywords = self::meaningfulKeywords(self::candidateAnswerText($rightAnswer));
+ if ($leftKeywords === [] || $rightKeywords === []) {
+ return true;
+ }
+
+ $overlap = count(array_intersect($leftKeywords, $rightKeywords));
+ $answerSimilarity = $overlap / max(1, min(count($leftKeywords), count($rightKeywords)));
+
+ return $answerSimilarity >= 0.65;
  }
 
  private static function feedbackTemplateFingerprint(string $feedback, array $feedbackItem, array $answer): string

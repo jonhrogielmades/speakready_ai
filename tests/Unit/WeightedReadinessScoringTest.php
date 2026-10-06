@@ -710,6 +710,54 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString('Answer focus: this salary answer', $second['ai_feedback']);
     }
 
+    public function test_repeated_provider_wording_keeps_ai_source_when_answers_are_different(): void
+    {
+        $answers = [
+            [
+                'id' => 833,
+                'question_type' => 'Technical',
+                'question' => 'Explain an indexing tradeoff.',
+                'answer' => 'An index can improve selective reads but adds storage and write overhead, so I verify the workload and query plan first.',
+            ],
+            [
+                'id' => 834,
+                'question_type' => 'Technical',
+                'question' => 'Explain a transaction isolation tradeoff.',
+                'answer' => 'Stronger isolation can reduce anomalies, but I check lock behavior and throughput before choosing the level.',
+            ],
+        ];
+
+        $templateItems = [];
+        $items = [];
+        foreach ($answers as $answer) {
+            $item = $this->v4FeedbackFor($answer, 88, 'directly_addressed');
+            $templateItem = $item;
+            $templateItem['ai_feedback'] = 'For "'.$answer['question'].'", you stated "'.$answer['answer'].'". This directly answered the question and gave useful details for the interviewer.';
+            $templateItems[] = $templateItem;
+            $items[] = $item;
+        }
+
+        $this->assertSame([], $this->invokePrivate('duplicatedFeedbackTemplateIds', [$templateItems, $answers]));
+
+        $response = [
+            'per_question_feedback' => $items,
+            'session_feedback' => array_merge($this->sessionFeedback(88, 0), [
+                'overall_summary' => 'Across the indexing and transaction answers, the candidate gave different database tradeoff details. The next focus is to connect each tradeoff to the final workload choice.',
+            ]),
+        ];
+
+        $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [$response, $answers]));
+
+        $normalized = $this->invokePrivate('normalizeFeedbackResponse', [$response, $answers, [], true, 'openai']);
+
+        $this->assertSame('ai_evidence_validated', $normalized['per_question_feedback'][0]['evaluation_source']);
+        $this->assertSame('ai_evidence_validated', $normalized['per_question_feedback'][1]['evaluation_source']);
+        $this->assertSame('ai_provider', $normalized['per_question_feedback'][0]['better_sample_answer_source']);
+        $this->assertSame('ai_provider', $normalized['per_question_feedback'][1]['better_sample_answer_source']);
+        $this->assertStringContainsString('index can improve selective reads', $normalized['per_question_feedback'][0]['better_sample_answer']);
+        $this->assertStringContainsString('Stronger isolation can reduce anomalies', $normalized['per_question_feedback'][1]['better_sample_answer']);
+    }
+
     public function test_valid_items_are_preserved_when_another_question_item_is_invalid(): void
     {
         $answers = [

@@ -1072,7 +1072,12 @@ return response()->json([
  is_array($answer->observation_data)? $answer->observation_data: [],
  'final_answer_coaching'
  );
- $coachingFeedback = $this->withPossibleAnswerProviderMetadata($coachingFeedback, $feedbackEvidenceProvider);
+ $coachingFeedback = $this->withPossibleAnswerProviderMetadata(
+ $coachingFeedback,
+ $feedbackEvidenceProvider,
+ is_scalar($qFeedback['better_sample_answer_source']?? null)? (string) $qFeedback['better_sample_answer_source']: null,
+ is_scalar($qFeedback['better_sample_answer_provider']?? null)? (string) $qFeedback['better_sample_answer_provider']: null
+ );
  $answer->update([
  'ai_feedback' => trim((string) ($qFeedback['ai_feedback']?? '')),
  'better_sample_answer' => trim((string) ($qFeedback['better_sample_answer']?? '')),
@@ -1559,7 +1564,12 @@ return response()->json([
  is_array($retry->observation_data)? $retry->observation_data: [],
  'retry_feedback'
  );
- $coachingFeedback = $this->withPossibleAnswerProviderMetadata($coachingFeedback, $feedbackEvidenceProvider);
+ $coachingFeedback = $this->withPossibleAnswerProviderMetadata(
+ $coachingFeedback,
+ $feedbackEvidenceProvider,
+ is_scalar($qFeedback['better_sample_answer_source']?? null)? (string) $qFeedback['better_sample_answer_source']: null,
+ is_scalar($qFeedback['better_sample_answer_provider']?? null)? (string) $qFeedback['better_sample_answer_provider']: null
+ );
  try {
  $retry->update([
  'ai_feedback' => $qFeedback['ai_feedback']?? '',
@@ -4143,14 +4153,16 @@ return response()->json([
  return $this->evidenceProviderKey($feedback['_provider_key']?? $requestedProvider);
  }
 
- private function withPossibleAnswerProviderMetadata(array $coachingFeedback,?string $providerKey): array
+ private function withPossibleAnswerProviderMetadata(array $coachingFeedback,?string $providerKey,?string $sourceKey = null,?string $answerProviderKey = null): array
  {
- $providerKey = AIService::normalizeProviderKey($providerKey);
- $source = match ($providerKey) {
- 'localmodel' => 'local_trained_model',
- 'local' => 'local_evidence',
+ $providerKey = AIService::normalizeProviderKey($answerProviderKey?: $providerKey);
+ $sourceKey = trim((string) $sourceKey);
+ $source = match ($sourceKey !== ''? $sourceKey: $providerKey) {
+ 'ai_provider', 'ai_evidence_validated' => 'ai_provider',
+ 'local_trained_model', 'localmodel' => 'local_trained_model',
+ 'local_evidence', 'local' => 'local_evidence',
  '' => 'unknown',
- default => 'ai_provider',
+ default => $providerKey!== '' && ! in_array($providerKey, ['local', 'localmodel'], true)? 'ai_provider': 'local_evidence',
  };
 
  if (! is_array($coachingFeedback['content_alignment']?? null)) {
