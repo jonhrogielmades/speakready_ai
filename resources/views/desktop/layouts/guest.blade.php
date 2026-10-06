@@ -117,11 +117,8 @@
                   <div class="d-none d-xl-flex align-items-center gap-1 mx-auto">
                      <a href="#hero" class="nav-link">Home</a>
                      <a href="#features" class="nav-link">Features</a>
-                     <a href="#how" class="nav-link">How It Works</a>
                      <a href="#benefits" class="nav-link">Interview Categories</a>
                      <a href="#developers" class="nav-link">Developers</a>
-                     <a href="#faq" class="nav-link">FAQ</a>
-                     <a href="#contact" class="nav-link">Contact Us</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
                      <button class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">
