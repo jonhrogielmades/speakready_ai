@@ -1488,7 +1488,7 @@ class UserSideHardeningTest extends TestCase
  $desktopResponse->assertSee($markup, false);
  }
  $desktopResponse->assertSee('class="db-nl db-nav-purple active" title="Interview Practice"', false);
- $desktopResponse->assertSee('js/user-ui.js?v=22', false);
+ $desktopResponse->assertSee('js/user-ui.js?v=23', false);
  foreach ($removedLiveWidgetMarkup as $markup) {
  $desktopResponse->assertDontSee($markup, false);
  }
@@ -1508,7 +1508,7 @@ class UserSideHardeningTest extends TestCase
  $mobileResponse->assertSee($markup, false);
  }
  $mobileResponse->assertSee('class="mob-nav-item mob-nav-primary active"', false);
- $mobileResponse->assertSee('js/user-ui.js?v=22', false);
+ $mobileResponse->assertSee('js/user-ui.js?v=23', false);
  foreach ($removedLiveWidgetMarkup as $markup) {
  $mobileResponse->assertDontSee($markup, false);
  }

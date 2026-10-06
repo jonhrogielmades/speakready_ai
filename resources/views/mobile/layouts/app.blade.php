@@ -4668,14 +4668,14 @@
                <span>Progress</span>
             </a>
             <a href="{{ route('interview.setup') }}"
-               class="mob-nav-item mob-nav-primary {{ request()->routeIs('interview.*') ? 'active' : '' }}"
+               class="mob-nav-item mob-nav-primary {{ request()->routeIs('interview.setup', 'interview.session') ? 'active' : '' }}"
                id="mobnav-interview"
                aria-label="Start interview practice">
                <span class="mob-nav-primary-icon"><i class="fa-solid fa-microphone"></i></span>
                <span>Interview</span>
             </a>
             <a href="{{ route('user.feedback') }}"
-               class="mob-nav-item {{ request()->routeIs('user.feedback', 'user.review') ? 'active' : '' }}"
+               class="mob-nav-item {{ request()->routeIs('user.feedback', 'user.review', 'interview.review') ? 'active' : '' }}"
                id="mobnav-feedback">
                <span class="mob-nav-icon"><i class="fa-regular fa-clipboard-list"></i></span>
                <span>Feedback</span>
@@ -4718,7 +4718,7 @@
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=22" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=23" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {

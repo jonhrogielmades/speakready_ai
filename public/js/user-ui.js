@@ -1259,7 +1259,9 @@
     function isFeedbackNavigationPath(pathname) {
         var path = normalizeUserNavigationPath(pathname);
 
-        return path === '/feedback' || /^\/session\/[^/]+\/review$/.test(path);
+        return path === '/feedback'
+            || /^\/session\/[^/]+\/review$/.test(path)
+            || /^\/interview\/[^/]+\/review$/.test(path);
     }
 
     function isInterviewPracticeNavigationPath(pathname) {
@@ -1289,7 +1291,7 @@
         var states = {
             'mobnav-home': path === '/dashboard',
             'mobnav-progress': path === '/progress',
-            'mobnav-interview': isSameOrChildNavigationPath(path, '/interview'),
+            'mobnav-interview': isInterviewPracticeNavigationPath(path),
             'mobnav-feedback': isFeedbackNavigationPath(path),
             'mobnav-more': isMoreNavigationPath(path)
         };
@@ -1311,6 +1313,8 @@
 
             var active = anchorUrl.pathname === '/interview/setup'
                 ? isInterviewPracticeNavigationPath(url.pathname)
+                : anchorUrl.pathname === '/feedback'
+                    ? isFeedbackNavigationPath(url.pathname)
                 : isSameOrChildNavigationPath(url.pathname, anchorUrl.pathname);
             anchor.classList.toggle('active', active);
         });

@@ -147,7 +147,7 @@
 
                <div class="db-nav-section">Growth</div>
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>
-               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback', 'user.review') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
+               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback', 'user.review', 'interview.review') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports and Sessions"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports and Sessions</span></a>
             </div>
             <div class="db-bottom db-sidebar-profile-bottom d-none d-lg-block">
@@ -320,7 +320,7 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=8') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=22" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=23" defer></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>

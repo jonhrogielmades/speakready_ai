@@ -168,6 +168,35 @@ class PageSmokeTest extends TestCase
  ->assertRedirect(route('user.learning'));
  }
 
+ public function test_feedback_review_page_highlights_feedback_navigation(): void
+ {
+ $seed = $this->seedUserPageData();
+ $user = $seed[0];
+ $session = $seed[2];
+
+ $desktopResponse = $this->actingAs($user)->get(route('user.review', $session));
+ $desktopResponse->assertOk();
+ $desktopContent = $desktopResponse->getContent();
+
+ $this->assertMatchesRegularExpression('/class="db-nl db-nav-cyan active"[^>]*title="Feedback"/', $desktopContent);
+ $this->assertDoesNotMatchRegularExpression('/class="db-nl db-nav-purple active"[^>]*title="Interview Practice"/', $desktopContent);
+
+ $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+ $mobileResponse = $this->actingAs($user)
+ ->withHeader('User-Agent', $mobileUserAgent)
+ ->get(route('user.review', $session));
+ $mobileResponse->assertOk();
+ $mobileContent = $mobileResponse->getContent();
+
+ $this->assertMatchesRegularExpression('/class="mob-nav-item active"\s+id="mobnav-feedback"/', $mobileContent);
+ $this->assertDoesNotMatchRegularExpression('/class="mob-nav-item mob-nav-primary active"\s+id="mobnav-interview"/', $mobileContent);
+
+ $navigationScript = file_get_contents(public_path('js/user-ui.js'));
+ $this->assertStringContainsString("anchorUrl.pathname === '/feedback'", $navigationScript);
+ $this->assertStringContainsString("|| /^\\/session\\/[^/]+\\/review$/.test(path)", $navigationScript);
+ $this->assertStringContainsString("'mobnav-interview': isInterviewPracticeNavigationPath(path)", $navigationScript);
+ }
+
  public function test_named_user_pages_expose_functional_controls_and_routes(): void
  {
  [$user, $category, $session, $module, $gameCategory] = $this->seedUserPageData();
