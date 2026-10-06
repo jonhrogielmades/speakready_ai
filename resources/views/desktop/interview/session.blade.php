@@ -53,12 +53,6 @@
  $savedStateForUi = json_decode($sessionRecord->session_state?? '', true);
  $hasSavedInterviewState = is_array($savedStateForUi) &&!empty($savedStateForUi['has_started']);
  $initialQuestionCounter = $hasSavedInterviewState? 'Resume': 'Ready';
- $assistanceLevelKey = strtolower((string) ($sessionRecord->ai_assistance_level?? 'standard'));
- $assistanceLevelLabel = [
-  'beginner' => 'Beginner Assistance',
-  'standard' => 'Standard Assistance',
-  'challenge' => 'Challenge Assistance',
-  ][$assistanceLevelKey]?? 'Standard Assistance';
   $responseModeKey = strtolower((string) ($sessionRecord->response_mode?? 'text'));
   $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
   $interviewerAvatarImages = [
@@ -320,7 +314,6 @@
  <span class="session-chip"><i class="fa-solid fa-flag"></i>{{ $scenarioLabel }}</span>
  <span class="session-chip"><i class="fa-solid fa-microphone"></i>{{ ['text' => 'Text', 'voice' => 'Voice', 'hybrid' => 'Hybrid', 'voice_and_text' => 'Hybrid'][strtolower((string) $sessionRecord->response_mode)]?? 'Text' }} Mode</span>
  <span class="session-chip"><i class="fa-solid fa-brain"></i>{{ ($sessionRecord->live_feedback_mode?? 'coaching') === 'real_interview'? 'Real Interview': 'Coaching On' }}</span>
- <span class="session-chip"><i class="fa-solid fa-sliders"></i>{{ $assistanceLevelLabel }}</span>
  <span class="session-chip"><i class="fa-solid fa-list-check"></i>{{ $num }} Questions</span>
  <span class="session-chip"><i class="fa-solid fa-video"></i>Camera {{ $cameraDetectionEnabled? 'ON': 'OFF' }}</span>
  </div>
@@ -412,7 +405,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return ['text', 'voice', 'hybrid'].includes(mode)? mode: 'text';
  })();
  const perQuestionLimitSeconds = {{ (int) (($sessionRecord->time_limit?? 0) * 60) }};
- const assistanceLevel = @json($sessionRecord->ai_assistance_level?? 'standard');
  const liveFeedbackMode = @json($sessionRecord->live_feedback_mode?? 'coaching');
  const cameraDetectionEnabled = @json($cameraDetectionEnabled);
  const cameraPreviewEnabled = cameraDetectionEnabled;
@@ -6480,7 +6472,7 @@ return fallbackText;
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const stepsMobile = [
- { element: '#interviewStartModal.active .interview-start-dialog', popover: { title: 'Session Preview', description: 'Review the scenario, response mode, coaching level, question count, and camera setting before entering the room.', side: 'bottom', align: 'center' }},
+ { element: '#interviewStartModal.active .interview-start-dialog', popover: { title: 'Session Preview', description: 'Review the scenario, response mode, feedback mode, question count, and camera setting before entering the room.', side: 'bottom', align: 'center' }},
  { element: '#interviewStartModal.active #confirmInterviewStartButton', popover: { title: 'Begin When Ready', description: 'Start or resume the interview after the setup summary looks right.', side: 'top', align: 'center' }},
  { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'Questions appear here with the interviewer avatar, caption area, timer, and quick controls.', side: 'bottom', align: 'start' }},
  { element: '#interviewControls', popover: { title: 'Question Controls', description: 'Repeat the current question or end the session from this compact control strip.', side: 'top', align: 'center' }},
@@ -6492,7 +6484,7 @@ return fallbackText;
  ];
 
  const stepsDesktop = [
- { element: '#interviewStartModal.active .interview-start-dialog', popover: { title: 'Session Preview', description: 'Review the scenario, response mode, coaching level, question count, and camera setting before entering the room.', side: 'bottom', align: 'center' }},
+ { element: '#interviewStartModal.active .interview-start-dialog', popover: { title: 'Session Preview', description: 'Review the scenario, response mode, feedback mode, question count, and camera setting before entering the room.', side: 'bottom', align: 'center' }},
  { element: '#interviewStartModal.active #confirmInterviewStartButton', popover: { title: 'Begin When Ready', description: 'Start or resume the interview after the setup summary looks right.', side: 'top', align: 'center' }},
  { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'Questions appear here with the interviewer avatar, caption area, timer, and quick controls.', side: 'right', align: 'start' }},
  { element: '#interviewControls', popover: { title: 'Question Controls', description: 'Repeat the current question or end the session from this compact control strip.', side: 'top', align: 'center' }},

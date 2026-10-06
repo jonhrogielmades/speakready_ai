@@ -82,7 +82,6 @@
  'num_questions' => (string) old('num_questions', ''),
  'time_limit' => (string) old('time_limit', ''),
  'interview_focus' => old('interview_focus', $selectedScenario['focus']?? ''),
- 'ai_assistance_level' => old('ai_assistance_level', ''),
  'live_feedback_mode' => old('live_feedback_mode', $requestedLiveFeedbackMode),
  'response_mode' => old('response_mode', ''),
  ];
@@ -348,28 +347,16 @@
  </div>
  </div>
 
- <!-- Content & Assistance -->
+ <!-- Scenario -->
  <div class="setup-panel setup-assistance-card animate-fade-up delay-400" id="panel-content">
  <div class="assistance-head">
  <div class="assistance-head-icon" aria-hidden="true">
  <i class="fa-solid fa-brain"></i>
  </div>
- <h5 class="assistance-title">Content & Assistance</h5>
+ <h5 class="assistance-title">Scenario</h5>
  </div>
 
  <div class="assistance-stack">
- <div class="assistance-field assistance-level-field">
- <label class="olbl" for="valAssistance">AI Assistance Level</label>
- <div class="assistance-select-wrap">
- <select class="oinp setup-input" name="ai_assistance_level" id="valAssistance" required>
- <option value="" disabled {{ $setupDefaults['ai_assistance_level'] === ''? 'selected': '' }}>Not yet selected</option>
- <option value="beginner" {{ $setupDefaults['ai_assistance_level'] === 'beginner'? 'selected': '' }}>Beginner Mode (More hints & feedback)</option>
- <option value="standard" {{ $setupDefaults['ai_assistance_level'] === 'standard'? 'selected': '' }}>Standard Mode (Balanced experience)</option>
- <option value="challenge" {{ $setupDefaults['ai_assistance_level'] === 'challenge'? 'selected': '' }}>Challenge Mode (No hints, harder follow-ups)</option>
- </select>
- </div>
- </div>
-
  <div class="assistance-field assistance-feedback-field">
  <label class="olbl" for="valFeedbackMode">Live Feedback Mode</label>
  <div class="assistance-select-wrap">
@@ -475,11 +462,6 @@
  <span class="summary-val summary-val-pending" id="sumCameraDetection">Not set yet</span>
  </div>
  <div class="summary-row">
- <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-brain"></i></span>
- <span class="summary-label">Assistance:</span>
- <span class="summary-val summary-val-pending" id="sumAssistance">Not set yet</span>
- </div>
- <div class="summary-row">
  <span class="summary-icon" aria-hidden="true"><i class="fa-regular fa-circle-question"></i></span>
  <span class="summary-label">Question Types:</span>
  <span class="summary-val summary-val-pending" id="sumQuestionTypes">Not set yet</span>
@@ -533,13 +515,12 @@
  'valPosition',
  'valNumQuestions',
  'valTimeLimit',
- 'valAssistance',
  'valFeedbackMode',
  ];
  const setupPanelRequiredFields = {
  'panel-basic': ['valScenario', 'valPosition'],
  'panel-structure': ['valNumQuestions', 'valTimeLimit'],
- 'panel-content': ['valAssistance', 'valFeedbackMode'],
+ 'panel-content': ['valFeedbackMode'],
  };
  let setupValidationVisible = false;
  const setupFieldErrorIds = {
@@ -1065,12 +1046,6 @@
 
  const cameraDetection = document.querySelector('input[name="camera_detection"]:checked');
  setSummaryValue('sumCameraDetection', cameraDetection?.value === '1'? 'Camera On': 'Camera Off', cameraReady && Boolean(cameraDetection));
-
- const assistance = document.getElementById('valAssistance');
- if (assistance) {
- const assistanceLabel = (assistance.options[assistance.selectedIndex]?.text || '').replace(/\s*\([^)]*\)\s*$/, '');
- setSummaryValue('sumAssistance', assistanceLabel, contentReady && Boolean(assistance.value));
- }
 
  const selectedQuestionTypes = Array.from(document.querySelectorAll('input[name="question_types[]"]:checked')).map(input => input.value);
  setSummaryValue('sumQuestionTypes', selectedQuestionTypes.join(', '), contentReady && selectedQuestionTypes.length > 0);

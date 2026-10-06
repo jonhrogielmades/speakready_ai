@@ -956,16 +956,12 @@ class UserSideHardeningTest extends TestCase
  }
  }
 
- public function test_interview_setup_exposes_content_assistance_controls_on_desktop_and_mobile(): void
+ public function test_interview_setup_exposes_scenario_controls_on_desktop_and_mobile(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $this->category();
  $expectedMarkup = [
- 'name="ai_assistance_level"',
- 'id="valAssistance"',
- '<option value="beginner"',
- '<option value="standard"',
- '<option value="challenge"',
+ '<h5 class="assistance-title">Scenario</h5>',
  'name="live_feedback_mode"',
  'id="valFeedbackMode"',
  '<option value="coaching"',
@@ -975,11 +971,18 @@ class UserSideHardeningTest extends TestCase
  'value="Situational"',
  'value="Technical"',
  'value="Personal"',
- 'id="sumAssistance"',
  'id="sumQuestionTypes"',
  'id="sumFeedbackMode"',
  ];
  $removedMarkup = [
+ 'name="ai_assistance_level"',
+ 'id="valAssistance"',
+ '<option value="beginner"',
+ '<option value="standard"',
+ '<option value="challenge"',
+ 'AI Assistance Level',
+ 'Content & Assistance',
+ 'id="sumAssistance"',
  'name="interviewer_strictness"',
  'id="valStrictness"',
  '<option value="friendly"',
@@ -1213,7 +1216,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame(['Behavioral', 'Technical'], json_decode($session->question_types, true));
  }
 
- public function test_interview_start_stores_complete_content_assistance_settings(): void
+ public function test_interview_start_stores_complete_scenario_settings(): void
  {
  Http::fake();
 
@@ -1233,7 +1236,7 @@ class UserSideHardeningTest extends TestCase
 
  $session = InterviewSession::where('user_id', $user->id)->latest('id')->firstOrFail();
 
- $this->assertSame('challenge', $session->ai_assistance_level);
+ $this->assertSame('standard', $session->ai_assistance_level);
  $this->assertSame('real_interview', $session->live_feedback_mode);
  $this->assertSame('assessment', $session->assessment_mode);
  $this->assertTrue((bool) $session->score_eligible);
@@ -1455,10 +1458,14 @@ class UserSideHardeningTest extends TestCase
  $expectedMarkup = [
  'css/desktop/interview/session.css?v=52',
  'Coaching On',
- 'Challenge Assistance',
  "classList.toggle('real-interview-mode', liveFeedbackMode === 'real_interview')",
- 'const assistanceLevel = "challenge";',
  'const liveFeedbackMode = "coaching";',
+ ];
+ $removedAssistanceMarkup = [
+ 'Challenge Assistance',
+ 'Standard Assistance',
+ 'Beginner Assistance',
+ 'const assistanceLevel',
  ];
  $removedLiveWidgetMarkup = [
  'id="coachingTip"',
@@ -1489,6 +1496,9 @@ class UserSideHardeningTest extends TestCase
  }
  $desktopResponse->assertSee('class="db-nl db-nav-purple active" title="Interview Practice"', false);
  $desktopResponse->assertSee('js/user-ui.js?v=23', false);
+ foreach ($removedAssistanceMarkup as $markup) {
+ $desktopResponse->assertDontSee($markup, false);
+ }
  foreach ($removedLiveWidgetMarkup as $markup) {
  $desktopResponse->assertDontSee($markup, false);
  }
@@ -1509,6 +1519,9 @@ class UserSideHardeningTest extends TestCase
  }
  $mobileResponse->assertSee('class="mob-nav-item mob-nav-primary active"', false);
  $mobileResponse->assertSee('js/user-ui.js?v=23', false);
+ foreach ($removedAssistanceMarkup as $markup) {
+ $mobileResponse->assertDontSee($markup, false);
+ }
  foreach ($removedLiveWidgetMarkup as $markup) {
  $mobileResponse->assertDontSee($markup, false);
  }

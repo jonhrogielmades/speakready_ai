@@ -546,7 +546,6 @@
                 <input type="hidden" name="interview_focus" id="dashboardMockFocus" value="{{ $dashboardMockSelectedScenario['interview_focus'] ?? 'Job Interview' }}">
                 <input type="hidden" name="coach_focus_mode" value="balanced">
                 <input type="hidden" name="time_limit" value="0">
-                <input type="hidden" name="ai_assistance_level" value="standard">
                 <div class="modal-header">
                     <div class="sr-dashboard-coach-heading">
                         <span class="sr-dashboard-coach-icon"><i class="fa-solid fa-play"></i></span>
