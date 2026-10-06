@@ -2184,12 +2184,12 @@ EOT;
  }
  $requestOptions = [
  'module' => 'feedback_generation',
- 'timeout_seconds' => max(2, min(8, (int) env('AI_FEEDBACK_TIMEOUT', 6))),
+ 'timeout_seconds' => max(2, min(60, (int) env('AI_FEEDBACK_TIMEOUT', 6))),
  'attempts' => max(1, min(2, (int) env('AI_FEEDBACK_HTTP_ATTEMPTS', 1))),
  'response_format' => self::feedbackResponseFormat(),
  'model' => trim((string) env('OPENAI_FEEDBACK_MODEL', env('OPENAI_MODEL', 'gpt-4o-mini'))),
  ];
- $deadlineSeconds = max(3, min(12, (int) env('AI_FEEDBACK_DEADLINE_SECONDS', 10)));
+ $deadlineSeconds = max(3, min(180, (int) env('AI_FEEDBACK_DEADLINE_SECONDS', 10)));
  $deadlineAt = microtime(true) + $deadlineSeconds;
  $attemptedProviders = [];
  $repairableProviderResponse = null;
