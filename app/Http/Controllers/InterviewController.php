@@ -1039,7 +1039,6 @@ return response()->json([
  }
 
  if ($qFeedback) {
- $answerFeedbackProvider = $this->answerFeedbackEvidenceProvider($qFeedback, $feedbackEvidenceProvider);
  $c = $this->scoreValue($qFeedback['clarity_score']?? 0);
  $r = $this->scoreValue($qFeedback['relevance_score']?? 0);
  $g = $this->scoreValue($qFeedback['grammar_score']?? 0);
@@ -1074,7 +1073,7 @@ return response()->json([
  );
  $coachingFeedback = $this->withPossibleAnswerProviderMetadata(
  $coachingFeedback,
- $answerFeedbackProvider,
+ $feedbackEvidenceProvider,
  is_scalar($qFeedback['better_sample_answer_source']?? null)? (string) $qFeedback['better_sample_answer_source']: null,
  is_scalar($qFeedback['better_sample_answer_provider']?? null)? (string) $qFeedback['better_sample_answer_provider']: null
  );
@@ -1092,7 +1091,7 @@ return response()->json([
  'recommendation_text' => $rubric['next_level'],
  'improved_answer_source' => 'candidate_facts',
  'coaching_feedback' => $coachingFeedback,
- 'ai_provider' => $answerFeedbackProvider,
+ 'ai_provider' => $feedbackEvidenceProvider,
  ]);
  } else {
  throw new \RuntimeException("Missing validated AI feedback for answer {$answer->id}.");
@@ -1529,7 +1528,6 @@ return response()->json([
  $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($feedback, $provider);
  $qFeedback = $feedback['per_question_feedback'][0]?? null;
  if ($qFeedback) {
- $answerFeedbackProvider = $this->answerFeedbackEvidenceProvider($qFeedback, $feedbackEvidenceProvider);
  $retryScore = $this->scoreValue($qFeedback['score']?? 0);
  $betterAnswer = trim((string) ($qFeedback['better_sample_answer']?? ''));
  try {
@@ -1567,7 +1565,7 @@ return response()->json([
  );
  $coachingFeedback = $this->withPossibleAnswerProviderMetadata(
  $coachingFeedback,
- $answerFeedbackProvider,
+ $feedbackEvidenceProvider,
  is_scalar($qFeedback['better_sample_answer_source']?? null)? (string) $qFeedback['better_sample_answer_source']: null,
  is_scalar($qFeedback['better_sample_answer_provider']?? null)? (string) $qFeedback['better_sample_answer_provider']: null
  );
@@ -1586,7 +1584,7 @@ return response()->json([
  'recommendation_text' => $rubric['next_level'],
  'improved_answer_source' => 'candidate_facts',
  'coaching_feedback' => $coachingFeedback,
- 'ai_provider' => $answerFeedbackProvider,
+ 'ai_provider' => $feedbackEvidenceProvider,
  ]);
  } catch (\Throwable $error) {
  Log::warning('Retry answer optional feedback update failed after answer save.', [
@@ -4152,15 +4150,6 @@ return response()->json([
  private function feedbackEvidenceProvider(array $feedback,?string $requestedProvider = null):?string
  {
  return $this->evidenceProviderKey($feedback['_provider_key']?? $requestedProvider);
- }
-
- private function answerFeedbackEvidenceProvider(array $feedbackItem,?string $reportProvider = null):?string
- {
- $itemProvider = is_scalar($feedbackItem['evaluation_provider']?? null)
- ? (string) $feedbackItem['evaluation_provider']
- : null;
-
- return $this->evidenceProviderKey($itemProvider)?? $this->evidenceProviderKey($reportProvider);
  }
 
  private function withPossibleAnswerProviderMetadata(array $coachingFeedback,?string $providerKey,?string $sourceKey = null,?string $answerProviderKey = null): array
