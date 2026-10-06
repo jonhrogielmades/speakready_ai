@@ -154,7 +154,6 @@ class FeedbackReportPresenterTest extends TestCase
             'improvement_suggestions' => 'Fallback suggestion should not replace the provider summary.',
             'coaching_summary' => json_encode([
                 'overall_summary' => $providerSummary,
-                'overall_summary_source' => 'ai_provider_validated',
                 'content_overview' => ['partially_answered' => 1],
             ]),
         ], true);
@@ -177,50 +176,5 @@ class FeedbackReportPresenterTest extends TestCase
 
         $this->assertSame($providerSummary, $report['overview']['summary']);
         $this->assertStringNotContainsString('This overall review is based on', $report['overview']['summary']);
-    }
-
-    public function test_overall_review_prefers_validated_provider_strengths_and_weaknesses(): void
-    {
-        $session = new InterviewSession();
-
-        $feedback = new Feedback();
-        $feedback->setRawAttributes([
-            'strengths' => 'OpenAI found clear customer concern and next-step detail.',
-            'weaknesses' => 'OpenAI found the final customer result still needs to be clearer.',
-            'improvement_suggestions' => 'OpenAI recommends closing with the true customer outcome.',
-            'coaching_summary' => json_encode([
-                'overall_summary' => 'OpenAI summary from saved answer evidence.',
-                'overall_summary_source' => 'ai_provider_validated',
-            ]),
-        ], true);
-
-        $question = new Question();
-        $question->setRawAttributes(['question_text' => 'How do you calm an escalated customer?'], true);
-
-        $answer = new InterviewAnswer();
-        $answer->setRawAttributes([
-            'answer_text' => 'I listened, confirmed the billing concern, explained the next step, and followed up.',
-            'is_skipped' => false,
-            'coaching_feedback' => json_encode([
-                'content_alignment' => [
-                    'what_worked' => 'Local answer review strength should not replace provider strengths.',
-                    'improvement_focus' => 'Local answer review gap should not replace provider weaknesses.',
-                ],
-            ]),
-        ], true);
-        $answer->setRelation('question', $question);
-
-        $session->setRelation('feedback', $feedback);
-        $session->setRelation('score', new Score());
-        $session->setRelation('answers', collect([$answer]));
-
-        $report = FeedbackReportPresenter::forSession($session);
-
-        $this->assertSame(['OpenAI found clear customer concern and next-step detail.'], $report['strength_items']);
-        $this->assertSame([
-            'OpenAI found the final customer result still needs to be clearer.',
-            'OpenAI recommends closing with the true customer outcome.',
-        ], $report['weakness_items']);
-        $this->assertStringNotContainsString('Local answer review', implode(' ', array_merge($report['strength_items'], $report['weakness_items'])));
     }
 }

@@ -789,12 +789,7 @@ class UserController extends Controller
  $interviewController->deferCompletedSessionOpenAiFeedbackEvidence($sessionRecord->id, 'detailed_review');
  } else {
  $feedbackRefreshed = $interviewController
- ->ensureCompletedSessionOpenAiFeedbackEvidence($sessionRecord, $sessionRecord->gameLevel);
-
- if (! $feedbackRefreshed) {
- $feedbackRefreshed = $interviewController
  ->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel);
- }
  }
  } catch (\Throwable $exception) {
  Log::warning('Detailed feedback refresh failed; rendering saved report data.', [

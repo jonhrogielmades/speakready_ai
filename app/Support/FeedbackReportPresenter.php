@@ -18,23 +18,20 @@ class FeedbackReportPresenter
  $focus = self::primaryFocus($session);
  $categoryBreakdown = self::categoryBreakdown($session);
  $answers = self::answers($session);
- $usesProviderSessionFeedback = self::usesProviderSessionFeedback($session);
  $answerStrengthItems = self::generalizedAnswerReviewItems(self::answerReviewStrengthItems($answers));
- $providerStrengthItems = self::bulletItems($strengths, '', 4, null);
- $strengthItems = $usesProviderSessionFeedback && $providerStrengthItems !== []
- ? $providerStrengthItems
- : ($answerStrengthItems!== [] ? $answerStrengthItems : $providerStrengthItems);
+ $strengthItems = $answerStrengthItems!== []
+ ? $answerStrengthItems
+ : self::bulletItems($strengths, '', 4, null);
  if ($strengthItems === []) {
  $strengthItems = ['No answer-level strength is reliable yet. Add a complete answer so the review can identify what worked.'];
  }
  $answerWeaknessItems = self::generalizedAnswerReviewItems(self::answerReviewWeaknessItems($answers));
- $providerWeaknessItems = self::mergedItems(
+ $weaknessItems = $answerWeaknessItems!== []
+ ? $answerWeaknessItems
+ : self::mergedItems(
  self::bulletItems($weaknesses, '', 4, null),
  self::bulletItems($suggestions, '', 2, null)
  );
- $weaknessItems = $usesProviderSessionFeedback && $providerWeaknessItems !== []
- ? $providerWeaknessItems
- : ($answerWeaknessItems!== [] ? $answerWeaknessItems : $providerWeaknessItems);
  if ($weaknessItems === []) {
  $weaknessItems = ['Add one direct answer, one specific detail, and one true result or lesson.'];
  }
@@ -145,13 +142,6 @@ class FeedbackReportPresenter
  }
 
  return $items!== []? $items: [$characterLimit === null? $clean: self::limitText($clean, $characterLimit)];
- }
-
- private static function usesProviderSessionFeedback(InterviewSession $session): bool
- {
- $summary = is_array($session->feedback?->coaching_summary?? null)? $session->feedback->coaching_summary: [];
-
- return data_get($summary, 'overall_summary_source') === 'ai_provider_validated';
  }
 
  private static function mergedItems(array ...$groups): array
@@ -384,7 +374,7 @@ class FeedbackReportPresenter
 
  $summary = is_array($session->feedback?->coaching_summary?? null)? $session->feedback->coaching_summary: [];
  $providerSummary = self::reviewText(data_get($summary, 'overall_summary'), null, 700);
- if ($providerSummary!== '' && data_get($summary, 'overall_summary_source') === 'ai_provider_validated') {
+ if ($providerSummary!== '') {
  return $providerSummary;
  }
 
