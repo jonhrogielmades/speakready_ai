@@ -411,6 +411,7 @@ html.interview-setup-page-root,
 
     html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .structure-difficulty-list.setup-field-invalid,
     html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .camera-mode-list.setup-field-invalid,
+    html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .live-feedback-mode-list.setup-field-invalid,
     html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-question-list.setup-field-invalid,
     html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .response-mode-list.setup-field-invalid {
         border: 1px solid #ef4444 !important;

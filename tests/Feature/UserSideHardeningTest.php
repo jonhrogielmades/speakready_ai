@@ -960,12 +960,9 @@ class UserSideHardeningTest extends TestCase
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $this->category();
- $expectedMarkup = [
+ $sharedExpectedMarkup = [
  '<h5 class="assistance-title">Scenario</h5>',
  'name="live_feedback_mode"',
- 'id="valFeedbackMode"',
- '<option value="coaching"',
- '<option value="real_interview"',
  'name="question_types[]"',
  'value="Behavioral"',
  'value="Situational"',
@@ -973,6 +970,19 @@ class UserSideHardeningTest extends TestCase
  'value="Personal"',
  'id="sumQuestionTypes"',
  'id="sumFeedbackMode"',
+ ];
+ $desktopExpectedMarkup = [
+ 'id="feedbackModeGroup"',
+ 'role="radiogroup"',
+ 'id="feedbackModeError"',
+ 'value="coaching"',
+ 'value="real_interview"',
+ 'class="inclusive-option live-feedback-mode-option"',
+ ];
+ $mobileExpectedMarkup = [
+ 'id="valFeedbackMode"',
+ '<option value="coaching"',
+ '<option value="real_interview"',
  ];
  $removedMarkup = [
  'name="ai_assistance_level"',
@@ -1004,10 +1014,21 @@ class UserSideHardeningTest extends TestCase
  ->get(route('interview.setup'))
  ->assertOk();
 
- foreach ($expectedMarkup as $markup) {
+ foreach ($sharedExpectedMarkup as $markup) {
  $desktopResponse->assertSee($markup, false);
  $mobileResponse->assertSee($markup, false);
  }
+
+ foreach ($desktopExpectedMarkup as $markup) {
+ $desktopResponse->assertSee($markup, false);
+ }
+
+ foreach ($mobileExpectedMarkup as $markup) {
+ $mobileResponse->assertSee($markup, false);
+ }
+
+ $desktopResponse->assertDontSee('id="valFeedbackMode"', false);
+ $desktopResponse->assertDontSee('<select class="oinp setup-input" name="live_feedback_mode"', false);
 
  foreach ($removedMarkup as $markup) {
  $desktopResponse->assertDontSee($markup, false);

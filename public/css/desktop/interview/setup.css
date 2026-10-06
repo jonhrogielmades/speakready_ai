@@ -6449,13 +6449,8 @@ html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-conte
     align-items: start !important;
 }
 
-html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .assistance-level-field {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
-}
-
 html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .assistance-feedback-field {
-    grid-column: 2 !important;
+    grid-column: 1 / -1 !important;
     grid-row: 1 !important;
 }
 
@@ -6563,6 +6558,82 @@ html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclu
 html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-copy {
     align-content: center !important;
     min-height: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .live-feedback-mode-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    grid-auto-rows: 72px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .live-feedback-mode-option {
+    display: flex !important;
+    height: 72px !important;
+    min-height: 72px !important;
+    max-height: 72px !important;
+    box-sizing: border-box !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 12px !important;
+    overflow: hidden !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .live-feedback-mode-option input[type="radio"] {
+    appearance: none !important;
+    display: block !important;
+    inline-size: 26px !important;
+    block-size: 26px !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    min-height: 26px !important;
+    max-width: 26px !important;
+    max-height: 26px !important;
+    flex: 0 0 26px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 1 / 1 !important;
+    border: 2px solid rgba(100, 116, 139, 0.65) !important;
+    border-radius: 999px !important;
+    background: #ffffff !important;
+    box-shadow: inset 0 0 0 6px #ffffff !important;
+    transform: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .live-feedback-mode-option input[type="radio"]:checked {
+    border-color: #2563eb !important;
+    background: radial-gradient(circle at center, #2563eb 0 42%, #ffffff 44% 100%) !important;
+    box-shadow: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .live-feedback-mode-option:has(input[type="radio"]:checked) {
+    border-color: rgba(37, 99, 235, 0.72) !important;
+    background: rgba(37, 99, 235, 0.08) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .live-feedback-mode-copy {
+    display: grid !important;
+    gap: 3px !important;
+    align-content: center !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .live-feedback-mode-copy strong {
+    color: var(--setup-pro-text, #0f172a) !important;
+    font-size: 0.86rem !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .live-feedback-mode-copy small {
+    color: var(--setup-pro-muted, #64748b) !important;
+    font-size: 0.7rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
 }
 
 html body #sec-interview-setup #panel-basic.setup-details-card,
@@ -6798,6 +6869,7 @@ html body #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-lock
 
 html body #sec-interview-setup .structure-difficulty-list.setup-field-invalid,
 html body #sec-interview-setup .camera-mode-list.setup-field-invalid,
+html body #sec-interview-setup .live-feedback-mode-list.setup-field-invalid,
 html body #sec-interview-setup .response-mode-list.setup-field-invalid {
     border-radius: 14px !important;
     outline: 2px solid rgba(239, 68, 68, 0.52) !important;

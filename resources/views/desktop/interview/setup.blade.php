@@ -359,14 +359,24 @@
 
  <div class="assistance-stack">
  <div class="assistance-field assistance-feedback-field">
- <label class="olbl" for="valFeedbackMode">Live Feedback Mode</label>
- <div class="assistance-select-wrap">
- <select class="oinp setup-input" name="live_feedback_mode" id="valFeedbackMode" required>
- <option value="" disabled {{ $setupDefaults['live_feedback_mode'] === ''? 'selected': '' }}>Not yet selected</option>
- <option value="coaching" {{ $setupDefaults['live_feedback_mode'] === 'coaching'? 'selected': '' }}>Coaching On</option>
- <option value="real_interview" {{ $setupDefaults['live_feedback_mode'] === 'real_interview'? 'selected': '' }}>Real Interview Mode</option>
- </select>
+ <label class="olbl" id="feedbackModeLabel">Live Feedback Mode</label>
+ <div class="inclusive-option-list live-feedback-mode-list" id="feedbackModeGroup" role="radiogroup" aria-labelledby="feedbackModeLabel" aria-describedby="feedbackModeError" aria-invalid="false">
+ <label class="inclusive-option live-feedback-mode-option">
+ <input type="radio" name="live_feedback_mode" value="coaching" class="setup-input" data-summary-label="Coaching On" required {{ $setupDefaults['live_feedback_mode'] === 'coaching'? 'checked': '' }}>
+ <span class="live-feedback-mode-copy">
+ <strong>Coaching On</strong>
+ <small>Live help enabled</small>
+ </span>
+ </label>
+ <label class="inclusive-option live-feedback-mode-option">
+ <input type="radio" name="live_feedback_mode" value="real_interview" class="setup-input" data-summary-label="Real Interview Mode" required {{ $setupDefaults['live_feedback_mode'] === 'real_interview'? 'checked': '' }}>
+ <span class="live-feedback-mode-copy">
+ <strong>Real Interview Mode</strong>
+ <small>Quiet practice run</small>
+ </span>
+ </label>
  </div>
+ <div class="setup-inline-error" id="feedbackModeError" role="alert" hidden>Choose Coaching On or Real Interview Mode.</div>
  </div>
 
  <div class="assistance-field assistance-question-field">
@@ -516,12 +526,11 @@
  'valPosition',
  'valNumQuestions',
  'valTimeLimit',
- 'valFeedbackMode',
  ];
  const setupPanelRequiredFields = {
  'panel-basic': ['valScenario', 'valPosition'],
  'panel-structure': ['valNumQuestions', 'valTimeLimit'],
- 'panel-content': ['valFeedbackMode'],
+ 'panel-content': [],
  };
  let setupValidationVisible = false;
  const setupFieldErrorIds = {
@@ -530,6 +539,7 @@
  const setupGroupErrorIds = {
  difficulty: { container: '.structure-difficulty-list', error: 'difficultyError' },
  camera_detection: { container: '.camera-mode-list', error: 'cameraDetectionError' },
+ live_feedback_mode: { container: '.live-feedback-mode-list', error: 'feedbackModeError' },
  response_mode: { container: '.response-mode-list', error: 'responseModeError' },
  };
  let targetPositionAlertVisible = false;
@@ -828,6 +838,9 @@
  }
 
  if (!panelId || panelId === 'panel-content') {
+ if (!hasCheckedSetupInput('live_feedback_mode')) {
+ missing.push({ type: 'group', name: 'live_feedback_mode', panelId: 'panel-content' });
+ }
  if (!hasCheckedSetupInput('question_types[]')) {
  missing.push({ type: 'group', name: 'question_types[]', panelId: 'panel-content' });
  }
@@ -977,10 +990,9 @@
  const selectedQuestionTypes = Array.from(document.querySelectorAll('input[name="question_types[]"]:checked')).map(input => input.value);
  setSummaryValue('sumQuestionTypes', selectedQuestionTypes.join(', '), contentReady && selectedQuestionTypes.length > 0);
 
- const feedbackMode = document.getElementById('valFeedbackMode');
- if (feedbackMode) {
- setSummaryValue('sumFeedbackMode', feedbackMode.options[feedbackMode.selectedIndex]?.text || '', contentReady && Boolean(feedbackMode.value));
- }
+ const feedbackMode = document.querySelector('input[name="live_feedback_mode"]:checked');
+ const feedbackModeLabel = feedbackMode?.dataset.summaryLabel || feedbackMode?.closest('label')?.querySelector('strong')?.textContent || '';
+ setSummaryValue('sumFeedbackMode', feedbackModeLabel, contentReady && Boolean(feedbackMode));
 
  const timeLimit = parseInt(document.getElementById('valTimeLimit').value);
  let durationStr = "No limit";
@@ -1002,10 +1014,11 @@
 
  const hasDifficulty = hasCheckedSetupInput('difficulty');
  const hasCameraDetection = hasCheckedSetupInput('camera_detection');
+ const hasLiveFeedbackMode = hasCheckedSetupInput('live_feedback_mode');
  const hasResponseMode = hasCheckedSetupInput('response_mode');
  const hasQuestionType = hasCheckedSetupInput('question_types[]');
  const hasScenarioTargetMatch = !setupScenarioTargetMismatch();
- const hasCompleteSetupFields = hasRequiredFields && hasDifficulty && hasCameraDetection && hasResponseMode && hasQuestionType && hasScenarioTargetMatch;
+ const hasCompleteSetupFields = hasRequiredFields && hasDifficulty && hasCameraDetection && hasLiveFeedbackMode && hasResponseMode && hasQuestionType && hasScenarioTargetMatch;
  const hasReviewedSetupSteps = getRequiredSetupReviewStepIds().every(stepId => visitedSetupStepIds.has(stepId));
  const canStart = hasCompleteSetupFields && hasReviewedSetupSteps;
  const activeStepId = getSetupSteps()[setupStepState.index]?.id;
@@ -1652,7 +1665,7 @@
  { element: '#targetPositionDropdownButton', popover: { title: 'Target Role', description: 'Pick the role you are practicing for so the questions match your goal.', side: 'bottom', align: 'start' }},
  { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, number of questions, and timing. Shorter sessions are useful for quick drills; longer ones feel closer to a full interview.', side: 'top', align: 'center' }},
  { element: '#panel-inclusive', popover: { title: 'Camera Detection', description: 'Camera On enables local body-language observations for coaching only. Camera Off keeps the session answer-focused.', side: 'top', align: 'center' }},
- { element: '#valFeedbackMode', popover: { title: 'Coaching Style', description: 'Choose Coaching On for live help, or Real Interview Mode for a quieter practice run.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackModeGroup', popover: { title: 'Coaching Style', description: 'Choose Coaching On for live help, or Real Interview Mode for a quieter practice run.', side: 'bottom', align: 'start' }},
  { element: '#questionTypeGroup', popover: { title: 'Question Mix', description: 'Select the kinds of questions you want included in this practice session.', side: 'top', align: 'center' }},
  { element: '#panel-response', popover: { title: 'Response Mode', description: 'Use Text for typing, Voice for spoken answers, or Hybrid when you want speech-to-text with manual edits.', side: 'top', align: 'center' }},
  { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Review the generated setup summary so you can catch mismatches before the interview begins.', side: 'top', align: 'center' }},
