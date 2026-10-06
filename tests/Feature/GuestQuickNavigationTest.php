@@ -19,11 +19,11 @@ class GuestQuickNavigationTest extends TestCase
             ->assertSee('id="userCommandList"', false)
             ->assertSee('id="gqn-destination-home"', false)
             ->assertSee('id="gqn-destination-features"', false)
-            ->assertSee('id="gqn-destination-how"', false)
             ->assertSee('id="gqn-destination-benefits"', false)
             ->assertSee('id="gqn-destination-developers"', false)
-            ->assertSee('id="gqn-destination-faq"', false)
-            ->assertSee('id="gqn-destination-contact"', false)
+            ->assertDontSee('id="gqn-destination-how"', false)
+            ->assertDontSee('id="gqn-destination-faq"', false)
+            ->assertDontSee('id="gqn-destination-contact"', false)
             ->assertSee('class="ucp-guest-actions"', false)
             ->assertSee('data-ucp-action', false)
             ->assertSee('class="guest-brand-copy"', false)
@@ -45,7 +45,7 @@ class GuestQuickNavigationTest extends TestCase
         $markup = $response->getContent();
 
         $this->assertSame(1, substr_count($markup, 'data-ucp-open'));
-        $this->assertSame(7, substr_count($markup, 'data-ucp-item'));
+        $this->assertSame(4, substr_count($markup, 'data-ucp-item'));
         $this->assertSame(2, substr_count($markup, 'data-ucp-action'));
         $this->assertMatchesRegularExpression(
             '/id="mbtog".*?data-ucp-open.*?aria-controls="userCommandPalette".*?<i class="fa-solid fa-bars"/s',

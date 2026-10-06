@@ -45,13 +45,6 @@
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
-                <a id="gqn-destination-how" class="ucp-result" href="#how" data-ucp-item>
-                    <span class="ucp-result-icon ucp-cyan"><i class="fa-solid fa-route" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>How It Works</strong><small>See the path from practice to progress</small></span>
-                    <span class="ucp-result-group">Explore</span>
-                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
-                </a>
-
                 <a id="gqn-destination-benefits" class="ucp-result" href="#benefits" data-ucp-item>
                     <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-award" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Interview Categories</strong><small>Explore practice paths by interview type</small></span>
@@ -63,20 +56,6 @@
                     <span class="ucp-result-icon ucp-indigo"><i class="fa-solid fa-code" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Developers</strong><small>Meet the team behind SpeakReady</small></span>
                     <span class="ucp-result-group">Company</span>
-                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
-                </a>
-
-                <a id="gqn-destination-faq" class="ucp-result" href="#faq" data-ucp-item>
-                    <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-circle-question" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>FAQ</strong><small>Find answers to common questions</small></span>
-                    <span class="ucp-result-group">Support</span>
-                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
-                </a>
-
-                <a id="gqn-destination-contact" class="ucp-result" href="#contact" data-ucp-item>
-                    <span class="ucp-result-icon ucp-rose"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Contact Us</strong><small>Send a question or feedback</small></span>
-                    <span class="ucp-result-group">Support</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
