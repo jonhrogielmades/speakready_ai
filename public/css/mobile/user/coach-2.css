@@ -1634,3 +1634,134 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
         font-size: 0.94rem !important;
     }
 }
+
+/* Keep the coach composer clear of the Android keyboard. */
+@media (max-width: 767px) {
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open {
+        height: var(--coach-visual-vh, var(--sr-visual-vh, 100dvh)) !important;
+        min-height: var(--coach-visual-vh, var(--sr-visual-vh, 100dvh)) !important;
+        overflow: hidden !important;
+        overscroll-behavior: none !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #mob-bottom-nav {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transform: translate3d(0, calc(100% + var(--mob-safe-bottom, 0px) + 12px), 0) !important;
+        transition: transform 0.16s ease, opacity 0.16s ease !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #mob-content {
+        height: var(--coach-visual-vh, var(--sr-visual-vh, 100dvh)) !important;
+        min-height: var(--coach-visual-vh, var(--sr-visual-vh, 100dvh)) !important;
+        padding-bottom: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #mob-content > .db-content {
+        display: flex !important;
+        flex-direction: column !important;
+        height: calc(var(--coach-visual-vh, var(--sr-visual-vh, 100dvh)) - var(--mob-top-h, 56px) - var(--mob-safe-top, 0px)) !important;
+        min-height: 0 !important;
+        padding-bottom: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #mob-content #ai-coach-page {
+        flex: 1 1 auto !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        gap: 8px !important;
+        padding: 6px 8px 0 !important;
+        overflow: hidden !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .coach-progress-hero {
+        display: none !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .chat-container {
+        flex: 1 1 auto !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        border-radius: 14px 14px 0 0 !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .chat-main {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .coach-chat-header {
+        flex: 0 0 auto !important;
+        min-height: 52px !important;
+        padding: 8px 10px !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .chat-messages {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        padding: 10px 10px 8px !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .chat-input-area {
+        flex: 0 0 auto !important;
+        padding: 8px 8px max(8px, env(safe-area-inset-bottom, 0px)) !important;
+        border-radius: 0 !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .chat-input-wrapper {
+        grid-template-columns: 40px minmax(0, 1fr) 40px 40px !important;
+        min-height: 52px !important;
+        gap: 7px !important;
+        padding: 6px !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page :is(.chat-attachment-btn, .chat-send-btn, .chat-voice-btn) {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        border-radius: 9px !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .chat-textarea,
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea,
+    html body #mob-content #ai-coach-page .chat-textarea,
+    html body #ai-coach-page .chat-textarea {
+        height: var(--coach-textarea-height, 42px) !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .chat-textarea {
+        min-height: 40px !important;
+        max-height: 88px !important;
+        padding: 9px 10px !important;
+        line-height: 20px !important;
+        overflow-y: auto !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .coach-disclaimer {
+        margin-top: 6px !important;
+        font-size: 0.68rem !important;
+        line-height: 1.24 !important;
+    }
+}
+
+@media (max-width: 360px) {
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page .chat-input-wrapper {
+        grid-template-columns: 36px minmax(0, 1fr) 36px 36px !important;
+    }
+
+    body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #ai-coach-page :is(.chat-attachment-btn, .chat-send-btn, .chat-voice-btn) {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+    }
+}

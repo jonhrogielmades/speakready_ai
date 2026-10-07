@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/coach.css?v=2') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=6') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=7') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -166,7 +166,7 @@
                     <button class="chat-attachment-btn" type="button" id="coachAttachBtn" aria-label="Attach interview file" title="Attach resume, certificate, PDF, DOCX, or image" onclick="document.getElementById('coachFiles').click()">
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
-                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask about interviews, resumes, certificates..." oninput="resizeCoachTextarea(this)"></textarea>
+                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask your AI coach..." oninput="resizeCoachTextarea(this)"></textarea>
                     <button class="chat-voice-btn" type="button" id="coachVoiceBtn" aria-label="Start voice prompt" aria-pressed="false" title="Speak a message" onclick="toggleCoachVoicePrompt()">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
@@ -248,7 +248,110 @@
             textarea.style.height = 'auto';
             const nextHeight = Math.min(textarea.scrollHeight, maxHeight);
             textarea.style.height = `${nextHeight}px`;
+            textarea.style.setProperty('--coach-textarea-height', `${nextHeight}px`);
             textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+        }
+
+        let coachKeyboardLayoutFrame = null;
+        let coachKeyboardBlurTimer = null;
+
+        function isCoachMobileLayout() {
+            return document.body?.classList.contains('user-mobile-shell')
+                || window.matchMedia('(max-width: 767.98px)').matches;
+        }
+
+        function getCoachVisualViewportHeight() {
+            const viewportHeight = Number(window.visualViewport?.height || 0);
+            return viewportHeight || window.innerHeight || document.documentElement.clientHeight || 0;
+        }
+
+        function syncCoachKeyboardLayout() {
+            coachKeyboardLayoutFrame = null;
+
+            const page = document.getElementById('ai-coach-page');
+            const input = document.getElementById('chatMsg');
+            const body = document.body;
+            if (!page || !input || !body) {
+                body?.classList.remove('coach-mobile-page-active', 'coach-input-focused', 'coach-keyboard-open');
+                return;
+            }
+
+            const mobileLayout = isCoachMobileLayout();
+            const inputFocused = document.activeElement === input;
+            const visualHeight = getCoachVisualViewportHeight();
+            const focusedState = mobileLayout && inputFocused;
+
+            body.classList.add('coach-mobile-page-active');
+            body.classList.toggle('coach-input-focused', focusedState);
+            body.classList.toggle('coach-keyboard-open', focusedState);
+
+            if (visualHeight > 0) {
+                document.documentElement.style.setProperty('--coach-visual-vh', `${Math.round(visualHeight)}px`);
+            }
+
+            if (focusedState) {
+                resizeCoachTextarea(input);
+                const box = document.getElementById('chatBox');
+                if (box) {
+                    box.scrollTop = box.scrollHeight;
+                }
+                document.getElementById('coach-input-area')?.scrollIntoView({
+                    block: 'end',
+                    inline: 'nearest',
+                    behavior: 'auto'
+                });
+            }
+        }
+
+        function queueCoachKeyboardLayout(delay = 0) {
+            if (coachKeyboardLayoutFrame !== null) {
+                window.cancelAnimationFrame(coachKeyboardLayoutFrame);
+                coachKeyboardLayoutFrame = null;
+            }
+
+            if (delay > 0) {
+                window.setTimeout(() => queueCoachKeyboardLayout(), delay);
+                return;
+            }
+
+            coachKeyboardLayoutFrame = window.requestAnimationFrame(syncCoachKeyboardLayout);
+        }
+
+        function initializeCoachKeyboardLayout() {
+            const input = document.getElementById('chatMsg');
+            const body = document.body;
+            if (!input || !body || input.dataset.coachKeyboardBound === 'true') return;
+
+            body.classList.add('coach-mobile-page-active');
+            input.dataset.coachKeyboardBound = 'true';
+
+            input.addEventListener('focus', () => {
+                if (coachKeyboardBlurTimer) {
+                    window.clearTimeout(coachKeyboardBlurTimer);
+                    coachKeyboardBlurTimer = null;
+                }
+                queueCoachKeyboardLayout();
+                queueCoachKeyboardLayout(120);
+                queueCoachKeyboardLayout(320);
+            });
+
+            input.addEventListener('blur', () => {
+                coachKeyboardBlurTimer = window.setTimeout(() => {
+                    document.body?.classList.remove('coach-input-focused', 'coach-keyboard-open');
+                    queueCoachKeyboardLayout();
+                }, 120);
+            });
+
+            input.addEventListener('input', () => queueCoachKeyboardLayout());
+            window.addEventListener('resize', () => queueCoachKeyboardLayout(), { passive: true });
+            window.addEventListener('orientationchange', () => queueCoachKeyboardLayout(180), { passive: true });
+            window.visualViewport?.addEventListener('resize', () => queueCoachKeyboardLayout(), { passive: true });
+            window.visualViewport?.addEventListener('scroll', () => queueCoachKeyboardLayout(), { passive: true });
+            window.addEventListener('pagehide', () => {
+                document.body?.classList.remove('coach-mobile-page-active', 'coach-input-focused', 'coach-keyboard-open');
+            });
+
+            queueCoachKeyboardLayout();
         }
 
         function setCoachSending(isSending) {
@@ -1105,8 +1208,11 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             initializeCoachVoicePrompt();
+            initializeCoachKeyboardLayout();
 
         });
+
+        initializeCoachKeyboardLayout();
     </script>
 </div>
 
