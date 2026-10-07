@@ -5766,3 +5766,27 @@ html, body {
           color: var(--developers-copy) !important;
           -webkit-text-fill-color: var(--developers-copy) !important;
       }
+
+      @media (max-width: 767.98px) {
+          body.guest-mobile-shell #contact .contact-layout-row {
+              --bs-gutter-x: 0;
+              width: 100%;
+              margin-left: 0 !important;
+              margin-right: 0 !important;
+          }
+
+          body.guest-mobile-shell #contact .contact-layout-row > :where(.contact-info-column, .contact-form-column) {
+              flex: 0 0 100%;
+              width: 100%;
+              max-width: 100%;
+              padding-left: 0 !important;
+              padding-right: 0 !important;
+          }
+
+          body.guest-mobile-shell #contact .contact-form-panel {
+              width: 100%;
+              max-width: 100%;
+              margin-left: 0 !important;
+              margin-right: 0 !important;
+          }
+      }

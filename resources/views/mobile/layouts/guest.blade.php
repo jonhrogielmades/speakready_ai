@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=34') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=20') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=21') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
@@ -1214,8 +1214,8 @@
                   <span class="slbl">Contact Us</span>
                   <h2 class="stitle">Get in <span class="gt">Touch</span></h2>
                </div>
-               <div class="row g-5 justify-content-center">
-                  <div class="col-lg-5 rv">
+               <div class="row g-5 justify-content-center contact-layout-row">
+                  <div class="col-lg-5 rv contact-info-column">
                      <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:30px">Have questions or need support? We're here to help you on your journey to interview success.</p>
 
                      <div class="d-flex flex-column gap-4">
@@ -1242,8 +1242,8 @@
                          </div>
                      </div>
                   </div>
-                  <div class="col-lg-5 rv" style="transition-delay:.1s">
-                     <div class="gc p-4 p-md-5 h-100">
+                  <div class="col-lg-5 rv contact-form-column" style="transition-delay:.1s">
+                     <div class="gc p-4 p-md-5 h-100 contact-form-panel">
                          @if(session('contact_success'))
                              <div class="alert alert-success d-flex align-items-center mb-4" role="status" style="background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.24); color: #10b981; border-radius: 12px; padding: 15px;">
                                  <i class="fa-solid fa-circle-check fs-5 me-3" aria-hidden="true"></i>
