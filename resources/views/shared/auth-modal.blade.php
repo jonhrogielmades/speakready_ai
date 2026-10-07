@@ -80,7 +80,7 @@
                      </form>
                      <div class="odiv auth-divider">or continue with</div>
                      <a href="{{ route('auth.google.login') }}" class="oauth auth-oauth" data-auth-transition="google">
-                        <i class="fa-brands fa-google" style="color:#EA4335;" aria-hidden="true"></i>
+                        @include('shared.google-auth-mark')
                         <span>Log in with Google</span>
                      </a>
                      <p class="auth-secure-note"><i class="fa-regular fa-shield-check" aria-hidden="true"></i><span>Your data is secure with us.</span></p>
@@ -135,7 +135,7 @@
                      </form>
                      <div class="odiv auth-divider">or sign up with</div>
                      <a href="{{ route('auth.google.register') }}" class="oauth auth-oauth" data-auth-transition="google-register">
-                        <i class="fa-brands fa-google" style="color:#EA4335;" aria-hidden="true"></i>
+                        @include('shared.google-auth-mark')
                         <span>Sign up with Google</span>
                      </a>
                      <p class="auth-secure-note"><i class="fa-regular fa-shield-check" aria-hidden="true"></i><span>Your information is safe and secure.</span></p>

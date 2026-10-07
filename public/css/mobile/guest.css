@@ -5607,6 +5607,50 @@ html, body {
             -webkit-text-fill-color: #ea4335 !important;
          }
 
+         #lofc a.oauth[data-auth-transition^="google"] {
+            border-color: transparent !important;
+            background:
+               linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(52, 168, 83, 0.08) 38%, rgba(251, 188, 5, 0.1) 68%, rgba(234, 67, 53, 0.08)) padding-box,
+               linear-gradient(90deg, #4285f4, #34a853, #fbbc05, #ea4335) border-box !important;
+            color: #1f1f1f !important;
+            -webkit-text-fill-color: #1f1f1f !important;
+            box-shadow:
+               0 10px 24px rgba(15, 23, 42, 0.05),
+               0 1px 0 rgba(255, 255, 255, 0.92) inset !important;
+         }
+
+         html:not(.lm) #lofc a.oauth[data-auth-transition^="google"] {
+            background:
+               linear-gradient(135deg, rgba(66, 133, 244, 0.14), rgba(52, 168, 83, 0.13) 38%, rgba(251, 188, 5, 0.14) 68%, rgba(234, 67, 53, 0.13)) padding-box,
+               linear-gradient(90deg, #4285f4, #34a853, #fbbc05, #ea4335) border-box !important;
+            color: #f8fafc !important;
+            -webkit-text-fill-color: #f8fafc !important;
+            box-shadow:
+               0 12px 28px rgba(0, 0, 0, 0.24),
+               0 1px 0 rgba(255, 255, 255, 0.06) inset !important;
+         }
+
+         #lofc a.oauth[data-auth-transition^="google"]:hover,
+         #lofc a.oauth[data-auth-transition^="google"]:focus-visible {
+            color: #174ea6 !important;
+            -webkit-text-fill-color: #174ea6 !important;
+         }
+
+         html:not(.lm) #lofc a.oauth[data-auth-transition^="google"]:hover,
+         html:not(.lm) #lofc a.oauth[data-auth-transition^="google"]:focus-visible {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         #lofc a.oauth[data-auth-transition^="google"] .google-auth-mark {
+            -webkit-text-fill-color: initial !important;
+         }
+
+         #lofc a.oauth[data-auth-transition^="google"] .google-auth-spinner {
+            color: #4285f4 !important;
+            -webkit-text-fill-color: #4285f4 !important;
+         }
+
          #loginTransitionOverlay {
             background: var(--bg) !important;
          }

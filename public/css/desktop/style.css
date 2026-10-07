@@ -10822,32 +10822,64 @@ body.user-desktop-shell:not(.admin-shell) #dashboard #userPlan {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 18px;
+  gap: 14px;
   width: 100%;
   min-height: 58px;
   margin: 0;
   padding: 0 18px;
-  border: 1px solid var(--auth-line-strong);
+  border: 1px solid transparent;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--auth-ink);
+  background:
+    linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(52, 168, 83, 0.08) 38%, rgba(251, 188, 5, 0.1) 68%, rgba(234, 67, 53, 0.08)) padding-box,
+    linear-gradient(90deg, #4285f4, #34a853, #fbbc05, #ea4335) border-box;
+  color: #1f1f1f;
   font-family: "Poppins", sans-serif;
   font-size: 1rem;
   font-weight: 800;
   text-decoration: none !important;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.05),
+    0 1px 0 rgba(255, 255, 255, 0.92) inset;
 }
 
-#lofc.auth-modal .auth-oauth i {
-  font-size: 1.1rem;
+#lofc.auth-modal .auth-oauth .google-auth-mark,
+#lofc .oauth .google-auth-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow:
+    0 1px 4px rgba(60, 64, 67, 0.2),
+    0 0 0 1px rgba(218, 220, 224, 0.75);
+}
+
+#lofc.auth-modal .auth-oauth .google-auth-svg,
+#lofc .oauth .google-auth-svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+}
+
+#lofc.auth-modal .auth-oauth .google-auth-spinner,
+#lofc .oauth .google-auth-spinner {
+  flex: 0 0 30px;
+  width: 30px;
+  color: #4285f4;
+  font-size: 1rem;
+  text-align: center;
 }
 
 #lofc.auth-modal .auth-oauth:hover,
 #lofc.auth-modal .auth-oauth:focus-visible {
-  border-color: var(--auth-blue);
-  color: var(--auth-blue-dark);
+  color: #174ea6;
   outline: none;
-  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.12);
+  box-shadow:
+    0 16px 30px rgba(66, 133, 244, 0.16),
+    0 0 0 3px rgba(66, 133, 244, 0.1);
 }
 
 #lofc.auth-modal .auth-secure-note {
@@ -11873,10 +11905,14 @@ body.dm #lofc.auth-modal .auth-divider::after {
 html.dm #lofc.auth-modal .auth-oauth,
 html[data-theme="dark"] #lofc.auth-modal .auth-oauth,
 body.dm #lofc.auth-modal .auth-oauth {
-  border-color: rgba(148, 163, 184, 0.42);
-  background: rgba(15, 23, 42, 0.72);
+  border-color: transparent;
+  background:
+    linear-gradient(135deg, rgba(66, 133, 244, 0.14), rgba(52, 168, 83, 0.13) 38%, rgba(251, 188, 5, 0.14) 68%, rgba(234, 67, 53, 0.13)) padding-box,
+    linear-gradient(90deg, #4285f4, #34a853, #fbbc05, #ea4335) border-box;
   color: #f8fafc;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.24),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
 }
 
 html.dm #lofc.auth-modal .auth-secure-note,

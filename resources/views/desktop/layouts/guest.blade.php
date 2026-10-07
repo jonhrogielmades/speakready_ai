@@ -24,8 +24,8 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=7') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=8') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=8') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=9') }}" />
       <style>
          :root,
          .lm {
@@ -1789,11 +1789,10 @@
                   googleAuthLinks.forEach(function(link) {
                       link.style.pointerEvents = '';
                       link.removeAttribute('aria-disabled');
-                      const icon = link.querySelector('i');
-                      if (icon) {
-                          icon.className = 'fa-brands fa-google me-2';
-                          icon.style.color = '#EA4335';
-                      }
+                      const spinner = link.querySelector('.google-auth-spinner');
+                      if (spinner) spinner.remove();
+                      const googleMark = link.querySelector('.google-auth-mark');
+                      if (googleMark) googleMark.hidden = false;
                   });
               };
 
@@ -1808,10 +1807,13 @@
                       link.setAttribute('aria-disabled', 'true');
                       link.style.pointerEvents = 'none';
 
-                      const icon = link.querySelector('i');
-                      if (icon) {
-                          icon.className = 'fa-solid fa-spinner fa-spin me-2';
-                          icon.style.color = '';
+                      const googleMark = link.querySelector('.google-auth-mark');
+                      if (googleMark) {
+                          googleMark.hidden = true;
+                          const spinner = document.createElement('i');
+                          spinner.className = 'fa-solid fa-spinner fa-spin google-auth-spinner';
+                          spinner.setAttribute('aria-hidden', 'true');
+                          link.insertBefore(spinner, googleMark);
                       }
 
                       window.setTimeout(function() {
