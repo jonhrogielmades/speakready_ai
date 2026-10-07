@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=54') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=55') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -52,9 +52,20 @@
  $savedStateForUi = json_decode($sessionRecord->session_state?? '', true);
  $hasSavedInterviewState = is_array($savedStateForUi) &&!empty($savedStateForUi['has_started']);
  $initialQuestionCounter = $hasSavedInterviewState? 'Resume': 'Ready';
-  $responseModeKey = strtolower((string) ($sessionRecord->response_mode?? 'text'));
-  $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
-  $isVoiceResponseMode = in_array($responseModeKey, ['voice', 'hybrid', 'voice_and_text'], true);
+ $responseModeKey = strtolower((string) ($sessionRecord->response_mode?? 'text'));
+ $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
+ $isVoiceResponseMode = in_array($responseModeKey, ['voice', 'hybrid', 'voice_and_text'], true);
+ $interviewResponseModeLabel = ['text' => 'Text', 'voice' => 'Voice', 'hybrid' => 'Hybrid', 'voice_and_text' => 'Hybrid'][$responseModeKey]?? 'Text';
+ $interviewFeedbackModeLabel = ($sessionRecord->live_feedback_mode?? 'coaching') === 'real_interview'? 'Real Interview Mode': 'Coaching On';
+ $interviewQuestionTypeLabel = collect($selectedQuestionTypes)->map(fn($type) => ucwords(str_replace(['_', '-'], ' ', (string) $type)))->implode(', ');
+ $interviewQuestionTypeLabel = $interviewQuestionTypeLabel !== ''? $interviewQuestionTypeLabel: 'Question mix';
+ $interviewDifficultyLabel = ucfirst((string) ($sessionRecord->difficulty?? 'Medium'));
+ $interviewQuestionCountLabel = $num . ' ' . ((int) $num === 1? 'Question': 'Questions');
+ $interviewTimeLimit = (int) ($sessionRecord->time_limit?? 0);
+ $interviewTimeLimitLabel = $interviewTimeLimit > 0? $interviewTimeLimit . ' ' . ($interviewTimeLimit === 1? 'Minute': 'Minutes') . ' per Question': 'No Limit';
+ $interviewTargetLabel = trim((string) ($sessionRecord->target_position?? ''));
+ $interviewTargetLabel = $interviewTargetLabel !== ''? $interviewTargetLabel: 'Target role';
+ $interviewCameraLabel = $cameraDetectionEnabled? 'Camera On': 'Camera Off';
   $interviewerAvatarImages = [
   'img/interviewers/Filipina_Interviewer_06.png',
   ];
@@ -346,25 +357,84 @@
  </div>
  </div>
 
- <div id="interviewStartModal" class="interview-start-modal" role="dialog" aria-modal="true" aria-labelledby="interviewStartTitle" aria-describedby="interviewStartDescription">
- <div class="interview-start-dialog">
- <div class="interview-start-icon" aria-hidden="true">
- <i class="fa-solid fa-robot"></i>
+ <div id="interviewStartModal" class="interview-start-modal interview-prep-start-overlay" role="dialog" aria-modal="true" aria-labelledby="interviewStartTitle" aria-describedby="interviewStartDescription">
+ <div class="interview-start-dialog interview-prep-start-shell" tabindex="-1">
+ <div class="interview-prep-start-art" aria-hidden="true">
+ <span class="prep-start-art-ring"></span>
+ <span class="prep-start-art-doc">
+ <span class="prep-start-art-clip"></span>
+ <span class="prep-start-art-avatar"><i class="fa-solid fa-user"></i></span>
+ <span class="prep-start-art-line prep-start-art-line-1"></span>
+ <span class="prep-start-art-line prep-start-art-line-2"></span>
+ <span class="prep-start-art-line prep-start-art-line-3"></span>
+ <span class="prep-start-art-bars"><span></span><span></span><span></span></span>
+ </span>
+ <span class="prep-start-art-badge prep-start-art-badge-left"><i class="fa-solid fa-brain"></i></span>
+ <span class="prep-start-art-badge prep-start-art-badge-right"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+ <span class="prep-start-art-lens"><i class="fa-solid fa-check"></i></span>
+ <span class="prep-start-art-handle"></span>
  </div>
- <h4 id="interviewStartTitle">Interview Ready</h4>
- <p id="interviewStartDescription">{{ $hasSavedInterviewState? 'Your saved interview is ready to resume.': 'Your customized interview session is ready to begin.' }}</p>
- <div class="interview-start-meta interview-meta-line">
- <span class="session-chip"><i class="fa-solid fa-flag"></i>{{ $scenarioLabel }}</span>
- <span class="session-chip"><i class="fa-solid fa-microphone"></i>{{ ['text' => 'Text', 'voice' => 'Voice', 'hybrid' => 'Hybrid', 'voice_and_text' => 'Hybrid'][strtolower((string) $sessionRecord->response_mode)]?? 'Text' }} Mode</span>
- <span class="session-chip"><i class="fa-solid fa-brain"></i>{{ ($sessionRecord->live_feedback_mode?? 'coaching') === 'real_interview'? 'Real Interview': 'Coaching On' }}</span>
- <span class="session-chip"><i class="fa-solid fa-list-check"></i>{{ $num }} Questions</span>
- <span class="session-chip"><i class="fa-solid fa-video"></i>Camera {{ $cameraDetectionEnabled? 'ON': 'OFF' }}</span>
+
+ <div class="interview-prep-start-copy">
+ <h4 id="interviewStartTitle" class="interview-prep-start-title">Preparing Your <span>Interview...</span></h4>
+ <p id="interviewStartDescription" class="interview-prep-start-subtitle">{{ $hasSavedInterviewState? 'Your saved interview is being prepared to resume.': 'Your customized interview session is being prepared.' }}</p>
  </div>
- <div class="interview-start-actions">
- <button type="button" class="interview-start-button cancel" onclick="cancelInterviewStart()">
+
+ <div class="interview-prep-start-progress" aria-label="Preparing interview progress">
+ <div class="interview-prep-start-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+ <span id="interviewStartProgressBar" class="interview-prep-start-progress-bar"></span>
+ </div>
+ <strong id="interviewStartProgressPercent" class="interview-prep-start-progress-percent">0%</strong>
+ </div>
+
+ <div class="interview-prep-start-checklist" id="interviewStartChecklist" aria-label="Configured interview setup">
+ <div class="interview-prep-start-check-row" data-start-loading-item="details">
+ <span class="interview-prep-start-row-icon"><i class="fa-regular fa-file-lines"></i></span>
+ <span class="interview-prep-start-row-copy">
+ <strong>Details configured</strong>
+ <small>{{ $scenarioLabel }} - {{ $interviewTargetLabel }}</small>
+ </span>
+ <span class="interview-prep-start-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="interview-prep-start-check-row" data-start-loading-item="structure">
+ <span class="interview-prep-start-row-icon"><i class="fa-solid fa-list-check"></i></span>
+ <span class="interview-prep-start-row-copy">
+ <strong>Structure configured</strong>
+ <small>{{ $interviewDifficultyLabel }} - {{ $interviewQuestionCountLabel }} - {{ $interviewTimeLimitLabel }}</small>
+ </span>
+ <span class="interview-prep-start-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="interview-prep-start-check-row" data-start-loading-item="camera">
+ <span class="interview-prep-start-row-icon"><i class="fa-solid fa-video"></i></span>
+ <span class="interview-prep-start-row-copy">
+ <strong>Camera configured</strong>
+ <small>{{ $interviewCameraLabel }}</small>
+ </span>
+ <span class="interview-prep-start-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="interview-prep-start-check-row" data-start-loading-item="coaching">
+ <span class="interview-prep-start-row-icon"><i class="fa-solid fa-comments"></i></span>
+ <span class="interview-prep-start-row-copy">
+ <strong>Coaching configured</strong>
+ <small>{{ $interviewFeedbackModeLabel }} - {{ $interviewQuestionTypeLabel }}</small>
+ </span>
+ <span class="interview-prep-start-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
+ </div>
+ <div class="interview-prep-start-check-row" data-start-loading-item="response">
+ <span class="interview-prep-start-row-icon"><i class="fa-solid fa-microphone-lines"></i></span>
+ <span class="interview-prep-start-row-copy">
+ <strong>Response configured</strong>
+ <small>{{ $interviewResponseModeLabel }} Mode answers ready</small>
+ </span>
+ <span class="interview-prep-start-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
+ </div>
+ </div>
+
+ <div class="interview-prep-start-actions interview-start-actions">
+ <button type="button" id="cancelInterviewStartButton" class="interview-start-button cancel" onclick="cancelInterviewStart()" disabled aria-disabled="true">
  <i class="fa-solid fa-xmark"></i> Cancel
  </button>
- <button type="button" id="confirmInterviewStartButton" class="interview-start-button begin" onclick="confirmInterviewStart()">
+ <button type="button" id="confirmInterviewStartButton" class="interview-start-button begin" onclick="confirmInterviewStart()" disabled aria-disabled="true">
  {{ $hasSavedInterviewState? 'Resume Interview': 'Begin Interview' }} <i class="fa-solid fa-play"></i>
  </button>
  </div>
@@ -5898,6 +5968,100 @@ return fallbackText;
  }, 50);
  }
 
+let interviewStartProgressTimer = null;
+let interviewStartChecklistTimers = [];
+let interviewStartReady = false;
+
+function setInterviewStartActionsReady(ready) {
+interviewStartReady = Boolean(ready);
+['cancelInterviewStartButton', 'confirmInterviewStartButton'].forEach(id => {
+const button = document.getElementById(id);
+if (!button) return;
+button.disabled = !interviewStartReady;
+button.setAttribute('aria-disabled', interviewStartReady? 'false': 'true');
+button.classList.toggle('is-ready', interviewStartReady);
+});
+}
+
+function setInterviewStartProgress(value) {
+const progress = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+const bar = document.getElementById('interviewStartProgressBar');
+const percent = document.getElementById('interviewStartProgressPercent');
+const track = document.querySelector('#interviewStartModal .interview-prep-start-progress-track');
+if (bar) bar.style.width = `${progress}%`;
+if (percent) percent.textContent = `${progress}%`;
+if (track) track.setAttribute('aria-valuenow', String(progress));
+}
+
+function clearInterviewStartChecklistTimers() {
+interviewStartChecklistTimers.forEach(timerId => window.clearTimeout(timerId));
+interviewStartChecklistTimers = [];
+}
+
+function resetInterviewStartChecklist() {
+clearInterviewStartChecklistTimers();
+document.querySelectorAll('#interviewStartModal .interview-prep-start-check-row').forEach(row => {
+row.classList.remove('is-checking', 'is-complete');
+row.querySelector('.interview-prep-start-row-check')?.setAttribute('aria-label', 'Pending');
+});
+}
+
+function completeInterviewStartChecklist() {
+clearInterviewStartChecklistTimers();
+document.querySelectorAll('#interviewStartModal .interview-prep-start-check-row').forEach(row => {
+row.classList.remove('is-checking');
+row.classList.add('is-complete');
+row.querySelector('.interview-prep-start-row-check')?.setAttribute('aria-label', 'Complete');
+});
+}
+
+function startInterviewStartChecklist() {
+resetInterviewStartChecklist();
+const rows = Array.from(document.querySelectorAll('#interviewStartModal .interview-prep-start-check-row'));
+rows.forEach((row, index) => {
+const checkingTimer = window.setTimeout(() => {
+row.classList.add('is-checking');
+row.querySelector('.interview-prep-start-row-check')?.setAttribute('aria-label', 'Checking');
+
+const completeTimer = window.setTimeout(() => {
+row.classList.remove('is-checking');
+row.classList.add('is-complete');
+row.querySelector('.interview-prep-start-row-check')?.setAttribute('aria-label', 'Complete');
+}, 280);
+
+interviewStartChecklistTimers.push(completeTimer);
+}, 220 + (index * 460));
+
+interviewStartChecklistTimers.push(checkingTimer);
+});
+}
+
+function resetInterviewStartPreparation() {
+window.clearInterval(interviewStartProgressTimer);
+interviewStartProgressTimer = null;
+setInterviewStartActionsReady(false);
+setInterviewStartProgress(0);
+resetInterviewStartChecklist();
+}
+
+function startInterviewStartPreparation() {
+resetInterviewStartPreparation();
+startInterviewStartChecklist();
+let progress = 0;
+interviewStartProgressTimer = window.setInterval(() => {
+const step = progress < 32? 8: (progress < 72? 5: (progress < 94? 3: 2));
+progress = Math.min(100, progress + step);
+setInterviewStartProgress(progress);
+if (progress >= 100) {
+window.clearInterval(interviewStartProgressTimer);
+interviewStartProgressTimer = null;
+completeInterviewStartChecklist();
+setInterviewStartActionsReady(true);
+focusFirstModalAction(document.getElementById('interviewStartModal'), '#confirmInterviewStartButton');
+}
+}, 150);
+}
+
  function trapModalFocus(event, modal) {
  const focusable = Array.from(modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(element =>!element.disabled && element.offsetParent!== null);
  if (!focusable.length) return;
@@ -6159,16 +6323,21 @@ return fallbackText;
  syncInterviewModalBodyState();
 
  if (visible) {
- focusFirstModalAction(modal, '#confirmInterviewStartButton');
+startInterviewStartPreparation();
+focusFirstModalAction(modal, '.interview-prep-start-shell');
+} else {
+resetInterviewStartPreparation();
  }
  }
 
  function confirmInterviewStart() {
+if (!interviewStartReady) return;
  setInterviewStartModalVisible(false);
  startInterviewSession();
  }
 
  function cancelInterviewStart() {
+if (!interviewStartReady) return;
  window.location.href = '{{ route("interview.setup") }}';
  }
 
@@ -6196,15 +6365,15 @@ return fallbackText;
  return true;
  }
 
+if (modal?.id === 'interviewStartModal') {
+event.preventDefault();
+if (interviewStartReady) cancelInterviewStart();
+return true;
+}
+
  if (sessionFullscreenActive) {
  event.preventDefault();
  exitMobileFullscreen();
- return true;
- }
-
- if (modal?.id === 'interviewStartModal') {
- event.preventDefault();
- cancelInterviewStart();
  return true;
  }
 
