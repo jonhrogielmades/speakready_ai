@@ -90,7 +90,7 @@ class TermsAcceptanceGateTest extends TestCase
     {
         $this->post(route('register'), [
             'name' => 'New Terms User',
-            'email' => 'new-terms-user@example.com',
+            'username' => 'new-terms-user',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])->assertRedirect(route('terms.acceptance.show'))
@@ -99,7 +99,7 @@ class TermsAcceptanceGateTest extends TestCase
 
         $this->assertAuthenticated();
 
-        $user = User::where('email', 'new-terms-user@example.com')->firstOrFail();
+        $user = User::where('username', 'new-terms-user')->firstOrFail();
 
         $this->assertNull($user->terms_accepted_at);
         $this->assertNull($user->terms_version);

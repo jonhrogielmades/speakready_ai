@@ -41,7 +41,7 @@
                            <div class="mb-2"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first('account_inactive') }}</span></div>
                            <form action="{{ route('request.reactivation') }}" method="POST">
                               @csrf
-                              <input type="hidden" name="email" value="{{ old('email') }}">
+                              <input type="hidden" name="username" value="{{ old('username') }}">
                               <button type="submit" class="btn btn-sm btn-warning w-100 fw-bold auth-reactivation-button">Request Reactivation</button>
                            </form>
                         </div>
@@ -52,10 +52,10 @@
                            <div class="err-msg is-visible" role="alert"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first() }}</span></div>
                         @endif
                         <div class="auth-field">
-                           <label class="olbl" for="loginEmail"><i class="fa-solid fa-envelope" aria-hidden="true"></i>Email address</label>
+                           <label class="olbl" for="loginUsername"><i class="fa-solid fa-user" aria-hidden="true"></i>Username</label>
                            <div class="auth-input-wrap">
-                              <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
-                              <input class="oinp" type="email" name="email" id="loginEmail" placeholder="you@email.com" required autocomplete="off" value="{{ old('email') }}">
+                              <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+                              <input class="oinp" type="text" name="username" id="loginUsername" placeholder="your_username" required autocomplete="username" value="{{ old('username') }}">
                            </div>
                         </div>
                         <div class="auth-field">
@@ -101,10 +101,10 @@
                            </div>
                         </div>
                         <div class="auth-field">
-                           <label class="olbl" for="signupEmail"><i class="fa-solid fa-envelope" aria-hidden="true"></i>Email address</label>
+                           <label class="olbl" for="signupUsername"><i class="fa-solid fa-user-tag" aria-hidden="true"></i>Username</label>
                            <div class="auth-input-wrap">
-                              <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
-                              <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@email.com" required autocomplete="off" value="{{ old('email') }}">
+                              <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-user-tag"></i></span>
+                              <input class="oinp" type="text" name="username" id="signupUsername" placeholder="your_username" required autocomplete="username" value="{{ old('username') }}">
                            </div>
                         </div>
                         <div class="auth-field">

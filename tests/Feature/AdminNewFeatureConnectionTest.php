@@ -89,12 +89,12 @@ class AdminNewFeatureConnectionTest extends TestCase
         Setting::setVal('acc_registration', false, 'general', 'boolean');
         $this->post(route('register'), [
             'name' => 'Blocked User',
-            'email' => 'blocked@example.com',
+            'username' => 'blocked-user',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-        ])->assertSessionHasErrors('email');
+        ])->assertSessionHasErrors('username');
 
-        $this->assertDatabaseMissing('users', ['email' => 'blocked@example.com']);
+        $this->assertDatabaseMissing('users', ['username' => 'blocked-user']);
     }
 
     public function test_user_side_updates_are_visible_to_admin_activity_and_user_details(): void

@@ -24,7 +24,7 @@ use Throwable;
 
 class AuthController extends Controller
 {
-    private const LOGIN_EMAIL_MISMATCH_MESSAGE = 'The email address do not match our records.';
+    private const LOGIN_USERNAME_MISMATCH_MESSAGE = 'The username does not match our records.';
 
     private const LOGIN_PASSWORD_MISMATCH_MESSAGE = 'The password do not match our records.';
 
@@ -34,25 +34,26 @@ class AuthController extends Controller
     {
         if (! Setting::enabled('acc_registration')) {
             return back()->withErrors([
-                'email' => 'New account registration is currently disabled by the administrator.',
-            ])->withInput($request->only('name', 'email'));
+                'username' => 'New account registration is currently disabled by the administrator.',
+            ])->withInput($request->only('name', 'username'));
         }
 
         $request->merge([
-            'email' => Str::lower(trim((string) $request->input('email'))),
+            'username' => $this->normalizeUsername($request->input('username')),
         ]);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
+            'username' => ['required', 'string', 'min:3', 'max:64', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
             'password' => $this->newPasswordRules(['confirmed']),
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'username' => $validated['username'],
+            'email' => null,
             'password' => Hash::make($validated['password']),
-            'email_verified_at' => SystemSettings::enabled('acc_verify_email', false) ? null : now(),
+            'email_verified_at' => now(),
         ]);
 
         $this->ensureAuthenticationProfile($user);
@@ -62,7 +63,7 @@ class AuthController extends Controller
         $this->safeActivityLog(
             $user,
             'user_registered',
-            "{$user->name} ({$user->email}) registered a new account.",
+            "{$user->name} ({$this->userIdentifier($user)}) registered a new account.",
             $request->ip(),
             false
         );
@@ -82,48 +83,49 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $loginValue = $request->input('username', $request->input('email'));
+
         $request->merge([
-            'email' => Str::lower(trim((string) $request->input('email'))),
+            'username' => $this->normalizeUsername($loginValue),
         ]);
 
         $validated = $request->validate([
-            'email' => 'required|string|email|max:255',
+            'username' => 'required|string|max:255',
             'password' => 'required|string',
             'remember' => 'sometimes|boolean',
         ]);
 
         $rememberDevice = $request->boolean('remember', true);
-        $credentials = [
-            'email' => $validated['email'],
-            'password' => $validated['password'],
-        ];
+        $identifier = $validated['username'];
 
-        if ($lockoutMessage = $this->loginLockoutMessage($request, $validated['email'])) {
-            return $this->failedLoginResponse('email', $lockoutMessage);
+        if ($lockoutMessage = $this->loginLockoutMessage($request, $identifier)) {
+            return $this->failedLoginResponse('username', $lockoutMessage);
         }
 
-        $user = User::where('email', $validated['email'])->first();
+        $user = $this->findUserByLoginIdentifier($identifier);
 
         if (! $user) {
             $message = $this->passwordMatchesAnyUser($validated['password'])
-                ? self::LOGIN_EMAIL_MISMATCH_MESSAGE
+                ? self::LOGIN_USERNAME_MISMATCH_MESSAGE
                 : self::LOGIN_CREDENTIALS_MISMATCH_MESSAGE;
 
-            $this->recordFailedLoginAttempt($request, $validated['email']);
+            $this->recordFailedLoginAttempt($request, $identifier);
 
-            return $this->failedLoginResponse('email', $message);
+            return $this->failedLoginResponse('username', $message);
         }
 
         if (! Hash::check($validated['password'], (string) $user->password)) {
-            $this->recordFailedLoginAttempt($request, $validated['email']);
+            $this->recordFailedLoginAttempt($request, $identifier);
 
             return $this->failedLoginResponse('password', self::LOGIN_PASSWORD_MISMATCH_MESSAGE);
         }
 
-        if (Auth::attempt($credentials, $rememberDevice)) {
+        Auth::login($user, $rememberDevice);
+
+        if (Auth::check()) {
             $request->session()->regenerate();
             $user = Auth::user();
-            $this->clearFailedLoginAttempts($request, $validated['email']);
+            $this->clearFailedLoginAttempts($request, $identifier);
 
             if (in_array($user->status, ['inactive', 'suspended'])) {
                 Auth::logout();
@@ -133,19 +135,19 @@ class AuthController extends Controller
                 return back()->withErrors([
                     'account_inactive' => 'Your account was inactivated please contact to the admin for request.',
                 ])->withInput([
-                    'email' => $validated['email'],
+                    'username' => $identifier,
                 ]);
             }
 
-            if (! $user->is_admin && SystemSettings::enabled('acc_verify_email', false) && ! $user->email_verified_at) {
+            if (! $user->is_admin && filled($user->email) && SystemSettings::enabled('acc_verify_email', false) && ! $user->email_verified_at) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
                 return back()->withErrors([
-                    'email' => 'Email verification is required before you can sign in.',
+                    'username' => 'Email verification is required before you can sign in.',
                 ])->withInput([
-                    'email' => $validated['email'],
+                    'username' => $identifier,
                 ]);
             }
 
@@ -158,20 +160,22 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return $this->failedLoginResponse('email', self::LOGIN_CREDENTIALS_MISMATCH_MESSAGE);
+        return $this->failedLoginResponse('username', self::LOGIN_CREDENTIALS_MISMATCH_MESSAGE);
     }
 
     public function requestReactivation(Request $request)
     {
+        $loginValue = $request->input('username', $request->input('email'));
+
         $request->merge([
-            'email' => Str::lower(trim((string) $request->input('email'))),
+            'username' => $this->normalizeUsername($loginValue),
         ]);
 
         $validated = $request->validate([
-            'email' => 'required|string|email|max:255',
+            'username' => 'required|string|max:255',
         ]);
 
-        $user = User::where('email', $validated['email'])->first();
+        $user = $this->findUserByLoginIdentifier($validated['username']);
 
         if ($user && in_array($user->status, ['inactive', 'suspended'])) {
             $user->update(['reactivation_requested_at' => now()]);
@@ -179,7 +183,7 @@ class AuthController extends Controller
             $this->safeActivityLog(
                 $user,
                 'reactivation_requested',
-                "{$user->name} ({$user->email}) requested account reactivation.",
+                "{$user->name} ({$this->userIdentifier($user)}) requested account reactivation.",
                 $request->ip(),
                 false
             );
@@ -188,8 +192,8 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Unable to process your request at this time.',
-        ])->onlyInput('email');
+            'username' => 'Unable to process your request at this time.',
+        ])->onlyInput('username');
     }
 
     public function showForgotPasswordForm()
@@ -383,13 +387,19 @@ class AuthController extends Controller
                     ]);
                 }
 
-                $user = User::create([
+                $userAttributes = [
                     'name' => $googleUser->name ?: 'Google User',
                     'email' => $googleEmail,
                     'google_id' => $googleUser->id,
                     'password' => Hash::make(Str::random(64)),
                     'profile_photo_path' => $googleAvatarUrl,
-                ]);
+                ];
+
+                if ($this->hasUsernameColumn()) {
+                    $userAttributes['username'] = $this->uniqueUsernameFromSeed($googleEmail ?: $googleUser->name ?: 'google-user');
+                }
+
+                $user = User::create($userAttributes);
                 $user->forceFill([
                     'email_verified_at' => $googleVerifiedAt,
                 ])->save();
@@ -408,6 +418,9 @@ class AuthController extends Controller
                 $updates = [];
                 if (! $user->google_id) {
                     $updates['google_id'] = $googleUser->id;
+                }
+                if ($this->hasUsernameColumn() && blank($user->username)) {
+                    $updates['username'] = $this->uniqueUsernameFromSeed($googleEmail ?: $googleUser->name ?: 'google-user');
                 }
                 if ($this->shouldSyncGoogleAvatar($user, $googleAvatarUrl)) {
                     $updates['profile_photo_path'] = $googleAvatarUrl;
@@ -625,11 +638,71 @@ class AuthController extends Controller
         return Str::lower(trim((string) $email));
     }
 
+    private function normalizeUsername(mixed $username): string
+    {
+        return Str::lower(trim((string) $username));
+    }
+
+    private function findUserByLoginIdentifier(string $identifier): ?User
+    {
+        $identifier = $this->normalizeUsername($identifier);
+
+        return User::query()
+            ->where(function ($query) use ($identifier): void {
+                if ($this->hasUsernameColumn()) {
+                    $query->where('username', $identifier)
+                        ->orWhereRaw('LOWER(email) = ?', [$identifier]);
+
+                    return;
+                }
+
+                $query->whereRaw('LOWER(email) = ?', [$identifier]);
+            })
+            ->first();
+    }
+
+    private function hasUsernameColumn(): bool
+    {
+        try {
+            return Schema::hasColumn('users', 'username');
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    private function uniqueUsernameFromSeed(string $seed): string
+    {
+        $base = $this->usernameBase($seed);
+        $candidate = $base;
+        $suffix = 2;
+
+        while (User::where('username', $candidate)->exists()) {
+            $candidate = Str::limit($base, 55, '').'-'.$suffix;
+            $suffix++;
+        }
+
+        return $candidate;
+    }
+
+    private function usernameBase(string $seed): string
+    {
+        $seed = Str::before($seed, '@');
+        $seed = Str::ascii(Str::lower($seed));
+        $seed = preg_replace('/[^a-z0-9._-]+/', '-', $seed) ?: '';
+        $seed = trim($seed, '.-_');
+
+        if (strlen($seed) < 3) {
+            $seed = 'user-'.$seed;
+        }
+
+        return Str::limit($seed, 60, '');
+    }
+
     private function failedLoginResponse(string $field, string $message)
     {
         return back()->withErrors([
             $field => $message,
-        ])->onlyInput('email');
+        ])->onlyInput('username');
     }
 
     private function newPasswordRules(array $extra = []): array
@@ -699,10 +772,17 @@ class AuthController extends Controller
         $this->safeActivityLog(
             $user,
             $action,
-            "{$user->name} ({$user->email}) {$activity}.",
+            "{$user->name} ({$this->userIdentifier($user)}) {$activity}.",
             $ipAddress,
             false
         );
+    }
+
+    private function userIdentifier(User $user): string
+    {
+        return filled($user->username)
+            ? (string) $user->username
+            : (string) $user->email;
     }
 
     private function ensureAuthenticationProfile(User $user): void

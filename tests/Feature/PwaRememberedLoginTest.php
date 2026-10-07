@@ -18,6 +18,7 @@ class PwaRememberedLoginTest extends TestCase
     public function test_password_login_remembers_the_device_by_default(): void
     {
         $user = User::factory()->create([
+            'username' => 'pwa-user',
             'email' => 'pwa-user@example.com',
             'password' => Hash::make('password'),
             'is_admin' => false,
@@ -25,7 +26,7 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $response = $this->post(route('login'), [
-            'email' => 'pwa-user@example.com',
+            'username' => 'pwa-user',
             'password' => 'password',
         ]);
 
@@ -49,6 +50,7 @@ class PwaRememberedLoginTest extends TestCase
     public function test_password_login_can_opt_out_of_remembering_the_device(): void
     {
         User::factory()->create([
+            'username' => 'shared-device',
             'email' => 'shared-device@example.com',
             'password' => Hash::make('password'),
             'is_admin' => false,
@@ -56,7 +58,7 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $response = $this->post(route('login'), [
-            'email' => 'shared-device@example.com',
+            'username' => 'shared-device',
             'password' => 'password',
             'remember' => '0',
         ]);
@@ -65,9 +67,10 @@ class PwaRememberedLoginTest extends TestCase
         $response->assertCookieMissing(Auth::guard()->getRecallerName());
     }
 
-    public function test_password_login_reports_email_and_password_mismatches(): void
+    public function test_password_login_reports_username_and_password_mismatches(): void
     {
         User::factory()->create([
+            'username' => 'known-user',
             'email' => 'known-user@example.com',
             'password' => Hash::make('correct-password'),
             'is_admin' => false,
@@ -75,24 +78,24 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $this->post(route('login'), [
-            'email' => 'missing-user@example.com',
+            'username' => 'missing-user',
             'password' => 'correct-password',
         ])->assertSessionHasErrors([
-            'email' => 'The email address do not match our records.',
+            'username' => 'The username does not match our records.',
         ]);
 
         $this->post(route('login'), [
-            'email' => 'known-user@example.com',
+            'username' => 'known-user',
             'password' => 'wrong-password',
         ])->assertSessionHasErrors([
             'password' => 'The password do not match our records.',
         ]);
 
         $this->post(route('login'), [
-            'email' => 'missing-user@example.com',
+            'username' => 'missing-user',
             'password' => 'not-a-known-password',
         ])->assertSessionHasErrors([
-            'email' => 'The provided credentials do not match our records.',
+            'username' => 'The provided credentials do not match our records.',
         ]);
 
         $this->assertGuest();
@@ -102,7 +105,7 @@ class PwaRememberedLoginTest extends TestCase
     {
         $response = $this->post(route('register'), [
             'name' => 'New Interview User',
-            'email' => 'new-interview-user@example.com',
+            'username' => 'new-interview-user',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
@@ -114,10 +117,11 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [
             'name' => 'New Interview User',
-            'email' => 'new-interview-user@example.com',
+            'username' => 'new-interview-user',
+            'email' => null,
         ]);
         $this->assertDatabaseHas('profiles', [
-            'user_id' => User::where('email', 'new-interview-user@example.com')->value('id'),
+            'user_id' => User::where('username', 'new-interview-user')->value('id'),
         ]);
 
         $this->get(route('terms.acceptance.show'))
@@ -148,10 +152,12 @@ class PwaRememberedLoginTest extends TestCase
         $response->assertOk()
             ->assertSee('id="loginForm"', false)
             ->assertSee('id="signupForm"', false)
-            ->assertSee('name="email"', false)
-            ->assertSee('id="loginEmail"', false)
-            ->assertSee('id="signupEmail"', false)
-            ->assertSee('Email address', false)
+            ->assertSee('name="username"', false)
+            ->assertSee('id="loginUsername"', false)
+            ->assertSee('id="signupUsername"', false)
+            ->assertSee('Username', false)
+            ->assertDontSee('id="loginEmail"', false)
+            ->assertDontSee('id="signupEmail"', false)
             ->assertDontSee('name="identifier"', false)
             ->assertDontSee('id="loginIdentifier"', false)
             ->assertDontSee('id="signupIdentifier"', false)
