@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=59') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=60') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -6218,6 +6218,9 @@ let finishReviewChecklistTimers = [];
 let finishReviewProgressTimer = null;
 let finishReviewProgressValue = 0;
 let finishReviewRedirectUrl = '';
+let finishReviewPrefetchPromise = null;
+let finishReviewPrefetchController = null;
+let finishReviewNavigationStarted = false;
 
  function clearFinishReviewChecklistTimers() {
  finishReviewChecklistTimers.forEach(timerId => window.clearTimeout(timerId));
@@ -6227,6 +6230,53 @@ let finishReviewRedirectUrl = '';
 function clearFinishReviewProgressTimer() {
 window.clearInterval(finishReviewProgressTimer);
 finishReviewProgressTimer = null;
+}
+
+function cancelFinishReviewPrefetch() {
+if (finishReviewPrefetchController) {
+finishReviewPrefetchController.abort();
+finishReviewPrefetchController = null;
+}
+finishReviewPrefetchPromise = null;
+document.querySelectorAll('link[data-finish-review-prefetch="true"]').forEach(link => link.remove());
+}
+
+function waitForFinishReviewWarmup(promise, timeoutMs = 1800) {
+return Promise.race([
+Promise.resolve(promise).catch(() => false),
+new Promise(resolve => window.setTimeout(() => resolve(false), timeoutMs))
+]);
+}
+
+function prefetchFinishReviewPage(url) {
+cancelFinishReviewPrefetch();
+if (!url) return Promise.resolve(false);
+try {
+const link = document.createElement('link');
+link.rel = 'prefetch';
+link.as = 'document';
+link.href = url;
+link.dataset.finishReviewPrefetch = 'true';
+document.head.appendChild(link);
+} catch (error) {
+console.debug('Review prefetch link skipped', error);
+}
+if (!window.fetch) {
+finishReviewPrefetchPromise = Promise.resolve(false);
+return finishReviewPrefetchPromise;
+}
+const controller = typeof AbortController === 'function'? new AbortController(): null;
+finishReviewPrefetchController = controller;
+finishReviewPrefetchPromise = fetch(url, {
+method: 'GET',
+credentials: 'same-origin',
+cache: 'force-cache',
+headers: { Accept: 'text/html,application/xhtml+xml' },
+signal: controller?.signal
+}).then(response => response.ok).catch(() => false).finally(() => {
+if (finishReviewPrefetchController === controller) finishReviewPrefetchController = null;
+});
+return finishReviewPrefetchPromise;
 }
 
 function setFinishReviewProgress(value) {
@@ -6248,14 +6298,16 @@ button.hidden = !ready;
 button.disabled = !ready;
 button.setAttribute('aria-disabled', ready? 'false': 'true');
 button.classList.toggle('is-ready', Boolean(ready));
-button.classList.remove('is-opening');
+button.classList.remove('is-navigating');
 const label = button.querySelector('.finish-review-button-label');
 if (label) label.textContent = 'View Detailed Review';
 }
 
 function resetFinishReviewLoading() {
 clearFinishReviewProgressTimer();
+cancelFinishReviewPrefetch();
 finishReviewRedirectUrl = '';
+finishReviewNavigationStarted = false;
 const title = document.getElementById('finishTransitionTitle');
 const message = document.getElementById('finishTransitionMessage');
 if (title) title.innerHTML = 'Analyzing Your <span>Response...</span>';
@@ -6358,27 +6410,28 @@ resetFinishReviewLoading();
  document.body.classList.toggle('finish-transition-active', visible);
  }
 
-function completeFinishReviewLoading(redirectUrl) {
+async function completeFinishReviewLoading(redirectUrl) {
 clearFinishReviewProgressTimer();
 completeFinishReviewChecklist();
-setFinishReviewProgress(100);
+setFinishReviewProgress(98);
 const title = document.getElementById('finishTransitionTitle');
 const message = document.getElementById('finishTransitionMessage');
 if (title) title.innerHTML = 'Detailed Review <span>Ready</span>';
+if (message) message.textContent = 'Your interview report is ready. Preparing the detailed review page...';
+await waitForFinishReviewWarmup(prefetchFinishReviewPage(redirectUrl));
+setFinishReviewProgress(100);
 if (message) message.textContent = 'Your interview report is ready. Open the detailed review to see scores, coaching notes, and next steps.';
 setFinishViewReviewReady(true, redirectUrl);
 document.getElementById('finishViewReviewButton')?.focus();
 }
 
 async function viewDetailedReview() {
-if (!finishReviewRedirectUrl) return;
+if (!finishReviewRedirectUrl || finishReviewNavigationStarted) return;
+finishReviewNavigationStarted = true;
 const button = document.getElementById('finishViewReviewButton');
 if (button) {
-button.disabled = true;
 button.setAttribute('aria-disabled', 'true');
-button.classList.add('is-opening');
-const label = button.querySelector('.finish-review-button-label');
-if (label) label.textContent = 'Opening Review';
+button.classList.add('is-navigating');
 }
 await exitAutoInterviewFullscreen();
 window.location.replace(finishReviewRedirectUrl);
@@ -6440,7 +6493,7 @@ startFinishReviewProgress();
  }
 
  window.SpeakReadyInterviewSetupDraft?.clear();
-completeFinishReviewLoading(data.redirect_url);
+await completeFinishReviewLoading(data.redirect_url);
  return true;
  }
 
