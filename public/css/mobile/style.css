@@ -10000,6 +10000,143 @@ body.user-mobile-shell .mob-notif-link-btn:disabled {
   }
 }
 
+@media (max-width: 767.98px) {
+  body.auth-modal-field-focused {
+    overflow: hidden !important;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal {
+    overflow: hidden !important;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .modal-dialog {
+    display: flex !important;
+    align-items: flex-start !important;
+    width: min(390px, calc(100vw - 20px));
+    max-width: min(390px, calc(100vw - 20px));
+    height: var(--sr-visual-vh, 100dvh) !important;
+    min-height: var(--sr-visual-vh, 100dvh) !important;
+    margin: 0 auto !important;
+    padding:
+      max(8px, env(safe-area-inset-top, 0px))
+      0
+      max(8px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-modal-content {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100%;
+    max-height: calc(var(--sr-visual-vh, 100dvh) - 16px) !important;
+    border-radius: 16px;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-modal-header {
+    flex: 0 0 auto;
+    gap: 9px;
+    padding: 10px 12px 9px;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-logo-frame {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-brand-title {
+    font-size: 0.98rem;
+    line-height: 1.1;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-brand-subtitle {
+    display: none;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-close-button {
+    flex-basis: 30px;
+    width: 30px;
+    height: 30px;
+    font-size: 1.3rem;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none !important;
+    overflow-y: auto !important;
+    padding: 10px 12px max(18px, env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-top: 12px;
+    scroll-padding-bottom: 88px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-tab-switch {
+    height: 40px;
+    margin-bottom: 10px;
+    border-radius: 9px;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .tab-sw-btn {
+    min-height: 38px;
+    gap: 6px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-field {
+    margin-bottom: 8px;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .olbl {
+    margin-bottom: 3px;
+    font-size: 0.69rem;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-input-wrap {
+    min-height: 42px;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-input-wrap .oinp {
+    height: 40px;
+    font-size: 0.78rem;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-options-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin: 0 0 10px;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-check .form-check-label,
+  body.auth-modal-field-focused #lofc.auth-modal .auth-inline-link,
+  body.auth-modal-field-focused #lofc.auth-modal .auth-terms a {
+    font-size: 0.69rem;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-submit,
+  body.auth-modal-field-focused #lofc.auth-modal .auth-oauth {
+    min-height: 42px;
+    font-size: 0.78rem;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-divider {
+    margin: 12px 0 9px;
+    font-size: 0.68rem;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-secure-note {
+    margin-top: 10px;
+    font-size: 0.66rem;
+  }
+
+  body.auth-modal-field-focused #lofc.auth-modal .auth-wave {
+    display: none;
+  }
+}
+
 /* Night theme visibility for authentication modal */
 html.dm #lofc.auth-modal,
 html[data-theme="dark"] #lofc.auth-modal,

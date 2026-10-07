@@ -299,6 +299,104 @@ guestAuthPanel?.addEventListener('hidden.bs.modal', () => {
     });
 });
 
+const authModalMobileViewport = window.matchMedia('(max-width: 767.98px)');
+const authModalInputSelector = 'input, textarea, select';
+let authModalFocusTimer = 0;
+let authModalFocusRaf = 0;
+
+function isMobileAuthModalViewport() {
+    return authModalMobileViewport.matches ||
+        document.body.classList.contains('guest-mobile-shell') ||
+        document.body.classList.contains('auth-mobile-shell');
+}
+
+function syncAuthModalViewportHeight() {
+    const height = Math.round(
+        (window.visualViewport && window.visualViewport.height) ||
+        window.innerHeight ||
+        document.documentElement.clientHeight ||
+        0
+    );
+
+    if (height > 0) {
+        document.documentElement.style.setProperty('--sr-js-vh', `${height}px`);
+        document.documentElement.style.setProperty('--sr-visual-vh', `${height}px`);
+    }
+}
+
+function queueFocusedAuthFieldScroll(delay = 0) {
+    window.clearTimeout(authModalFocusTimer);
+    authModalFocusTimer = window.setTimeout(() => {
+        if (authModalFocusRaf) window.cancelAnimationFrame(authModalFocusRaf);
+
+        authModalFocusRaf = window.requestAnimationFrame(() => {
+            authModalFocusRaf = 0;
+            if (!guestAuthPanel || !document.body.classList.contains('auth-modal-field-focused')) return;
+
+            const activeField = document.activeElement;
+            if (!activeField || !guestAuthPanel.contains(activeField) || !activeField.matches(authModalInputSelector)) return;
+
+            const scrollTarget = activeField.closest('.auth-field, .auth-check') || activeField;
+            scrollTarget.scrollIntoView({
+                block: 'center',
+                inline: 'nearest',
+                behavior: 'smooth'
+            });
+        });
+    }, delay);
+}
+
+function setAuthModalFieldFocused(active) {
+    if (!active) {
+        document.body.classList.remove('auth-modal-field-focused');
+        return;
+    }
+
+    if (!isMobileAuthModalViewport()) return;
+
+    syncAuthModalViewportHeight();
+    document.body.classList.add('auth-modal-field-focused');
+    queueFocusedAuthFieldScroll(60);
+}
+
+if (guestAuthPanel) {
+    guestAuthPanel.addEventListener('focusin', event => {
+        if (!event.target.matches(authModalInputSelector)) return;
+
+        setAuthModalFieldFocused(true);
+    });
+
+    guestAuthPanel.addEventListener('focusout', () => {
+        window.setTimeout(() => {
+            const activeField = document.activeElement;
+            const stillFocused = activeField &&
+                guestAuthPanel.contains(activeField) &&
+                activeField.matches(authModalInputSelector);
+
+            if (!stillFocused) {
+                setAuthModalFieldFocused(false);
+            }
+        }, 90);
+    });
+
+    guestAuthPanel.addEventListener('shown.bs.modal', syncAuthModalViewportHeight);
+    guestAuthPanel.addEventListener('hidden.bs.modal', () => setAuthModalFieldFocused(false));
+}
+
+function syncFocusedAuthModalViewport() {
+    if (!document.body.classList.contains('auth-modal-field-focused')) return;
+
+    syncAuthModalViewportHeight();
+    queueFocusedAuthFieldScroll(80);
+}
+
+window.addEventListener('resize', syncFocusedAuthModalViewport, { passive: true });
+window.addEventListener('orientationchange', syncFocusedAuthModalViewport, { passive: true });
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncFocusedAuthModalViewport, { passive: true });
+    window.visualViewport.addEventListener('scroll', syncFocusedAuthModalViewport, { passive: true });
+}
+
 const guestSectionIds = ['hero', 'features', 'how', 'benefits', 'developers', 'faq', 'contact'];
 const guestSections = guestSectionIds
     .map(id => document.getElementById(id))

@@ -24,11 +24,12 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=34') }}" />
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=20') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
+            --sr-visual-vh: var(--sr-js-vh, 100dvh);
             --pur: {{ $systemPrimaryColor ?? '#3b82f6' }};
             --blu: {{ $systemPrimaryColor ?? '#3b82f6' }};
             --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#3b82f6' }}, {{ $systemSecondaryColor ?? '#34d399' }});
@@ -1406,7 +1407,7 @@
       <script src="{{ asset('js/jquery.waypoints.min.js') }}"></script>
       <script src="{{ asset('js/jquery.counterup.min.js') }}"></script>
 
-      <script src="{{ asset('js/main.js?v=7') }}"></script>
+      <script src="{{ asset('js/main.js?v=8') }}"></script>
       @if($errors->any())
       <script>
          document.addEventListener('DOMContentLoaded', function() {

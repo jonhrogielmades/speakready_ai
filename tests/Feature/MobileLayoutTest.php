@@ -37,7 +37,7 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('guest-shell guest-mobile-shell', false)
                 ->assertSee('data-layout-shell="mobile"', false)
                 ->assertSee('data-guest-layout="mobile"', false)
-                ->assertSee('css/mobile/style.css?v=30', false)
+                ->assertSee('css/mobile/style.css?v=34', false)
                 ->assertSee('mobilePreviewSwiper', false)
                 ->assertSee('mobile-preview-image-swiper', false)
                 ->assertSee('id="mbtog"', false)
@@ -64,7 +64,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=30', false)
+            ->assertSee('css/mobile/style.css?v=34', false)
             ->assertSee('mobilePreviewSwiper', false)
             ->assertDontSee('css/desktop/style.css?v=7', false);
     }
@@ -78,7 +78,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=30', false)
+            ->assertSee('css/mobile/style.css?v=34', false)
             ->assertSee('mobilePreviewSwiper', false)
             ->assertDontSee('css/desktop/style.css?v=7', false);
     }
@@ -95,7 +95,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
             ->assertSee('css/desktop/style.css?v=7', false)
-            ->assertDontSee('css/mobile/style.css?v=30', false);
+            ->assertDontSee('css/mobile/style.css?v=34', false);
     }
 
     public function test_guest_landing_exposes_shell_marker_for_viewport_repair(): void
