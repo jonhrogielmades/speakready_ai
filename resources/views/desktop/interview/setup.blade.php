@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=38') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=39') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=18') }}" data-page-style="interview-setup-2">
 @endpush
 
@@ -494,7 +494,7 @@
  </div>
  </form>
 
- <div id="setupTransitionOverlay" class="finish-transition-overlay interview-prep-overlay" role="status" aria-live="polite" aria-atomic="true">
+<div id="setupTransitionOverlay" class="finish-transition-overlay interview-prep-overlay" role="dialog" aria-modal="true" aria-live="polite" aria-atomic="true" aria-labelledby="setupLoadingTitle" aria-describedby="setupLoadingDescription">
  <div class="interview-prep-shell">
  <div class="interview-prep-art" aria-hidden="true">
  <span class="prep-art-ring"></span>
@@ -513,8 +513,8 @@
  </div>
 
  <div class="interview-prep-copy">
- <h4 class="interview-prep-title">Preparing Your <span>Interview...</span></h4>
- <p class="interview-prep-subtitle">This will just take a few moments.</p>
+<h4 id="setupLoadingTitle" class="interview-prep-title">Preparing Your <span>Interview...</span></h4>
+<p id="setupLoadingDescription" class="interview-prep-subtitle">This will just take a few moments.</p>
  </div>
 
  <div class="interview-prep-progress" aria-label="Preparing interview progress">
@@ -571,6 +571,15 @@
  <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
  <span>Great practice leads to <strong>great performance!</strong></span>
  </div>
+
+<div class="interview-prep-actions" aria-label="Interview loading actions">
+<button type="button" id="setupPrepCancelButton" class="interview-prep-button cancel" onclick="cancelSetupPreparedInterview()" disabled aria-disabled="true">
+<i class="fa-solid fa-xmark"></i> Cancel
+</button>
+<button type="button" id="setupPrepBeginButton" class="interview-prep-button begin" onclick="beginPreparedInterview()" disabled aria-disabled="true">
+Begin Interview <i class="fa-solid fa-play"></i>
+</button>
+</div>
  </div>
  </div>
 
@@ -1471,6 +1480,8 @@
 
  let setupLoadingProgressTimer = null;
  let setupLoadingChecklistTimers = [];
+let setupLoadingReady = false;
+let setupLoadingSubmitStarted = false;
 
  function setupLoadingSelectedOptionText(selectId) {
  const select = document.getElementById(selectId);
@@ -1544,7 +1555,7 @@
  }
 
  function setSetupLoadingProgress(value) {
- const progress = Math.max(0, Math.min(99, Math.round(Number(value) || 0)));
+const progress = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
  const bar = document.getElementById('setupLoadingProgressBar');
  const percent = document.getElementById('setupLoadingPercent');
  const track = setupTransitionOverlay?.querySelector('.interview-prep-progress-track');
@@ -1552,6 +1563,35 @@
  if (percent) percent.textContent = `${progress}%`;
  if (track) track.setAttribute('aria-valuenow', String(progress));
  }
+
+function setSetupLoadingActionsReady(ready) {
+setupLoadingReady = Boolean(ready);
+['setupPrepCancelButton', 'setupPrepBeginButton'].forEach(id => {
+const button = document.getElementById(id);
+if (!button) return;
+const disabled = !setupLoadingReady || setupLoadingSubmitStarted;
+button.disabled = disabled;
+button.setAttribute('aria-disabled', disabled? 'true': 'false');
+button.classList.toggle('is-ready', setupLoadingReady && !setupLoadingSubmitStarted);
+});
+}
+
+function setSetupLoadingSubmitting(submitting) {
+setupLoadingSubmitStarted = Boolean(submitting);
+const beginButton = document.getElementById('setupPrepBeginButton');
+const cancelButton = document.getElementById('setupPrepCancelButton');
+if (beginButton) {
+beginButton.disabled = setupLoadingSubmitStarted || !setupLoadingReady;
+beginButton.setAttribute('aria-disabled', beginButton.disabled? 'true': 'false');
+beginButton.classList.toggle('is-ready', setupLoadingReady && !setupLoadingSubmitStarted);
+beginButton.innerHTML = setupLoadingSubmitStarted? 'Starting <i class="fa-solid fa-spinner fa-spin"></i>': 'Begin Interview <i class="fa-solid fa-play"></i>';
+}
+if (cancelButton) {
+cancelButton.disabled = setupLoadingSubmitStarted || !setupLoadingReady;
+cancelButton.setAttribute('aria-disabled', cancelButton.disabled? 'true': 'false');
+cancelButton.classList.toggle('is-ready', setupLoadingReady && !setupLoadingSubmitStarted);
+}
+}
 
  function clearSetupLoadingChecklistTimers() {
  setupLoadingChecklistTimers.forEach(timerId => window.clearTimeout(timerId));
@@ -1565,6 +1605,15 @@
  row.querySelector('.interview-prep-row-check')?.setAttribute('aria-label', 'Pending');
  });
  }
+
+function completeSetupLoadingChecklist() {
+clearSetupLoadingChecklistTimers();
+setupTransitionOverlay?.querySelectorAll('.interview-prep-check-row').forEach(row => {
+row.classList.remove('is-checking');
+row.classList.add('is-complete');
+row.querySelector('.interview-prep-row-check')?.setAttribute('aria-label', 'Complete');
+});
+}
 
  function startSetupLoadingChecklist() {
  resetSetupLoadingChecklist();
@@ -1589,15 +1638,19 @@
 
  function startSetupLoadingProgress() {
  window.clearInterval(setupLoadingProgressTimer);
+setSetupLoadingActionsReady(false);
  let progress = 19;
  setSetupLoadingProgress(progress);
  setupLoadingProgressTimer = window.setInterval(() => {
- const step = progress < 48? 7: (progress < 78? 4: 1);
- progress = Math.min(95, progress + step);
+const step = progress < 48? 7: (progress < 78? 4: (progress < 94? 2: 1));
+progress = Math.min(100, progress + step);
  setSetupLoadingProgress(progress);
- if (progress >= 95) {
+if (progress >= 100) {
  window.clearInterval(setupLoadingProgressTimer);
  setupLoadingProgressTimer = null;
+completeSetupLoadingChecklist();
+setSetupLoadingActionsReady(true);
+document.getElementById('setupPrepBeginButton')?.focus();
  }
  }, 260);
  }
@@ -1611,18 +1664,49 @@
  function resetSetupTransitionOverlay() {
  window.clearInterval(setupLoadingProgressTimer);
  setupLoadingProgressTimer = null;
+setupLoadingSubmitStarted = false;
  setSetupLoadingProgress(19);
  resetSetupLoadingChecklist();
+setSetupLoadingActionsReady(false);
+setSetupLoadingSubmitting(false);
  }
 
- function submitSetupFormAfterLoadingFrame() {
+function submitSetupFormAfterLoadingFrame(delay = 120) {
  window.setTimeout(() => {
  if (typeof HTMLFormElement !== 'undefined' && HTMLFormElement.prototype.submit) {
  HTMLFormElement.prototype.submit.call(setupForm);
  return;
  }
  setupForm.submit();
- }, 420);
+}, delay);
+}
+
+function exitSetupBrowserFullscreen() {
+if (document.fullscreenElement && document.exitFullscreen) {
+return document.exitFullscreen().catch(() => {});
+}
+return Promise.resolve();
+}
+
+function cancelSetupPreparedInterview() {
+if (!setupLoadingReady || setupLoadingSubmitStarted) return;
+setupFormSubmitting = false;
+setupTransitionOverlay.classList.remove('active');
+document.documentElement.classList.remove('finish-transition-active');
+document.body.classList.remove('finish-transition-active');
+resetSetupTransitionOverlay();
+if (startInterviewButton) {
+startInterviewButton.innerHTML = startInterviewButton.dataset.defaultLabel || 'Start <i class="fa-solid fa-play ms-2"></i>';
+updateSummary();
+}
+exitSetupBrowserFullscreen();
+}
+
+function beginPreparedInterview() {
+if (!setupLoadingReady || setupLoadingSubmitStarted) return;
+setSetupLoadingSubmitting(true);
+rememberSetupAutoFullscreenPreference();
+submitSetupFormAfterLoadingFrame();
  }
 
  if (setupForm && setupTransitionOverlay) {
@@ -1648,12 +1732,10 @@
  document.body.classList.add('finish-transition-active');
  requestSetupBrowserFullscreen();
 
- if (startInterviewButton) {
+if (startInterviewButton) {
  startInterviewButton.disabled = true;
- startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'Starting Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>';
+startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'Preparing Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>';
  }
-
- submitSetupFormAfterLoadingFrame();
  });
 
  window.addEventListener('pageshow', function() {
