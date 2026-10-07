@@ -7506,3 +7506,119 @@ html body #sec-interview-setup #panel-content #feedbackModeError {
     width: 100% !important;
     max-width: none !important;
 }
+
+@media (min-width: 768px) {
+    #setupTransitionOverlay.finish-transition-overlay {
+        padding: max(10px, env(safe-area-inset-top, 0px)) 18px max(10px, env(safe-area-inset-bottom, 0px)) !important;
+        overflow: hidden !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-shell {
+        width: min(100%, 620px) !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: calc(100dvh - 20px) !important;
+        padding: 0 !important;
+        gap: 10px !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-art {
+        width: 252px !important;
+        height: 172px !important;
+        transform: scale(0.78) !important;
+        transform-origin: center top !important;
+        margin-bottom: -4px !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-copy {
+        gap: 5px !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-title {
+        max-width: 420px !important;
+        font-size: clamp(1.72rem, 2.6vw, 2.05rem) !important;
+        line-height: 1.08 !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-subtitle {
+        max-width: 400px !important;
+        font-size: 0.86rem !important;
+        line-height: 1.35 !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-progress {
+        width: min(100%, 520px) !important;
+        gap: 6px !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-progress-track {
+        height: 12px !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-progress-percent {
+        font-size: 0.98rem !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-checklist {
+        width: min(100%, 580px) !important;
+        padding: 7px 14px !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-check-row {
+        min-height: 49px !important;
+        grid-template-columns: 34px minmax(0, 1fr) 30px !important;
+        gap: 10px !important;
+        padding: 6px 0 !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-row-icon {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 0.84rem !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-row-copy {
+        gap: 2px !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-row-copy strong {
+        font-size: 0.86rem !important;
+        line-height: 1.12 !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-row-copy small {
+        font-size: 0.74rem !important;
+        line-height: 1.22 !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-row-check {
+        width: 26px !important;
+        height: 26px !important;
+        font-size: 0.74rem !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-tip {
+        width: min(100%, 520px) !important;
+        min-height: 38px !important;
+        padding: 8px 14px !important;
+        gap: 9px !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-tip span {
+        font-size: 0.78rem !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-actions {
+        width: min(100%, 580px) !important;
+        gap: 8px !important;
+    }
+
+    #setupTransitionOverlay .interview-prep-button {
+        height: 38px !important;
+        min-height: 38px !important;
+        padding: 8px 12px !important;
+        font-size: 0.8rem !important;
+    }
+}

@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=39') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=40') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=18') }}" data-page-style="interview-setup-2">
 @endpush
 
