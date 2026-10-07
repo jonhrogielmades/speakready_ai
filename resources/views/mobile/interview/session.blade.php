@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=54') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=55') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -290,13 +290,19 @@
  <input type="hidden" name="notes" id="formNotes">
  </form>
 
- <div id="finishTransitionOverlay" class="finish-transition-overlay" role="status" aria-live="polite" aria-atomic="true">
+<div id="finishTransitionOverlay" class="finish-transition-overlay" role="dialog" aria-modal="true" aria-live="polite" aria-atomic="true" aria-labelledby="finishTransitionTitle" aria-describedby="finishTransitionMessage">
  <div class="finish-loading-wrapper">
  <div class="finish-loading-circle"></div>
  <img src="{{ asset('img/logo.png') }}" alt="Loading feedback">
  </div>
  <h4 id="finishTransitionTitle">Analyzing your response...</h4>
  <p id="finishTransitionMessage">Please wait while we finalize your interview report.</p>
+<div class="finish-review-progress" aria-label="Detailed review progress">
+<div class="finish-review-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+<span id="finishReviewProgressBar" class="finish-review-progress-bar"></span>
+</div>
+<strong id="finishReviewProgressPercent" class="finish-review-progress-percent">0%</strong>
+</div>
  <div id="finishReviewChecklist" class="finish-review-checklist" aria-label="Feedback detailed review preparation">
  <div class="finish-review-check-row" data-feedback-step="responses">
  <span class="finish-review-row-icon"><i class="fa-solid fa-file-lines"></i></span>
@@ -340,6 +346,11 @@
  </div>
  </div>
  <div id="finishFailureAlert" class="finish-failure-alert" role="alert" aria-live="assertive" hidden></div>
+<div class="finish-review-actions">
+<button type="button" id="finishViewReviewButton" class="finish-view-review-button" onclick="viewDetailedReview()" disabled aria-disabled="true" hidden>
+View Detailed Review <i class="fa-solid fa-arrow-right"></i>
+</button>
+</div>
  <div class="finish-recovery-actions">
  <button type="button" id="finishRetryButton" class="finish-retry-button" style="display:none;" onclick="retryFinishInterview()"><i class="fa-solid fa-rotate-right me-1"></i>Retry report</button>
  <button type="button" id="finishBackButton" class="finish-secondary-button" style="display:none;" onclick="returnToInterviewAfterFinishError()"><i class="fa-solid fa-arrow-left me-1"></i>Back to answer</button>
@@ -5941,12 +5952,61 @@ return fallbackText;
  return new Promise(resolve => setTimeout(resolve, Math.max(250, Math.min(2500, delayMs || 1000))));
  }
 
- let finishReviewChecklistTimers = [];
+let finishReviewChecklistTimers = [];
+let finishReviewProgressTimer = null;
+let finishReviewProgressValue = 0;
+let finishReviewRedirectUrl = '';
 
  function clearFinishReviewChecklistTimers() {
  finishReviewChecklistTimers.forEach(timerId => window.clearTimeout(timerId));
  finishReviewChecklistTimers = [];
  }
+
+function clearFinishReviewProgressTimer() {
+window.clearInterval(finishReviewProgressTimer);
+finishReviewProgressTimer = null;
+}
+
+function setFinishReviewProgress(value) {
+finishReviewProgressValue = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+const bar = document.getElementById('finishReviewProgressBar');
+const percent = document.getElementById('finishReviewProgressPercent');
+const track = document.querySelector('#finishTransitionOverlay .finish-review-progress-track');
+if (bar) bar.style.width = `${finishReviewProgressValue}%`;
+if (percent) percent.textContent = `${finishReviewProgressValue}%`;
+if (track) track.setAttribute('aria-valuenow', String(finishReviewProgressValue));
+}
+
+function setFinishViewReviewReady(ready, redirectUrl = '') {
+if (ready && redirectUrl) finishReviewRedirectUrl = redirectUrl;
+if (!ready) finishReviewRedirectUrl = '';
+const button = document.getElementById('finishViewReviewButton');
+if (!button) return;
+button.hidden = !ready;
+button.disabled = !ready;
+button.setAttribute('aria-disabled', ready? 'false': 'true');
+button.classList.toggle('is-ready', Boolean(ready));
+button.innerHTML = 'View Detailed Review <i class="fa-solid fa-arrow-right"></i>';
+}
+
+function resetFinishReviewLoading() {
+clearFinishReviewProgressTimer();
+finishReviewRedirectUrl = '';
+setFinishReviewProgress(0);
+setFinishViewReviewReady(false);
+}
+
+function startFinishReviewProgress() {
+resetFinishReviewLoading();
+setFinishReviewProgress(8);
+finishReviewProgressTimer = window.setInterval(() => {
+const step = finishReviewProgressValue < 44? 7: (finishReviewProgressValue < 78? 4: 1);
+setFinishReviewProgress(Math.min(94, finishReviewProgressValue + step));
+if (finishReviewProgressValue >= 94) {
+clearFinishReviewProgressTimer();
+}
+}, 260);
+}
 
  function finishReviewResponseModeLabel() {
  const labels = {
@@ -5984,6 +6044,15 @@ return fallbackText;
  });
  }
 
+function completeFinishReviewChecklist() {
+clearFinishReviewChecklistTimers();
+document.querySelectorAll('.finish-review-check-row').forEach(row => {
+row.classList.remove('is-checking');
+row.classList.add('is-complete');
+row.querySelector('.finish-review-row-check')?.setAttribute('aria-label', 'Complete');
+});
+}
+
  function startFinishReviewChecklist() {
  updateFinishReviewChecklistDetails();
  resetFinishReviewChecklist();
@@ -6015,10 +6084,35 @@ return fallbackText;
  if (!visible) {
  overlay.classList.remove('finish-transition-error');
  resetFinishReviewChecklist();
+resetFinishReviewLoading();
  }
  overlay.classList.toggle('active', visible);
  document.body.classList.toggle('finish-transition-active', visible);
  }
+
+function completeFinishReviewLoading(redirectUrl) {
+clearFinishReviewProgressTimer();
+completeFinishReviewChecklist();
+setFinishReviewProgress(100);
+const title = document.getElementById('finishTransitionTitle');
+const message = document.getElementById('finishTransitionMessage');
+if (title) title.textContent = 'Detailed review ready';
+if (message) message.textContent = 'Your interview report is ready. Open the detailed review to see scores, coaching notes, and next steps.';
+setFinishViewReviewReady(true, redirectUrl);
+document.getElementById('finishViewReviewButton')?.focus();
+}
+
+async function viewDetailedReview() {
+if (!finishReviewRedirectUrl) return;
+const button = document.getElementById('finishViewReviewButton');
+if (button) {
+button.disabled = true;
+button.setAttribute('aria-disabled', 'true');
+button.innerHTML = 'Opening Review <i class="fa-solid fa-spinner fa-spin"></i>';
+}
+await exitMobileFullscreen();
+window.location.replace(finishReviewRedirectUrl);
+}
 
  async function finishInterview() {
  if (feedbackSubmissionInFlight || interviewTerminated) return false;
@@ -6040,10 +6134,11 @@ return fallbackText;
  failureAlert.textContent = '';
  failureAlert.hidden = true;
  }
- overlay?.setAttribute('role', 'status');
+overlay?.setAttribute('role', 'dialog');
  overlay?.setAttribute('aria-live', 'polite');
  if (retryButton) retryButton.style.display = 'none';
  if (backButton) backButton.style.display = 'none';
+startFinishReviewProgress();
  startFinishReviewChecklist();
  setFinishTransitionVisible(true);
  const form = document.getElementById('finishForm');
@@ -6075,7 +6170,7 @@ return fallbackText;
  }
 
  window.SpeakReadyInterviewSetupDraft?.clear();
- window.location.replace(data.redirect_url);
+completeFinishReviewLoading(data.redirect_url);
  return true;
  }
 
@@ -6091,6 +6186,8 @@ return fallbackText;
  const backButton = document.getElementById('finishBackButton');
  const overlay = document.getElementById('finishTransitionOverlay');
  clearFinishReviewChecklistTimers();
+clearFinishReviewProgressTimer();
+setFinishViewReviewReady(false);
  overlay?.classList.add('finish-transition-error');
  if (title) title.textContent = 'Report not finished';
  if (message) message.textContent = 'Your answers are saved. Retry the report or return to your answer.';
