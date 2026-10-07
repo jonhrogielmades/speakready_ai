@@ -1333,6 +1333,17 @@
     }
     .finish-review-primary-button.is-navigating {
         pointer-events: none;
+        cursor: progress;
+    }
+    .finish-review-primary-button.is-navigating::after {
+        content: "";
+        width: 1em;
+        height: 1em;
+        border: 2px solid rgba(255, 255, 255, 0.48);
+        border-top-color: #ffffff;
+        border-radius: 50%;
+        animation: finishReviewButtonSpin 0.7s linear infinite;
+        transform: none;
     }
     .finish-review-primary-button::before {
         content: "";
@@ -1766,6 +1777,10 @@
         0% { transform: scale(0.45) rotate(-18deg); }
         65% { transform: scale(1.18) rotate(0deg); }
         100% { transform: scale(1) rotate(0deg); }
+    }
+    @keyframes finishReviewButtonSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
     .mobile-camera-pip { position:absolute; top:15px; right:15px; width:80px; height:80px; border-radius:12px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6); background:#111827; }
     .mobile-camera-placeholder { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72);background:linear-gradient(135deg,#111827,#312e81);font-size:1rem;z-index:3; }
@@ -5752,6 +5767,17 @@ html body #finishTransitionOverlay .finish-review-primary-button::after {
 
 html body #finishTransitionOverlay .finish-review-primary-button.is-navigating {
     pointer-events: none !important;
+    cursor: progress !important;
+}
+
+html body #finishTransitionOverlay .finish-review-primary-button.is-navigating::after {
+    content: "" !important;
+    width: 1em !important;
+    height: 1em !important;
+    border: 2px solid rgba(255, 255, 255, 0.48) !important;
+    border-top-color: #ffffff !important;
+    border-radius: 50% !important;
+    animation: finishReviewButtonSpin 0.7s linear infinite !important;
 }
 
 html body #finishTransitionOverlay .finish-review-primary-button::before {

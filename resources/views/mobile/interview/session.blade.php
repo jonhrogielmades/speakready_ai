@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=61') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=62') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -6189,7 +6189,10 @@ const button = document.getElementById('finishViewReviewButton');
 if (button) {
 button.setAttribute('aria-disabled', 'true');
 button.classList.add('is-navigating');
+const label = button.querySelector('.finish-review-button-label');
+if (label) label.textContent = 'Opening Review';
 }
+await new Promise(resolve => window.requestAnimationFrame(resolve));
 await exitMobileFullscreen();
 window.location.replace(finishReviewRedirectUrl);
 }

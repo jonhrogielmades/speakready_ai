@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=60') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=61') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -6432,7 +6432,10 @@ const button = document.getElementById('finishViewReviewButton');
 if (button) {
 button.setAttribute('aria-disabled', 'true');
 button.classList.add('is-navigating');
+const label = button.querySelector('.finish-review-button-label');
+if (label) label.textContent = 'Opening Review';
 }
+await new Promise(resolve => window.requestAnimationFrame(resolve));
 await exitAutoInterviewFullscreen();
 window.location.replace(finishReviewRedirectUrl);
 }
