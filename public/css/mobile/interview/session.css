@@ -4917,6 +4917,115 @@ body.dm #sec-interview-session .answer-transcript-stage .answer-transcription-me
     }
 }
 
+@media (max-width: 767.98px) {
+    html body.mobile-answer-focused.mobile-interview-fullscreen,
+    html body.mobile-answer-focused.mobile-interview-fullscreen #mob-content,
+    html body.mobile-answer-focused.mobile-interview-fullscreen #mob-content > .db-content,
+    html body.mobile-answer-focused.mobile-interview-fullscreen.user-mobile-shell #sec-interview-session,
+    html body.mobile-answer-focused.mobile-interview-fullscreen #mob-content #sec-interview-session {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    html body.mobile-answer-focused.mobile-interview-fullscreen.user-mobile-shell #sec-interview-session,
+    html body.mobile-answer-focused.mobile-interview-fullscreen #mob-content #sec-interview-session {
+        height: var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) !important;
+        min-height: var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) !important;
+        padding-bottom: max(10px, env(safe-area-inset-bottom, 0px)) !important;
+        scroll-padding-top: 8px !important;
+        scroll-padding-bottom: 18px !important;
+    }
+
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .ai-avatar-panel,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .ai-avatar-panel {
+        --interview-avatar-lift: 0px;
+        height: clamp(118px, calc(var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) * 0.28), 168px) !important;
+        min-height: 118px !important;
+        margin-bottom: 8px !important;
+    }
+
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session #aiAvatarHead.avatar-wrapper,
+    html body.mobile-answer-focused #mob-content #sec-interview-session #aiAvatarHead.avatar-wrapper {
+        width: clamp(74px, 22vw, 96px) !important;
+        height: clamp(74px, 22vw, 96px) !important;
+        transform: translateY(-4px) !important;
+    }
+
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .circular-spectrum,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .circular-spectrum {
+        --spectrum-radius: clamp(48px, 14vw, 58px);
+        transform: translateY(-4px) !important;
+    }
+
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .circular-spectrum .spectrum-bar,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .circular-spectrum .spectrum-bar {
+        left: -3px !important;
+        width: 6px !important;
+        height: 8px !important;
+        max-height: 28px !important;
+    }
+
+    html body.mobile-answer-focused #sec-interview-session .ai-avatar-panel #interviewControls.interview-panel-actions,
+    html body.mobile-answer-focused #sec-interview-session .ai-avatar-panel #answerTranscriptControls.interview-panel-voice-actions {
+        display: none !important;
+    }
+
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .question-caption-overlay,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .question-caption-overlay {
+        inset: auto 12px 10px 12px !important;
+    }
+
+    html body.mobile-answer-focused #sec-interview-session .question-caption-line {
+        max-height: 2.8em !important;
+        padding: 4px 8px !important;
+        overflow: hidden !important;
+        font-size: clamp(0.58rem, 2.5vw, 0.7rem) !important;
+        line-height: 1.28 !important;
+    }
+
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .response-panel,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .response-panel {
+        position: sticky !important;
+        top: max(6px, env(safe-area-inset-top, 0px)) !important;
+        z-index: 90 !important;
+        margin-bottom: 10px !important;
+        padding-bottom: 10px !important;
+    }
+
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session #answerForm,
+    html body.mobile-answer-focused #mob-content #sec-interview-session #answerForm {
+        max-height: calc(var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) - 58px) !important;
+        overflow: visible !important;
+    }
+
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .answer-transcript-stage #answerTextarea,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .answer-transcript-stage #answerTextarea {
+        height: clamp(108px, calc(var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) - 290px), 180px) !important;
+        min-height: 108px !important;
+        max-height: 180px !important;
+        margin-bottom: 0 !important;
+        font-size: 16px !important;
+        line-height: 1.42 !important;
+        resize: none !important;
+    }
+}
+
+@media (max-width: 390px) {
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .ai-avatar-panel,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .ai-avatar-panel {
+        height: clamp(104px, calc(var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) * 0.24), 140px) !important;
+        min-height: 104px !important;
+    }
+
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .answer-transcript-stage #answerTextarea,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .answer-transcript-stage #answerTextarea {
+        height: clamp(96px, calc(var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) - 260px), 158px) !important;
+        min-height: 96px !important;
+        max-height: 158px !important;
+    }
+}
+
 html body #sec-interview-session .response-title-actions #aiCoachHeadButton.ai-coach-head-button {
     position: static !important;
     inset: auto !important;

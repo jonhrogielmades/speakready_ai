@@ -1479,7 +1479,7 @@ class UserSideHardeningTest extends TestCase
  ]);
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
  $expectedMarkup = [
- 'css/desktop/interview/session.css?v=52',
+ 'css/desktop/interview/session.css?v=62',
  'Coaching On',
  "classList.toggle('real-interview-mode', liveFeedbackMode === 'real_interview')",
  'const liveFeedbackMode = "coaching";',
@@ -1535,8 +1535,8 @@ class UserSideHardeningTest extends TestCase
  ->get(route('interview.session'))
  ->assertOk();
 
- foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=52']), [
- 'css/mobile/interview/session.css?v=53',
+ foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=62']), [
+ 'css/mobile/interview/session.css?v=63',
  ]) as $markup) {
  $mobileResponse->assertSee($markup, false);
  }

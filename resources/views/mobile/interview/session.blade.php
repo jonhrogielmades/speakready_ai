@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=62') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=63') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -3334,6 +3334,81 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return document.getElementById('answerTextarea');
  }
 
+ let mobileAnswerFocusFrame = null;
+ let mobileAnswerFocusScrollTimer = null;
+ let mobileAnswerViewportListenersBound = false;
+
+ function isMobileAnswerViewport() {
+ return document.body.classList.contains('user-mobile-shell') || window.matchMedia('(max-width: 767.98px)').matches;
+ }
+
+ function currentVisualViewportHeight() {
+ const visualViewport = window.visualViewport;
+ const height = Number(visualViewport?.height || 0)
+ || Number(window.innerHeight || 0)
+ || Number(document.documentElement?.clientHeight || 0);
+ return Math.max(0, height);
+ }
+
+ function syncMobileAnswerFocusState(options = {}) {
+ const textarea = answerTextareaElement();
+ const answerFocused = Boolean(textarea && document.activeElement === textarea && isMobileAnswerViewport());
+ const visualHeight = currentVisualViewportHeight();
+
+ if (visualHeight > 0) {
+ document.documentElement.style.setProperty('--sr-answer-viewport-h', `${visualHeight.toFixed(2)}px`);
+ }
+
+ document.body.classList.toggle('mobile-answer-focused', answerFocused);
+ document.body.classList.toggle('mobile-answer-keyboard-open', answerFocused);
+
+ if (answerFocused && options.scroll!== false) {
+ clearTimeout(mobileAnswerFocusScrollTimer);
+ mobileAnswerFocusScrollTimer = setTimeout(() => {
+ const panel = document.querySelector('#sec-interview-session .response-panel');
+ panel?.scrollIntoView({
+ block: 'start',
+ inline: 'nearest',
+ behavior: options.instant? 'auto': 'smooth'
+ });
+ }, Math.max(0, Number(options.delayMs?? 90)));
+ }
+ }
+
+ function queueMobileAnswerFocusSync(options = {}) {
+ if (mobileAnswerFocusFrame!== null) {
+ window.cancelAnimationFrame(mobileAnswerFocusFrame);
+ }
+
+ mobileAnswerFocusFrame = window.requestAnimationFrame(() => {
+ mobileAnswerFocusFrame = null;
+ syncMobileAnswerFocusState(options);
+ });
+ }
+
+ function handleMobileAnswerFocus() {
+ queueMobileAnswerFocusSync({ delayMs: 80 });
+ setTimeout(() => queueMobileAnswerFocusSync({ delayMs: 0 }), 260);
+ }
+
+ function handleMobileAnswerBlur() {
+ setTimeout(() => queueMobileAnswerFocusSync({ scroll: false }), 180);
+ }
+
+ function bindMobileAnswerViewportListeners(answerTextarea) {
+ if (!answerTextarea || mobileAnswerViewportListenersBound) return;
+ mobileAnswerViewportListenersBound = true;
+
+ answerTextarea.addEventListener('focus', handleMobileAnswerFocus);
+ answerTextarea.addEventListener('blur', handleMobileAnswerBlur);
+ window.addEventListener('resize', () => queueMobileAnswerFocusSync({ delayMs: 60 }), { passive: true });
+ window.addEventListener('orientationchange', () => queueMobileAnswerFocusSync({ delayMs: 180 }), { passive: true });
+ if (window.visualViewport) {
+ window.visualViewport.addEventListener('resize', () => queueMobileAnswerFocusSync({ delayMs: 60 }), { passive: true });
+ window.visualViewport.addEventListener('scroll', () => queueMobileAnswerFocusSync({ delayMs: 60 }), { passive: true });
+ }
+ }
+
  function updateAnswerTranscriptionOverlay() {
  const textarea = answerTextareaElement();
  const stage = document.querySelector('.answer-transcript-stage');
@@ -3380,6 +3455,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function focusAnswerTextarea() {
  answerTextareaElement()?.focus();
+ queueMobileAnswerFocusSync({ delayMs: 80 });
  }
 
  function hybridModeHasTranscriptText() {
@@ -4601,6 +4677,7 @@ return fallbackText;
 
  document.body.classList.add('mobile-interview-fullscreen');
  window.SpeakReadyViewport?.refresh?.();
+ queueMobileAnswerFocusSync({ scroll: false });
  updateMobileFullscreenToggle();
 
  if (options.requestBrowser === false) return;
@@ -4615,6 +4692,7 @@ return fallbackText;
 
  function exitMobileFullscreen() {
  document.body.classList.remove('mobile-interview-fullscreen');
+ document.body.classList.remove('mobile-answer-focused', 'mobile-answer-keyboard-open');
  window.SpeakReadyViewport?.refresh?.();
  updateMobileFullscreenToggle();
 
@@ -4727,6 +4805,7 @@ return fallbackText;
  if (answerTextarea) {
  answerTextarea.addEventListener('input', handleAnswerInput);
  answerTextarea.addEventListener('paste', handleAnswerPaste);
+ bindMobileAnswerViewportListeners(answerTextarea);
  }
  document.addEventListener('click', closeVoiceSessionMenu);
  document.addEventListener('keydown', event => {

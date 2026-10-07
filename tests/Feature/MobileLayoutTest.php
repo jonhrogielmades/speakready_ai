@@ -1298,7 +1298,7 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'));
 
         $response->assertOk()
-            ->assertSee('css/desktop/interview/session.css?v=52', false)
+            ->assertSee('css/desktop/interview/session.css?v=62', false)
             ->assertSee('const cameraDetectionEnabled = true;', false)
             ->assertSee('interview-session-browser-fullscreen', false)
             ->assertSee('interview-ready-fullscreen', false)
@@ -1468,7 +1468,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=53', false)
+            ->assertSee('css/mobile/interview/session.css?v=63', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)
@@ -1480,6 +1480,9 @@ class MobileLayoutTest extends TestCase
             ->assertSee('id="responseFullscreenToggle"', false)
             ->assertSee('enterMobileFullscreen({ requestBrowser: false });', false)
             ->assertSee('enterMobileFullscreen();', false)
+            ->assertSee('function syncMobileAnswerFocusState(options = {})', false)
+            ->assertSee("document.body.classList.toggle('mobile-answer-focused', answerFocused);", false)
+            ->assertSee('bindMobileAnswerViewportListeners(answerTextarea);', false)
             ->assertSee('function handleInterviewEscapeKey(event)', false)
             ->assertSee('exitMobileFullscreen();', false)
             ->assertDontSee('class="mobile-camera-pip d-lg-none"', false)
@@ -1521,6 +1524,10 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('height: clamp(162px, calc(var(--sr-visual-vh, 100dvh) - 404px), 224px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('margin-bottom: 14px !important;', $mobileSessionCss);
         $this->assertStringContainsString('overflow: hidden !important;', $mobileSessionCss);
+        $this->assertStringContainsString('html body.mobile-answer-focused.mobile-interview-fullscreen.user-mobile-shell #sec-interview-session', $mobileSessionCss);
+        $this->assertStringContainsString('overflow-y: auto !important;', $mobileSessionCss);
+        $this->assertStringContainsString('position: sticky !important;', $mobileSessionCss);
+        $this->assertStringContainsString('height: clamp(108px, calc(var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) - 290px), 180px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('html body.mobile-interview-fullscreen.user-mobile-shell #sec-interview-session .response-panel', $mobileSessionCss);
         $this->assertStringNotContainsString('height: clamp(292px, 46dvh, 340px) !important;', $mobileSessionCss);
         $this->assertStringNotContainsString('height: clamp(270px, 44dvh, 318px) !important;', $mobileSessionCss);
