@@ -267,7 +267,7 @@
             color: var(--tx3);
             font-weight: 600;
         }
-        #mainUsersTable tbody td:nth-child(2)::before { content: "Email"; }
+        #mainUsersTable tbody td:nth-child(2)::before { content: "Username/Email"; }
         #mainUsersTable tbody td:nth-child(3)::before { content: "Role"; }
         #mainUsersTable tbody td:nth-child(4)::before { content: "Status"; }
         #mainUsersTable tbody td:nth-child(5)::before { content: "Date Registered"; }

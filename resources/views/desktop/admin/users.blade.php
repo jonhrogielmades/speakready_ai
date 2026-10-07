@@ -235,7 +235,7 @@
                 <thead>
                     <tr>
                         <th>Profile & Name</th>
-                        <th>Email</th>
+                        <th>Username/Email</th>
                         <th>Role</th>
                         <th>Status</th>
                         <th>Date Registered</th>
@@ -287,7 +287,17 @@
                                 </div>
                             </div>
                         </td>
-                        <td>{{ $user->email }}</td>
+                        @php
+                            $userUsername = trim((string) ($user->username ?? ''));
+                            $userEmail = trim((string) ($user->email ?? ''));
+                            $userIdentifier = $userUsername !== '' ? $userUsername : ($userEmail !== '' ? $userEmail : 'No username/email');
+                        @endphp
+                        <td>
+                            <div class="fw-semibold">{{ $userIdentifier }}</div>
+                            @if($userUsername !== '' && $userEmail !== '')
+                                <div style="font-size:0.75rem;color:var(--tx3);">{{ $userEmail }}</div>
+                            @endif
+                        </td>
                         <td>
                             @if($user->is_admin)
                                 <span class="stat-badge primary" style="background:rgba(59,130,246,0.15);color:#60a5fa;">Admin</span>

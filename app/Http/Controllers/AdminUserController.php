@@ -94,13 +94,13 @@ class AdminUserController extends Controller
 
         $callback = function () use ($users) {
             $file = fopen('php://output', 'w');
-            CsvExportService::writeRow($file, ['ID', 'Name', 'Email', 'Role', 'Status', 'Registered At']);
+            CsvExportService::writeRow($file, ['ID', 'Name', 'Username/Email', 'Role', 'Status', 'Registered At']);
 
             foreach ($users as $user) {
                 CsvExportService::writeRow($file, [
                     $user->id,
                     $user->name,
-                    $user->email,
+                    $this->usernameEmailLabel($user),
                     $user->is_admin ? 'Admin' : 'User',
                     $user->status,
                     optional($user->created_at)->toDateTimeString(),
@@ -418,6 +418,7 @@ class AdminUserController extends Controller
             $search = trim((string) $request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
             });
         }
@@ -466,6 +467,18 @@ class AdminUserController extends Controller
             ->unique()
             ->values()
             ->all();
+    }
+
+    private function usernameEmailLabel(User $user): string
+    {
+        $username = trim((string) ($user->username ?? ''));
+        $email = trim((string) ($user->email ?? ''));
+
+        if ($username !== '' && $email !== '') {
+            return "{$username} / {$email}";
+        }
+
+        return $username !== '' ? $username : $email;
     }
 
     private function onlineUserIds(?\Illuminate\Support\Collection $lastActiveByUserId = null): \Illuminate\Support\Collection

@@ -589,7 +589,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('admin-users-pagination-controls', false)
             ->assertSee('id="mainUsersTable"', false)
             ->assertSee('data-label="User"', false)
-            ->assertSee('data-label="Email"', false)
+            ->assertSee('data-label="Username/Email"', false)
             ->assertSee('data-label="Actions"', false)
             ->assertSee('Mobile Managed Candidate', false)
             ->assertSee($user->email, false)
