@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=55') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=60') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -291,12 +291,26 @@
  </form>
 
 <div id="finishTransitionOverlay" class="finish-transition-overlay" role="dialog" aria-modal="true" aria-live="polite" aria-atomic="true" aria-labelledby="finishTransitionTitle" aria-describedby="finishTransitionMessage">
- <div class="finish-loading-wrapper">
- <div class="finish-loading-circle"></div>
- <img src="{{ asset('img/logo.png') }}" alt="Loading feedback">
+<div class="finish-review-shell">
+ <div class="finish-review-art" aria-hidden="true">
+ <span class="finish-review-art-ring"></span>
+ <span class="finish-review-art-doc">
+ <span class="finish-review-art-clip"></span>
+ <span class="finish-review-art-avatar"><i class="fa-solid fa-user"></i></span>
+ <span class="finish-review-art-line finish-review-art-line-1"></span>
+ <span class="finish-review-art-line finish-review-art-line-2"></span>
+ <span class="finish-review-art-line finish-review-art-line-3"></span>
+ <span class="finish-review-art-bars"><span></span><span></span><span></span></span>
+ </span>
+ <span class="finish-review-art-badge finish-review-art-badge-left"><i class="fa-solid fa-brain"></i></span>
+ <span class="finish-review-art-badge finish-review-art-badge-right"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+ <span class="finish-review-art-lens"><i class="fa-solid fa-check"></i></span>
+ <span class="finish-review-art-handle"></span>
  </div>
- <h4 id="finishTransitionTitle">Analyzing your response...</h4>
- <p id="finishTransitionMessage">Please wait while we finalize your interview report.</p>
+ <div class="finish-review-copy">
+ <h4 id="finishTransitionTitle" class="finish-review-title">Analyzing Your <span>Response...</span></h4>
+ <p id="finishTransitionMessage" class="finish-review-subtitle">Please wait while we finalize your interview report.</p>
+ </div>
 <div class="finish-review-progress" aria-label="Detailed review progress">
 <div class="finish-review-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
 <span id="finishReviewProgressBar" class="finish-review-progress-bar"></span>
@@ -346,14 +360,19 @@
  </div>
  </div>
  <div id="finishFailureAlert" class="finish-failure-alert" role="alert" aria-live="assertive" hidden></div>
+<div class="finish-review-tip">
+<i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+<span>Detailed feedback helps build <strong>stronger answers!</strong></span>
+</div>
 <div class="finish-review-actions">
-<button type="button" id="finishViewReviewButton" class="finish-view-review-button" onclick="viewDetailedReview()" disabled aria-disabled="true" hidden>
-View Detailed Review <i class="fa-solid fa-arrow-right"></i>
+<button type="button" id="finishViewReviewButton" class="finish-view-review-button finish-review-primary-button" onclick="viewDetailedReview()" disabled aria-disabled="true" hidden>
+<span class="finish-review-button-label">View Detailed Review</span>
 </button>
 </div>
  <div class="finish-recovery-actions">
  <button type="button" id="finishRetryButton" class="finish-retry-button" style="display:none;" onclick="retryFinishInterview()"><i class="fa-solid fa-rotate-right me-1"></i>Retry report</button>
  <button type="button" id="finishBackButton" class="finish-secondary-button" style="display:none;" onclick="returnToInterviewAfterFinishError()"><i class="fa-solid fa-arrow-left me-1"></i>Back to answer</button>
+ </div>
  </div>
  </div>
 
@@ -5986,12 +6005,18 @@ button.hidden = !ready;
 button.disabled = !ready;
 button.setAttribute('aria-disabled', ready? 'false': 'true');
 button.classList.toggle('is-ready', Boolean(ready));
-button.innerHTML = 'View Detailed Review <i class="fa-solid fa-arrow-right"></i>';
+button.classList.remove('is-opening');
+const label = button.querySelector('.finish-review-button-label');
+if (label) label.textContent = 'View Detailed Review';
 }
 
 function resetFinishReviewLoading() {
 clearFinishReviewProgressTimer();
 finishReviewRedirectUrl = '';
+const title = document.getElementById('finishTransitionTitle');
+const message = document.getElementById('finishTransitionMessage');
+if (title) title.innerHTML = 'Analyzing Your <span>Response...</span>';
+if (message) message.textContent = 'Please wait while we finalize your interview report.';
 setFinishReviewProgress(0);
 setFinishViewReviewReady(false);
 }
@@ -6096,7 +6121,7 @@ completeFinishReviewChecklist();
 setFinishReviewProgress(100);
 const title = document.getElementById('finishTransitionTitle');
 const message = document.getElementById('finishTransitionMessage');
-if (title) title.textContent = 'Detailed review ready';
+if (title) title.innerHTML = 'Detailed Review <span>Ready</span>';
 if (message) message.textContent = 'Your interview report is ready. Open the detailed review to see scores, coaching notes, and next steps.';
 setFinishViewReviewReady(true, redirectUrl);
 document.getElementById('finishViewReviewButton')?.focus();
@@ -6108,7 +6133,9 @@ const button = document.getElementById('finishViewReviewButton');
 if (button) {
 button.disabled = true;
 button.setAttribute('aria-disabled', 'true');
-button.innerHTML = 'Opening Review <i class="fa-solid fa-spinner fa-spin"></i>';
+button.classList.add('is-opening');
+const label = button.querySelector('.finish-review-button-label');
+if (label) label.textContent = 'Opening Review';
 }
 await exitMobileFullscreen();
 window.location.replace(finishReviewRedirectUrl);
@@ -6128,7 +6155,7 @@ window.location.replace(finishReviewRedirectUrl);
  const backButton = document.getElementById('finishBackButton');
  const overlay = document.getElementById('finishTransitionOverlay');
  overlay?.classList.remove('finish-transition-error');
- if (transitionTitle) transitionTitle.textContent = 'Analyzing your response...';
+ if (transitionTitle) transitionTitle.innerHTML = 'Analyzing Your <span>Response...</span>';
  if (transitionMessage) transitionMessage.textContent = 'Please wait while we finalize your interview report.';
  if (failureAlert) {
  failureAlert.textContent = '';
