@@ -1223,7 +1223,7 @@
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-envelope" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Email Address</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">admin@speakready.ai</p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">capstonespeakreadyai@gmail.com</p>
                              </div>
                          </div>
                          <div class="d-flex align-items-center gap-3">
@@ -1237,7 +1237,7 @@
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-location-dot" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Location</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">Pinut-an, San Ricardo, Southern Leyte</p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">San Ramon, Bontoc, Southern Leyte - SLSU Bontoc Campus</p>
                              </div>
                          </div>
                      </div>
@@ -1352,7 +1352,7 @@
                      <div class="footer-socials" aria-label="Contact links">
                          <a href="mailto:{{ $systemContactEmail ?? 'support@speakready.ai' }}" class="footer-social-link" title="Email {{ $systemName ?? 'SpeakReady AI' }}" aria-label="Email {{ $systemName ?? 'SpeakReady AI' }}"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
                          <a href="tel:{{ preg_replace('/[^0-9+]/', '', $systemContactNumber ?? '') ?: '09066544727' }}" class="footer-social-link" title="Call {{ $systemName ?? 'SpeakReady AI' }}" aria-label="Call {{ $systemName ?? 'SpeakReady AI' }}"><i class="fa-solid fa-phone" aria-hidden="true"></i></a>
-                         <a href="https://www.google.com/maps/search/?api=1&query=Pinut-an%2C%20San%20Ricardo%2C%20Southern%20Leyte" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="View location" aria-label="View location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></a>
+                         <a href="https://www.google.com/maps/search/?api=1&query=San%20Ramon%2C%20Bontoc%2C%20Southern%20Leyte%20SLSU%20Bontoc%20Campus" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="View location" aria-label="View location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></a>
                      </div>
                   </div>
                </div>

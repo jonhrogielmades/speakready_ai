@@ -14,7 +14,7 @@
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-envelope" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Email Address</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;"></p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">capstonespeakreadyai@gmail.com</p>
                              </div>
                          </div>
                          <div class="d-flex align-items-center gap-3">
@@ -28,7 +28,7 @@
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-location-dot" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Location</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">Pinut-an, San Ricardo, Southern Leyte</p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">San Ramon, Bontoc, Southern Leyte - SLSU Bontoc Campus</p>
                              </div>
                          </div>
                      </div>
