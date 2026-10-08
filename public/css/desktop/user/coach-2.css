@@ -2040,3 +2040,46 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
         -webkit-text-fill-color: #94a3b8 !important;
     }
 }
+
+/* Composer polish: keep the textarea visually merged into the ChatGPT-style pill. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell.desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper {
+        grid-template-columns: 44px minmax(0, 1fr) 44px 48px !important;
+        align-items: center !important;
+        min-height: 60px !important;
+        padding: 7px 9px !important;
+        border-radius: 999px !important;
+        background: #ffffff !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-desktop-shell.desktop-shell:not(.admin-shell) #ai-coach-page textarea.chat-textarea,
+    html body.user-desktop-shell.desktop-shell:not(.admin-shell) #ai-coach-page textarea.chat-textarea:focus {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 30px !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 4px 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        outline: 0 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        box-shadow: none !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell.desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper,
+    :root:not(.lm) body.user-desktop-shell.desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper,
+    body.dm.user-desktop-shell.desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper {
+        background: #0f172a !important;
+    }
+
+    html body.user-desktop-shell.desktop-shell:not(.admin-shell) #ai-coach-page textarea.chat-textarea::placeholder {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+}

@@ -3232,7 +3232,7 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
         grid-template-columns: 34px minmax(0, 1fr) 34px !important;
         gap: 6px !important;
         margin-bottom: 12px !important;
-        padding: 9px 8px 11px !important;
+        padding: 9px 8px 12px !important;
         border-radius: 12px !important;
         overflow: hidden !important;
     }
@@ -3241,7 +3241,7 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
     html body #mob-content #learning-games-page .challenge-level-stepper-track,
     html body #learning-games-page .challenge-level-stepper-track {
         gap: 6px !important;
-        min-height: 64px !important;
+        min-height: 88px !important;
         padding: 2px 0 3px !important;
         overflow-x: auto !important;
         scrollbar-width: none !important;
@@ -3262,6 +3262,7 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
         min-width: clamp(54px, 21vw, 62px) !important;
         gap: 4px !important;
         padding: 0 1px !important;
+        align-content: start !important;
     }
 
     body.user-mobile-shell #mob-content #learning-games-page .challenge-step-dot::after,
@@ -3301,10 +3302,14 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
     html body #learning-games-page .challenge-step-label {
         width: 100% !important;
         max-width: 100% !important;
-        min-height: 24px !important;
+        min-height: 48px !important;
         font-size: 0.58rem !important;
         line-height: 1.1 !important;
+        display: block !important;
+        overflow: visible !important;
         overflow-wrap: anywhere !important;
+        -webkit-line-clamp: unset !important;
+        -webkit-box-orient: initial !important;
     }
 
     body.user-mobile-shell #mob-content #learning-games-page .challenge-step-nav,
@@ -3327,7 +3332,13 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
     html body #learning-games-page .challenge-level-stepper {
         grid-template-columns: 32px minmax(0, 1fr) 32px !important;
         gap: 5px !important;
-        padding: 8px 7px 10px !important;
+        padding: 8px 7px 11px !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-level-stepper-track,
+    html body #mob-content #learning-games-page .challenge-level-stepper-track,
+    html body #learning-games-page .challenge-level-stepper-track {
+        min-height: 86px !important;
     }
 
     body.user-mobile-shell #mob-content #learning-games-page .challenge-step-dot,
@@ -3352,5 +3363,59 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
     html body #mob-content #learning-games-page .challenge-step-label,
     html body #learning-games-page .challenge-step-label {
         font-size: 0.54rem !important;
+        min-height: 46px !important;
+    }
+}
+
+/* Center active challenge card content on mobile. */
+@media (max-width: 576px) {
+    body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card > .d-flex:first-child,
+    html body #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card > .d-flex:first-child,
+    html body #learning-games-page #modules-list.level-stepper-mode .level-card > .d-flex:first-child {
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card > .d-flex:first-child > div:first-child,
+    html body #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card > .d-flex:first-child > div:first-child,
+    html body #learning-games-page #modules-list.level-stepper-mode .level-card > .d-flex:first-child > div:first-child {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card h5,
+    body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card p,
+    html body #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card h5,
+    html body #mob-content #learning-games-page #modules-list.level-stepper-mode .level-card p,
+    html body #learning-games-page #modules-list.level-stepper-mode .level-card h5,
+    html body #learning-games-page #modules-list.level-stepper-mode .level-card p {
+        text-align: center !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode :is(.score-badge, .requirement-badge, .locked-status-pill),
+    html body #mob-content #learning-games-page #modules-list.level-stepper-mode :is(.score-badge, .requirement-badge, .locked-status-pill),
+    html body #learning-games-page #modules-list.level-stepper-mode :is(.score-badge, .requirement-badge, .locked-status-pill) {
+        margin-inline: auto !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .learning-badge-row,
+    html body #mob-content #learning-games-page #modules-list.level-stepper-mode .learning-badge-row,
+    html body #learning-games-page #modules-list.level-stepper-mode .learning-badge-row {
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page #modules-list.level-stepper-mode .learning-badge-row .badge,
+    html body #mob-content #learning-games-page #modules-list.level-stepper-mode .learning-badge-row .badge,
+    html body #learning-games-page #modules-list.level-stepper-mode .learning-badge-row .badge {
+        justify-content: center !important;
+        text-align: center !important;
     }
 }

@@ -2064,3 +2064,55 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
         font-size: 0.9rem !important;
     }
 }
+
+/* Composer polish: keep the textarea visually merged into the ChatGPT-style pill. */
+@media (max-width: 767px) {
+    html body.user-mobile-shell.mobile-shell:not(.admin-shell) #mob-content #ai-coach-page .chat-input-wrapper,
+    html body.user-mobile-shell.mobile-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper {
+        grid-template-columns: 38px minmax(0, 1fr) 38px 42px !important;
+        align-items: center !important;
+        min-height: 54px !important;
+        padding: 6px 7px !important;
+        border-radius: 999px !important;
+        background: #ffffff !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-mobile-shell.mobile-shell:not(.admin-shell) #mob-content #ai-coach-page textarea.chat-textarea,
+    html body.user-mobile-shell.mobile-shell:not(.admin-shell) #mob-content #ai-coach-page textarea.chat-textarea:focus,
+    html body.user-mobile-shell.mobile-shell:not(.admin-shell) #ai-coach-page textarea.chat-textarea,
+    html body.user-mobile-shell.mobile-shell:not(.admin-shell) #ai-coach-page textarea.chat-textarea:focus,
+    html body.user-mobile-shell.mobile-shell.coach-mobile-page-active.coach-keyboard-open:not(.admin-shell) #ai-coach-page textarea.chat-textarea,
+    html body.user-mobile-shell.mobile-shell.coach-mobile-page-active.coach-keyboard-open:not(.admin-shell) #ai-coach-page textarea.chat-textarea:focus {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 28px !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 4px 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        outline: 0 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        box-shadow: none !important;
+    }
+
+    html[data-theme="dark"] body.user-mobile-shell.mobile-shell:not(.admin-shell) #mob-content #ai-coach-page .chat-input-wrapper,
+    :root:not(.lm) body.user-mobile-shell.mobile-shell:not(.admin-shell) #mob-content #ai-coach-page .chat-input-wrapper,
+    body.dm.user-mobile-shell.mobile-shell:not(.admin-shell) #mob-content #ai-coach-page .chat-input-wrapper,
+    html[data-theme="dark"] body.user-mobile-shell.mobile-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper,
+    :root:not(.lm) body.user-mobile-shell.mobile-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper,
+    body.dm.user-mobile-shell.mobile-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper {
+        background: #0f172a !important;
+    }
+
+    html body.user-mobile-shell.mobile-shell:not(.admin-shell) #mob-content #ai-coach-page textarea.chat-textarea::placeholder,
+    html body.user-mobile-shell.mobile-shell:not(.admin-shell) #ai-coach-page textarea.chat-textarea::placeholder {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+}
