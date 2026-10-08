@@ -1125,7 +1125,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->get(route('user.reports'));
 
  $mobile->assertOk()
- ->assertSee('css/mobile/user/reports-2.css?v=16', false)
+ ->assertSee('css/mobile/user/reports-2.css?v=17', false)
  ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('Page 1 of 2')
  ->assertDontSee('recent_sessions_page=2', false);
@@ -1314,7 +1314,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/mobile/user/reports.css?v=2', false)
- ->assertSee('css/mobile/user/reports-2.css?v=16', false)
+ ->assertSee('css/mobile/user/reports-2.css?v=17', false)
  ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')
