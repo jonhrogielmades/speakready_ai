@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=12') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=13') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -787,6 +787,12 @@
  button.setAttribute('aria-selected', isSelected? 'true': 'false');
  button.tabIndex = isSelected? 0: -1;
  });
+
+ const selectedButton = stepButtons[selectedStepIndex];
+ if (selectedButton && stepperTrack) {
+ const targetLeft = selectedButton.offsetLeft - ((stepperTrack.clientWidth - selectedButton.offsetWidth) / 2);
+ stepperTrack.scrollTo({ left: Math.max(0, targetLeft), behavior: 'auto' });
+ }
 
  pathLines.forEach(line => {
  line.hidden = true;

@@ -3223,3 +3223,134 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
     min-height: 0 !important;
     margin-left: 0 !important;
 }
+
+/* Mobile challenge stepper fit pass. */
+@media (max-width: 576px) {
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-level-stepper,
+    html body #mob-content #learning-games-page .challenge-level-stepper,
+    html body #learning-games-page .challenge-level-stepper {
+        grid-template-columns: 34px minmax(0, 1fr) 34px !important;
+        gap: 6px !important;
+        margin-bottom: 12px !important;
+        padding: 9px 8px 11px !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-level-stepper-track,
+    html body #mob-content #learning-games-page .challenge-level-stepper-track,
+    html body #learning-games-page .challenge-level-stepper-track {
+        gap: 6px !important;
+        min-height: 64px !important;
+        padding: 2px 0 3px !important;
+        overflow-x: auto !important;
+        scrollbar-width: none !important;
+        scroll-padding-inline: 8px !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-level-stepper-track::-webkit-scrollbar,
+    html body #mob-content #learning-games-page .challenge-level-stepper-track::-webkit-scrollbar,
+    html body #learning-games-page .challenge-level-stepper-track::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-dot,
+    html body #mob-content #learning-games-page .challenge-step-dot,
+    html body #learning-games-page .challenge-step-dot {
+        flex: 0 0 clamp(54px, 21vw, 62px) !important;
+        min-width: clamp(54px, 21vw, 62px) !important;
+        gap: 4px !important;
+        padding: 0 1px !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-dot::after,
+    html body #mob-content #learning-games-page .challenge-step-dot::after,
+    html body #learning-games-page .challenge-step-dot::after {
+        top: 16px !important;
+        left: calc(50% + 15px) !important;
+        width: calc(100% - 24px) !important;
+        height: 2px !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-circle,
+    html body #mob-content #learning-games-page .challenge-step-circle,
+    html body #learning-games-page .challenge-step-circle {
+        width: 32px !important;
+        height: 32px !important;
+        border-width: 2px !important;
+        font-size: 0.74rem !important;
+        box-shadow: 0 5px 12px rgba(15, 23, 42, 0.08) !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-dot.is-active .challenge-step-circle,
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-dot.is-active.status-locked .challenge-step-circle,
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-dot.is-active.status-completed .challenge-step-circle,
+    html body #mob-content #learning-games-page .challenge-step-dot.is-active .challenge-step-circle,
+    html body #mob-content #learning-games-page .challenge-step-dot.is-active.status-locked .challenge-step-circle,
+    html body #mob-content #learning-games-page .challenge-step-dot.is-active.status-completed .challenge-step-circle,
+    html body #learning-games-page .challenge-step-dot.is-active .challenge-step-circle,
+    html body #learning-games-page .challenge-step-dot.is-active.status-locked .challenge-step-circle,
+    html body #learning-games-page .challenge-step-dot.is-active.status-completed .challenge-step-circle {
+        transform: none !important;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.14), 0 8px 16px rgba(37, 99, 235, 0.18) !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-label,
+    html body #mob-content #learning-games-page .challenge-step-label,
+    html body #learning-games-page .challenge-step-label {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 24px !important;
+        font-size: 0.58rem !important;
+        line-height: 1.1 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-nav,
+    html body #mob-content #learning-games-page .challenge-step-nav,
+    html body #learning-games-page .challenge-step-nav {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 999px !important;
+        font-size: 0.82rem !important;
+        box-shadow: 0 5px 12px rgba(15, 23, 42, 0.08) !important;
+        position: relative !important;
+        z-index: 2 !important;
+    }
+}
+
+@media (max-width: 360px) {
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-level-stepper,
+    html body #mob-content #learning-games-page .challenge-level-stepper,
+    html body #learning-games-page .challenge-level-stepper {
+        grid-template-columns: 32px minmax(0, 1fr) 32px !important;
+        gap: 5px !important;
+        padding: 8px 7px 10px !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-dot,
+    html body #mob-content #learning-games-page .challenge-step-dot,
+    html body #learning-games-page .challenge-step-dot {
+        flex-basis: 52px !important;
+        min-width: 52px !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-circle,
+    html body #mob-content #learning-games-page .challenge-step-circle,
+    html body #learning-games-page .challenge-step-circle,
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-nav,
+    html body #mob-content #learning-games-page .challenge-step-nav,
+    html body #learning-games-page .challenge-step-nav {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+    }
+
+    body.user-mobile-shell #mob-content #learning-games-page .challenge-step-label,
+    html body #mob-content #learning-games-page .challenge-step-label,
+    html body #learning-games-page .challenge-step-label {
+        font-size: 0.54rem !important;
+    }
+}
