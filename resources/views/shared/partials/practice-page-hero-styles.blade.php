@@ -877,7 +877,7 @@
     html body #mob-content #practice-calendar-page #activity-calendar .activity-legend,
     #practice-calendar-page #activity-calendar .activity-legend {
         display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
         align-items: center !important;
         gap: 8px !important;
         margin: 10px 0 0 !important;
@@ -885,23 +885,90 @@
         width: 100% !important;
     }
 
-    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend span,
-    html body #mob-content #practice-calendar-page #activity-calendar .activity-legend span,
-    #practice-calendar-page #activity-calendar .activity-legend span {
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend-items,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-legend-items,
+    #practice-calendar-page #activity-calendar .activity-legend-items {
         grid-column: 1 !important;
-        justify-self: start !important;
-        gap: 6px !important;
-        font-size: 0.68rem !important;
-        line-height: 1.15 !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 7px !important;
+        min-width: 0 !important;
     }
 
-    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend span i,
-    html body #mob-content #practice-calendar-page #activity-calendar .activity-legend span i,
-    #practice-calendar-page #activity-calendar .activity-legend span i {
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend-item,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-legend-item,
+    #practice-calendar-page #activity-calendar .activity-legend-item {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-self: start !important;
+        gap: 6px !important;
+        min-height: 28px !important;
+        padding: 5px 8px !important;
+        border: 1px solid rgba(148, 163, 184, 0.18) !important;
+        border-radius: 999px !important;
+        background: rgba(248, 250, 252, 0.82) !important;
+        font-size: 0.68rem !important;
+        font-weight: 850 !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend-swatch,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-legend-swatch,
+    #practice-calendar-page #activity-calendar .activity-legend-swatch {
         width: 10px !important;
         height: 10px !important;
         min-width: 10px !important;
         border-radius: 3px !important;
+        display: inline-block !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend-swatch.is-recorded,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-legend-swatch.is-recorded,
+    #practice-calendar-page #activity-calendar .activity-legend-swatch.is-recorded {
+        background: linear-gradient(135deg, rgba(109, 93, 252, 0.8), rgba(16, 185, 129, 0.8)) !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend-swatch.is-today,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-legend-swatch.is-today,
+    #practice-calendar-page #activity-calendar .activity-legend-swatch.is-today {
+        background: transparent !important;
+        border: 2px solid rgba(37, 99, 235, 0.6) !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12) !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend-swatch.is-empty,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-legend-swatch.is-empty,
+    #practice-calendar-page #activity-calendar .activity-legend-swatch.is-empty {
+        background: rgba(248, 250, 252, 0.96) !important;
+        border: 1px solid rgba(148, 163, 184, 0.35) !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend-swatch.is-future,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-legend-swatch.is-future,
+    #practice-calendar-page #activity-calendar .activity-legend-swatch.is-future {
+        background: rgba(148, 163, 184, 0.18) !important;
+        border: 1px solid rgba(148, 163, 184, 0.28) !important;
+    }
+
+    html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend-count,
+    html body #mob-content #practice-calendar-page #activity-calendar .activity-legend-count,
+    #practice-calendar-page #activity-calendar .activity-legend-count {
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        border-radius: 999px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #2563eb !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        font-size: 0.58rem !important;
+        font-style: normal !important;
+        font-weight: 950 !important;
+        line-height: 1 !important;
     }
 
     html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-cta.compact,
@@ -986,11 +1053,18 @@
             justify-items: center !important;
         }
 
-        html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend span,
+        html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend-items,
+        html body #mob-content #practice-calendar-page #activity-calendar .activity-legend-items,
+        #practice-calendar-page #activity-calendar .activity-legend-items {
+            justify-content: center !important;
+            gap: 6px !important;
+        }
+
+        html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-legend-item,
         html body #dashboard .db-content #practice-calendar-page #activity-calendar .activity-cta.compact,
-        html body #mob-content #practice-calendar-page #activity-calendar .activity-legend span,
+        html body #mob-content #practice-calendar-page #activity-calendar .activity-legend-item,
         html body #mob-content #practice-calendar-page #activity-calendar .activity-cta.compact,
-        #practice-calendar-page #activity-calendar .activity-legend span,
+        #practice-calendar-page #activity-calendar .activity-legend-item,
         #practice-calendar-page #activity-calendar .activity-cta.compact {
             grid-column: 1 !important;
             justify-self: center !important;
@@ -1383,15 +1457,48 @@
         opacity: 1 !important;
     }
 
-    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-heading-icon, .activity-legend span i),
-    .dm :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-heading-icon, .activity-legend span i),
-    :is(html:not(.lm), html[data-theme="dark"]) body #practice-calendar-page #activity-calendar :is(.activity-heading-icon, .activity-legend span i),
-    .dm #practice-calendar-page #activity-calendar :is(.activity-heading-icon, .activity-legend span i) {
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-heading-icon, .activity-legend-swatch.is-recorded),
+    .dm :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar :is(.activity-heading-icon, .activity-legend-swatch.is-recorded),
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-calendar-page #activity-calendar :is(.activity-heading-icon, .activity-legend-swatch.is-recorded),
+    .dm #practice-calendar-page #activity-calendar :is(.activity-heading-icon, .activity-legend-swatch.is-recorded) {
         background: linear-gradient(135deg, rgba(99, 102, 241, 0.24), rgba(20, 184, 166, 0.2)) !important;
         border-color: rgba(165, 180, 252, 0.22) !important;
         color: #c4b5fd !important;
         -webkit-text-fill-color: #c4b5fd !important;
         opacity: 1 !important;
+    }
+
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar .activity-legend-item,
+    .dm :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar .activity-legend-item,
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-calendar-page #activity-calendar .activity-legend-item,
+    .dm #practice-calendar-page #activity-calendar .activity-legend-item {
+        background: rgba(30, 41, 59, 0.68) !important;
+        border-color: rgba(148, 163, 184, 0.24) !important;
+    }
+
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar .activity-legend-swatch.is-today,
+    .dm :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar .activity-legend-swatch.is-today,
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-calendar-page #activity-calendar .activity-legend-swatch.is-today,
+    .dm #practice-calendar-page #activity-calendar .activity-legend-swatch.is-today {
+        background: transparent !important;
+        border-color: rgba(96, 165, 250, 0.78) !important;
+        box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.18) !important;
+    }
+
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar .activity-legend-swatch.is-empty,
+    .dm :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar .activity-legend-swatch.is-empty,
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-calendar-page #activity-calendar .activity-legend-swatch.is-empty,
+    .dm #practice-calendar-page #activity-calendar .activity-legend-swatch.is-empty {
+        background: rgba(15, 23, 42, 0.9) !important;
+        border-color: rgba(148, 163, 184, 0.36) !important;
+    }
+
+    :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar .activity-legend-swatch.is-future,
+    .dm :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar .activity-legend-swatch.is-future,
+    :is(html:not(.lm), html[data-theme="dark"]) body #practice-calendar-page #activity-calendar .activity-legend-swatch.is-future,
+    .dm #practice-calendar-page #activity-calendar .activity-legend-swatch.is-future {
+        background: rgba(148, 163, 184, 0.2) !important;
+        border-color: rgba(148, 163, 184, 0.28) !important;
     }
 
     :is(html:not(.lm), html[data-theme="dark"]) body :is(#dashboard .db-content, #mob-content) #practice-calendar-page #activity-calendar .activity-cta.compact,

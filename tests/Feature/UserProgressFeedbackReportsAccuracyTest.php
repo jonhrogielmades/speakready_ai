@@ -367,8 +367,13 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('rgba(30, 41, 59, 0.82)', false)
  ->assertSee('min-height: 48px !important', false)
  ->assertSee('grid-template-columns: repeat(7, minmax(0, 1fr))', false)
- ->assertSee('grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)', false)
+ ->assertSee('grid-template-columns: minmax(0, 1fr) auto', false)
  ->assertSee('justify-self: center !important', false)
+ ->assertSee('Practice recorded')
+ ->assertSee('Interviews completed')
+ ->assertSee('Today')
+ ->assertSee('No practice')
+ ->assertSee('Upcoming day')
  ->assertSee('Practice Again')
  ->assertViewHas('activityCalendar', fn ($calendar) => $calendar
  && $calendar->active_days === 2
@@ -379,6 +384,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1')
  ->get(route('user.practice.calendar'))
  ->assertOk()
+ ->assertSee('Interviews completed')
+ ->assertSee('Upcoming day')
  ->assertSee('Mobile activity calendar footer action hidden', false)
  ->assertSee('body.user-mobile-shell #mob-content #practice-calendar-page #activity-calendar .activity-cta.compact', false)
  ->assertSee('display: none !important', false);

@@ -60,8 +60,14 @@
                         @endif
                     @endforeach
                 </div>
-                <div class="activity-legend">
-                    <span><i></i>Practice recorded</span>
+                <div class="activity-legend" role="group" aria-label="Activity calendar legend">
+                    <div class="activity-legend-items">
+                        <span class="activity-legend-item"><i class="activity-legend-swatch is-recorded" aria-hidden="true"></i>Practice recorded</span>
+                        <span class="activity-legend-item"><b class="activity-legend-count" aria-hidden="true">2</b>Interviews completed</span>
+                        <span class="activity-legend-item"><i class="activity-legend-swatch is-today" aria-hidden="true"></i>Today</span>
+                        <span class="activity-legend-item"><i class="activity-legend-swatch is-empty" aria-hidden="true"></i>No practice</span>
+                        <span class="activity-legend-item"><i class="activity-legend-swatch is-future" aria-hidden="true"></i>Upcoming day</span>
+                    </div>
                     <a href="{{ route('interview.setup') }}" class="btn btn-outline-primary activity-cta compact"><i class="fa-solid fa-play"></i> Practice Again</a>
                 </div>
             @else
