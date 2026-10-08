@@ -70,6 +70,13 @@ class UserController extends Controller
  'Delivery Stability' => 'delivery_stability_score',
  ];
 
+ private const SKILL_TRACKER_METRICS = [
+ 'Clarity' => 'clarity_score',
+ 'Relevance' => 'relevance_score',
+ 'Grammar' => 'grammar_score',
+ 'Professionalism' => 'professionalism_score',
+ ];
+
  private const REMOVED_JOB_EVIDENCE_FIELDS = [
  'ats_match_score',
  'job_evidence_match_score',
@@ -1253,7 +1260,7 @@ class UserController extends Controller
  return $this->scoreComparisonRowsFor(
  $sessions[$sessions->count() - 2],
  $sessions->last(),
- self::SCORE_METRICS
+ self::SKILL_TRACKER_METRICS
  );
  }
 

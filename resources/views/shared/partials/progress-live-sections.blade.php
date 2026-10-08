@@ -6,6 +6,13 @@
     $learningAverage = $learningItems->isNotEmpty()
         ? (int) round($learningItems->avg(fn ($progress) => max(0, min(100, (int) ($progress->progress_percentage ?? 0)))))
         : null;
+    $visibleSkillComparison = collect($skillComparison ?? [])
+        ->reject(function ($metric) {
+            $label = strtolower(trim((string) ($metric['label'] ?? '')));
+
+            return in_array($label, ['delivery stability', 'pacing'], true);
+        })
+        ->values();
 @endphp
 
 <div class="progress-live-grid">
@@ -69,8 +76,8 @@
                 </div>
             </div>
 
-            @if(count($skillComparison) > 0)
-                @foreach($skillComparison as $metric)
+            @if($visibleSkillComparison->isNotEmpty())
+                @foreach($visibleSkillComparison as $metric)
                     <div class="skill-metric-row">
                         <div class="skill-metric-top">
                             <span class="skill-metric-label">{{ $metric['label'] }}</span>
