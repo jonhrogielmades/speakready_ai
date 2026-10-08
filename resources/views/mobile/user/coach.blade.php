@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/coach.css?v=2') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=7') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=8') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -163,14 +163,14 @@
                 <div class="chat-attachment-preview" id="chatAttachmentPreview" aria-live="polite"></div>
                 <div class="chat-input-wrapper">
                     <input class="chat-file-input" id="coachFiles" type="file" multiple accept="{{ $coachAllowedAccept }}">
-                    <button class="chat-attachment-btn" type="button" id="coachAttachBtn" aria-label="Attach interview file" title="Attach resume, certificate, PDF, DOCX, or image" onclick="document.getElementById('coachFiles').click()">
-                        <i class="fa-solid fa-paperclip"></i>
+                    <button class="chat-attachment-btn" type="button" id="coachAttachBtn" aria-label="Add attachment" title="Add resume, certificate, PDF, DOCX, or image" onclick="document.getElementById('coachFiles').click()">
+                        <i class="fa-solid fa-plus"></i>
                     </button>
                     <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask your AI coach..." oninput="resizeCoachTextarea(this)"></textarea>
                     <button class="chat-voice-btn" type="button" id="coachVoiceBtn" aria-label="Start voice prompt" aria-pressed="false" title="Speak a message" onclick="toggleCoachVoicePrompt()">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
-                    <button class="chat-send-btn" type="button" id="chatSendBtn" aria-label="Send message" title="Send message" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+                    <button class="chat-send-btn" type="button" id="chatSendBtn" aria-label="Send message" title="Send message" onclick="sendMsg()"><i class="fa-solid fa-waveform-lines"></i></button>
                 </div>
                 <div class="coach-inline-feedback" id="coachInlineFeedback" role="status" aria-live="polite"></div>
                 <div class="coach-disclaimer">
@@ -247,7 +247,7 @@
             const maxHeight = Number.parseFloat(getComputedStyle(textarea).maxHeight) || 96;
             textarea.style.height = 'auto';
             const nextHeight = Math.min(textarea.scrollHeight, maxHeight);
-            textarea.style.height = `${nextHeight}px`;
+            textarea.style.setProperty('height', `${nextHeight}px`, 'important');
             textarea.style.setProperty('--coach-textarea-height', `${nextHeight}px`);
             textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
         }

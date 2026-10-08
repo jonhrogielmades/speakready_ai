@@ -1765,3 +1765,302 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
         min-height: 36px !important;
     }
 }
+
+/* ChatGPT-inspired mobile AI Coach composer. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-input-area,
+    html body #mob-content #ai-coach-page .chat-input-area,
+    html body #ai-coach-page .chat-input-area {
+        padding: 10px 10px max(10px, env(safe-area-inset-bottom, 0px)) !important;
+        gap: 7px !important;
+        border-top: 0 !important;
+        background: linear-gradient(180deg, rgba(248, 250, 252, 0.72), rgba(255, 255, 255, 0.98)) !important;
+        box-shadow: 0 -16px 34px rgba(15, 23, 42, 0.08) !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-input-wrapper,
+    html body #mob-content #ai-coach-page .chat-input-wrapper,
+    html body #ai-coach-page .chat-input-wrapper {
+        display: grid !important;
+        grid-template-columns: 38px minmax(0, 1fr) 38px 44px !important;
+        align-items: center !important;
+        width: 100% !important;
+        min-height: 56px !important;
+        gap: 6px !important;
+        padding: 6px 7px !important;
+        border: 1px solid rgba(148, 163, 184, 0.24) !important;
+        border-radius: 999px !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12) !important;
+        transition: border-color 0.14s ease, box-shadow 0.14s ease, background 0.14s ease !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-input-wrapper:focus-within,
+    html body #mob-content #ai-coach-page .chat-input-wrapper:focus-within,
+    html body #ai-coach-page .chat-input-wrapper:focus-within {
+        border-color: rgba(37, 99, 235, 0.36) !important;
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.13), 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-attachment-btn,
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-voice-btn,
+    html body #mob-content #ai-coach-page .chat-attachment-btn,
+    html body #mob-content #ai-coach-page .chat-voice-btn,
+    html body #ai-coach-page .chat-attachment-btn,
+    html body #ai-coach-page .chat-voice-btn {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        flex: 0 0 38px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 999px !important;
+        background: transparent !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.08rem !important;
+        line-height: 1 !important;
+        touch-action: manipulation !important;
+        transition: background-color 0.14s ease, color 0.14s ease, transform 0.14s ease !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-send-btn,
+    html body #mob-content #ai-coach-page .chat-send-btn,
+    html body #ai-coach-page .chat-send-btn {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        min-height: 42px !important;
+        flex: 0 0 42px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 999px !important;
+        background: linear-gradient(135deg, #2563eb, #0ea5e9) !important;
+        color: #ffffff !important;
+        box-shadow: 0 9px 18px rgba(37, 99, 235, 0.28) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.04rem !important;
+        line-height: 1 !important;
+        touch-action: manipulation !important;
+        transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-attachment-btn:active,
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-voice-btn:active,
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-send-btn:active,
+    html body #mob-content #ai-coach-page .chat-attachment-btn:active,
+    html body #mob-content #ai-coach-page .chat-voice-btn:active,
+    html body #mob-content #ai-coach-page .chat-send-btn:active,
+    html body #ai-coach-page .chat-attachment-btn:active,
+    html body #ai-coach-page .chat-voice-btn:active,
+    html body #ai-coach-page .chat-send-btn:active {
+        transform: scale(0.98) !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-attachment-btn:focus-visible,
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-voice-btn:focus-visible,
+    html body #mob-content #ai-coach-page .chat-attachment-btn:focus-visible,
+    html body #mob-content #ai-coach-page .chat-voice-btn:focus-visible,
+    html body #ai-coach-page .chat-attachment-btn:focus-visible,
+    html body #ai-coach-page .chat-voice-btn:focus-visible {
+        background: rgba(15, 23, 42, 0.07) !important;
+        color: #020617 !important;
+        outline: none !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-send-btn:focus-visible,
+    html body #mob-content #ai-coach-page .chat-send-btn:focus-visible,
+    html body #ai-coach-page .chat-send-btn:focus-visible {
+        filter: brightness(1.04) !important;
+        outline: none !important;
+        box-shadow: 0 12px 22px rgba(37, 99, 235, 0.32) !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-send-btn:disabled,
+    html body #mob-content #ai-coach-page .chat-send-btn:disabled,
+    html body #ai-coach-page .chat-send-btn:disabled {
+        cursor: not-allowed !important;
+        opacity: 0.56 !important;
+        transform: none !important;
+        box-shadow: none !important;
+        filter: none !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-attachment-btn i,
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-voice-btn i,
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-send-btn i,
+    html body #mob-content #ai-coach-page .chat-attachment-btn i,
+    html body #mob-content #ai-coach-page .chat-voice-btn i,
+    html body #mob-content #ai-coach-page .chat-send-btn i,
+    html body #ai-coach-page .chat-attachment-btn i,
+    html body #ai-coach-page .chat-voice-btn i,
+    html body #ai-coach-page .chat-send-btn i {
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: inherit !important;
+        line-height: 1 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea,
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea:focus,
+    html body #mob-content #ai-coach-page .chat-textarea,
+    html body #mob-content #ai-coach-page .chat-textarea:focus,
+    html body #ai-coach-page .chat-textarea,
+    html body #ai-coach-page .chat-textarea:focus {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 28px !important;
+        height: auto !important;
+        max-height: 104px !important;
+        margin: 0 !important;
+        padding: 4px 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: #111827 !important;
+        -webkit-text-fill-color: #111827 !important;
+        caret-color: #2563eb !important;
+        resize: none !important;
+        outline: none !important;
+        font-size: 0.96rem !important;
+        font-weight: 500 !important;
+        line-height: 1.38 !important;
+        letter-spacing: 0 !important;
+        overflow-y: hidden !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea::placeholder,
+    html body #mob-content #ai-coach-page .chat-textarea::placeholder,
+    html body #ai-coach-page .chat-textarea::placeholder {
+        color: #8b91a0 !important;
+        -webkit-text-fill-color: #8b91a0 !important;
+        font-size: 0.96rem !important;
+        font-weight: 600 !important;
+        opacity: 1 !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-inline-feedback,
+    body.user-mobile-shell #mob-content #ai-coach-page .coach-disclaimer,
+    html body #mob-content #ai-coach-page .coach-inline-feedback,
+    html body #mob-content #ai-coach-page .coach-disclaimer,
+    html body #ai-coach-page .coach-inline-feedback,
+    html body #ai-coach-page .coach-disclaimer {
+        margin-inline: 8px !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-voice-btn.is-recording,
+    html body #mob-content #ai-coach-page .chat-voice-btn.is-recording,
+    html body #ai-coach-page .chat-voice-btn.is-recording {
+        border: 0 !important;
+        background: linear-gradient(135deg, #ef4444, #f97316) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14) !important;
+        animation: coachVoicePulse 1.15s ease-in-out infinite !important;
+    }
+
+    html[data-theme="dark"] body.user-mobile-shell #mob-content #ai-coach-page .chat-input-area,
+    :root:not(.lm) body.user-mobile-shell #mob-content #ai-coach-page .chat-input-area,
+    body.dm.user-mobile-shell #mob-content #ai-coach-page .chat-input-area,
+    html[data-theme="dark"] body #mob-content #ai-coach-page .chat-input-area,
+    :root:not(.lm) body #mob-content #ai-coach-page .chat-input-area,
+    body.dm #mob-content #ai-coach-page .chat-input-area {
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.96)) !important;
+        box-shadow: 0 -16px 34px rgba(2, 6, 23, 0.28) !important;
+    }
+
+    html[data-theme="dark"] body.user-mobile-shell #mob-content #ai-coach-page .chat-input-wrapper,
+    :root:not(.lm) body.user-mobile-shell #mob-content #ai-coach-page .chat-input-wrapper,
+    body.dm.user-mobile-shell #mob-content #ai-coach-page .chat-input-wrapper,
+    html[data-theme="dark"] body #mob-content #ai-coach-page .chat-input-wrapper,
+    :root:not(.lm) body #mob-content #ai-coach-page .chat-input-wrapper,
+    body.dm #mob-content #ai-coach-page .chat-input-wrapper {
+        border-color: rgba(148, 163, 184, 0.26) !important;
+        background: rgba(15, 23, 42, 0.96) !important;
+        box-shadow: 0 14px 28px rgba(2, 6, 23, 0.32) !important;
+    }
+
+    html[data-theme="dark"] body.user-mobile-shell #mob-content #ai-coach-page :is(.chat-attachment-btn, .chat-voice-btn),
+    :root:not(.lm) body.user-mobile-shell #mob-content #ai-coach-page :is(.chat-attachment-btn, .chat-voice-btn),
+    body.dm.user-mobile-shell #mob-content #ai-coach-page :is(.chat-attachment-btn, .chat-voice-btn),
+    html[data-theme="dark"] body #mob-content #ai-coach-page :is(.chat-attachment-btn, .chat-voice-btn),
+    :root:not(.lm) body #mob-content #ai-coach-page :is(.chat-attachment-btn, .chat-voice-btn),
+    body.dm #mob-content #ai-coach-page :is(.chat-attachment-btn, .chat-voice-btn) {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea,
+    html[data-theme="dark"] body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea:focus,
+    :root:not(.lm) body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea,
+    :root:not(.lm) body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea:focus,
+    body.dm.user-mobile-shell #mob-content #ai-coach-page .chat-textarea,
+    body.dm.user-mobile-shell #mob-content #ai-coach-page .chat-textarea:focus,
+    html[data-theme="dark"] body #mob-content #ai-coach-page .chat-textarea,
+    html[data-theme="dark"] body #mob-content #ai-coach-page .chat-textarea:focus,
+    :root:not(.lm) body #mob-content #ai-coach-page .chat-textarea,
+    :root:not(.lm) body #mob-content #ai-coach-page .chat-textarea:focus,
+    body.dm #mob-content #ai-coach-page .chat-textarea,
+    body.dm #mob-content #ai-coach-page .chat-textarea:focus {
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea::placeholder,
+    :root:not(.lm) body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea::placeholder,
+    body.dm.user-mobile-shell #mob-content #ai-coach-page .chat-textarea::placeholder,
+    html[data-theme="dark"] body #mob-content #ai-coach-page .chat-textarea::placeholder,
+    :root:not(.lm) body #mob-content #ai-coach-page .chat-textarea::placeholder,
+    body.dm #mob-content #ai-coach-page .chat-textarea::placeholder {
+        color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
+    }
+}
+
+@media (max-width: 360px) {
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-input-wrapper,
+    html body #mob-content #ai-coach-page .chat-input-wrapper,
+    html body #ai-coach-page .chat-input-wrapper {
+        grid-template-columns: 36px minmax(0, 1fr) 36px 40px !important;
+        gap: 4px !important;
+        padding: 6px !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-attachment-btn,
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-voice-btn,
+    html body #mob-content #ai-coach-page .chat-attachment-btn,
+    html body #mob-content #ai-coach-page .chat-voice-btn,
+    html body #ai-coach-page .chat-attachment-btn,
+    html body #ai-coach-page .chat-voice-btn {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        font-size: 1rem !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-send-btn,
+    html body #mob-content #ai-coach-page .chat-send-btn,
+    html body #ai-coach-page .chat-send-btn {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+    }
+
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea,
+    html body #mob-content #ai-coach-page .chat-textarea,
+    html body #ai-coach-page .chat-textarea,
+    body.user-mobile-shell #mob-content #ai-coach-page .chat-textarea::placeholder,
+    html body #mob-content #ai-coach-page .chat-textarea::placeholder,
+    html body #ai-coach-page .chat-textarea::placeholder {
+        font-size: 0.9rem !important;
+    }
+}

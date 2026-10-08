@@ -1847,3 +1847,196 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
         font-size: 0.96rem !important;
     }
 }
+
+/* Final ChatGPT-inspired AI Coach composer. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-area {
+        padding: 16px 18px 14px !important;
+        gap: 8px !important;
+        border-top: 0 !important;
+        background: linear-gradient(180deg, rgba(248, 250, 252, 0.7), rgba(255, 255, 255, 0.98)) !important;
+        box-shadow: 0 -18px 42px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper {
+        display: grid !important;
+        grid-template-columns: 44px minmax(0, 1fr) 44px 50px !important;
+        align-items: center !important;
+        width: 100% !important;
+        min-height: 62px !important;
+        gap: 10px !important;
+        padding: 8px 10px !important;
+        border: 1px solid rgba(148, 163, 184, 0.24) !important;
+        border-radius: 999px !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.11) !important;
+        transition: border-color 0.14s ease, box-shadow 0.14s ease, background 0.14s ease !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper:focus-within {
+        border-color: rgba(37, 99, 235, 0.36) !important;
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12), 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-btn,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-voice-btn {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        min-height: 42px !important;
+        flex: 0 0 42px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 999px !important;
+        background: transparent !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.18rem !important;
+        line-height: 1 !important;
+        transition: background-color 0.14s ease, color 0.14s ease, transform 0.14s ease !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        flex: 0 0 48px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 999px !important;
+        background: linear-gradient(135deg, #2563eb, #0ea5e9) !important;
+        color: #ffffff !important;
+        box-shadow: 0 10px 22px rgba(37, 99, 235, 0.3) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.16rem !important;
+        line-height: 1 !important;
+        transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-btn:hover,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-btn:focus-visible,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-voice-btn:hover,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-voice-btn:focus-visible {
+        background: rgba(15, 23, 42, 0.07) !important;
+        color: #020617 !important;
+        outline: none !important;
+        transform: translateY(-1px) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn:hover,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn:focus-visible {
+        filter: brightness(1.04) !important;
+        outline: none !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 14px 26px rgba(37, 99, 235, 0.34) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn:disabled {
+        cursor: not-allowed !important;
+        opacity: 0.56 !important;
+        transform: none !important;
+        box-shadow: none !important;
+        filter: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-btn i,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-voice-btn i,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn i {
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: inherit !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea:focus {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 30px !important;
+        height: auto !important;
+        max-height: 132px !important;
+        margin: 0 !important;
+        padding: 4px 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: #111827 !important;
+        -webkit-text-fill-color: #111827 !important;
+        caret-color: #2563eb !important;
+        resize: none !important;
+        outline: none !important;
+        font-size: 1.05rem !important;
+        font-weight: 500 !important;
+        line-height: 1.4 !important;
+        letter-spacing: 0 !important;
+        overflow-y: hidden !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea::placeholder {
+        color: #8b91a0 !important;
+        -webkit-text-fill-color: #8b91a0 !important;
+        font-size: 1.05rem !important;
+        font-weight: 600 !important;
+        opacity: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-disclaimer {
+        margin-inline: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-voice-btn.is-recording {
+        border: 0 !important;
+        background: linear-gradient(135deg, #ef4444, #f97316) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14) !important;
+        animation: coachVoicePulse 1.15s ease-in-out infinite !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-area,
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-area,
+    body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-area {
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.96)) !important;
+        box-shadow: 0 -18px 42px rgba(2, 6, 23, 0.28) !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper,
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper,
+    body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper {
+        border-color: rgba(148, 163, 184, 0.26) !important;
+        background: rgba(15, 23, 42, 0.96) !important;
+        box-shadow: 0 16px 36px rgba(2, 6, 23, 0.32) !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #ai-coach-page :is(.chat-attachment-btn, .chat-voice-btn),
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #ai-coach-page :is(.chat-attachment-btn, .chat-voice-btn),
+    body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page :is(.chat-attachment-btn, .chat-voice-btn) {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea,
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea:focus,
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea,
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea:focus,
+    body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea,
+    body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea:focus {
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea::placeholder,
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea::placeholder,
+    body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea::placeholder {
+        color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
+    }
+}
