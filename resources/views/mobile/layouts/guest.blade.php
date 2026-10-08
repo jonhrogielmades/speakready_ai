@@ -24,8 +24,8 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=35') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=22') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=36') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=23') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
@@ -1407,7 +1407,7 @@
       <script src="{{ asset('js/jquery.waypoints.min.js') }}"></script>
       <script src="{{ asset('js/jquery.counterup.min.js') }}"></script>
 
-      <script src="{{ asset('js/main.js?v=8') }}"></script>
+      <script src="{{ asset('js/main.js?v=9') }}"></script>
       @if($errors->any())
       <script>
          document.addEventListener('DOMContentLoaded', function() {

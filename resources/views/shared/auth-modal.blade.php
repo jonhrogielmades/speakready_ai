@@ -1,5 +1,5 @@
       <!-- ======================== LOGIN MODAL ======================== -->
-      <div class="modal fade auth-modal" tabindex="-1" id="lofc" aria-labelledby="authModalTitle" aria-hidden="true">
+      <div class="modal auth-modal" tabindex="-1" id="lofc" aria-labelledby="authModalTitle" aria-hidden="true">
          <div class="modal-dialog modal-dialog-centered auth-modal-dialog">
             <div class="modal-content auth-modal-content">
                <div class="auth-modal-header">
@@ -46,7 +46,7 @@
                            </form>
                         </div>
                      @endif
-                     <form id="loginForm" class="auth-form" action="{{ route('login') }}" method="POST" autocomplete="off">
+                     <form id="loginForm" class="auth-form" action="{{ route('login') }}" method="POST" autocomplete="on">
                         @csrf
                         @if($errors->any() && !$errors->has('account_inactive') && !old('name'))
                            <div class="err-msg is-visible" role="alert"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first() }}</span></div>
@@ -62,7 +62,7 @@
                            <label class="olbl" for="loginPass"><i class="fa-solid fa-lock" aria-hidden="true"></i>Password</label>
                            <div class="auth-input-wrap password-field">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                              <input class="oinp" type="password" name="password" id="loginPass" placeholder="********" required autocomplete="new-password">
+                              <input class="oinp" type="password" name="password" id="loginPass" placeholder="********" required autocomplete="current-password">
                               <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('loginPass', this)" aria-label="Show password">
                                  <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
                               </button>
@@ -88,7 +88,7 @@
 
                   <!-- Sign Up -->
                   <div id="fSignup" class="auth-panel" role="tabpanel" aria-labelledby="tabSignup" style="display:none">
-                     <form id="signupForm" class="auth-form" action="{{ route('register') }}" method="POST" autocomplete="off">
+                     <form id="signupForm" class="auth-form" action="{{ route('register') }}" method="POST" autocomplete="on">
                         @csrf
                         @if($errors->any() && old('name'))
                            <div class="err-msg is-visible" role="alert"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first() }}</span></div>
@@ -97,7 +97,7 @@
                            <label class="olbl" for="signupName"><i class="fa-solid fa-user" aria-hidden="true"></i>Full name</label>
                            <div class="auth-input-wrap">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
-                              <input class="oinp" type="text" name="name" id="signupName" placeholder="John Doe" required autocomplete="off" value="{{ old('name') }}">
+                              <input class="oinp" type="text" name="name" id="signupName" placeholder="John Doe" required autocomplete="name" value="{{ old('name') }}">
                            </div>
                         </div>
                         <div class="auth-field">

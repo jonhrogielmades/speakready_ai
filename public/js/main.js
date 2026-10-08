@@ -340,7 +340,7 @@ function queueFocusedAuthFieldScroll(delay = 0) {
             scrollTarget.scrollIntoView({
                 block: 'center',
                 inline: 'nearest',
-                behavior: 'smooth'
+                behavior: 'auto'
             });
         });
     }, delay);
@@ -356,7 +356,7 @@ function setAuthModalFieldFocused(active) {
 
     syncAuthModalViewportHeight();
     document.body.classList.add('auth-modal-field-focused');
-    queueFocusedAuthFieldScroll(60);
+    queueFocusedAuthFieldScroll();
 }
 
 if (guestAuthPanel) {
@@ -376,7 +376,7 @@ if (guestAuthPanel) {
             if (!stillFocused) {
                 setAuthModalFieldFocused(false);
             }
-        }, 90);
+        }, 0);
     });
 
     guestAuthPanel.addEventListener('shown.bs.modal', syncAuthModalViewportHeight);
@@ -387,7 +387,7 @@ function syncFocusedAuthModalViewport() {
     if (!document.body.classList.contains('auth-modal-field-focused')) return;
 
     syncAuthModalViewportHeight();
-    queueFocusedAuthFieldScroll(80);
+    queueFocusedAuthFieldScroll();
 }
 
 window.addEventListener('resize', syncFocusedAuthModalViewport, { passive: true });
@@ -529,16 +529,25 @@ function swTab(t) {
     const activePanel = isL ? loginPanel : signupPanel;
     const inactivePanel = isL ? signupPanel : loginPanel;
 
-    if (activePanel && inactivePanel && inactivePanel.style.display !== 'none') {
-        inactivePanel.classList.add('is-switching-out');
-        window.setTimeout(function () {
-            inactivePanel.style.display = 'none';
-            inactivePanel.classList.remove('is-switching-out');
-            activePanel.style.display = 'block';
-        }, 150);
-    } else {
-        if (loginPanel) loginPanel.style.display = isL ? 'block' : 'none';
-        if (signupPanel) signupPanel.style.display = isL ? 'none' : 'block';
+    [loginPanel, signupPanel].forEach(panel => {
+        panel?.classList.remove('is-switching-out', 'is-entering');
+    });
+
+    if (inactivePanel) {
+        inactivePanel.style.display = 'none';
+        inactivePanel.hidden = true;
+        inactivePanel.setAttribute('aria-hidden', 'true');
+    }
+
+    if (activePanel) {
+        activePanel.hidden = false;
+        activePanel.style.display = 'block';
+        activePanel.setAttribute('aria-hidden', 'false');
+        void activePanel.offsetWidth;
+        activePanel.classList.add('is-entering');
+        activePanel.addEventListener('animationend', () => {
+            activePanel.classList.remove('is-entering');
+        }, { once: true });
     }
 
     loginTab?.classList.toggle('on', isL);

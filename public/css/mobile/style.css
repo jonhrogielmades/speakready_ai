@@ -8869,18 +8869,36 @@ body.user-mobile-shell .mob-notif-link-btn:disabled {
 }
 
 #lofc.auth-modal .auth-panel {
-  animation: authPanelIn 0.22s ease both;
+  animation: none;
+  transform-origin: center top;
+}
+
+#lofc.auth-modal .auth-panel.is-entering {
+  animation: authPanelIn 0.14s ease-out both;
+}
+
+#lofc.auth-modal .auth-panel.is-switching-out {
+  animation: none;
 }
 
 @keyframes authPanelIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(4px) scale(0.996);
   }
 
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #lofc.auth-modal .auth-panel,
+  #lofc.auth-modal .auth-panel.is-entering,
+  #lofc.auth-modal .auth-panel.is-switching-out {
+    animation: none !important;
+    transform: none !important;
   }
 }
 

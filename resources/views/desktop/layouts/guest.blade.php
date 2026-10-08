@@ -24,8 +24,8 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=8') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=9') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=9') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=10') }}" />
       <style>
          :root,
          .lm {
@@ -1304,7 +1304,7 @@
       <script src="{{ asset('js/jquery.waypoints.min.js') }}"></script>
       <script src="{{ asset('js/jquery.counterup.min.js') }}"></script>
 
-      <script src="{{ asset('js/main.js?v=7') }}"></script>
+      <script src="{{ asset('js/main.js?v=9') }}"></script>
       @if($errors->any())
       <script>
          document.addEventListener('DOMContentLoaded', function() {
