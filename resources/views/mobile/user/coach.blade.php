@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/coach.css?v=2') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=15') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=18') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -84,8 +84,6 @@
             <div class="coach-chat-header">
                 <div class="d-flex align-items-center">
                     <div>
-                        <div class="coach-chat-title" id="coachChatTitle">New conversation</div>
-                        <span class="coach-status">Online</span>
                         <div class="coach-disclaimer">
                             <i class="fa-regular fa-circle-info" aria-hidden="true"></i>
                             The coach can make mistakes. Verify advice and keep every personal claim truthful.

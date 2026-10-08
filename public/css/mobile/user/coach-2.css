@@ -2167,9 +2167,9 @@ html body.user-mobile-shell:not(.admin-shell) #mob-content #ai-coach-page .coach
 html body.user-mobile-shell:not(.admin-shell) #ai-coach-page .coach-avatar::before {
     content: "" !important;
     position: absolute !important;
-    inset: -12px !important;
+    inset: 1px !important;
     z-index: 0 !important;
-    background: url("/img/dashboard-coach-floating-robot.png") center 18% / 230% auto no-repeat !important;
+    background: url("/img/dashboard-coach-floating-robot.png") center 18% / 175% auto no-repeat !important;
     transform: scaleX(-1) !important;
     transform-origin: center !important;
     pointer-events: none !important;
@@ -2390,4 +2390,24 @@ body.dm #ai-coach-page .chat-attachment-btn i::after,
     color: currentColor !important;
     -webkit-text-fill-color: currentColor !important;
     opacity: 1 !important;
+}
+
+/* Header no longer shows a conversation title/status badge. */
+html body.user-mobile-shell:not(.admin-shell) #mob-content #ai-coach-page .coach-chat-header .coach-disclaimer,
+html body.user-mobile-shell:not(.admin-shell) #ai-coach-page .coach-chat-header .coach-disclaimer {
+    justify-content: center !important;
+    align-items: center !important;
+    max-width: min(292px, calc(100% - 4px)) !important;
+    margin: 0 auto !important;
+    color: var(--coach-pro-muted, #64748b) !important;
+    font-size: 0.62rem !important;
+    font-weight: 650 !important;
+    line-height: 1.28 !important;
+    gap: 6px !important;
+}
+
+html body.user-mobile-shell:not(.admin-shell) #mob-content #ai-coach-page .coach-chat-header .coach-disclaimer i,
+html body.user-mobile-shell:not(.admin-shell) #ai-coach-page .coach-chat-header .coach-disclaimer i {
+    margin-top: 0 !important;
+    font-size: 0.64rem !important;
 }
