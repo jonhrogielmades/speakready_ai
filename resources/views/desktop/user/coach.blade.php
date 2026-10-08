@@ -133,7 +133,7 @@
                     <button class="chat-voice-btn" type="button" id="coachVoiceBtn" aria-label="Start voice prompt" aria-pressed="false" title="Speak a message" onclick="toggleCoachVoicePrompt()">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
-                    <button class="chat-send-btn" type="button" id="chatSendBtn" aria-label="Send message" title="Send message" onclick="sendMsg()"><i class="fa-solid fa-waveform-lines"></i></button>
+                    <button class="chat-send-btn" type="button" id="chatSendBtn" aria-label="Send message" title="Send message" onclick="sendMsg()"><i class="fa-solid fa-arrow-up"></i></button>
                 </div>
                 <div class="coach-inline-feedback" id="coachInlineFeedback" role="status" aria-live="polite"></div>
                 <div class="coach-disclaimer">
