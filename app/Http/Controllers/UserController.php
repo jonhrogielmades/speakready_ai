@@ -466,7 +466,7 @@ class UserController extends Controller
  $currentStreak
  );
  $totalPracticeDays = (int) ($activityCalendar->active_days?? 0);
- $historySessions = $sessions->sortByDesc('created_at')->take(5)->values();
+ $historySessions = $sessions->sortByDesc('created_at')->take(12)->values();
 
  $badgesEarned = is_array($profile->badges_earned)? $profile->badges_earned: json_decode($profile->badges_earned, true)?? [];
  $badges = $this->progressBadgesFor(

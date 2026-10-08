@@ -256,7 +256,7 @@
  <i class="fa-solid fa-magnifying-glass"></i>
  <input type="text" id="historySearch" placeholder="Search history...">
  </label>
- <div class="history-list">
+ <div class="history-list" id="historyList" data-history-page-size-desktop="4" data-history-page-size-mobile="3">
  @foreach($historySessions as $session)
  @php $sc = $session->score? $session->score->overall_readiness_score: null; @endphp
  <article class="history-card" data-history-record>
@@ -290,6 +290,19 @@
  </div>
  @endif
  </div>
+ @if($historySessions->count() > 0)
+ <nav class="history-pager" id="historyPager" aria-label="Recent interview history pagination">
+ <button type="button" class="history-pager-btn" id="historyPrevBtn">
+ <i class="fa-solid fa-chevron-left"></i>
+ <span>Previous</span>
+ </button>
+ <span class="history-page-status" id="historyPageStatus" aria-live="polite">Page 1</span>
+ <button type="button" class="history-pager-btn" id="historyNextBtn">
+ <span>Next</span>
+ <i class="fa-solid fa-chevron-right"></i>
+ </button>
+ </nav>
+ @endif
  @if($sessions->count() > $historySessions->count())
  <div class="history-footer-action">
  <a href="{{ route('user.feedback') }}" class="btn btn-outline-primary history-feedback-btn"><i class="fa-solid fa-clock-rotate-left"></i> View Full History</a>
@@ -514,27 +527,87 @@
  progressCharts.forEach(applyProgressChartTheme);
  };
 
- // Feature 2: History Search Filter
+ // Feature 2: History Search and Pagination
+ const historyRoot = document.getElementById('history-table');
+ if(historyRoot) {
  const searchInput = document.getElementById('historySearch');
- if(searchInput) {
- searchInput.addEventListener('input', function() {
- const filter = searchInput.value.toLowerCase();
- const cards = document.querySelectorAll('#history-table [data-history-record]');
+ const historyList = document.getElementById('historyList');
+ const cards = Array.from(historyRoot.querySelectorAll('[data-history-record]'));
  const noResults = document.getElementById('historyNoResults');
- let visibleCards = 0;
+ const pager = document.getElementById('historyPager');
+ const prevBtn = document.getElementById('historyPrevBtn');
+ const nextBtn = document.getElementById('historyNextBtn');
+ const pageStatus = document.getElementById('historyPageStatus');
+ const toPageSize = (value, fallback) => {
+ const parsed = Number.parseInt(value, 10);
+ return Number.isFinite(parsed) && parsed > 0? parsed: fallback;
+ };
+ const desktopPageSize = toPageSize(historyList?.dataset.historyPageSizeDesktop, 4);
+ const mobilePageSize = toPageSize(historyList?.dataset.historyPageSizeMobile, 3);
+ const mobileHistoryMedia = window.matchMedia? window.matchMedia('(max-width: 767.98px)'): null;
+ let currentHistoryPage = 1;
+ let currentHistoryMatches = cards;
+ const getHistoryPageSize = () => (
+ document.body.classList.contains('user-mobile-shell') || (mobileHistoryMedia && mobileHistoryMedia.matches)
+ )? mobilePageSize: desktopPageSize;
+ const renderHistoryPage = () => {
+ const filter = searchInput? searchInput.value.trim().toLowerCase(): '';
+ currentHistoryMatches = cards.filter(card => card.textContent.toLowerCase().includes(filter));
+ const pageSize = getHistoryPageSize();
+ const totalPages = Math.max(1, Math.ceil(currentHistoryMatches.length / pageSize));
+ currentHistoryPage = Math.min(Math.max(currentHistoryPage, 1), totalPages);
+ const start = (currentHistoryPage - 1) * pageSize;
+ const visibleCards = new Set(currentHistoryMatches.slice(start, start + pageSize));
 
  cards.forEach(card => {
- const text = card.textContent.toLowerCase();
- const isVisible = text.includes(filter);
- card.style.display = isVisible? '': 'none';
- if (isVisible) {
- visibleCards++;
- }
+ card.hidden = !visibleCards.has(card);
  });
  if (noResults) {
- noResults.hidden = filter.length === 0 || cards.length === 0 || visibleCards > 0;
+ noResults.hidden = filter.length === 0 || cards.length === 0 || currentHistoryMatches.length > 0;
+ }
+ if (pager) {
+ pager.hidden = cards.length === 0 || currentHistoryMatches.length === 0;
+ }
+ if (prevBtn) {
+ prevBtn.disabled = currentHistoryPage <= 1;
+ }
+ if (nextBtn) {
+ nextBtn.disabled = currentHistoryPage >= totalPages;
+ }
+ if (pageStatus) {
+ pageStatus.textContent = `Page ${currentHistoryPage} of ${totalPages}`;
+ }
+ };
+
+ if(searchInput) {
+ searchInput.addEventListener('input', function() {
+ currentHistoryPage = 1;
+ renderHistoryPage();
+ });
+ }
+ if(prevBtn) {
+ prevBtn.addEventListener('click', function() {
+ if (currentHistoryPage > 1) {
+ currentHistoryPage -= 1;
+ renderHistoryPage();
  }
  });
+ }
+ if(nextBtn) {
+ nextBtn.addEventListener('click', function() {
+ const totalPages = Math.max(1, Math.ceil(currentHistoryMatches.length / getHistoryPageSize()));
+ if (currentHistoryPage < totalPages) {
+ currentHistoryPage += 1;
+ renderHistoryPage();
+ }
+ });
+ }
+ if(mobileHistoryMedia?.addEventListener) {
+ mobileHistoryMedia.addEventListener('change', renderHistoryPage);
+ } else if(mobileHistoryMedia?.addListener) {
+ mobileHistoryMedia.addListener(renderHistoryPage);
+ }
+ renderHistoryPage();
  }
  });
  </script>

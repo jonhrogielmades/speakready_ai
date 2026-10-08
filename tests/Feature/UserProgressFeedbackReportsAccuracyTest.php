@@ -222,6 +222,39 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertViewHas('goalNote', fn ($note) => $note && $note->title === 'First milestone waiting');
  }
 
+ public function test_progress_recent_history_has_responsive_previous_next_pagination(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('Job Interview');
+ $createdSessions = collect();
+
+ foreach (range(1, 7) as $index) {
+ $createdSessions->push($this->completedSessionFor($user, $category, 60 + $index, now()->subDays(8 - $index), [
+ 'practice_scenario' => "Pagination Scenario {$index}",
+ ]));
+ }
+
+ $response = $this->actingAs($user)->get(route('user.progress'));
+ $content = $response->getContent();
+
+ $response->assertOk()
+ ->assertSee('id="historyList"', false)
+ ->assertSee('data-history-page-size-desktop="4"', false)
+ ->assertSee('data-history-page-size-mobile="3"', false)
+ ->assertSee('id="historyPager"', false)
+ ->assertSee('id="historyPrevBtn"', false)
+ ->assertSee('id="historyNextBtn"', false)
+ ->assertSee('Previous')
+ ->assertSee('Next')
+ ->assertSee('Page 1')
+ ->assertViewHas('historySessions', function ($historySessions) use ($createdSessions) {
+ return $historySessions->count() === 7
+ && $historySessions->pluck('id')->all() === $createdSessions->reverse()->pluck('id')->all();
+ });
+
+ $this->assertSame(7, substr_count($content, '<article class="history-card" data-history-record'));
+ }
+
  public function test_progress_star_card_does_not_treat_default_zero_as_reliable_star_evidence(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
