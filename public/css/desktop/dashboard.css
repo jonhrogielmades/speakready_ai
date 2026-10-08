@@ -8331,6 +8331,8 @@ body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
     height: 100%;
     object-fit: contain;
     object-position: center;
+    transform: scaleX(-1);
+    transform-origin: center;
     filter:
         drop-shadow(0 12px 18px rgba(15, 23, 42, 0.18))
         drop-shadow(0 0 12px rgba(56, 189, 248, 0.3));

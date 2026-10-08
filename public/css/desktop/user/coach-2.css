@@ -2083,3 +2083,58 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
         background-color: transparent !important;
     }
 }
+
+/* Place the AI caution below the Online status in the chat header. */
+html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-chat-header > .d-flex:first-child {
+    min-width: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-chat-header .coach-disclaimer {
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    max-width: min(520px, 58vw) !important;
+    margin: 6px 0 0 !important;
+    padding: 0 !important;
+    color: var(--coach-pro-muted, var(--tx3)) !important;
+    text-align: left !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    line-height: 1.28 !important;
+    gap: 6px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-chat-header .coach-disclaimer i {
+    margin-top: 0.1em !important;
+    color: var(--coach-pro-accent, #2563eb) !important;
+    font-size: 0.72rem !important;
+}
+
+/* Use the dashboard robot art as the AI avatar, mirrored so the wave is on the right. */
+html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-avatar {
+    position: relative !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+    border: 1px solid rgba(37, 99, 235, 0.18) !important;
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe) !important;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.16) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-avatar::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: -10px -9px -6px -11px !important;
+    z-index: 0 !important;
+    background: url("/img/dashboard-coach-floating-robot.png") center 42% / 155% auto no-repeat !important;
+    transform: scaleX(-1) !important;
+    transform-origin: center !important;
+    pointer-events: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-avatar > i.fa-robot {
+    display: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-avatar > i:not(.fa-robot) {
+    position: relative !important;
+    z-index: 1 !important;
+}
