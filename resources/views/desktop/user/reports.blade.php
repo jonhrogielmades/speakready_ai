@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/reports.css?v=2') }}" data-page-style="user-reports">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=21') }}" data-page-style="user-reports-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=22') }}" data-page-style="user-reports-2">
 @endpush
 
 @section('content')
@@ -247,7 +247,11 @@
  </div>
  @endif
 
- @include('shared.user.recent-sessions-card')
+ @include('shared.user.recent-sessions-card', [
+ 'recentSessionsClientPager' => true,
+ 'recentSessionsPageSizeDesktop' => 3,
+ 'recentSessionsPageSizeMobile' => 3,
+ ])
 </div>
 
 @push('scripts')

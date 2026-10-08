@@ -3809,6 +3809,10 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-ses
     border-radius: 16px !important;
 }
 
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions [data-recent-session-entry][hidden] {
+    display: none !important;
+}
+
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-sessions .sr-sessions-table table {
     width: 100% !important;
     min-width: 0 !important;

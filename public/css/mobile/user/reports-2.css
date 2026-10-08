@@ -3351,6 +3351,11 @@ html body #portfolioReport #card-recent-sessions.report-sessions-card {
     overflow: visible !important;
 }
 
+html body #mob-content #portfolioReport #card-recent-sessions [data-recent-session-entry][hidden],
+html body #portfolioReport #card-recent-sessions [data-recent-session-entry][hidden] {
+    display: none !important;
+}
+
 html body #mob-content #portfolioReport #card-recent-sessions .sr-session-card-polished,
 html body #portfolioReport #card-recent-sessions .sr-session-card-polished {
     grid-template-columns: 34px minmax(0, 1fr) 72px 36px !important;

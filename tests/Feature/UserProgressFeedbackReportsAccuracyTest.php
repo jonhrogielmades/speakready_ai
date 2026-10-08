@@ -1086,7 +1086,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertViewMissing('categoryPerf');
  }
 
- public function test_reports_recent_sessions_are_limited_to_three_entries_with_previous_next_pagination(): void
+ public function test_reports_recent_sessions_use_in_place_previous_next_pagination(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('Account Management');
@@ -1097,35 +1097,38 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $newest = $this->completedSessionFor($user, $category, 94, now()->subDay());
 
  $response = $this->actingAs($user)->get(route('user.reports'));
+ $content = $response->getContent();
 
  $response->assertOk()
+ ->assertSee('data-client-pager="true"', false)
+ ->assertSee('data-page-size-desktop="3"', false)
+ ->assertSee('data-page-size-mobile="3"', false)
  ->assertSee('sr-recent-session-pager', false)
  ->assertSee('Page 1 of 2')
  ->assertSee('Previous')
  ->assertSee('Next')
- ->assertSee('recent_sessions_page=2', false)
- ->assertViewHas('recentSessions', function ($recentSessions) use ($newest, $second, $third) {
- return $recentSessions->perPage() === 3
- && $recentSessions->currentPage() === 1
- && $recentSessions->lastPage() === 2
- && $recentSessions->total() === 4
- && $recentSessions->getCollection()->pluck('id')->all() === [$newest->id, $second->id, $third->id];
+ ->assertSee('data-recent-page-prev', false)
+ ->assertSee('data-recent-page-next', false)
+ ->assertDontSee('recent_sessions_page=2', false)
+ ->assertViewHas('recentSessions', function ($recentSessions) use ($newest, $second, $third, $oldest) {
+ return $recentSessions->count() === 4
+ && $recentSessions->pluck('id')->all() === [$newest->id, $second->id, $third->id, $oldest->id];
  });
 
- $pageTwo = $this->actingAs($user)->get(route('user.reports', ['recent_sessions_page' => 2]));
+ preg_match_all('/<tr class="sr-session-table-row" data-recent-session-entry="desktop"[^>]*\shidden\b/', $content, $hiddenRows);
+ preg_match_all('/<div class="sr-session-card-polished" data-recent-session-entry="mobile"[^>]*\shidden\b/', $content, $hiddenCards);
+ $this->assertSame(1, count($hiddenRows[0]));
+ $this->assertSame(1, count($hiddenCards[0]));
 
- $pageTwo->assertOk()
- ->assertSee('Page 2 of 2')
- ->assertSee('Previous')
- ->assertSee('Next')
- ->assertSee('recent_sessions_page=1', false)
- ->assertViewHas('recentSessions', function ($recentSessions) use ($oldest) {
- return $recentSessions->perPage() === 3
- && $recentSessions->currentPage() === 2
- && $recentSessions->lastPage() === 2
- && $recentSessions->total() === 4
- && $recentSessions->getCollection()->pluck('id')->all() === [$oldest->id];
- });
+ $mobile = $this->actingAs($user)
+ ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+ ->get(route('user.reports'));
+
+ $mobile->assertOk()
+ ->assertSee('css/mobile/user/reports-2.css?v=16', false)
+ ->assertSee('serverDetectedMobile: true', false)
+ ->assertSee('Page 1 of 2')
+ ->assertDontSee('recent_sessions_page=2', false);
  }
 
  public function test_reports_show_summary_score_breakdown_and_hide_removed_report_sections(): void
@@ -1277,7 +1280,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/desktop/user/reports.css?v=2', false)
- ->assertSee('css/desktop/user/reports-2.css?v=21', false)
+ ->assertSee('css/desktop/user/reports-2.css?v=22', false)
  ->assertSee('data-page-style="user-reports"', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')
@@ -1311,7 +1314,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/mobile/user/reports.css?v=2', false)
- ->assertSee('css/mobile/user/reports-2.css?v=15', false)
+ ->assertSee('css/mobile/user/reports-2.css?v=16', false)
  ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')
