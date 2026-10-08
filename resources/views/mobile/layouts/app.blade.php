@@ -4494,6 +4494,44 @@
             }
          }
 
+         body.user-mobile-shell :is(.animate-fade-up, .afu, .rv, .delay-100, .delay-150, .delay-200, .delay-300, .delay-400) {
+             animation-delay: 0s !important;
+             transition-delay: 0s !important;
+         }
+
+         body.user-mobile-shell :is(.animate-fade-up, .afu) {
+             animation-duration: 0.22s !important;
+         }
+
+         body.user-mobile-shell .rv {
+             transition-duration: 0.2s !important;
+         }
+
+         body.user-mobile-shell :is(
+             .premium-panel,
+             .panel,
+             .setup-panel,
+             .module-card,
+             .stat-card,
+             .ll-stat-card,
+             .level-node,
+             .mob-nav-item,
+             .mob-icon-btn,
+             .mob-profile-link,
+             .mob-notif-action,
+             .mob-notif-item,
+             .db-dropdown,
+             .ucp-backdrop,
+             .ucp-dialog,
+             .boc,
+             .btn,
+             .card,
+             .accordion-button
+         ) {
+             transition-delay: 0s !important;
+             transition-duration: 0.16s !important;
+         }
+
       </style>
       @stack('styles')
       @include('mobile.partials.user-mobile-side-gutter')
@@ -4718,7 +4756,7 @@
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=23" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=24" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {
@@ -4846,6 +4884,7 @@
          let deferredPrompt;
          const suppressPwaInstallPrompt = @json(request()->routeIs('interview.session'));
          let pwaPromptRetryTimer = null;
+         const pwaPromptDelayMs = 900;
 
          function isPwaInstallPromptBlocked() {
             return Boolean(
@@ -4869,7 +4908,7 @@
                }
 
                prompt.style.display = 'block';
-            }, attempt === 0 ? 2600 : 1800);
+            }, pwaPromptDelayMs);
          }
 
          window.addEventListener('beforeinstallprompt', (e) => {
@@ -4949,7 +4988,7 @@
             item._mobileNavMotionTimer = window.setTimeout(() => {
                item.classList.remove('nav-icon-moving');
                item._mobileNavMotionTimer = null;
-            }, item.classList.contains('mob-nav-primary') ? 620 : 540);
+            }, item.classList.contains('mob-nav-primary') ? 360 : 320);
          }
 
          function stopMobileInterviewNavLoading() {
@@ -5009,7 +5048,7 @@
             };
             reset();
             requestAnimationFrame(reset);
-            setTimeout(reset, 80);
+            setTimeout(reset, 40);
          }
 
          function closeMobileProfile() {
@@ -5043,7 +5082,7 @@
                return;
             }
 
-            window.setTimeout(callback, Math.min(timeout, 1200));
+            window.setTimeout(callback, Math.min(timeout, 700));
          }
 
          function safeMobileNotificationIcon(value) {

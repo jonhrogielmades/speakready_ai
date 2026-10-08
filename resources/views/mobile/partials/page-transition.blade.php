@@ -17,7 +17,7 @@
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
-        transition: opacity 0.18s ease, visibility 0.18s ease;
+        transition: opacity 0.12s ease, visibility 0.12s ease;
     }
 
     #pageTransitionOverlay.active {
@@ -56,7 +56,7 @@
         border: 4px solid var(--bd, #e2e8f0);
         border-top-color: var(--pur, #7c3aed);
         border-right-color: rgba(14, 165, 233, 0.78);
-        animation: srPageTransitionSpin 0.95s linear infinite;
+        animation: srPageTransitionSpin 0.7s linear infinite;
     }
 
     .sr-page-loading-wrapper img {
@@ -65,7 +65,7 @@
         object-fit: contain;
         border-radius: 20px;
         filter: drop-shadow(0 12px 18px rgba(37, 99, 235, 0.2));
-        animation: srPageTransitionPulse 1.45s ease-in-out infinite;
+        animation: srPageTransitionPulse 1s ease-in-out infinite;
     }
 
     #pageTransitionOverlay h4 {
@@ -167,9 +167,9 @@
         var activeClass = 'sr-page-transition-active';
         var showTimer = null;
         var longLoadTimer = null;
-        var defaultDelayMs = 1100;
-        var formDelayMs = 900;
-        var longLoadMs = 12000;
+        var defaultDelayMs = 220;
+        var formDelayMs = 140;
+        var longLoadMs = 8000;
 
         function getOverlay() {
             return document.getElementById(overlayId);

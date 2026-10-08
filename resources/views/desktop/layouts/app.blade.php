@@ -109,6 +109,41 @@
                   -webkit-text-fill-color: var(--tx) !important;
               }
           }
+
+          body.user-desktop-shell :is(.animate-fade-up, .afu, .rv, .delay-100, .delay-150, .delay-200, .delay-300, .delay-400) {
+              animation-delay: 0s !important;
+              transition-delay: 0s !important;
+          }
+
+          body.user-desktop-shell :is(.animate-fade-up, .afu) {
+              animation-duration: 0.22s !important;
+          }
+
+          body.user-desktop-shell .rv {
+              transition-duration: 0.2s !important;
+          }
+
+          body.user-desktop-shell :is(
+              .premium-panel,
+              .panel,
+              .setup-panel,
+              .module-card,
+              .stat-card,
+              .ll-stat-card,
+              .level-node,
+              .db-nl,
+              .profile-menu-item,
+              .db-dropdown,
+              .ucp-backdrop,
+              .ucp-dialog,
+              .boc,
+              .btn,
+              .card,
+              .accordion-button
+          ) {
+              transition-delay: 0s !important;
+              transition-duration: 0.16s !important;
+          }
       </style>
       @include('desktop.partials.onboarding-styles')
       @stack('styles')
@@ -320,7 +355,7 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=8') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=23" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=24" defer></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>
@@ -562,7 +597,7 @@
                return;
             }
 
-            window.setTimeout(callback, Math.min(timeout, 1200));
+            window.setTimeout(callback, Math.min(timeout, 700));
          }
 
          function toggleNotif(e) {

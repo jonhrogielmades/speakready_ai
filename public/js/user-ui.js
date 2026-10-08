@@ -6,12 +6,13 @@
         window.SpeakReadyUserApp = userApp;
     }
     var NAVIGATION_CACHE_TTL_MS = 120000;
-    var NAVIGATION_STATUS_DELAY_MS = 700;
-    var NAVIGATION_PREFETCH_DELAY_MS = 90;
+    var NAVIGATION_STATUS_DELAY_MS = 220;
+    var NAVIGATION_PREFETCH_DELAY_MS = 40;
     var NAVIGATION_PREFETCH_LIMIT = 8;
-    var NAVIGATION_PREFETCH_TIMEOUT_MS = 2500;
-    var NAVIGATION_STYLESHEET_TIMEOUT_MS = 1800;
-    var NAVIGATION_SCRIPT_TIMEOUT_MS = 3500;
+    var NAVIGATION_PREFETCH_TIMEOUT_MS = 1800;
+    var NAVIGATION_STYLESHEET_TIMEOUT_MS = 900;
+    var NAVIGATION_SCRIPT_TIMEOUT_MS = 2400;
+    var NAVIGATION_STYLE_PAINT_WAIT_MS = 160;
     var TRANSIENT_USER_PAGE_BODY_CLASSES = [
         'interview-setup-page',
         'interview-session-shell',
@@ -1155,7 +1156,7 @@
             var contentScripts = Array.from(nextContent.querySelectorAll('script'));
             var nextPageStyles = collectPageStyles(doc, html);
             var stylePromise = appendRuntimePageStyles(nextPageStyles, token);
-            await stylePromise;
+            await waitForNavigationStylePaint(stylePromise);
             if (token !== userApp.navigationToken) {
                 discardRuntimePageStylesForToken(token);
                 return;
@@ -1508,6 +1509,27 @@
             }, { once: true });
 
             fallbackTimer = window.setTimeout(finish, NAVIGATION_STYLESHEET_TIMEOUT_MS);
+        });
+    }
+
+    function waitForNavigationStylePaint(stylePromise) {
+        if (!stylePromise || typeof stylePromise.then !== 'function') {
+            return Promise.resolve();
+        }
+
+        return new Promise(function (resolve) {
+            var settled = false;
+            var paintTimer = 0;
+
+            function finish() {
+                if (settled) return;
+                settled = true;
+                if (paintTimer) window.clearTimeout(paintTimer);
+                resolve();
+            }
+
+            stylePromise.then(finish, finish);
+            paintTimer = window.setTimeout(finish, NAVIGATION_STYLE_PAINT_WAIT_MS);
         });
     }
 
