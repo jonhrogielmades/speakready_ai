@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/coach.css?v=2') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=11') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=14') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -171,6 +171,9 @@
                         <i class="fa-solid fa-plus"></i>
                     </button>
                     <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask your AI coach..." oninput="resizeCoachTextarea(this)"></textarea>
+                    <div class="coach-voice-wave" id="coachVoiceWave" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
                     <button class="chat-voice-btn" type="button" id="coachVoiceBtn" aria-label="Start voice prompt" aria-pressed="false" title="Speak a message" onclick="toggleCoachVoicePrompt()">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
@@ -473,11 +476,15 @@
             coachVoiceActive = isActive;
             const button = document.getElementById('coachVoiceBtn');
             if (!button) return;
+            const wrapper = document.querySelector('#coach-input-area .chat-input-wrapper');
+            const wave = document.getElementById('coachVoiceWave');
 
             button.classList.toggle('is-recording', isActive);
             button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
             button.setAttribute('aria-label', isActive ? 'Stop voice prompt' : 'Start voice prompt');
             button.title = isActive ? 'Stop voice prompt' : 'Speak a message';
+            wrapper?.classList.toggle('is-voice-recording', isActive);
+            wave?.setAttribute('aria-hidden', isActive ? 'false' : 'true');
 
             const icon = button.querySelector('i');
             if (icon) {
@@ -529,25 +536,13 @@
             };
 
             coachVoiceRecognition.onerror = function (event) {
-                const voiceError = event?.error || '';
-                const errorMessages = {
-                    'not-allowed': 'Microphone permission was blocked. Enable it in your browser and try again.',
-                    'service-not-allowed': 'Voice prompt is not available in this browser session.',
-                    'no-speech': 'I did not catch speech. Tap the mic and try again.',
-                    'audio-capture': 'No microphone was found. Check your audio input and try again.'
-                };
-
+                console.warn('Coach voice prompt error:', event?.error || event);
                 coachVoiceStopRequested = true;
-                showCoachFeedback(errorMessages[voiceError] || 'Could not capture the voice prompt. Please try again.', voiceError === 'no-speech' ? 'info' : 'error');
+                setCoachVoiceState(false);
             };
 
             coachVoiceRecognition.onend = function () {
-                const capturedText = document.getElementById('chatMsg')?.value.trim() || '';
                 setCoachVoiceState(false);
-
-                if (!coachVoiceStopRequested && capturedText) {
-                    showCoachFeedback('Voice prompt added. Review it, then send.', 'info');
-                }
             };
 
             return coachVoiceRecognition;
@@ -558,7 +553,6 @@
 
             if (!CoachSpeechRecognition) {
                 initializeCoachVoicePrompt();
-                showCoachFeedback('Voice prompt is not supported in this browser. You can still type your message.', 'error');
                 return;
             }
 
@@ -572,14 +566,13 @@
             try {
                 recognition.start();
                 setCoachVoiceState(true);
-                showCoachFeedback('Listening... speak your coach message, then tap the mic or send.', 'info');
+                showCoachFeedback('');
             } catch (error) {
                 console.warn('Coach voice prompt could not start:', error);
-                showCoachFeedback('Voice prompt is already listening. Speak your message or tap the mic to stop.', 'info');
             }
         }
 
-        function stopCoachVoicePrompt(silent = false) {
+        function stopCoachVoicePrompt() {
             coachVoiceStopRequested = true;
 
             if (coachVoiceRecognition && coachVoiceActive) {
@@ -591,11 +584,6 @@
             }
 
             setCoachVoiceState(false);
-
-            if (!silent) {
-                const capturedText = document.getElementById('chatMsg')?.value.trim() || '';
-                showCoachFeedback(capturedText ? 'Voice prompt added. Review it, then send.' : 'Stopped listening.', 'info');
-            }
         }
 
         function toggleCoachVoicePrompt() {
@@ -794,7 +782,7 @@
 
         async function sendMsg() {
             if (coachVoiceActive) {
-                stopCoachVoicePrompt(true);
+                stopCoachVoicePrompt();
             }
 
             const ta = document.getElementById('chatMsg');
@@ -1008,7 +996,7 @@
         
         function newConversation() {
             if (coachVoiceActive) {
-                stopCoachVoicePrompt(true);
+                stopCoachVoicePrompt();
             }
 
             // Reset state
@@ -1034,7 +1022,7 @@
 
         async function loadConversation(id) {
             if (coachVoiceActive) {
-                stopCoachVoicePrompt(true);
+                stopCoachVoicePrompt();
             }
 
             try {
