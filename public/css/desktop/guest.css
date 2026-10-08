@@ -5709,3 +5709,47 @@
           color: var(--developers-copy) !important;
           -webkit-text-fill-color: var(--developers-copy) !important;
       }
+
+      /* Guest landing speed pass: remove artificial waits while keeping motion readable. */
+      @media (max-width: 820px), (display-mode: standalone) {
+          body.guest-shell.guest-splash-pending {
+              overflow: auto;
+          }
+
+          body.guest-shell.guest-splash-pending #landing,
+          body.guest-shell.guest-splash-pending #lofc,
+          body.guest-shell.guest-splash-pending #pwa-install-prompt {
+              visibility: visible;
+          }
+      }
+
+      body.guest-shell #landing .afu,
+      body.guest-shell #landing .rv {
+          animation-delay: 0s !important;
+          transition-delay: 0s !important;
+      }
+
+      body.guest-shell #landing .afu {
+          animation-duration: 0.24s !important;
+      }
+
+      body.guest-shell #landing .rv {
+          transition-duration: 0.22s !important;
+      }
+
+      body.guest-desktop-shell #landing .desktop-preview-image-slide,
+      body.guest-desktop-shell #landing .desktop-preview-shell-img {
+          transition-duration: 160ms !important;
+      }
+
+      body.guest-shell .sr-launch-screen {
+          transition-duration: 80ms !important;
+      }
+
+      body.guest-shell .sr-launch-progress span {
+          animation-duration: 0.7s !important;
+      }
+
+      body.guest-shell #loginTransitionOverlay {
+          transition-duration: 120ms !important;
+      }

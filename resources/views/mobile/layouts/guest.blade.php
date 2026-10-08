@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=36') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=23') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=24') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
@@ -74,16 +74,15 @@
 
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
             const isMobile = window.matchMedia('(max-width: 820px)').matches;
-            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const seenKey = 'speakready_guest_splash_seen';
             const shouldShow = (isStandalone || isMobile) && !sessionStorage.getItem(seenKey);
 
             function clearSplash() {
+               if (splash.dataset.cleared === 'true') return;
+               splash.dataset.cleared = 'true';
                document.body.classList.remove('guest-splash-pending');
                splash.classList.add('is-hiding');
-               window.setTimeout(function () {
-                  splash.remove();
-               }, reduceMotion ? 0 : 460);
+               splash.remove();
             }
 
             if (!shouldShow) {
@@ -92,13 +91,11 @@
             }
 
             sessionStorage.setItem(seenKey, '1');
-            const startedAt = window.performance ? performance.now() : Date.now();
-            const minimumDuration = reduceMotion ? 120 : 450;
 
             function finishWhenReady() {
-               const now = window.performance ? performance.now() : Date.now();
-               const remaining = Math.max(0, minimumDuration - (now - startedAt));
-               window.setTimeout(clearSplash, remaining);
+               (window.requestAnimationFrame || function(callback) {
+                  return window.setTimeout(callback, 0);
+               })(clearSplash);
             }
 
             if (document.readyState === 'loading') {
@@ -107,7 +104,7 @@
                finishWhenReady();
             }
 
-            window.setTimeout(clearSplash, 1200);
+            window.setTimeout(clearSplash, 250);
          })();
       </script>
       @endif
@@ -1426,8 +1423,8 @@
          $(document).ready(function() {
              if($.fn.counterUp) {
                  $('.counter').counterUp({
-                     delay: 10,
-                     time: 1500
+                     delay: 1,
+                     time: 320
                  });
              }
 
@@ -1439,6 +1436,7 @@
                          slidesPerView: "auto",
                          centeredSlides: true,
                          spaceBetween: 0,
+                         speed: 180,
                          effect: "coverflow",
                          coverflowEffect: {
                              rotate: 0,
@@ -1451,7 +1449,7 @@
                          loop: true,
                          watchSlidesProgress: true,
                          autoplay: reduceMotion ? false : {
-                             delay: 3000,
+                             delay: 2200,
                              disableOnInteraction: false,
                              pauseOnMouseEnter: true,
                          },
@@ -1527,6 +1525,7 @@
                          slidesPerView: "auto",
                          centeredSlides: true,
                          spaceBetween: 16,
+                         speed: 180,
                          effect: "coverflow",
                          coverflowEffect: {
                              rotate: 0,
@@ -1539,7 +1538,7 @@
                          loop: true,
                          watchSlidesProgress: true,
                          autoplay: reduceMotion ? false : {
-                             delay: 2800,
+                             delay: 2200,
                              disableOnInteraction: false,
                              pauseOnMouseEnter: true,
                          },
@@ -1602,6 +1601,7 @@
          const PWA_PROMPT_DISMISSED_KEY = 'pwa_prompt_dismissed';
          const PWA_PROMPT_AUTO_SHOWN_KEY = 'pwa_prompt_auto_shown';
          const PWA_PROMPT_LAST_SHOWN_KEY = 'pwa_prompt_last_shown_at';
+         const PWA_PROMPT_DELAY_MS = 700;
 
          function isPwaAlreadyInstalled() {
             return window.matchMedia('(display-mode: standalone)').matches ||
@@ -1711,14 +1711,14 @@
                      if (!isPwaAlreadyInstalled()) {
                         showPwaInstallMessage('Install SpeakReady AI', 'Do you want to install this app for a better and faster experience?', true);
                      }
-                  }, 4200);
+                  }, PWA_PROMPT_DELAY_MS);
                   return;
                }
 
                if (!isPwaAlreadyInstalled()) {
                   showPwaInstallMessage('Install SpeakReady AI', 'Do you want to install this app for a better and faster experience?', true);
                }
-            }, 4200);
+            }, PWA_PROMPT_DELAY_MS);
          }
 
          async function triggerInstall() {
@@ -1900,7 +1900,7 @@
 
                window.scrollTo({
                   top: 0,
-                  behavior: 'smooth'
+                  behavior: 'auto'
                });
             });
          });

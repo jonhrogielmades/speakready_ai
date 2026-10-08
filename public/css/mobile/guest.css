@@ -5829,3 +5829,49 @@ html, body {
               margin-right: 0 !important;
           }
       }
+
+      /* Guest landing speed pass: remove artificial waits while keeping motion readable. */
+      @media (max-width: 820px), (display-mode: standalone) {
+          body.guest-shell.guest-splash-pending {
+              overflow: auto;
+          }
+
+          body.guest-shell.guest-splash-pending #landing,
+          body.guest-shell.guest-splash-pending #lofc,
+          body.guest-shell.guest-splash-pending #pwa-install-prompt {
+              visibility: visible;
+          }
+      }
+
+      body.guest-shell #landing .afu,
+      body.guest-shell #landing .rv {
+          animation-delay: 0s !important;
+          transition-delay: 0s !important;
+      }
+
+      body.guest-shell #landing .afu {
+          animation-duration: 0.24s !important;
+      }
+
+      body.guest-shell #landing .rv {
+          transition-duration: 0.22s !important;
+      }
+
+      body.guest-mobile-shell #landing .mobile-preview-image-slide,
+      body.guest-mobile-shell #landing .mobile-preview-shell-img,
+      body.guest-mobile-shell #landing .landing-auto-carousel .swiper-slide,
+      body.guest-mobile-shell #landing .landing-auto-carousel .swiper-slide > .gc {
+          transition-duration: 160ms !important;
+      }
+
+      body.guest-shell .sr-launch-screen {
+          transition-duration: 80ms !important;
+      }
+
+      body.guest-shell .sr-launch-progress span {
+          animation-duration: 0.7s !important;
+      }
+
+      body.guest-shell #loginTransitionOverlay {
+          transition-duration: 120ms !important;
+      }
