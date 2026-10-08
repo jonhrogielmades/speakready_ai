@@ -11645,3 +11645,71 @@ body.dm #sec-progress-tracking .history-pager-btn:hover:not(:disabled) {
         align-content: center !important;
     }
 }
+
+/* Dedicated stat grid: avoid Bootstrap row/col gutters on the top cards. */
+html body #sec-progress-tracking #progress-stats.progress-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    row-gap: 12px !important;
+    column-gap: 12px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+html body #sec-progress-tracking #progress-stats.progress-stats-grid > .progress-stat-cell {
+    display: flex !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+html body #sec-progress-tracking #progress-stats.progress-stats-grid .progress-stat-card {
+    width: 100% !important;
+    margin: 0 !important;
+    display: grid !important;
+    grid-template-rows: auto auto auto !important;
+    align-content: center !important;
+    justify-items: center !important;
+    gap: 6px !important;
+    padding: 12px 14px !important;
+    min-height: 104px !important;
+}
+
+html body #sec-progress-tracking #progress-stats.progress-stats-grid .progress-stat-icon,
+html body #sec-progress-tracking #progress-stats.progress-stats-grid .progress-stat-value,
+html body #sec-progress-tracking #progress-stats.progress-stats-grid .progress-stat-label {
+    margin: 0 !important;
+}
+
+@media (max-width: 767.98px) {
+    html body #sec-progress-tracking #progress-stats.progress-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    html body #sec-progress-tracking #progress-stats.progress-stats-grid .progress-stat-card {
+        min-height: 88px !important;
+        padding: 12px 10px !important;
+        gap: 3px !important;
+        border-radius: 8px !important;
+    }
+
+    html body #sec-progress-tracking #progress-stats.progress-stats-grid .progress-stat-icon {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        border-radius: 9px !important;
+        font-size: 0.78rem !important;
+    }
+
+    html body #sec-progress-tracking #progress-stats.progress-stats-grid .progress-stat-value {
+        font-size: 1.05rem !important;
+        line-height: 1.05 !important;
+    }
+
+    html body #sec-progress-tracking #progress-stats.progress-stats-grid .progress-stat-label {
+        font-size: 0.58rem !important;
+        line-height: 1.15 !important;
+    }
+}

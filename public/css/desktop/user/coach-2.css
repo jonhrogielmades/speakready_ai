@@ -2289,3 +2289,28 @@ body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-voice-wave sp
         opacity: 1;
     }
 }
+
+/* Keep the attachment plus visible in the night-theme composer. */
+html[data-theme="dark"] body #ai-coach-page .chat-attachment-btn,
+:root:not(.lm) body #ai-coach-page .chat-attachment-btn,
+body.dm #ai-coach-page .chat-attachment-btn,
+.dm #ai-coach-page .chat-attachment-btn {
+    color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body #ai-coach-page .chat-attachment-btn i,
+html[data-theme="dark"] body #ai-coach-page .chat-attachment-btn i::before,
+html[data-theme="dark"] body #ai-coach-page .chat-attachment-btn i::after,
+:root:not(.lm) body #ai-coach-page .chat-attachment-btn i,
+:root:not(.lm) body #ai-coach-page .chat-attachment-btn i::before,
+:root:not(.lm) body #ai-coach-page .chat-attachment-btn i::after,
+body.dm #ai-coach-page .chat-attachment-btn i,
+body.dm #ai-coach-page .chat-attachment-btn i::before,
+body.dm #ai-coach-page .chat-attachment-btn i::after,
+.dm #ai-coach-page .chat-attachment-btn i,
+.dm #ai-coach-page .chat-attachment-btn i::before,
+.dm #ai-coach-page .chat-attachment-btn i::after {
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+    opacity: 1 !important;
+}

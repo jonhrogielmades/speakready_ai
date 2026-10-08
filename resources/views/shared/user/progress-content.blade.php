@@ -41,29 +41,29 @@
  </div>
  <div class="progress-summary-strip">
  <!-- Readiness-first summary -->
- <div id="progress-stats" class="row g-4">
- <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.1s;">
+ <div id="progress-stats" class="progress-stats-grid">
+ <div class="progress-stat-cell animate-fade-up" style="animation-delay: 0.1s;">
  <div class="premium-panel progress-stat-card readiness-primary" style="--stat-accent:{{ $readinessSummary?->color?? '#64748b' }}">
  <div class="progress-stat-icon"><i class="fa-solid fa-gauge-high"></i></div>
  <div class="progress-stat-value">{{ $readinessSummary?->current === null? 'N/A': $readinessSummary->current.'%' }}</div>
  <div class="progress-stat-label">Current Readiness</div>
  </div>
  </div>
- <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.2s;">
+ <div class="progress-stat-cell animate-fade-up" style="animation-delay: 0.2s;">
  <div class="premium-panel progress-stat-card" style="--stat-accent:#2563eb">
  <div class="progress-stat-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
  <div class="progress-stat-value">{{ $readinessMovement?->label?? 'N/A' }}</div>
  <div class="progress-stat-label">VS Last</div>
  </div>
  </div>
- <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.3s;">
+ <div class="progress-stat-cell animate-fade-up" style="animation-delay: 0.3s;">
  <div class="premium-panel progress-stat-card" style="--stat-accent:#f59e0b">
  <div class="progress-stat-icon"><i class="fa-solid fa-fire"></i></div>
  <div class="progress-stat-value">{{ $currentStreak }} {{ $currentStreak == 1? 'Day': 'Days' }}</div>
  <div class="progress-stat-label">Current Streak</div>
  </div>
  </div>
- <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.4s;">
+ <div class="progress-stat-cell animate-fade-up" style="animation-delay: 0.4s;">
  <div class="premium-panel progress-stat-card" style="--stat-accent:#16a34a">
  <div class="progress-stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
  <div class="progress-stat-value">{{ $totalPracticeDays }} {{ $totalPracticeDays == 1? 'Day': 'Days' }}</div>
