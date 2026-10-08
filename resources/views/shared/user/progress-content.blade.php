@@ -256,10 +256,14 @@
  <i class="fa-solid fa-magnifying-glass"></i>
  <input type="text" id="historySearch" placeholder="Search history...">
  </label>
+ @php
+ $historyInitialPageSize = ($serverDetectedMobile?? false)? 3: 4;
+ $historyInitialPageCount = max(1, (int) ceil($historySessions->count() / $historyInitialPageSize));
+ @endphp
  <div class="history-list" id="historyList" data-history-page-size-desktop="4" data-history-page-size-mobile="3">
  @foreach($historySessions as $session)
  @php $sc = $session->score? $session->score->overall_readiness_score: null; @endphp
- <article class="history-card" data-history-record>
+ <article class="history-card" data-history-record @if($loop->index >= $historyInitialPageSize) hidden @endif>
  <div class="history-date"><i class="fa-regular fa-calendar-days"></i>{{ $session->created_at->format('M d, Y') }}</div>
  <h6 class="history-scenario">{{ $session->practice_scenario?? 'General Job Interview' }}</h6>
  <div class="history-meta">
@@ -292,12 +296,12 @@
  </div>
  @if($historySessions->count() > 0)
  <nav class="history-pager" id="historyPager" aria-label="Recent interview history pagination">
- <button type="button" class="history-pager-btn" id="historyPrevBtn">
+ <button type="button" class="history-pager-btn" id="historyPrevBtn" disabled>
  <i class="fa-solid fa-chevron-left"></i>
  <span>Previous</span>
  </button>
- <span class="history-page-status" id="historyPageStatus" aria-live="polite">Page 1</span>
- <button type="button" class="history-pager-btn" id="historyNextBtn">
+ <span class="history-page-status" id="historyPageStatus" aria-live="polite">Page 1 of {{ $historyInitialPageCount }}</span>
+ <button type="button" class="history-pager-btn" id="historyNextBtn" @if($historyInitialPageCount <= 1) disabled @endif>
  <span>Next</span>
  <i class="fa-solid fa-chevron-right"></i>
  </button>
@@ -409,7 +413,13 @@
  <!-- Scripts -->
  <script src="{{ asset('js/chart.umd.min.js') }}"></script>
  <script>
- document.addEventListener('DOMContentLoaded', function() {
+ (function() {
+ const initProgressPage = function() {
+ const progressRoot = document.getElementById('sec-progress-tracking');
+ if (progressRoot?.dataset.progressInitialized === '1') return;
+ if (progressRoot) {
+ progressRoot.dataset.progressInitialized = '1';
+ }
  // Enable tooltips
  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
  // If bootstrap is available
@@ -609,7 +619,13 @@
  }
  renderHistoryPage();
  }
- });
+ };
+ if (document.readyState === 'loading') {
+ document.addEventListener('DOMContentLoaded', initProgressPage, { once: true });
+ } else {
+ initProgressPage();
+ }
+ })();
  </script>
 </div>
 

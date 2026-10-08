@@ -1,13 +1,33 @@
 @php
     $recentSessionsForCard = $recentSessions ?? collect();
+    $recentSessionsItems = $recentSessionsForCard instanceof \Illuminate\Pagination\AbstractPaginator
+        ? $recentSessionsForCard->getCollection()
+        : collect($recentSessionsForCard);
     $recentSessionsCardId = $recentSessionsCardId ?? 'card-recent-sessions';
     $recentSessionsTitle = $recentSessionsTitle ?? 'Recent Sessions';
     $recentSessionsSubtitle = $recentSessionsSubtitle ?? 'Review the latest completed local mock interviews.';
     $recentSessionsEmptyText = $recentSessionsEmptyText ?? 'No recent sessions found. Start interview practice when you are ready.';
     $recentSessionsActionLabel = $recentSessionsActionLabel ?? 'Review';
+    $recentSessionsClientPager = (bool) ($recentSessionsClientPager ?? false);
+    $recentSessionsPageSizeDesktop = max(1, (int) ($recentSessionsPageSizeDesktop ?? 6));
+    $recentSessionsPageSizeMobile = max(1, (int) ($recentSessionsPageSizeMobile ?? 3));
+    $recentSessionsInitialPageSize = ($serverDetectedMobile ?? $isMobile ?? false)
+        ? $recentSessionsPageSizeMobile
+        : $recentSessionsPageSizeDesktop;
+    $recentSessionsInitialPages = max(1, (int) ceil($recentSessionsItems->count() / $recentSessionsInitialPageSize));
 @endphp
 
-<section id="{{ $recentSessionsCardId }}" class="print-card report-sessions-card btn-no-print" style="--report-session-accent:#06b6d4">
+<section
+    id="{{ $recentSessionsCardId }}"
+    class="print-card report-sessions-card btn-no-print"
+    style="--report-session-accent:#06b6d4"
+    @if($recentSessionsClientPager)
+        data-recent-session-card
+        data-client-pager="true"
+        data-page-size-desktop="{{ $recentSessionsPageSizeDesktop }}"
+        data-page-size-mobile="{{ $recentSessionsPageSizeMobile }}"
+    @endif
+>
     <div class="sr-polished-header report-sessions-header">
         <div class="sr-polished-icon report-sessions-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
         <div class="min-w-0 flex-grow-1">
@@ -16,7 +36,7 @@
         </div>
     </div>
 
-    @if($recentSessionsForCard->count() > 0)
+    @if($recentSessionsItems->count() > 0)
         <div class="sr-section-actions report-session-actions">
             <form action="{{ route('user.sessions.clear') }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Clear all sessions?" data-sr-confirm-message="This will permanently clear all completed interview sessions. This cannot be undone." data-sr-confirm-action="Clear All" data-sr-confirm-variant="danger">
                 @csrf
@@ -39,14 +59,14 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($recentSessionsForCard as $session)
+                @forelse($recentSessionsItems as $session)
                     @php
                         $sessionScore = $session->score ? (int) $session->score->overall_readiness_score : null;
                         $sessionScoreLabel = $sessionScore === null ? 'No score' : $sessionScore.'%';
                         $sessionColor = $sessionScore === null ? '#64748b' : ($sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444'));
                         $sessionCategoryLabel = $session->category ? $session->category->title : ($session->practice_scenario ?? 'Interview');
                     @endphp
-                    <tr class="sr-session-table-row" data-recent-session-entry="desktop" style="--session-score-color: {{ $sessionColor }};">
+                    <tr class="sr-session-table-row" data-recent-session-entry="desktop" @if($recentSessionsClientPager && $loop->index >= $recentSessionsInitialPageSize) hidden @endif style="--session-score-color: {{ $sessionColor }};">
                         <td>{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</td>
                         <td><span class="report-session-category-chip">{{ $sessionCategoryLabel }}</span></td>
                         <td><span class="report-session-score-value">{{ $sessionScoreLabel }}</span></td>
@@ -73,7 +93,7 @@
     </div>
 
     <div class="sr-sessions-mobile sr-session-list">
-        @forelse($recentSessionsForCard as $session)
+        @forelse($recentSessionsItems as $session)
             @php
                 $sessionScore = $session->score ? (int) $session->score->overall_readiness_score : null;
                 $sessionScoreBarValue = $sessionScore === null ? '0' : $sessionScore.'%';
@@ -81,7 +101,7 @@
                 $sessionColor = $sessionScore === null ? '#64748b' : ($sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444'));
                 $sessionCategoryLabel = $session->category ? $session->category->title : ($session->practice_scenario ?? 'Interview');
             @endphp
-            <div class="sr-session-card-polished" data-recent-session-entry="mobile">
+            <div class="sr-session-card-polished" data-recent-session-entry="mobile" @if($recentSessionsClientPager && $loop->index >= $recentSessionsInitialPageSize) hidden @endif>
                 <div class="sr-session-icon"><i class="fa-solid fa-briefcase"></i></div>
                 <div class="sr-session-meta">
                     <div class="sr-session-title">{{ $sessionCategoryLabel }}</div>
@@ -110,7 +130,33 @@
         @endforelse
     </div>
 
-    @if(method_exists($recentSessionsForCard, 'hasPages') && $recentSessionsForCard->hasPages())
+    @if($recentSessionsClientPager && $recentSessionsItems->count() > 0)
+        <div class="sr-recent-session-pager" data-recent-session-pager aria-label="Recent sessions pagination">
+            <button
+                type="button"
+                class="sr-recent-page-btn disabled"
+                data-recent-page-prev
+                aria-disabled="true"
+                disabled
+            >
+                <i class="fa-solid fa-arrow-left"></i>
+                Previous
+            </button>
+            <span class="sr-recent-page-status" data-recent-page-status aria-live="polite">
+                Page 1 of {{ $recentSessionsInitialPages }}
+            </span>
+            <button
+                type="button"
+                class="sr-recent-page-btn {{ $recentSessionsInitialPages > 1 ? '' : 'disabled' }}"
+                data-recent-page-next
+                aria-disabled="{{ $recentSessionsInitialPages > 1 ? 'false' : 'true' }}"
+                @if($recentSessionsInitialPages <= 1) disabled @endif
+            >
+                Next
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    @elseif(method_exists($recentSessionsForCard, 'hasPages') && $recentSessionsForCard->hasPages())
         <div class="sr-recent-session-pager" aria-label="Recent sessions pagination">
             <a
                 href="{{ $recentSessionsForCard->previousPageUrl() ?: '#' }}"
@@ -134,5 +180,106 @@
                 <i class="fa-solid fa-arrow-right"></i>
             </a>
         </div>
+    @endif
+    @if($recentSessionsClientPager)
+        <script>
+        (function() {
+            const initRecentSessionPager = function() {
+                document.querySelectorAll('[data-recent-session-card][data-client-pager="true"]').forEach(function(card) {
+                    if (card.dataset.recentPagerReady === '1') return;
+                    card.dataset.recentPagerReady = '1';
+
+                    const desktopEntries = Array.from(card.querySelectorAll('[data-recent-session-entry="desktop"]'));
+                    const mobileEntries = Array.from(card.querySelectorAll('[data-recent-session-entry="mobile"]'));
+                    const pager = card.querySelector('[data-recent-session-pager]');
+                    const prevBtn = card.querySelector('[data-recent-page-prev]');
+                    const nextBtn = card.querySelector('[data-recent-page-next]');
+                    const status = card.querySelector('[data-recent-page-status]');
+                    const pageSizeDesktop = Number.parseInt(card.dataset.pageSizeDesktop || '6', 10) || 6;
+                    const pageSizeMobile = Number.parseInt(card.dataset.pageSizeMobile || '3', 10) || 3;
+                    const mobileMedia = window.matchMedia ? window.matchMedia('(max-width: 767.98px)') : null;
+                    let currentPage = 1;
+
+                    const getPageSize = function() {
+                        return document.body.classList.contains('user-mobile-shell') || (mobileMedia && mobileMedia.matches)
+                            ? pageSizeMobile
+                            : pageSizeDesktop;
+                    };
+
+                    const updateButton = function(button, disabled) {
+                        if (!button) return;
+                        button.disabled = disabled;
+                        button.classList.toggle('disabled', disabled);
+                        button.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+                    };
+
+                    const renderPage = function() {
+                        const pageSize = getPageSize();
+                        const totalItems = Math.max(desktopEntries.length, mobileEntries.length);
+                        const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+                        currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+                        const start = (currentPage - 1) * pageSize;
+                        const end = start + pageSize;
+
+                        [desktopEntries, mobileEntries].forEach(function(entries) {
+                            entries.forEach(function(entry, index) {
+                                entry.hidden = index < start || index >= end;
+                            });
+                        });
+
+                        if (pager) {
+                            pager.hidden = totalItems === 0;
+                        }
+                        if (status) {
+                            status.textContent = `Page ${currentPage} of ${totalPages}`;
+                        }
+                        updateButton(prevBtn, currentPage <= 1);
+                        updateButton(nextBtn, currentPage >= totalPages);
+                    };
+
+                    if (prevBtn) {
+                        prevBtn.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            if (currentPage > 1) {
+                                currentPage -= 1;
+                                renderPage();
+                            }
+                        });
+                    }
+
+                    if (nextBtn) {
+                        nextBtn.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            const totalPages = Math.max(1, Math.ceil(Math.max(desktopEntries.length, mobileEntries.length) / getPageSize()));
+                            if (currentPage < totalPages) {
+                                currentPage += 1;
+                                renderPage();
+                            }
+                        });
+                    }
+
+                    if (mobileMedia?.addEventListener) {
+                        mobileMedia.addEventListener('change', function() {
+                            currentPage = 1;
+                            renderPage();
+                        });
+                    } else if (mobileMedia?.addListener) {
+                        mobileMedia.addListener(function() {
+                            currentPage = 1;
+                            renderPage();
+                        });
+                    }
+
+                    renderPage();
+                });
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initRecentSessionPager, { once: true });
+            } else {
+                initRecentSessionPager();
+            }
+        })();
+        </script>
     @endif
 </section>

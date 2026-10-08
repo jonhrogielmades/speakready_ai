@@ -4867,6 +4867,10 @@ html body.user-desktop-shell:not(.admin-shell) .feedback-shell #card-practice-hi
     display: none;
 }
 
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell #card-practice-history [data-recent-session-entry][hidden] {
+    display: none !important;
+}
+
 html body.user-desktop-shell:not(.admin-shell) .feedback-shell #card-practice-history .sr-polished-empty {
     padding: 24px;
     text-align: center;
@@ -4921,6 +4925,15 @@ html body.user-desktop-shell:not(.admin-shell) .feedback-shell #card-practice-hi
     color: #94a3b8;
     pointer-events: none;
     background: #f8fafc;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell #card-practice-history button.sr-recent-page-btn {
+    appearance: none;
+    cursor: pointer;
+}
+
+html body.user-desktop-shell:not(.admin-shell) .feedback-shell #card-practice-history button.sr-recent-page-btn:disabled {
+    cursor: not-allowed;
 }
 
 html body.user-desktop-shell:not(.admin-shell) .feedback-shell #card-practice-history .sr-recent-page-status {

@@ -246,13 +246,15 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('id="historyNextBtn"', false)
  ->assertSee('Previous')
  ->assertSee('Next')
- ->assertSee('Page 1')
+ ->assertSee('Page 1 of 2')
  ->assertViewHas('historySessions', function ($historySessions) use ($createdSessions) {
  return $historySessions->count() === 7
  && $historySessions->pluck('id')->all() === $createdSessions->reverse()->pluck('id')->all();
  });
 
  $this->assertSame(7, substr_count($content, '<article class="history-card" data-history-record'));
+ preg_match_all('/<article class="history-card" data-history-record[^>]*\shidden\b/', $content, $hiddenHistoryCards);
+ $this->assertSame(3, count($hiddenHistoryCards[0]));
  }
 
  public function test_progress_star_card_does_not_treat_default_zero_as_reliable_star_evidence(): void
@@ -436,6 +438,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee(route('user.review', $matchingSession->id), false)
  ->assertViewHas('sessions', fn ($sessions) => $sessions->total() === 1
  && $sessions->getCollection()->first()?->id === $matchingSession->id)
+ ->assertViewHas('practiceHistorySessions', fn ($sessions) => $sessions->count() === 1
+ && $sessions->first()?->id === $matchingSession->id)
  ->assertViewHas('feedbackCategories', function ($categories) {
  return $categories->all() === [
  'Job Interviews',
@@ -908,14 +912,14 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/desktop/user/feedback.css?v=18', false)
+ ->assertSee('css/desktop/user/feedback.css?v=19', false)
  ->assertSee('data-page-style="user-feedback"', false);
 
  $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
  ->get(route('user.feedback'))
  ->assertOk()
- ->assertSee('css/mobile/user/feedback.css?v=17', false)
+ ->assertSee('css/mobile/user/feedback.css?v=18', false)
  ->assertSee('serverDetectedMobile: true', false);
 
  foreach (['desktop', 'mobile'] as $device) {
@@ -964,6 +968,50 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('No score')
  ->assertSee('95%')
  ->assertSee('34%');
+ }
+
+ public function test_feedback_practice_history_uses_in_place_desktop_and_mobile_pagination(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('Job Interview');
+
+ foreach (range(1, 8) as $index) {
+ $this->completedSessionFor($user, $category, 40 + $index, now()->subDays(9 - $index));
+ }
+
+ $desktop = $this->actingAs($user)->get(route('user.feedback'));
+ $desktopContent = $desktop->getContent();
+
+ $desktop->assertOk()
+ ->assertSee('data-client-pager="true"', false)
+ ->assertSee('data-page-size-desktop="6"', false)
+ ->assertSee('data-page-size-mobile="3"', false)
+ ->assertSee('data-recent-page-prev', false)
+ ->assertSee('data-recent-page-next', false)
+ ->assertSee('Page 1 of 2')
+ ->assertDontSee('recent_sessions_page=2', false)
+ ->assertViewHas('sessions', fn ($sessions) => $sessions->total() === 8 && $sessions->perPage() === 6)
+ ->assertViewHas('practiceHistorySessions', fn ($sessions) => $sessions->count() === 8);
+
+ preg_match_all('/<tr class="sr-session-table-row" data-recent-session-entry="desktop"[^>]*\shidden\b/', $desktopContent, $desktopHiddenRows);
+ preg_match_all('/<div class="sr-session-card-polished" data-recent-session-entry="mobile"[^>]*\shidden\b/', $desktopContent, $desktopHiddenCards);
+ $this->assertSame(2, count($desktopHiddenRows[0]));
+ $this->assertSame(2, count($desktopHiddenCards[0]));
+
+ $mobile = $this->actingAs($user)
+ ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+ ->get(route('user.feedback'));
+ $mobileContent = $mobile->getContent();
+
+ $mobile->assertOk()
+ ->assertSee('data-client-pager="true"', false)
+ ->assertSee('Page 1 of 3')
+ ->assertDontSee('recent_sessions_page=2', false);
+
+ preg_match_all('/<tr class="sr-session-table-row" data-recent-session-entry="desktop"[^>]*\shidden\b/', $mobileContent, $mobileHiddenRows);
+ preg_match_all('/<div class="sr-session-card-polished" data-recent-session-entry="mobile"[^>]*\shidden\b/', $mobileContent, $mobileHiddenCards);
+ $this->assertSame(5, count($mobileHiddenRows[0]));
+ $this->assertSame(5, count($mobileHiddenCards[0]));
  }
 
  public function test_reports_do_not_render_placeholder_scores_for_unscored_sessions(): void

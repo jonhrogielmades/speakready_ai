@@ -2,7 +2,7 @@
 @section('title', 'Feedback Center')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=18') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=19') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')
@@ -183,13 +183,16 @@
  </div>
 
  @include('shared.user.recent-sessions-card', [
- 'recentSessions' => $sessions,
+ 'recentSessions' => $practiceHistorySessions,
  'recentSessionsCardId' => 'card-practice-history',
  'recentSessionsTitle' => 'Practice History',
  'recentSessionsSubtitle' => 'Review completed mock interviews and saved feedback.',
  'recentSessionsEmptyText' => $hasActiveFeedbackFilters
  ? 'No practice history matches your current filters.'
  : 'Complete a practice interview to generate feedback.',
+ 'recentSessionsClientPager' => true,
+ 'recentSessionsPageSizeDesktop' => 6,
+ 'recentSessionsPageSizeMobile' => 3,
  ])
 </div>
 

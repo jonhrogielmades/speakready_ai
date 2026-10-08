@@ -10671,3 +10671,88 @@ body.dm #sec-progress-tracking .history-pager-btn:hover:not(:disabled) {
         order: -1 !important;
     }
 }
+
+/* Refresh-safe hero sizing: keep the full-page reload from painting legacy oversized rules. */
+@media (max-width: 991.98px) {
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero.progress-hero,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero.progress-hero {
+        display: grid !important;
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-height: 69px !important;
+        height: auto !important;
+        max-height: none !important;
+        padding: 8px 72px 8px 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-inner,
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-copy,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-inner,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-copy {
+        display: contents !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+    }
+
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-icon,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-icon {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+    }
+
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-title,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-title {
+        margin: 0 0 3px !important;
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-subtitle,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-subtitle {
+        max-width: 100% !important;
+        margin: 0 !important;
+        font-size: 0.49rem !important;
+        line-height: 1.32 !important;
+    }
+
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-art,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-art {
+        right: -5px !important;
+        bottom: -2px !important;
+        width: 72px !important;
+        max-width: 72px !important;
+    }
+}
+
+@media (max-width: 390px) {
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero.progress-hero,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero.progress-hero {
+        grid-template-columns: 28px minmax(0, 1fr) !important;
+        gap: 7px !important;
+        padding: 8px 66px 8px 9px !important;
+    }
+
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-title,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-title {
+        font-size: 0.68rem !important;
+    }
+
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-subtitle,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-subtitle {
+        font-size: 0.46rem !important;
+    }
+
+    html body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-art,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero .progress-hero-art {
+        width: 66px !important;
+        max-width: 66px !important;
+    }
+}

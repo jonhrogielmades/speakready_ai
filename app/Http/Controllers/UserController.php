@@ -569,7 +569,7 @@ class UserController extends Controller
  ->values();
  }
 
- $sessions = (clone $baseQuery)
+ $sessionsQuery = (clone $baseQuery)
  ->with(['category', 'score', 'feedback'])
  ->when($selectedScenario!== '', fn ($query) => $query->whereIn('id', $matchingScenarioIds))
  ->when($search!== '', function ($query) use ($search, $matchingSearchScenarioIds) {
@@ -606,9 +606,18 @@ class UserController extends Controller
  }
  });
  })
- ->orderBy('created_at', $sort)
+ ->orderBy('created_at', $sort);
+
+ $sessions = (clone $sessionsQuery)
  ->paginate(6)
  ->withQueryString();
+ $practiceHistorySessions = (clone $sessionsQuery)
+ ->get()
+ ->map(function ($session) {
+ $session->practice_scenario = $this->practiceScenarioLabel($session);
+
+ return $session;
+ });
  $sessions->getCollection()->transform(function ($session) {
  $session->practice_scenario = $this->practiceScenarioLabel($session);
 
@@ -651,7 +660,8 @@ class UserController extends Controller
  'hasFeedbackRecords',
  'latestFeedbackSession',
  'feedbackSummary',
- 'feedbackEvidence'
+ 'feedbackEvidence',
+ 'practiceHistorySessions'
  ));
  }
 
