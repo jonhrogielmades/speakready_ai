@@ -10756,3 +10756,58 @@ body.dm #sec-progress-tracking .history-pager-btn:hover:not(:disabled) {
         max-width: 66px !important;
     }
 }
+
+/* Equalize Interview Progress stat-panel gaps. */
+@media (max-width: 991.98px) {
+    body.user-mobile-shell #mob-content #sec-progress-tracking,
+    html body #mob-content #sec-progress-tracking,
+    html body #sec-progress-tracking {
+        --progress-dashboard-gap: 12px !important;
+        --progress-panel-group-gap: 12px !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progressModulesLikeHero.progress-hero,
+    html body #mob-content #sec-progress-tracking #progressModulesLikeHero.progress-hero,
+    html body #sec-progress-tracking #progressModulesLikeHero.progress-hero {
+        margin: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking > .progress-summary-strip,
+    html body #mob-content #sec-progress-tracking > .progress-summary-strip,
+    html body #sec-progress-tracking > .progress-summary-strip,
+    body.user-mobile-shell #mob-content #sec-progress-tracking .progress-summary-strip,
+    html body #mob-content #sec-progress-tracking .progress-summary-strip,
+    html body #sec-progress-tracking .progress-summary-strip {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking .progress-summary-strip > #progress-stats,
+    html body #mob-content #sec-progress-tracking .progress-summary-strip > #progress-stats,
+    html body #sec-progress-tracking .progress-summary-strip > #progress-stats,
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats,
+    html body #mob-content #sec-progress-tracking #progress-stats,
+    html body #sec-progress-tracking #progress-stats {
+        gap: 12px !important;
+        row-gap: 12px !important;
+        column-gap: 12px !important;
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 0 !important;
+        margin: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking #progress-stats > [class*="col-"],
+    html body #mob-content #sec-progress-tracking #progress-stats > [class*="col-"],
+    html body #sec-progress-tracking #progress-stats > [class*="col-"] {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #sec-progress-tracking .progress-summary-strip .progress-stat-card,
+    html body #mob-content #sec-progress-tracking .progress-summary-strip .progress-stat-card,
+    html body #sec-progress-tracking .progress-summary-strip .progress-stat-card {
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+        align-content: center !important;
+    }
+}

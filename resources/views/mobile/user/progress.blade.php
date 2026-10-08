@@ -2,7 +2,7 @@
 @section('title', 'Interview Progress')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/progress.css?v=45') }}" data-page-style="user-progress">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/progress.css?v=46') }}" data-page-style="user-progress">
 @endpush
 
 @section('content')
