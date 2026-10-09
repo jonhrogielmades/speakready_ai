@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/coach.css?v=2') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=22') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=23') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -261,9 +261,29 @@
                 || window.matchMedia('(max-width: 767.98px)').matches;
         }
 
-        function getCoachVisualViewportHeight() {
-            const viewportHeight = Number(window.visualViewport?.height || 0);
-            return viewportHeight || window.innerHeight || document.documentElement.clientHeight || 0;
+        function getCoachVisualViewportMetrics() {
+            const viewport = window.visualViewport;
+            const heightCandidates = [
+                Number(viewport?.height || 0),
+                Number(window.innerHeight || 0),
+                Number(document.documentElement.clientHeight || 0)
+            ].filter((value) => value > 0);
+            const height = heightCandidates.length ? Math.min(...heightCandidates) : 0;
+
+            return {
+                height: height || window.innerHeight || document.documentElement.clientHeight || 0,
+                offsetTop: Number(viewport?.offsetTop || 0)
+            };
+        }
+
+        function isCoachFullscreenActive() {
+            return Boolean(document.fullscreenElement) || Boolean(document.body?.classList.contains('user-app-fullscreen'));
+        }
+
+        function setCoachRootPx(name, value) {
+            if (Number.isFinite(value) && value >= 0) {
+                document.documentElement.style.setProperty(name, `${Math.round(value)}px`);
+            }
         }
 
         function syncCoachKeyboardLayout() {
@@ -279,15 +299,38 @@
 
             const mobileLayout = isCoachMobileLayout();
             const inputFocused = document.activeElement === input;
-            const visualHeight = getCoachVisualViewportHeight();
+            const viewport = getCoachVisualViewportMetrics();
+            const visualHeight = viewport.height;
             const focusedState = mobileLayout && inputFocused;
+            const fullscreenState = mobileLayout && isCoachFullscreenActive();
 
             body.classList.add('coach-mobile-page-active');
             body.classList.toggle('coach-input-focused', focusedState);
             body.classList.toggle('coach-keyboard-open', focusedState);
+            body.classList.toggle('coach-fullscreen-active', fullscreenState);
 
             if (visualHeight > 0) {
-                document.documentElement.style.setProperty('--coach-visual-vh', `${Math.round(visualHeight)}px`);
+                setCoachRootPx('--coach-visual-vh', visualHeight);
+                setCoachRootPx('--coach-visual-offset-top', Math.max(0, viewport.offsetTop));
+
+                const visualBottom = viewport.offsetTop + visualHeight;
+                const contentShell = page.closest('.db-content') || document.getElementById('mob-content') || page.parentElement || page;
+                const contentTop = Math.max(0, Number(contentShell.getBoundingClientRect?.().top || 0));
+                const pageTop = Math.max(0, Number(page.getBoundingClientRect().top || 0));
+                const contentHeight = Math.max(260, visualBottom - contentTop);
+                const pageHeight = Math.max(240, visualBottom - pageTop);
+                const layoutHeight = Math.max(
+                    Number(window.innerHeight || 0),
+                    Number(document.documentElement.clientHeight || 0),
+                    visualHeight
+                );
+                const keyboardInset = focusedState ? Math.max(0, layoutHeight - visualBottom) : 0;
+                const composerHeight = Math.max(56, Number(document.getElementById('coach-input-area')?.getBoundingClientRect?.().height || 0));
+
+                setCoachRootPx('--coach-content-vh', contentHeight);
+                setCoachRootPx('--coach-page-vh', pageHeight);
+                setCoachRootPx('--coach-keyboard-inset', keyboardInset);
+                setCoachRootPx('--coach-composer-height', composerHeight);
             }
 
             if (focusedState) {
@@ -296,11 +339,15 @@
                 if (box) {
                     box.scrollTop = box.scrollHeight;
                 }
-                document.getElementById('coach-input-area')?.scrollIntoView({
-                    block: 'end',
-                    inline: 'nearest',
-                    behavior: 'auto'
-                });
+                if (fullscreenState) {
+                    document.getElementById('mob-content')?.scrollTo({ top: 0, behavior: 'auto' });
+                } else {
+                    document.getElementById('coach-input-area')?.scrollIntoView({
+                        block: 'end',
+                        inline: 'nearest',
+                        behavior: 'auto'
+                    });
+                }
             }
         }
 
@@ -346,10 +393,11 @@
             input.addEventListener('input', () => queueCoachKeyboardLayout());
             window.addEventListener('resize', () => queueCoachKeyboardLayout(), { passive: true });
             window.addEventListener('orientationchange', () => queueCoachKeyboardLayout(180), { passive: true });
+            document.addEventListener('fullscreenchange', () => queueCoachKeyboardLayout(80));
             window.visualViewport?.addEventListener('resize', () => queueCoachKeyboardLayout(), { passive: true });
             window.visualViewport?.addEventListener('scroll', () => queueCoachKeyboardLayout(), { passive: true });
             window.addEventListener('pagehide', () => {
-                document.body?.classList.remove('coach-mobile-page-active', 'coach-input-focused', 'coach-keyboard-open');
+                document.body?.classList.remove('coach-mobile-page-active', 'coach-input-focused', 'coach-keyboard-open', 'coach-fullscreen-active');
             });
 
             queueCoachKeyboardLayout();
