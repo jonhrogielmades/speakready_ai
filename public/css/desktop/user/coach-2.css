@@ -2118,7 +2118,7 @@ html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-chat-header
 /* Use the dedicated AI Coach icon and keep the full robot head visible. */
 html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-avatar {
     position: relative !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     isolation: isolate !important;
     border: 1px solid rgba(37, 99, 235, 0.14) !important;
     background: transparent !important;
@@ -2130,10 +2130,14 @@ html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-avatar::bef
     position: absolute !important;
     inset: 0 !important;
     z-index: 0 !important;
-    background: url("/img/ai-coach-avatar-icon.png") center center / contain no-repeat !important;
+    background: url("/img/ai-coach-avatar-icon.png?v=2") center center / contain no-repeat !important;
     transform: none !important;
     transform-origin: center !important;
     pointer-events: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-avatar::after {
+    z-index: 2 !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-avatar > i.fa-robot {
