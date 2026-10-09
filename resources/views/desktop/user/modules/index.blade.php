@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=15') }}" data-page-style="user-modules-index">
-<link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=1') }}" data-page-style="interview-prep-loader">
+<link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=2') }}" data-page-style="interview-prep-loader">
 @endpush
 
 @section('content')

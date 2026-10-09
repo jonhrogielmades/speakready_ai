@@ -14,7 +14,10 @@
     min-height: 100dvh;
     max-height: none;
     margin: 0;
-    padding: max(24px, env(safe-area-inset-top, 0px)) 20px max(24px, env(safe-area-inset-bottom, 0px));
+    padding:
+        max(24px, env(safe-area-inset-top, 0px))
+        clamp(28px, 5vw, 72px)
+        max(24px, env(safe-area-inset-bottom, 0px));
     background:
         linear-gradient(135deg, rgba(219, 234, 254, 0.42) 0 1px, transparent 1px) 0 0 / 44px 44px,
         linear-gradient(180deg, #f8fbff 0%, #eef5ff 58%, #f8fbff 100%);
@@ -46,6 +49,7 @@ body.finish-transition-active {
     position: relative;
     z-index: 1;
     width: min(100%, 680px);
+    max-width: calc(100vw - clamp(56px, 10vw, 144px));
     min-height: 100%;
     margin: 0 auto;
     padding: clamp(18px, 3vh, 34px) 0;
@@ -498,12 +502,16 @@ body.finish-transition-active {
 
 @media (min-width: 768px) {
     #setupTransitionOverlay.finish-transition-overlay {
-        padding: max(10px, env(safe-area-inset-top, 0px)) 18px max(10px, env(safe-area-inset-bottom, 0px)) !important;
+        padding:
+            max(10px, env(safe-area-inset-top, 0px))
+            clamp(32px, 5vw, 76px)
+            max(10px, env(safe-area-inset-bottom, 0px)) !important;
         overflow: hidden !important;
     }
 
     #setupTransitionOverlay .interview-prep-shell {
         width: min(100%, 620px) !important;
+        max-width: calc(100vw - clamp(64px, 10vw, 152px)) !important;
         height: 100% !important;
         min-height: 0 !important;
         max-height: calc(100dvh - 20px) !important;
@@ -609,11 +617,16 @@ body.finish-transition-active {
 
 @media (max-width: 575.98px) {
     .finish-transition-overlay {
-        padding: max(18px, env(safe-area-inset-top, 0px)) 16px max(18px, env(safe-area-inset-bottom, 0px));
+        padding:
+            max(18px, env(safe-area-inset-top, 0px))
+            max(20px, env(safe-area-inset-right, 0px))
+            max(18px, env(safe-area-inset-bottom, 0px))
+            max(20px, env(safe-area-inset-left, 0px));
     }
 
     .interview-prep-shell {
         width: min(100%, 430px);
+        max-width: calc(100vw - 40px);
         gap: 13px;
         justify-content: flex-start;
         padding: 10px 0 0;

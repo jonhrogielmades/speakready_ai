@@ -15,6 +15,44 @@ class LearningChallengeGenerationService
 
  private?array $gameLevelColumns = null;
 
+ public function savedJourneyForPosition(?Category $requestedCategory, string $position): ?array
+ {
+ $challengePositions = app(ChallengePositionService::class);
+ $position = $challengePositions->clean($position);
+
+ if ($position === '') {
+ return null;
+ }
+
+ $categories = collect();
+ $positionCategory = Category::where('type', 'game')
+ ->where('status', 'active')
+ ->where('title', $this->positionCategoryTitle($position))
+ ->first();
+
+ if ($positionCategory) {
+ $categories->push($positionCategory);
+ }
+
+ if ($requestedCategory && $this->canUseRequestedCategory($requestedCategory, $position)) {
+ $categories->push($requestedCategory);
+ }
+
+ foreach ($categories->unique(fn (Category $category): int => (int) $category->id) as $category) {
+ $levels = $this->positionJourneyLevels($category, $position);
+
+ if ($levels->count() >= ChallengePositionService::JOURNEY_MAX_LEVEL_NUMBER) {
+ return [
+ 'category' => $category,
+ 'levels' => $levels,
+ 'created_count' => 0,
+ ];
+ }
+ }
+
+ return null;
+ }
+
  public function ensureAiJourneyForPosition(?Category $requestedCategory, string $position): array
  {
  @set_time_limit(300);
@@ -139,7 +177,12 @@ class LearningChallengeGenerationService
  $aiDrafts = [];
 
  try {
- $aiDrafts = AIService::generateGames($topic, $slotBatch, AIService::defaultProviderKey());
+ $aiDrafts = AIService::generateGames(
+ $topic,
+ $slotBatch,
+ AIService::defaultProviderKey(),
+ $this->aiProviderRequestOptions()
+ );
  } catch (\Throwable $e) {
  Log::warning('AI challenge journey generation failed; using guarded fallback levels.', [
  'position' => $position,
@@ -368,6 +411,16 @@ class LearningChallengeGenerationService
  private function gameGenerationBatchSize(): int
  {
  return max(1, min(10, (int) env('AI_GAME_BATCH_SIZE', self::DEFAULT_GAME_GENERATION_BATCH_SIZE)));
+ }
+
+ private function aiProviderRequestOptions(): array
+ {
+ return [
+ 'timeout_seconds' => max(2, min(20, (int) env('AI_CHALLENGE_GENERATION_TIMEOUT', 8))),
+ 'attempts' => max(1, min(2, (int) env('AI_CHALLENGE_GENERATION_ATTEMPTS', 1))),
+ 'max_providers' => max(1, min(2, (int) env('AI_CHALLENGE_GENERATION_MAX_PROVIDERS', 1))),
+ 'module' => 'learning_challenge_generation',
+ ];
  }
 
  private function gameLevelDataForCurrentSchema(array $data): array

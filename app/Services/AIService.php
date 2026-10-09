@@ -2592,7 +2592,7 @@ EOT;
  return null;
  }
 
- public static function generateGames(string $topic, array $levelSpecs, string $provider = 'openai'): array
+ public static function generateGames(string $topic, array $levelSpecs, string $provider = 'openai', array $requestOptions = []): array
  {
  if (empty($levelSpecs) || self::externalAiDisabledForTests()) {
  return [];
@@ -2652,7 +2652,10 @@ Rules:
 - Keep content professional, concise, and useful for interview practice.
 EOT;
 
- $providers = self::providerPriorityList($provider);
+ $providers = self::limitProvidersForRequest(
+ self::providerPriorityList($provider),
+ $requestOptions
+ );
 
  foreach ($providers as $currentProvider) {
  if (! self::providerHasCredentials($currentProvider)) {
@@ -2660,7 +2663,7 @@ EOT;
  }
 
  try {
- $response = self::callStructuredProvider($currentProvider, $prompt);
+ $response = self::callStructuredProvider($currentProvider, $prompt, $requestOptions);
  $levels = $response['levels']?? [];
 
  if (is_array($levels) && $levels!== []) {
@@ -4508,6 +4511,20 @@ PROMPT;
 
  return $response;
  });
+ }
+
+ private static function limitProvidersForRequest(array $providers, array $requestOptions): array
+ {
+ if (! array_key_exists('max_providers', $requestOptions)) {
+ return $providers;
+ }
+
+ $maxProviders = (int) $requestOptions['max_providers'];
+ if ($maxProviders <= 0) {
+ return $providers;
+ }
+
+ return array_slice($providers, 0, max(1, min($maxProviders, count($providers))));
  }
 
  private static function recordProviderAttempt(string $provider, string $module, callable $callback)
@@ -7989,9 +8006,12 @@ PROMPT;
  return 'Sorry, I am having trouble connecting to my brain right now.';
  }
 
- public static function generateJson($prompt, $provider = 'openai')
+ public static function generateJson($prompt, $provider = 'openai', array $requestOptions = [])
  {
- $providers = self::providerPriorityList($provider);
+ $providers = self::limitProvidersForRequest(
+ self::providerPriorityList($provider),
+ $requestOptions
+ );
 
  foreach ($providers as $currentProvider) {
  if (! self::shouldAttemptProvider($currentProvider)) {
@@ -7999,7 +8019,7 @@ PROMPT;
  }
 
  try {
- $response = self::callStructuredProvider($currentProvider, $prompt);
+ $response = self::callStructuredProvider($currentProvider, $prompt, $requestOptions);
 
  if (! empty($response)) {
  return json_encode($response);

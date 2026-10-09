@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Category;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -210,7 +211,39 @@ class QuestionDatasetProvider
 
  public static function targetPositionOptionGroups(?array $datasets = null): array
  {
+ if ($datasets === null && ! app()->runningUnitTests()) {
+ return self::cachedTargetPositionOptionGroups();
+ }
+
  $datasets??= self::all();
+
+ return self::targetPositionOptionGroupsFromDatasets($datasets);
+ }
+
+ private static function cachedTargetPositionOptionGroups(): array
+ {
+ return Cache::remember('question_dataset_target_position_option_groups_v3', now()->addHours(12), function (): array {
+ $groups = self::fastTargetPositionOptionGroups();
+
+ return $groups!== []? $groups: self::targetPositionOptionGroupsFromDatasets(self::all());
+ });
+ }
+
+ private static function fastTargetPositionOptionGroups(): array
+ {
+ $positions = collect(self::PH_COMMON_TARGET_POSITIONS)
+ ->pluck('label')
+ ->map(fn ($position): string => self::cleanTargetRoleOption($position))
+ ->filter()
+ ->unique(fn (string $position): string => self::targetRoleDedupeKey($position))
+ ->values()
+ ->all();
+
+ return $positions === []? []: [$positions];
+ }
+
+ private static function targetPositionOptionGroupsFromDatasets(array $datasets): array
+ {
  $roleCounts = [];
 
  foreach ($datasets as $dataset) {

@@ -4214,7 +4214,7 @@ class UserController extends Controller
  }
 
  $message = $createdCount > 0
- ? ($usedAi? "Generated and saved {$createdCount} role-specific learning module(s) for {$position} in Admin.": "Generated and saved {$createdCount} role-specific learning module(s) for {$position} in Admin with reliable fallback content while the AI provider was unavailable.")
+ ? ($usedAi? "Generated {$createdCount} and saved role-specific learning module(s) for {$position} in Admin.": "Generated {$createdCount} and saved role-specific learning module(s) for {$position} in Admin with reliable fallback content while the AI provider was unavailable.")
  : "Showing saved admin interview modules for {$position}.";
 
  $redirectParams = collect([

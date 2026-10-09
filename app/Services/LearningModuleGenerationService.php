@@ -298,7 +298,11 @@ Return ONLY one JSON object with this exact shape:
 This is one module in a 4-module generated set. The full set must never exceed 4 AI-generated modules for the target position. This module must have exactly 10 chapters. Every chapter must read like a real training module or short book chapter for '.$position.', not a short note. Use many paragraphs, detailed explanations, concrete examples, weak-versus-strong answer comparisons, practice exercises, and completion checks. Use fresh graduate, career-shifter, BPO, remote-work, school project, internship, or local workplace examples only when they naturally fit the target position. Keep the content practical: explain the interview situation, what the interviewer is listening for, how to structure the answer, what weak answers sound like, and how the learner knows the chapter is complete.';
 
  try {
- $jsonResponse = AIService::generateJson($prompt, AIService::defaultProviderKey());
+ $jsonResponse = AIService::generateJson(
+ $prompt,
+ AIService::defaultProviderKey(),
+ $this->aiProviderRequestOptions()
+ );
  $data = json_decode($jsonResponse, true);
 
  if (! is_array($data)) {
@@ -339,6 +343,16 @@ This is one module in a 4-module generated set. The full set must never exceed 4
  }
 
  return $keyed;
+ }
+
+ private function aiProviderRequestOptions(): array
+ {
+ return [
+ 'timeout_seconds' => max(2, min(20, (int) env('AI_MODULE_GENERATION_TIMEOUT', 8))),
+ 'attempts' => max(1, min(2, (int) env('AI_MODULE_GENERATION_ATTEMPTS', 1))),
+ 'max_providers' => max(1, min(2, (int) env('AI_MODULE_GENERATION_MAX_PROVIDERS', 1))),
+ 'module' => 'learning_module_generation',
+ ];
  }
 
  private function normalizeGeneratedModuleData(?array $moduleData, string $position, string $categoryTitle, array $spec): array
