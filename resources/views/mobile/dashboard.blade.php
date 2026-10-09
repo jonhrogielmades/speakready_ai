@@ -22,6 +22,24 @@
     $sessionsMeter = max(0, min(100, (int) round((($totalSessions ?? 0) / 10) * 100)));
     $ratingMeter = max(0, min(100, (int) round(($rating / 5) * 100)));
     $xpValue = max(0, (int) ($experiencePoints ?? 0));
+    $formatCompactStat = static function ($value): string {
+        $value = max(0, (float) $value);
+
+        if ($value < 1000) {
+            return number_format((int) round($value));
+        }
+
+        if ($value < 10000) {
+            return rtrim(rtrim(number_format($value / 1000, 1), '0'), '.').'K';
+        }
+
+        if ($value < 999500) {
+            return number_format((int) round($value / 1000)).'K';
+        }
+
+        return rtrim(rtrim(number_format($value / 1000000, 1), '0'), '.').'M';
+    };
+    $compactXpValue = $formatCompactStat($xpValue);
     $playerLevel = max(1, (int) ($profile->player_level ?? (floor($xpValue / 1000) + 1)));
     $xpMeter = max(0, min(100, (int) round((($xpValue % 1000) / 1000) * 100)));
     $streakMeter = max(0, min(100, (int) round((($currentStreak ?? 0) / 7) * 100)));
@@ -186,7 +204,7 @@
                         <span class="sr-chip">Growth</span>
                     </div>
                     <div class="sr-stat-body">
-                        <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
+                        <div class="sr-stat-value" title="{{ number_format($xpValue) }} XP">{{ $compactXpValue }}</div>
                         <div class="sr-stat-label">Experience points</div>
                         <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
                     </div>
@@ -260,7 +278,7 @@
                         <span class="sr-chip">Growth</span>
                     </div>
                     <div class="sr-stat-body">
-                        <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
+                        <div class="sr-stat-value" title="{{ number_format($xpValue) }} XP">{{ $compactXpValue }}</div>
                         <div class="sr-stat-label">Experience points</div>
                         <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
                     </div>
