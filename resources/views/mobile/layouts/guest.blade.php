@@ -128,10 +128,8 @@
                   </a>
                   <div class="d-none d-xl-flex align-items-center gap-1 mx-auto">
                      <a href="#hero" class="nav-link">Home</a>
-                     <a href="#demo-preview" class="nav-link">Demo</a>
-                     <a href="#how" class="nav-link">How It Works</a>
                      <a href="#features" class="nav-link">Features</a>
-                     <a href="#benefits" class="nav-link">Why It Helps</a>
+                     <a href="#benefits" class="nav-link">Interview Categories</a>
                      <a href="#developers" class="nav-link">Developers</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
@@ -143,7 +141,7 @@
                      <i class="fa-regular fa-user fa-sm"></i> Login
                      </button>
                      <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
-                     Start Free <i class="fa-solid fa-arrow-right fa-sm"></i>
+                     Register <i class="fa-solid fa-arrow-right fa-sm"></i>
                      </button>
                      <button class="boc d-xl-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
                      <i class="fa-solid fa-bars" aria-hidden="true"></i>
@@ -162,7 +160,7 @@
              <div class="container position-relative" style="z-index:2">
                 <div class="text-center mt-3 pt-3 afu" style="animation-delay:.05s">
                     <span class="hbadge">
-                 AI Interview Coach for Job Seekers
+                 AI-Based Interview Practice System
                     </span>
                 </div>
                 @php
@@ -173,24 +171,36 @@
                 @endphp
                 <div class="row align-items-center justify-content-center mt-4">
                   <div class="col-lg-7 col-md-10 text-center">
-                     <h1 class="h1 afu" style="animation-delay:.12s">Practice your next interview with an <span class="gt">AI coach.</span></h1>
-                     <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">Get realistic questions, live coaching, and feedback reports built around your target role.</p>
+                     <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
+                     <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI helps you practice role-focused job interviews with scenario setup, Coaching On or Real Interview Mode, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')"><i class="fa-solid fa-arrow-right me-2"></i>Start Free Practice</button>
-                        <a href="#demo-preview" class="boc btn px-4 py-3 fs-6"><i class="fa-solid fa-mobile-screen-button me-2" style="color:var(--pur)"></i>View Demo</a>
+                        <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">Login for Free</button>
+                        <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
+                        <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                      </div>
                     </div>
                  </div>
 
-                <div class="hero-benefit-strip afu" aria-label="SpeakReady AI benefits" style="animation-delay:.36s">
-                  <span class="hero-benefit-chip"><i class="fa-solid fa-briefcase" aria-hidden="true"></i>Role-based questions</span>
-                  <span class="hero-benefit-chip"><i class="fa-solid fa-comments" aria-hidden="true"></i>Real-time feedback</span>
-                  <span class="hero-benefit-chip"><i class="fa-solid fa-chart-line" aria-hidden="true"></i>Progress reports</span>
+                <div class="hero-tech-card mt-3 mb-3 afu text-center" style="animation-delay:.4s">
+                  <p class="hero-tech-title" style="font-size:.71rem;color:var(--hero-tech-color, #000000);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
+                  <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap tech-icons" style="color:var(--hero-tech-color, #000000); font-size:1.5rem;">
+                      <a href="https://laravel.com" target="_blank" rel="noopener noreferrer" title="Laravel"><i class="fa-brands fa-laravel"></i></a>
+                      <a href="https://php.net" target="_blank" rel="noopener noreferrer" title="PHP"><i class="fa-brands fa-php"></i></a>
+                      <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer" title="MySQL"><i class="fa-solid fa-database"></i></a>
+                      @php
+                          $title = 'OpenAI';
+                          $link = 'https://openai.com';
+                      @endphp
+                      <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" title="{{ $title }}">
+                          <i class="fa-solid fa-robot"></i>
+                      </a>
+                      <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank" rel="noopener noreferrer" title="Web Speech API"><i class="fa-solid fa-microphone"></i></a>
+                   </div>
                 </div>
 
-                <div id="demo-preview" class="hero-demo-label text-center afu" style="animation-delay:.44s">
-                  <span>Product Preview</span>
-                  <strong>See SpeakReady AI on mobile</strong>
+                <div id="demo-preview" class="landing-section-heading mobile-demo-preview-heading text-center mt-4 mb-3 afu" style="animation-delay:.48s">
+                  <span class="slbl">Mobile Demo Preview</span>
+                  <h2 class="stitle">Inside <span class="gt">SpeakReady AI</span></h2>
                 </div>
 
                 <div class="row justify-content-center mt-3 mb-3">
@@ -989,7 +999,7 @@
             <div class="container">
                <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">How It Works</span>
-                  <h2 class="stitle">Choose your role, answer, then <span class="gt">improve</span></h2>
+                  <h2 class="stitle">From setup to <span class="gt">stronger answers</span></h2>
                </div>
 
                <div class="swiper landingHowSwiper landing-auto-carousel how-auto-carousel" aria-label="How it works carousel">
@@ -997,22 +1007,43 @@
                   <div class="col-md-4 col-sm-6 rv swiper-slide">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">1</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Choose Your Role</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Pick the job interview scenario, target position, difficulty, and support settings before starting.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Open Interview Setup</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Start from your workspace and open the guided setup for a job-interview practice session.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">2</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Answer Real Prompts</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Practice by text, voice, or hybrid input while Coaching On helps or Real Interview Mode keeps it quiet.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Pick Scenario And Role</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Select Job Interviews, then choose a target position so prompts match your hiring goal.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">3</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Get Feedback</h3>
-                         <p style="font-size:.875rem;color:var(--tx2)">Review evidence-based notes, readiness trends, reports, and the next practice action to focus on.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Set Interview Structure</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Choose difficulty, question count, timer, question types, and response mode before starting.</p>
+                     </div>
+                  </div>
+                  <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.3s">
+                     <div class="gc p-4 h-100 text-center position-relative">
+                        <div class="hnum">4</div>
+                        <h3 class="fs-5 fw-semibold mb-2">Select Support Controls</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Set Camera Detection, then choose Coaching On for help or Real Interview Mode for quiet practice.</p>
+                     </div>
+                  </div>
+                  <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.4s">
+                     <div class="gc p-4 h-100 text-center position-relative">
+                        <div class="hnum">5</div>
+                        <h3 class="fs-5 fw-semibold mb-2">Practice The Session</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Answer each prompt by text, voice, or hybrid input while the system records your responses.</p>
+                     </div>
+                  </div>
+                  <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.5s">
+                     <div class="gc p-4 h-100 text-center position-relative">
+                        <div class="hnum">6</div>
+                        <h3 class="fs-5 fw-semibold mb-2">Review Next Steps</h3>
+                         <p style="font-size:.875rem;color:var(--tx2)">Use evidence feedback, reports, modules, challenges, and trends to plan your next practice.</p>
                      </div>
                   </div>
                   </div>
@@ -1028,55 +1059,55 @@
             </div>
          </section>
 
-         <!-- WHY IT HELPS -->
+         <!-- INTERVIEW CATEGORIES -->
          <section id="benefits" class="sp position-relative">
             <div class="aur aur-b" style="top:50%;right:-200px;transform:translateY(-50%)"></div>
             <div class="container position-relative" style="z-index:1">
                <div class="row justify-content-center">
                   <div class="col-lg-10 rv">
                      <div class="landing-section-heading mb-4">
-                        <span class="slbl">Why It Helps</span>
-                        <h2 class="stitle">Practice with a clearer path to <span class="gt">interview readiness</span></h2>
+                        <span class="slbl">Interview Categories</span>
+                        <h2 class="stitle">One scenario with <span class="gt">flexible practice paths</span></h2>
                      </div>
-                     <div class="swiper landingCategorySwiper landing-auto-carousel category-auto-carousel" aria-label="Why SpeakReady AI helps carousel">
+                     <div class="swiper landingCategorySwiper landing-auto-carousel category-auto-carousel" aria-label="Interview categories carousel">
                         <div class="row g-3 swiper-wrapper">
                            <div class="col-sm-6 swiper-slide">
                               <div class="gc p-4 h-100 text-center" style="border-top: 4px solid var(--pur);">
-                                 <div style="font-size:2rem; margin-bottom:15px; color:var(--pur)"><i class="fa-solid fa-shield-heart"></i></div>
-                                 <h4 class="fs-5 fw-bold">Build Confidence</h4>
-                                 <p style="font-size:.85rem;color:var(--tx2)">Repeat realistic interview practice until the format feels familiar and less intimidating.</p>
+                                 <div style="font-size:2rem; margin-bottom:15px; color:var(--pur)"><i class="fa-solid fa-briefcase"></i></div>
+                                 <h4 class="fs-5 fw-bold">Job Interviews</h4>
+                                 <p style="font-size:.85rem;color:var(--tx2)">Practice HR screening, behavioral, situational, role-fit, and salary expectation questions.</p>
                               </div>
                            </div>
                            <div class="col-sm-6 swiper-slide">
                               <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #f59e0b;">
-                                 <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-list-check"></i></div>
-                                 <h4 class="fs-5 fw-bold">Structure Answers</h4>
-                                 <p style="font-size:.85rem;color:var(--tx2)">Turn scattered thoughts into clearer STAR-style responses with specific actions and results.</p>
+                                 <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-bullseye"></i></div>
+                                 <h4 class="fs-5 fw-bold">Target Roles</h4>
+                                 <p style="font-size:.85rem;color:var(--tx2)">Choose your target position so prompts match the role, difficulty, and hiring context.</p>
                               </div>
                            </div>
                            <div class="col-sm-6 swiper-slide">
                               <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #10b981;">
-                                 <div style="font-size:2rem; margin-bottom:15px; color:#10b981"><i class="fa-solid fa-bullseye"></i></div>
-                                 <h4 class="fs-5 fw-bold">Match The Role</h4>
-                                 <p style="font-size:.85rem;color:var(--tx2)">Connect your skills, experience, and motivation to the position you are actually preparing for.</p>
+                                 <div style="font-size:2rem; margin-bottom:15px; color:#10b981"><i class="fa-solid fa-comments"></i></div>
+                                 <h4 class="fs-5 fw-bold">Coaching On</h4>
+                                 <p style="font-size:.85rem;color:var(--tx2)">Get live guidance during practice while coaching-only delivery notes stay out of readiness scores.</p>
                               </div>
                            </div>
                            <div class="col-sm-6 swiper-slide">
                               <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
-                                 <div style="font-size:2rem; margin-bottom:15px; color:#3b82f6"><i class="fa-solid fa-chart-line"></i></div>
-                                 <h4 class="fs-5 fw-bold">Track Readiness</h4>
-                                 <p style="font-size:.85rem;color:var(--tx2)">Use reports, trends, and feedback history to see what changed and what to practice next.</p>
+                                 <div style="font-size:2rem; margin-bottom:15px; color:#3b82f6"><i class="fa-solid fa-user-tie"></i></div>
+                                 <h4 class="fs-5 fw-bold">Real Interview Mode</h4>
+                                 <p style="font-size:.85rem;color:var(--tx2)">Run a quieter practice session for a closer interview feel and scoring after completion.</p>
                               </div>
                            </div>
                         </div>
                         <div class="landing-carousel-control-bar">
                            <div class="swiper-pagination landing-carousel-pagination landing-category-pagination"></div>
-                           <button type="button" class="landing-carousel-autoplay-toggle landing-category-autoplay-toggle" aria-label="Pause why it helps carousel" data-pause-label="Pause why it helps carousel" data-play-label="Play why it helps carousel">
+                           <button type="button" class="landing-carousel-autoplay-toggle landing-category-autoplay-toggle" aria-label="Pause interview categories carousel" data-pause-label="Pause interview categories carousel" data-play-label="Play interview categories carousel">
                               <i class="fa-solid fa-pause" aria-hidden="true"></i>
                            </button>
                         </div>
-                        <button type="button" class="swiper-button-next landing-carousel-next landing-category-next" aria-label="Next benefit"></button>
-                        <button type="button" class="swiper-button-prev landing-carousel-prev landing-category-prev" aria-label="Previous benefit"></button>
+                        <button type="button" class="swiper-button-next landing-carousel-next landing-category-next" aria-label="Next interview category"></button>
+                        <button type="button" class="swiper-button-prev landing-carousel-prev landing-category-prev" aria-label="Previous interview category"></button>
                      </div>
                   </div>
                </div>
@@ -1166,21 +1197,6 @@
                            </div>
                         </div>
                      </div>
-                  </div>
-               </div>
-            </div>
-         </section>
-
-         <!-- FINAL CTA -->
-         <section id="start-practice" class="sp landing-final-cta">
-            <div class="container">
-               <div class="landing-final-cta-panel rv">
-                  <span class="slbl">Ready To Practice?</span>
-                  <h2 class="stitle">Start your next interview answer today.</h2>
-                  <p>Open a free practice session, choose your target role, and get feedback you can use for the next round.</p>
-                  <div class="landing-final-cta-actions">
-                     <button class="bgrd btn" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')"><i class="fa-solid fa-arrow-right me-2" aria-hidden="true"></i>Start Free Practice</button>
-                     <a class="boc btn" href="#demo-preview"><i class="fa-solid fa-mobile-screen-button me-2" aria-hidden="true" style="color:var(--pur)"></i>View Demo</a>
                   </div>
                </div>
             </div>
@@ -1291,7 +1307,7 @@
                            <li><a href="#hero">Home</a></li>
                            <li><a href="#features">Features</a></li>
                            <li><a href="#about">About</a></li>
-                           <li><a href="#benefits">Why It Helps</a></li>
+                           <li><a href="#benefits">Interview Categories</a></li>
                            <li><a href="#developers">Developers</a></li>
                         </ul>
                      </div>
@@ -1299,7 +1315,7 @@
                         <h5 class="footer-heading">Platform</h5>
                         <ul class="list-unstyled footer-links">
                            <li><a href="#lofc" role="button" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">Log In</a></li>
-                           <li><a href="#lofc" role="button" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Start Free Practice</a></li>
+                           <li><a href="#lofc" role="button" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Register</a></li>
                            <li><a href="#faq">FAQ</a></li>
                            <li><a href="#contact">Contact</a></li>
                            <li><a href="{{ route('legal.privacy') }}">Privacy Policy</a></li>

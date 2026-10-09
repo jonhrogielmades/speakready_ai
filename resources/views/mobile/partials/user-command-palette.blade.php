@@ -38,20 +38,6 @@
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
-                <a id="gqn-destination-demo" class="ucp-result" href="#demo-preview" data-ucp-item>
-                    <span class="ucp-result-icon ucp-blue"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Demo</strong><small>See the mobile interview practice preview</small></span>
-                    <span class="ucp-result-group">Explore</span>
-                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
-                </a>
-
-                <a id="gqn-destination-how" class="ucp-result" href="#how" data-ucp-item>
-                    <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-route" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>How It Works</strong><small>Choose a role, practice, then review feedback</small></span>
-                    <span class="ucp-result-group">Explore</span>
-                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
-                </a>
-
                 <a id="gqn-destination-features" class="ucp-result" href="#features" data-ucp-item>
                     <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Features</strong><small>Explore AI-powered interview tools</small></span>
@@ -61,7 +47,7 @@
 
                 <a id="gqn-destination-benefits" class="ucp-result" href="#benefits" data-ucp-item>
                     <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-award" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Why It Helps</strong><small>See the interview skills SpeakReady improves</small></span>
+                    <span class="ucp-result-copy"><strong>Interview Categories</strong><small>Explore practice paths by interview type</small></span>
                     <span class="ucp-result-group">Explore</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
@@ -154,7 +140,7 @@
                         Login
                     </button>
                     <button type="button" class="ucp-guest-action ucp-guest-register" data-ucp-action data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
-                        Start Free Practice
+                        Start Practicing
                         <i class="fa-solid fa-arrow-right fa-sm" aria-hidden="true"></i>
                     </button>
                 </div>
