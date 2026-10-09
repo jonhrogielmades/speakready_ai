@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/coach.css?v=2') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=20') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=22') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -144,7 +144,7 @@
                         <i class="fa-solid fa-robot"></i>
                     </div>
                     <div class="chat-bubble bubble-ai">
-                        Hello {{ Auth::user()->name }}! I can use your competency map and verified story index to explain scores, rehearse truthful answers, and prepare your next job-specific practice step. I will never invent experience for you.
+                        Hello {{ Auth::user()->name }}! I can use your <span class="coach-important">competency map</span> and <span class="coach-important">verified story index</span> to explain scores, rehearse <span class="coach-important">truthful answers</span>, and prepare your next <span class="coach-important">job-specific practice step</span>. I will <span class="coach-important">never invent experience</span> for you.
                     </div>
                 </div>
                 
@@ -969,10 +969,45 @@
         }
 
         function formatInlineMarkdown(text) {
-            return escapeHtml(text)
+            return highlightCoachImportantWords(escapeHtml(text))
                 .replace(/`([^`]+)`/g, '<code>$1</code>')
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        }
+
+        function highlightCoachImportantWords(html) {
+            const importantTerms = [
+                'job-specific practice step',
+                'verified story index',
+                'competency map',
+                'truthful answers',
+                'never invent experience',
+                'interview question',
+                'saved answer',
+                'target role',
+                'job description',
+                'practice answer',
+                'priority action',
+                'next step',
+                'result',
+                'evidence',
+                'specific example',
+                'STAR',
+                'resume',
+                'CV',
+                'skills',
+                'certificate',
+                'truthful',
+                'verify',
+                'practice',
+                'interview'
+            ];
+
+            const pattern = new RegExp(`\\b(${importantTerms
+                .map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+                .join('|')})\\b`, 'gi');
+
+            return String(html || '').replace(pattern, '<span class="coach-important">$1</span>');
         }
 
         function flushList(listItems, ordered, parts) {
@@ -1036,10 +1071,11 @@
             return `<div class="ai-response">${parts.join('')}</div>`;
         }
         
-        function newConversation() {
+        function newConversation(options = {}) {
             if (coachVoiceActive) {
                 stopCoachVoicePrompt();
             }
+            const shouldFocusInput = options.focusInput !== false;
 
             // Reset state
             coachChatHistory = [];
@@ -1059,7 +1095,13 @@
             const ta = document.getElementById('chatMsg');
             ta.value = '';
             resizeCoachTextarea(ta);
-            ta.focus();
+            if (shouldFocusInput) {
+                ta.focus();
+            } else {
+                ta.blur();
+                document.body?.classList.remove('coach-input-focused', 'coach-keyboard-open');
+                queueCoachKeyboardLayout(80);
+            }
         }
 
         async function loadConversation(id) {
@@ -1205,7 +1247,7 @@
                         olderHeading.insertAdjacentElement('afterend', olderEmpty);
                     }
                 }
-                newConversation();
+                newConversation({ focusInput: false });
             } catch (error) {
                 console.error(error);
                 showCoachFeedback('Could not clear conversation history. Please try again.', 'error');

@@ -80,6 +80,69 @@ class AiCoachDeveloperCreditsTest extends TestCase
         ]);
     }
 
+    public function test_ai_coach_response_bubbles_use_borders_and_keyword_highlights_on_desktop_and_mobile(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+        $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', $desktopUserAgent)
+            ->get(route('user.coach'))
+            ->assertOk()
+            ->assertSee('css/desktop/user/coach-2.css?v=26', false)
+            ->assertSee('class="chat-bubble bubble-ai"', false)
+            ->assertSee('<span class="coach-important">competency map</span>', false)
+            ->assertSee('function highlightCoachImportantWords(html)', false);
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', $mobileUserAgent)
+            ->get(route('user.coach'))
+            ->assertOk()
+            ->assertSee('css/mobile/user/coach-2.css?v=22', false)
+            ->assertSee('class="chat-bubble bubble-ai"', false)
+            ->assertSee('<span class="coach-important">competency map</span>', false)
+            ->assertSee('function highlightCoachImportantWords(html)', false);
+
+        $desktopCss = file_get_contents(public_path('css/desktop/user/coach-2.css'));
+        $mobileCss = file_get_contents(public_path('css/mobile/user/coach-2.css'));
+
+        $this->assertStringContainsString('#ai-coach-page .chat-bubble.bubble-ai', $desktopCss);
+        $this->assertStringContainsString('#ai-coach-page .chat-bubble.bubble-ai .coach-important', $desktopCss);
+        $this->assertStringContainsString('color-mix(in srgb, var(--bd, #dbe4f0) 58%, var(--pur, #2563eb) 42%)', $desktopCss);
+        $this->assertStringContainsString('#ai-coach-page .chat-bubble.bubble-ai', $mobileCss);
+        $this->assertStringContainsString('#ai-coach-page .chat-bubble.bubble-ai .coach-important', $mobileCss);
+        $this->assertStringContainsString('color-mix(in srgb, var(--bd, #dbe4f0) 58%, var(--pur, #2563eb) 42%)', $mobileCss);
+    }
+
+    public function test_mobile_ai_coach_clear_history_restores_nav_and_keeps_actions_spaced(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $response = $this->actingAs($user)
+            ->withHeader('User-Agent', $mobileUserAgent)
+            ->get(route('user.coach'));
+
+        $response
+            ->assertOk()
+            ->assertSee('css/mobile/user/coach-2.css?v=22', false)
+            ->assertSee('function newConversation(options = {})', false)
+            ->assertSee('newConversation({ focusInput: false });', false)
+            ->assertSee("document.body?.classList.remove('coach-input-focused', 'coach-keyboard-open');", false);
+
+        $mobileCss = file_get_contents(public_path('css/mobile/user/coach-2.css'));
+
+        $this->assertStringContainsString('body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #mob-bottom-nav', $mobileCss);
+        $this->assertStringContainsString('margin-right: clamp(8px, 2.8vw, 14px) !important;', $mobileCss);
+    }
+
     public function test_readiness_coach_repairs_chatbot_schema_and_falls_back_when_ai_is_unavailable(): void
     {
         Http::fake(['*' => Http::response([], 500)]);
