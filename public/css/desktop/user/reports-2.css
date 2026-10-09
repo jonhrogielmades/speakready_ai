@@ -3876,3 +3876,54 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport #card-recent-ses
     padding: 7px 10px !important;
     font-size: 0.78rem !important;
 }
+
+/* Final theme safety pass for the Report Summary panel. */
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96)),
+        linear-gradient(135deg, rgba(59, 130, 246, 0.10), rgba(20, 184, 166, 0.08)) !important;
+    border: 1px solid rgba(59, 130, 246, 0.22) !important;
+    color: #0f172a !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness :is(h5, .report-summary-value, .report-previous-score) {
+    color: #0f172a !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness :is(h6, .report-section-kicker, .report-summary-label, .report-readiness-message) {
+    color: #475569 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-summary-item {
+    background: rgba(255, 255, 255, 0.78) !important;
+    border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness,
+html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness,
+body.dm.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness {
+    background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96)),
+        linear-gradient(135deg, rgba(96, 165, 250, 0.18), rgba(45, 212, 191, 0.12)) !important;
+    border-color: rgba(147, 197, 253, 0.34) !important;
+    color: #f8fafc !important;
+}
+
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness :is(h5, .report-summary-value, .report-previous-score),
+html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness :is(h5, .report-summary-value, .report-previous-score),
+body.dm.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness :is(h5, .report-summary-value, .report-previous-score) {
+    color: #f8fafc !important;
+}
+
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness :is(h6, .report-section-kicker, .report-summary-label, .report-readiness-message),
+html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness :is(h6, .report-section-kicker, .report-summary-label, .report-readiness-message),
+body.dm.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness :is(h6, .report-section-kicker, .report-summary-label, .report-readiness-message) {
+    color: #cbd5e1 !important;
+}
+
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-summary-item,
+html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-summary-item,
+body.dm.user-desktop-shell:not(.admin-shell) #portfolioReport #report-readiness .report-summary-item {
+    background: rgba(30, 41, 59, 0.78) !important;
+    border-color: rgba(148, 163, 184, 0.24) !important;
+}
