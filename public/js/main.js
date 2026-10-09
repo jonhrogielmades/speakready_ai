@@ -488,20 +488,22 @@ const rvObs = new IntersectionObserver(
 document.querySelectorAll('.rv').forEach(el => rvObs.observe(el));
 
 /*  VIDEO POPUP  */
-$('.vidpop').magnificPopup({
-    type: 'iframe',
-    iframe: {
-        patterns: {
-            youtube: {
-                index: 'youtube.com/',
-                id: 'v=',
-                src: 'https://www.youtube.com/embed/%id%?autoplay=1&rel=0'
+if (window.jQuery?.fn?.magnificPopup && document.querySelector('.vidpop')) {
+    window.jQuery('.vidpop').magnificPopup({
+        type: 'iframe',
+        iframe: {
+            patterns: {
+                youtube: {
+                    index: 'youtube.com/',
+                    id: 'v=',
+                    src: 'https://www.youtube.com/embed/%id%?autoplay=1&rel=0'
+                }
             }
-        }
-    },
-    mainClass: 'mfp-fade',
-    removalDelay: 160
-});
+        },
+        mainClass: 'mfp-fade',
+        removalDelay: 160
+    });
+}
 
 /*  PRICING TOGGLE  */
 const ptog = document.getElementById('ptog');

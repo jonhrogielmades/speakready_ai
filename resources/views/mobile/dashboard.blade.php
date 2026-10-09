@@ -152,7 +152,7 @@
                         aria-label="Open AI Coach"
                         title="AI Coach"
                     >
-                        <img src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" draggable="false">
+                        <img src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async" draggable="false">
                     </a>
                 </div>
             </section>
@@ -437,6 +437,7 @@
 
 
 @push('scripts')
+<script src="{{ asset('js/chart.umd.min.js') }}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     if (typeof Chart === 'undefined') return;

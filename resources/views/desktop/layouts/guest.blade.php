@@ -10,19 +10,17 @@
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link rel="preconnect" href="https://accounts.google.com">
       <link rel="dns-prefetch" href="//accounts.google.com">
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
-      <!-- AOS Animate on Scroll -->
-      <link href="{{ asset('css/aos.css') }}" rel="stylesheet"/>
       <!-- Swiper CSS -->
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <!-- all min css -->
-      <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
-      <!-- magnific CSS -->
-      <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
+      <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+      <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=9') }}" />
       <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=11') }}" />
@@ -356,7 +354,7 @@
                                         <span class="ui-mobile-wire-line" style="width:58px"></span>
                                         <span class="ui-mobile-wire-line" style="width:50px"></span>
                                      </div>
-                                    <img class="ui-mobile-wire-robot" data-src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true">
+                                    <img class="ui-mobile-wire-robot" data-src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true" width="1536" height="1024" decoding="async">
                                   </section>
 
                                   <div class="ui-mobile-wire-progress" aria-hidden="true"><span></span></div>
@@ -557,7 +555,7 @@
                                                    <span class="ui-desktop-wire-line" style="width:86%"></span>
                                                    <span class="ui-desktop-wire-line" style="width:72%"></span>
                                                 </div>
-                                                <img class="ui-desktop-wire-robot" data-src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="">
+                                                <img class="ui-desktop-wire-robot" data-src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" width="1536" height="1024" decoding="async">
                                              </div>
                                           </section>
 
@@ -1023,7 +1021,7 @@
                <div class="developers-grid">
                   <div class="developer-card-wrap rv">
                      <div class="gc p-4 h-100 developer-card">
-                        <img src="{{ asset('img/dev1.png') }}" alt="Jonh Rogiel M. Tumanda" class="developer-photo img-fluid rounded-circle mb-3" style="border: 4px solid var(--pur);">
+                        <img src="{{ asset('img/dev1.png') }}" alt="Jonh Rogiel M. Tumanda" class="developer-photo img-fluid rounded-circle mb-3" width="1024" height="682" loading="lazy" decoding="async" style="border: 4px solid var(--pur);">
                         <h6 class="fw-bold mb-1">Jonh Rogiel M. Tumanda</h6>
                         <p class="developer-role" style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">Lead Programmer</p>
                         <p class="developer-bio" style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Core Code, Databases, and APIs.</p>
@@ -1031,7 +1029,7 @@
                   </div>
                   <div class="developer-card-wrap rv" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 developer-card">
-                        <img src="{{ asset('img/dev2.png') }}" alt="Karyl G. Gesto" class="developer-photo img-fluid rounded-circle mb-3" style="border: 4px solid #34d399;">
+                        <img src="{{ asset('img/dev2.png') }}" alt="Karyl G. Gesto" class="developer-photo img-fluid rounded-circle mb-3" width="1024" height="682" loading="lazy" decoding="async" style="border: 4px solid #34d399;">
                         <h6 class="fw-bold mb-1">Karyl G. Gesto</h6>
                         <p class="developer-role" style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">Manuscript Editor</p>
                         <p class="developer-bio" style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Technical Writing, Documentation, and Compliance.</p>
@@ -1039,7 +1037,7 @@
                   </div>
                   <div class="developer-card-wrap rv" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 developer-card">
-                        <img src="{{ asset('img/dev3.png') }}" alt="Eva Mae C. Cabilic" class="developer-photo img-fluid rounded-circle mb-3" style="border: 4px solid #f59e0b;">
+                        <img src="{{ asset('img/dev3.png') }}" alt="Eva Mae C. Cabilic" class="developer-photo img-fluid rounded-circle mb-3" width="1024" height="682" loading="lazy" decoding="async" style="border: 4px solid #f59e0b;">
                         <h6 class="fw-bold mb-1">Eva Mae C. Cabilic</h6>
                         <p class="developer-role" style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">QA Tester</p>
                         <p class="developer-bio" style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Bug Hunting, Test Cases, and UX Stability.</p>
@@ -1285,21 +1283,11 @@
 
 
 <!-- ======================== SCRIPTS ======================== -->
-      <!-- jQuery -->
-      <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       @include('desktop.partials.flash-modal', ['includeValidationErrors' => false])
-      <!-- AOS -->
-      <script src="{{ asset('js/aos.js') }}"></script>
       <!-- Swiper -->
       <script src="{{ asset('js/swiper-bundle.min.js') }}"></script>
-      <script src="{{ asset('js/chart.umd.min.js') }}"></script>
-      <!-- Magnific -->
-      <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
-      <!-- Counter Up and Waypoints -->
-      <script src="{{ asset('js/jquery.waypoints.min.js') }}"></script>
-      <script src="{{ asset('js/jquery.counterup.min.js') }}"></script>
 
       <script src="{{ asset('js/main.js?v=9') }}"></script>
       @if($errors->any())
@@ -1317,12 +1305,48 @@
 
       <script>
          // Initialize CounterUp and desktop preview carousel when document is ready
-         $(document).ready(function() {
-             if($.fn.counterUp) {
-                 $('.counter').counterUp({
-                     delay: 1,
-                     time: 320
+         document.addEventListener('DOMContentLoaded', function() {
+             const animateCounter = function(counter) {
+                 if (counter.dataset.counterReady === "true") return;
+                 counter.dataset.counterReady = "true";
+                 const originalText = counter.textContent.trim();
+                 const numericText = originalText.replace(/,/g, "");
+                 const target = Number.parseFloat(numericText);
+                 if (!Number.isFinite(target)) return;
+                 const decimals = (numericText.split(".")[1] || "").length;
+                 const useGrouping = originalText.includes(",");
+                 const formatter = new Intl.NumberFormat(undefined, {
+                     minimumFractionDigits: decimals,
+                     maximumFractionDigits: decimals
                  });
+                 const startTime = performance.now();
+                 const duration = 320;
+                 const step = function(now) {
+                     const progress = Math.min(1, (now - startTime) / duration);
+                     const eased = 1 - Math.pow(1 - progress, 3);
+                     const value = target * eased;
+                     counter.textContent = useGrouping ? formatter.format(value) : value.toFixed(decimals);
+                     if (progress < 1) {
+                         requestAnimationFrame(step);
+                     } else {
+                         counter.textContent = originalText;
+                     }
+                 };
+                 requestAnimationFrame(step);
+             };
+
+             const counters = Array.from(document.querySelectorAll(".counter"));
+             if ("IntersectionObserver" in window) {
+                 const counterObserver = new IntersectionObserver(function(entries, observer) {
+                     entries.forEach(function(entry) {
+                         if (!entry.isIntersecting) return;
+                         animateCounter(entry.target);
+                         observer.unobserve(entry.target);
+                     });
+                 }, { threshold: 0.45 });
+                 counters.forEach(function(counter) { counterObserver.observe(counter); });
+             } else {
+                 counters.forEach(animateCounter);
              }
 
              if(typeof Swiper !== 'undefined') {

@@ -40,12 +40,11 @@
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
-      <link href="{{ asset('css/aos.css') }}" rel="stylesheet"/>
-      <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
-      <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
+      <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+      <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=33') }}" />
       @include('mobile.partials.onboarding-styles')
       <style>
@@ -4747,12 +4746,8 @@
       </div>
 
       <!-- ======================== SCRIPTS ======================== -->
-      <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       @include('mobile.partials.flash-modal')
-      <script src="{{ asset('js/aos.js') }}"></script>
-      <script src="{{ asset('js/chart.umd.min.js') }}"></script>
-      <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')

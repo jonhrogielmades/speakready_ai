@@ -43,17 +43,13 @@
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
-      <!-- AOS Animate on Scroll -->
-      <link href="{{ asset('css/aos.css') }}" rel="stylesheet"/>
-      <!-- Swiper -->
-      <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <!-- all min css -->
-      <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
-      <!-- magnific CSS -->
-      <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
+      <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+      <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Shared app CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=40') }}" />
       <style>
@@ -342,17 +338,9 @@
          </div>
       </div>
       <!-- ======================== SCRIPTS ======================== -->
-      <!-- jQuery -->
-      <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       @include('desktop.partials.flash-modal')
-      <!-- AOS -->
-      <script src="{{ asset('js/aos.js') }}"></script>
-      <!-- Swiper -->
-      <script src="{{ asset('js/chart.umd.min.js') }}"></script>
-      <!-- CounterUp -->
-      <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=8') }}"></script>
       <script src="{{ asset('js/user-ui.js') }}?v=24" defer></script>
