@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=54') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=55') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -19,6 +19,24 @@
     $sessionsMeter = max(0, min(100, (int) round((($totalSessions ?? 0) / 10) * 100)));
     $ratingMeter = max(0, min(100, (int) round(($rating / 5) * 100)));
     $xpValue = max(0, (int) ($experiencePoints ?? 0));
+    $formatCompactStat = static function ($value): string {
+        $value = max(0, (float) $value);
+
+        if ($value < 1000) {
+            return number_format((int) round($value));
+        }
+
+        if ($value < 10000) {
+            return rtrim(rtrim(number_format($value / 1000, 1), '0'), '.').'K';
+        }
+
+        if ($value < 999500) {
+            return number_format((int) round($value / 1000)).'K';
+        }
+
+        return rtrim(rtrim(number_format($value / 1000000, 1), '0'), '.').'M';
+    };
+    $compactXpValue = $formatCompactStat($xpValue);
     $playerLevel = max(1, (int) ($profile->player_level ?? (floor($xpValue / 1000) + 1)));
     $xpMeter = max(0, min(100, (int) round((($xpValue % 1000) / 1000) * 100)));
     $streakMeter = max(0, min(100, (int) round((($currentStreak ?? 0) / 7) * 100)));
@@ -197,7 +215,7 @@
             </section>
 
             <div class="stat-grid sr-stats-desktop" role="group" aria-label="Quick statistics">
-                <div class="sr-stat-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;">
+                <a href="{{ route('user.reports') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;" aria-label="Open completed sessions reports">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-microphone"></i></div>
                         <span class="sr-chip">Practice</span>
@@ -211,8 +229,8 @@
                         <span>10-session milestone</span>
                         <strong>{{ $sessionsMeter }}%</strong>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;">
+                </a>
+                <a href="{{ route('user.feedback') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;" aria-label="Open feedback and average rating details">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-regular fa-star"></i></div>
                         <span class="sr-chip">Quality</span>
@@ -226,14 +244,14 @@
                         <span>Quality meter</span>
                         <strong>{{ $ratingMeter }}%</strong>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;">
+                </a>
+                <a href="{{ route('user.skills') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;" aria-label="Open skills and experience points">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-bolt"></i></div>
                         <span class="sr-chip">Growth</span>
                     </div>
                     <div class="sr-stat-body">
-                        <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
+                        <div class="sr-stat-value" title="{{ number_format($xpValue) }} XP">{{ $compactXpValue }}</div>
                         <div class="sr-stat-label">Experience points</div>
                         <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
                     </div>
@@ -241,8 +259,8 @@
                         <span>Next level</span>
                         <strong>{{ $xpMeter }}%</strong>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;">
+                </a>
+                <a href="{{ route('user.practice.calendar') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;" aria-label="Open activity calendar and streak details">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-fire"></i></div>
                         <span class="sr-chip">Streak</span>
@@ -256,12 +274,12 @@
                         <span>7-day streak</span>
                         <strong>{{ $streakMeter }}%</strong>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
         <div class="sr-mobile-readiness-row">
-            <section class="sr-card sr-score-panel {{ $scoreVal >= 80 ? 'score-high-panel' : ($scoreVal >= 60 ? 'score-med-panel' : 'score-low-panel') }}" aria-label="Readiness score">
+            <a href="{{ route('user.progress') }}" class="sr-card sr-score-panel sr-score-link-panel {{ $scoreVal >= 80 ? 'score-high-panel' : ($scoreVal >= 60 ? 'score-med-panel' : 'score-low-panel') }}" aria-label="Open readiness and goal progress">
                 <div class="sr-score-top sr-score-top-desktop">
                     <span class="sr-chip sr-boost-chip"><i class="fa-solid fa-bolt"></i> Boost</span>
                     <span class="sr-chip ph-focus-chip"><i class="fa-solid fa-location-dot"></i> Interview Focus</span>
@@ -297,10 +315,10 @@
                         <strong>+{{ $challengeXp }} XP</strong>
                     </div>
                 </div>
-                </section>
+                </a>
 
             <div class="sr-mobile-stat-grid" role="group" aria-label="Quick statistics">
-                <div class="sr-stat-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;">
+                <a href="{{ route('user.reports') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;" aria-label="Open completed sessions reports">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-microphone"></i></div>
                         <span class="sr-chip">Practice</span>
@@ -314,8 +332,8 @@
                         <span>10-session milestone</span>
                         <strong>{{ $sessionsMeter }}%</strong>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;">
+                </a>
+                <a href="{{ route('user.feedback') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;" aria-label="Open feedback and average rating details">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-regular fa-star"></i></div>
                         <span class="sr-chip">Quality</span>
@@ -329,14 +347,14 @@
                         <span>Quality meter</span>
                         <strong>{{ $ratingMeter }}%</strong>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;">
+                </a>
+                <a href="{{ route('user.skills') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;" aria-label="Open skills and experience points">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-bolt"></i></div>
                         <span class="sr-chip">Growth</span>
                     </div>
                     <div class="sr-stat-body">
-                        <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
+                        <div class="sr-stat-value" title="{{ number_format($xpValue) }} XP">{{ $compactXpValue }}</div>
                         <div class="sr-stat-label">Experience points</div>
                         <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
                     </div>
@@ -344,8 +362,8 @@
                         <span>Next level</span>
                         <strong>{{ $xpMeter }}%</strong>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;">
+                </a>
+                <a href="{{ route('user.practice.calendar') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;" aria-label="Open activity calendar and streak details">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-fire"></i></div>
                         <span class="sr-chip">Streak</span>
@@ -359,7 +377,7 @@
                         <span>7-day streak</span>
                         <strong>{{ $streakMeter }}%</strong>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
     </div>
@@ -449,7 +467,7 @@
                     <span class="sr-reward-pill xp"><i class="fa-regular fa-star"></i> +{{ $challengeXp }} XP</span>
                     <span class="sr-reward-pill streak"><i class="fa-solid fa-fire"></i> Streak eligible</span>
                 </div>
-                <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100 sr-challenge-cta"><i class="fa-solid fa-play"></i> Start Interview Challenge</a>
+                <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100 sr-challenge-cta"><i class="fa-solid fa-play"></i> START INTERVIEW</a>
             </section>
 
             <section id="card-current-goal" class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#ef4444">
