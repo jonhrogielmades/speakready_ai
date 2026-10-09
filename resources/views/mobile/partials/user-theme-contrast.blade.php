@@ -383,6 +383,24 @@
       -webkit-text-fill-color: var(--sr-unified-hero-muted, rgba(248, 251, 255, 0.9)) !important;
    }
 
+   body.user-mobile-shell #mob-content #userAppContent #module-detail-page .mod-hero .module-detail-title {
+      color: var(--module-detail-title, var(--sr-user-readable-title, #0f172a)) !important;
+      -webkit-text-fill-color: var(--module-detail-title, var(--sr-user-readable-title, #0f172a)) !important;
+      text-shadow: none !important;
+   }
+
+   body.user-mobile-shell #mob-content #userAppContent #module-detail-page .mod-hero .module-detail-description,
+   body.user-mobile-shell #mob-content #userAppContent #module-detail-page .mod-hero .module-progress-summary {
+      color: var(--module-detail-copy, var(--sr-user-readable-copy, #334155)) !important;
+      -webkit-text-fill-color: var(--module-detail-copy, var(--sr-user-readable-copy, #334155)) !important;
+      text-shadow: none !important;
+   }
+
+   body.user-mobile-shell #mob-content #userAppContent #module-detail-page .mod-hero .module-progress-summary span:last-child {
+      color: var(--module-detail-title, var(--sr-user-readable-title, #0f172a)) !important;
+      -webkit-text-fill-color: var(--module-detail-title, var(--sr-user-readable-title, #0f172a)) !important;
+   }
+
    body.user-mobile-shell #mob-content #userAppContent .sr-hero-card .sr-subtitle .sr-subtitle-accent {
       color: #fde047 !important;
       -webkit-text-fill-color: #fde047 !important;
