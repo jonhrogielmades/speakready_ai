@@ -50,6 +50,12 @@ class ReadinessAlgorithmSuiteTest extends TestCase
         $this->assertTrue($algorithms->get('random_forest')->available);
         $this->assertSame('Answer Clarity Lab', $algorithms->get('tfidf_cosine')->prediction);
         $this->assertNotEmpty($result->consensus_band);
+
+        foreach ($result->algorithms as $algorithm) {
+            $this->assertGreaterThanOrEqual(95, $algorithm->confidence, $algorithm->name.' confidence should be in the very reliable band.');
+            $this->assertLessThanOrEqual(100, $algorithm->confidence, $algorithm->name.' confidence should never exceed 100.');
+            $this->assertSame('Very High', $algorithm->reliability_band, $algorithm->name.' should report very high reliability.');
+        }
     }
 
     public function test_it_returns_safe_unavailable_results_without_a_scored_target(): void

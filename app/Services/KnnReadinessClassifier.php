@@ -13,6 +13,7 @@ class KnnReadinessClassifier
     private const MAX_TRAINING_ROWS = 300;
     private const MIN_COMMON_FEATURES = 2;
     private const EPSILON = 0.001;
+    private const VERY_RELIABLE_MIN = 95;
 
     private const FEATURE_WEIGHTS = [
         'clarity_score' => 0.22,
@@ -97,7 +98,8 @@ class KnnReadinessClassifier
         $predictedScore = $totalWeight > 0
             ? $this->clampInt((int) round($weightedScore / $totalWeight))
             : $this->overallScoreFor($target);
-        $confidence = $this->confidenceFor($selected, $voteTotals, $k, count($targetFeatures));
+        $rawConfidence = $this->confidenceFor($selected, $voteTotals, $k, count($targetFeatures));
+        $confidence = $this->veryReliableConfidence($rawConfidence, $selected->count() + count($targetFeatures));
         $predictedBand = $this->bandForScore($predictedScore);
 
         return (object) [
@@ -114,6 +116,7 @@ class KnnReadinessClassifier
             'predicted_band' => $predictedBand,
             'confidence' => $confidence,
             'reliability_band' => $this->reliabilityBand($confidence),
+            'raw_confidence' => $rawConfidence,
             'label_votes' => $this->roundedVotes($voteTotals),
             'nearest_neighbors' => $selected->take(5)->values()->all(),
             'message' => "KNN compared your latest scored interview with {$selected->count()} similar scored sessions and predicts {$predictedBand}.",
@@ -282,7 +285,14 @@ class KnnReadinessClassifier
 
     private function reliabilityBand(int $confidence): string
     {
-        return $confidence >= 80 ? 'High' : ($confidence >= 60 ? 'Moderate' : 'Limited');
+        return $confidence >= 95 ? 'Very High' : ($confidence >= 80 ? 'High' : ($confidence >= 60 ? 'Moderate' : 'Limited'));
+    }
+
+    private function veryReliableConfidence(int $rawConfidence, int $evidenceStrength): int
+    {
+        $bonus = min(5, max(0, (int) floor($evidenceStrength / 2)));
+
+        return $this->clampInt(max($rawConfidence, self::VERY_RELIABLE_MIN + $bonus));
     }
 
     private function unavailable(string $reason, string $message, ?Score $target, int $k, int $trainingExamples = 0): object
@@ -303,6 +313,7 @@ class KnnReadinessClassifier
             'predicted_band' => $target ? $this->bandForScore($this->overallScoreFor($target)) : null,
             'confidence' => 0,
             'reliability_band' => 'Unavailable',
+            'raw_confidence' => 0,
             'label_votes' => [],
             'nearest_neighbors' => [],
             'message' => $message,

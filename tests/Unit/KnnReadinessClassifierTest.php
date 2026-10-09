@@ -69,6 +69,10 @@ class KnnReadinessClassifierTest extends TestCase
         $this->assertSame(3, $result->neighbors_used);
         $this->assertSame('Ready for Simulation', $result->predicted_band);
         $this->assertGreaterThanOrEqual(80, $result->predicted_score);
+        $this->assertGreaterThanOrEqual(95, $result->confidence);
+        $this->assertLessThanOrEqual(100, $result->confidence);
+        $this->assertSame('Very High', $result->reliability_band);
+        $this->assertGreaterThan(0, $result->raw_confidence);
         $this->assertArrayHasKey('Ready for Simulation', $result->label_votes);
     }
 
@@ -94,6 +98,8 @@ class KnnReadinessClassifierTest extends TestCase
 
         $this->assertTrue($result->available);
         $this->assertEqualsWithDelta(0.066332, $result->nearest_neighbors[0]['distance'], 0.000001);
+        $this->assertGreaterThanOrEqual(95, $result->confidence);
+        $this->assertLessThanOrEqual(100, $result->confidence);
         $this->assertSame(
             'sqrt(sum(weight_i * (target_i - neighbor_i)^2) / sum(weight_i))',
             $result->formula

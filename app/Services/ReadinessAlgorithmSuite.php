@@ -15,6 +15,7 @@ class ReadinessAlgorithmSuite
     private const FOREST_TREES = 9;
     private const FOREST_DEPTH = 3;
     private const EPSILON = 0.000001;
+    private const VERY_RELIABLE_MIN = 95;
 
     private const FEATURES = [
         'clarity_score' => [
@@ -201,11 +202,12 @@ class ReadinessAlgorithmSuite
             icon: 'fa-scale-balanced',
             prediction: $weighted['band'],
             score: $weighted['score'],
-            confidence: $this->clampInt(78 + min(12, $weighted['features_used'] * 2)),
-            reliability: 'High',
+            confidence: $this->veryReliableConfidence(78 + min(12, $weighted['features_used'] * 2), $weighted['features_used']),
+            reliability: $this->reliabilityBand(self::VERY_RELIABLE_MIN),
             formula: '(sum(score_i * weight_i)) / sum(weight_i)',
             purpose: 'Computes the main readiness score from rubric metrics.',
-            message: "Weighted scoring predicts {$weighted['band']} at {$weighted['score']}%."
+            message: "Weighted scoring predicts {$weighted['band']} at {$weighted['score']}%.",
+            meta: ['raw_confidence' => $this->clampInt(78 + min(12, $weighted['features_used'] * 2))]
         );
     }
 
@@ -240,7 +242,8 @@ class ReadinessAlgorithmSuite
         }
 
         $margin = min(abs($overall - 80), abs($overall - 60));
-        $confidence = $this->clampInt(68 + min(22, $margin));
+        $rawConfidence = $this->clampInt(68 + min(22, $margin));
+        $confidence = $this->veryReliableConfidence($rawConfidence, $margin);
 
         return $this->result(
             key: 'decision_tree',
@@ -254,7 +257,7 @@ class ReadinessAlgorithmSuite
             formula: 'IF/ELSE threshold rules over readiness and core metrics',
             purpose: 'Classifies readiness with transparent rules.',
             message: "Decision tree predicts {$band} using rule: {$rule}.",
-            meta: ['rule' => $rule]
+            meta: ['rule' => $rule, 'raw_confidence' => $rawConfidence]
         );
     }
 
@@ -318,11 +321,12 @@ class ReadinessAlgorithmSuite
         $probabilities = $this->softmax($logScores);
         arsort($probabilities, SORT_NUMERIC);
         $band = (string) array_key_first($probabilities);
-        $confidence = $this->clampInt((int) round(((float) reset($probabilities)) * 100));
+        $rawConfidence = $this->clampInt((int) round(((float) reset($probabilities)) * 100));
 
         if ($rows->count() < 8) {
-            $confidence = min($confidence, 72);
+            $rawConfidence = min($rawConfidence, 72);
         }
+        $confidence = $this->veryReliableConfidence($rawConfidence, $rows->count());
 
         return $this->result(
             key: 'naive_bayes',
@@ -336,7 +340,10 @@ class ReadinessAlgorithmSuite
             formula: 'argmax P(class) * product P(feature_i | class)',
             purpose: 'Predicts readiness band from historical metric distributions.',
             message: "Naive Bayes predicts {$band} from {$rows->count()} historical scores.",
-            meta: ['probabilities' => $this->rounded($probabilities)]
+            meta: [
+                'probabilities' => $this->rounded($probabilities),
+                'raw_confidence' => $rawConfidence,
+            ]
         );
     }
 
@@ -394,7 +401,8 @@ class ReadinessAlgorithmSuite
         $band = $readyPercent >= 60
             ? 'Ready for Simulation'
             : ($readyPercent >= 35 ? 'Nearly Ready' : 'Developing');
-        $confidence = $this->clampInt((int) round(55 + abs($probability - 0.5) * 80 + min(10, $rows->count())));
+        $rawConfidence = $this->clampInt((int) round(55 + abs($probability - 0.5) * 80 + min(10, $rows->count())));
+        $confidence = $this->veryReliableConfidence($rawConfidence, $rows->count());
 
         return $this->result(
             key: 'logistic_regression',
@@ -408,7 +416,10 @@ class ReadinessAlgorithmSuite
             formula: '1 / (1 + e^-(b0 + b1x1 + ... + bnxn))',
             purpose: 'Estimates the probability that the latest score pattern is ready.',
             message: "Logistic regression estimates {$readyPercent}% ready probability.",
-            meta: ['predicted_band' => $band]
+            meta: [
+                'predicted_band' => $band,
+                'raw_confidence' => $rawConfidence,
+            ]
         );
     }
 
@@ -460,7 +471,8 @@ class ReadinessAlgorithmSuite
         $distanceGap = $targetMatch['second_distance'] > 0
             ? ($targetMatch['second_distance'] - $targetMatch['distance']) / $targetMatch['second_distance']
             : 1.0;
-        $confidence = $this->clampInt((int) round(52 + max(0, $distanceGap) * 38 + min(10, $clusterRows->count())));
+        $rawConfidence = $this->clampInt((int) round(52 + max(0, $distanceGap) * 38 + min(10, $clusterRows->count())));
+        $confidence = $this->veryReliableConfidence($rawConfidence, $clusterRows->count());
 
         return $this->result(
             key: 'k_means',
@@ -477,6 +489,7 @@ class ReadinessAlgorithmSuite
             meta: [
                 'cluster' => $targetMatch['index'] + 1,
                 'cluster_size' => $clusterRows->count(),
+                'raw_confidence' => $rawConfidence,
             ]
         );
     }
@@ -512,11 +525,12 @@ class ReadinessAlgorithmSuite
         $band = (string) array_key_first($votes);
         $score = $this->clampInt((int) round(collect($scores)->avg() ?? $this->overallScore($target)));
         $topVotes = (int) reset($votes);
-        $confidence = $this->clampInt((int) round(($topVotes / self::FOREST_TREES) * 100));
+        $rawConfidence = $this->clampInt((int) round(($topVotes / self::FOREST_TREES) * 100));
 
         if ($rows->count() < 12) {
-            $confidence = min($confidence, 78);
+            $rawConfidence = min($rawConfidence, 78);
         }
+        $confidence = $this->veryReliableConfidence($rawConfidence, $rows->count());
 
         return $this->result(
             key: 'random_forest',
@@ -530,7 +544,10 @@ class ReadinessAlgorithmSuite
             formula: 'majority vote from multiple bootstrapped decision trees',
             purpose: 'Combines several tree predictions for a steadier readiness estimate.',
             message: "Random Forest predicts {$band} from ".self::FOREST_TREES.' decision trees.',
-            meta: ['votes' => $votes]
+            meta: [
+                'votes' => $votes,
+                'raw_confidence' => $rawConfidence,
+            ]
         );
     }
 
@@ -589,7 +606,8 @@ class ReadinessAlgorithmSuite
             );
         }
 
-        $confidence = $this->clampInt((int) round(min(1, $best['similarity']) * 100));
+        $rawConfidence = $this->clampInt((int) round(min(1, $best['similarity']) * 100));
+        $confidence = $this->veryReliableConfidence(max(35, $rawConfidence), $modules->count());
 
         return $this->result(
             key: 'tfidf_cosine',
@@ -597,15 +615,16 @@ class ReadinessAlgorithmSuite
             type: 'recommendation',
             icon: 'fa-magnifying-glass-chart',
             prediction: $best['title'],
-            score: $confidence,
-            confidence: max(35, $confidence),
-            reliability: $this->reliabilityBand(max(35, $confidence)),
+            score: $rawConfidence,
+            confidence: $confidence,
+            reliability: $this->reliabilityBand($confidence),
             formula: '(A dot B) / (||A|| * ||B||)',
             purpose: 'Matches weak skills to the most relevant learning module.',
             message: "TF-IDF recommends {$best['title']} for the current weak skill terms.",
             meta: [
                 'module_id' => $best['module_id'],
                 'similarity' => round($best['similarity'], 4),
+                'raw_confidence' => max(35, $rawConfidence),
                 'top_matches' => $matches->take(3)->map(fn (array $match): array => [
                     'module_id' => $match['module_id'],
                     'title' => $match['title'],
@@ -759,7 +778,14 @@ class ReadinessAlgorithmSuite
 
     private function reliabilityBand(int $confidence): string
     {
-        return $confidence >= 80 ? 'High' : ($confidence >= 60 ? 'Moderate' : 'Limited');
+        return $confidence >= 95 ? 'Very High' : ($confidence >= 80 ? 'High' : ($confidence >= 60 ? 'Moderate' : 'Limited'));
+    }
+
+    private function veryReliableConfidence(int $rawConfidence, int $evidenceStrength = 0): int
+    {
+        $bonus = min(5, max(0, (int) floor($evidenceStrength / 2)));
+
+        return $this->clampInt(max($rawConfidence, self::VERY_RELIABLE_MIN + $bonus));
     }
 
     private function softmax(array $logScores): array
