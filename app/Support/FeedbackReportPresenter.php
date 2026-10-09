@@ -98,14 +98,6 @@ class FeedbackReportPresenter
  ];
  }
 
- if (self::hasMeasuredDelivery($session) && is_numeric($score->delivery_stability_score?? null)) {
- $metrics[] = [
- 'name' => 'Pacing',
- 'score' => $score->delivery_stability_score,
- 'color' => '#f59e0b',
- ];
- }
-
  return collect($metrics)
  ->filter(fn (array $metric): bool => is_numeric($metric['score']?? null))
  ->map(fn (array $metric): array => [
@@ -641,14 +633,6 @@ class FeedbackReportPresenter
  ],
  ];
 
- if (self::hasMeasuredDelivery($session) && is_numeric($score?->delivery_stability_score?? null)) {
- $metrics[] = [
- 'label' => 'Pacing',
- 'score' => $score->delivery_stability_score,
- 'advice' => 'Pause between ideas and reduce filler words.',
- ];
- }
-
  $metrics = array_values(array_filter($metrics, fn (array $metric): bool => is_numeric($metric['score']?? null)));
  if ($metrics === []) {
  return [
@@ -782,25 +766,6 @@ class FeedbackReportPresenter
  private static function hasRecordedConfidence(mixed $score): bool
  {
  return is_numeric($score) && self::score($score) > 0;
- }
-
- private static function hasMeasuredDelivery(InterviewSession $session): bool
- {
- if ((int) data_get($session->feedback?->coaching_summary?? [], 'coverage.delivery_measured', 0) > 0) {
- return true;
- }
-
- return self::answers($session)->contains(function ($answer): bool {
- if (data_get($answer->coaching_feedback?? [], 'delivery.status') === 'measured') {
- return true;
- }
-
- $responseMode = strtolower(trim((string) ($answer->response_mode?? '')));
-
- return in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true)
- && (int) ($answer->voice_duration?? 0) > 0
- && $answer->delivery_stability_score!== null;
- });
  }
 
  private static function wordCount(string $text): int

@@ -4285,9 +4285,6 @@ return response()->json([
  if (! (bool) data_get($session->accommodation_profile, 'separate_language_scoring', false)) {
  $metrics['Grammar'] = (int) ($score->grammar_score?? 0);
  }
- if ($answers->contains(fn (InterviewAnswer $answer): bool => $answer->delivery_stability_score!== null)) {
- $metrics['Pacing'] = (int) ($score->delivery_stability_score?? 0);
- }
  if ($answers->contains(fn (InterviewAnswer $answer): bool => QuestionIntentService::starApplicable($answer->question))) {
  $metrics['STAR Method'] = (int) ($score->star_method_score?? 0);
  }
@@ -4334,7 +4331,6 @@ return response()->json([
  'Answer Match' => 'Before answering, say the question goal in one sentence and link each example to that goal.',
  'Grammar' => 'Speak more slowly and use shorter sentences, then read the answer text for unclear phrasing.',
  'Professional Tone' => 'Replace casual words with clear interview words and show what you did.',
- 'Pacing' => 'Record the same answer twice, then compare speed, filler words, pauses, and ending.',
  'STAR Method' => 'Practice a past-example answer and include Situation, Task, Action, and Result.',
  default => 'Practice the lowest-score answer and make the next version easier to check.',
  };
@@ -4343,7 +4339,7 @@ return response()->json([
  private function recommendedQuestionTypes(string $weakestSkill, InterviewSession $session): array
  {
  return match ($weakestSkill) {
- 'STAR Method', 'Fluency & Clarity', 'Pacing' => ['Behavioral', 'Situational'],
+ 'STAR Method', 'Fluency & Clarity' => ['Behavioral', 'Situational'],
  'Answer Match' => ['Technical', 'Situational'],
  'Professional Tone', 'Grammar' => ['Personal', 'Behavioral'],
  default => $this->decodeQuestionTypes($session->question_types)?: ['Behavioral', 'Situational'],
@@ -4352,7 +4348,7 @@ return response()->json([
 
  private function recommendedPathsFor(string $weakestSkill): array
  {
- if (in_array($weakestSkill, ['Pacing', 'Grammar'], true)) {
+ if ($weakestSkill === 'Grammar') {
  return [
  ['label' => 'Practice Coach', 'url' => route('user.coach')],
  ['label' => 'Mock Interview', 'url' => route('interview.setup')],

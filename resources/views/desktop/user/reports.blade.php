@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/reports.css?v=2') }}" data-page-style="user-reports">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=22') }}" data-page-style="user-reports-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=23') }}" data-page-style="user-reports-2">
 @endpush
 
 @section('content')
@@ -138,7 +138,7 @@
 
  <div class="row g-4 mb-4 report-score-comparison-row">
  <!-- Feature 2: Detailed Score Breakdown -->
- <div class="{{ $hasComparisonRows? 'col-lg-7': 'col-12' }} report-card-equal-col">
+ <div class="{{ $hasComparisonRows? 'col-lg-6': 'col-12' }} report-card-equal-col">
  <div id="report-score-breakdown" class="print-card" style="padding:32px;height:100%;">
  <div class="report-section-kicker">Score details</div>
  <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 20px;"><i class="fa-solid fa-chart-simple text-primary me-2"></i>Detailed Score Breakdown</h5>
@@ -185,7 +185,7 @@
 
  @if($hasComparisonRows)
  <!-- Feature 8: Performance Comparison Report -->
- <div class="col-lg-5 report-card-equal-col">
+ <div class="col-lg-6 report-card-equal-col">
  <div id="report-comparison" class="print-card report-comparison-card" style="padding:32px;height:100%;">
  <h5 class="report-comparison-title" style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-code-compare text-warning me-2"></i>Performance Comparison</h5>
  <p class="report-comparison-copy" style="color:var(--tx3);font-size:0.9rem;">Comparing First Interview vs. Latest Interview</p>

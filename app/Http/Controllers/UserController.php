@@ -67,7 +67,6 @@ class UserController extends Controller
  'Relevance' => 'relevance_score',
  'Grammar' => 'grammar_score',
  'Professionalism' => 'professionalism_score',
- 'Delivery Stability' => 'delivery_stability_score',
  ];
 
  private const SKILL_TRACKER_METRICS = [
@@ -715,7 +714,6 @@ class UserController extends Controller
  ['label' => 'Answer Match', 'column' => 'relevance_score', 'icon' => 'fa-bullseye'],
  ['label' => 'Grammar', 'column' => 'grammar_score', 'icon' => 'fa-spell-check'],
  ['label' => 'Professional Tone', 'column' => 'professionalism_score', 'icon' => 'fa-handshake'],
- ['label' => 'Pacing', 'column' => 'delivery_stability_score', 'icon' => 'fa-wave-square', 'advanced' => true],
  ])
  ->map(function (array $metric) use ($score) {
  $value = $score->{$metric['column']}?? null;
@@ -952,7 +950,6 @@ class UserController extends Controller
  'Answer Match' => 'relevance_score',
  'Grammar' => 'grammar_score',
  'Professional Tone' => 'professionalism_score',
- 'Pacing' => 'delivery_stability_score',
  'Overall' => 'overall_readiness_score',
  ];
 
@@ -960,10 +957,6 @@ class UserController extends Controller
  foreach ($metrics as $label => $column) {
  $previous = (int) ($previousSession->score->{$column}?? 0);
  $current = (int) ($session->score->{$column}?? 0);
-
- if ($label === 'Pacing' && $previous === 0 && $current === 0) {
- continue;
- }
 
  $rows[] = [
  'label' => $label,
@@ -1141,12 +1134,6 @@ class UserController extends Controller
  if ($value === null) {
  continue;
  }
- if ($field === 'delivery_stability_score'
- && $value === 0
- && (int) ($score->score_version?? 1) < 2) {
- continue;
- }
-
  $metrics[] = [
  'name' => $label,
  'score' => $value,

@@ -490,6 +490,7 @@
             margin-bottom: var(--reports-saas-gap) !important;
         }
         #portfolioReport .col-lg-7,
+        #portfolioReport .col-lg-6,
         #portfolioReport .col-lg-5,
         #portfolioReport .col-md-8,
         #portfolioReport .col-md-4,
@@ -941,7 +942,7 @@
             margin-bottom: 8px !important;
         }
 
-        html body #portfolioReport :is(.col-lg-7, .col-lg-5, .col-md-8, .col-md-4, .col-md-6, .col-md-3, .col-12) {
+        html body #portfolioReport :is(.col-lg-7, .col-lg-6, .col-lg-5, .col-md-8, .col-md-4, .col-md-6, .col-md-3, .col-12) {
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
@@ -3695,18 +3696,18 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-recent-page-
 
 /* Final compact comparison table pass to avoid inner scrolling. */
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison.report-comparison-card {
-    gap: 7px !important;
-    padding: 16px !important;
+    gap: 10px !important;
+    padding: 20px !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-title {
-    font-size: 1rem !important;
-    line-height: 1.16 !important;
+    font-size: 1.18rem !important;
+    line-height: 1.22 !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-copy {
-    font-size: 0.74rem !important;
-    line-height: 1.22 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.36 !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table-wrap {
@@ -3719,23 +3720,23 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparis
     width: 100% !important;
     min-width: 0 !important;
     table-layout: fixed !important;
-    border-spacing: 0 3px !important;
+    border-spacing: 0 6px !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table :is(th, td) {
-    padding: 3px 3px !important;
+    padding: 6px 5px !important;
     vertical-align: middle !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table th {
-    font-size: 0.52rem !important;
-    line-height: 1.08 !important;
+    font-size: 0.68rem !important;
+    line-height: 1.12 !important;
     white-space: nowrap !important;
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table td {
-    font-size: 0.66rem !important;
-    line-height: 1.16 !important;
+    font-size: 0.86rem !important;
+    line-height: 1.25 !important;
     white-space: nowrap !important;
 }
 
@@ -3745,7 +3746,7 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparis
 }
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table td:first-child {
-    font-size: 0.68rem !important;
+    font-size: 0.9rem !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
@@ -3761,7 +3762,7 @@ html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparis
 
 html body.user-desktop-shell:not(.admin-shell) #portfolioReport #report-comparison .report-comparison-table td i {
     margin-right: 2px !important;
-    font-size: 0.62rem !important;
+    font-size: 0.82rem !important;
 }
 
 /* Recent Sessions final fit pass: keep all 3 paginated rows and controls visible. */
