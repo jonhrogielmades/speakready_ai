@@ -161,8 +161,7 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const unlockBtns = document.querySelectorAll('.btn-unlock');
+(() => {
     const skillTheme = () => ({
         background: document.documentElement.classList.contains('lm') ? '#fff' : '#1e1e1e',
         color: document.documentElement.classList.contains('lm') ? '#000' : '#fff'
@@ -189,50 +188,85 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return data;
     };
-    
-    unlockBtns.forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const perkId = btn.dataset.id;
-            const originalText = btn.innerHTML;
-            
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btn.disabled = true;
-            
-            try {
-                const token = csrfToken();
-                if (!token) {
-                    throw new Error('Your secure session token is missing. Please refresh the page and try again.');
+
+    const initSkillTrees = () => {
+        const page = document.getElementById('skill-trees-page');
+        if (!page) return;
+
+        const unlockBtns = page.querySelectorAll('.btn-unlock:not([data-skill-unlock-bound])');
+
+        unlockBtns.forEach(btn => {
+            btn.dataset.skillUnlockBound = 'true';
+            if (!btn.getAttribute('type')) {
+                btn.setAttribute('type', 'button');
+            }
+
+            btn.addEventListener('click', async function() {
+                if (btn.disabled || btn.dataset.skillUnlocking === 'true') return;
+
+                const perkId = (btn.dataset.id || '').trim();
+                const originalText = btn.innerHTML;
+
+                if (!perkId) {
+                    await skillAlert({
+                        icon: 'error',
+                        title: 'Unlock Failed',
+                        text: 'This perk is missing its unlock ID. Please refresh and try again.'
+                    });
+                    return;
                 }
 
-                const data = await fetch("{{ route('user.skills.unlock') }}", {
-                    method: "POST",
-                    credentials: "same-origin",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": token
-                    },
-                    body: JSON.stringify({ perk_id: perkId })
-                }).then(skillJson);
+                btn.dataset.skillUnlocking = 'true';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                btn.disabled = true;
+                btn.setAttribute('aria-busy', 'true');
 
-                await skillAlert({
-                    icon: 'success',
-                    title: 'Perk Unlocked!',
-                    text: data.message
-                });
-                window.location.reload();
-            } catch (error) {
-                console.error(error);
-                await skillAlert({
-                    icon: 'error',
-                    title: 'Unlock Failed',
-                    text: error.message || 'We could not unlock this perk. Please refresh and try again.'
-                });
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+                try {
+                    const token = csrfToken();
+                    if (!token) {
+                        throw new Error('Your secure session token is missing. Please refresh the page and try again.');
+                    }
+
+                    const data = await fetch("{{ route('user.skills.unlock') }}", {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": token
+                        },
+                        body: JSON.stringify({ perk_id: perkId })
+                    }).then(skillJson);
+
+                    await skillAlert({
+                        icon: 'success',
+                        title: 'Perk Unlocked!',
+                        text: data.message
+                    });
+                    window.location.reload();
+                } catch (error) {
+                    console.error(error);
+                    delete btn.dataset.skillUnlocking;
+                    btn.removeAttribute('aria-busy');
+                    await skillAlert({
+                        icon: 'error',
+                        title: 'Unlock Failed',
+                        text: error.message || 'We could not unlock this perk. Please refresh and try again.'
+                    });
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            });
         });
-    });
-});
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSkillTrees, { once: true });
+    } else {
+        initSkillTrees();
+    }
+
+    document.addEventListener('speakready:user-content-updated', initSkillTrees);
+})();
 </script>
 @endpush
