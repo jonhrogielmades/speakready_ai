@@ -55,7 +55,6 @@
  <div class="review-ai-coach-action" data-ai-coach-prompt-wrapper>
  <textarea class="review-ai-coach-prompt" data-ai-coach-prompt hidden readonly>{{ $coachPrompt }}</textarea>
  <button type="button" class="review-ai-coach-button" data-coach-url="{{ route('user.coach') }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach about this answer">
- <i class="fa-solid fa-robot" aria-hidden="true"></i>
  <span>ASK AI COACH</span>
  </button>
  </div>

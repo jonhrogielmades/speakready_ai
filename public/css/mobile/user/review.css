@@ -1907,55 +1907,72 @@
     }
 }
 
+body.user-mobile-shell #mob-content .review-shell .review-ai-coach-action,
+html body #mob-content .review-shell .review-ai-coach-action,
 .review-ai-coach-action {
-    display: flex;
-    justify-content: flex-start;
-    margin-top: 12px;
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: 14px !important;
+    width: 100% !important;
 }
 
+body.user-mobile-shell #mob-content .review-shell .review-ai-coach-prompt,
+html body #mob-content .review-shell .review-ai-coach-prompt,
 .review-ai-coach-prompt {
     display: none !important;
 }
 
+body.user-mobile-shell #mob-content .review-shell .review-ai-coach-button,
+html body #mob-content .review-shell .review-ai-coach-button,
 .review-ai-coach-button {
-    align-items: center;
-    background: linear-gradient(135deg, #2563eb, #0891b2);
-    border: 1px solid rgba(37, 99, 235, .35);
-    border-radius: 8px;
-    box-shadow: 0 8px 18px rgba(37, 99, 235, .18);
-    color: #fff;
-    display: inline-flex;
-    font-size: .78rem;
-    font-weight: 900;
-    gap: 8px;
-    justify-content: center;
-    letter-spacing: 0;
-    line-height: 1;
-    min-height: 42px;
-    padding: 0 16px;
-    text-transform: uppercase;
-    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    align-items: center !important;
+    appearance: none !important;
+    background: linear-gradient(135deg, #2563eb 0%, #0891b2 100%) !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, .24) !important;
+    color: #fff !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    font-family: inherit !important;
+    font-size: .78rem !important;
+    font-weight: 900 !important;
+    gap: 0 !important;
+    justify-content: center !important;
+    letter-spacing: 0 !important;
+    line-height: 1 !important;
+    min-height: 44px !important;
+    min-width: 174px !important;
+    padding: 0 24px !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease !important;
+    white-space: nowrap !important;
+    width: auto !important;
 }
 
+body.user-mobile-shell #mob-content .review-shell .review-ai-coach-button:hover,
+body.user-mobile-shell #mob-content .review-shell .review-ai-coach-button:focus-visible,
+html body #mob-content .review-shell .review-ai-coach-button:hover,
+html body #mob-content .review-shell .review-ai-coach-button:focus-visible,
 .review-ai-coach-button:hover,
 .review-ai-coach-button:focus-visible {
-    box-shadow: 0 12px 24px rgba(8, 145, 178, .24);
-    color: #fff;
-    filter: brightness(1.04);
-    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(8, 145, 178, .3) !important;
+    color: #fff !important;
+    filter: brightness(1.05) !important;
+    transform: translateY(-1px) !important;
 }
 
+body.user-mobile-shell #mob-content .review-shell .review-ai-coach-button:focus-visible,
+html body #mob-content .review-shell .review-ai-coach-button:focus-visible,
 .review-ai-coach-button:focus-visible {
-    outline: 3px solid rgba(14, 165, 233, .32);
-    outline-offset: 2px;
-}
-
-.review-ai-coach-button i {
-    font-size: .9rem;
+    outline: 3px solid rgba(14, 165, 233, .32) !important;
+    outline-offset: 2px !important;
 }
 
 @media (max-width: 575.98px) {
     .review-ai-coach-button {
-        width: 100%;
+        max-width: none !important;
+        width: auto !important;
     }
 }
