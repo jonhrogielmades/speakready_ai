@@ -3261,20 +3261,20 @@ html body #portfolioReport .sr-recent-page-status {
 /* Final compact comparison table pass to avoid inner scrolling. */
 html body #mob-content #portfolioReport #report-comparison.report-comparison-card,
 html body #portfolioReport #report-comparison.report-comparison-card {
-    gap: 9px !important;
-    padding: 12px !important;
+    gap: 10px !important;
+    padding: 14px !important;
 }
 
 html body #mob-content #portfolioReport #report-comparison .report-comparison-title,
 html body #portfolioReport #report-comparison .report-comparison-title {
-    font-size: 0.96rem !important;
-    line-height: 1.18 !important;
+    font-size: 1.04rem !important;
+    line-height: 1.2 !important;
 }
 
 html body #mob-content #portfolioReport #report-comparison .report-comparison-copy,
 html body #portfolioReport #report-comparison .report-comparison-copy {
-    font-size: 0.72rem !important;
-    line-height: 1.25 !important;
+    font-size: 0.78rem !important;
+    line-height: 1.32 !important;
 }
 
 html body #mob-content #portfolioReport #report-comparison .report-comparison-table-wrap,
@@ -3289,38 +3289,39 @@ html body #portfolioReport #report-comparison .report-comparison-table {
     width: 100% !important;
     min-width: 0 !important;
     table-layout: fixed !important;
-    border-spacing: 0 4px !important;
+    border-spacing: 0 5px !important;
 }
 
 html body #mob-content #portfolioReport #report-comparison .report-comparison-table :is(th, td),
 html body #portfolioReport #report-comparison .report-comparison-table :is(th, td) {
-    padding: 4px 3px !important;
+    padding: 5px 3px !important;
     vertical-align: middle !important;
 }
 
 html body #mob-content #portfolioReport #report-comparison .report-comparison-table th,
 html body #portfolioReport #report-comparison .report-comparison-table th {
-    font-size: 0.55rem !important;
-    line-height: 1.08 !important;
-    white-space: nowrap !important;
+    font-size: 0.62rem !important;
+    line-height: 1.12 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
 }
 
 html body #mob-content #portfolioReport #report-comparison .report-comparison-table td,
 html body #portfolioReport #report-comparison .report-comparison-table td {
-    font-size: 0.68rem !important;
-    line-height: 1.16 !important;
+    font-size: 0.74rem !important;
+    line-height: 1.18 !important;
     white-space: nowrap !important;
 }
 
 html body #mob-content #portfolioReport #report-comparison .report-comparison-table :is(th:first-child, td:first-child),
 html body #portfolioReport #report-comparison .report-comparison-table :is(th:first-child, td:first-child) {
-    width: 38% !important;
+    width: 40% !important;
     text-align: left !important;
 }
 
 html body #mob-content #portfolioReport #report-comparison .report-comparison-table td:first-child,
 html body #portfolioReport #report-comparison .report-comparison-table td:first-child {
-    font-size: 0.7rem !important;
+    font-size: 0.76rem !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
@@ -3329,7 +3330,7 @@ html body #mob-content #portfolioReport #report-comparison .report-comparison-ta
 html body #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(2), td:nth-child(2)),
 html body #mob-content #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(3), td:nth-child(3)),
 html body #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(3), td:nth-child(3)) {
-    width: 21% !important;
+    width: 20% !important;
 }
 
 html body #mob-content #portfolioReport #report-comparison .report-comparison-table :is(th:nth-child(4), td:nth-child(4)),
@@ -3340,7 +3341,7 @@ html body #portfolioReport #report-comparison .report-comparison-table :is(th:nt
 html body #mob-content #portfolioReport #report-comparison .report-comparison-table td i,
 html body #portfolioReport #report-comparison .report-comparison-table td i {
     margin-right: 2px !important;
-    font-size: 0.62rem !important;
+    font-size: 0.68rem !important;
 }
 
 /* Recent Sessions final fit pass for Reports and Sessions mobile. */
@@ -3518,5 +3519,66 @@ html body #portfolioReport #card-recent-sessions .sr-recent-session-pager {
     html body #mob-content #portfolioReport #card-recent-sessions.report-sessions-card,
     html body #portfolioReport #card-recent-sessions.report-sessions-card {
         margin-top: 0 !important;
+    }
+}
+
+/* Final mobile score summary layout: current and previous stay side by side. */
+@media (max-width: 767.98px) {
+    html body #mob-content #portfolioReport #report-readiness > .report-readiness-score-row,
+    html body #portfolioReport #report-readiness > .report-readiness-score-row {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        text-align: left !important;
+    }
+
+    html body #mob-content #portfolioReport #report-readiness > .report-readiness-score-row > .report-score-panel,
+    html body #portfolioReport #report-readiness > .report-readiness-score-row > .report-score-panel {
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        min-height: 92px !important;
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        border-right: 0 !important;
+    }
+
+    html body #mob-content #portfolioReport #report-readiness > .report-readiness-score-row > .report-change-panel,
+    html body #portfolioReport #report-readiness > .report-readiness-score-row > .report-change-panel {
+        grid-column: 1 / -1 !important;
+        min-height: 0 !important;
+    }
+
+    html body #mob-content #portfolioReport #report-readiness .report-current-score-panel .report-final-score,
+    html body #portfolioReport #report-readiness .report-current-score-panel .report-final-score {
+        font-size: 2rem !important;
+        line-height: 0.95 !important;
+    }
+
+    html body #mob-content #portfolioReport #report-readiness .report-current-score-panel .report-score-percent,
+    html body #portfolioReport #report-readiness .report-current-score-panel .report-score-percent {
+        font-size: 1rem !important;
+        line-height: 1 !important;
+    }
+
+    html body #mob-content #portfolioReport #report-readiness .report-previous-score-panel .report-previous-score,
+    html body #portfolioReport #report-readiness .report-previous-score-panel .report-previous-score {
+        font-size: 1.5rem !important;
+        line-height: 1 !important;
+    }
+
+    html body #mob-content #portfolioReport #report-readiness .report-current-score-panel .badge,
+    html body #portfolioReport #report-readiness .report-current-score-panel .badge {
+        margin-top: auto !important;
+        width: fit-content !important;
+        max-width: 100% !important;
+        white-space: normal !important;
     }
 }

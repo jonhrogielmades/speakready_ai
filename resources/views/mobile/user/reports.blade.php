@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/reports.css?v=2') }}" data-page-style="user-reports">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/reports-2.css?v=19') }}" data-page-style="user-reports-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/reports-2.css?v=21') }}" data-page-style="user-reports-2">
 @endpush
 
 @section('content')
@@ -89,17 +89,17 @@
  <i class="fa-regular fa-calendar"></i> Report date {{ $reportGeneratedShortDate }}
  </span>
  </div>
- <div class="row align-items-center text-center text-md-start">
- <div class="col-md-3 border-end" style="border-color:rgba(59, 130, 246, 0.2)!important;">
- <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:0;margin-bottom:8px;">Final Score</h6>
+ <div class="row align-items-center text-center text-md-start report-readiness-score-row">
+ <div class="col-md-3 border-end report-score-panel report-current-score-panel" style="border-color:rgba(59, 130, 246, 0.2)!important;">
+ <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:0;margin-bottom:8px;">Current Score</h6>
  <div class="report-final-score" style="font-size:3.5rem;font-weight:900;line-height:1;color:{{ $readinessSummary->color }};">{{ $readinessSummary->current }}<span class="report-score-percent" style="font-size:1.5rem">%</span></div>
  <div class="badge mt-2 fs-6" style="background-color:{{ $readinessSummary->color }};color:#fff;">{{ $readinessSummary->rating }}</div>
  </div>
- <div class="col-md-3 border-end mt-4 mt-md-0" style="border-color:rgba(59, 130, 246, 0.2)!important;">
+ <div class="col-md-3 border-end mt-4 mt-md-0 report-score-panel report-previous-score-panel" style="border-color:rgba(59, 130, 246, 0.2)!important;">
  <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:0;margin-bottom:8px;">Previous Score</h6>
  <div class="report-previous-score" style="font-size:2rem;font-weight:700;line-height:1;color:var(--tx);">{{ $readinessSummary->previous === null? 'N/A': $readinessSummary->previous. '%' }}</div>
  </div>
- <div class="col-md-6 mt-4 mt-md-0 ps-md-4">
+ <div class="col-md-6 mt-4 mt-md-0 ps-md-4 report-score-panel report-change-panel">
  <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:0;margin-bottom:8px;">Readiness Change</h6>
  <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
  <i class="fa-solid {{ $readinessSummary->delta === null? 'fa-minus': ($readinessSummary->delta >= 0? 'fa-arrow-trend-up': 'fa-arrow-trend-down') }} fs-1" style="color:{{ $readinessSummary->delta_color }};"></i>
@@ -261,7 +261,7 @@
 
  const stepsMobile = [
  { element: '#portfolioReport .sr-page-hero', popover: { title: 'Reports and Sessions', description: 'Use reports to review readiness, scores, comparisons, and recent completed sessions.', side: 'bottom', align: 'start' }},
- { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, previous score, readiness change, result level, target role, and question count.', side: 'bottom', align: 'start' }},
+ { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the current score, previous score, readiness change, result level, target role, and question count.', side: 'bottom', align: 'start' }},
  { element: '#report-score-breakdown', popover: { title: 'Score Breakdown', description: 'Review metric-level scores for the latest interview, including scenario, date, difficulty, and question count.', side: 'bottom', align: 'start' }},
  { element: '.report-score-list', popover: { title: 'Metric Rows', description: 'Each row shows one scored skill so you can see where the final score came from.', side: 'top', align: 'start' }},
  { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare first and latest scores to see which skills are moving up or down.', side: 'top', align: 'start' }},
@@ -271,7 +271,7 @@
 
  const stepsDesktop = [
  { element: '#portfolioReport .sr-page-hero', popover: { title: 'Reports and Sessions', description: 'Use reports to review readiness, scores, comparisons, and recent completed sessions.', side: 'bottom', align: 'start' }},
- { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, previous score, readiness change, result level, target role, and question count.', side: 'bottom', align: 'start' }},
+ { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the current score, previous score, readiness change, result level, target role, and question count.', side: 'bottom', align: 'start' }},
  { element: '#report-score-breakdown', popover: { title: 'Score Breakdown', description: 'Review metric-level scores for the latest interview, including scenario, date, difficulty, and question count.', side: 'bottom', align: 'start' }},
  { element: '.report-score-list', popover: { title: 'Metric Rows', description: 'Each row shows one scored skill so you can see where the final score came from.', side: 'top', align: 'start' }},
  { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare first and latest scores to see which skills are moving up or down.', side: 'top', align: 'start' }},
