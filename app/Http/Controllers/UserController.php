@@ -165,7 +165,6 @@ class UserController extends Controller
  'relevance_score',
  'grammar_score',
  'professionalism_score',
- 'delivery_stability_score',
  ]);
  $avgScore = $scoreAverages['overall_readiness_score']?? 0.0;
 
@@ -181,7 +180,6 @@ class UserController extends Controller
  'relevance' => round($scoreAverages['relevance_score']?? 0),
  'grammar' => round($scoreAverages['grammar_score']?? 0),
  'professionalism' => round($scoreAverages['professionalism_score']?? 0),
- 'delivery_stability' => round($scoreAverages['delivery_stability_score']?? 0),
  ];
 
  // AI Feedback Parsing (Get recent top strengths and areas for improvement)
@@ -206,7 +204,6 @@ class UserController extends Controller
  'Relevance' => $latestS->relevance_score?? 0,
  'Grammar' => $latestS->grammar_score?? 0,
  'Professionalism' => $latestS->professionalism_score?? 0,
- 'Delivery Stability' => $latestS->delivery_stability_score?? 0,
  ];
  foreach ($skillsList as $sName => $sVal) {
  if ($sVal >= 80) {

@@ -443,8 +443,8 @@
                     <div class="sr-side-title-row">
                         <div class="sr-side-icon"><i class="fa-solid fa-chart-simple"></i></div>
                         <div>
-                            <h5 class="sr-side-title">Skill Radar</h5>
-                            <p class="sr-side-subtitle">Average capability profile.</p>
+                            <h5 class="sr-side-title">Skill Chart</h5>
+                            <p class="sr-side-subtitle">Average capability by skill.</p>
                         </div>
                     </div>
                     <a href="{{ route('user.progress') }}" class="sr-side-detail-btn"><i class="fa-solid fa-chart-line"></i> View Details</a>
@@ -456,7 +456,7 @@
                 @else
                     <div class="sr-radar-locked" role="status">
                         <div class="sr-radar-locked-icon"><i class="fa-solid fa-lock"></i></div>
-                        <p>Complete a scored interview to unlock your skill radar.</p>
+                        <p>Complete a scored interview to unlock your skill chart.</p>
                     </div>
                 @endif
             </section>
@@ -696,17 +696,15 @@ document.addEventListener("DOMContentLoaded", function() {
     };
     const getRadarDatasetColors = (hasScores, palette) => ({
         backgroundColor: hasScores
-            ? (palette.isLightMode ? 'rgba(219, 39, 119, 0.2)' : 'rgba(244, 114, 182, 0.28)')
-            : (palette.isLightMode ? 'rgba(219, 39, 119, 0.12)' : 'rgba(244, 114, 182, 0.2)'),
+            ? (palette.isLightMode ? 'rgba(219, 39, 119, 0.72)' : 'rgba(244, 114, 182, 0.76)')
+            : (palette.isLightMode ? 'rgba(219, 39, 119, 0.18)' : 'rgba(244, 114, 182, 0.24)'),
         borderColor: hasScores
             ? (palette.isLightMode ? '#be185d' : '#f9a8d4')
             : (palette.isLightMode ? 'rgba(190, 24, 93, 0.78)' : 'rgba(251, 207, 232, 0.94)'),
-        pointBackgroundColor: hasScores
+        hoverBackgroundColor: hasScores
             ? (palette.isLightMode ? '#be185d' : '#f9a8d4')
-            : (palette.isLightMode ? '#db2777' : '#fbcfe8'),
-        pointBorderColor: palette.surfaceColor,
-        pointHoverBackgroundColor: palette.surfaceColor,
-        pointHoverBorderColor: palette.isLightMode ? '#be185d' : '#f9a8d4'
+            : (palette.isLightMode ? 'rgba(219, 39, 119, 0.28)' : 'rgba(244, 114, 182, 0.34)'),
+        hoverBorderColor: palette.isLightMode ? '#9d174d' : '#fbcfe8'
     });
     const initialPalette = getDashboardChartPalette();
     const {
@@ -723,7 +721,7 @@ document.addEventListener("DOMContentLoaded", function() {
         radarLabelColor
     } = initialPalette;
     const isCompactTrend = () => window.matchMedia('(max-width: 575px)').matches;
-    const radarPointLabelSize = () => window.matchMedia('(max-width: 380px)').matches ? 9 : 10;
+    const skillChartLabelSize = () => window.matchMedia('(max-width: 380px)').matches ? 9 : 10;
     let progressChart = null;
     let progressCtx = null;
     let radarChart = null;
@@ -935,55 +933,80 @@ document.addEventListener("DOMContentLoaded", function() {
             {{ (int) ($radarData['clarity'] ?? 0) }},
             {{ (int) ($radarData['relevance'] ?? 0) }},
             {{ (int) ($radarData['grammar'] ?? 0) }},
-            {{ (int) ($radarData['professionalism'] ?? 0) }},
-            {{ (int) ($radarData['delivery_stability'] ?? 0) }}
+            {{ (int) ($radarData['professionalism'] ?? 0) }}
         ];
         const hasRadarScores = radarScores.some((value) => Number(value) > 0);
         dashboardHasRadarScores = hasRadarScores;
-        const radarDisplayScores = hasRadarScores ? radarScores : [0, 0, 0, 0, 0];
+        const radarDisplayScores = hasRadarScores ? radarScores : [0, 0, 0, 0];
         const radarColors = getRadarDatasetColors(hasRadarScores, initialPalette);
 
         radarChart = new Chart(radarCanvas.getContext('2d'), {
-            type: 'radar',
+            type: 'bar',
             data: {
-                labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism', 'Delivery Stability'],
+                labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism'],
                 datasets: [{
                     label: 'Score Level',
                     data: radarDisplayScores,
                     backgroundColor: radarColors.backgroundColor,
                     borderColor: radarColors.borderColor,
-                    pointBackgroundColor: radarColors.pointBackgroundColor,
-                    pointBorderColor: radarColors.pointBorderColor,
-                    pointHoverBackgroundColor: radarColors.pointHoverBackgroundColor,
-                    pointHoverBorderColor: radarColors.pointHoverBorderColor,
-                    borderWidth: hasRadarScores ? 2.25 : 1.75,
-                    borderDash: hasRadarScores ? [] : [6, 5]
+                    hoverBackgroundColor: radarColors.hoverBackgroundColor,
+                    hoverBorderColor: radarColors.hoverBorderColor,
+                    borderWidth: hasRadarScores ? 1.5 : 1,
+                    borderRadius: 9,
+                    borderSkipped: false,
+                    maxBarThickness: 22,
+                    categoryPercentage: 0.74,
+                    barPercentage: 0.84
                 }]
             },
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 8, right: 12, bottom: 8, left: 12 } },
-                elements: {
-                    line: { borderJoinStyle: 'round' },
-                    point: { radius: 3.5, hoverRadius: 5, borderWidth: 2 }
-                },
+                layout: { padding: { top: 6, right: 10, bottom: 4, left: 0 } },
                 plugins: {
                     legend: { display: false },
                     emptyChartMessage: {
                         color: mutedColor,
                         force: !hasRadarScores,
-                        text: 'Complete a scored interview to unlock your skill radar.'
+                        text: 'Complete a scored interview to unlock your skill chart.'
+                    },
+                    tooltip: {
+                        backgroundColor: isLightMode ? '#ffffff' : 'rgba(15, 23, 42, 0.94)',
+                        titleColor: isLightMode ? '#0f172a' : '#fff',
+                        bodyColor: isLightMode ? '#334155' : '#dbeafe',
+                        borderColor: radarColors.borderColor,
+                        borderWidth: 1,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return ' Score Level: ' + context.parsed.x + '%';
+                            }
+                        }
                     }
                 },
                 scales: {
-                    r: {
-                        angleLines: { color: radarAngleColor, lineWidth: radarGridWidth },
-                        grid: { color: radarGridColor, lineWidth: radarGridWidth },
-                        pointLabels: { color: radarLabelColor, font: { size: radarPointLabelSize(), weight: 900 }, padding: 10 },
-                        suggestedMin: 0,
-                        suggestedMax: 100,
-                        ticks: { display: false, stepSize: 20, backdropColor: 'transparent' }
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            stepSize: 25,
+                            color: txColor,
+                            font: { size: 10, weight: 700 },
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: { color: radarGridColor, lineWidth: radarGridWidth, drawTicks: false },
+                        border: { display: false }
+                    },
+                    y: {
+                        ticks: {
+                            color: radarLabelColor,
+                            font: { size: skillChartLabelSize(), weight: 900 }
+                        },
+                        grid: { display: false },
+                        border: { display: false }
                     }
                 }
             }
@@ -1022,12 +1045,15 @@ document.addEventListener("DOMContentLoaded", function() {
             const radarDataset = radarChart.data.datasets[0];
             Object.assign(radarDataset, radarColors);
             radarChart.options.plugins.emptyChartMessage.color = palette.mutedColor;
-            radarChart.options.scales.r.angleLines.color = palette.radarAngleColor;
-            radarChart.options.scales.r.angleLines.lineWidth = palette.radarGridWidth;
-            radarChart.options.scales.r.grid.color = palette.radarGridColor;
-            radarChart.options.scales.r.grid.lineWidth = palette.radarGridWidth;
-            radarChart.options.scales.r.pointLabels.color = palette.radarLabelColor;
-            radarChart.options.scales.r.pointLabels.font.size = radarPointLabelSize();
+            radarChart.options.plugins.tooltip.backgroundColor = palette.isLightMode ? '#ffffff' : 'rgba(15, 23, 42, 0.94)';
+            radarChart.options.plugins.tooltip.titleColor = palette.isLightMode ? '#0f172a' : '#fff';
+            radarChart.options.plugins.tooltip.bodyColor = palette.isLightMode ? '#334155' : '#dbeafe';
+            radarChart.options.plugins.tooltip.borderColor = radarColors.borderColor;
+            radarChart.options.scales.x.ticks.color = palette.txColor;
+            radarChart.options.scales.x.grid.color = palette.radarGridColor;
+            radarChart.options.scales.x.grid.lineWidth = palette.radarGridWidth;
+            radarChart.options.scales.y.ticks.color = palette.radarLabelColor;
+            radarChart.options.scales.y.ticks.font.size = skillChartLabelSize();
             radarChart.update('none');
         }
     };
