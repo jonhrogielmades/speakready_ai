@@ -9422,8 +9422,11 @@ html body #mob-content #card-recent-sessions .sr-recent-page-status {
     }
 
     body.user-mobile-shell #mob-content .sr-dashboard #card-daily-challenge .sr-challenge-cta {
+        width: min(100%, 190px) !important;
         min-height: 44px !important;
         font-size: 0.92rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
     }
 
     body.user-mobile-shell #mob-content .sr-dashboard .sr-goal-title,

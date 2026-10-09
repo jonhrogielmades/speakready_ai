@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=44') }}" data-page-style="dashboard-v44">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=45') }}" data-page-style="dashboard-v45">
 @endpush
 
 @section('content')
@@ -324,32 +324,6 @@
                 </div>
             </section>
 
-            <section id="card-achievements" class="sr-card sr-card-pad sr-side-feature sr-achievements-main" style="--side-accent:#f59e0b">
-                <div class="sr-side-feature-header">
-                    <div class="sr-side-title-row">
-                        <div class="sr-side-icon"><i class="fa-solid fa-trophy"></i></div>
-                        <div>
-                            <h5 class="sr-side-title">Achievements</h5>
-                            <p class="sr-side-subtitle">Milestones earned through practice.</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('user.progress') }}" class="sr-side-detail-btn">View All <i class="fa-solid fa-chevron-right"></i></a>
-                </div>
-                <div class="sr-achievement-showcase">
-                    @foreach($achievementCatalog as $achievement)
-                        @php $earned = (bool) $achievement['earned']; @endphp
-                        <div class="sr-achievement-tile" style="--accent: {{ $achievement['accent'] }}">
-                            <div class="sr-achievement-tile-icon"><i class="fa-solid {{ $achievement['icon'] }}"></i></div>
-                            <div class="sr-achievement-tile-title">{{ $achievement['label'] }}</div>
-                            <div class="sr-achievement-status">
-                                @if(! $earned && $achievement['status'] === 'Locked')<i class="fa-solid fa-lock"></i>@endif
-                                {{ $earned ? 'Earned' : $achievement['status'] }}
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </section>
-
         </main>
 
         <aside class="sr-side-stack">
@@ -392,7 +366,7 @@
                     <span class="sr-reward-pill xp"><i class="fa-regular fa-star"></i> +{{ $challengeXp }} XP</span>
                     <span class="sr-reward-pill streak"><i class="fa-solid fa-fire"></i> Streak eligible</span>
                 </div>
-                <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100 sr-challenge-cta"><i class="fa-solid fa-play"></i> Start Interview Challenge</a>
+                <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100 sr-challenge-cta"><i class="fa-solid fa-play"></i> START INTERVIEW</a>
             </section>
 
             <section class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#ef4444">
@@ -427,6 +401,32 @@
                         </div>
                     </div>
                 @endif
+            </section>
+
+            <section id="card-achievements" class="sr-card sr-card-pad sr-side-feature sr-achievements-main" style="--side-accent:#f59e0b">
+                <div class="sr-side-feature-header">
+                    <div class="sr-side-title-row">
+                        <div class="sr-side-icon"><i class="fa-solid fa-trophy"></i></div>
+                        <div>
+                            <h5 class="sr-side-title">Achievements</h5>
+                            <p class="sr-side-subtitle">Milestones earned through practice.</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('user.progress') }}" class="sr-side-detail-btn">View All <i class="fa-solid fa-chevron-right"></i></a>
+                </div>
+                <div class="sr-achievement-showcase">
+                    @foreach($achievementCatalog as $achievement)
+                        @php $earned = (bool) $achievement['earned']; @endphp
+                        <div class="sr-achievement-tile" style="--accent: {{ $achievement['accent'] }}">
+                            <div class="sr-achievement-tile-icon"><i class="fa-solid {{ $achievement['icon'] }}"></i></div>
+                            <div class="sr-achievement-tile-title">{{ $achievement['label'] }}</div>
+                            <div class="sr-achievement-status">
+                                @if(! $earned && $achievement['status'] === 'Locked')<i class="fa-solid fa-lock"></i>@endif
+                                {{ $earned ? 'Earned' : $achievement['status'] }}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </section>
 
         </aside>
