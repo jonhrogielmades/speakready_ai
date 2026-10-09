@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=45') }}" data-page-style="dashboard-v45">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=46') }}" data-page-style="dashboard-v46">
 @endpush
 
 @section('content')
@@ -176,7 +176,7 @@
             </section>
 
             <div class="stat-grid sr-stats-desktop" role="group" aria-label="Quick statistics">
-                <div class="sr-stat-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;">
+                <a href="{{ route('user.reports') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;" aria-label="Open completed sessions reports">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-microphone"></i></div>
                         <span class="sr-chip">Practice</span>
@@ -186,8 +186,8 @@
                         <div class="sr-stat-label">Completed sessions</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;">
+                </a>
+                <a href="{{ route('user.feedback') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;" aria-label="Open feedback and average rating details">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-regular fa-star"></i></div>
                         <span class="sr-chip">Quality</span>
@@ -197,8 +197,8 @@
                         <div class="sr-stat-label">Average rating</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-award"></i></div>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;">
+                </a>
+                <a href="{{ route('user.skills') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;" aria-label="Open skills and experience points">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-bolt"></i></div>
                         <span class="sr-chip">Growth</span>
@@ -208,8 +208,8 @@
                         <div class="sr-stat-label">Experience points</div>
                         <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;">
+                </a>
+                <a href="{{ route('user.practice.calendar') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;" aria-label="Open activity calendar and streak details">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-fire"></i></div>
                         <span class="sr-chip">Streak</span>
@@ -219,13 +219,13 @@
                         <div class="sr-stat-label">Active practice days</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-regular fa-calendar-days"></i></div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
         <div class="sr-mobile-readiness-row">
             <div class="sr-mobile-stat-grid sr-readiness-card-grid" role="group" aria-label="Readiness summary">
-                <div class="sr-stat-card sr-readiness-stat-card" style="--accent:{{ $scoreVal >= 80 ? '#22c55e' : ($scoreVal >= 60 ? '#f59e0b' : '#ef4444') }};--meter-value:{{ $scoreVal }}%;">
+                <a href="{{ route('user.progress') }}" class="sr-stat-card sr-stat-link-card sr-readiness-stat-card" style="--accent:{{ $scoreVal >= 80 ? '#22c55e' : ($scoreVal >= 60 ? '#f59e0b' : '#ef4444') }};--meter-value:{{ $scoreVal }}%;" aria-label="Open overall readiness progress">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid {{ $scoreIcon }}"></i></div>
                         <span class="sr-chip">{{ $mobileScoreText }}</span>
@@ -235,8 +235,8 @@
                         <div class="sr-stat-label">Overall readiness</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
                     </div>
-                </div>
-                <div class="sr-stat-card sr-readiness-stat-card" style="--accent:#3b82f6;--meter-value:{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}%;">
+                </a>
+                <a href="{{ route('user.progress') }}" class="sr-stat-card sr-stat-link-card sr-readiness-stat-card" style="--accent:#3b82f6;--meter-value:{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}%;" aria-label="Open next goal progress">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-bullseye"></i></div>
                         <span class="sr-chip">Goal</span>
@@ -246,11 +246,11 @@
                         <div class="sr-stat-label">Next goal</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-bullseye"></i></div>
                     </div>
-                </div>
+                </a>
             </div>
 
             <div class="sr-mobile-stat-grid" role="group" aria-label="Quick statistics">
-                <div class="sr-stat-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;">
+                <a href="{{ route('user.reports') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;" aria-label="Open completed sessions reports">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-microphone"></i></div>
                         <span class="sr-chip">Practice</span>
@@ -260,8 +260,8 @@
                         <div class="sr-stat-label">Completed sessions</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;">
+                </a>
+                <a href="{{ route('user.feedback') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;" aria-label="Open feedback and average rating details">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-regular fa-star"></i></div>
                         <span class="sr-chip">Quality</span>
@@ -271,8 +271,8 @@
                         <div class="sr-stat-label">Average rating</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-award"></i></div>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;">
+                </a>
+                <a href="{{ route('user.skills') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;" aria-label="Open skills and experience points">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-bolt"></i></div>
                         <span class="sr-chip">Growth</span>
@@ -282,8 +282,8 @@
                         <div class="sr-stat-label">Experience points</div>
                         <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
                     </div>
-                </div>
-                <div class="sr-stat-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;">
+                </a>
+                <a href="{{ route('user.practice.calendar') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;" aria-label="Open activity calendar and streak details">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-fire"></i></div>
                         <span class="sr-chip">Streak</span>
@@ -293,7 +293,7 @@
                         <div class="sr-stat-label">Active practice days</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-regular fa-calendar-days"></i></div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
     </div>

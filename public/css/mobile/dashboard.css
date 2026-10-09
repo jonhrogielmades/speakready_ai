@@ -1050,6 +1050,36 @@
         color: var(--stat-title, #0f172a);
     }
 
+    .sr-stat-link-card {
+        color: var(--stat-title, #0f172a);
+        text-decoration: none !important;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .sr-stat-link-card:hover,
+    .sr-stat-link-card:focus {
+        color: var(--stat-title, #0f172a);
+        text-decoration: none !important;
+    }
+
+    .sr-stat-link-card:hover,
+    .sr-stat-link-card:focus-visible {
+        border-color: color-mix(in srgb, var(--accent, #60a5fa) 36%, var(--stat-border, rgba(226, 232, 240, 0.9)));
+        box-shadow: 0 18px 38px color-mix(in srgb, var(--accent, #60a5fa) 14%, rgba(15, 23, 42, 0.08));
+        transform: translateY(-1px);
+    }
+
+    .sr-stat-link-card:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--accent, #60a5fa) 34%, transparent);
+        outline-offset: 3px;
+    }
+
+    .sr-stat-link-card:active {
+        transform: translateY(0);
+    }
+
     :root:not(.lm) .sr-stat-card {
         --stat-bg: #151c2d;
         --stat-border: rgba(96, 165, 250, 0.16);
