@@ -11713,3 +11713,11 @@ html body #sec-progress-tracking #progress-stats.progress-stats-grid .progress-s
         line-height: 1.15 !important;
     }
 }
+
+/* Final pagination visibility override for desktop history cards. */
+html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-progress-tracking #history-table [data-history-record][hidden],
+html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-progress-tracking #history-table [data-history-record].is-history-page-hidden {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}

@@ -264,8 +264,11 @@
  @endphp
  <div class="history-list" id="historyList" data-history-page-size-desktop="{{ $historyDesktopPageSize }}" data-history-page-size-mobile="{{ $historyMobilePageSize }}">
  @foreach($historySessions as $session)
- @php $sc = $session->score? $session->score->overall_readiness_score: null; @endphp
- <article class="history-card" data-history-record @if($loop->index >= $historyInitialPageSize) hidden @endif>
+ @php
+ $sc = $session->score? $session->score->overall_readiness_score: null;
+ $historyRecordHidden = $loop->index >= $historyInitialPageSize;
+ @endphp
+ <article class="history-card{{ $historyRecordHidden? ' is-history-page-hidden': '' }}" data-history-record @if($historyRecordHidden) hidden aria-hidden="true" @else aria-hidden="false" @endif>
  <div class="history-date"><i class="fa-regular fa-calendar-days"></i>{{ $session->created_at->format('M d, Y') }}</div>
  <h6 class="history-scenario">{{ $session->practice_scenario?? 'General Job Interview' }}</h6>
  <div class="history-meta">
@@ -579,7 +582,10 @@
  const visibleCards = new Set(currentHistoryMatches.slice(start, start + pageSize));
 
  cards.forEach(card => {
- card.hidden = !visibleCards.has(card);
+ const isVisible = visibleCards.has(card);
+ card.hidden = ! isVisible;
+ card.classList.toggle('is-history-page-hidden', ! isVisible);
+ card.setAttribute('aria-hidden', isVisible? 'false': 'true');
  });
  if (noResults) {
  noResults.hidden = filter.length === 0 || cards.length === 0 || currentHistoryMatches.length > 0;
