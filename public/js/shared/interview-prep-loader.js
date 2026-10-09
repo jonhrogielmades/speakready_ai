@@ -2,6 +2,7 @@
     'use strict';
 
     var SUBMIT_DELAY_MS = 120;
+    var SERVER_WAIT_PROGRESS_CAP = 94;
 
     function onReady(callback) {
         if (document.readyState === 'loading') {
@@ -86,6 +87,27 @@
             row.classList.remove('is-checking', 'is-complete');
             var check = row.querySelector('.interview-prep-row-check');
             if (check) check.setAttribute('aria-label', 'Pending');
+        });
+    }
+
+    function releaseMobileLayoutOverrides(overlay) {
+        if (!overlay || !overlay.style) return;
+
+        overlay.classList.remove('sr-user-page-root');
+        overlay.removeAttribute('data-user-mobile-page-root');
+        overlay.removeAttribute('data-user-mobile-layout-root');
+
+        [
+            'width',
+            'min-width',
+            'max-width',
+            'padding-left',
+            'padding-right',
+            'margin-left',
+            'margin-right',
+            'box-sizing'
+        ].forEach(function (property) {
+            overlay.style.removeProperty(property);
         });
     }
 
@@ -181,37 +203,113 @@
         }, SUBMIT_DELAY_MS);
     }
 
+    function shouldWaitForServerGeneration(form) {
+        var type = getLoaderType(form);
+
+        return (type === 'modules' || type === 'challenges')
+            && typeof window.fetch === 'function'
+            && typeof window.FormData !== 'undefined';
+    }
+
+    function submitFormAndWait(form, submitter) {
+        var action = form.getAttribute('action') || window.location.href;
+        var method = String(form.getAttribute('method') || 'GET').toUpperCase();
+        var body = null;
+
+        try {
+            body = submitter ? new FormData(form, submitter) : new FormData(form);
+        } catch (error) {
+            body = new FormData(form);
+        }
+
+        return window.fetch(new URL(action, window.location.href).toString(), {
+            method: method,
+            body: method === 'GET' ? null : body,
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'X-SpeakReady-Loader-Wait': '1'
+            },
+            redirect: 'follow'
+        }).then(function (response) {
+            if (!response.ok) {
+                throw new Error('Loader form request failed with status ' + response.status);
+            }
+
+            var contentType = response.headers.get('content-type') || '';
+            if (contentType.indexOf('application/json') !== -1) {
+                return response.json().then(function (payload) {
+                    return payload.redirect || response.url || action || window.location.href;
+                });
+            }
+
+            return response.text().catch(function () {
+                return '';
+            }).then(function () {
+                return response.url || action || window.location.href;
+            });
+        });
+    }
+
     function navigateTo(url) {
         window.setTimeout(function () {
             window.location.assign(url);
         }, SUBMIT_DELAY_MS);
     }
 
-    function startProgress(overlay, done) {
+    function startProgress(overlay, done, options) {
+        options = options || {};
         var progress = 19;
+        var waitsForCompletion = options.waitForCompletion === true;
+        var progressCap = waitsForCompletion ? Math.min(99, Math.max(20, Number(options.cap) || SERVER_WAIT_PROGRESS_CAP)) : 100;
         var timers = startChecklist(overlay);
+        var finished = false;
+        var interval = null;
+
+        function finish(callback) {
+            if (finished) return;
+            finished = true;
+
+            if (interval) window.clearInterval(interval);
+            timers.forEach(function (timer) {
+                window.clearTimeout(timer);
+            });
+
+            setProgress(overlay, 100);
+            completeChecklist(overlay);
+            if (typeof callback === 'function') callback();
+            else if (typeof done === 'function') done();
+        }
 
         setProgress(overlay, progress);
 
-        var interval = window.setInterval(function () {
+        interval = window.setInterval(function () {
             var step = progress < 50 ? 10 : (progress < 78 ? 7 : (progress < 92 ? 5 : 2));
-            progress = Math.min(100, progress + step);
-            setProgress(overlay, progress);
+            var nextProgress = Math.min(progressCap, progress + step);
 
-            if (progress >= 100) {
-                window.clearInterval(interval);
-                timers.forEach(function (timer) {
-                    window.clearTimeout(timer);
-                });
-                completeChecklist(overlay);
-                done();
+            if (nextProgress !== progress) {
+                progress = nextProgress;
+                setProgress(overlay, progress);
+            }
+
+            if (!waitsForCompletion && progress >= 100) {
+                finish();
             }
         }, 120);
+
+        return {
+            complete: finish
+        };
     }
 
-    function activateLoader(source, done) {
+    function activateLoader(source, done, options) {
         var overlay = getOverlay();
-        if (!overlay) return done();
+        if (!overlay) {
+            if (typeof done === 'function') done();
+            return null;
+        }
+
+        releaseMobileLayoutOverrides(overlay);
 
         if (overlay.parentElement !== document.body) {
             document.body.appendChild(overlay);
@@ -223,7 +321,7 @@
         overlay.classList.add('active');
         document.documentElement.classList.add('finish-transition-active');
         document.body.classList.add('finish-transition-active');
-        startProgress(overlay, done);
+        return startProgress(overlay, done, options);
     }
 
     function targetPositionIsPresent(form) {
@@ -261,6 +359,30 @@
 
                 event.preventDefault();
                 form.dataset.srRelatedLoaderSubmitting = 'true';
+
+                if (shouldWaitForServerGeneration(form)) {
+                    var progress = activateLoader(form, null, {
+                        waitForCompletion: true,
+                        cap: SERVER_WAIT_PROGRESS_CAP
+                    });
+
+                    if (!progress) {
+                        submitForm(form);
+                        return;
+                    }
+
+                    submitFormAndWait(form, event.submitter).then(function (url) {
+                        progress.complete(function () {
+                            navigateTo(url);
+                        });
+                    }).catch(function () {
+                        progress.complete(function () {
+                            submitForm(form);
+                        });
+                    });
+                    return;
+                }
+
                 activateLoader(form, function () {
                     submitForm(form);
                 });

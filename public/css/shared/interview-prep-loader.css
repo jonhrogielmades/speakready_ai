@@ -619,14 +619,14 @@ body.finish-transition-active {
     .finish-transition-overlay {
         padding:
             max(18px, env(safe-area-inset-top, 0px))
-            max(20px, env(safe-area-inset-right, 0px))
+            max(16px, env(safe-area-inset-right, 0px))
             max(18px, env(safe-area-inset-bottom, 0px))
-            max(20px, env(safe-area-inset-left, 0px));
+            max(16px, env(safe-area-inset-left, 0px));
     }
 
     .interview-prep-shell {
         width: min(100%, 430px);
-        max-width: calc(100vw - 40px);
+        max-width: 100%;
         gap: 13px;
         justify-content: flex-start;
         padding: 10px 0 0;

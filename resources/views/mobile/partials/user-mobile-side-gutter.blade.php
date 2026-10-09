@@ -166,7 +166,9 @@
       }
 
       function normalizePageRoot(element) {
-         if (!element || element.closest('.modal, .dropdown-menu, #mobProfileDropdown, #mobNotifDropdown, #mob-bottom-nav, #mob-header')) return;
+         if (!element
+            || element.matches('.finish-transition-overlay, .interview-prep-overlay, #setupTransitionOverlay')
+            || element.closest('.modal, .dropdown-menu, #mobProfileDropdown, #mobNotifDropdown, #mob-bottom-nav, #mob-header, .finish-transition-overlay, .interview-prep-overlay')) return;
 
          element.classList.add('sr-user-page-root');
          element.setAttribute('data-user-mobile-page-root', 'true');

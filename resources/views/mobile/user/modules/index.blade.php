@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/modules/index.css?v=9') }}" data-page-style="user-modules-index">
-<link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=2') }}" data-page-style="interview-prep-loader">
+<link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=3') }}" data-page-style="interview-prep-loader">
 @endpush
 
 @section('content')
@@ -338,6 +338,6 @@
  });
  });
 </script>
-<script src="{{ asset('js/shared/interview-prep-loader.js?v=1') }}"></script>
+<script src="{{ asset('js/shared/interview-prep-loader.js?v=3') }}"></script>
 @endpush
 @endsection

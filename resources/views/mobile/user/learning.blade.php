@@ -4,7 +4,7 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/learning.css?v=1') }}" data-page-style="user-learning">
 <link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=15') }}" data-page-style="user-learning-2">
-<link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=2') }}" data-page-style="interview-prep-loader">
+<link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=3') }}" data-page-style="interview-prep-loader">
 @endpush
 
 @section('content')
@@ -975,6 +975,6 @@
  });
  });
 </script>
-<script src="{{ asset('js/shared/interview-prep-loader.js?v=1') }}"></script>
+<script src="{{ asset('js/shared/interview-prep-loader.js?v=3') }}"></script>
 @endpush
 @endsection

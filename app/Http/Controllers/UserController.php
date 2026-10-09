@@ -3553,8 +3553,16 @@ class UserController extends Controller
  ? "Generated and saved {$journey['created_count']} AI challenge level(s) for {$position} in Admin."
  : "Showing saved admin interview challenges for {$position}.";
 
+ $redirectUrl = route('user.learning', ['category_id' => $journeyCategory->id]);
+
+ if ($request->headers->get('X-SpeakReady-Loader-Wait') === '1') {
+ $request->session()->flash('success', $message);
+
+ return response()->json(['redirect' => $redirectUrl]);
+ }
+
  return redirect()
- ->route('user.learning', ['category_id' => $journeyCategory->id])
+ ->to($redirectUrl)
  ->with('success', $message);
  }
 
@@ -4224,8 +4232,16 @@ class UserController extends Controller
  ->filter(fn (string $value): bool => $value!== '')
  ->all();
 
+ $redirectUrl = route('user.modules.index', $redirectParams);
+
+ if ($request->headers->get('X-SpeakReady-Loader-Wait') === '1') {
+ $request->session()->flash('success', $message);
+
+ return response()->json(['redirect' => $redirectUrl]);
+ }
+
  return redirect()
- ->route('user.modules.index', $redirectParams)
+ ->to($redirectUrl)
  ->with('success', $message);
  }
 
