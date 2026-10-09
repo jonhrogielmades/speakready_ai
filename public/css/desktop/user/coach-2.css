@@ -2332,3 +2332,14 @@ html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-chat-header
     margin-top: 0 !important;
     font-size: 0.78rem !important;
 }
+
+/* Override the global contrast field background so the composer stays one clean pill. */
+body.user-desktop-shell #dashboard #userAppContent #ai-coach-page textarea.chat-textarea,
+body.user-desktop-shell #dashboard #userAppContent #ai-coach-page textarea.chat-textarea:focus {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+}
