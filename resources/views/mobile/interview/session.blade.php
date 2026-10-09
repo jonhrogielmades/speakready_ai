@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=66') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=67') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -92,6 +92,7 @@
  <span class="session-chip" id="questionTimerChip"><i class="fa-regular fa-clock"></i><span id="perQuestionTimer">Self-paced</span></span>
  </div>
  <div id="aiAvatarContainer" class="interviewer-room-stage" style="--interviewer-panel-room-bg:url('{{ asset($interviewerPanelBackgroundImage) }}');width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+ <img class="interviewer-room-bg-image" src="{{ asset($interviewerPanelBackgroundImage) }}" alt="" aria-hidden="true" loading="eager" fetchpriority="high" decoding="async">
  <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;--avatar-ring-color:#8b5cf6;">
  <div class="avatar-side-wave avatar-side-wave-left" aria-hidden="true">
  <span style="--wave-index:0"></span><span style="--wave-index:1"></span><span style="--wave-index:2"></span><span style="--wave-index:3"></span><span style="--wave-index:4"></span>
