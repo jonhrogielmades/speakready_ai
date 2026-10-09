@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=63') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=66') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -61,9 +61,11 @@
   $interviewerAvatarIndex = abs(crc32((string) $sessionRecord->id)) % count($interviewerAvatarImages);
   $interviewerAvatarImage = $interviewerAvatarImages[$interviewerAvatarIndex];
   $interviewerAvatarWebpImage = preg_replace('/\.png$/', '.webp', $interviewerAvatarImage);
+  $interviewerPanelBackgroundImage = 'img/interviewer-panel-room-bg.png';
   @endphp
  @push('styles')
  <link rel="preload" as="image" href="{{ asset($interviewerAvatarWebpImage) }}" type="image/webp" fetchpriority="high">
+ <link rel="preload" as="image" href="{{ asset($interviewerPanelBackgroundImage) }}" type="image/png">
  @endpush
  <div id="workspaceWrapper" style="display:none;">
  <div class="row g-4" id="workspaceRow">
@@ -73,7 +75,7 @@
 
  <!-- Interviewer Avatar Panel -->
  <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
- <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
+ <div class="interviewer-panel-overlay" aria-hidden="true"></div>
  @if($cameraDetectionEnabled)
  <!-- Mobile self-view for camera detection. -->
  <div class="mobile-camera-pip d-lg-none" aria-label="Camera preview">
@@ -89,14 +91,20 @@
  <div class="question-timer-anchor">
  <span class="session-chip" id="questionTimerChip"><i class="fa-regular fa-clock"></i><span id="perQuestionTimer">Self-paced</span></span>
  </div>
- <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);">
+ <div id="aiAvatarContainer" class="interviewer-room-stage" style="--interviewer-panel-room-bg:url('{{ asset($interviewerPanelBackgroundImage) }}');width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
  <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;--avatar-ring-color:#8b5cf6;">
+ <div class="avatar-side-wave avatar-side-wave-left" aria-hidden="true">
+ <span style="--wave-index:0"></span><span style="--wave-index:1"></span><span style="--wave-index:2"></span><span style="--wave-index:3"></span><span style="--wave-index:4"></span>
+ </div>
  <!-- The Image Container (with border, glow, and clipping for the image itself) -->
  <div class="avatar-frame">
  <picture style="display:block;width:100%;height:100%;">
  <source srcset="{{ asset($interviewerAvatarWebpImage) }}" type="image/webp">
  <img id="interviewerAvatarImage" src="{{ asset($interviewerAvatarImage) }}" alt="AI Interviewer" width="110" height="110" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover;">
  </picture>
+ </div>
+ <div class="avatar-side-wave avatar-side-wave-right" aria-hidden="true">
+ <span style="--wave-index:0"></span><span style="--wave-index:1"></span><span style="--wave-index:2"></span><span style="--wave-index:3"></span><span style="--wave-index:4"></span>
  </div>
  </div>
  
@@ -4070,7 +4078,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function startSpeakingUi(text, boundaryAware = false) {
  clearCaptionInterval();
  document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
- document.getElementById('aiAvatarHead')?.style.setProperty('--avatar-ring-color', '#34d399');
+ const avatarHead = document.getElementById('aiAvatarHead');
+ avatarHead?.style.setProperty('--avatar-ring-color', '#34d399');
+ avatarHead?.classList.add('is-speaking');
  document.getElementById('aiQuestionText').innerText = text;
 
  const words = captionWordsFor(text);
@@ -4114,7 +4124,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (token!== questionSpeechToken) return;
 
  document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
- document.getElementById('aiAvatarHead')?.style.setProperty('--avatar-ring-color', '#8b5cf6');
+ const avatarHead = document.getElementById('aiAvatarHead');
+ avatarHead?.style.setProperty('--avatar-ring-color', '#8b5cf6');
+ avatarHead?.classList.remove('is-speaking');
  if (visualizerInterval) clearInterval(visualizerInterval);
  visualizerInterval = null;
  clearCaptionInterval();
@@ -4149,7 +4161,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  visualizerInterval = null;
  document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
  const avatarHead = document.getElementById('aiAvatarHead');
- if (avatarHead) avatarHead.style.borderColor = '#8b5cf6';
+ if (avatarHead) {
+ avatarHead.style.setProperty('--avatar-ring-color', '#8b5cf6');
+ avatarHead.classList.remove('is-speaking');
+ }
  }
 
  async function serverSpeechUrl(questionId, speechText = '') {

@@ -1299,7 +1299,7 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'));
 
         $response->assertOk()
-            ->assertSee('css/desktop/interview/session.css?v=62', false)
+            ->assertSee('css/desktop/interview/session.css?v=64', false)
             ->assertSee('const cameraDetectionEnabled = true;', false)
             ->assertSee('interview-session-browser-fullscreen', false)
             ->assertSee('interview-ready-fullscreen', false)
@@ -1311,6 +1311,11 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="desktop-camera-pip d-none d-lg-flex"', false)
             ->assertSee('id="userCamera"', false)
             ->assertSee('alt="AI Interviewer"', false)
+            ->assertSee('img/interviewer-panel-room-bg.png', false)
+            ->assertSee('class="interviewer-room-stage"', false)
+            ->assertSee('avatar-side-wave avatar-side-wave-left', false)
+            ->assertSee("classList.add('is-speaking')", false)
+            ->assertSee("classList.remove('is-speaking')", false)
             ->assertSee("document.getElementById('userCamera') || document.getElementById('userCameraMobile')", false)
             ->assertDontSee('id="questionTimerChip"', false)
             ->assertDontSee('id="cameraPanel"', false)
@@ -1325,6 +1330,10 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen .desktop-interview-panel .ai-avatar-panel', $desktopSessionCss);
         $this->assertStringContainsString('width: clamp(320px, 21vw, 440px)', $desktopSessionCss);
         $this->assertStringContainsString('--spectrum-radius: clamp(178px, 11.6vw, 240px);', $desktopSessionCss);
+        $this->assertStringContainsString('#sec-interview-session .interviewer-room-stage', $desktopSessionCss);
+        $this->assertStringContainsString('var(--interviewer-panel-room-bg)', $desktopSessionCss);
+        $this->assertStringContainsString('#sec-interview-session #aiAvatarHead.is-speaking .avatar-side-wave', $desktopSessionCss);
+        $this->assertStringContainsString('@keyframes avatarSideWavePulse', $desktopSessionCss);
         $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen .desktop-response-column .response-panel', $desktopSessionCss);
         $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen .desktop-response-column #answerTextarea', $desktopSessionCss);
         $this->assertStringContainsString('max-height: none !important;', $desktopSessionCss);
@@ -1469,7 +1478,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=63', false)
+            ->assertSee('css/mobile/interview/session.css?v=66', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)
@@ -1479,6 +1488,11 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('mobile-response-end-session-action', false)
             ->assertDontSee('mobile-response-end-session-btn', false)
             ->assertSee('id="responseFullscreenToggle"', false)
+            ->assertSee('img/interviewer-panel-room-bg.png', false)
+            ->assertSee('class="interviewer-room-stage"', false)
+            ->assertSee('avatar-side-wave avatar-side-wave-left', false)
+            ->assertSee("classList.add('is-speaking')", false)
+            ->assertSee("classList.remove('is-speaking')", false)
             ->assertSee('enterMobileFullscreen({ requestBrowser: false });', false)
             ->assertSee('enterMobileFullscreen();', false)
             ->assertSee('function syncMobileAnswerFocusState(options = {})', false)
@@ -1546,6 +1560,12 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('height: clamp(390px, calc(var(--sr-visual-vh, 100dvh) * 0.55), 520px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('width: clamp(152px, 42vw, 180px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('--spectrum-radius: clamp(88px, 23vw, 96px);', $mobileSessionCss);
+        $this->assertStringContainsString('width: clamp(86px, 23vw, 112px) !important;', $mobileSessionCss);
+        $this->assertStringContainsString('height: clamp(86px, 23vw, 112px) !important;', $mobileSessionCss);
+        $this->assertStringContainsString('#sec-interview-session .interviewer-room-stage', $mobileSessionCss);
+        $this->assertStringContainsString('var(--interviewer-panel-room-bg)', $mobileSessionCss);
+        $this->assertStringContainsString('#sec-interview-session #aiAvatarHead.is-speaking .avatar-side-wave', $mobileSessionCss);
+        $this->assertStringContainsString('@keyframes avatarSideWavePulse', $mobileSessionCss);
         $this->assertStringContainsString('transform: translateY(var(--interview-avatar-lift)) !important;', $mobileSessionCss);
         $this->assertStringContainsString('inset: auto 16px 22px 16px !important;', $mobileSessionCss);
 

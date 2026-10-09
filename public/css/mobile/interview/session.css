@@ -51,6 +51,37 @@
         margin-bottom: var(--session-gap) !important;
         box-shadow: var(--shadow-soft, 0 10px 28px rgba(0, 0, 0, 0.14)) !important;
     }
+    #sec-interview-session .interviewer-room-stage {
+        position: relative;
+        overflow: hidden;
+        background-color: #0f172a;
+        background-image:
+            linear-gradient(180deg, rgba(15, 23, 42, 0.08) 0%, rgba(15, 23, 42, 0.34) 100%),
+            var(--interviewer-panel-room-bg);
+        background-position: center 56%;
+        background-size: cover;
+        background-repeat: no-repeat;
+    }
+    #sec-interview-session .interviewer-room-stage::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at 50% 48%, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.44) 72%),
+            linear-gradient(180deg, rgba(15, 23, 42, 0.02) 0%, rgba(15, 23, 42, 0.4) 100%);
+    }
+    #sec-interview-session .interviewer-panel-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 56%),
+            radial-gradient(circle at bottom left, rgba(52, 211, 153, 0.12), transparent 58%),
+            linear-gradient(180deg, rgba(15, 23, 42, 0.02), rgba(15, 23, 42, 0.28));
+    }
     .interview-session-header {
         margin-bottom: 18px;
         overflow: visible;
@@ -1808,6 +1839,75 @@
             0 18px 42px rgba(15, 23, 42, 0.45),
             0 0 28px color-mix(in srgb, var(--avatar-ring-color, #8b5cf6) 58%, transparent);
         transition: border-color 0.24s ease, box-shadow 0.24s ease;
+    }
+    #sec-interview-session .avatar-side-wave {
+        position: absolute;
+        top: 50%;
+        z-index: 8;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(3px, 1.6vw, 7px);
+        width: clamp(32px, 30%, 58px);
+        height: 76%;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        filter: drop-shadow(0 0 14px rgba(52, 211, 153, 0.52));
+        transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.18s ease;
+    }
+    #sec-interview-session .avatar-side-wave-left {
+        left: calc(clamp(34px, 34%, 64px) * -1);
+        transform: translateY(-50%) scaleX(-0.86);
+    }
+    #sec-interview-session .avatar-side-wave-right {
+        right: calc(clamp(34px, 34%, 64px) * -1);
+        transform: translateY(-50%) scaleX(0.86);
+    }
+    #sec-interview-session .avatar-side-wave span {
+        display: block;
+        width: clamp(4px, 1.8vw, 8px);
+        height: var(--wave-height, 28px);
+        border-radius: 999px;
+        background: linear-gradient(180deg, #f8fafc 0%, #67e8f9 35%, #34d399 100%);
+        box-shadow: 0 0 14px rgba(52, 211, 153, 0.58);
+        opacity: 0.44;
+        transform-origin: center;
+    }
+    #sec-interview-session .avatar-side-wave span:nth-child(1),
+    #sec-interview-session .avatar-side-wave span:nth-child(5) {
+        --wave-height: clamp(18px, 24%, 34px);
+    }
+    #sec-interview-session .avatar-side-wave span:nth-child(2),
+    #sec-interview-session .avatar-side-wave span:nth-child(4) {
+        --wave-height: clamp(28px, 40%, 52px);
+    }
+    #sec-interview-session .avatar-side-wave span:nth-child(3) {
+        --wave-height: clamp(38px, 58%, 70px);
+    }
+    #sec-interview-session #aiAvatarHead.is-speaking .avatar-side-wave {
+        opacity: 1;
+        visibility: visible;
+    }
+    #sec-interview-session #aiAvatarHead.is-speaking .avatar-side-wave-left {
+        transform: translateY(-50%) scaleX(-1);
+    }
+    #sec-interview-session #aiAvatarHead.is-speaking .avatar-side-wave-right {
+        transform: translateY(-50%) scaleX(1);
+    }
+    #sec-interview-session #aiAvatarHead.is-speaking .avatar-side-wave span {
+        animation: avatarSideWavePulse 0.62s ease-in-out infinite;
+        animation-delay: calc(var(--wave-index) * 70ms);
+    }
+    @keyframes avatarSideWavePulse {
+        0%, 100% {
+            transform: scaleY(0.52);
+            opacity: 0.5;
+        }
+        50% {
+            transform: scaleY(1.12);
+            opacity: 1;
+        }
     }
     .circular-spectrum {
         --spectrum-radius: 60px;
@@ -5537,5 +5637,25 @@ html body #finishTransitionOverlay .finish-view-review-button.is-ready:not(:disa
         min-height: 42px !important;
         padding: 10px 12px !important;
         font-size: 0.82rem !important;
+    }
+}
+
+/* Larger mobile self-view inside the interviewer panel. */
+@media (max-width: 991px) {
+    html body.user-mobile-shell #sec-interview-session .mobile-camera-pip,
+    html body #sec-interview-session .mobile-camera-pip {
+        top: clamp(10px, 3vw, 14px) !important;
+        right: clamp(10px, 3vw, 14px) !important;
+        bottom: auto !important;
+        width: clamp(86px, 23vw, 112px) !important;
+        height: clamp(86px, 23vw, 112px) !important;
+        border-radius: 16px !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-session .mobile-camera-pip video,
+    html body #sec-interview-session .mobile-camera-pip video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
     }
 }
