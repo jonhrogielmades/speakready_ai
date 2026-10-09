@@ -2472,7 +2472,7 @@ body.dm.user-mobile-shell:not(.admin-shell) #ai-coach-page .chat-bubble.bubble-a
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.24), rgba(52, 211, 153, 0.16));
 }
 
-/* Fullscreen keyboard clamp: keep the coach composer above Android's IME. */
+/* Keyboard-safe clamp that preserves the default mobile Coach layout. */
 @media (max-width: 767px) {
     html body.user-mobile-shell.mobile-shell.coach-mobile-page-active.coach-keyboard-open:not(.admin-shell) {
         --coach-keyboard-gap: max(6px, env(safe-area-inset-bottom, 0px));
@@ -2506,13 +2506,15 @@ body.dm.user-mobile-shell:not(.admin-shell) #ai-coach-page .chat-bubble.bubble-a
         height: var(--coach-page-vh, 100%) !important;
         min-height: 0 !important;
         max-height: var(--coach-page-vh, 100%) !important;
-        gap: 0 !important;
-        padding: 6px 8px var(--coach-keyboard-gap) !important;
+        gap: var(--coach-progress-gap, 15px) !important;
+        padding: 8px 12px var(--coach-keyboard-gap) !important;
         overflow: hidden !important;
     }
 
     html body.user-mobile-shell.mobile-shell.coach-mobile-page-active.coach-keyboard-open:not(.admin-shell) #ai-coach-page .coach-progress-hero {
-        display: none !important;
+        display: grid !important;
+        flex: 0 0 auto !important;
+        margin: 0 !important;
     }
 
     html body.user-mobile-shell.mobile-shell.coach-mobile-page-active.coach-keyboard-open:not(.admin-shell) #ai-coach-page .chat-container {
@@ -2521,7 +2523,7 @@ body.dm.user-mobile-shell:not(.admin-shell) #ai-coach-page .chat-bubble.bubble-a
         min-height: 0 !important;
         max-height: none !important;
         margin: 0 !important;
-        border-radius: 14px 14px 0 0 !important;
+        border-radius: var(--coach-progress-panel-radius, 16px) !important;
     }
 
     html body.user-mobile-shell.mobile-shell.coach-mobile-page-active.coach-keyboard-open:not(.admin-shell) #ai-coach-page .chat-main {
@@ -2533,8 +2535,8 @@ body.dm.user-mobile-shell:not(.admin-shell) #ai-coach-page .chat-bubble.bubble-a
 
     html body.user-mobile-shell.mobile-shell.coach-mobile-page-active.coach-keyboard-open:not(.admin-shell) #ai-coach-page .coach-chat-header {
         flex: 0 0 auto !important;
-        min-height: auto !important;
-        padding: 8px 10px !important;
+        min-height: 64px !important;
+        padding: 12px !important;
     }
 
     html body.user-mobile-shell.mobile-shell.coach-mobile-page-active.coach-keyboard-open:not(.admin-shell) #ai-coach-page .chat-messages {
@@ -2543,12 +2545,12 @@ body.dm.user-mobile-shell:not(.admin-shell) #ai-coach-page .chat-bubble.bubble-a
         max-height: none !important;
         overflow-y: auto !important;
         overscroll-behavior: contain !important;
-        padding-bottom: 8px !important;
+        padding: 14px !important;
     }
 
     html body.user-mobile-shell.mobile-shell.coach-mobile-page-active.coach-keyboard-open:not(.admin-shell) #ai-coach-page .chat-input-area {
         flex: 0 0 auto !important;
-        padding: 7px 6px var(--coach-keyboard-gap) !important;
+        padding: 10px 10px var(--coach-keyboard-gap) !important;
         transform: translateZ(0);
     }
 
