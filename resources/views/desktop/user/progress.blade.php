@@ -6,5 +6,5 @@
 @endpush
 
 @section('content')
-@include('shared.user.progress-content', ['serverDetectedMobile' => false])
+@include('shared.user.progress-content', ['serverDetectedMobile' => false, 'historyPageSizeDesktop' => 4])
 @endsection

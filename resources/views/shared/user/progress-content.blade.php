@@ -257,10 +257,12 @@
  <input type="text" id="historySearch" placeholder="Search history...">
  </label>
  @php
- $historyInitialPageSize = ($serverDetectedMobile?? false)? 3: 4;
+ $historyDesktopPageSize = max(1, (int) ($historyPageSizeDesktop?? 4));
+ $historyMobilePageSize = max(1, (int) ($historyPageSizeMobile?? 3));
+ $historyInitialPageSize = ($serverDetectedMobile?? false)? $historyMobilePageSize: $historyDesktopPageSize;
  $historyInitialPageCount = max(1, (int) ceil($historySessions->count() / $historyInitialPageSize));
  @endphp
- <div class="history-list" id="historyList" data-history-page-size-desktop="4" data-history-page-size-mobile="3">
+ <div class="history-list" id="historyList" data-history-page-size-desktop="{{ $historyDesktopPageSize }}" data-history-page-size-mobile="{{ $historyMobilePageSize }}">
  @foreach($historySessions as $session)
  @php $sc = $session->score? $session->score->overall_readiness_score: null; @endphp
  <article class="history-card" data-history-record @if($loop->index >= $historyInitialPageSize) hidden @endif>
@@ -557,9 +559,16 @@
  const mobileHistoryMedia = window.matchMedia? window.matchMedia('(max-width: 767.98px)'): null;
  let currentHistoryPage = 1;
  let currentHistoryMatches = cards;
- const getHistoryPageSize = () => (
- document.body.classList.contains('user-mobile-shell') || (mobileHistoryMedia && mobileHistoryMedia.matches)
- )? mobilePageSize: desktopPageSize;
+ const getHistoryPageSize = () => {
+ if (document.body.classList.contains('user-desktop-shell')) {
+ return desktopPageSize;
+ }
+ if (document.body.classList.contains('user-mobile-shell')) {
+ return mobilePageSize;
+ }
+
+ return (mobileHistoryMedia && mobileHistoryMedia.matches)? mobilePageSize: desktopPageSize;
+ };
  const renderHistoryPage = () => {
  const filter = searchInput? searchInput.value.trim().toLowerCase(): '';
  currentHistoryMatches = cards.filter(card => card.textContent.toLowerCase().includes(filter));
