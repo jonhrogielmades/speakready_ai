@@ -2032,7 +2032,7 @@ class UserController extends Controller
  $preferredLanguage = Setting::preferredLanguageFor(Auth::user())?? (Setting::languageConfig()['code']?? CoachLanguageService::ENGLISH);
  $responseLanguage = $coachLanguages->detect($message, $history, $preferredLanguage);
 
- if ($this->isSpeakReadyDeveloperQuestion($message)) {
+ if (! $reviewAnswerPrompt && $this->isSpeakReadyDeveloperQuestion($message)) {
  $response = $this->speakReadyDeveloperCreditsResponse($responseLanguage);
  } elseif (! $this->coachRequestIsInterviewRelated($message, $attachmentContexts, $history)) {
  $response = $this->coachInterviewScopeResponse($responseLanguage);
@@ -3182,8 +3182,13 @@ class UserController extends Controller
  private function isSpeakReadyDeveloperQuestion(string $message): bool
  {
  $normalized = strtolower(trim(preg_replace('/\s+/', ' ', $message)?? $message));
+ if ($normalized === ''
+ || (str_contains($normalized, 'interview question:') && str_contains($normalized, 'my answer:'))
+ ) {
+ return false;
+ }
 
- $developerTerms = [
+ $developerNouns = [
  'developer',
  'developers',
  'creator',
@@ -3199,14 +3204,23 @@ class UserController extends Controller
  'programmer',
  'programmers',
  'team',
+ 'maintainer',
+ 'maintainers',
+ 'tagagawa',
+ 'naghimo',
+ ];
+
+ $builderVerbs = [
  'made',
  'built',
  'created',
  'developed',
+ 'maintained',
+ 'maintains',
+ 'owns',
  'gumawa',
  'bumuo',
  'lumikha',
- 'tagagawa',
  'naghimo',
  'mihimo',
  'nagbuhat',
@@ -3218,6 +3232,8 @@ class UserController extends Controller
  'names',
  'role',
  'roles',
+ 'what',
+ 'which',
  'responsibility',
  'responsibilities',
  'list',
@@ -3246,6 +3262,8 @@ class UserController extends Controller
  'speakready ai',
  'this system',
  'the system',
+ 'system na ito',
+ 'ng system',
  'this app',
  'the app',
  'application',
@@ -3259,11 +3277,21 @@ class UserController extends Controller
  'ani nga sistema',
  ];
 
- $hasDeveloperTerm = $this->containsAny($normalized, $developerTerms);
+ $hasDeveloperNoun = $this->containsAny($normalized, $developerNouns);
+ $hasBuilderVerb = $this->containsAny($normalized, $builderVerbs);
  $hasIdentityTerm = $this->containsAny($normalized, $identityTerms);
  $hasSystemTerm = $this->containsAny($normalized, $systemTerms);
 
- return $hasDeveloperTerm && $hasIdentityTerm && ($hasSystemTerm ||! str_contains($normalized, 'interview'));
+ if (! $hasSystemTerm ||! $hasIdentityTerm) {
+ return false;
+ }
+
+ if ($hasDeveloperNoun) {
+ return true;
+ }
+
+ return $hasBuilderVerb
+ && preg_match('/\b(?:who|sino|kinsa|which|what|ano|unsa)\b.*\b(?:made|built|created|developed|maintains?|owns|gumawa|bumuo|lumikha|naghimo|mihimo|nagbuhat)\b/u', $normalized) === 1;
  }
 
  private function containsAny(string $haystack, array $needles): bool
