@@ -635,6 +635,50 @@
             return document.getElementById('ai-coach-page')?.dataset[datasetKey] || fallback;
         }
 
+        function readCoachReviewPromptHandoff() {
+            const storageKey = 'speakready.aiCoach.reviewPrompt';
+            let prompt = '';
+
+            try {
+                const raw = window.sessionStorage.getItem(storageKey);
+                if (raw) {
+                    window.sessionStorage.removeItem(storageKey);
+                    const payload = JSON.parse(raw);
+                    prompt = typeof payload === 'string' ? payload : payload?.prompt;
+                }
+            } catch (error) {
+                prompt = '';
+            }
+
+            if (!prompt) {
+                try {
+                    const url = new URL(window.location.href);
+                    prompt = url.searchParams.get('review_prompt') || '';
+                    if (prompt) {
+                        url.searchParams.delete('review_prompt');
+                        window.history.replaceState({}, document.title, url.toString());
+                    }
+                } catch (error) {
+                    prompt = '';
+                }
+            }
+
+            return String(prompt || '').trim().slice(0, 10000);
+        }
+
+        function sendCoachReviewPromptHandoff() {
+            const prompt = readCoachReviewPromptHandoff();
+            if (!prompt) return;
+
+            const input = document.getElementById('chatMsg');
+            if (!input || coachSending) return;
+
+            input.value = prompt;
+            resizeCoachTextarea(input);
+            showCoachFeedback('Sending your saved answer to AI Coach...', 'info');
+            window.setTimeout(() => sendMsg(), 80);
+        }
+
         async function sendMsg() {
             if (coachVoiceActive) {
                 stopCoachVoicePrompt();
@@ -1042,6 +1086,7 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             initializeCoachVoicePrompt();
+            sendCoachReviewPromptHandoff();
 
         });
     </script>

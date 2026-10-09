@@ -23,6 +23,20 @@
  if (trim($possibleAnswer) === '') {
  $possibleAnswer = 'No possible answer was generated for this answer yet.';
  }
+ $coachQuestion = review_question_text($questionSource);
+ if ($coachQuestion === '') {
+ $coachQuestion = 'Question text unavailable.';
+ }
+ $coachAnswer = review_answer_text($answer);
+ if ($coachAnswer === '') {
+ $coachAnswer = $answerDisplay;
+ }
+ $coachPrompt = trim(implode("\n\n", [
+ 'Please act as my SpeakReady interview coach. Review my saved interview answer and give concise, actionable advice. Keep every suggestion truthful and do not invent details for me.',
+ 'Interview question: '.$coachQuestion,
+ 'My answer: '.$coachAnswer,
+ 'Please tell me what worked, what I should improve, and a stronger structure I can practice for this answer.',
+ ]));
 @endphp
 
 <div class="review-answer-simple review-answer-minimal">
@@ -35,9 +49,46 @@
  <span>Your Answer</span>
  <p>{{ $answerDisplay }}</p>
  </section>
- <section>
+ <section class="review-answer-possible-section">
  <span>Possible Answer</span>
  <p>{{ $possibleAnswer }}</p>
+ <div class="review-ai-coach-action" data-ai-coach-prompt-wrapper>
+ <textarea class="review-ai-coach-prompt" data-ai-coach-prompt hidden readonly>{{ $coachPrompt }}</textarea>
+ <button type="button" class="review-ai-coach-button" data-coach-url="{{ route('user.coach') }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach about this answer">
+ <i class="fa-solid fa-robot" aria-hidden="true"></i>
+ <span>ASK AI COACH</span>
+ </button>
+ </div>
  </section>
  </div>
 </div>
+
+@once
+<script>
+    (function () {
+        const reviewCoachPromptKey = 'speakready.aiCoach.reviewPrompt';
+
+        window.speakReadyAskAiCoachFromReview = function (button) {
+            const target = button?.dataset?.coachUrl || '/coach';
+            const promptField = button?.closest('[data-ai-coach-prompt-wrapper]')?.querySelector('[data-ai-coach-prompt]');
+            const prompt = String(promptField?.value || '').trim();
+
+            if (prompt) {
+                try {
+                    window.sessionStorage.setItem(reviewCoachPromptKey, JSON.stringify({
+                        prompt,
+                        source: 'answer-review',
+                        createdAt: Date.now()
+                    }));
+                } catch (error) {
+                    const separator = target.includes('?') ? '&' : '?';
+                    window.location.href = `${target}${separator}review_prompt=${encodeURIComponent(prompt.slice(0, 3500))}`;
+                    return;
+                }
+            }
+
+            window.location.href = target;
+        };
+    })();
+</script>
+@endonce

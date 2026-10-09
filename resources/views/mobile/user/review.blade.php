@@ -2,7 +2,7 @@
 @section('title', 'Detailed Review')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=14') }}" data-page-style="user-review">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/review.css?v=15') }}" data-page-style="user-review">
 @endpush
 
 @section('content')
