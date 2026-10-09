@@ -734,7 +734,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     hoverBackgroundColor: radarColors.hoverBackgroundColor,
                     hoverBorderColor: radarColors.hoverBorderColor,
                     borderWidth: hasRadarScores ? 1.5 : 1,
-                    borderRadius: 9,
+                    borderRadius: 0,
                     borderSkipped: false,
                     maxBarThickness: 22,
                     categoryPercentage: 0.74,

@@ -10474,3 +10474,68 @@ body.user-desktop-shell:not(.admin-shell) .sr-dashboard #card-achievements.sr-ac
         font-size: 0.52rem !important;
     }
 }
+
+/* Full-width readiness trend with the three support panels directly underneath. */
+.sr-dashboard-panel-row {
+    display: grid;
+    gap: var(--dash-section-gap);
+    min-width: 0;
+}
+
+@media (min-width: 992px) {
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard .sr-dashboard-shell {
+        grid-template-columns: minmax(0, 1fr) !important;
+        align-items: stretch !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard .sr-dashboard-shell > .sr-main-stack,
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard #card-progress-chart {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: stretch;
+        width: 100%;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row > .sr-card {
+        height: 100%;
+        min-width: 0;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row .sr-side-feature-header {
+        min-width: 0;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row .sr-side-title-row {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row .sr-side-detail-btn {
+        flex: 0 0 auto;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row #card-skill-radar .sr-radar-box,
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row #card-skill-radar .sr-radar-locked {
+        min-height: 174px;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-current-goal .sr-goal-panel {
+        display: flex;
+        flex-direction: column;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-current-goal .sr-goal-main {
+        flex: 1 1 auto;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .sr-dashboard-panel-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
