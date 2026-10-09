@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=52') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=53') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -174,7 +174,7 @@
                     <div class="sr-image-speech" aria-hidden="true" data-sr-dashboard-bubble>
                         <strong>Hi! {{ $welcomeName }}</strong>
                         <span data-sr-dashboard-bubble-line>You're <span class="sr-image-speech-accent">ready</span> to practice and <span class="sr-image-speech-accent is-success">succeed</span> today!</span>
-                        <span class="sr-image-speech-action" data-sr-dashboard-bubble-action>Use the floating coach icon for AI Coach.</span>
+                        <span class="sr-image-speech-action" data-sr-dashboard-bubble-action>Click the robot for AI Coach.</span>
                     </div>
                     <div class="sr-image-head-icons" aria-hidden="true">
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-microphone"></i></span></span>
@@ -184,7 +184,15 @@
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-graduation-cap"></i></span></span>
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-star"></i></span></span>
                     </div>
-                    <img class="sr-image-robot" src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" draggable="false">
+                    <a
+                        href="{{ route('user.coach') }}"
+                        class="sr-image-robot sr-image-coach-trigger"
+                        id="dashboardCoachImageTrigger"
+                        aria-label="Open AI Coach"
+                        title="AI Coach"
+                    >
+                        <img src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" draggable="false">
+                    </a>
                 </div>
             </section>
 
@@ -510,24 +518,6 @@
     </div>
 </div>
 
-<button
-    type="button"
-    class="sr-dashboard-coach-fab"
-    id="dashboardCoachFloatingLauncher"
-    data-dashboard-coach-launcher
-    data-dashboard-coach-draggable
-    data-bs-toggle="modal"
-    data-bs-target="#dashboardCoachModal"
-    aria-controls="dashboardCoachModal"
-    aria-label="Open AI Coach"
-    title="AI Coach"
->
-    <span class="sr-dashboard-coach-fab-image" aria-hidden="true">
-        <img src="{{ asset('img/dashboard-coach-floating-robot.png') }}" alt="" draggable="false">
-    </span>
-    <span class="visually-hidden">Open AI Coach</span>
-</button>
-
 @php
     $dashboardMockScenarios = collect($dashboardMockScenarios ?? []);
     $dashboardMockDefaultScenario = $dashboardMockScenarios->first();
@@ -661,7 +651,6 @@
     </div>
 </div>
 
-@include('shared.user.dashboard-coach-modal')
 @include('shared.user.dashboard-setup-tools-modal')
 
 @push('scripts')
@@ -1165,161 +1154,8 @@ document.addEventListener("DOMContentLoaded", function() {
             syncScenarioFields();
         }
 
-        function initDashboardCoachLauncherDrag() {
-            const launcher = document.getElementById('dashboardCoachFloatingLauncher');
-            if (!launcher || launcher.dataset.dragBound === 'true') return;
-
-            launcher.dataset.dragBound = 'true';
-
-            const isMobile = document.body?.classList.contains('user-mobile-shell');
-            const dragThreshold = 6;
-            const edgePadding = 8;
-            let dragState = null;
-
-            function launcherSize() {
-                const rect = launcher.getBoundingClientRect();
-                return {
-                    width: rect.width || (isMobile ? 62 : 78),
-                    height: rect.height || (isMobile ? 62 : 78),
-                };
-            }
-
-            function clampPosition(x, y) {
-                const size = launcherSize();
-                const maxX = Math.max(edgePadding, window.innerWidth - size.width - edgePadding);
-                const maxY = Math.max(edgePadding, window.innerHeight - size.height - edgePadding);
-
-                return {
-                    x: Math.min(Math.max(edgePadding, x), maxX),
-                    y: Math.min(Math.max(edgePadding, y), maxY),
-                };
-            }
-
-            function applyPosition(x, y) {
-                const position = clampPosition(x, y);
-
-                launcher.style.setProperty('position', 'fixed', 'important');
-                launcher.style.setProperty('left', Math.round(position.x) + 'px', 'important');
-                launcher.style.setProperty('top', Math.round(position.y) + 'px', 'important');
-                launcher.style.setProperty('right', 'auto', 'important');
-                launcher.style.setProperty('bottom', 'auto', 'important');
-                launcher.style.setProperty('transform', 'none', 'important');
-                launcher.style.setProperty('z-index', '1300', 'important');
-                launcher.style.setProperty('margin', '0', 'important');
-            }
-
-            function applyDefaultPosition() {
-                launcher.style.setProperty('position', 'fixed', 'important');
-                launcher.style.setProperty('left', 'auto', 'important');
-                launcher.style.setProperty('top', 'auto', 'important');
-                launcher.style.setProperty('right', isMobile ? 'max(8px, env(safe-area-inset-right, 0px))' : 'max(22px, env(safe-area-inset-right, 0px))', 'important');
-                launcher.style.setProperty('bottom', isMobile ? 'calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 8px)' : 'max(22px, env(safe-area-inset-bottom, 0px))', 'important');
-                launcher.style.setProperty('transform', 'none', 'important');
-                launcher.style.setProperty('z-index', '1300', 'important');
-                launcher.style.setProperty('margin', '0', 'important');
-            }
-
-            function resetLauncherPosition() {
-                if (launcher.parentElement !== document.body) {
-                    document.body.appendChild(launcher);
-                }
-
-                try {
-                    localStorage.removeItem('speakready.dashboardCoachLauncher.mobile');
-                    localStorage.removeItem('speakready.dashboardCoachLauncher.desktop');
-                } catch (error) {
-                    console.warn('Could not clear dashboard coach launcher position:', error);
-                }
-
-                applyDefaultPosition();
-            }
-
-            launcher.addEventListener('click', (event) => {
-                if (launcher.dataset.dragSuppressClick !== 'true') return;
-
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                delete launcher.dataset.dragSuppressClick;
-            }, true);
-
-            launcher.addEventListener('pointerdown', (event) => {
-                if (event.button !== undefined && event.button !== 0) return;
-
-                const rect = launcher.getBoundingClientRect();
-                dragState = {
-                    pointerId: event.pointerId,
-                    startX: event.clientX,
-                    startY: event.clientY,
-                    offsetX: event.clientX - rect.left,
-                    offsetY: event.clientY - rect.top,
-                    moved: false,
-                };
-
-                launcher.classList.add('is-dragging');
-
-                try {
-                    launcher.setPointerCapture(event.pointerId);
-                } catch (error) {
-                    console.warn('Could not capture dashboard coach launcher pointer:', error);
-                }
-            });
-
-            launcher.addEventListener('pointermove', (event) => {
-                if (!dragState || dragState.pointerId !== event.pointerId) return;
-
-                const deltaX = event.clientX - dragState.startX;
-                const deltaY = event.clientY - dragState.startY;
-
-                if (!dragState.moved && Math.hypot(deltaX, deltaY) >= dragThreshold) {
-                    dragState.moved = true;
-                }
-
-                if (!dragState.moved) return;
-
-                event.preventDefault();
-                applyPosition(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY, false);
-            });
-
-            function finishDrag(event) {
-                if (!dragState || dragState.pointerId !== event.pointerId) return;
-
-                if (dragState.moved) {
-                    event.preventDefault();
-                    applyPosition(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY);
-                    launcher.dataset.dragSuppressClick = 'true';
-                    window.setTimeout(() => {
-                        delete launcher.dataset.dragSuppressClick;
-                    }, 250);
-                }
-
-                launcher.classList.remove('is-dragging');
-
-                try {
-                    launcher.releasePointerCapture(event.pointerId);
-                } catch (error) {
-                    // Pointer capture may already be released by the browser.
-                }
-
-                dragState = null;
-            }
-
-            launcher.addEventListener('pointerup', finishDrag);
-            launcher.addEventListener('pointercancel', finishDrag);
-            window.addEventListener('resize', () => {
-                const left = Number.parseFloat(launcher.style.left);
-                const top = Number.parseFloat(launcher.style.top);
-
-                if (Number.isFinite(left) && Number.isFinite(top)) {
-                    applyPosition(left, top);
-                }
-            });
-
-            resetLauncherPosition();
-        }
-
         function initDashboardModals() {
             initDashboardMockModal();
-            initDashboardCoachLauncherDrag();
         }
 
         if (document.readyState === 'loading') {
@@ -1338,7 +1174,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const fallbackDashboardBubbleMessages = [
             {
                 line: 'You\'re ready to practice and succeed today!',
-                action: 'Use the floating coach icon for AI Coach.',
+                action: 'Click the robot for AI Coach.',
             },
             {
                 line: 'Warm up with one focused mock interview today.',
@@ -1350,7 +1186,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             {
                 line: 'Build confidence before the real interview.',
-                action: 'Use the floating coach icon when you need help.',
+                action: 'Click the robot when you need help.',
             },
         ];
         let dashboardBubbleMessages = (Array.isArray(providerDashboardBubbleMessages) && providerDashboardBubbleMessages.length

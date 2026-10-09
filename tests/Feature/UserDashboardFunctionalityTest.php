@@ -100,13 +100,13 @@ class UserDashboardFunctionalityTest extends TestCase
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => [],
                 'shell' => 'class="user-desktop-shell desktop-shell',
-                'css' => 'css/desktop/dashboard.css?v=51',
+                'css' => 'css/desktop/dashboard.css?v=53',
             ],
             [
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => ['User-Agent' => $iphoneUserAgent],
                 'shell' => 'class="user-mobile-shell mobile-shell',
-                'css' => 'css/mobile/dashboard.css?v=43',
+                'css' => 'css/mobile/dashboard.css?v=44',
             ],
         ];
 
@@ -126,7 +126,13 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('img/dashboard-hero-robot-reference.png', false)
                 ->assertDontSee('localStorage.setItem(storageKey', false)
                 ->assertDontSee('localStorage.getItem(storageKey', false)
-                ->assertDontSee('Click the robot for AI Coach.')
+                ->assertSee('href="'.route('user.coach').'"', false)
+                ->assertDontSee('data-bs-target="#dashboardCoachModal"', false)
+                ->assertDontSee('id="dashboardCoachForm"', false)
+                ->assertDontSee('id="dashboardCoachClear"', false)
+                ->assertDontSee('id="dashboardCoachVoice"', false)
+                ->assertDontSee('DashboardCoachSpeechRecognition', false)
+                ->assertDontSee('initDashboardCoachModal', false)
                 ->assertSee('id="dashboardSetupToolsModal"', false)
                 ->assertSee('id="dashboardSetupToolsForm"', false)
                 ->assertSee('data-sr-setup-tool="microphone"', false)
@@ -145,8 +151,8 @@ class UserDashboardFunctionalityTest extends TestCase
                     ->assertSee('id="dashboardCoachImageTrigger"', false)
                     ->assertSee('sr-image-coach-trigger', false)
                     ->assertSee('Tap the robot for AI Coach.')
-                    ->assertSee('data-bs-target="#dashboardCoachModal"', false)
-                    ->assertSee('aria-controls="dashboardCoachModal"', false)
+                    ->assertDontSee('Click the robot for AI Coach.')
+                    ->assertDontSee('aria-controls="dashboardCoachModal"', false)
                     ->assertDontSee('id="dashboardCoachFloatingLauncher"', false)
                     ->assertDontSee('data-dashboard-coach-launcher', false)
                     ->assertDontSee('data-dashboard-coach-fixed', false)
@@ -158,15 +164,16 @@ class UserDashboardFunctionalityTest extends TestCase
                     ->assertDontSee("localStorage.removeItem('speakready.dashboardCoachLauncher.mobile')", false);
             } else {
                 $response
-                    ->assertDontSee('id="dashboardCoachImageTrigger"', false)
-                    ->assertDontSee('sr-image-coach-trigger', false)
-                    ->assertSee('id="dashboardCoachFloatingLauncher"', false)
-                    ->assertSee('data-dashboard-coach-launcher', false)
-                    ->assertSee('img/dashboard-coach-floating-robot.png', false)
-                    ->assertSee('Use the floating coach icon for AI Coach.')
-                    ->assertSee('data-dashboard-coach-draggable', false)
-                    ->assertSee('initDashboardCoachLauncherDrag', false)
-                    ->assertSee("localStorage.removeItem('speakready.dashboardCoachLauncher.desktop')", false);
+                    ->assertSee('id="dashboardCoachImageTrigger"', false)
+                    ->assertSee('sr-image-coach-trigger', false)
+                    ->assertSee('Click the robot for AI Coach.')
+                    ->assertDontSee('id="dashboardCoachFloatingLauncher"', false)
+                    ->assertDontSee('data-dashboard-coach-launcher', false)
+                    ->assertDontSee('img/dashboard-coach-floating-robot.png', false)
+                    ->assertDontSee('Use the floating coach icon for AI Coach.')
+                    ->assertDontSee('data-dashboard-coach-draggable', false)
+                    ->assertDontSee('initDashboardCoachLauncherDrag', false)
+                    ->assertDontSee("localStorage.removeItem('speakready.dashboardCoachLauncher.desktop')", false);
             }
         }
     }

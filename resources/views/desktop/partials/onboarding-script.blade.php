@@ -837,7 +837,7 @@
                     actionsTitle: 'Start practice',
                     actionsDescription: 'Jump into a mock interview or interview coach prompt from the visible action buttons.',
                     heroSelectors: ['.sr-hero-image-panel', '.sr-score-panel', '#srDashboardTitle'],
-                    workspaceSelectors: ['#card-progress-chart', '#dashboardCoachForm'],
+                    workspaceSelectors: ['#card-progress-chart', '#dashboardCoachImageTrigger'],
                     metricsSelectors: ['.sr-mobile-stat-grid', '.sr-stats-desktop', '#card-progress-chart', '#card-skill-radar'],
                     actionSelectors: ['#card-daily-challenge', '.sr-challenge-cta', '.sr-btn-primary'],
                 });

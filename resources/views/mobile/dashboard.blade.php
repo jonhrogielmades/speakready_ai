@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=43') }}" data-page-style="dashboard-v43">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=44') }}" data-page-style="dashboard-v44">
 @endpush
 
 @section('content')
@@ -145,18 +145,15 @@
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-graduation-cap"></i></span></span>
                         <span class="sr-image-head-icon"><span class="sr-image-head-icon-face"><i class="fa-solid fa-star"></i></span></span>
                     </div>
-                    <button
-                        type="button"
+                    <a
+                        href="{{ route('user.coach') }}"
                         class="sr-image-robot sr-image-coach-trigger"
                         id="dashboardCoachImageTrigger"
-                        data-bs-toggle="modal"
-                        data-bs-target="#dashboardCoachModal"
-                        aria-controls="dashboardCoachModal"
                         aria-label="Open AI Coach"
                         title="AI Coach"
                     >
                         <img src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" draggable="false">
-                    </button>
+                    </a>
                 </div>
             </section>
 
@@ -436,7 +433,6 @@
     </div>
 </div>
 
-@include('shared.user.dashboard-coach-modal')
 @include('shared.user.dashboard-setup-tools-modal')
 
 
@@ -824,8 +820,8 @@ document.addEventListener("DOMContentLoaded", function() {
 @php
     $mobileDashboardBubbleMessages = collect($dashboardBubbleMessages ?? [])
         ->map(function ($message) {
-            if (is_array($message) && isset($message['action']) && is_string($message['action']) && str_contains($message['action'], 'floating coach icon')) {
-                $message['action'] = 'Tap the robot for AI Coach.';
+            if (is_array($message) && isset($message['action']) && is_string($message['action']) && str_contains($message['action'], 'Click the robot')) {
+                $message['action'] = str_replace('Click the robot', 'Tap the robot', $message['action']);
             }
 
             return $message;
