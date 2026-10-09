@@ -2152,14 +2152,14 @@ html body.user-mobile-shell:not(.admin-shell) #ai-coach-page .coach-chat-header 
     font-size: 0.6rem !important;
 }
 
-/* Use the dashboard robot art as the AI avatar, mirrored so the wave is on the right. */
+/* Use the dedicated AI Coach icon and keep the full robot head visible. */
 html body.user-mobile-shell:not(.admin-shell) #mob-content #ai-coach-page .coach-avatar,
 html body.user-mobile-shell:not(.admin-shell) #ai-coach-page .coach-avatar {
     position: relative !important;
     overflow: hidden !important;
     isolation: isolate !important;
-    border: 1px solid rgba(37, 99, 235, 0.18) !important;
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe) !important;
+    border: 1px solid rgba(37, 99, 235, 0.14) !important;
+    background: transparent !important;
     box-shadow: 0 8px 18px rgba(37, 99, 235, 0.16) !important;
 }
 
@@ -2167,10 +2167,10 @@ html body.user-mobile-shell:not(.admin-shell) #mob-content #ai-coach-page .coach
 html body.user-mobile-shell:not(.admin-shell) #ai-coach-page .coach-avatar::before {
     content: "" !important;
     position: absolute !important;
-    inset: 1px !important;
+    inset: 0 !important;
     z-index: 0 !important;
-    background: url("/img/dashboard-coach-floating-robot.png") center 18% / 175% auto no-repeat !important;
-    transform: scaleX(-1) !important;
+    background: url("/img/ai-coach-avatar-icon.png") center center / contain no-repeat !important;
+    transform: none !important;
     transform-origin: center !important;
     pointer-events: none !important;
 }
