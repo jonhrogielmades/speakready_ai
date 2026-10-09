@@ -1278,7 +1278,7 @@
             '/notifications',
             '/modules',
             '/learning',
-            '/coach',
+            '/progress',
             '/reports'
         ];
 
@@ -1291,7 +1291,7 @@
         var path = normalizeUserNavigationPath(url.pathname);
         var states = {
             'mobnav-home': path === '/dashboard',
-            'mobnav-progress': path === '/progress',
+            'mobnav-coach': isSameOrChildNavigationPath(path, '/coach'),
             'mobnav-interview': isInterviewPracticeNavigationPath(path),
             'mobnav-feedback': isFeedbackNavigationPath(path),
             'mobnav-more': isMoreNavigationPath(path)

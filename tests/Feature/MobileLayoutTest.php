@@ -1109,14 +1109,15 @@ class MobileLayoutTest extends TestCase
             ->assertSee('aria-label="Start interview practice"', false)
             ->assertSee('<span>Interview</span>', false)
             ->assertSee('<span>More</span>', false)
-            ->assertSee('class="fa-solid fa-chart-simple"', false)
+            ->assertSee('class="fa-solid fa-robot"', false)
+            ->assertSee('<span>AI Coach</span>', false)
             ->assertSee('class="fa-regular fa-clipboard-list"', false)
             ->assertSee('class="fa-solid fa-grid"', false);
 
         $content = $response->getContent();
 
         $this->assertMatchesRegularExpression(
-            '/id="mobnav-home".*id="mobnav-progress".*id="mobnav-interview".*id="mobnav-feedback".*id="mobnav-more"/s',
+            '/id="mobnav-home".*id="mobnav-coach".*id="mobnav-interview".*id="mobnav-feedback".*id="mobnav-more"/s',
             $content
         );
 
@@ -1222,7 +1223,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('height: var(--sr-visual-vh) !important', false)
             ->assertSee('css/mobile/style.css?v=33', false)
             ->assertSee('js/main.js?v=7', false)
-            ->assertSee('js/user-ui.js?v=24', false)
+            ->assertSee('js/user-ui.js?v=25', false)
             ->assertSee('body.user-mobile-shell #mob-header #mobFullscreenBtn', false)
             ->assertSee('display: inline-flex !important;', false)
             ->assertDontSee('body.user-mobile-shell #mob-header #mobFullscreenBtn {

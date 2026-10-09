@@ -1541,7 +1541,7 @@ class UserSideHardeningTest extends TestCase
  $mobileResponse->assertSee($markup, false);
  }
  $mobileResponse->assertSee('class="mob-nav-item mob-nav-primary active"', false);
- $mobileResponse->assertSee('js/user-ui.js?v=24', false);
+ $mobileResponse->assertSee('js/user-ui.js?v=25', false);
  foreach ($removedAssistanceMarkup as $markup) {
  $mobileResponse->assertDontSee($markup, false);
  }

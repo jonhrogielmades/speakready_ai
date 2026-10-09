@@ -4610,7 +4610,7 @@
 
                 <div class="mob-profile-section-title">Interview Tools</div>
                 <div class="mob-profile-grid">
-               <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>Interview Coach</span></a>
+               <a href="{{ route('user.progress') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-simple"></i><span>Progress</span></a>
                <a href="{{ route('user.practice.calendar') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}"><i class="fa-regular fa-calendar-days"></i><span>Calendar</span></a>
                <a href="{{ route('user.reports') }}" class="mob-profile-link mob-profile-link-wide profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports and Sessions"><i class="fa-solid fa-folder-open"></i><span>Reports and Sessions</span></a>
                </div>
@@ -4699,11 +4699,11 @@
                <span class="mob-nav-icon"><i class="fa-solid fa-house"></i></span>
                <span>Home</span>
             </a>
-            <a href="{{ route('user.progress') }}"
-               class="mob-nav-item {{ request()->routeIs('user.progress') ? 'active' : '' }}"
-               id="mobnav-progress">
-               <span class="mob-nav-icon"><i class="fa-solid fa-chart-simple"></i></span>
-               <span>Progress</span>
+            <a href="{{ route('user.coach') }}"
+               class="mob-nav-item {{ request()->routeIs('user.coach*') ? 'active' : '' }}"
+               id="mobnav-coach">
+               <span class="mob-nav-icon"><i class="fa-solid fa-robot"></i></span>
+               <span>AI Coach</span>
             </a>
             <a href="{{ route('interview.setup') }}"
                class="mob-nav-item mob-nav-primary {{ request()->routeIs('interview.setup', 'interview.session') ? 'active' : '' }}"
@@ -4718,7 +4718,7 @@
                <span class="mob-nav-icon"><i class="fa-regular fa-clipboard-list"></i></span>
                <span>Feedback</span>
             </a>
-            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.coach*', 'user.practice.*', 'user.reports', 'user.learning', 'user.skills', 'user.modules.*') ? 'active' : '' }}"
+            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.progress', 'user.practice.*', 'user.reports', 'user.learning', 'user.skills', 'user.modules.*') ? 'active' : '' }}"
                     id="mobnav-more"
                     type="button"
                     aria-controls="mobProfileDropdown"
@@ -4756,7 +4756,7 @@
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=24" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=25" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {
