@@ -122,6 +122,51 @@ class AiCoachDeveloperCreditsTest extends TestCase
         $this->assertSame(2, ChatbotMessage::count());
     }
 
+    public function test_answer_review_handoff_prompt_gets_grounded_fallback_when_ai_is_unavailable(): void
+    {
+        Http::fake(['*' => Http::response([], 500)]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+
+        $message = implode("\n\n", [
+            'Please act as my SpeakReady interview coach. Review my saved interview answer and give concise, actionable advice. Use only the exact question and my saved answer as evidence. Keep every suggestion truthful and do not invent details for me.',
+            'Interview question: Explain a time you helped a customer.',
+            'My answer: I listened to the customer, confirmed the issue, and explained the next step.',
+            'Please tell me what worked, what I should improve, and a stronger structure I can practice for this answer.',
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => $message,
+            'history' => [],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('language', 'en')
+            ->assertJsonPath('title', 'Answer Review Coaching');
+
+        $answer = $response->json('response');
+        $this->assertIsString($answer);
+        $this->assertStringContainsString('Based only on your saved answer', $answer);
+        $this->assertStringContainsString('What is reliable:', $answer);
+        $this->assertStringContainsString('The question being reviewed is: Explain a time you helped a customer.', $answer);
+        $this->assertStringContainsString('The saved answer evidence I can safely use is: "I listened to the customer confirmed the issue and explained the next step".', $answer);
+        $this->assertStringContainsString('Add only a true result, outcome, lesson, or confirmation step that you can verify.', $answer);
+        $this->assertStringContainsString('Before using this in an interview, verify any missing result', $answer);
+        $this->assertStringNotContainsString('increased customer satisfaction', $answer);
+        $this->assertStringNotContainsString('hired', $answer);
+
+        $this->assertDatabaseHas('chatbot_conversations', [
+            'user_id' => $user->id,
+            'title' => 'Answer Review Coaching',
+        ]);
+        $this->assertSame(2, ChatbotMessage::count());
+    }
+
     public function test_ai_coach_answers_developer_credit_questions_from_official_team(): void
     {
         Http::fake();

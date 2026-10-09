@@ -32,7 +32,7 @@
  $coachAnswer = $answerDisplay;
  }
  $coachPrompt = trim(implode("\n\n", [
- 'Please act as my SpeakReady interview coach. Review my saved interview answer and give concise, actionable advice. Keep every suggestion truthful and do not invent details for me.',
+ 'Please act as my SpeakReady interview coach. Review my saved interview answer and give concise, actionable advice. Use only the exact question and my saved answer as evidence. Keep every suggestion truthful and do not invent details for me.',
  'Interview question: '.$coachQuestion,
  'My answer: '.$coachAnswer,
  'Please tell me what worked, what I should improve, and a stronger structure I can practice for this answer.',
