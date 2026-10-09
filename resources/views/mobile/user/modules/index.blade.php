@@ -183,6 +183,7 @@
 
 @include('shared.partials.interview-prep-loader', [
  'prepLoaderKind' => 'modules',
+ 'prepLoaderShowLogo' => false,
  'prepLoaderTitleAccent' => 'Modules...',
  'prepLoaderChecklistLabel' => 'Prepared related modules',
 ])

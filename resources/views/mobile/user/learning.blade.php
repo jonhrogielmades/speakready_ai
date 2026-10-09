@@ -441,6 +441,7 @@
 
 @include('shared.partials.interview-prep-loader', [
  'prepLoaderKind' => 'challenges',
+ 'prepLoaderShowLogo' => false,
  'prepLoaderTitleAccent' => 'Challenges...',
  'prepLoaderChecklistLabel' => 'Prepared related challenges',
 ])

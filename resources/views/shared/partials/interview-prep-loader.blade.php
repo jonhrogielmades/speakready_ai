@@ -1,5 +1,6 @@
 @php
     $prepLoaderKind = $prepLoaderKind ?? 'default';
+    $prepLoaderShowLogo = $prepLoaderShowLogo ?? true;
     $prepLoaderTitle = $prepLoaderTitle ?? 'Preparing Your';
     $prepLoaderTitleAccent = $prepLoaderTitleAccent ?? 'Interview...';
     $prepLoaderDescription = $prepLoaderDescription ?? 'This will just take a few moments.';
@@ -16,9 +17,11 @@
 
 <div id="setupTransitionOverlay" class="finish-transition-overlay interview-prep-overlay" role="dialog" aria-modal="true" aria-live="polite" aria-atomic="true" aria-labelledby="setupLoadingTitle" aria-describedby="setupLoadingDescription" data-related-prep-loader="{{ $prepLoaderKind }}">
  <div class="interview-prep-shell">
+ @if($prepLoaderShowLogo)
  <span class="interview-prep-logo" aria-hidden="true">
  <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="">
  </span>
+ @endif
 
  <div class="interview-prep-art" aria-hidden="true">
  <span class="prep-art-ring"></span>
