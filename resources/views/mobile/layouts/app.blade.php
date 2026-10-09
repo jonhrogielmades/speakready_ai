@@ -3293,16 +3293,9 @@
                background: #ef4444 !important;
             }
 
-            body.user-mobile-shell #mob-header #mobFullscreenBtn {
-               display: inline-flex !important;
-            }
          }
 
          @media (max-width: 420px) {
-            body.user-mobile-shell #mob-header #mobFullscreenBtn {
-               display: inline-flex !important;
-            }
-
              body.user-mobile-shell #mob-header .mob-header-brand-pill {
                 width: fit-content !important;
                 min-width: 0 !important;
@@ -4552,9 +4545,6 @@
          <div class="mob-header-right">
             <button class="mob-icon-btn" id="mobTutorialBtn" type="button" aria-label="Start tutorial" onclick="triggerMobTutorial()" title="Start Tutorial" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);">
                <i class="fa-solid fa-circle-play"></i>
-            </button>
-            <button class="mob-icon-btn" id="mobFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" data-user-fullscreen-toggle>
-               <i class="fa-solid fa-expand" id="mobFullscreenIcon"></i>
             </button>
             <button class="mob-icon-btn" id="mobThBtn" type="button" aria-label="Toggle color theme" onclick="toggleTheme()" title="Toggle theme">
                <i class="fa-solid fa-sun" id="mobSunI" style="display:none"></i>
