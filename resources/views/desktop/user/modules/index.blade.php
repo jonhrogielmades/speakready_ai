@@ -3,6 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=15') }}" data-page-style="user-modules-index">
+<link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=1') }}" data-page-style="interview-prep-loader">
 @endpush
 
 @section('content')
@@ -115,7 +116,7 @@
  <div class="module-card-views">
  <i class="fa-solid fa-eye me-1"></i> {{ number_format($module->views) }} views
  </div>
- <a href="{{ route('user.modules.show', $module->id) }}" class="module-card-link btn-shine">
+ <a href="{{ route('user.modules.show', $module->id) }}" class="module-card-link btn-shine" data-sr-related-loader-link="module-open" data-sr-loader-label="{{ $module->title }}">
  Open Action Module <i class="fa-solid fa-arrow-right ms-1"></i>
  </a>
  </div>
@@ -150,7 +151,7 @@
 
 <div class="modal fade module-position-modal" id="modulePositionModal" tabindex="-1" aria-labelledby="modulePositionModalTitle" aria-hidden="true" data-show-on-load="{{ ($showModulePositionModal || $errors->has('target_position'))? 'true': 'false' }}" data-require-choice="{{ $selectedModulePosition === ''? 'true': 'false' }}">
  <div class="modal-dialog modal-dialog-centered module-position-dialog">
- <form action="{{ route('user.modules.position') }}" method="POST" class="modal-content">
+ <form action="{{ route('user.modules.position') }}" method="POST" class="modal-content" data-sr-related-loader-form="modules">
  @csrf
  <input type="hidden" name="category" value="{{ $currentCategory }}">
  <input type="hidden" name="search" value="{{ $currentSearch }}">
@@ -199,6 +200,12 @@
  </form>
  </div>
 </div>
+
+@include('shared.partials.interview-prep-loader', [
+ 'prepLoaderKind' => 'modules',
+ 'prepLoaderTitleAccent' => 'Modules...',
+ 'prepLoaderChecklistLabel' => 'Prepared related modules',
+])
 @push('scripts')
 <script>
  document.addEventListener('DOMContentLoaded', function () {
@@ -247,6 +254,7 @@
  }
  syncClearLink(nextForm);
  currentResults.replaceWith(nextResults);
+ window.SpeakReadyInterviewPrepLoader?.refresh?.();
  history.replaceState({}, '', url);
  const count = nextResults.querySelectorAll('.module-card').length;
  const status = document.getElementById('moduleSearchStatus');
@@ -407,5 +415,6 @@
  });
  });
 </script>
+<script src="{{ asset('js/shared/interview-prep-loader.js?v=1') }}"></script>
 @endpush
 @endsection

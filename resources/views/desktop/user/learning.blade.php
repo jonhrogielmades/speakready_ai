@@ -4,6 +4,7 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=34') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=1') }}" data-page-style="interview-prep-loader">
 @endpush
 
 @section('content')
@@ -307,7 +308,7 @@
  <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $level->energy_cost }} Energy</div>
  </div>
  @if($status === 'active')
- <form action="{{ route('user.game.start', $level->id) }}" method="POST" class="start-challenge-form">
+ <form action="{{ route('user.game.start', $level->id) }}" method="POST" class="start-challenge-form" data-sr-related-loader-form="challenge-start" data-sr-loader-label="{{ $level->title }}">
  @csrf
  <button type="submit" class="btn btn-shine start-challenge-btn" style="background:var(--dash-primary, #60a5fa);color:#fff;border:none;box-shadow:0 4px 15px rgba(96,165,250,0.4);border-radius:12px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
  </form>
@@ -393,7 +394,7 @@
 
 <div class="modal fade challenge-position-modal" id="challengePositionModal" tabindex="-1" aria-labelledby="challengePositionModalTitle" aria-hidden="true" data-show-on-load="{{ ($showPositionModal || $errors->has('target_position'))? 'true': 'false' }}" data-require-choice="{{ $selectedChallengePosition === ''? 'true': 'false' }}">
  <div class="modal-dialog modal-dialog-centered challenge-position-dialog">
- <form action="{{ route('user.learning.position') }}" method="POST" class="modal-content">
+ <form action="{{ route('user.learning.position') }}" method="POST" class="modal-content" data-sr-related-loader-form="challenges">
  @csrf
  <input type="hidden" name="category_id" value="{{ $selectedCategory?->id }}">
  <div class="modal-header">
@@ -441,6 +442,12 @@
  </form>
  </div>
 </div>
+
+@include('shared.partials.interview-prep-loader', [
+ 'prepLoaderKind' => 'challenges',
+ 'prepLoaderTitleAccent' => 'Challenges...',
+ 'prepLoaderChecklistLabel' => 'Prepared related challenges',
+])
 
 @if($gameResult)
  @php
@@ -1030,5 +1037,6 @@
  });
  });
 </script>
+<script src="{{ asset('js/shared/interview-prep-loader.js?v=1') }}"></script>
 @endpush
 @endsection
