@@ -1086,6 +1086,7 @@ return response()->json([
  'grammar_score' => $g,
  'score' => $qScore,
  'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence']?? 80),
+ 'star_analysis' => $this->starAnalysisFromFeedback($answer, $qFeedback),
  'evidence_map' => $evidence,
  'rubric_level' => $rubric['level'],
  'recommendation_text' => $rubric['next_level'],
@@ -1585,6 +1586,7 @@ return response()->json([
  'grammar_score' => $this->scoreValue($qFeedback['grammar_score']?? 0),
  'score' => $retryScore,
  'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence']?? 0),
+ 'star_analysis' => $this->starAnalysisFromFeedback($retry, $qFeedback),
  'evidence_map' => $evidence,
  'rubric_level' => $rubric['level'],
  'recommendation_text' => $rubric['next_level'],
@@ -4990,6 +4992,113 @@ return response()->json([
  }
 
  return array_values(array_unique($hits));
+ }
+
+ private function starAnalysisFromFeedback(InterviewAnswer $answer, array $feedback): array
+ {
+ $answer->loadMissing('question');
+
+ $question = $answer->question;
+ $questionUsesStar = $this->questionUsesStarProgress($question);
+ $providerStarApplicable = array_key_exists('star_applicable', $feedback)? (bool) $feedback['star_applicable']: null;
+ $starApplicable = $providerStarApplicable === true || $questionUsesStar;
+ $isSkipped = (bool) ($feedback['is_skipped']?? $answer->is_skipped?? false);
+ $isTooShort = (bool) ($feedback['is_too_short']?? false);
+
+ if (! $starApplicable || $isSkipped || $isTooShort) {
+ return [
+ 'applicable' => false,
+ 'score' => 0,
+ 'source' => 'feedback_finalization',
+ ];
+ }
+
+ $answerText = $this->answerContentForAssessment($answer);
+ $score = $this->scoreValue($feedback['star_method_score']?? 0);
+ $parts = $this->starPartsFromAnswerText($answerText);
+
+ if (array_key_exists('has_personal_action', $feedback)) {
+ $parts['action'] = (bool) $feedback['has_personal_action'];
+ }
+ if (array_key_exists('has_result', $feedback)) {
+ $parts['result'] = (bool) $feedback['has_result'];
+ }
+
+ foreach ($this->starPartsFromScore($score) as $part => $present) {
+ $parts[$part] = $parts[$part] || $present;
+ }
+
+ return array_merge([
+ 'applicable' => true,
+ 'score' => $score,
+ 'suggestion' => $this->starAnalysisSuggestion($feedback, $parts),
+ 'source' => 'feedback_finalization',
+ ], $parts);
+ }
+
+ private function questionUsesStarProgress(?Question $question): bool
+ {
+ if (! $question) {
+ return false;
+ }
+
+ $intent = QuestionIntentService::classify([
+ 'question' => $question->question_text?? '',
+ 'question_type' => $question->type?? null,
+ 'expected_guide' => $question->expected_guide?? '',
+ 'mapped_skills' => is_array($question->mapped_skills)? $question->mapped_skills: [],
+ ]);
+
+ return in_array($intent, ['behavioral', 'situational'], true);
+ }
+
+ private function starPartsFromAnswerText(string $answerText): array
+ {
+ return [
+ 'situation' => preg_match('/\b(?:situation|context|background|when|while|during|previously|last|once|one time|there was|we had|i had|at my|in my|in our)\b/iu', $answerText) === 1,
+ 'task' => preg_match('/\b(?:task|responsibility|responsible|goal|needed|objective|role|assigned|had to|i needed|we needed|my job|my duty)\b/iu', $answerText) === 1,
+ 'action' => preg_match('/\b(?:i|we)\s+(?:personally\s+)?(?:handled|helped|explained|created|built|led|managed|solved|supported|listened|confirmed|coordinated|organized|implemented|used|worked|communicated|resolved|assisted|improved|decided|checked|prepared|delivered)\b/iu', $answerText) === 1
+ || preg_match('/\b(?:action|step|steps|approach)\b/iu', $answerText) === 1,
+ 'result' => preg_match('/\b(?:result|outcome|impact|as a result|this led to|which led to|resolved|completed|passed|saved|received|achieved|learned|faster|slower|improved|increased|reduced|\d+(?:\.\d+)?%?|\d+\s*(?:hours?|days?|minutes?|customers?|tickets?|calls?|tasks?))\b/iu', $answerText) === 1,
+ ];
+ }
+
+ private function starPartsFromScore(int $score): array
+ {
+ $score = $this->scoreValue($score);
+
+ return [
+ 'situation' => $score >= 25,
+ 'task' => $score >= 50,
+ 'action' => $score >= 65,
+ 'result' => $score >= 85,
+ ];
+ }
+
+ private function starAnalysisSuggestion(array $feedback, array $parts): string
+ {
+ foreach ((array) ($feedback['missing_evidence']?? []) as $missing) {
+ if (is_scalar($missing) && trim((string) $missing)!== '') {
+ return Str::limit(trim((string) $missing), 160, '');
+ }
+ }
+
+ if (! empty($feedback['follow_up_question']) && is_scalar($feedback['follow_up_question'])) {
+ return Str::limit(trim((string) $feedback['follow_up_question']), 160, '');
+ }
+
+ foreach ([
+ 'situation' => 'Add the situation first so the listener understands the context.',
+ 'task' => 'Name your responsibility or goal before explaining the work.',
+ 'action' => 'Explain the action you personally took.',
+ 'result' => 'End with a true result, outcome, lesson, or confirmation step.',
+ ] as $part => $suggestion) {
+ if (empty($parts[$part])) {
+ return $suggestion;
+ }
+ }
+
+ return 'Keep the STAR flow and make the result specific when the question allows it.';
  }
 
  private function gameTargetToneBonus(string $answerText, string $tone): int

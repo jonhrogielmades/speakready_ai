@@ -287,6 +287,40 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  && in_array('Relevance (76%)', $summary->weaknesses, true));
  }
 
+ public function test_progress_star_card_infers_complete_star_progress_from_saved_behavioral_answer(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category('Behavioral');
+
+ $session = $this->completedSessionFor($user, $category, 82, now());
+ $question = Question::create([
+ 'category_id' => $category->id,
+ 'question_text' => 'Tell me about a time you solved a team problem.',
+ 'difficulty' => 'medium',
+ 'type' => 'Behavioral',
+ 'status' => 'active',
+ ]);
+
+ InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'During my internship, our team had a delayed report. I was responsible for checking the missing data. I coordinated with classmates and prepared the final file. As a result, we submitted it on time and learned a clearer tracking process.',
+ 'score' => 82,
+ ]);
+
+ $response = $this->actingAs($user)->get(route('user.progress'));
+
+ $response->assertOk()
+ ->assertSee('100%')
+ ->assertSee('Strong STAR coverage across 1 analyzed answer.')
+ ->assertViewHas('starProgress', fn ($progress) => $progress
+ && $progress->has_data
+ && $progress->overall_percent === 100
+ && $progress->analyzed_answers === 1
+ && $progress->complete_answers === 1
+ && collect($progress->parts)->every(fn ($part) => $part->percent === 100));
+ }
+
  public function test_progress_strengths_card_uses_latest_feedback_when_available(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

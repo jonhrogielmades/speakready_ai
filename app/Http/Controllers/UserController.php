@@ -25,6 +25,7 @@ use App\Services\LearningChallengeGenerationService;
 use App\Services\LearningModuleGenerationService;
 use App\Services\LearningRecommendationService;
 use App\Services\QuestionDatasetProvider;
+use App\Services\QuestionIntentService;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\AccountNotificationSchema;
 use App\Support\ChatbotSchema;
@@ -424,7 +425,7 @@ class UserController extends Controller
  'score',
  'category',
  'feedback',
- 'answers' => fn ($query) => $query->whereNull('retry_of_answer_id')->orderBy('id'),
+ 'answers' => fn ($query) => $query->whereNull('retry_of_answer_id')->with('question')->orderBy('id'),
  ])
  ->orderBy('created_at', 'asc')
  ->get();
@@ -1562,9 +1563,14 @@ class UserController extends Controller
  $analyzedAnswers = 0;
  $completeAnswers = 0;
  $latestSuggestion = '';
+ $answerStarScores = collect();
 
  foreach ($answers as $answer) {
- $analysis = is_array($answer->star_analysis?? null)? $answer->star_analysis: [];
+ $analysis = $this->starProgressAnalysisForAnswer($answer);
+ if ($analysis === [] || ($analysis['applicable']?? true) === false) {
+ continue;
+ }
+
  $hasPartData = false;
  $answerComplete = true;
 
@@ -1591,6 +1597,11 @@ class UserController extends Controller
  }
  }
 
+ $answerStarScore = $this->starProgressScoreValue($analysis['score']?? null);
+ if ($answerStarScore!== null) {
+ $answerStarScores->push($answerStarScore);
+ }
+
  if (! empty($analysis['suggestion'])) {
  $latestSuggestion = trim((string) $analysis['suggestion']);
  }
@@ -1610,10 +1621,11 @@ class UserController extends Controller
  $coverageTotal = $partProgress->sum('total');
  $coverageComplete = $partProgress->sum('complete');
  $coveragePercent = $coverageTotal > 0? $this->barWidth((int) round(($coverageComplete / $coverageTotal) * 100)): null;
- $starScores = Score::hasColumn('star_method_score')? $sessions
+ $sessionStarScores = Score::hasColumn('star_method_score')? $sessions
  ->filter(fn ($session) => $this->scoreHasRecordedStarMetric($session->score))
  ->map(fn ($session) => $this->scoreValue($session->score, 'star_method_score'))
  ->filter(fn ($score) => $score!== null): collect();
+ $starScores = $answerStarScores->merge($sessionStarScores);
  $averageScore = $starScores->isNotEmpty()? $this->barWidth((int) round($starScores->avg())): null;
  $overallPercent = $coveragePercent?? $averageScore;
  $hasAnswerData = $analyzedAnswers > 0;
@@ -1635,6 +1647,166 @@ class UserController extends Controller
  'message' => $this->starProgressMessage($overallPercent, $analyzedAnswers),
  'suggestion' => $latestSuggestion?: $this->starProgressSuggestion($overallPercent),
  ];
+ }
+
+ private function starProgressAnalysisForAnswer($answer): array
+ {
+ $analysis = is_array($answer->star_analysis?? null)? $answer->star_analysis: [];
+ if ($analysis!== []) {
+ $applicable = $this->starAnalysisApplicability($analysis);
+ if ($applicable === false) {
+ return ['applicable' => false];
+ }
+
+ $normalized = ['applicable' => true];
+ foreach (['situation', 'task', 'action', 'result'] as $part) {
+ if (array_key_exists($part, $analysis)) {
+ $normalized[$part] = $analysis[$part];
+ }
+ }
+
+ $score = $this->starProgressScoreValue($analysis['score']?? ($analysis['star_method_score']?? null));
+ if ($score!== null) {
+ $normalized['score'] = $score;
+ foreach ($this->starPartsFromScore($score) as $part => $present) {
+ if (! array_key_exists($part, $normalized)) {
+ $normalized[$part] = $present;
+ }
+ }
+ }
+
+ if (! empty($analysis['suggestion'])) {
+ $normalized['suggestion'] = trim((string) $analysis['suggestion']);
+ }
+
+ if (collect(['situation', 'task', 'action', 'result'])->contains(fn ($part) => array_key_exists($part, $normalized))) {
+ return $normalized;
+ }
+ }
+
+ return $this->starProgressAnalysisFromAnswerText($answer);
+ }
+
+ private function starAnalysisApplicability(array $analysis):?bool
+ {
+ foreach (['applicable', 'star_applicable'] as $key) {
+ if (! array_key_exists($key, $analysis)) {
+ continue;
+ }
+
+ $value = $analysis[$key];
+ if (is_bool($value)) {
+ return $value;
+ }
+
+ if (is_numeric($value)) {
+ return ((int) $value) === 1;
+ }
+
+ $text = Str::lower(trim((string) $value));
+ if ($text === '') {
+ return null;
+ }
+
+ return! in_array($text, ['0', 'false', 'no', 'not applicable', 'n/a'], true);
+ }
+
+ return null;
+ }
+
+ private function starProgressAnalysisFromAnswerText($answer): array
+ {
+ $answerText = trim((string) ($answer->answer_text?? ''));
+ if ($answerText === '') {
+ $answerText = trim((string) ($answer->delivery_transcript?? ''));
+ }
+
+ if ((bool) ($answer->is_skipped?? false) || $this->starWordCount($answerText) < 8 ||! $this->answerLooksStarApplicable($answer)) {
+ return [];
+ }
+
+ $parts = $this->starPartsFromText($answerText);
+ $score = $this->barWidth(array_sum(array_map(fn ($present) => $present? 25: 0, $parts)));
+
+ if (! in_array(true, $parts, true) && $score === 0) {
+ return [];
+ }
+
+ return array_merge([
+ 'applicable' => true,
+ 'score' => $score,
+ 'suggestion' => $this->starPartSuggestion($parts),
+ ], $parts);
+ }
+
+ private function answerLooksStarApplicable($answer): bool
+ {
+ $question = $answer->relationLoaded('question')? $answer->question: null;
+ $mappedSkills = $question && is_array($question->mapped_skills)? $question->mapped_skills: [];
+
+ $intent = QuestionIntentService::classify([
+ 'question' => $question?->question_text?? '',
+ 'question_type' => $question?->type?? null,
+ 'expected_guide' => $question?->expected_guide?? '',
+ 'mapped_skills' => $mappedSkills,
+ ]);
+
+ return in_array($intent, ['behavioral', 'situational'], true);
+ }
+
+ private function starPartsFromText(string $answerText): array
+ {
+ return [
+ 'situation' => preg_match('/\b(?:situation|context|background|when|while|during|previously|last|once|one time|there was|we had|i had|at my|in my|in our)\b/iu', $answerText) === 1,
+ 'task' => preg_match('/\b(?:task|responsibility|responsible|goal|needed|objective|role|assigned|had to|i needed|we needed|my job|my duty)\b/iu', $answerText) === 1,
+ 'action' => preg_match('/\b(?:i|we)\s+(?:personally\s+)?(?:handled|helped|explained|created|built|led|managed|solved|supported|listened|confirmed|coordinated|organized|implemented|used|worked|communicated|resolved|assisted|improved|decided|checked|prepared|delivered)\b/iu', $answerText) === 1
+ || preg_match('/\b(?:action|step|steps|approach)\b/iu', $answerText) === 1,
+ 'result' => preg_match('/\b(?:result|outcome|impact|as a result|this led to|which led to|resolved|completed|passed|saved|received|achieved|learned|faster|slower|improved|increased|reduced|\d+(?:\.\d+)?%?|\d+\s*(?:hours?|days?|minutes?|customers?|tickets?|calls?|tasks?))\b/iu', $answerText) === 1,
+ ];
+ }
+
+ private function starPartsFromScore(int $score): array
+ {
+ $score = $this->barWidth($score);
+
+ return [
+ 'situation' => $score >= 25,
+ 'task' => $score >= 50,
+ 'action' => $score >= 65,
+ 'result' => $score >= 85,
+ ];
+ }
+
+ private function starProgressScoreValue($score):?int
+ {
+ if (! is_numeric($score)) {
+ return null;
+ }
+
+ return $this->barWidth((int) round((float) $score));
+ }
+
+ private function starWordCount(string $text): int
+ {
+ preg_match_all('/\b[\pL\pN][\pL\pN\'-]*\b/u', $text, $matches);
+
+ return count($matches[0]?? []);
+ }
+
+ private function starPartSuggestion(array $parts): string
+ {
+ foreach ([
+ 'situation' => 'Add the situation first so the listener understands the context.',
+ 'task' => 'Name your responsibility or goal before explaining the work.',
+ 'action' => 'Explain the action you personally took.',
+ 'result' => 'End with a true result, outcome, lesson, or confirmation step.',
+ ] as $part => $suggestion) {
+ if (empty($parts[$part])) {
+ return $suggestion;
+ }
+ }
+
+ return 'Keep the STAR flow and make the result specific when the question allows it.';
  }
 
  private function scoreHasRecordedStarMetric(?Score $score): bool
