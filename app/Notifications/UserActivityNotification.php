@@ -76,6 +76,8 @@ class UserActivityNotification extends Notification
         return [
             'title' => $this->title,
             'body' => $this->message,
+            'iconUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_ICON,
+            'badgeUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE,
             'tag' => 'speakready-user-activity',
             'url' => url('/notifications'),
             'data' => [

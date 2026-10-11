@@ -1,6 +1,8 @@
-const CACHE_NAME = 'speakready-pwa-v35';
+const CACHE_NAME = 'speakready-pwa-v36';
 const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';
-const CLIENT_REFRESH_VALUE = 'pwa-v35';
+const CLIENT_REFRESH_VALUE = 'pwa-v36';
+const NOTIFICATION_ICON = '/img/notification-icon-192.png';
+const NOTIFICATION_BADGE = '/img/notification-badge.png';
 const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
 const NETWORK_FIRST_ASSET_PATTERN = /\.(?:css|js)$/i;
 
@@ -130,8 +132,8 @@ self.addEventListener('message', event => {
   event.waitUntil(
     self.registration.showNotification(data.title || 'SpeakReady AI', {
       body: data.body || 'New admin activity.',
-      icon: '/img/app-icon-192.png',
-      badge: '/img/app-icon-192.png',
+      icon: data.icon || NOTIFICATION_ICON,
+      badge: data.badge || NOTIFICATION_BADGE,
       tag: data.tag || 'admin-activity',
       renotify: true,
       data: {
@@ -164,8 +166,8 @@ self.addEventListener('push', event => {
   event.waitUntil(
     self.registration.showNotification(payload.title || 'SpeakReady AI', {
       body: payload.body || payload.message || 'You have a new notification.',
-      icon: payload.icon || '/img/app-icon-192.png',
-      badge: payload.badge || '/img/app-icon-192.png',
+      icon: payload.icon || NOTIFICATION_ICON,
+      badge: payload.badge || NOTIFICATION_BADGE,
       tag: payload.tag || 'speakready-notification',
       renotify: payload.renotify !== false,
       data: {

@@ -89,6 +89,8 @@ class PushSubscriptionController extends Controller
         $sent = $webPush->sendToUser($user, [
             'title' => 'SpeakReady AI',
             'body' => 'Device notifications are ready.',
+            'iconUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_ICON,
+            'badgeUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE,
             'tag' => 'speakready-push-test',
             'url' => url('/notifications'),
             'data' => [

@@ -16,6 +16,10 @@ use phpseclib3\Crypt\EC;
 
 class WebPushNotificationService
 {
+    public const DEFAULT_NOTIFICATION_ICON = '/img/notification-icon-192.png';
+
+    public const DEFAULT_NOTIFICATION_BADGE = '/img/notification-badge.png';
+
     /**
      * @var array{publicKey: string, privateKey: string}|null
      */
@@ -418,8 +422,8 @@ class WebPushNotificationService
         return [
             'title' => $title !== '' ? $title : 'SpeakReady AI',
             'body' => $body !== '' ? $body : 'You have a new notification.',
-            'icon' => $payload['iconUrl'] ?? '/img/app-icon-192.png',
-            'badge' => $payload['badgeUrl'] ?? '/img/app-icon-192.png',
+            'icon' => $payload['iconUrl'] ?? self::DEFAULT_NOTIFICATION_ICON,
+            'badge' => $payload['badgeUrl'] ?? self::DEFAULT_NOTIFICATION_BADGE,
             'tag' => $payload['tag'] ?? 'speakready-notification',
             'renotify' => $payload['renotify'] ?? true,
             'url' => $url,

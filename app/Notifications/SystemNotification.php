@@ -79,6 +79,8 @@ class SystemNotification extends Notification
         return [
             'title' => $this->title,
             'body' => $this->message,
+            'iconUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_ICON,
+            'badgeUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE,
             'tag' => 'speakready-system-'.$this->type,
             'url' => url('/notifications'),
             'data' => [

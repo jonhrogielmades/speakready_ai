@@ -393,10 +393,17 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
 
- $this->mock(WebPushNotificationService::class, function ($mock): void {
+ $this->mock(WebPushNotificationService::class, function ($mock) use ($user): void {
  $mock->shouldReceive('isConfigured')->once()->andReturnTrue();
  $mock->shouldReceive('canNotify')->once()->andReturnTrue();
- $mock->shouldReceive('sendToUser')->once()->andReturn(1);
+ $mock->shouldReceive('sendToUser')
+ ->once()
+ ->with(
+ \Mockery::on(fn ($notifiable): bool => $notifiable instanceof User && $notifiable->is($user)),
+ \Mockery::on(fn (array $payload): bool => ($payload['iconUrl']?? null) === WebPushNotificationService::DEFAULT_NOTIFICATION_ICON
+ && ($payload['badgeUrl']?? null) === WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE)
+ )
+ ->andReturn(1);
  });
 
  $this->actingAs($user)
