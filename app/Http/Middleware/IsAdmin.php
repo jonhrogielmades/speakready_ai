@@ -35,7 +35,7 @@ class IsAdmin
         }
 
         if (!$user->is_admin) {
-            return redirect('/dashboard');
+            return redirect()->route('dashboard', sr_layout_query($request));
         }
 
         return $this->withoutRestrictedCountryText($next($request));

@@ -36,14 +36,16 @@ class DetectMobile
 
     private function detectMobile(Request $request): bool
     {
-        $queryLayout = strtolower((string) $request->query('sr_layout', ''));
-        if ($request->isMethod('GET') && in_array($queryLayout, ['mobile', 'desktop'], true)) {
-            return $queryLayout === 'mobile';
-        }
+        $explicitLayout = function_exists('sr_explicit_request_layout_preference')
+            ? sr_explicit_request_layout_preference($request)
+            : null;
 
-        $queryViewportWidth = filter_var($request->query('sr_viewport_width'), FILTER_VALIDATE_INT);
-        if ($request->isMethod('GET') && $queryViewportWidth !== false && $queryViewportWidth > 0) {
-            return $queryViewportWidth <= self::MOBILE_VIEWPORT_MAX;
+        if ($request->isMethod('GET') && in_array($explicitLayout, ['mobile', 'desktop'], true)) {
+            if (function_exists('sr_remember_layout_preference')) {
+                sr_remember_layout_preference($request, $explicitLayout);
+            }
+
+            return $explicitLayout === 'mobile';
         }
 
         $userAgent = $this->userAgent($request);
@@ -61,6 +63,18 @@ class DetectMobile
         $viewportWidth = filter_var($request->cookie('sr_viewport_width'), FILTER_VALIDATE_INT);
         if ($viewportWidth !== false && $viewportWidth > 0 && $viewportWidth <= self::MOBILE_VIEWPORT_MAX) {
             $isMobile = true;
+        }
+
+        $sessionLayout = function_exists('sr_session_layout_preference')
+            ? sr_session_layout_preference($request)
+            : null;
+
+        if ($sessionLayout === 'mobile') {
+            $isMobile = true;
+        }
+
+        if (function_exists('sr_remember_layout_preference')) {
+            sr_remember_layout_preference($request, $isMobile ? 'mobile' : 'desktop');
         }
 
         return $isMobile;

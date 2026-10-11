@@ -455,6 +455,76 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('terms-mobile-submit', false);
     }
 
+    public function test_google_login_uses_signed_oauth_state_when_session_layout_is_stale(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'state-mobile-login@example.com',
+            'google_id' => 'state-mobile-login-id',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $desktopLikeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+        $state = $this->captureGoogleRedirectState(
+            route('auth.google.login', ['sr_layout' => 'mobile']),
+            $desktopLikeUserAgent
+        );
+
+        $this->mockGoogleCallback([
+            'id' => 'state-mobile-login-id',
+            'name' => 'State Mobile Login',
+            'email' => 'state-mobile-login@example.com',
+            'avatar' => null,
+        ]);
+
+        $this->withSession([
+            'google_auth_intent' => 'login',
+            'google_auth_layout' => 'desktop',
+            'sr_layout_preference' => 'desktop',
+        ])
+            ->withHeader('User-Agent', $desktopLikeUserAgent)
+            ->get(route('auth.google.callback', ['code' => 'test-code', 'state' => $state]))
+            ->assertRedirect(route('dashboard', ['sr_layout' => 'mobile']));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_google_registration_uses_signed_oauth_state_when_session_intent_is_stale(): void
+    {
+        $desktopLikeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+        $state = $this->captureGoogleRedirectState(
+            route('auth.google.register', ['sr_layout' => 'mobile']),
+            $desktopLikeUserAgent
+        );
+
+        $this->mockGoogleCallback([
+            'id' => 'state-mobile-register-id',
+            'name' => 'State Mobile Register',
+            'email' => 'state-mobile-register@example.com',
+            'avatar' => null,
+        ]);
+
+        $this->withSession([
+            'google_auth_intent' => 'login',
+            'google_auth_layout' => 'desktop',
+            'sr_layout_preference' => 'desktop',
+        ])
+            ->withHeader('User-Agent', $desktopLikeUserAgent)
+            ->get(route('auth.google.callback', ['code' => 'test-code', 'state' => $state]))
+            ->assertRedirect(route('terms.acceptance.show', ['sr_layout' => 'mobile']))
+            ->assertSessionHas('registration_success', true);
+
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', [
+            'email' => 'state-mobile-register@example.com',
+            'google_id' => 'state-mobile-register-id',
+        ]);
+
+        $this->post(route('terms.acceptance.store'), [
+            'terms_accepted' => '1',
+        ])->assertRedirect(route('dashboard', ['sr_layout' => 'mobile']));
+    }
+
     private function mockGoogleCallback(array $attributes, array $raw = []): void
     {
         $this->configureGoogleOAuth();
@@ -471,6 +541,40 @@ class PwaRememberedLoginTest extends TestCase
             ->once()
             ->with('google')
             ->andReturn($provider);
+    }
+
+    private function captureGoogleRedirectState(string $url, string $userAgent): string
+    {
+        $this->configureGoogleOAuth();
+
+        $state = null;
+        $provider = Mockery::mock();
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('with')
+            ->once()
+            ->with(Mockery::on(function (array $parameters) use (&$state): bool {
+                $state = $parameters['state'] ?? null;
+
+                return is_string($state) && str_starts_with($state, 'sr.');
+            }))
+            ->andReturnSelf();
+        $provider->shouldReceive('redirect')
+            ->once()
+            ->andReturn(redirect()->away('https://accounts.google.test/oauth'));
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
+
+        $this->withHeader('User-Agent', $userAgent)
+            ->get($url)
+            ->assertRedirect('https://accounts.google.test/oauth');
+
+        $this->assertIsString($state);
+        $this->assertNotSame('', $state);
+
+        return $state;
     }
 
     private function mockGoogleCallbackFailure(\Throwable $exception): void

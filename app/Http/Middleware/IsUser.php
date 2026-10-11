@@ -40,7 +40,7 @@ class IsUser
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Please accept the Terms and Conditions before continuing.',
-                    'redirect' => route('terms.acceptance.show'),
+                    'redirect' => route('terms.acceptance.show', sr_layout_query($request)),
                 ], 409);
             }
 
@@ -48,7 +48,7 @@ class IsUser
                 $request->session()->put('url.intended', $request->fullUrl());
             }
 
-            return redirect()->route('terms.acceptance.show');
+            return redirect()->route('terms.acceptance.show', sr_layout_query($request));
         }
 
         return $next($request);

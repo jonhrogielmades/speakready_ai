@@ -31,10 +31,10 @@ Route::get('/', function (LandingStatsService $landingStatsService) {
     try {
         if (Auth::check()) {
             if (Auth::user()->is_admin) {
-                return redirect()->route('admin.dashboard');
+                return redirect()->route('admin.dashboard', sr_layout_query(request()));
             }
 
-            return redirect()->route('dashboard');
+            return redirect()->route('dashboard', sr_layout_query(request()));
         }
     } catch (\Throwable) {
         // Keep the public landing page available when the local database is offline.

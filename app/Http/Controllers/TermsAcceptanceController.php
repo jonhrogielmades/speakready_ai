@@ -12,9 +12,10 @@ class TermsAcceptanceController extends Controller
     public function show(Request $request): View|RedirectResponse
     {
         $user = $request->user();
+        sr_remember_layout_preference($request);
 
         if ($user->hasAcceptedCurrentTerms()) {
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route('dashboard', sr_layout_query($request)));
         }
 
         if ($request->session()->has('registration_success') || $request->session()->has('success')) {
@@ -45,7 +46,9 @@ class TermsAcceptanceController extends Controller
             'terms_ip_address' => $request->ip(),
         ])->save();
 
-        $redirect = redirect()->intended(route('dashboard'));
+        sr_remember_layout_preference($request);
+
+        $redirect = redirect()->intended(route('dashboard', sr_layout_query($request)));
 
         if ($registrationSuccess) {
             return $redirect

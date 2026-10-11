@@ -1,5 +1,123 @@
 <?php
 
+if (! function_exists('sr_layout_preference_session_key')) {
+    function sr_layout_preference_session_key(): string
+    {
+        return 'sr_layout_preference';
+    }
+}
+
+if (! function_exists('sr_mobile_viewport_max')) {
+    function sr_mobile_viewport_max(): int
+    {
+        return 820;
+    }
+}
+
+if (! function_exists('sr_normalized_layout')) {
+    function sr_normalized_layout(mixed $layout): ?string
+    {
+        $layout = strtolower(trim((string) $layout));
+
+        return in_array($layout, ['mobile', 'desktop'], true) ? $layout : null;
+    }
+}
+
+if (! function_exists('sr_explicit_request_layout_preference')) {
+    function sr_explicit_request_layout_preference(?\Illuminate\Http\Request $request = null): ?string
+    {
+        $request ??= request();
+
+        $queryLayout = sr_normalized_layout($request->query('sr_layout', ''));
+        if ($queryLayout !== null) {
+            return $queryLayout;
+        }
+
+        $queryIsMobile = strtolower((string) $request->query('sr_is_mobile', ''));
+        if (in_array($queryIsMobile, ['1', 'true'], true)) {
+            return 'mobile';
+        }
+        if (in_array($queryIsMobile, ['0', 'false'], true)) {
+            return 'desktop';
+        }
+
+        $queryViewportWidth = filter_var($request->query('sr_viewport_width'), FILTER_VALIDATE_INT);
+        if ($queryViewportWidth !== false && $queryViewportWidth > 0) {
+            return $queryViewportWidth <= sr_mobile_viewport_max() ? 'mobile' : 'desktop';
+        }
+
+        return null;
+    }
+}
+
+if (! function_exists('sr_session_layout_preference')) {
+    function sr_session_layout_preference(?\Illuminate\Http\Request $request = null): ?string
+    {
+        $request ??= request();
+
+        try {
+            if (! $request->hasSession()) {
+                return null;
+            }
+
+            return sr_normalized_layout($request->session()->get(sr_layout_preference_session_key()));
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+}
+
+if (! function_exists('sr_request_layout_preference')) {
+    function sr_request_layout_preference(?\Illuminate\Http\Request $request = null): ?string
+    {
+        $request ??= request();
+
+        $layout = sr_explicit_request_layout_preference($request)
+            ?? sr_session_layout_preference($request);
+
+        if ($layout !== null) {
+            return $layout;
+        }
+
+        if ($request->attributes->has('is_mobile')) {
+            return (bool) $request->attributes->get('is_mobile') ? 'mobile' : 'desktop';
+        }
+
+        return null;
+    }
+}
+
+if (! function_exists('sr_remember_layout_preference')) {
+    function sr_remember_layout_preference(?\Illuminate\Http\Request $request = null, mixed $layout = null): ?string
+    {
+        $request ??= request();
+        $layout = sr_normalized_layout($layout) ?? sr_request_layout_preference($request);
+
+        if ($layout === null) {
+            return null;
+        }
+
+        try {
+            if ($request->hasSession()) {
+                $request->session()->put(sr_layout_preference_session_key(), $layout);
+            }
+        } catch (\Throwable) {
+            //
+        }
+
+        return $layout;
+    }
+}
+
+if (! function_exists('sr_layout_query')) {
+    function sr_layout_query(?\Illuminate\Http\Request $request = null): array
+    {
+        $layout = sr_request_layout_preference($request ?? request());
+
+        return $layout === 'mobile' ? ['sr_layout' => 'mobile'] : [];
+    }
+}
+
 if (! function_exists('mobile_view')) {
     /**
      * Resolve and return the correct desktop or mobile Blade view.

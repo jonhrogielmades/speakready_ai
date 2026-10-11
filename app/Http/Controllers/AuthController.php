@@ -80,12 +80,12 @@ class AuthController extends Controller
         $registrationMessage = 'Registration successful. Welcome to SpeakReady AI!';
 
         if ($user->is_admin) {
-            return redirect()->route('admin.dashboard')
+            return redirect()->route('admin.dashboard', sr_layout_query($request))
                 ->with('success', $registrationMessage)
                 ->with('registration_success', true);
         }
 
-        return redirect()->route('terms.acceptance.show')
+        return redirect()->route('terms.acceptance.show', sr_layout_query($request))
             ->with('success', $registrationMessage)
             ->with('registration_success', true);
     }
@@ -163,10 +163,10 @@ class AuthController extends Controller
             $this->logAuthenticationActivity($user, 'user_logged_in', 'logged in', $request->ip());
 
             if ($user->is_admin) {
-                return redirect()->route('admin.dashboard');
+                return redirect()->route('admin.dashboard', sr_layout_query($request));
             }
 
-            return redirect()->route('dashboard');
+            return redirect()->route('dashboard', sr_layout_query($request));
         }
 
         return $this->failedLoginResponse('username', self::LOGIN_CREDENTIALS_MISMATCH_MESSAGE);
@@ -306,8 +306,9 @@ class AuthController extends Controller
 
     public function handleGoogleCallback(Request $request)
     {
-        $this->restoreGoogleLayoutPreference($request);
-        $intent = $this->googleAuthIntent($request);
+        $stateContext = $this->googleAuthStateContext($request);
+        $this->restoreGoogleLayoutPreference($request, $stateContext['layout'] ?? null);
+        $intent = $this->googleAuthIntent($request, $stateContext['intent'] ?? null);
 
         if ($request->filled('error')) {
             Log::warning('Google authentication returned an OAuth error.', [
@@ -472,8 +473,11 @@ class AuthController extends Controller
 
     private function redirectToGoogleWithIntent(Request $request, string $intent)
     {
+        $layout = $this->requestLayoutPreference($request) ?? 'desktop';
+
         $request->session()->put(self::GOOGLE_AUTH_INTENT_SESSION_KEY, $intent);
-        $request->session()->put(self::GOOGLE_AUTH_LAYOUT_SESSION_KEY, $this->requestLayoutPreference($request) ?? 'desktop');
+        $request->session()->put(self::GOOGLE_AUTH_LAYOUT_SESSION_KEY, $layout);
+        sr_remember_layout_preference($request, $layout);
 
         if ($configurationError = $this->googleConfigurationErrorMessage()) {
             Log::warning('Google authentication is not configured correctly.');
@@ -481,13 +485,18 @@ class AuthController extends Controller
             return $this->googleAuthFailureResponse($request, $configurationError, $intent);
         }
 
-        return Socialite::driver('google')->stateless()->redirect();
+        return Socialite::driver('google')
+            ->stateless()
+            ->with(['state' => $this->googleAuthState($intent, $layout)])
+            ->redirect();
     }
 
-    private function restoreGoogleLayoutPreference(Request $request): ?string
+    private function restoreGoogleLayoutPreference(Request $request, ?string $fallbackLayout = null): ?string
     {
         $layout = $this->explicitRequestLayoutPreference($request)
-            ?? $request->session()->get(self::GOOGLE_AUTH_LAYOUT_SESSION_KEY);
+            ?? sr_normalized_layout($fallbackLayout)
+            ?? sr_normalized_layout($request->session()->get(self::GOOGLE_AUTH_LAYOUT_SESSION_KEY))
+            ?? sr_session_layout_preference($request);
 
         if (! in_array($layout, ['mobile', 'desktop'], true) && $request->attributes->has('is_mobile')) {
             $layout = (bool) $request->attributes->get('is_mobile') ? 'mobile' : 'desktop';
@@ -500,13 +509,17 @@ class AuthController extends Controller
         $isMobile = $layout === 'mobile';
         $request->attributes->set('is_mobile', $isMobile);
         View::share('isMobile', $isMobile);
+        $request->session()->put(self::GOOGLE_AUTH_LAYOUT_SESSION_KEY, $layout);
+        sr_remember_layout_preference($request, $layout);
 
         return $layout;
     }
 
     private function requestLayoutPreference(Request $request): ?string
     {
-        $layout = $this->explicitRequestLayoutPreference($request);
+        $layout = $this->explicitRequestLayoutPreference($request)
+            ?? sr_session_layout_preference($request);
+
         if ($layout !== null) {
             return $layout;
         }
@@ -563,9 +576,11 @@ class AuthController extends Controller
         return redirect()->route($routeName, array_merge($parameters, $this->googleLayoutQuery($request)));
     }
 
-    private function googleAuthIntent(Request $request): string
+    private function googleAuthIntent(Request $request, ?string $fallbackIntent = null): string
     {
-        $intent = $request->session()->get(self::GOOGLE_AUTH_INTENT_SESSION_KEY, 'login');
+        $intent = in_array($fallbackIntent, ['login', 'register'], true)
+            ? $fallbackIntent
+            : $request->session()->get(self::GOOGLE_AUTH_INTENT_SESSION_KEY, 'login');
 
         return in_array($intent, ['login', 'register'], true) ? $intent : 'login';
     }
@@ -586,6 +601,69 @@ class AuthController extends Controller
         return array_merge([
             self::AUTH_TAB_OLD_INPUT_KEY => $intent === 'register' ? 'signup' : 'login',
         ], $input);
+    }
+
+    private function googleAuthState(string $intent, string $layout): string
+    {
+        $payload = [
+            'intent' => in_array($intent, ['login', 'register'], true) ? $intent : 'login',
+            'layout' => in_array($layout, ['mobile', 'desktop'], true) ? $layout : 'desktop',
+            'issued_at' => time(),
+            'nonce' => Str::random(12),
+        ];
+
+        $body = rtrim(strtr(base64_encode((string) json_encode($payload)), '+/', '-_'), '=');
+        $signature = hash_hmac('sha256', $body, $this->googleAuthStateKey());
+
+        return 'sr.'.$body.'.'.$signature;
+    }
+
+    private function googleAuthStateContext(Request $request): array
+    {
+        $state = trim((string) $request->query('state', ''));
+        if (! Str::startsWith($state, 'sr.')) {
+            return [];
+        }
+
+        $parts = explode('.', $state, 3);
+        if (count($parts) !== 3 || $parts[0] !== 'sr') {
+            return [];
+        }
+
+        [, $body, $signature] = $parts;
+        $expectedSignature = hash_hmac('sha256', $body, $this->googleAuthStateKey());
+        if (! hash_equals($expectedSignature, $signature)) {
+            return [];
+        }
+
+        $json = base64_decode(strtr($body, '-_', '+/'), true);
+        $payload = is_string($json) ? json_decode($json, true) : null;
+        if (! is_array($payload)) {
+            return [];
+        }
+
+        $issuedAt = filter_var($payload['issued_at'] ?? null, FILTER_VALIDATE_INT);
+        if ($issuedAt === false || $issuedAt < time() - 3600) {
+            return [];
+        }
+
+        return [
+            'intent' => in_array($payload['intent'] ?? null, ['login', 'register'], true) ? $payload['intent'] : null,
+            'layout' => sr_normalized_layout($payload['layout'] ?? null),
+        ];
+    }
+
+    private function googleAuthStateKey(): string
+    {
+        $key = (string) config('app.key');
+
+        if (Str::startsWith($key, 'base64:')) {
+            $decoded = base64_decode(Str::after($key, 'base64:'), true);
+
+            return is_string($decoded) && $decoded !== '' ? $decoded : $key;
+        }
+
+        return $key;
     }
 
     private function googleAvatarUrl($googleUser): ?string
