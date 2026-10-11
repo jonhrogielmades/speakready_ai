@@ -154,6 +154,27 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr)) !important;', $css);
     }
 
+    public function test_user_dashboard_mobile_user_agent_ignores_stale_desktop_layout_hint(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $androidUserAgent = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36';
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', $androidUserAgent)
+            ->get(route('dashboard', ['sr_layout' => 'desktop']))
+            ->assertOk()
+            ->assertSee('class="user-mobile-shell mobile-shell"', false)
+            ->assertSee('data-layout-shell="mobile"', false)
+            ->assertSee('css/mobile/dashboard.css?v=47', false)
+            ->assertSee('sr-readiness-card-grid', false)
+            ->assertDontSee('user-desktop-shell desktop-shell', false)
+            ->assertDontSee('class="db-sidebar"', false);
+    }
+
     public function test_admin_dashboard_uses_mobile_shell_for_mobile_user_agent(): void
     {
         $admin = User::factory()->create([
