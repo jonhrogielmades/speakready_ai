@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speakready-pwa-v33';
+const CACHE_NAME = 'speakready-pwa-v34';
 const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
 const NETWORK_FIRST_ASSET_PATTERN = /\.(?:css|js)$/i;
 

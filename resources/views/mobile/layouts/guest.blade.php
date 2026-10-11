@@ -7,7 +7,7 @@
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - Practice Smarter. Interview Better.')</title>
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
-      <link rel="manifest" href="{{ asset('manifest.json') }}">
+      <link rel="manifest" href="{{ asset('manifest.json?v=2') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1620,7 +1620,7 @@
       <script>
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=14').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=15').then(function(registration) {
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);

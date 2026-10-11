@@ -2,7 +2,7 @@
   "name": "SpeakReady AI",
   "short_name": "SpeakReady",
   "description": "Practice interviews with AI coaching and instant feedback.",
-  "start_url": "/",
+  "start_url": "/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",

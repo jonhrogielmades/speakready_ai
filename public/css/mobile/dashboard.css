@@ -9907,6 +9907,187 @@ html body #mob-content .sr-dashboard #card-achievements.sr-achievements-main .sr
     }
 }
 
+/* PWA mobile dashboard lockdown.
+   Android standalone mode and Chrome "Desktop site" can expose a wide CSS
+   viewport while still running inside the mobile shell. Keep the dashboard
+   in the phone layout whenever the server has selected user-mobile-shell. */
+body.user-mobile-shell :is(#mob-content, #userAppContent) .db-sidebar,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .db-top {
+    display: none !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard {
+    width: 100% !important;
+    max-width: min(100%, 480px) !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    margin: 0 auto !important;
+    padding: 8px 10px calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 24px) !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-summary-grid,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-dashboard-shell,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-welcome-stack,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-main-stack,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-side-stack {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-stats-desktop,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-score-panel {
+    display: none !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-readiness-row {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-readiness-card-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-rows: minmax(124px, auto) !important;
+    gap: 10px !important;
+    margin: 0 !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 124px !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 13px !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-head,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-body {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-head {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-icon {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    flex-basis: 36px !important;
+    border-radius: 11px !important;
+    font-size: 0.95rem !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-chip {
+    max-width: calc(100% - 44px) !important;
+    min-height: 28px !important;
+    padding: 6px 8px !important;
+    border-radius: 999px !important;
+    font-size: 0.72rem !important;
+    line-height: 1.12 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: center !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-body {
+    position: static !important;
+    margin-top: auto !important;
+    padding-right: 0 !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-value {
+    margin-top: 0 !important;
+    font-size: clamp(1.34rem, 6vw, 1.72rem) !important;
+    line-height: 1.02 !important;
+    letter-spacing: 0 !important;
+    overflow-wrap: anywhere !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-value span {
+    font-size: 0.74rem !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-label {
+    margin-top: 6px !important;
+    font-size: 0.82rem !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-meter {
+    display: grid !important;
+    place-items: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    opacity: 0.78 !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-skill-radar,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-daily-challenge,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-achievements,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-side-feature {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-chart-wrap {
+    min-height: 190px !important;
+    height: clamp(190px, 46vh, 240px) !important;
+}
+
 @media (max-width: 380px) {
     body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid,
     body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-readiness-card-grid {

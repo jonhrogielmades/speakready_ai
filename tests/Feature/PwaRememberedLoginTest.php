@@ -47,6 +47,32 @@ class PwaRememberedLoginTest extends TestCase
             ->assertRedirect(route('dashboard'));
     }
 
+    public function test_pwa_mobile_start_url_sends_authenticated_user_to_mobile_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($user)
+            ->get('/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1')
+            ->assertRedirect(route('dashboard', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']));
+    }
+
+    public function test_pwa_manifest_starts_in_mobile_layout(): void
+    {
+        $manifest = json_decode(file_get_contents(public_path('manifest.json')), true);
+
+        $this->assertSame('/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1', $manifest['start_url'] ?? null);
+    }
+
+    public function test_pwa_service_worker_cache_version_is_bumped_for_mobile_layout_fix(): void
+    {
+        $worker = file_get_contents(public_path('sw.js'));
+
+        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v34';", $worker);
+    }
+
     public function test_password_login_can_opt_out_of_remembering_the_device(): void
     {
         User::factory()->create([

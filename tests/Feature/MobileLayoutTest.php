@@ -152,8 +152,8 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="user-mobile-shell mobile-shell"', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('id="mob-content"', false)
-            ->assertSee('css/mobile/dashboard.css?v=47', false)
-            ->assertSee('data-page-style="dashboard-v47"', false)
+            ->assertSee('css/mobile/dashboard.css?v=48', false)
+            ->assertSee('data-page-style="dashboard-v48"', false)
             ->assertSee('sr-readiness-card-grid', false)
             ->assertDontSee('class="sr-card sr-score-panel', false)
             ->assertSee('--mob-card-gap: 12px', false)
@@ -168,7 +168,9 @@ class MobileLayoutTest extends TestCase
         $css = file_get_contents(public_path('css/mobile/dashboard.css'));
 
         $this->assertStringContainsString('Gmail auth mobile dashboard hardening', $css);
+        $this->assertStringContainsString('PWA mobile dashboard lockdown', $css);
         $this->assertStringContainsString('body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-score-panel', $css);
+        $this->assertStringContainsString('body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-dashboard-shell', $css);
         $this->assertStringContainsString('display: none !important;', $css);
         $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr)) !important;', $css);
     }
@@ -188,7 +190,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('class="user-mobile-shell mobile-shell"', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/dashboard.css?v=47', false)
+            ->assertSee('css/mobile/dashboard.css?v=48', false)
             ->assertSee('sr-readiness-card-grid', false)
             ->assertDontSee('user-desktop-shell desktop-shell', false)
             ->assertDontSee('class="db-sidebar"', false);
