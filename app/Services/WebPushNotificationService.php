@@ -16,9 +16,9 @@ use phpseclib3\Crypt\EC;
 
 class WebPushNotificationService
 {
-    public const DEFAULT_NOTIFICATION_ICON = '/img/notification-icon-192.png';
+    public const DEFAULT_NOTIFICATION_ICON = '/img/notification-icon-192.png?v=2';
 
-    public const DEFAULT_NOTIFICATION_BADGE = '/img/notification-badge.png';
+    public const DEFAULT_NOTIFICATION_BADGE = '/img/notification-badge.png?v=2';
 
     private const DEFAULT_NOTIFICATION_ACTIONS = [
         ['action' => 'open', 'title' => 'Open'],
