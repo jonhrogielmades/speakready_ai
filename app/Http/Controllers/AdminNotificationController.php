@@ -74,7 +74,14 @@ class AdminNotificationController extends Controller
             'sent_by' => Auth::id()
         ]);
 
-        $notification = new SystemNotification($request->title, $request->message, $request->type);
+        $notification = new SystemNotification(
+            $request->title,
+            $request->message,
+            $request->type,
+            null,
+            'speakready-system-announcement-'.$announcement->id,
+            true
+        );
 
         if ($request->target === 'all') {
             $users = User::all();

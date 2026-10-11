@@ -1,6 +1,6 @@
-const CACHE_NAME = 'speakready-pwa-v41';
+const CACHE_NAME = 'speakready-pwa-v42';
 const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';
-const CLIENT_REFRESH_VALUE = 'pwa-v41';
+const CLIENT_REFRESH_VALUE = 'pwa-v42';
 const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';
 const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';
 const DEFAULT_NOTIFICATION_ACTIONS = [
@@ -124,25 +124,6 @@ self.addEventListener('fetch', event => {
 
         return freshResponse.catch(() => caches.match(event.request));
       });
-    })
-  );
-});
-
-self.addEventListener('message', event => {
-  const data = event.data || {};
-
-  if (data.type !== 'SHOW_ADMIN_ACTIVITY_NOTIFICATION') return;
-
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'SpeakReady AI', {
-      body: data.body || 'New admin activity.',
-      icon: data.icon || NOTIFICATION_ICON,
-      badge: data.badge || NOTIFICATION_BADGE,
-      tag: data.tag || 'admin-activity',
-      renotify: true,
-      data: {
-        url: data.url || '/admin/dashboard',
-      },
     })
   );
 });

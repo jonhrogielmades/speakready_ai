@@ -9,6 +9,8 @@ use App\Models\LearningModule;
 use App\Models\Score;
 use App\Models\User;
 use App\Helpers\ActivityLogger;
+use App\Notifications\Channels\WebPushChannel;
+use App\Notifications\SystemNotification;
 use App\Notifications\UserActivityNotification;
 use App\Services\QuestionDatasetProvider;
 use App\Services\WebPushNotificationService;
@@ -231,6 +233,79 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertSame($notificationCount, $user->fresh()->notifications()->count());
  }
 
+ public function test_activity_notifications_do_not_use_device_push_by_default(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+ $this->mock(WebPushNotificationService::class, function ($mock): void {
+ $mock->shouldReceive('canNotify')->never();
+ });
+
+ $channels = (new UserActivityNotification('Profile Updated', 'Your profile was updated.'))->via($user);
+
+ $this->assertSame(['database'], $channels);
+ }
+
+ public function test_important_ai_feedback_activity_can_use_device_push(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $reviewUrl = route('user.review', 123);
+
+ $this->mock(WebPushNotificationService::class, function ($mock) use ($user): void {
+ $mock->shouldReceive('canNotify')
+ ->once()
+ ->with(\Mockery::on(fn ($notifiable): bool => $notifiable instanceof User && $notifiable->is($user)))
+ ->andReturnTrue();
+ });
+
+ $notification = new UserActivityNotification(
+ 'AI Feedback Ready',
+ 'Your AI interview feedback is ready.',
+ 'fa-flag-checkered',
+ 'success',
+ true,
+ $reviewUrl,
+ 'speakready-ai-feedback-123',
+ true
+ );
+
+ $channels = $notification->via($user);
+ $payload = $notification->toWebPush($user);
+
+ $this->assertContains(WebPushChannel::class, $channels);
+ $this->assertSame('AI Feedback Ready', $payload['title']);
+ $this->assertSame($reviewUrl, $payload['url']);
+ $this->assertSame($reviewUrl, $payload['data']['url']);
+ $this->assertSame('speakready-ai-feedback-123', $payload['tag']);
+ $this->assertSame('high', $payload['urgency']);
+ $this->assertTrue($payload['requireInteraction']);
+ }
+
+ public function test_system_notifications_use_device_push_for_users_only(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $notification = new SystemNotification('What is new', 'A new AI recommendation is ready.', 'info');
+
+ $this->mock(WebPushNotificationService::class, function ($mock) use ($user): void {
+ $mock->shouldReceive('canNotify')
+ ->once()
+ ->with(\Mockery::on(fn ($notifiable): bool => $notifiable instanceof User && $notifiable->is($user)))
+ ->andReturnTrue();
+ });
+
+ $userChannels = $notification->via($user);
+ $adminChannels = $notification->via($admin);
+ $userPayload = $notification->toWebPush($user);
+
+ $this->assertContains(WebPushChannel::class, $userChannels);
+ $this->assertNotContains(WebPushChannel::class, $adminChannels);
+ $this->assertSame(route('user.notifications'), $userPayload['url']);
+ $this->assertSame(route('user.notifications'), $userPayload['data']['url']);
+ $this->assertSame('system', $userPayload['data']['category']);
+ $this->assertTrue($userPayload['requireInteraction']);
+ }
+
  public function test_account_delete_soft_deletes_user_and_logs_out(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -356,56 +431,33 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ]);
  }
 
- public function test_admin_push_subscription_actions_store_and_remove_current_admin_device(): void
+ public function test_admin_accounts_are_redirected_from_user_push_endpoints(): void
  {
  $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
- $otherAdmin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
- $endpoint = 'https://push.example.test/admin-subscriptions/'.str_repeat('d', 48);
-
- config([
- 'services.webpush.public_key' => null,
- 'services.webpush.private_key' => null,
- 'services.webpush.auto_generate' => false,
- ]);
+ $endpoint = 'https://push.example.test/admin-blocked/'.str_repeat('f', 48);
 
  $this->actingAs($admin)
- ->get(route('admin.notifications.push.key'))
- ->assertOk()
- ->assertJsonPath('supported', false)
- ->assertJsonPath('publicKey', null);
+ ->get(route('user.notifications.push.key'))
+ ->assertRedirect('/admin/dashboard');
 
  $this->actingAs($admin)
- ->postJson(route('admin.notifications.push.subscribe'), [
+ ->postJson(route('user.notifications.push.subscribe'), [
  'endpoint' => $endpoint,
  'keys' => [
- 'p256dh' => str_repeat('D', 88),
- 'auth' => str_repeat('E', 24),
+ 'p256dh' => str_repeat('F', 88),
+ 'auth' => str_repeat('G', 24),
  ],
  'contentEncoding' => 'aes128gcm',
  ])
- ->assertOk()
- ->assertJson(['success' => true]);
-
- $this->assertDatabaseHas('push_subscriptions', [
- 'user_id' => $admin->id,
- 'endpoint_hash' => hash('sha256', $endpoint),
- 'content_encoding' => 'aes128gcm',
- ]);
-
- $this->actingAs($otherAdmin)
- ->deleteJson(route('admin.notifications.push.unsubscribe'), ['endpoint' => $endpoint])
- ->assertOk()
- ->assertJson(['success' => true]);
-
- $this->assertDatabaseHas('push_subscriptions', [
- 'user_id' => $admin->id,
- 'endpoint_hash' => hash('sha256', $endpoint),
- ]);
+ ->assertRedirect('/admin/dashboard');
 
  $this->actingAs($admin)
- ->deleteJson(route('admin.notifications.push.unsubscribe'), ['endpoint' => $endpoint])
- ->assertOk()
- ->assertJson(['success' => true]);
+ ->postJson(route('user.notifications.push.test'))
+ ->assertRedirect('/admin/dashboard');
+
+ $this->actingAs($admin)
+ ->deleteJson(route('user.notifications.push.unsubscribe'), ['endpoint' => $endpoint])
+ ->assertRedirect('/admin/dashboard');
 
  $this->assertDatabaseMissing('push_subscriptions', [
  'endpoint_hash' => hash('sha256', $endpoint),
@@ -469,39 +521,6 @@ class UserUtilityPagesFunctionalityTest extends TestCase
 
  $this->actingAs($user)
  ->postJson(route('user.notifications.push.test'))
- ->assertOk()
- ->assertJson([
- 'success' => true,
- 'sent' => 1,
- ]);
- }
-
- public function test_admin_push_test_endpoint_sends_admin_notification_to_current_admin(): void
- {
- $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
-
- $this->mock(WebPushNotificationService::class, function ($mock) use ($admin): void {
- $mock->shouldReceive('isConfigured')->once()->andReturnTrue();
- $mock->shouldReceive('canNotify')->once()->andReturnTrue();
- $mock->shouldReceive('sendToUser')
- ->once()
- ->with(
- \Mockery::on(fn ($notifiable): bool => $notifiable instanceof User && $notifiable->is($admin)),
- \Mockery::on(fn (array $payload): bool => ($payload['body']?? null) === 'Admin device notifications are ready.'
- && ($payload['iconUrl']?? null) === WebPushNotificationService::DEFAULT_NOTIFICATION_ICON
- && ($payload['badgeUrl']?? null) === WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE
- && ($payload['tag']?? null) === 'speakready-admin-push-test'
- && ($payload['urgency']?? null) === 'high'
- && ($payload['requireInteraction']?? null) === true
- && ($payload['vibrate']?? null) === [120, 50, 120]
- && ($payload['url']?? null) === route('admin.notifications.index')
- && ($payload['data']['url']?? null) === route('admin.notifications.index'))
- )
- ->andReturn(1);
- });
-
- $this->actingAs($admin)
- ->postJson(route('admin.notifications.push.test'))
  ->assertOk()
  ->assertJson([
  'success' => true,

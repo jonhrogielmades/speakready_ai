@@ -370,10 +370,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/admin/api/activities/{id}', [\App\Http\Controllers\AdminController::class, 'deleteActivity']);
 
     Route::get('/admin/notifications', [\App\Http\Controllers\AdminNotificationController::class, 'index'])->name('admin.notifications.index');
-    Route::get('/admin/notifications/push/key', [PushSubscriptionController::class, 'publicKey'])->name('admin.notifications.push.key');
-    Route::post('/admin/notifications/push/subscribe', [PushSubscriptionController::class, 'store'])->name('admin.notifications.push.subscribe');
-    Route::post('/admin/notifications/push/test', [PushSubscriptionController::class, 'test'])->name('admin.notifications.push.test');
-    Route::delete('/admin/notifications/push/unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('admin.notifications.push.unsubscribe');
     Route::post('/admin/notifications/send', [\App\Http\Controllers\AdminNotificationController::class, 'store'])->name('admin.notifications.store');
     Route::delete('/admin/notifications/{id}', [\App\Http\Controllers\AdminNotificationController::class, 'destroy'])->name('admin.notifications.destroy');
 });

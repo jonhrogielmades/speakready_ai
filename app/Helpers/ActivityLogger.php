@@ -41,9 +41,22 @@ class ActivityLogger
             $message = $notificationOptions['message'] ?? $description;
             $icon = $notificationOptions['icon'] ?? 'fa-info-circle';
             $type = $notificationOptions['type'] ?? 'info';
+            $sendPush = (bool) ($notificationOptions['push'] ?? false);
+            $url = $notificationOptions['url'] ?? null;
+            $tag = $notificationOptions['tag'] ?? null;
+            $requireInteraction = (bool) ($notificationOptions['requireInteraction'] ?? $sendPush);
 
             try {
-                $user->notify(new UserActivityNotification($title, $message, $icon, $type));
+                $user->notify(new UserActivityNotification(
+                    $title,
+                    $message,
+                    $icon,
+                    $type,
+                    $sendPush,
+                    $url,
+                    $tag,
+                    $requireInteraction
+                ));
             } catch (\Throwable $error) {
                 Log::warning('Unable to write user activity notification.', [
                     'user_id' => $user->id ?? null,

@@ -12,6 +12,7 @@ class PushSubscriptionController extends Controller
 {
     public function publicKey(WebPushNotificationService $webPush)
     {
+        $this->ensureUserSidePushRecipient();
         AccountNotificationSchema::ensure();
         $user = Auth::user();
 
@@ -30,6 +31,7 @@ class PushSubscriptionController extends Controller
 
     public function store(Request $request, WebPushNotificationService $webPush)
     {
+        $this->ensureUserSidePushRecipient();
         AccountNotificationSchema::ensure();
 
         $validated = $request->validate([
@@ -64,6 +66,7 @@ class PushSubscriptionController extends Controller
 
     public function test(WebPushNotificationService $webPush)
     {
+        $this->ensureUserSidePushRecipient();
         AccountNotificationSchema::ensure();
 
         $user = Auth::user();
@@ -86,15 +89,14 @@ class PushSubscriptionController extends Controller
             ], 422);
         }
 
-        $isAdminPush = request()->routeIs('admin.notifications.push.*');
-        $notificationUrl = $isAdminPush ? route('admin.notifications.index') : url('/notifications');
+        $notificationUrl = url('/notifications');
 
         $sent = $webPush->sendToUser($user, [
             'title' => 'SpeakReady AI',
-            'body' => $isAdminPush ? 'Admin device notifications are ready.' : 'Device notifications are ready.',
+            'body' => 'Device notifications are ready.',
             'iconUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_ICON,
             'badgeUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE,
-            'tag' => $isAdminPush ? 'speakready-admin-push-test' : 'speakready-push-test',
+            'tag' => 'speakready-push-test',
             'urgency' => 'high',
             'requireInteraction' => true,
             'vibrate' => [120, 50, 120],
@@ -116,6 +118,7 @@ class PushSubscriptionController extends Controller
 
     public function destroy(Request $request)
     {
+        $this->ensureUserSidePushRecipient();
         AccountNotificationSchema::ensure();
 
         $validated = $request->validate([
@@ -129,5 +132,14 @@ class PushSubscriptionController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    private function ensureUserSidePushRecipient(): void
+    {
+        $user = Auth::user();
+
+        if ($user && (bool) ($user->is_admin ?? false)) {
+            abort(404);
+        }
     }
 }

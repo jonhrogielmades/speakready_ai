@@ -1294,10 +1294,14 @@ return response()->json([
  $request->ip(),
  true,
  [
- 'title' => 'Interview Completed',
- 'message' => "You completed an interview session with an overall score of {$overall}%.",
+ 'title' => 'AI Feedback Ready',
+ 'message' => "Your AI interview feedback is ready. Overall score: {$overall}%.",
  'icon' => 'fa-flag-checkered',
  'type' => 'success',
+ 'push' => true,
+ 'url' => route('user.review', $session->id),
+ 'tag' => 'speakready-ai-feedback-'.$session->id,
+ 'requireInteraction' => true,
  ]
  );
  } catch (\Throwable $activityError) {

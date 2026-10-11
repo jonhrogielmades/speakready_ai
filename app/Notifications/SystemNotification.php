@@ -16,15 +16,21 @@ class SystemNotification extends Notification
     protected $title;
     protected $message;
     protected $type;
+    protected $url;
+    protected $tag;
+    protected $requireInteraction;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($title, $message, $type = 'info')
+    public function __construct($title, $message, $type = 'info', $url = null, $tag = null, $requireInteraction = true)
     {
         $this->title = $title;
         $this->message = $message;
         $this->type = $type;
+        $this->url = $url;
+        $this->tag = $tag;
+        $this->requireInteraction = (bool) $requireInteraction;
     }
 
     /**
@@ -40,7 +46,7 @@ class SystemNotification extends Notification
             $channels[] = 'mail';
         }
 
-        if (app(WebPushNotificationService::class)->canNotify($notifiable)) {
+        if (! (bool) ($notifiable->is_admin ?? false) && app(WebPushNotificationService::class)->canNotify($notifiable)) {
             $channels[] = WebPushChannel::class;
         }
 
@@ -76,16 +82,21 @@ class SystemNotification extends Notification
 
     public function toWebPush(object $notifiable): array
     {
+        $url = $this->url ?: route('user.notifications');
+
         return [
             'title' => $this->title,
             'body' => $this->message,
             'iconUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_ICON,
             'badgeUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE,
-            'tag' => 'speakready-system-'.$this->type,
-            'url' => url('/notifications'),
+            'tag' => $this->tag ?: 'speakready-system-'.$this->type,
+            'urgency' => 'high',
+            'requireInteraction' => $this->requireInteraction,
+            'url' => $url,
             'data' => [
-                'url' => url('/notifications'),
+                'url' => $url,
                 'type' => $this->type,
+                'category' => 'system',
             ],
         ];
     }

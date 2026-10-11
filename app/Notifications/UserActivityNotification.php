@@ -17,16 +17,24 @@ class UserActivityNotification extends Notification
     protected $message;
     protected $icon;
     protected $type;
+    protected $sendPush;
+    protected $url;
+    protected $tag;
+    protected $requireInteraction;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($title, $message, $icon = 'fa-bell', $type = 'info')
+    public function __construct($title, $message, $icon = 'fa-bell', $type = 'info', $sendPush = false, $url = null, $tag = null, $requireInteraction = false)
     {
         $this->title = $title;
         $this->message = $message;
         $this->icon = $icon;
         $this->type = $type;
+        $this->sendPush = (bool) $sendPush;
+        $this->url = $url;
+        $this->tag = $tag;
+        $this->requireInteraction = (bool) $requireInteraction;
     }
 
     /**
@@ -42,7 +50,7 @@ class UserActivityNotification extends Notification
             $channels[] = 'mail';
         }
 
-        if (app(WebPushNotificationService::class)->canNotify($notifiable)) {
+        if ($this->sendPush && app(WebPushNotificationService::class)->canNotify($notifiable)) {
             $channels[] = WebPushChannel::class;
         }
 
@@ -73,15 +81,19 @@ class UserActivityNotification extends Notification
 
     public function toWebPush(object $notifiable): array
     {
+        $url = $this->url ?: url('/notifications');
+
         return [
             'title' => $this->title,
             'body' => $this->message,
             'iconUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_ICON,
             'badgeUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE,
-            'tag' => 'speakready-user-activity',
-            'url' => url('/notifications'),
+            'tag' => $this->tag ?: 'speakready-important-'.$this->type,
+            'urgency' => 'high',
+            'requireInteraction' => $this->requireInteraction,
+            'url' => $url,
             'data' => [
-                'url' => url('/notifications'),
+                'url' => $url,
                 'type' => $this->type,
             ],
         ];

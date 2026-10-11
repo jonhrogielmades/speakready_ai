@@ -287,17 +287,6 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=7') }}"></script>
-      <script>
-         window.SpeakReadyPushConfig = {
-            publicKeyUrl: @json(route('admin.notifications.push.key')),
-            subscribeUrl: @json(route('admin.notifications.push.subscribe')),
-            testUrl: @json(route('admin.notifications.push.test')),
-            unsubscribeUrl: @json(route('admin.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=22')),
-            csrfToken: @json(csrf_token())
-         };
-      </script>
-      <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
       <!-- PWA Service Worker Registration -->
       <script>
          function closeDashboardSidebar() {
@@ -365,7 +354,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=22').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=23').then(function(registration) {
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
@@ -619,59 +608,8 @@
               }
           }
 
-          function syncAdminWebPushAfterPermission(permission, attempt = 0) {
-              if (permission !== 'granted') return;
-
-              if (window.SpeakReadyPush?.enable) {
-                  window.SpeakReadyPush.enable({ requestPermission: false }).catch(() => {});
-                  return;
-              }
-
-              if (attempt < 8) {
-                  window.setTimeout(() => syncAdminWebPushAfterPermission(permission, attempt + 1), 250);
-              }
-          }
-
-          function requestAdminPwaNotificationPermission() {
-              if (!('Notification' in window)) return;
-
-              if (Notification.permission === 'default') {
-                  Notification.requestPermission()
-                      .then(syncAdminWebPushAfterPermission)
-                      .catch(() => {});
-                  return;
-              }
-
-              syncAdminWebPushAfterPermission(Notification.permission);
-          }
-
-          function showAdminPwaNotification(activity) {
-              if (!activity || !('Notification' in window) || Notification.permission !== 'granted') return;
-
-              const payload = {
-                  type: 'SHOW_ADMIN_ACTIVITY_NOTIFICATION',
-                  title: activity.title || 'Admin activity',
-                  body: activity.body || 'A user activity was recorded.',
-                  url: activity.url || '{{ route('admin.dashboard') }}',
-                  tag: `admin-activity-${activity.id}`,
-              };
-
-              if (navigator.serviceWorker?.controller) {
-                  navigator.serviceWorker.controller.postMessage(payload);
-                  return;
-              }
-
-              navigator.serviceWorker?.ready
-                  .then(registration => registration.active?.postMessage(payload))
-                  .catch(() => {});
-          }
-
           function notifyNewAdminAuthActivities(activities) {
               if (!Array.isArray(activities) || activities.length === 0) return;
-
-              const newActivities = activities
-                  .filter(activity => Number(activity.id) > Number(adminLastSeenActivityId || 0))
-                  .sort((a, b) => Number(a.id) - Number(b.id));
 
               if (!adminActivityNotificationsReady) {
                   adminActivityNotificationsReady = true;
@@ -679,7 +617,6 @@
                   return;
               }
 
-              newActivities.forEach(showAdminPwaNotification);
               rememberLatestAdminActivity(activities);
           }
 
@@ -771,7 +708,6 @@
           }
 
           document.addEventListener('DOMContentLoaded', function() {
-              requestAdminPwaNotificationPermission();
               fetchAdminActivities();
               setInterval(fetchAdminActivities, 15000);
           });
