@@ -75,13 +75,31 @@ class UserApplicationController extends Controller
         $application->save();
         $careerPlan->syncPracticePlan($application);
 
+        ActivityLogger::log(
+            Auth::user(),
+            'job_application_updated',
+            "You updated {$application->company_name} - {$application->job_title} in your tracker.",
+            $request->ip(),
+            false
+        );
+
         return redirect()->route('user.applications.index')->with('success', 'Application tracker and plan updated.');
     }
 
-    public function destroy(JobApplication $application)
+    public function destroy(Request $request, JobApplication $application)
     {
         $this->authorizeApplication($application);
+        $companyName = $application->company_name;
+        $jobTitle = $application->job_title;
         $application->delete();
+
+        ActivityLogger::log(
+            Auth::user(),
+            'job_application_deleted',
+            "You removed {$companyName} - {$jobTitle} from your tracker.",
+            $request->ip(),
+            false
+        );
 
         return redirect()->route('user.applications.index')->with('success', 'Application removed from your tracker.');
     }

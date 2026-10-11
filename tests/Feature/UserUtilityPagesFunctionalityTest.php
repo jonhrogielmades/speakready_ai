@@ -8,6 +8,7 @@ use App\Models\InterviewSession;
 use App\Models\LearningModule;
 use App\Models\Score;
 use App\Models\User;
+use App\Helpers\ActivityLogger;
 use App\Notifications\UserActivityNotification;
 use App\Services\QuestionDatasetProvider;
 use App\Services\WebPushNotificationService;
@@ -194,6 +195,38 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  fn ($notification): bool => ($notification->data['title']?? null) === 'Password Changed'
  )
  );
+ }
+
+ public function test_important_activity_logs_create_notifications_even_when_called_activity_only(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+ ActivityLogger::log(
+ $user,
+ 'language_updated',
+ "{$user->name} changed preferred language to Cebuano.",
+ '127.0.0.1',
+ false
+ );
+
+ $this->assertTrue(
+ $user->fresh()->notifications()->get()->contains(
+ fn ($notification): bool => ($notification->data['title']?? null) === 'Language Updated'
+ && ($notification->data['message']?? null) === "{$user->name} changed preferred language to Cebuano."
+ )
+ );
+
+ $notificationCount = $user->fresh()->notifications()->count();
+
+ ActivityLogger::log(
+ $user,
+ 'ai_coach_message_sent',
+ "{$user->name} sent a new AI coach message.",
+ '127.0.0.1',
+ false
+ );
+
+ $this->assertSame($notificationCount, $user->fresh()->notifications()->count());
  }
 
  public function test_account_delete_soft_deletes_user_and_logs_out(): void

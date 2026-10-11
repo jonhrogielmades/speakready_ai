@@ -31,6 +31,12 @@ class AdminLoginLogoutActivityNotificationTest extends TestCase
             'action' => 'user_logged_in',
             'description' => 'Ready User (ready@example.com) logged in.',
         ]);
+
+        $this->assertTrue(
+            $user->fresh()->notifications()->get()->contains(
+                fn ($notification): bool => ($notification->data['title'] ?? null) === 'New Sign-In'
+            )
+        );
     }
 
     public function test_user_logout_creates_admin_activity_entry(): void
@@ -51,5 +57,11 @@ class AdminLoginLogoutActivityNotificationTest extends TestCase
             'action' => 'user_logged_out',
             'description' => 'Ready User (ready@example.com) logged out.',
         ]);
+
+        $this->assertTrue(
+            $user->fresh()->notifications()->get()->contains(
+                fn ($notification): bool => ($notification->data['title'] ?? null) === 'Signed Out'
+            )
+        );
     }
 }
