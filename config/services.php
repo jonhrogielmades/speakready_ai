@@ -45,6 +45,12 @@ return [
  'timeout' => env('GOOGLE_HTTP_TIMEOUT', 20),
  ],
 
+ 'webpush' => [
+ 'subject' => env('WEBPUSH_VAPID_SUBJECT', env('APP_URL')),
+ 'public_key' => env('WEBPUSH_VAPID_PUBLIC_KEY'),
+ 'private_key' => env('WEBPUSH_VAPID_PRIVATE_KEY'),
+ ],
+
  'ai_tts' => [
  'enabled' => env('AI_TTS_ENABLED', false),
  'provider' => env('AI_TTS_PROVIDER', 'elevenlabs,openai,gemini'),

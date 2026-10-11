@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speakready-pwa-v30';
+const CACHE_NAME = 'speakready-pwa-v31';
 const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
 
 function isSameOrigin(requestUrl) {
@@ -84,10 +84,45 @@ self.addEventListener('message', event => {
   );
 });
 
+function pushPayload(event) {
+  if (!event.data) return {};
+
+  try {
+    return event.data.json();
+  } catch (error) {
+    return {
+      title: 'SpeakReady AI',
+      body: event.data.text(),
+    };
+  }
+}
+
+self.addEventListener('push', event => {
+  const payload = pushPayload(event);
+  const notificationData = payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)
+    ? payload.data
+    : {};
+  const targetUrl = payload.url || notificationData.url || '/notifications';
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || 'SpeakReady AI', {
+      body: payload.body || payload.message || 'You have a new notification.',
+      icon: payload.icon || '/img/app-icon-192.png',
+      badge: payload.badge || '/img/app-icon-192.png',
+      tag: payload.tag || 'speakready-notification',
+      renotify: payload.renotify !== false,
+      data: {
+        ...notificationData,
+        url: targetUrl,
+      },
+    })
+  );
+});
+
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
-  const targetUrl = event.notification.data?.url || '/admin/dashboard';
+  const targetUrl = event.notification.data?.url || '/notifications';
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {

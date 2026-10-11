@@ -259,6 +259,61 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertDatabaseHas('notifications', ['id' => $otherNotification->id]);
  }
 
+ public function test_push_subscription_actions_store_and_remove_current_device(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $endpoint = 'https://push.example.test/subscriptions/'.str_repeat('a', 48);
+
+ config([
+ 'services.webpush.public_key' => null,
+ 'services.webpush.private_key' => null,
+ ]);
+
+ $this->actingAs($user)
+ ->get(route('user.notifications.push.key'))
+ ->assertOk()
+ ->assertJsonPath('supported', false)
+ ->assertJsonPath('publicKey', null);
+
+ $this->actingAs($user)
+ ->postJson(route('user.notifications.push.subscribe'), [
+ 'endpoint' => $endpoint,
+ 'keys' => [
+ 'p256dh' => str_repeat('B', 88),
+ 'auth' => str_repeat('C', 24),
+ ],
+ 'contentEncoding' => 'aes128gcm',
+ ])
+ ->assertOk()
+ ->assertJson(['success' => true]);
+
+ $this->assertDatabaseHas('push_subscriptions', [
+ 'user_id' => $user->id,
+ 'endpoint_hash' => hash('sha256', $endpoint),
+ 'content_encoding' => 'aes128gcm',
+ ]);
+
+ $this->actingAs($otherUser)
+ ->deleteJson(route('user.notifications.push.unsubscribe'), ['endpoint' => $endpoint])
+ ->assertOk()
+ ->assertJson(['success' => true]);
+
+ $this->assertDatabaseHas('push_subscriptions', [
+ 'user_id' => $user->id,
+ 'endpoint_hash' => hash('sha256', $endpoint),
+ ]);
+
+ $this->actingAs($user)
+ ->deleteJson(route('user.notifications.push.unsubscribe'), ['endpoint' => $endpoint])
+ ->assertOk()
+ ->assertJson(['success' => true]);
+
+ $this->assertDatabaseMissing('push_subscriptions', [
+ 'endpoint_hash' => hash('sha256', $endpoint),
+ ]);
+ }
+
  public function test_notifications_page_shows_current_users_full_activity_history(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -542,6 +597,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  Schema::disableForeignKeyConstraints();
 
  try {
+ Schema::dropIfExists('push_subscriptions');
  Schema::dropIfExists('activity_logs');
  Schema::dropIfExists('notifications');
  } finally {
@@ -559,6 +615,11 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertTrue(Schema::hasTable('activity_logs'));
  foreach (['user_id', 'action', 'description', 'ip_address', 'read_at', 'created_at', 'updated_at'] as $column) {
  $this->assertTrue(Schema::hasColumn('activity_logs', $column), "Missing activity_logs.{$column}");
+ }
+
+ $this->assertTrue(Schema::hasTable('push_subscriptions'));
+ foreach (['user_id', 'endpoint_hash', 'endpoint', 'public_key', 'auth_token', 'content_encoding', 'user_agent', 'last_used_at', 'failed_at', 'created_at', 'updated_at'] as $column) {
+ $this->assertTrue(Schema::hasColumn('push_subscriptions', $column), "Missing push_subscriptions.{$column}");
  }
 
  foreach (['is_admin', 'google_id', 'status', 'reactivation_requested_at', 'profile_photo_path', 'target_position', 'preferred_language', 'deleted_at'] as $column) {

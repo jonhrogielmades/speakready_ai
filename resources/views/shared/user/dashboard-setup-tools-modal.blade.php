@@ -227,6 +227,33 @@
             }
 
             async function requestNotifications() {
+                if (window.SpeakReadyPush && typeof window.SpeakReadyPush.enable === 'function') {
+                    try {
+                        const result = await window.SpeakReadyPush.enable();
+
+                        if (result.status === 'granted') {
+                            setToolStatus('notifications', 'Allowed', 'success');
+                            return 'granted';
+                        }
+
+                        if (result.status === 'unconfigured') {
+                            setToolStatus('notifications', 'Server setup needed', 'error');
+                            return 'unconfigured';
+                        }
+
+                        if (result.status === 'unsupported') {
+                            setToolStatus('notifications', 'Unsupported', 'error');
+                            return 'unsupported';
+                        }
+
+                        setToolStatus('notifications', 'Blocked', 'error');
+                        return result.status || 'denied';
+                    } catch (error) {
+                        setToolStatus('notifications', permissionErrorMessage('notifications', error), 'error');
+                        return error && error.name ? error.name : 'error';
+                    }
+                }
+
                 if (!('Notification' in window) || typeof Notification.requestPermission !== 'function') {
                     setToolStatus('notifications', 'Unsupported', 'error');
                     return 'unsupported';

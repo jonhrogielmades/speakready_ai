@@ -20,6 +20,7 @@ class AccountNotificationSchema
         self::ensureUserColumns();
         self::ensureNotificationsTable();
         self::ensureActivityLogsTable();
+        self::ensurePushSubscriptionsTable();
 
         self::$checked = true;
         self::$ready = true;
@@ -76,7 +77,8 @@ class AccountNotificationSchema
     {
         return self::hasRequiredUserColumns()
             && self::hasRequiredNotificationsTable()
-            && self::hasRequiredActivityLogsTable();
+            && self::hasRequiredActivityLogsTable()
+            && self::hasRequiredPushSubscriptionsTable();
     }
 
     public static function hasRequiredUserColumns(): bool
@@ -98,6 +100,12 @@ class AccountNotificationSchema
     {
         return Schema::hasTable('activity_logs')
             && self::missingColumns('activity_logs', self::activityLogColumns()) === [];
+    }
+
+    public static function hasRequiredPushSubscriptionsTable(): bool
+    {
+        return Schema::hasTable('push_subscriptions')
+            && self::missingColumns('push_subscriptions', self::pushSubscriptionColumns()) === [];
     }
 
     private static function ensureNotificationsTable(): void
@@ -184,6 +192,70 @@ class AccountNotificationSchema
             }
             if (self::isMissing($missing, 'read_at')) {
                 $table->timestamp('read_at')->nullable();
+            }
+            if (self::isMissing($missing, 'created_at')) {
+                $table->timestamp('created_at')->nullable();
+            }
+            if (self::isMissing($missing, 'updated_at')) {
+                $table->timestamp('updated_at')->nullable();
+            }
+        });
+    }
+
+    private static function ensurePushSubscriptionsTable(): void
+    {
+        if (! Schema::hasTable('push_subscriptions')) {
+            Schema::create('push_subscriptions', function (Blueprint $table): void {
+                $table->id();
+                self::foreignId($table, 'user_id', 'users');
+                $table->char('endpoint_hash', 64)->unique();
+                $table->text('endpoint');
+                $table->text('public_key');
+                $table->text('auth_token');
+                $table->string('content_encoding', 32)->default('aes128gcm');
+                $table->text('user_agent')->nullable();
+                $table->timestamp('last_used_at')->nullable();
+                $table->timestamp('failed_at')->nullable();
+                $table->timestamps();
+
+                $table->index(['user_id', 'failed_at']);
+            });
+
+            return;
+        }
+
+        $missing = self::missingColumns('push_subscriptions', self::pushSubscriptionColumns());
+        if ($missing === []) {
+            return;
+        }
+
+        Schema::table('push_subscriptions', function (Blueprint $table) use ($missing): void {
+            if (self::isMissing($missing, 'user_id')) {
+                self::foreignId($table, 'user_id', 'users', true);
+            }
+            if (self::isMissing($missing, 'endpoint_hash')) {
+                $table->char('endpoint_hash', 64)->nullable()->unique();
+            }
+            if (self::isMissing($missing, 'endpoint')) {
+                $table->text('endpoint')->nullable();
+            }
+            if (self::isMissing($missing, 'public_key')) {
+                $table->text('public_key')->nullable();
+            }
+            if (self::isMissing($missing, 'auth_token')) {
+                $table->text('auth_token')->nullable();
+            }
+            if (self::isMissing($missing, 'content_encoding')) {
+                $table->string('content_encoding', 32)->default('aes128gcm');
+            }
+            if (self::isMissing($missing, 'user_agent')) {
+                $table->text('user_agent')->nullable();
+            }
+            if (self::isMissing($missing, 'last_used_at')) {
+                $table->timestamp('last_used_at')->nullable();
+            }
+            if (self::isMissing($missing, 'failed_at')) {
+                $table->timestamp('failed_at')->nullable();
             }
             if (self::isMissing($missing, 'created_at')) {
                 $table->timestamp('created_at')->nullable();
@@ -304,6 +376,26 @@ class AccountNotificationSchema
             'description',
             'ip_address',
             'read_at',
+            'created_at',
+            'updated_at',
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function pushSubscriptionColumns(): array
+    {
+        return [
+            'user_id',
+            'endpoint_hash',
+            'endpoint',
+            'public_key',
+            'auth_token',
+            'content_encoding',
+            'user_agent',
+            'last_used_at',
+            'failed_at',
             'created_at',
             'updated_at',
         ];

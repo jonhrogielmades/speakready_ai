@@ -2,6 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Channels\WebPushChannel;
+use App\Services\WebPushNotificationService;
 use App\Support\SystemSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -38,6 +40,10 @@ class SystemNotification extends Notification
             $channels[] = 'mail';
         }
 
+        if (app(WebPushNotificationService::class)->canNotify($notifiable)) {
+            $channels[] = WebPushChannel::class;
+        }
+
         return $channels;
     }
 
@@ -66,5 +72,19 @@ class SystemNotification extends Notification
         return (new MailMessage)
             ->subject($this->title)
             ->line($this->message);
+    }
+
+    public function toWebPush(object $notifiable): array
+    {
+        return [
+            'title' => $this->title,
+            'body' => $this->message,
+            'tag' => 'speakready-system-'.$this->type,
+            'url' => url('/notifications'),
+            'data' => [
+                'url' => url('/notifications'),
+                'type' => $this->type,
+            ],
+        ];
     }
 }

@@ -343,6 +343,16 @@
       @include('desktop.partials.flash-modal')
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=8') }}"></script>
+      <script>
+         window.SpeakReadyPushConfig = {
+            publicKeyUrl: @json(route('user.notifications.push.key')),
+            subscribeUrl: @json(route('user.notifications.push.subscribe')),
+            unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
+            serviceWorkerUrl: @json(asset('sw.js?v=12')),
+            csrfToken: @json(csrf_token())
+         };
+      </script>
+      <script src="{{ asset('js/push-notifications.js?v=1') }}" defer></script>
       <script src="{{ asset('js/user-ui.js') }}?v=24" defer></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
@@ -535,7 +545,8 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=11').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=12').then(function(registration) {
+                  window.SpeakReadyServiceWorkerRegistration = registration;
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
