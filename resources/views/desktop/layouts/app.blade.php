@@ -351,11 +351,11 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=17')),
+            serviceWorkerUrl: @json(asset('sw.js?v=18')),
             csrfToken: @json(csrf_token())
          };
       </script>
-      <script src="{{ asset('js/push-notifications.js?v=5') }}" defer></script>
+      <script src="{{ asset('js/push-notifications.js?v=6') }}" defer></script>
       <script src="{{ asset('js/user-ui.js') }}?v=24" defer></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
@@ -548,7 +548,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=17').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=18').then(function(registration) {
                   window.SpeakReadyServiceWorkerRegistration = registration;
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {
@@ -613,6 +613,34 @@
             if (willOpen && dd.getAttribute('data-loaded') !== 'true') {
                fetchNotifications();
             }
+         }
+
+         function openNotificationDropdownFromPush() {
+            if (document.visibilityState && document.visibilityState !== 'visible') return;
+
+            const dropdown = document.getElementById('notifDropdown');
+            if (!dropdown) return;
+
+            closeUserHeaderDropdowns('notifDropdown');
+            setUserDropdownState('notifDropdown', 'bellBtn', true);
+            dropdown.classList.add('has-live-push');
+            dropdown.setAttribute('data-loaded', 'false');
+            notificationLastLoadedAt = 0;
+
+            fetchNotifications({ force: true }).finally(() => {
+               window.setTimeout(() => dropdown.classList.remove('has-live-push'), 6500);
+            });
+         }
+
+         function handleServiceWorkerNotificationMessage(event) {
+            const data = event?.data || {};
+            if (data.type !== 'SPEAKREADY_PUSH_NOTIFICATION_RECEIVED') return;
+
+            openNotificationDropdownFromPush();
+         }
+
+         if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', handleServiceWorkerNotificationMessage);
          }
 
          function escapeNotifHtml(value) {
@@ -703,10 +731,12 @@
             const badge = document.getElementById('notifBadge');
             const unreadBadge = document.getElementById('unreadCountBadge');
             const listContainer = document.getElementById('notifListContainer');
+            const dropdown = document.getElementById('notifDropdown');
             if (!badge || !unreadBadge || !listContainer) return;
 
             const unreadCount = Number(data?.unreadCount || 0);
             const notifications = Array.isArray(data?.notifications) ? data.notifications : [];
+            const liveHighlight = dropdown?.classList.contains('has-live-push');
 
             if (unreadCount > 0) {
                badge.style.display = 'block';
@@ -724,8 +754,9 @@
 
             let html = '';
             const notificationUrl = escapeNotifHtml(userNotificationsUrl);
-            notifications.forEach(n => {
+            notifications.forEach((n, index) => {
                const unreadClass = n.read_at ? '' : 'notif-unread';
+               const liveClass = liveHighlight && index === 0 ? 'live-incoming' : '';
                const title = escapeNotifHtml(n.data?.title || 'Notification');
                const message = escapeNotifHtml(n.data?.message || '');
                const icon = escapeNotifHtml(safeNotificationIcon(n.data?.icon));
@@ -734,7 +765,7 @@
                const date = escapeNotifHtml(Number.isNaN(createdAt.getTime()) ? 'Recently' : createdAt.toLocaleString());
 
                html += `
-                  <div class="notif-item user-notif-item ${unreadClass}">
+                  <div class="notif-item user-notif-item ${unreadClass} ${liveClass}">
                      <a class="notif-ico user-notif-ico" href="${notificationUrl}" aria-label="Open notifications page"><i class="fa-solid ${icon}"></i></a>
                      <div class="user-notif-copy">
                         <a class="user-notif-open" href="${notificationUrl}">
