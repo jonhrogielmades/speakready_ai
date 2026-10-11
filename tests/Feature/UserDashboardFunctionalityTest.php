@@ -134,6 +134,7 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertDontSee('DashboardCoachSpeechRecognition', false)
                 ->assertDontSee('initDashboardCoachModal', false)
                 ->assertSee('id="dashboardSetupToolsModal"', false)
+                ->assertSee('data-sr-setup-auto-show="true"', false)
                 ->assertSee('id="dashboardSetupToolsForm"', false)
                 ->assertSee('data-sr-setup-tool="microphone"', false)
                 ->assertSee('data-sr-setup-tool="camera"', false)

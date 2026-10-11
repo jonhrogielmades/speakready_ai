@@ -1957,3 +1957,61 @@
         flex-basis: 72px !important;
     }
 }
+
+#account-page .account-record-notification-item,
+body.user-mobile-shell #mob-content #account-page .account-record-notification-item,
+html body #mob-content #account-page .account-record-notification-item,
+html body #account-page .account-record-notification-item {
+    grid-template-columns: 44px minmax(0, 1fr) auto !important;
+}
+
+#account-page .account-notification-setup-btn,
+body.user-mobile-shell #mob-content #account-page .account-notification-setup-btn,
+html body #mob-content #account-page .account-notification-setup-btn,
+html body #account-page .account-notification-setup-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    min-width: 104px !important;
+    min-height: 36px !important;
+    padding: 0 13px !important;
+    border: 1px solid rgba(37, 99, 235, 0.28) !important;
+    border-radius: 10px !important;
+    background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+    color: #fff !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.16) !important;
+}
+
+#account-page .account-notification-setup-btn:focus-visible,
+body.user-mobile-shell #mob-content #account-page .account-notification-setup-btn:focus-visible,
+html body #mob-content #account-page .account-notification-setup-btn:focus-visible,
+html body #account-page .account-notification-setup-btn:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.28) !important;
+    outline-offset: 2px !important;
+}
+
+@media (max-width: 575.98px) {
+    #account-page .account-record-notification-item,
+    body.user-mobile-shell #mob-content #account-page .account-record-notification-item,
+    html body #mob-content #account-page .account-record-notification-item,
+    html body #account-page .account-record-notification-item {
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+    }
+
+    #account-page .account-notification-setup-btn,
+    body.user-mobile-shell #mob-content #account-page .account-notification-setup-btn,
+    html body #mob-content #account-page .account-notification-setup-btn,
+    html body #account-page .account-notification-setup-btn {
+        grid-column: 2 !important;
+        justify-self: start !important;
+        min-width: 96px !important;
+        min-height: 34px !important;
+        padding: 0 12px !important;
+        font-size: 0.68rem !important;
+        box-shadow: none !important;
+    }
+}

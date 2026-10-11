@@ -1,4 +1,4 @@
-<div class="modal fade sr-dashboard-coach-modal sr-dashboard-setup-modal" id="dashboardSetupToolsModal" tabindex="-1" aria-labelledby="dashboardSetupToolsModalTitle" aria-hidden="true" data-sr-dashboard-setup-modal>
+<div class="modal fade sr-dashboard-coach-modal sr-dashboard-setup-modal" id="dashboardSetupToolsModal" tabindex="-1" aria-labelledby="dashboardSetupToolsModalTitle" aria-hidden="true" data-sr-dashboard-setup-modal data-sr-setup-auto-show="{{ ! empty($setupToolsAutoShow) ? 'true' : 'false' }}">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form id="dashboardSetupToolsForm" data-sr-dashboard-setup-form>
@@ -86,6 +86,7 @@
             const toggles = Array.from(form.querySelectorAll('[data-sr-setup-tool]'));
             const storageKey = 'speakready.dashboardSetupTools.v1';
             const snoozeKey = 'speakready.dashboardSetupTools.snoozed';
+            const shouldAutoShow = modalElement?.dataset.srSetupAutoShow === 'true';
             let completed = false;
             let submitActive = false;
 
@@ -380,7 +381,7 @@
                 }
             });
 
-            if (!hasCompletedSetup() && !safeSessionGet(snoozeKey) && window.bootstrap && modalElement) {
+            if (shouldAutoShow && !hasCompletedSetup() && !safeSessionGet(snoozeKey) && window.bootstrap && modalElement) {
                 window.setTimeout(() => {
                     if (hasCompletedSetup() || safeSessionGet(snoozeKey)) return;
 

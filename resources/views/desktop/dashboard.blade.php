@@ -668,7 +668,7 @@
     </div>
 </div>
 
-@include('shared.user.dashboard-setup-tools-modal')
+@include('shared.user.dashboard-setup-tools-modal', ['setupToolsAutoShow' => true])
 
 @push('scripts')
 <script src="{{ asset('js/chart.umd.min.js') }}"></script>

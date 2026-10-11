@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/account.css?v=2') }}" data-page-style="user-account">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/account-2.css?v=9') }}" data-page-style="user-account-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/account-2.css?v=10') }}" data-page-style="user-account-2">
 @endpush
 
 @section('content')
@@ -170,6 +170,8 @@
         </div>
     </div>
 </div>
+
+@include('shared.user.dashboard-setup-tools-modal')
 
 <div class="profile-crop-modal" id="profileCropModal" aria-hidden="true" hidden>
     <div class="profile-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="profileCropTitle">
