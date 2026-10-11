@@ -85,6 +85,22 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('css/desktop/style.css?v=9', false);
     }
 
+    public function test_desktop_guest_google_auth_links_are_hardened_for_mobile_viewports(): void
+    {
+        $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+        $this->withHeader('User-Agent', $desktopUserAgent)
+            ->get('/?sr_layout=desktop&sr_viewport_width=1280')
+            ->assertOk()
+            ->assertSee('guest-shell guest-desktop-shell', false)
+            ->assertSee('window.SpeakReadyGoogleMobileLayout', false)
+            ->assertSee('shouldUseMobileLayout', false)
+            ->assertSee("url.searchParams.set('sr_layout', 'mobile')", false)
+            ->assertSee("url.searchParams.set('sr_is_mobile', '1')", false)
+            ->assertSee("url.searchParams.set('sr_viewport_width', String(width))", false)
+            ->assertSee('window.location.href = destination;', false);
+    }
+
     public function test_guest_landing_desktop_query_hint_can_override_stale_mobile_cookie(): void
     {
         $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';

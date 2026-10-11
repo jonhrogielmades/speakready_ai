@@ -1939,6 +1939,8 @@
          });
       </script>
 
+      @include('shared.google-auth-mobile-layout-guard')
+
       <!-- LOGIN TRANSITION OVERLAY -->
 
       <div id="loginTransitionOverlay">
@@ -2024,8 +2026,13 @@
                           link.insertBefore(spinner, googleMark);
                       }
 
+                      var destination = link.href;
+                      if (window.SpeakReadyGoogleMobileLayout && typeof window.SpeakReadyGoogleMobileLayout.apply === 'function') {
+                          destination = window.SpeakReadyGoogleMobileLayout.apply(link);
+                      }
+
                       window.setTimeout(function() {
-                          window.location.href = link.href;
+                          window.location.href = destination;
                       }, 80);
                   });
               });
