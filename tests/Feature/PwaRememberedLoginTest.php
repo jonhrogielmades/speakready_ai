@@ -303,16 +303,26 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect('/')
+            ->assertRedirect('/?auth_modal=login&auth_alert=google_login_unregistered')
             ->assertSessionHasErrors([
                 'email' => 'This Google account is not registered. Please register first.',
             ])
             ->assertSessionHas('_old_input.auth_tab', 'login')
             ->assertSessionHas('_old_input.email', 'missing-google-login@example.com');
 
-        $this->get('/')
+        $this->get('/?auth_modal=login&auth_alert=google_login_unregistered')
             ->assertOk()
             ->assertSee('id="tabLogin" role="tab" aria-selected="true"', false)
+            ->assertSee("swTab('login')", false)
+            ->assertSee('This Google account is not registered. Please register first.');
+    }
+
+    public function test_google_unregistered_query_fallback_opens_login_modal_without_flashed_errors(): void
+    {
+        $this->get('/?auth_modal=login&auth_alert=google_login_unregistered')
+            ->assertOk()
+            ->assertSee('id="tabLogin" role="tab" aria-selected="true"', false)
+            ->assertSee("swTab('login')", false)
             ->assertSee('This Google account is not registered. Please register first.');
     }
 

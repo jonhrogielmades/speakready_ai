@@ -33,6 +33,8 @@ class AuthController extends Controller
 
     private const GOOGLE_LOGIN_UNREGISTERED_ACCOUNT_MESSAGE = 'This Google account is not registered. Please register first.';
 
+    private const GOOGLE_LOGIN_UNREGISTERED_ALERT_KEY = 'google_login_unregistered';
+
     private const GOOGLE_AUTH_INTENT_SESSION_KEY = 'google_auth_intent';
 
     private const GOOGLE_AUTH_LAYOUT_SESSION_KEY = 'google_auth_layout';
@@ -372,6 +374,9 @@ class AuthController extends Controller
             if (! $user && $intent === 'login') {
                 return $this->googleAuthFailureResponse($request, self::GOOGLE_LOGIN_UNREGISTERED_ACCOUNT_MESSAGE, $intent, [
                     'email' => $googleEmail,
+                ], 'email', [
+                    'auth_modal' => 'login',
+                    'auth_alert' => self::GOOGLE_LOGIN_UNREGISTERED_ALERT_KEY,
                 ]);
             }
 
@@ -560,9 +565,9 @@ class AuthController extends Controller
         return $layout === 'mobile' ? ['sr_layout' => 'mobile'] : [];
     }
 
-    private function redirectToHomeWithGoogleLayout(Request $request)
+    private function redirectToHomeWithGoogleLayout(Request $request, array $extraQuery = [])
     {
-        $query = $this->googleLayoutQuery($request);
+        $query = array_merge($this->googleLayoutQuery($request), $extraQuery);
 
         return empty($query)
             ? redirect('/')
@@ -583,9 +588,9 @@ class AuthController extends Controller
         return in_array($intent, ['login', 'register'], true) ? $intent : 'login';
     }
 
-    private function googleAuthFailureResponse(Request $request, string $message, ?string $intent = null, array $input = [], string $field = 'email')
+    private function googleAuthFailureResponse(Request $request, string $message, ?string $intent = null, array $input = [], string $field = 'email', array $homeQuery = [])
     {
-        return $this->redirectToHomeWithGoogleLayout($request)
+        return $this->redirectToHomeWithGoogleLayout($request, $homeQuery)
             ->withErrors([$field => $message])
             ->withInput($this->googleAuthOldInput($request, $intent, $input));
     }

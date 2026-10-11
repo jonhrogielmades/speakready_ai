@@ -1393,14 +1393,23 @@
       <script src="{{ asset('js/swiper-bundle.min.js') }}"></script>
 
       <script src="{{ asset('js/main.js?v=9') }}"></script>
-      @if($errors->any())
+      @php
+         $authModalRequest = request('auth_modal');
+         $shouldShowAuthModal = $errors->any()
+            || in_array($authModalRequest, ['login', 'signup', 'register'], true)
+            || request('auth_alert') === 'google_login_unregistered';
+         $shouldShowSignupAuthTab = in_array(old('auth_tab', $authModalRequest), ['signup', 'register'], true) || filled(old('name'));
+      @endphp
+      @if($shouldShowAuthModal)
       <script>
          document.addEventListener('DOMContentLoaded', function() {
             var authModal = document.getElementById('lofc');
             var bsModal = new bootstrap.Modal(authModal);
             bsModal.show();
-            @if(in_array(old('auth_tab'), ['signup', 'register'], true) || filled(old('name')))
+            @if($shouldShowSignupAuthTab)
                swTab('signup');
+            @else
+               swTab('login');
             @endif
          });
       </script>
