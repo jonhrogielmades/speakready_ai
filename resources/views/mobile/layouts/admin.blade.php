@@ -3270,6 +3270,17 @@
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <script src="{{ asset('js/main.js?v=7') }}"></script>
+      <script>
+         window.SpeakReadyPushConfig = {
+            publicKeyUrl: @json(route('admin.notifications.push.key')),
+            subscribeUrl: @json(route('admin.notifications.push.subscribe')),
+            testUrl: @json(route('admin.notifications.push.test')),
+            unsubscribeUrl: @json(route('admin.notifications.push.unsubscribe')),
+            serviceWorkerUrl: @json(asset('sw.js?v=22')),
+            csrfToken: @json(csrf_token())
+         };
+      </script>
+      <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
       <script src="{{ asset('js/user-ui.js') }}?v=21" defer></script>
 
       <script>
@@ -3561,12 +3572,30 @@
               }
           }
 
+          function syncAdminWebPushAfterPermission(permission, attempt = 0) {
+              if (permission !== 'granted') return;
+
+              if (window.SpeakReadyPush?.enable) {
+                  window.SpeakReadyPush.enable({ requestPermission: false }).catch(() => {});
+                  return;
+              }
+
+              if (attempt < 8) {
+                  window.setTimeout(() => syncAdminWebPushAfterPermission(permission, attempt + 1), 250);
+              }
+          }
+
           function requestAdminPwaNotificationPermission() {
               if (!('Notification' in window)) return;
 
               if (Notification.permission === 'default') {
-                  Notification.requestPermission().catch(() => {});
+                  Notification.requestPermission()
+                      .then(syncAdminWebPushAfterPermission)
+                      .catch(() => {});
+                  return;
               }
+
+              syncAdminWebPushAfterPermission(Notification.permission);
           }
 
           function showAdminPwaNotification(activity) {

@@ -86,18 +86,21 @@ class PushSubscriptionController extends Controller
             ], 422);
         }
 
+        $isAdminPush = request()->routeIs('admin.notifications.push.*');
+        $notificationUrl = $isAdminPush ? route('admin.notifications.index') : url('/notifications');
+
         $sent = $webPush->sendToUser($user, [
             'title' => 'SpeakReady AI',
-            'body' => 'Device notifications are ready.',
+            'body' => $isAdminPush ? 'Admin device notifications are ready.' : 'Device notifications are ready.',
             'iconUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_ICON,
             'badgeUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE,
-            'tag' => 'speakready-push-test',
+            'tag' => $isAdminPush ? 'speakready-admin-push-test' : 'speakready-push-test',
             'urgency' => 'high',
             'requireInteraction' => true,
             'vibrate' => [120, 50, 120],
-            'url' => url('/notifications'),
+            'url' => $notificationUrl,
             'data' => [
-                'url' => url('/notifications'),
+                'url' => $notificationUrl,
                 'type' => 'success',
             ],
         ]);

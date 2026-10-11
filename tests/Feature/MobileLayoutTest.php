@@ -237,6 +237,11 @@ class MobileLayoutTest extends TestCase
             ->assertSee('id="mobFullscreenBtn"', false)
             ->assertSee('data-user-fullscreen-toggle', false)
             ->assertSee('js/user-ui.js?v=21', false)
+            ->assertSee('SpeakReadyPushConfig', false)
+            ->assertSee('\\/admin\\/notifications\\/push\\/key', false)
+            ->assertSee('push-notifications.js?v=7', false)
+            ->assertSee('syncAdminWebPushAfterPermission', false)
+            ->assertSee('SpeakReadyPush.enable', false)
             ->assertSee('<span>SpeakReady AI</span>', false)
             ->assertDontSee('<span>SpeakReady AI Admin</span>', false)
             ->assertSee('--admin-topbar-control-size: 36px', false)
@@ -314,6 +319,11 @@ class MobileLayoutTest extends TestCase
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
             ->assertSee('css/desktop/admin/dashboard.css?v=3', false)
+            ->assertSee('SpeakReadyPushConfig', false)
+            ->assertSee('\\/admin\\/notifications\\/push\\/key', false)
+            ->assertSee('push-notifications.js?v=7', false)
+            ->assertSee('syncAdminWebPushAfterPermission', false)
+            ->assertSee('SpeakReadyPush.enable', false)
             ->assertSee('class="db-sidebar"', false)
             ->assertDontSee('id="mob-content"', false);
     }

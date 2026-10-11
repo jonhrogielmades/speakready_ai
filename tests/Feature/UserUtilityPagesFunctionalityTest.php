@@ -356,6 +356,62 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ]);
  }
 
+ public function test_admin_push_subscription_actions_store_and_remove_current_admin_device(): void
+ {
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $otherAdmin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $endpoint = 'https://push.example.test/admin-subscriptions/'.str_repeat('d', 48);
+
+ config([
+ 'services.webpush.public_key' => null,
+ 'services.webpush.private_key' => null,
+ 'services.webpush.auto_generate' => false,
+ ]);
+
+ $this->actingAs($admin)
+ ->get(route('admin.notifications.push.key'))
+ ->assertOk()
+ ->assertJsonPath('supported', false)
+ ->assertJsonPath('publicKey', null);
+
+ $this->actingAs($admin)
+ ->postJson(route('admin.notifications.push.subscribe'), [
+ 'endpoint' => $endpoint,
+ 'keys' => [
+ 'p256dh' => str_repeat('D', 88),
+ 'auth' => str_repeat('E', 24),
+ ],
+ 'contentEncoding' => 'aes128gcm',
+ ])
+ ->assertOk()
+ ->assertJson(['success' => true]);
+
+ $this->assertDatabaseHas('push_subscriptions', [
+ 'user_id' => $admin->id,
+ 'endpoint_hash' => hash('sha256', $endpoint),
+ 'content_encoding' => 'aes128gcm',
+ ]);
+
+ $this->actingAs($otherAdmin)
+ ->deleteJson(route('admin.notifications.push.unsubscribe'), ['endpoint' => $endpoint])
+ ->assertOk()
+ ->assertJson(['success' => true]);
+
+ $this->assertDatabaseHas('push_subscriptions', [
+ 'user_id' => $admin->id,
+ 'endpoint_hash' => hash('sha256', $endpoint),
+ ]);
+
+ $this->actingAs($admin)
+ ->deleteJson(route('admin.notifications.push.unsubscribe'), ['endpoint' => $endpoint])
+ ->assertOk()
+ ->assertJson(['success' => true]);
+
+ $this->assertDatabaseMissing('push_subscriptions', [
+ 'endpoint_hash' => hash('sha256', $endpoint),
+ ]);
+ }
+
  public function test_push_key_route_auto_generates_server_keys_when_env_keys_are_missing(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -413,6 +469,39 @@ class UserUtilityPagesFunctionalityTest extends TestCase
 
  $this->actingAs($user)
  ->postJson(route('user.notifications.push.test'))
+ ->assertOk()
+ ->assertJson([
+ 'success' => true,
+ 'sent' => 1,
+ ]);
+ }
+
+ public function test_admin_push_test_endpoint_sends_admin_notification_to_current_admin(): void
+ {
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+ $this->mock(WebPushNotificationService::class, function ($mock) use ($admin): void {
+ $mock->shouldReceive('isConfigured')->once()->andReturnTrue();
+ $mock->shouldReceive('canNotify')->once()->andReturnTrue();
+ $mock->shouldReceive('sendToUser')
+ ->once()
+ ->with(
+ \Mockery::on(fn ($notifiable): bool => $notifiable instanceof User && $notifiable->is($admin)),
+ \Mockery::on(fn (array $payload): bool => ($payload['body']?? null) === 'Admin device notifications are ready.'
+ && ($payload['iconUrl']?? null) === WebPushNotificationService::DEFAULT_NOTIFICATION_ICON
+ && ($payload['badgeUrl']?? null) === WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE
+ && ($payload['tag']?? null) === 'speakready-admin-push-test'
+ && ($payload['urgency']?? null) === 'high'
+ && ($payload['requireInteraction']?? null) === true
+ && ($payload['vibrate']?? null) === [120, 50, 120]
+ && ($payload['url']?? null) === route('admin.notifications.index')
+ && ($payload['data']['url']?? null) === route('admin.notifications.index'))
+ )
+ ->andReturn(1);
+ });
+
+ $this->actingAs($admin)
+ ->postJson(route('admin.notifications.push.test'))
  ->assertOk()
  ->assertJson([
  'success' => true,
