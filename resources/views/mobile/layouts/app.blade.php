@@ -4194,7 +4194,6 @@
                display: grid !important;
                grid-template-columns: 42px minmax(0, 1fr) !important;
                gap: 10px !important;
-               position: relative !important;
                margin: 0 0 10px !important;
                padding: 11px !important;
                border: 1px solid var(--mobile-notif-tile-border) !important;
@@ -4210,41 +4209,6 @@
                border-color: rgba(96, 165, 250, 0.62) !important;
                background:
                   linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(219, 234, 254, 0.86)) !important;
-            }
-
-            body.user-mobile-shell .mob-notif-item.live-incoming {
-               border-color: rgba(14, 165, 233, 0.9) !important;
-               box-shadow:
-                  0 0 0 2px rgba(125, 211, 252, 0.35),
-                  0 16px 32px rgba(14, 165, 233, 0.2),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.96) !important;
-               animation: sr-mobile-notif-drop 0.36s ease-out both;
-            }
-
-            body.user-mobile-shell .mob-notif-item.live-incoming::after {
-               content: "NEW";
-               position: absolute;
-               top: 8px;
-               right: 8px;
-               padding: 3px 6px;
-               border-radius: 999px;
-               background: #0ea5e9;
-               color: #ffffff;
-               font-size: 0.5rem;
-               font-weight: 900;
-               letter-spacing: 0;
-               line-height: 1;
-            }
-
-            @keyframes sr-mobile-notif-drop {
-               from {
-                  opacity: 0;
-                  transform: translateY(-12px) scale(0.98);
-               }
-               to {
-                  opacity: 1;
-                  transform: translateY(0) scale(1);
-               }
             }
 
             body.user-mobile-shell .mob-notif-ico {
@@ -4786,7 +4750,7 @@
             csrfToken: @json(csrf_token())
          };
       </script>
-      <script src="{{ asset('js/push-notifications.js?v=6') }}" defer></script>
+      <script src="{{ asset('js/push-notifications.js?v=5') }}" defer></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
       <script src="{{ asset('js/user-ui.js') }}?v=25" defer></script>
@@ -5129,35 +5093,6 @@
             return Boolean(document.getElementById('mobNotifDropdown')?.classList.contains('open'));
          }
 
-         function openMobileNotificationDropdownFromPush() {
-            if (document.visibilityState && document.visibilityState !== 'visible') return;
-
-            const dropdown = document.getElementById('mobNotifDropdown');
-            const button = document.getElementById('mobBellBtn');
-            if (!dropdown) return;
-
-            closeMobileProfile();
-            dropdown.classList.add('open', 'has-live-push');
-            dropdown.setAttribute('aria-hidden', 'false');
-            if (button) button.setAttribute('aria-expanded', 'true');
-            mobileNotificationLastLoadedAt = 0;
-
-            fetchMobileNotifications(true, { force: true }).finally(() => {
-               window.setTimeout(() => dropdown.classList.remove('has-live-push'), 6500);
-            });
-         }
-
-         function handleMobileServiceWorkerMessage(event) {
-            const data = event?.data || {};
-            if (data.type !== 'SPEAKREADY_PUSH_NOTIFICATION_RECEIVED') return;
-
-            openMobileNotificationDropdownFromPush();
-         }
-
-         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.addEventListener('message', handleMobileServiceWorkerMessage);
-         }
-
          async function requestMobileNotificationJson(url, options = {}) {
             const response = await fetch(url, {
                ...options,
@@ -5248,7 +5183,6 @@
             const badge = document.getElementById('mobNotifBadge');
             const unreadBadge = document.getElementById('mobUnreadCountBadge');
             const listContainer = document.getElementById('mobNotifListContainer');
-            const liveHighlight = document.getElementById('mobNotifDropdown')?.classList.contains('has-live-push');
             const notifications = Array.isArray(data.notifications) ? data.notifications : [];
             const unreadCount = Number.isFinite(Number(data.unreadCount))
                ? Math.max(0, Number(data.unreadCount))
@@ -5274,7 +5208,7 @@
                return;
             }
 
-            listContainer.innerHTML = notifications.map((notification, index) => {
+            listContainer.innerHTML = notifications.map(notification => {
                const notificationId = escapeMobileNotifHtml(notification.id || '');
                const title = escapeMobileNotifHtml(notification.data?.title || 'Notification');
                const message = escapeMobileNotifHtml(notification.data?.message || '');
@@ -5284,12 +5218,11 @@
                   ? escapeMobileNotifHtml(createdAt.toLocaleString())
                   : '';
                const unreadClass = notification.read_at ? '' : 'unread';
-               const liveClass = liveHighlight && index === 0 ? 'live-incoming' : '';
                const actionAttr = notificationId ? `data-mob-notif-id="${notificationId}"` : 'disabled aria-disabled="true"';
                const markRead = notification.read_at ? '' : `<button class="mob-notif-link-btn" type="button" data-mob-notif-action="mark-read" ${actionAttr}>Mark as read</button>`;
 
                return `
-                  <div class="mob-notif-item ${unreadClass} ${liveClass}">
+                  <div class="mob-notif-item ${unreadClass}">
                      <button class="mob-notif-ico" type="button" data-mob-notif-action="open" aria-label="Open notifications page">
                         <i class="fa-solid ${icon}"></i>
                      </button>

@@ -2291,7 +2291,6 @@ body.dm #nbar .boc {
   grid-template-columns: 32px minmax(0, 1fr);
   gap: 9px;
   align-items: flex-start;
-  position: relative;
   padding: 10px;
   border: 1px solid var(--user-notif-border);
   border-radius: 8px;
@@ -2303,40 +2302,6 @@ body.dm #nbar .boc {
 #notifDropdown .user-notif-item.notif-unread {
   border-color: rgba(96, 165, 250, 0.42);
   background: color-mix(in srgb, var(--user-notif-card) 86%, #2563eb 14%);
-}
-
-#notifDropdown .user-notif-item.live-incoming {
-  border-color: rgba(14, 165, 233, 0.84);
-  box-shadow:
-    0 0 0 2px rgba(125, 211, 252, 0.24),
-    0 12px 28px rgba(14, 165, 233, 0.16);
-  animation: sr-desktop-notif-drop 0.32s ease-out both;
-}
-
-#notifDropdown .user-notif-item.live-incoming::after {
-  content: "NEW";
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 3px 6px;
-  border-radius: 999px;
-  background: #0ea5e9;
-  color: #ffffff;
-  font-size: 0.55rem;
-  font-weight: 900;
-  letter-spacing: 0;
-  line-height: 1;
-}
-
-@keyframes sr-desktop-notif-drop {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 #notifDropdown .user-notif-ico {

@@ -20,11 +20,6 @@ class WebPushNotificationService
 
     public const DEFAULT_NOTIFICATION_BADGE = '/img/notification-badge.png?v=3';
 
-    private const DEFAULT_NOTIFICATION_ACTIONS = [
-        ['action' => 'open', 'title' => 'Open'],
-        ['action' => 'view-notifications', 'title' => 'View all'],
-    ];
-
     /**
      * @var array{publicKey: string, privateKey: string}|null
      */
@@ -429,14 +424,8 @@ class WebPushNotificationService
             'body' => $body !== '' ? $body : 'You have a new notification.',
             'icon' => $payload['iconUrl'] ?? self::DEFAULT_NOTIFICATION_ICON,
             'badge' => $payload['badgeUrl'] ?? self::DEFAULT_NOTIFICATION_BADGE,
-            'image' => $payload['imageUrl'] ?? null,
             'tag' => $payload['tag'] ?? 'speakready-notification',
             'renotify' => $payload['renotify'] ?? true,
-            'requireInteraction' => $payload['requireInteraction'] ?? false,
-            'silent' => $payload['silent'] ?? false,
-            'timestamp' => $payload['timestamp'] ?? (int) round(microtime(true) * 1000),
-            'vibrate' => $payload['vibrate'] ?? [90, 45, 90],
-            'actions' => $payload['actions'] ?? self::DEFAULT_NOTIFICATION_ACTIONS,
             'url' => $url,
             'data' => array_merge(
                 ['url' => $url],
