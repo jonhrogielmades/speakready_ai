@@ -3515,7 +3515,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=20')
+               navigator.serviceWorker.register('/sw.js?v=21')
                   .then(r => console.log('SW:', r.scope))
                   .catch(e => console.log('SW fail:', e));
             });

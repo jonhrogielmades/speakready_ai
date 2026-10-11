@@ -1,8 +1,12 @@
-const CACHE_NAME = 'speakready-pwa-v39';
+const CACHE_NAME = 'speakready-pwa-v40';
 const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';
-const CLIENT_REFRESH_VALUE = 'pwa-v39';
+const CLIENT_REFRESH_VALUE = 'pwa-v40';
 const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';
 const NOTIFICATION_BADGE = '/img/notification-badge.png?v=3';
+const DEFAULT_NOTIFICATION_ACTIONS = [
+  { action: 'open', title: 'Open' },
+  { action: 'view-notifications', title: 'View all' },
+];
 const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
 const NETWORK_FIRST_ASSET_PATTERN = /\.(?:css|js)$/i;
 
@@ -156,20 +160,45 @@ function pushPayload(event) {
   }
 }
 
+function notificationActions(payload) {
+  if (Array.isArray(payload.actions)) {
+    return payload.actions
+      .filter(action => action && typeof action.title === 'string')
+      .slice(0, 2);
+  }
+
+  return DEFAULT_NOTIFICATION_ACTIONS;
+}
+
+function notificationVibration(payload) {
+  if (Array.isArray(payload.vibrate) && payload.vibrate.every(value => Number.isFinite(Number(value)))) {
+    return payload.vibrate.map(value => Math.max(0, Number(value))).slice(0, 8);
+  }
+
+  return [120, 50, 120];
+}
+
 self.addEventListener('push', event => {
   const payload = pushPayload(event);
   const notificationData = payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)
     ? payload.data
     : {};
   const targetUrl = payload.url || notificationData.url || '/notifications';
+  const timestamp = Number.isFinite(Number(payload.timestamp)) ? Number(payload.timestamp) : Date.now();
 
   event.waitUntil(
     self.registration.showNotification(payload.title || 'SpeakReady AI', {
       body: payload.body || payload.message || 'You have a new notification.',
       icon: payload.icon || NOTIFICATION_ICON,
       badge: payload.badge || NOTIFICATION_BADGE,
+      image: payload.image || undefined,
       tag: payload.tag || 'speakready-notification',
       renotify: payload.renotify !== false,
+      requireInteraction: payload.requireInteraction === true,
+      silent: payload.silent === true,
+      timestamp,
+      vibrate: notificationVibration(payload),
+      actions: notificationActions(payload),
       data: {
         ...notificationData,
         url: targetUrl,
@@ -180,6 +209,10 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
+
+  if (event.action === 'dismiss') {
+    return;
+  }
 
   const targetUrl = event.notification.data?.url || '/notifications';
 

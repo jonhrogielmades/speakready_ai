@@ -70,11 +70,15 @@ class PwaRememberedLoginTest extends TestCase
     {
         $worker = file_get_contents(public_path('sw.js'));
 
-        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v39';", $worker);
+        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v40';", $worker);
         $this->assertStringContainsString("const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';", $worker);
-        $this->assertStringContainsString("const CLIENT_REFRESH_VALUE = 'pwa-v39';", $worker);
+        $this->assertStringContainsString("const CLIENT_REFRESH_VALUE = 'pwa-v40';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_BADGE = '/img/notification-badge.png?v=3';", $worker);
+        $this->assertStringContainsString("const DEFAULT_NOTIFICATION_ACTIONS", $worker);
+        $this->assertStringContainsString('notificationVibration(payload)', $worker);
+        $this->assertStringContainsString('requireInteraction: payload.requireInteraction === true', $worker);
+        $this->assertStringNotContainsString('SPEAKREADY_PUSH_NOTIFICATION_RECEIVED', $worker);
         $this->assertStringContainsString("self.clients.matchAll({ type: 'window', includeUncontrolled: true })", $worker);
         $this->assertStringContainsString('client.navigate(nextUrl)', $worker);
         $this->assertStringContainsString('refreshControlledClients()', $worker);

@@ -403,7 +403,10 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ->with(
  \Mockery::on(fn ($notifiable): bool => $notifiable instanceof User && $notifiable->is($user)),
  \Mockery::on(fn (array $payload): bool => ($payload['iconUrl']?? null) === WebPushNotificationService::DEFAULT_NOTIFICATION_ICON
- && ($payload['badgeUrl']?? null) === WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE)
+ && ($payload['badgeUrl']?? null) === WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE
+ && ($payload['urgency']?? null) === 'high'
+ && ($payload['requireInteraction']?? null) === true
+ && ($payload['vibrate']?? null) === [120, 50, 120])
  )
  ->andReturn(1);
  });

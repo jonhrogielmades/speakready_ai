@@ -92,6 +92,9 @@ class PushSubscriptionController extends Controller
             'iconUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_ICON,
             'badgeUrl' => WebPushNotificationService::DEFAULT_NOTIFICATION_BADGE,
             'tag' => 'speakready-push-test',
+            'urgency' => 'high',
+            'requireInteraction' => true,
+            'vibrate' => [120, 50, 120],
             'url' => url('/notifications'),
             'data' => [
                 'url' => url('/notifications'),

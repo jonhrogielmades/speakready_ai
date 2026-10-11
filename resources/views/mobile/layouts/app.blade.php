@@ -4746,11 +4746,11 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=20')),
+            serviceWorkerUrl: @json(asset('sw.js?v=21')),
             csrfToken: @json(csrf_token())
          };
       </script>
-      <script src="{{ asset('js/push-notifications.js?v=5') }}" defer></script>
+      <script src="{{ asset('js/push-notifications.js?v=6') }}" defer></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
       <script src="{{ asset('js/user-ui.js') }}?v=25" defer></script>
@@ -4844,7 +4844,7 @@
          // PWA Service Worker
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=20').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=21').then(function(registration) {
                   window.SpeakReadyServiceWorkerRegistration = registration;
                   console.log('ServiceWorker registration successful');
                }, function(err) {
