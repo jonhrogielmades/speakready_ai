@@ -562,7 +562,9 @@ class AuthController extends Controller
         $layout = $this->requestLayoutPreference($request)
             ?? $request->session()->get(self::GOOGLE_AUTH_LAYOUT_SESSION_KEY);
 
-        return $layout === 'mobile' ? ['sr_layout' => 'mobile'] : [];
+        return $layout === 'mobile'
+            ? ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']
+            : [];
     }
 
     private function redirectToHomeWithGoogleLayout(Request $request, array $extraQuery = [])

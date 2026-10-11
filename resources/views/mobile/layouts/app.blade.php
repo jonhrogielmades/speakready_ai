@@ -4532,11 +4532,12 @@
 
       @php
          $mobileHeaderPageTitle = trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview');
+         $mobileDashboardRoute = route('dashboard', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']);
       @endphp
 
       <!-- ===== MOBILE TOP HEADER ===== -->
       <header id="mob-header">
-         <a href="{{ route('dashboard') }}" class="mob-header-logo mob-header-brand-pill" aria-label="Go to dashboard">
+         <a href="{{ $mobileDashboardRoute }}" class="mob-header-logo mob-header-brand-pill" aria-label="Go to dashboard">
             <span class="mob-logo-ring">
                <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}">
             </span>
@@ -4682,7 +4683,7 @@
       <!-- ===== BOTTOM NAVIGATION ===== -->
       <nav id="mob-bottom-nav" aria-label="Main navigation">
          <div class="mob-nav-items">
-            <a href="{{ route('dashboard') }}"
+            <a href="{{ $mobileDashboardRoute }}"
                class="mob-nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}"
                id="mobnav-home">
                <span class="mob-nav-icon"><i class="fa-solid fa-house"></i></span>

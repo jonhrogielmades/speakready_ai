@@ -272,7 +272,7 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_layout' => 'mobile'])
             ->get(route('auth.google.callback'))
-            ->assertRedirect('/?sr_layout=mobile')
+            ->assertRedirect('/?sr_layout=mobile&sr_is_mobile=1')
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in expired. Please start Google login again.',
             ]);
@@ -455,7 +455,7 @@ class PwaRememberedLoginTest extends TestCase
         ])
             ->withHeader('User-Agent', $desktopLikeUserAgent)
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect(route('dashboard', ['sr_layout' => 'mobile']));
+            ->assertRedirect(route('dashboard', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']));
 
         $this->assertAuthenticatedAs($user);
 
@@ -483,7 +483,7 @@ class PwaRememberedLoginTest extends TestCase
         ])
             ->withHeader('User-Agent', $desktopLikeUserAgent)
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect(route('terms.acceptance.show', ['sr_layout' => 'mobile']))
+            ->assertRedirect(route('terms.acceptance.show', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
             ->assertSessionHas('registration_success', true);
 
         $this->assertAuthenticated();
@@ -505,7 +505,7 @@ class PwaRememberedLoginTest extends TestCase
 
         $desktopLikeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
         $state = $this->captureGoogleRedirectState(
-            route('auth.google.login', ['sr_layout' => 'mobile']),
+            route('auth.google.login', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']),
             $desktopLikeUserAgent
         );
 
@@ -523,7 +523,7 @@ class PwaRememberedLoginTest extends TestCase
         ])
             ->withHeader('User-Agent', $desktopLikeUserAgent)
             ->get(route('auth.google.callback', ['code' => 'test-code', 'state' => $state]))
-            ->assertRedirect(route('dashboard', ['sr_layout' => 'mobile']));
+            ->assertRedirect(route('dashboard', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']));
 
         $this->assertAuthenticatedAs($user);
     }
@@ -532,7 +532,7 @@ class PwaRememberedLoginTest extends TestCase
     {
         $desktopLikeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
         $state = $this->captureGoogleRedirectState(
-            route('auth.google.register', ['sr_layout' => 'mobile']),
+            route('auth.google.register', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']),
             $desktopLikeUserAgent
         );
 
@@ -550,7 +550,7 @@ class PwaRememberedLoginTest extends TestCase
         ])
             ->withHeader('User-Agent', $desktopLikeUserAgent)
             ->get(route('auth.google.callback', ['code' => 'test-code', 'state' => $state]))
-            ->assertRedirect(route('terms.acceptance.show', ['sr_layout' => 'mobile']))
+            ->assertRedirect(route('terms.acceptance.show', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
             ->assertSessionHas('registration_success', true);
 
         $this->assertAuthenticated();
@@ -561,7 +561,7 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->post(route('terms.acceptance.store'), [
             'terms_accepted' => '1',
-        ])->assertRedirect(route('dashboard', ['sr_layout' => 'mobile']));
+        ])->assertRedirect(route('dashboard', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']));
     }
 
     private function mockGoogleCallback(array $attributes, array $raw = []): void

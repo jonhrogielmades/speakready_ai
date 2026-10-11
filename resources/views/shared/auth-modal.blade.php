@@ -1,5 +1,5 @@
 @php
-   $googleAuthLayoutQuery = ($isMobile ?? false) ? ['sr_layout' => 'mobile'] : [];
+   $googleAuthLayoutQuery = ($isMobile ?? false) ? ['sr_layout' => 'mobile', 'sr_is_mobile' => '1'] : [];
    $authModalRequest = request('auth_modal');
    $authTab = old('auth_tab') ?: (in_array($authModalRequest, ['login', 'signup', 'register'], true) ? $authModalRequest : null);
    $showSignupAuthTab = in_array($authTab, ['signup', 'register'], true) || ($authTab === null && filled(old('name')));

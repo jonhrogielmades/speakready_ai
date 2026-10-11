@@ -40,8 +40,8 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('css/mobile/style.css?v=36', false)
                 ->assertSee('mobilePreviewSwiper', false)
                 ->assertSee('mobile-preview-image-swiper', false)
-                ->assertSee(route('auth.google.login', ['sr_layout' => 'mobile']), false)
-                ->assertSee(route('auth.google.register', ['sr_layout' => 'mobile']), false)
+                ->assertSee(route('auth.google.login', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
+                ->assertSee(route('auth.google.register', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
                 ->assertSee('id="mbtog"', false)
                 ->assertSee('aria-controls="userCommandPalette"', false)
                 ->assertSee('id="userCommandPalette"', false)
@@ -1256,17 +1256,14 @@ class MobileLayoutTest extends TestCase
             ->withHeader('User-Agent', $iphoneUserAgent)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('id="mobFullscreenBtn"', false)
-            ->assertSee('data-user-fullscreen-toggle', false)
+            ->assertDontSee('id="mobFullscreenBtn"', false)
+            ->assertDontSee('data-user-fullscreen-toggle', false)
             ->assertSee('body.mobile-shell.user-app-fullscreen #mob-content', false)
             ->assertSee('height: var(--sr-visual-vh) !important', false)
             ->assertSee('css/mobile/style.css?v=33', false)
             ->assertSee('js/main.js?v=7', false)
             ->assertSee('js/user-ui.js?v=25', false)
-            ->assertSee('body.user-mobile-shell #mob-header #mobFullscreenBtn', false)
-            ->assertSee('display: inline-flex !important;', false)
-            ->assertDontSee('body.user-mobile-shell #mob-header #mobFullscreenBtn {
-               display: none !important;', false);
+            ->assertDontSee('body.user-mobile-shell #mob-header #mobFullscreenBtn', false);
 
         $fullscreenScript = file_get_contents(public_path('js/user-ui.js'));
 

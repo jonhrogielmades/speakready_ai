@@ -114,7 +114,7 @@ if (! function_exists('sr_layout_query')) {
     {
         $layout = sr_request_layout_preference($request ?? request());
 
-        return $layout === 'mobile' ? ['sr_layout' => 'mobile'] : [];
+        return $layout === 'mobile' ? ['sr_layout' => 'mobile', 'sr_is_mobile' => '1'] : [];
     }
 }
 

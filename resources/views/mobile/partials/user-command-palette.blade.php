@@ -60,7 +60,7 @@
                 </a>
 
                 @else
-                <a id="ucp-destination-dashboard" class="ucp-result" href="{{ route('dashboard') }}" data-ucp-item>
+                <a id="ucp-destination-dashboard" class="ucp-result" href="{{ route('dashboard', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']) }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-blue"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Dashboard</strong><small>Overview of your interview workspace</small></span>
                     <span class="ucp-result-group">Workspace</span>
