@@ -1,5 +1,6 @@
-const CACHE_NAME = 'speakready-pwa-v32';
+const CACHE_NAME = 'speakready-pwa-v33';
 const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
+const NETWORK_FIRST_ASSET_PATTERN = /\.(?:css|js)$/i;
 
 function isSameOrigin(requestUrl) {
   return new URL(requestUrl).origin === self.location.origin;
@@ -13,6 +14,12 @@ function isCacheableStaticAsset(request) {
   if (!isSameOrigin(request.url)) return false;
 
   return STATIC_ASSET_PATTERN.test(new URL(request.url).pathname);
+}
+
+function isNetworkFirstStaticAsset(request) {
+  if (!isSameOrigin(request.url)) return false;
+
+  return NETWORK_FIRST_ASSET_PATTERN.test(new URL(request.url).pathname);
 }
 
 self.addEventListener('install', event => {
@@ -51,15 +58,19 @@ self.addEventListener('fetch', event => {
         }
 
         return response;
-      }).catch(() => caches.match(event.request));
+      });
+
+      if (isNetworkFirstStaticAsset(event.request)) {
+        return freshResponse.catch(() => caches.match(event.request));
+      }
 
       return cache.match(event.request).then(cachedResponse => {
         if (cachedResponse) {
-          event.waitUntil(freshResponse);
+          event.waitUntil(freshResponse.catch(() => undefined));
           return cachedResponse;
         }
 
-        return freshResponse;
+        return freshResponse.catch(() => caches.match(event.request));
       });
     })
   );

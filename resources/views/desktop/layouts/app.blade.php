@@ -18,6 +18,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
+      @include('desktop.partials.early-mobile-shell-repair')
       @stack('styles')
    </head>
    <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user" data-partial-navigation-response="true">
@@ -38,6 +39,7 @@
       <meta name="theme-color" content="#ffffff">
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
+      @include('desktop.partials.early-mobile-shell-repair')
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
@@ -349,7 +351,7 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=13')),
+            serviceWorkerUrl: @json(asset('sw.js?v=14')),
             csrfToken: @json(csrf_token())
          };
       </script>
@@ -546,7 +548,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=13').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=14').then(function(registration) {
                   window.SpeakReadyServiceWorkerRegistration = registration;
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {

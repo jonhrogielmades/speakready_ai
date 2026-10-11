@@ -109,6 +109,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
+            ->assertSee('sr_desktop_shell_mobile_repair_v2', false)
             ->assertSee("body.getAttribute('data-layout-shell')", false)
             ->assertSee("bodyClasses.contains('guest-desktop-shell')", false)
             ->assertSee("url.searchParams.set('sr_layout', targetLayout)", false)
@@ -1083,6 +1084,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('user-desktop-shell desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
+            ->assertSee('sr_desktop_shell_mobile_repair_v2', false)
             ->assertSee('class="db-sidebar"', false)
             ->assertDontSee('id="mob-bottom-nav"', false)
             ->assertDontSee('html body #progressModulesLikeHero.progress-hero', false);

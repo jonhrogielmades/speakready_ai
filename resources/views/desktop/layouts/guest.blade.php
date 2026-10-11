@@ -5,6 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#f7fbff">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - Practice Smarter. Interview Better.')</title>
+      @include('desktop.partials.early-mobile-shell-repair')
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
@@ -1445,7 +1446,7 @@
       <script>
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=13').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=14').then(function(registration) {
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);

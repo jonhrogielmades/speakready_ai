@@ -4745,7 +4745,7 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=13')),
+            serviceWorkerUrl: @json(asset('sw.js?v=14')),
             csrfToken: @json(csrf_token())
          };
       </script>
@@ -4843,7 +4843,7 @@
          // PWA Service Worker
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=13').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=14').then(function(registration) {
                   window.SpeakReadyServiceWorkerRegistration = registration;
                   console.log('ServiceWorker registration successful');
                }, function(err) {
