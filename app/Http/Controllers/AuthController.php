@@ -25,11 +25,13 @@ use Throwable;
 
 class AuthController extends Controller
 {
-    private const LOGIN_USERNAME_MISMATCH_MESSAGE = 'The username does not match our records.';
-
     private const LOGIN_PASSWORD_MISMATCH_MESSAGE = 'The password do not match our records.';
 
     private const LOGIN_CREDENTIALS_MISMATCH_MESSAGE = 'The provided credentials do not match our records.';
+
+    private const LOGIN_UNREGISTERED_ACCOUNT_MESSAGE = 'This account is not registered. Please register first.';
+
+    private const GOOGLE_LOGIN_UNREGISTERED_ACCOUNT_MESSAGE = 'This Google account is not registered. Please register first.';
 
     private const GOOGLE_AUTH_INTENT_SESSION_KEY = 'google_auth_intent';
 
@@ -114,13 +116,9 @@ class AuthController extends Controller
         $user = $this->findUserByLoginIdentifier($identifier);
 
         if (! $user) {
-            $message = $this->passwordMatchesAnyUser($validated['password'])
-                ? self::LOGIN_USERNAME_MISMATCH_MESSAGE
-                : self::LOGIN_CREDENTIALS_MISMATCH_MESSAGE;
-
             $this->recordFailedLoginAttempt($request, $identifier);
 
-            return $this->failedLoginResponse('username', $message);
+            return $this->failedLoginResponse('username', self::LOGIN_UNREGISTERED_ACCOUNT_MESSAGE);
         }
 
         if (! Hash::check($validated['password'], (string) $user->password)) {
@@ -372,7 +370,7 @@ class AuthController extends Controller
             }
 
             if (! $user && $intent === 'login') {
-                return $this->googleAuthFailureResponse($request, 'No SpeakReady AI account was found for this Google email. Please register first.', $intent, [
+                return $this->googleAuthFailureResponse($request, self::GOOGLE_LOGIN_UNREGISTERED_ACCOUNT_MESSAGE, $intent, [
                     'email' => $googleEmail,
                 ]);
             }
@@ -932,17 +930,6 @@ class AuthController extends Controller
     private function loginLockoutCacheKey(Request $request, string $email): string
     {
         return 'login_lockout:'.sha1(Str::lower($email).'|'.$request->ip());
-    }
-
-    private function passwordMatchesAnyUser(string $password): bool
-    {
-        foreach (User::whereNotNull('password')->select('password')->cursor() as $user) {
-            if (Hash::check($password, (string) $user->password)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function logAuthenticationActivity(User $user, string $action, string $activity, ?string $ipAddress): void

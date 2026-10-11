@@ -67,7 +67,7 @@ class PwaRememberedLoginTest extends TestCase
         $response->assertCookieMissing(Auth::guard()->getRecallerName());
     }
 
-    public function test_password_login_reports_username_and_password_mismatches(): void
+    public function test_password_login_reports_unregistered_accounts_and_password_mismatches(): void
     {
         User::factory()->create([
             'username' => 'known-user',
@@ -81,7 +81,7 @@ class PwaRememberedLoginTest extends TestCase
             'username' => 'missing-user',
             'password' => 'correct-password',
         ])->assertSessionHasErrors([
-            'username' => 'The username does not match our records.',
+            'username' => 'This account is not registered. Please register first.',
         ]);
 
         $this->post(route('login'), [
@@ -95,8 +95,13 @@ class PwaRememberedLoginTest extends TestCase
             'username' => 'missing-user',
             'password' => 'not-a-known-password',
         ])->assertSessionHasErrors([
-            'username' => 'The provided credentials do not match our records.',
+            'username' => 'This account is not registered. Please register first.',
         ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('This account is not registered. Please register first.')
+            ->assertSee('id="fLogin"', false);
 
         $this->assertGuest();
     }
@@ -285,6 +290,30 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in could not reach Google in time. Please check your connection and try again.',
             ]);
+    }
+
+    public function test_google_login_reports_unregistered_account_on_login_tab(): void
+    {
+        $this->mockGoogleCallback([
+            'id' => 'missing-google-login-id',
+            'name' => 'Missing Google Login',
+            'email' => 'missing-google-login@example.com',
+            'avatar' => null,
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect('/')
+            ->assertSessionHasErrors([
+                'email' => 'This Google account is not registered. Please register first.',
+            ])
+            ->assertSessionHas('_old_input.auth_tab', 'login')
+            ->assertSessionHas('_old_input.email', 'missing-google-login@example.com');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('id="tabLogin" role="tab" aria-selected="true"', false)
+            ->assertSee('This Google account is not registered. Please register first.');
     }
 
     public function test_google_login_uses_picture_fallback_for_profile_photo(): void
