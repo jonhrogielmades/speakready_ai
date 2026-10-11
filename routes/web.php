@@ -185,6 +185,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/notifications/fetch', [UserController::class, 'fetchNotifications'])->name('user.notifications.fetch');
     Route::get('/notifications/push/key', [PushSubscriptionController::class, 'publicKey'])->name('user.notifications.push.key');
     Route::post('/notifications/push/subscribe', [PushSubscriptionController::class, 'store'])->name('user.notifications.push.subscribe');
+    Route::post('/notifications/push/test', [PushSubscriptionController::class, 'test'])->name('user.notifications.push.test');
     Route::delete('/notifications/push/unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('user.notifications.push.unsubscribe');
     Route::post('/notifications/read-all', [UserController::class, 'markAllNotificationsAsRead'])->name('user.notifications.readAll');
     Route::delete('/notifications/clear-all', [UserController::class, 'clearAllNotifications'])->name('user.notifications.clearAll');

@@ -49,6 +49,8 @@ return [
  'subject' => env('WEBPUSH_VAPID_SUBJECT', env('APP_URL')),
  'public_key' => env('WEBPUSH_VAPID_PUBLIC_KEY'),
  'private_key' => env('WEBPUSH_VAPID_PRIVATE_KEY'),
+ 'auto_generate' => env('WEBPUSH_AUTO_GENERATE', true),
+ 'storage_path' => env('WEBPUSH_VAPID_STORAGE_PATH'),
  ],
 
  'ai_tts' => [

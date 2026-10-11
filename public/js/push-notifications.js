@@ -43,6 +43,24 @@
     return outputArray;
   }
 
+  function uint8ArrayToUrlBase64(value) {
+    const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
+    let binary = '';
+
+    for (let i = 0; i < bytes.byteLength; i += 1) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+
+    return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+
+  function subscriptionMatchesPublicKey(subscription, publicKey) {
+    const currentKey = subscription?.options?.applicationServerKey;
+    if (!currentKey) return true;
+
+    return uint8ArrayToUrlBase64(currentKey) === publicKey;
+  }
+
   async function requestJson(url, options = {}) {
     const response = await fetch(url, {
       ...options,
@@ -70,7 +88,7 @@
     if (!publicKeyUrl) return null;
 
     state.keyPromise = requestJson(publicKeyUrl)
-      .then((payload) => (payload?.supported && payload.publicKey ? payload.publicKey : null))
+      .then((payload) => (payload?.supported && payload?.configured && payload.publicKey ? payload.publicKey : null))
       .catch((error) => {
         console.warn('Push notifications are not configured.', error);
         return null;
@@ -86,7 +104,7 @@
       return state.registrationPromise;
     }
 
-    const serviceWorkerUrl = config().serviceWorkerUrl || '/sw.js?v=12';
+    const serviceWorkerUrl = config().serviceWorkerUrl || '/sw.js?v=13';
 
     state.registrationPromise = navigator.serviceWorker.register(serviceWorkerUrl)
       .then((registration) => {
@@ -119,6 +137,54 @@
     });
   }
 
+  async function deleteStoredSubscription(subscription) {
+    const unsubscribeUrl = config().unsubscribeUrl;
+    if (!unsubscribeUrl || !subscription) return { success: false };
+
+    return requestJson(unsubscribeUrl, {
+      method: 'DELETE',
+      body: JSON.stringify({ endpoint: subscription.endpoint }),
+    });
+  }
+
+  async function sendTestNotification() {
+    const testUrl = config().testUrl;
+    if (!testUrl) return { success: false, skipped: true };
+
+    return requestJson(testUrl, { method: 'POST' });
+  }
+
+  async function status() {
+    const result = {
+      supported: isSupported(),
+      permission: 'Notification' in window ? Notification.permission : 'unsupported',
+      configured: false,
+      subscribed: false,
+    };
+
+    if (!result.supported) return result;
+
+    const publicKeyUrl = config().publicKeyUrl;
+    if (publicKeyUrl) {
+      try {
+        const payload = await requestJson(publicKeyUrl);
+        result.configured = Boolean(payload?.configured && payload?.publicKey);
+        result.server = payload || {};
+      } catch (error) {
+        result.error = error.message;
+      }
+    }
+
+    try {
+      const registration = await serviceWorkerRegistration();
+      result.subscribed = Boolean(await registration.pushManager.getSubscription());
+    } catch (error) {
+      result.error = result.error || error.message;
+    }
+
+    return result;
+  }
+
   async function enable(options = {}) {
     if (!isSupported()) {
       return { status: 'unsupported' };
@@ -143,6 +209,12 @@
     const registration = await serviceWorkerRegistration();
     let subscription = await registration.pushManager.getSubscription();
 
+    if (subscription && !subscriptionMatchesPublicKey(subscription, publicKey)) {
+      await deleteStoredSubscription(subscription).catch(() => null);
+      await subscription.unsubscribe();
+      subscription = null;
+    }
+
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -150,9 +222,17 @@
       });
     }
 
-    await saveSubscription(subscription);
+    const saved = await saveSubscription(subscription);
+    const result = { status: 'granted', subscription, saved };
 
-    return { status: 'granted', subscription };
+    if (options.sendTest === true) {
+      result.test = await sendTestNotification().catch((error) => ({
+        success: false,
+        message: error.message,
+      }));
+    }
+
+    return result;
   }
 
   async function syncExisting() {
@@ -177,10 +257,7 @@
 
     const unsubscribeUrl = config().unsubscribeUrl;
     if (unsubscribeUrl) {
-      await requestJson(unsubscribeUrl, {
-        method: 'DELETE',
-        body: JSON.stringify({ endpoint: subscription.endpoint }),
-      });
+      await deleteStoredSubscription(subscription);
     }
 
     await subscription.unsubscribe();
@@ -190,7 +267,9 @@
 
   window.SpeakReadyPush = {
     isSupported,
+    status,
     enable,
+    sendTestNotification,
     syncExisting,
     disable,
   };

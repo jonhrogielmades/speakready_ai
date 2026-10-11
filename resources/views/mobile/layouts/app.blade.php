@@ -4743,12 +4743,13 @@
          window.SpeakReadyPushConfig = {
             publicKeyUrl: @json(route('user.notifications.push.key')),
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
+            testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
             serviceWorkerUrl: @json(asset('sw.js?v=13')),
             csrfToken: @json(csrf_token())
          };
       </script>
-      <script src="{{ asset('js/push-notifications.js?v=2') }}" defer></script>
+      <script src="{{ asset('js/push-notifications.js?v=4') }}" defer></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
       <script src="{{ asset('js/user-ui.js') }}?v=25" defer></script>

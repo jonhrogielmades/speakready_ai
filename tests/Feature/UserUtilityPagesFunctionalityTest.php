@@ -10,8 +10,10 @@ use App\Models\Score;
 use App\Models\User;
 use App\Notifications\UserActivityNotification;
 use App\Services\QuestionDatasetProvider;
+use App\Services\WebPushNotificationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -268,6 +270,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  config([
  'services.webpush.public_key' => null,
  'services.webpush.private_key' => null,
+ 'services.webpush.auto_generate' => false,
  ]);
 
  $this->actingAs($user)
@@ -311,6 +314,60 @@ class UserUtilityPagesFunctionalityTest extends TestCase
 
  $this->assertDatabaseMissing('push_subscriptions', [
  'endpoint_hash' => hash('sha256', $endpoint),
+ ]);
+ }
+
+ public function test_push_key_route_auto_generates_server_keys_when_env_keys_are_missing(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $path = storage_path('framework/testing/webpush-vapid-'.uniqid().'.json');
+
+ File::delete($path);
+
+ config([
+ 'services.webpush.public_key' => null,
+ 'services.webpush.private_key' => null,
+ 'services.webpush.subject' => 'https://example.test',
+ 'services.webpush.auto_generate' => true,
+ 'services.webpush.storage_path' => $path,
+ ]);
+
+ try {
+ $response = $this->actingAs($user)
+ ->get(route('user.notifications.push.key'))
+ ->assertOk()
+ ->assertJsonPath('supported', true)
+ ->assertJsonPath('configured', true)
+ ->assertJsonPath('schemaReady', true)
+ ->assertJsonPath('subscriptionCount', 0)
+ ->assertJsonPath('generatedKeys', true);
+
+ $payload = $response->json();
+ $this->assertIsString($payload['publicKey']);
+ $this->assertNotSame('', $payload['publicKey']);
+ $this->assertTrue(File::exists($path));
+ $this->assertSame($payload['publicKey'], json_decode(File::get($path), true)['publicKey']);
+ } finally {
+ File::delete($path);
+ }
+ }
+
+ public function test_push_test_endpoint_sends_test_notification_to_current_user(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+ $this->mock(WebPushNotificationService::class, function ($mock): void {
+ $mock->shouldReceive('isConfigured')->once()->andReturnTrue();
+ $mock->shouldReceive('canNotify')->once()->andReturnTrue();
+ $mock->shouldReceive('sendToUser')->once()->andReturn(1);
+ });
+
+ $this->actingAs($user)
+ ->postJson(route('user.notifications.push.test'))
+ ->assertOk()
+ ->assertJson([
+ 'success' => true,
+ 'sent' => 1,
  ]);
  }
 

@@ -229,10 +229,15 @@
             async function requestNotifications() {
                 if (window.SpeakReadyPush && typeof window.SpeakReadyPush.enable === 'function') {
                     try {
-                        const result = await window.SpeakReadyPush.enable();
+                        const result = await window.SpeakReadyPush.enable({ sendTest: true });
 
                         if (result.status === 'granted') {
-                            setToolStatus('notifications', 'Allowed', 'success');
+                            if (result.test && result.test.success === false && result.test.skipped !== true) {
+                                setToolStatus('notifications', 'Test failed', 'error');
+                                return 'test_failed';
+                            }
+
+                            setToolStatus('notifications', 'Ready', 'success');
                             return 'granted';
                         }
 

@@ -7,6 +7,7 @@ use App\Models\User;
 use Base64Url\Base64Url;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\File;
 use Minishlink\WebPush\MessageSentReport;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\VAPID;
@@ -15,11 +16,18 @@ use phpseclib3\Crypt\EC;
 
 class WebPushNotificationService
 {
+    /**
+     * @var array{publicKey: string, privateKey: string}|null
+     */
+    private ?array $activeKeyPair = null;
+
+    private bool $activeKeyPairResolved = false;
+
+    private bool $activeKeyPairUsesStorage = false;
+
     public function publicKey(): ?string
     {
-        $key = trim((string) config('services.webpush.public_key'));
-
-        return $key !== '' ? $key : null;
+        return $this->activeKeyPair()['publicKey'] ?? null;
     }
 
     public function hasPublicKey(): bool
@@ -30,8 +38,20 @@ class WebPushNotificationService
     public function isConfigured(): bool
     {
         return $this->hasPublicKey()
-            && trim((string) config('services.webpush.private_key')) !== ''
-            && trim((string) config('services.webpush.subject')) !== '';
+            && $this->privateKey() !== null
+            && $this->subject() !== null;
+    }
+
+    public function usesGeneratedKeys(): bool
+    {
+        $this->activeKeyPair();
+
+        return $this->activeKeyPairUsesStorage;
+    }
+
+    public function hasPartialEnvironmentKeys(): bool
+    {
+        return ($this->configuredPublicKey() === null) !== ($this->configuredPrivateKey() === null);
     }
 
     public function canNotify(object $notifiable): bool
@@ -70,9 +90,9 @@ class WebPushNotificationService
         try {
             $webPush = new WebPush([
                 'VAPID' => [
-                    'subject' => (string) config('services.webpush.subject'),
-                    'publicKey' => (string) config('services.webpush.public_key'),
-                    'privateKey' => (string) config('services.webpush.private_key'),
+                    'subject' => (string) $this->subject(),
+                    'publicKey' => (string) $this->publicKey(),
+                    'privateKey' => (string) $this->privateKey(),
                 ],
             ], [
                 'TTL' => 86400,
@@ -140,6 +160,167 @@ class WebPushNotificationService
         }
 
         return $sent;
+    }
+
+    private function privateKey(): ?string
+    {
+        return $this->activeKeyPair()['privateKey'] ?? null;
+    }
+
+    private function subject(): ?string
+    {
+        $subject = trim((string) config('services.webpush.subject'));
+
+        if ($subject !== '') {
+            return $subject;
+        }
+
+        $appUrl = trim((string) config('app.url'));
+
+        return $appUrl !== '' ? $appUrl : url('/');
+    }
+
+    /**
+     * @return array{publicKey: string, privateKey: string}|null
+     */
+    private function activeKeyPair(): ?array
+    {
+        if ($this->activeKeyPairResolved) {
+            return $this->activeKeyPair;
+        }
+
+        $this->activeKeyPairResolved = true;
+
+        $publicKey = $this->configuredPublicKey();
+        $privateKey = $this->configuredPrivateKey();
+
+        if ($publicKey !== null && $privateKey !== null) {
+            return $this->activeKeyPair = [
+                'publicKey' => $publicKey,
+                'privateKey' => $privateKey,
+            ];
+        }
+
+        if ($publicKey !== null || $privateKey !== null || ! $this->shouldAutoGenerateKeys()) {
+            return null;
+        }
+
+        $this->activeKeyPairUsesStorage = true;
+
+        return $this->activeKeyPair = $this->storedOrGeneratedKeyPair();
+    }
+
+    private function configuredPublicKey(): ?string
+    {
+        return $this->filledConfigString('services.webpush.public_key');
+    }
+
+    private function configuredPrivateKey(): ?string
+    {
+        return $this->filledConfigString('services.webpush.private_key');
+    }
+
+    private function filledConfigString(string $key): ?string
+    {
+        $value = trim((string) config($key));
+
+        if ($value === '' || str_starts_with($value, 'CHANGE_ME')) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    private function shouldAutoGenerateKeys(): bool
+    {
+        return filter_var(config('services.webpush.auto_generate', true), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * @return array{publicKey: string, privateKey: string}|null
+     */
+    private function storedOrGeneratedKeyPair(): ?array
+    {
+        $path = $this->keyStoragePath();
+        $stored = $this->readStoredKeyPair($path);
+
+        if ($stored !== null) {
+            return $stored;
+        }
+
+        try {
+            $keys = $this->generateKeys();
+            $this->writeStoredKeyPair($path, $keys);
+
+            return $keys;
+        } catch (\Throwable $error) {
+            Log::warning('Unable to auto-generate web push VAPID keys.', [
+                'path' => $path,
+                'error_type' => $error::class,
+                'message' => $error->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    private function keyStoragePath(): string
+    {
+        $configuredPath = trim((string) config('services.webpush.storage_path'));
+
+        return $configuredPath !== ''
+            ? $configuredPath
+            : storage_path('app/webpush-vapid.json');
+    }
+
+    /**
+     * @return array{publicKey: string, privateKey: string}|null
+     */
+    private function readStoredKeyPair(string $path): ?array
+    {
+        if (! is_file($path)) {
+            return null;
+        }
+
+        try {
+            $data = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $error) {
+            Log::warning('Unable to read stored web push VAPID keys.', [
+                'path' => $path,
+                'error_type' => $error::class,
+                'message' => $error->getMessage(),
+            ]);
+
+            return null;
+        }
+
+        return $this->validKeyPair($data) ? [
+            'publicKey' => (string) $data['publicKey'],
+            'privateKey' => (string) $data['privateKey'],
+        ] : null;
+    }
+
+    /**
+     * @param  array{publicKey: string, privateKey: string}  $keys
+     */
+    private function writeStoredKeyPair(string $path, array $keys): void
+    {
+        File::ensureDirectoryExists(dirname($path), 0755, true);
+
+        file_put_contents(
+            $path,
+            json_encode($keys, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+            LOCK_EX
+        );
+
+        @chmod($path, 0600);
+    }
+
+    private function validKeyPair(mixed $data): bool
+    {
+        return is_array($data)
+            && trim((string) ($data['publicKey'] ?? '')) !== ''
+            && trim((string) ($data['privateKey'] ?? '')) !== '';
     }
 
     /**
