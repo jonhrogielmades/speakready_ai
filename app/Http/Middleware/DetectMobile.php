@@ -42,7 +42,7 @@ class DetectMobile
         $hasMobileDeviceSignal = $this->hasMobileDeviceSignal($request);
 
         if ($request->isMethod('GET') && in_array($explicitLayout, ['mobile', 'desktop'], true)) {
-            if ($explicitLayout === 'desktop' && $this->isUserDashboardRequest($request) && $hasMobileDeviceSignal) {
+            if ($explicitLayout === 'desktop' && $hasMobileDeviceSignal) {
                 if (function_exists('sr_remember_layout_preference')) {
                     sr_remember_layout_preference($request, 'mobile');
                 }
@@ -95,16 +95,16 @@ class DetectMobile
             return true;
         }
 
+        $queryIsMobile = strtolower((string) $request->query('sr_is_mobile', ''));
+        if (in_array($queryIsMobile, ['1', 'true'], true)) {
+            return true;
+        }
+
         $queryViewportWidth = filter_var($request->query('sr_viewport_width'), FILTER_VALIDATE_INT);
 
         return $queryViewportWidth !== false
             && $queryViewportWidth > 0
             && $queryViewportWidth <= self::MOBILE_VIEWPORT_MAX;
-    }
-
-    private function isUserDashboardRequest(Request $request): bool
-    {
-        return trim($request->path(), '/') === 'dashboard';
     }
 
     private function userAgent(Request $request): string

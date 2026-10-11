@@ -100,6 +100,20 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('css/mobile/style.css?v=36', false);
     }
 
+    public function test_mobile_user_agent_cannot_force_desktop_shell_with_desktop_query_hint(): void
+    {
+        $androidUserAgent = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36';
+
+        $this->withHeader('User-Agent', $androidUserAgent)
+            ->get('/?sr_layout=desktop&sr_viewport_width=1280')
+            ->assertOk()
+            ->assertSee('guest-shell guest-mobile-shell', false)
+            ->assertSee('data-layout-shell="mobile"', false)
+            ->assertSee('css/mobile/style.css?v=36', false)
+            ->assertDontSee('guest-shell guest-desktop-shell', false)
+            ->assertDontSee('css/desktop/style.css?v=9', false);
+    }
+
     public function test_guest_landing_exposes_shell_marker_for_viewport_repair(): void
     {
         $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
@@ -109,10 +123,15 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
-            ->assertSee('sr_desktop_shell_mobile_repair_v2', false)
+            ->assertSee('sr_desktop_shell_mobile_repair_v3', false)
+            ->assertSee('sr_desktop_site_mobile_alert_v1', false)
+            ->assertSee('Desktop site is not available on mobile. Loading the mobile layout.', false)
             ->assertSee("body.getAttribute('data-layout-shell')", false)
             ->assertSee("bodyClasses.contains('guest-desktop-shell')", false)
+            ->assertSee('navigator.maxTouchPoints', false)
+            ->assertSee('screen.availWidth', false)
             ->assertSee("url.searchParams.set('sr_layout', targetLayout)", false)
+            ->assertSee("url.searchParams.set('sr_mobile_desktop_blocked', '1')", false)
             ->assertSee('window.location.replace(url.toString())', false)
             ->assertSee('css/desktop/style.css?v=9', false);
     }
@@ -1105,7 +1124,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('user-desktop-shell desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
-            ->assertSee('sr_desktop_shell_mobile_repair_v2', false)
+            ->assertSee('sr_desktop_shell_mobile_repair_v3', false)
             ->assertSee('class="db-sidebar"', false)
             ->assertDontSee('id="mob-bottom-nav"', false)
             ->assertDontSee('html body #progressModulesLikeHero.progress-hero', false);

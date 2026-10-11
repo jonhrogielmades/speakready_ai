@@ -33,10 +33,24 @@
          var platform = navigator.platform || '';
          var uaDataMobile = navigator.userAgentData && navigator.userAgentData.mobile === true;
          var iPadOSDesktopUA = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+         var touchCapable = (navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
+         var screenSizes = [
+            screen.width,
+            screen.height,
+            screen.availWidth,
+            screen.availHeight
+         ].map(function (value) {
+            return Math.round(Number(value) || 0);
+         }).filter(function (value) {
+            return value > 0;
+         });
+         var shortestScreenSide = screenSizes.length ? Math.min.apply(Math, screenSizes) : 0;
+         var touchPhoneScreen = touchCapable && shortestScreenSide > 0 && shortestScreenSide <= maxMobileWidth;
 
          return Boolean(
             uaDataMobile ||
             iPadOSDesktopUA ||
+            touchPhoneScreen ||
             /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone|Silk\/|Kindle|Opera Mobi|Fennec|Macintosh.*Touch|SM-|Pixel|Nexus/i.test(userAgent)
          );
       }
@@ -79,6 +93,11 @@
                if (needsUrlHint) {
                   url.searchParams.set('sr_layout', targetLayout);
                   url.searchParams.set('sr_is_mobile', shouldUseMobileExperience ? '1' : '0');
+                  if (shouldUseMobileExperience) {
+                     url.searchParams.set('sr_mobile_desktop_blocked', '1');
+                  } else {
+                     url.searchParams.delete('sr_mobile_desktop_blocked');
+                  }
                   if (targetWidth) {
                      url.searchParams.set('sr_viewport_width', targetWidth);
                   }
