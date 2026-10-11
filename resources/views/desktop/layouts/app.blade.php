@@ -42,7 +42,7 @@
       @include('desktop.partials.early-mobile-shell-repair')
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
-      <link rel="manifest" href="{{ asset('manifest.json?v=6') }}">
+      <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -351,11 +351,11 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=21')),
+            serviceWorkerUrl: @json(asset('sw.js?v=22')),
             csrfToken: @json(csrf_token())
          };
       </script>
-      <script src="{{ asset('js/push-notifications.js?v=6') }}" defer></script>
+      <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
       <script src="{{ asset('js/user-ui.js') }}?v=24" defer></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
@@ -548,7 +548,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=21').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=22').then(function(registration) {
                   window.SpeakReadyServiceWorkerRegistration = registration;
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {

@@ -18,7 +18,7 @@ class WebPushNotificationService
 {
     public const DEFAULT_NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';
 
-    public const DEFAULT_NOTIFICATION_BADGE = '/img/notification-badge.png?v=3';
+    public const DEFAULT_NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';
 
     private const DEFAULT_NOTIFICATION_URGENCY = 'high';
 

@@ -70,11 +70,11 @@ class PwaRememberedLoginTest extends TestCase
     {
         $worker = file_get_contents(public_path('sw.js'));
 
-        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v40';", $worker);
+        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v41';", $worker);
         $this->assertStringContainsString("const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';", $worker);
-        $this->assertStringContainsString("const CLIENT_REFRESH_VALUE = 'pwa-v40';", $worker);
+        $this->assertStringContainsString("const CLIENT_REFRESH_VALUE = 'pwa-v41';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';", $worker);
-        $this->assertStringContainsString("const NOTIFICATION_BADGE = '/img/notification-badge.png?v=3';", $worker);
+        $this->assertStringContainsString("const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';", $worker);
         $this->assertStringContainsString("const DEFAULT_NOTIFICATION_ACTIONS", $worker);
         $this->assertStringContainsString('notificationVibration(payload)', $worker);
         $this->assertStringContainsString('requireInteraction: payload.requireInteraction === true', $worker);
@@ -82,6 +82,36 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertStringContainsString("self.clients.matchAll({ type: 'window', includeUncontrolled: true })", $worker);
         $this->assertStringContainsString('client.navigate(nextUrl)', $worker);
         $this->assertStringContainsString('refreshControlledClients()', $worker);
+    }
+
+    public function test_pwa_notification_badge_uses_transparent_logo_mask(): void
+    {
+        $badgePath = public_path('img/notification-badge.png');
+        $badgeSize = getimagesize($badgePath);
+
+        $this->assertSame([96, 96], array_slice($badgeSize, 0, 2));
+
+        $badge = imagecreatefrompng($badgePath);
+        $transparentPixels = 0;
+        $opaquePixels = 0;
+
+        for ($y = 0; $y < imagesy($badge); $y++) {
+            for ($x = 0; $x < imagesx($badge); $x++) {
+                $alpha = (imagecolorat($badge, $x, $y) >> 24) & 0x7F;
+
+                if ($alpha > 100) {
+                    $transparentPixels++;
+                } else {
+                    $opaquePixels++;
+                }
+            }
+        }
+
+        imagedestroy($badge);
+
+        $this->assertGreaterThan(4000, $transparentPixels);
+        $this->assertGreaterThan(2000, $opaquePixels);
+        $this->assertLessThan(5000, $opaquePixels);
     }
 
     public function test_password_login_can_opt_out_of_remembering_the_device(): void
