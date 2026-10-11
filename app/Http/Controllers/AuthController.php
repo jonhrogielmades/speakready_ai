@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Laravel\Socialite\Facades\Socialite;
@@ -30,12 +31,20 @@ class AuthController extends Controller
 
     private const LOGIN_CREDENTIALS_MISMATCH_MESSAGE = 'The provided credentials do not match our records.';
 
+    private const GOOGLE_AUTH_INTENT_SESSION_KEY = 'google_auth_intent';
+
+    private const GOOGLE_AUTH_LAYOUT_SESSION_KEY = 'google_auth_layout';
+
+    private const AUTH_TAB_OLD_INPUT_KEY = 'auth_tab';
+
+    private const MOBILE_VIEWPORT_MAX = 820;
+
     public function register(Request $request)
     {
         if (! Setting::enabled('acc_registration')) {
             return back()->withErrors([
                 'username' => 'New account registration is currently disabled by the administrator.',
-            ])->withInput($request->only('name', 'username'));
+            ])->withInput($request->only('name', 'username', self::AUTH_TAB_OLD_INPUT_KEY));
         }
 
         $request->merge([
@@ -297,6 +306,9 @@ class AuthController extends Controller
 
     public function handleGoogleCallback(Request $request)
     {
+        $this->restoreGoogleLayoutPreference($request);
+        $intent = $this->googleAuthIntent($request);
+
         if ($request->filled('error')) {
             Log::warning('Google authentication returned an OAuth error.', [
                 'error' => $request->query('error'),
@@ -304,17 +316,13 @@ class AuthController extends Controller
                 'redirect_uri' => config('services.google.redirect'),
             ]);
 
-            return redirect('/')->withErrors([
-                'email' => $this->googleOAuthErrorMessage($request),
-            ]);
+            return $this->googleAuthFailureResponse($request, $this->googleOAuthErrorMessage($request), $intent);
         }
 
         if ($configurationError = $this->googleConfigurationErrorMessage()) {
             Log::warning('Google authentication is not configured correctly.');
 
-            return redirect('/')->withErrors([
-                'email' => $configurationError,
-            ]);
+            return $this->googleAuthFailureResponse($request, $configurationError, $intent);
         }
 
         if (! $request->filled('code')) {
@@ -323,24 +331,19 @@ class AuthController extends Controller
                 'redirect_uri' => config('services.google.redirect'),
             ]);
 
-            return redirect('/')->withErrors([
-                'email' => 'Google sign-in expired. Please start Google login again.',
-            ]);
+            return $this->googleAuthFailureResponse($request, 'Google sign-in expired. Please start Google login again.', $intent);
         }
 
         try {
             AccountNotificationSchema::ensureUserColumns();
 
-            $intent = $request->session()->pull('google_auth_intent', 'login');
-            $intent = in_array($intent, ['login', 'register'], true) ? $intent : 'login';
+            $request->session()->forget(self::GOOGLE_AUTH_INTENT_SESSION_KEY);
             $driver = $this->googleDriver();
             $googleUser = $driver->user();
             $googleAvatarUrl = $this->googleAvatarUrl($googleUser);
 
             if (blank($googleUser->email)) {
-                return redirect('/')->withErrors([
-                    'email' => 'Google did not return an email address. Please try another Google account.',
-                ]);
+                return $this->googleAuthFailureResponse($request, 'Google did not return an email address. Please try another Google account.', $intent);
             }
 
             $googleEmail = $this->normalizeEmail($googleUser->email);
@@ -361,27 +364,23 @@ class AuthController extends Controller
             }
 
             if ($user && $intent === 'register') {
-                return redirect('/')->withErrors([
-                    'email' => 'This Google email is already registered. Please log in with Google instead.',
-                ])->withInput([
+                return $this->googleAuthFailureResponse($request, 'This Google email is already registered. Please log in with Google instead.', $intent, [
                     'name' => $googleUser->name ?: 'Google User',
                     'email' => $googleEmail,
                 ]);
             }
 
             if (! $user && $intent === 'login') {
-                return redirect('/')->withErrors([
-                    'email' => 'No SpeakReady AI account was found for this Google email. Please register first.',
-                ])->withInput(['email' => $googleEmail]);
+                return $this->googleAuthFailureResponse($request, 'No SpeakReady AI account was found for this Google email. Please register first.', $intent, [
+                    'email' => $googleEmail,
+                ]);
             }
 
             $registeredWithGoogle = false;
 
             if (! $user) {
                 if (! Setting::enabled('acc_registration')) {
-                    return redirect('/')->withErrors([
-                        'email' => 'New account registration is currently disabled by the administrator.',
-                    ])->withInput([
+                    return $this->googleAuthFailureResponse($request, 'New account registration is currently disabled by the administrator.', $intent, [
                         'name' => $googleUser->name ?: 'Google User',
                         'email' => $googleEmail,
                     ]);
@@ -434,9 +433,9 @@ class AuthController extends Controller
             }
 
             if (in_array($user->status, ['inactive', 'suspended'])) {
-                return redirect('/')->withErrors([
-                    'account_inactive' => 'Your account was inactivated please contact to the admin for request.',
-                ])->withInput(['email' => $user->email]);
+                return $this->googleAuthFailureResponse($request, 'Your account was inactivated please contact to the admin for request.', 'login', [
+                    'email' => $user->email,
+                ], 'account_inactive');
             }
 
             Auth::login($user, true);
@@ -444,20 +443,20 @@ class AuthController extends Controller
             $this->logAuthenticationActivity($user, 'user_logged_in', 'logged in with Google', $request->ip());
 
             if ($user->is_admin) {
-                return redirect()->route('admin.dashboard');
+                return $this->redirectToRouteWithGoogleLayout($request, 'admin.dashboard');
             }
 
             if ($registeredWithGoogle) {
-                return redirect()->route('terms.acceptance.show')
+                return $this->redirectToRouteWithGoogleLayout($request, 'terms.acceptance.show')
                     ->with('success', 'Registration successful. Welcome to SpeakReady AI!')
                     ->with('registration_success', true);
             }
 
             if (! $user->hasAcceptedCurrentTerms()) {
-                return redirect()->route('terms.acceptance.show');
+                return $this->redirectToRouteWithGoogleLayout($request, 'terms.acceptance.show');
             }
 
-            return redirect()->route('dashboard');
+            return $this->redirectToRouteWithGoogleLayout($request, 'dashboard');
 
         } catch (Throwable $e) {
             $message = $this->googleAuthenticationExceptionMessage($e);
@@ -467,25 +466,126 @@ class AuthController extends Controller
                 'friendly_message' => $message,
             ]);
 
-            return redirect('/')->withErrors([
-                'email' => $message,
-            ]);
+            return $this->googleAuthFailureResponse($request, $message, $intent);
         }
     }
 
     private function redirectToGoogleWithIntent(Request $request, string $intent)
     {
+        $request->session()->put(self::GOOGLE_AUTH_INTENT_SESSION_KEY, $intent);
+        $request->session()->put(self::GOOGLE_AUTH_LAYOUT_SESSION_KEY, $this->requestLayoutPreference($request) ?? 'desktop');
+
         if ($configurationError = $this->googleConfigurationErrorMessage()) {
             Log::warning('Google authentication is not configured correctly.');
 
-            return redirect('/')->withErrors([
-                'email' => $configurationError,
-            ]);
+            return $this->googleAuthFailureResponse($request, $configurationError, $intent);
         }
 
-        $request->session()->put('google_auth_intent', $intent);
-
         return Socialite::driver('google')->stateless()->redirect();
+    }
+
+    private function restoreGoogleLayoutPreference(Request $request): ?string
+    {
+        $layout = $this->explicitRequestLayoutPreference($request)
+            ?? $request->session()->get(self::GOOGLE_AUTH_LAYOUT_SESSION_KEY);
+
+        if (! in_array($layout, ['mobile', 'desktop'], true) && $request->attributes->has('is_mobile')) {
+            $layout = (bool) $request->attributes->get('is_mobile') ? 'mobile' : 'desktop';
+        }
+
+        if (! in_array($layout, ['mobile', 'desktop'], true)) {
+            return null;
+        }
+
+        $isMobile = $layout === 'mobile';
+        $request->attributes->set('is_mobile', $isMobile);
+        View::share('isMobile', $isMobile);
+
+        return $layout;
+    }
+
+    private function requestLayoutPreference(Request $request): ?string
+    {
+        $layout = $this->explicitRequestLayoutPreference($request);
+        if ($layout !== null) {
+            return $layout;
+        }
+
+        if ($request->attributes->has('is_mobile')) {
+            return (bool) $request->attributes->get('is_mobile') ? 'mobile' : 'desktop';
+        }
+
+        return null;
+    }
+
+    private function explicitRequestLayoutPreference(Request $request): ?string
+    {
+        $queryLayout = strtolower((string) $request->query('sr_layout', ''));
+        if (in_array($queryLayout, ['mobile', 'desktop'], true)) {
+            return $queryLayout;
+        }
+
+        $queryIsMobile = strtolower((string) $request->query('sr_is_mobile', ''));
+        if (in_array($queryIsMobile, ['1', 'true'], true)) {
+            return 'mobile';
+        }
+        if (in_array($queryIsMobile, ['0', 'false'], true)) {
+            return 'desktop';
+        }
+
+        $queryViewportWidth = filter_var($request->query('sr_viewport_width'), FILTER_VALIDATE_INT);
+        if ($queryViewportWidth !== false && $queryViewportWidth > 0) {
+            return $queryViewportWidth <= self::MOBILE_VIEWPORT_MAX ? 'mobile' : 'desktop';
+        }
+
+        return null;
+    }
+
+    private function googleLayoutQuery(Request $request): array
+    {
+        $layout = $this->requestLayoutPreference($request)
+            ?? $request->session()->get(self::GOOGLE_AUTH_LAYOUT_SESSION_KEY);
+
+        return $layout === 'mobile' ? ['sr_layout' => 'mobile'] : [];
+    }
+
+    private function redirectToHomeWithGoogleLayout(Request $request)
+    {
+        $query = $this->googleLayoutQuery($request);
+
+        return empty($query)
+            ? redirect('/')
+            : redirect('/?'.http_build_query($query));
+    }
+
+    private function redirectToRouteWithGoogleLayout(Request $request, string $routeName, array $parameters = [])
+    {
+        return redirect()->route($routeName, array_merge($parameters, $this->googleLayoutQuery($request)));
+    }
+
+    private function googleAuthIntent(Request $request): string
+    {
+        $intent = $request->session()->get(self::GOOGLE_AUTH_INTENT_SESSION_KEY, 'login');
+
+        return in_array($intent, ['login', 'register'], true) ? $intent : 'login';
+    }
+
+    private function googleAuthFailureResponse(Request $request, string $message, ?string $intent = null, array $input = [], string $field = 'email')
+    {
+        return $this->redirectToHomeWithGoogleLayout($request)
+            ->withErrors([$field => $message])
+            ->withInput($this->googleAuthOldInput($request, $intent, $input));
+    }
+
+    private function googleAuthOldInput(Request $request, ?string $intent, array $input): array
+    {
+        $intent = in_array($intent, ['login', 'register'], true)
+            ? $intent
+            : $this->googleAuthIntent($request);
+
+        return array_merge([
+            self::AUTH_TAB_OLD_INPUT_KEY => $intent === 'register' ? 'signup' : 'login',
+        ], $input);
     }
 
     private function googleAvatarUrl($googleUser): ?string

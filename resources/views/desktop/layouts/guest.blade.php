@@ -1296,7 +1296,7 @@
             var authModal = document.getElementById('lofc');
             var bsModal = new bootstrap.Modal(authModal);
             bsModal.show();
-            @if(old('name'))
+            @if(in_array(old('auth_tab'), ['signup', 'register'], true) || filled(old('name')))
                swTab('signup');
             @endif
          });

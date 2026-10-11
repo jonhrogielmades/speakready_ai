@@ -37,9 +37,11 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('guest-shell guest-mobile-shell', false)
                 ->assertSee('data-layout-shell="mobile"', false)
                 ->assertSee('data-guest-layout="mobile"', false)
-                ->assertSee('css/mobile/style.css?v=35', false)
+                ->assertSee('css/mobile/style.css?v=36', false)
                 ->assertSee('mobilePreviewSwiper', false)
                 ->assertSee('mobile-preview-image-swiper', false)
+                ->assertSee(route('auth.google.login', ['sr_layout' => 'mobile']), false)
+                ->assertSee(route('auth.google.register', ['sr_layout' => 'mobile']), false)
                 ->assertSee('id="mbtog"', false)
                 ->assertSee('aria-controls="userCommandPalette"', false)
                 ->assertSee('id="userCommandPalette"', false)
@@ -49,7 +51,7 @@ class MobileLayoutTest extends TestCase
                 ->assertDontSee('id="mbmenu"', false)
                 ->assertDontSee('id="barIcon"', false)
                 ->assertDontSee('id="xIcon"', false)
-                ->assertDontSee('css/desktop/style.css?v=8', false);
+                ->assertDontSee('css/desktop/style.css?v=9', false);
         }
     }
 
@@ -64,9 +66,9 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=35', false)
+            ->assertSee('css/mobile/style.css?v=36', false)
             ->assertSee('mobilePreviewSwiper', false)
-            ->assertDontSee('css/desktop/style.css?v=8', false);
+            ->assertDontSee('css/desktop/style.css?v=9', false);
     }
 
     public function test_guest_landing_uses_mobile_guest_layout_from_viewport_query_hint(): void
@@ -78,9 +80,9 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=35', false)
+            ->assertSee('css/mobile/style.css?v=36', false)
             ->assertSee('mobilePreviewSwiper', false)
-            ->assertDontSee('css/desktop/style.css?v=8', false);
+            ->assertDontSee('css/desktop/style.css?v=9', false);
     }
 
     public function test_guest_landing_desktop_query_hint_can_override_stale_mobile_cookie(): void
@@ -94,8 +96,8 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
-            ->assertSee('css/desktop/style.css?v=8', false)
-            ->assertDontSee('css/mobile/style.css?v=35', false);
+            ->assertSee('css/desktop/style.css?v=9', false)
+            ->assertDontSee('css/mobile/style.css?v=36', false);
     }
 
     public function test_guest_landing_exposes_shell_marker_for_viewport_repair(): void
@@ -111,7 +113,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee("bodyClasses.contains('guest-desktop-shell')", false)
             ->assertSee("url.searchParams.set('sr_layout', targetLayout)", false)
             ->assertSee('window.location.replace(url.toString())', false)
-            ->assertSee('css/desktop/style.css?v=8', false);
+            ->assertSee('css/desktop/style.css?v=9', false);
     }
 
     public function test_user_dashboard_uses_mobile_shell_for_mobile_user_agent(): void

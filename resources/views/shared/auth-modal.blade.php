@@ -1,3 +1,9 @@
+@php
+   $googleAuthLayoutQuery = ($isMobile ?? false) ? ['sr_layout' => 'mobile'] : [];
+   $authTab = old('auth_tab');
+   $showSignupAuthTab = in_array($authTab, ['signup', 'register'], true) || ($authTab === null && filled(old('name')));
+@endphp
+
       <!-- ======================== LOGIN MODAL ======================== -->
       <div class="modal auth-modal" tabindex="-1" id="lofc" aria-labelledby="authModalTitle" aria-hidden="true">
          <div class="modal-dialog modal-dialog-centered auth-modal-dialog">
@@ -18,18 +24,18 @@
                </div>
                <div class="modal-body auth-modal-body">
                   <div class="tab-switch auth-tab-switch" role="tablist" aria-label="Authentication options">
-                     <button type="button" class="tab-sw-btn on" id="tabLogin" role="tab" aria-selected="true" aria-controls="fLogin" onclick="swTab('login')">
+                     <button type="button" class="tab-sw-btn @unless($showSignupAuthTab) on @endunless" id="tabLogin" role="tab" aria-selected="{{ $showSignupAuthTab ? 'false' : 'true' }}" aria-controls="fLogin" onclick="swTab('login')">
                         <i class="fa-solid fa-lock" aria-hidden="true"></i>
                         <span>Log In</span>
                      </button>
-                     <button type="button" class="tab-sw-btn" id="tabSignup" role="tab" aria-selected="false" aria-controls="fSignup" onclick="swTab('signup')">
+                     <button type="button" class="tab-sw-btn @if($showSignupAuthTab) on @endif" id="tabSignup" role="tab" aria-selected="{{ $showSignupAuthTab ? 'true' : 'false' }}" aria-controls="fSignup" onclick="swTab('signup')">
                         <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
                         <span>Register</span>
                      </button>
                   </div>
 
                   <!-- Login -->
-                  <div id="fLogin" class="auth-panel" role="tabpanel" aria-labelledby="tabLogin">
+                  <div id="fLogin" class="auth-panel" role="tabpanel" aria-labelledby="tabLogin" @if($showSignupAuthTab) style="display:none" hidden aria-hidden="true" @else aria-hidden="false" @endif>
                      @if(session('success'))
                         <div class="auth-success-msg" role="status">
                            <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
@@ -41,14 +47,15 @@
                            <div class="mb-2"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first('account_inactive') }}</span></div>
                            <form action="{{ route('request.reactivation') }}" method="POST">
                               @csrf
-                              <input type="hidden" name="username" value="{{ old('username') }}">
+                              <input type="hidden" name="username" value="{{ old('username', old('email')) }}">
                               <button type="submit" class="btn btn-sm btn-warning w-100 fw-bold auth-reactivation-button">Request Reactivation</button>
                            </form>
                         </div>
                      @endif
                      <form id="loginForm" class="auth-form" action="{{ route('login') }}" method="POST" autocomplete="on">
                         @csrf
-                        @if($errors->any() && !$errors->has('account_inactive') && !old('name'))
+                        <input type="hidden" name="auth_tab" value="login">
+                        @if($errors->any() && !$errors->has('account_inactive') && ! $showSignupAuthTab)
                            <div class="err-msg is-visible" role="alert"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first() }}</span></div>
                         @endif
                         <div class="auth-field">
@@ -79,7 +86,7 @@
                         <button type="submit" class="bgrd btn auth-submit w-100 fw-semibold" id="loginBtn">Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm" aria-hidden="true"></i></button>
                      </form>
                      <div class="odiv auth-divider">or continue with</div>
-                     <a href="{{ route('auth.google.login') }}" class="oauth auth-oauth" data-auth-transition="google">
+                     <a href="{{ route('auth.google.login', $googleAuthLayoutQuery) }}" class="oauth auth-oauth" data-auth-transition="google">
                         @include('shared.google-auth-mark')
                         <span>Log in with Google</span>
                      </a>
@@ -87,10 +94,11 @@
                   </div>
 
                   <!-- Sign Up -->
-                  <div id="fSignup" class="auth-panel" role="tabpanel" aria-labelledby="tabSignup" style="display:none">
+                  <div id="fSignup" class="auth-panel" role="tabpanel" aria-labelledby="tabSignup" @unless($showSignupAuthTab) style="display:none" hidden aria-hidden="true" @else aria-hidden="false" @endunless>
                      <form id="signupForm" class="auth-form" action="{{ route('register') }}" method="POST" autocomplete="on">
                         @csrf
-                        @if($errors->any() && old('name'))
+                        <input type="hidden" name="auth_tab" value="signup">
+                        @if($errors->any() && $showSignupAuthTab)
                            <div class="err-msg is-visible" role="alert"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first() }}</span></div>
                         @endif
                         <div class="auth-field">
@@ -134,7 +142,7 @@
                         <button type="submit" class="bgrd btn auth-submit w-100 fw-semibold" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm" aria-hidden="true"></i></button>
                      </form>
                      <div class="odiv auth-divider">or sign up with</div>
-                     <a href="{{ route('auth.google.register') }}" class="oauth auth-oauth" data-auth-transition="google-register">
+                     <a href="{{ route('auth.google.register', $googleAuthLayoutQuery) }}" class="oauth auth-oauth" data-auth-transition="google-register">
                         @include('shared.google-auth-mark')
                         <span>Sign up with Google</span>
                      </a>

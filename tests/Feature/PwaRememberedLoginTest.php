@@ -172,6 +172,23 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('border-right-color: rgba(14, 165, 233, 0.78);', false);
     }
 
+    public function test_registration_validation_alert_stays_on_register_tab_when_name_is_missing(): void
+    {
+        $this->post(route('register'), [
+            'auth_tab' => 'signup',
+            'name' => '',
+            'username' => 'missing-name-user',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertSessionHasErrors('name')
+            ->assertSessionHas('_old_input.auth_tab', 'signup');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('id="tabSignup" role="tab" aria-selected="true"', false)
+            ->assertSee('The name field is required.');
+    }
+
     public function test_google_login_reports_missing_configuration_before_redirect(): void
     {
         config([
@@ -187,6 +204,27 @@ class PwaRememberedLoginTest extends TestCase
             ]);
     }
 
+    public function test_google_register_reports_missing_configuration_on_register_tab(): void
+    {
+        config([
+            'services.google.client_id' => null,
+            'services.google.client_secret' => 'test-secret',
+            'services.google.redirect' => route('auth.google.callback'),
+        ]);
+
+        $this->get(route('auth.google.register'))
+            ->assertRedirect('/')
+            ->assertSessionHasErrors([
+                'email' => 'Google sign-in is not configured correctly. Please contact the administrator.',
+            ])
+            ->assertSessionHas('_old_input.auth_tab', 'signup');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('id="tabSignup" role="tab" aria-selected="true"', false)
+            ->assertSee('Google sign-in is not configured correctly. Please contact the administrator.');
+    }
+
     public function test_google_callback_reports_cancelled_authorization(): void
     {
         $this->get(route('auth.google.callback', ['error' => 'access_denied']))
@@ -196,12 +234,40 @@ class PwaRememberedLoginTest extends TestCase
             ]);
     }
 
+    public function test_google_register_callback_errors_open_register_tab(): void
+    {
+        $this->withSession(['google_auth_intent' => 'register'])
+            ->get(route('auth.google.callback', ['error' => 'access_denied']))
+            ->assertRedirect('/')
+            ->assertSessionHasErrors([
+                'email' => 'Google sign-in was cancelled. Please choose a Google account and allow access to continue.',
+            ])
+            ->assertSessionHas('_old_input.auth_tab', 'signup');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('id="tabSignup" role="tab" aria-selected="true"', false)
+            ->assertSee('Google sign-in was cancelled. Please choose a Google account and allow access to continue.');
+    }
+
     public function test_google_callback_requires_an_authorization_code(): void
     {
         $this->configureGoogleOAuth();
 
         $this->get(route('auth.google.callback'))
             ->assertRedirect('/')
+            ->assertSessionHasErrors([
+                'email' => 'Google sign-in expired. Please start Google login again.',
+            ]);
+    }
+
+    public function test_google_callback_errors_preserve_mobile_layout_hint(): void
+    {
+        $this->configureGoogleOAuth();
+
+        $this->withSession(['google_auth_layout' => 'mobile'])
+            ->get(route('auth.google.callback'))
+            ->assertRedirect('/?sr_layout=mobile')
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in expired. Please start Google login again.',
             ]);
@@ -324,6 +390,69 @@ class PwaRememberedLoginTest extends TestCase
             ->assertRedirect(route('dashboard'));
 
         $this->assertSame($uploadedPhoto, $user->fresh()->profile_photo_path);
+    }
+
+    public function test_google_login_preserves_mobile_layout_after_oauth_callback(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'mobile-google-login@example.com',
+            'google_id' => 'mobile-google-login-id',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $this->mockGoogleCallback([
+            'id' => 'mobile-google-login-id',
+            'name' => 'Mobile Google Login',
+            'email' => 'mobile-google-login@example.com',
+            'avatar' => null,
+        ]);
+
+        $desktopLikeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+        $this->withSession([
+            'google_auth_intent' => 'login',
+            'google_auth_layout' => 'mobile',
+        ])
+            ->withHeader('User-Agent', $desktopLikeUserAgent)
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect(route('dashboard', ['sr_layout' => 'mobile']));
+
+        $this->assertAuthenticatedAs($user);
+
+        $this->get(route('dashboard', ['sr_layout' => 'mobile']))
+            ->assertOk()
+            ->assertSee('class="user-mobile-shell mobile-shell"', false)
+            ->assertSee('data-layout-shell="mobile"', false)
+            ->assertDontSee('class="db-sidebar"', false);
+    }
+
+    public function test_google_registration_preserves_mobile_layout_after_oauth_callback(): void
+    {
+        $this->mockGoogleCallback([
+            'id' => 'mobile-google-register-id',
+            'name' => 'Mobile Google Register',
+            'email' => 'mobile-google-register@example.com',
+            'avatar' => null,
+        ]);
+
+        $desktopLikeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+        $this->withSession([
+            'google_auth_intent' => 'register',
+            'google_auth_layout' => 'mobile',
+        ])
+            ->withHeader('User-Agent', $desktopLikeUserAgent)
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect(route('terms.acceptance.show', ['sr_layout' => 'mobile']))
+            ->assertSessionHas('registration_success', true);
+
+        $this->assertAuthenticated();
+
+        $this->get(route('terms.acceptance.show', ['sr_layout' => 'mobile']))
+            ->assertOk()
+            ->assertSee('data-layout-shell="mobile"', false)
+            ->assertSee('terms-mobile-submit', false);
     }
 
     private function mockGoogleCallback(array $attributes, array $raw = []): void
