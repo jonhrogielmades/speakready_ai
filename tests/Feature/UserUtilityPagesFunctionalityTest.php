@@ -78,6 +78,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ->assertSee('Device Notifications')
  ->assertSee('data-account-open-notification-setup', false)
  ->assertSee('id="dashboardSetupToolsModal"', false)
+ ->assertSee('data-sr-dashboard-setup-styles', false)
  ->assertSee('data-sr-setup-auto-show="false"', false)
  ->assertSee('data-sr-confirm-form', false)
  ->assertDontSee('onsubmit="return confirm', false);
