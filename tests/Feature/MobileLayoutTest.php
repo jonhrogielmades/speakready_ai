@@ -132,11 +132,25 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="user-mobile-shell mobile-shell"', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('id="mob-content"', false)
+            ->assertSee('css/mobile/dashboard.css?v=47', false)
+            ->assertSee('data-page-style="dashboard-v47"', false)
+            ->assertSee('sr-readiness-card-grid', false)
+            ->assertDontSee('class="sr-card sr-score-panel', false)
             ->assertSee('--mob-card-gap: 12px', false)
             ->assertSee('--sr-visual-vh', false)
             ->assertSee('.tracker-panel', false)
             ->assertSee('id="mob-bottom-nav"', false)
             ->assertDontSee('class="db-sidebar"', false);
+    }
+
+    public function test_user_mobile_dashboard_css_hardens_cached_google_auth_layouts(): void
+    {
+        $css = file_get_contents(public_path('css/mobile/dashboard.css'));
+
+        $this->assertStringContainsString('Gmail auth mobile dashboard hardening', $css);
+        $this->assertStringContainsString('body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-score-panel', $css);
+        $this->assertStringContainsString('display: none !important;', $css);
+        $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr)) !important;', $css);
     }
 
     public function test_admin_dashboard_uses_mobile_shell_for_mobile_user_agent(): void

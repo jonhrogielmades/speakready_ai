@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=46') }}" data-page-style="dashboard-v46">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=47') }}" data-page-style="dashboard-v47">
 @endpush
 
 @section('content')
@@ -959,7 +959,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const stepsDesktop = [
             { element: '#dbSidebar', popover: { title: 'Practice Navigation', description: 'Open Mock Interview, Modules, Challenges, AI Coach, Progress, Feedback, and Reports.', side: 'right', align: 'start' }},
             { element: '#dbTutorialBtn', popover: { title: 'Replay Tutorial', description: 'Restart this walkthrough whenever the page changes or you want a quick orientation.', side: 'bottom', align: 'center' }},
-            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
+            { element: '.sr-readiness-card-grid', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed interviews, ratings, XP, streaks, and active practice days at a glance.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
             { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused interview task for XP, streak progress, and sharper answer structure.', side: 'left', align: 'start' }},
