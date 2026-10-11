@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\GameLevel;
 use App\Models\Category;
 use App\Services\AIService;
+use App\Services\UserContentUpdateNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -36,22 +37,28 @@ class AdminGameController extends Controller
  return $this->mobileView('admin.game', compact('levels', 'allLevels', 'categories'));
  }
 
- public function store(Request $request)
+ public function store(Request $request, UserContentUpdateNotificationService $contentNotifications)
  {
  $data = $request->validate($this->validationRules(null, $request->category_id));
  $data['is_hidden'] = $request->has('is_hidden');
 
- GameLevel::create($this->gameLevelDataForCurrentSchema($data));
+ $level = GameLevel::create($this->gameLevelDataForCurrentSchema($data));
+ $contentNotifications->learningGameCreated($level);
 
  return redirect()->route('admin.game')->with('success', 'interview learning game created successfully.');
  }
 
- public function update(Request $request, GameLevel $arena_level)
+ public function update(Request $request, GameLevel $arena_level, UserContentUpdateNotificationService $contentNotifications)
  {
  $data = $request->validate($this->validationRules($arena_level->id, $request->category_id));
  $data['is_hidden'] = $request->has('is_hidden');
+ $wasHidden = (bool) $arena_level->is_hidden;
 
  $arena_level->update($this->gameLevelDataForCurrentSchema($data));
+
+ if ($wasHidden && ! (bool) $arena_level->is_hidden) {
+ $contentNotifications->learningGameCreated($arena_level);
+ }
 
  return redirect()->route('admin.game')->with('success', 'interview learning game updated successfully.');
  }
@@ -62,7 +69,7 @@ class AdminGameController extends Controller
  return redirect()->route('admin.game')->with('success', 'interview learning game deleted successfully.');
  }
 
- public function generate(Request $request)
+ public function generate(Request $request, UserContentUpdateNotificationService $contentNotifications)
  {
  // Extend max execution time since generating up to 100 AI-backed levels can be slow.
  set_time_limit(3600);
@@ -121,6 +128,8 @@ class AdminGameController extends Controller
  if ($generatedCount === 0) {
  return redirect()->route('admin.game')->with('error', 'No open level slots are available between levels 1 and 100 for this category.');
  }
+
+ $contentNotifications->learningGamesGenerated($generatedCount, $topic, Category::find($categoryId));
 
  if ($generatedCount < $numLevels) {
  return redirect()->route('admin.game')->with('success', "Generated {$generatedCount} of {$numLevels} requested Learning Game(s). Only {$generatedCount} open slot(s) were available between levels 1 and 100.");

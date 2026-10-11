@@ -97,6 +97,201 @@ class AdminNewFeatureConnectionTest extends TestCase
         $this->assertDatabaseMissing('users', ['username' => 'blocked-user']);
     }
 
+    public function test_admin_created_user_facing_content_notifies_active_users(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $activeUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $inactiveUser = User::factory()->create(['is_admin' => false, 'status' => 'inactive']);
+        $otherAdmin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $gameCategory = $this->category(['title' => 'Confidence Challenges', 'type' => 'game']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.categories.store'), [
+                'title' => 'Behavioral Readiness',
+                'type' => 'core',
+                'description' => 'Fresh behavioral interview practice.',
+                'status' => 'active',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($admin)
+            ->post(route('admin.modules.store'), [
+                'title' => 'Salary Negotiation Sprint',
+                'category' => 'Career Growth',
+                'difficulty' => 'Intermediate',
+                'description' => 'Prepare clear salary expectation answers.',
+                'status' => 'published',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($admin)
+            ->post(route('admin.game.store'), $this->gamePayload($gameCategory, [
+                'level_number' => 7,
+                'title' => 'Confidence Challenge',
+            ]))
+            ->assertRedirect(route('admin.game'));
+
+        $notifications = $activeUser->fresh()->notifications()->get();
+
+        $this->assertTrue($notifications->contains(
+            fn ($notification): bool => ($notification->data['title'] ?? null) === 'New Interview Category'
+                && str_contains((string) ($notification->data['message'] ?? ''), 'Behavioral Readiness')
+        ));
+        $this->assertTrue($notifications->contains(
+            fn ($notification): bool => ($notification->data['title'] ?? null) === 'New Learning Module'
+                && str_contains((string) ($notification->data['message'] ?? ''), 'Salary Negotiation Sprint')
+        ));
+        $this->assertTrue($notifications->contains(
+            fn ($notification): bool => ($notification->data['title'] ?? null) === 'New Learning Challenge'
+                && str_contains((string) ($notification->data['message'] ?? ''), 'Confidence Challenge')
+        ));
+
+        $this->assertSame(0, $inactiveUser->fresh()->notifications()->count());
+        $this->assertSame(0, $otherAdmin->fresh()->notifications()->count());
+    }
+
+    public function test_draft_or_hidden_admin_content_does_not_notify_users(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $gameCategory = $this->category(['title' => 'Hidden Games', 'type' => 'game']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.categories.store'), [
+                'title' => 'Inactive Practice',
+                'type' => 'core',
+                'description' => 'Draft category.',
+                'status' => 'inactive',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($admin)
+            ->post(route('admin.modules.store'), [
+                'title' => 'Draft Learning Module',
+                'category' => 'Drafts',
+                'difficulty' => 'Beginner',
+                'description' => 'Draft content.',
+                'status' => 'draft',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($admin)
+            ->post(route('admin.game.store'), $this->gamePayload($gameCategory, [
+                'level_number' => 8,
+                'title' => 'Hidden Challenge',
+                'is_hidden' => '1',
+            ]))
+            ->assertRedirect(route('admin.game'));
+
+        $this->assertSame(0, $user->fresh()->notifications()->count());
+    }
+
+    public function test_making_admin_content_available_notifies_users_once(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category([
+            'title' => 'Fresh Interview Path',
+            'status' => 'inactive',
+            'type' => 'core',
+        ]);
+        $gameCategory = $this->category(['title' => 'Visible Games', 'type' => 'game']);
+        $hiddenLevel = $this->gameLevel($gameCategory, [
+            'level_number' => 9,
+            'title' => 'Visibility Challenge',
+            'is_hidden' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('admin.categories.update', $category), [
+                'title' => 'Fresh Interview Path',
+                'type' => 'core',
+                'description' => 'Fresh practice path.',
+                'status' => 'active',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($admin)
+            ->put(route('admin.game.update', $hiddenLevel), $this->gamePayload($gameCategory, [
+                'level_number' => 9,
+                'title' => 'Visibility Challenge',
+            ]))
+            ->assertRedirect(route('admin.game'));
+
+        $notifications = $user->fresh()->notifications()->get();
+
+        $this->assertTrue($notifications->contains(
+            fn ($notification): bool => ($notification->data['title'] ?? null) === 'New Interview Category'
+                && str_contains((string) ($notification->data['message'] ?? ''), 'Fresh Interview Path')
+        ));
+        $this->assertTrue($notifications->contains(
+            fn ($notification): bool => ($notification->data['title'] ?? null) === 'New Learning Challenge'
+                && str_contains((string) ($notification->data['message'] ?? ''), 'Visibility Challenge')
+        ));
+
+        $notificationCount = $user->fresh()->notifications()->count();
+
+        $this->actingAs($admin)
+            ->put(route('admin.categories.update', $category->fresh()), [
+                'title' => 'Fresh Interview Path',
+                'type' => 'core',
+                'description' => 'Fresh practice path updated.',
+                'status' => 'active',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($admin)
+            ->put(route('admin.game.update', $hiddenLevel->fresh()), $this->gamePayload($gameCategory, [
+                'level_number' => 9,
+                'title' => 'Visibility Challenge Updated',
+            ]))
+            ->assertRedirect(route('admin.game'));
+
+        $this->assertSame($notificationCount, $user->fresh()->notifications()->count());
+    }
+
+    public function test_publishing_draft_module_notifies_users_once(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $module = LearningModule::create([
+            'title' => 'STAR Answer Builder',
+            'category' => 'Interview Skills',
+            'difficulty' => 'Beginner',
+            'description' => 'Draft STAR content.',
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('admin.modules.update', $module), [
+                'title' => 'STAR Answer Builder',
+                'category' => 'Interview Skills',
+                'difficulty' => 'Beginner',
+                'description' => 'Published STAR content.',
+                'status' => 'published',
+            ])
+            ->assertRedirect(route('admin.modules'));
+
+        $this->assertTrue($user->fresh()->notifications()->get()->contains(
+            fn ($notification): bool => ($notification->data['title'] ?? null) === 'New Learning Module'
+                && str_contains((string) ($notification->data['message'] ?? ''), 'STAR Answer Builder')
+        ));
+
+        $notificationCount = $user->fresh()->notifications()->count();
+
+        $this->actingAs($admin)
+            ->put(route('admin.modules.update', $module->fresh()), [
+                'title' => 'STAR Answer Builder',
+                'category' => 'Interview Skills',
+                'difficulty' => 'Beginner',
+                'description' => 'Published STAR content updated.',
+                'status' => 'published',
+            ])
+            ->assertRedirect(route('admin.modules'));
+
+        $this->assertSame($notificationCount, $user->fresh()->notifications()->count());
+    }
+
     public function test_user_side_updates_are_visible_to_admin_activity_and_user_details(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
@@ -243,5 +438,33 @@ class AdminNewFeatureConnectionTest extends TestCase
             'energy_cost' => 1,
             'is_hidden' => false,
         ], $overrides));
+    }
+
+    private function gamePayload(Category $category, array $overrides = []): array
+    {
+        return array_merge([
+            'category_id' => $category->id,
+            'level_number' => 1,
+            'title' => 'Practice Challenge',
+            'description' => 'Practice clear responses.',
+            'mission_text' => '1. Introduce yourself clearly.',
+            'target_position' => 'Better Communication',
+            'skill_focus' => 'Confidence',
+            'learning_objective' => 'Practice confident answers.',
+            'success_criteria' => '1. Answer clearly.',
+            'retry_hint' => 'Try a clearer example.',
+            'difficulty' => 'beginner',
+            'required_score' => 60,
+            'xp_reward' => 100,
+            'energy_cost' => 1,
+            'ai_persona' => 'Friendly interviewer',
+            'ai_custom_prompt' => '',
+            'time_limit_seconds' => 0,
+            'banned_words' => '',
+            'target_tone' => 'professional',
+            'custom_badge_name' => '',
+            'skill_xp_type' => 'communication',
+            'skill_xp_amount' => 10,
+        ], $overrides);
     }
 }

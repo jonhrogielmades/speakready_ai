@@ -12,6 +12,7 @@ use App\Models\LearningModule;
 use App\Services\AIService;
 use App\Services\CsvExportService;
 use App\Services\QuestionDatasetProvider;
+use App\Services\UserContentUpdateNotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -240,7 +241,7 @@ class AdminController extends Controller
  }
 
  // Category CRUD
- public function storeCategory(Request $request)
+ public function storeCategory(Request $request, UserContentUpdateNotificationService $contentNotifications)
  {
  $request->validate([
  'title' => 'required|string|max:255',
@@ -251,7 +252,7 @@ class AdminController extends Controller
  'is_featured' => 'nullable|boolean',
  ]);
 
- Category::create([
+ $category = Category::create([
  'title' => $request->title,
  'type' => strtolower($request->type),
  'description' => $request->description,
@@ -261,10 +262,12 @@ class AdminController extends Controller
  'sort_order' => Category::max('sort_order') + 1,
  ]);
 
+ $contentNotifications->categoryCreated($category);
+
  return redirect()->back()->with('success', 'Category created successfully');
  }
 
- public function updateCategory(Request $request, Category $category)
+ public function updateCategory(Request $request, Category $category, UserContentUpdateNotificationService $contentNotifications)
  {
  $request->validate([
  'title' => 'required|string|max:255',
@@ -275,6 +278,8 @@ class AdminController extends Controller
  'is_featured' => 'nullable|boolean',
  ]);
 
+ $wasActive = (string) $category->status === 'active';
+
  $category->update([
  'title' => $request->title,
  'type' => strtolower($request->type),
@@ -283,6 +288,10 @@ class AdminController extends Controller
  'status' => $request->status,
  'is_featured' => $request->is_featured? true: false,
  ]);
+
+ if (! $wasActive && (string) $category->status === 'active') {
+ $contentNotifications->categoryCreated($category);
+ }
 
  return redirect()->back()->with('success', 'Category updated successfully');
  }
@@ -297,10 +306,15 @@ class AdminController extends Controller
  return redirect()->back()->with('success', 'Category deleted successfully');
  }
 
- public function toggleCategoryStatus(Category $category)
+ public function toggleCategoryStatus(Category $category, UserContentUpdateNotificationService $contentNotifications)
  {
+ $wasActive = (string) $category->status === 'active';
  $category->status = $category->status === 'active'? 'inactive': 'active';
  $category->save();
+
+ if (! $wasActive && (string) $category->status === 'active') {
+ $contentNotifications->categoryCreated($category);
+ }
 
  return redirect()->back()->with('success', 'Category status updated');
  }
@@ -736,7 +750,7 @@ class AdminController extends Controller
  }
 
  // Module Store
- public function storeModule(Request $request)
+ public function storeModule(Request $request, UserContentUpdateNotificationService $contentNotifications)
  {
  $request->validate([
  'title' => 'required|string|max:255',
@@ -749,7 +763,7 @@ class AdminController extends Controller
 
  $this->ensureLearningCategory($request->category);
 
- LearningModule::create([
+ $module = LearningModule::create([
  'title' => $request->title,
  'category' => $request->category,
  'difficulty' => $request->difficulty,
@@ -757,6 +771,8 @@ class AdminController extends Controller
  'status' => $request->status?? 'draft',
  'is_featured' => $request->has('is_featured'),
  ]);
+
+ $contentNotifications->learningModulePublished($module);
 
  return redirect()->back()->with('success', 'Module created successfully');
  }
@@ -946,7 +962,7 @@ class AdminController extends Controller
  return $this->mobileView('admin.module_edit', compact('module', 'categories'));
  }
 
- public function updateModule(Request $request, LearningModule $module)
+ public function updateModule(Request $request, LearningModule $module, UserContentUpdateNotificationService $contentNotifications)
  {
  $request->validate([
  'title' => 'required|string|max:255',
@@ -956,6 +972,7 @@ class AdminController extends Controller
  'status' => 'nullable|string',
  ]);
 
+ $wasPublished = (string) $module->status === 'published';
  $this->ensureLearningCategory($request->category);
 
  $module->update([
@@ -966,6 +983,10 @@ class AdminController extends Controller
  'status' => $request->status?? 'draft',
  'is_featured' => $request->has('is_featured'),
  ]);
+
+ if (! $wasPublished && (string) $module->status === 'published') {
+ $contentNotifications->learningModulePublished($module);
+ }
 
  return redirect()->route('admin.modules')->with('success', 'Module updated successfully');
  }
