@@ -1,8 +1,8 @@
-const CACHE_NAME = 'speakready-pwa-v38';
+const CACHE_NAME = 'speakready-pwa-v39';
 const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';
-const CLIENT_REFRESH_VALUE = 'pwa-v38';
-const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=2';
-const NOTIFICATION_BADGE = '/img/notification-badge.png?v=2';
+const CLIENT_REFRESH_VALUE = 'pwa-v39';
+const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';
+const NOTIFICATION_BADGE = '/img/notification-badge.png?v=3';
 const DEFAULT_NOTIFICATION_ACTIONS = [
   { action: 'open', title: 'Open' },
   { action: 'view-notifications', title: 'View all' },
