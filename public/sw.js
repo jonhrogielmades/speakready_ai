@@ -1,4 +1,6 @@
-const CACHE_NAME = 'speakready-pwa-v34';
+const CACHE_NAME = 'speakready-pwa-v35';
+const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';
+const CLIENT_REFRESH_VALUE = 'pwa-v35';
 const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
 const NETWORK_FIRST_ASSET_PATTERN = /\.(?:css|js)$/i;
 
@@ -22,6 +24,49 @@ function isNetworkFirstStaticAsset(request) {
   return NETWORK_FIRST_ASSET_PATTERN.test(new URL(request.url).pathname);
 }
 
+function refreshedClientUrl(clientUrl) {
+  try {
+    const url = new URL(clientUrl);
+    if (url.origin !== self.location.origin) return null;
+    if (url.searchParams.get(CLIENT_REFRESH_PARAM) === CLIENT_REFRESH_VALUE) return null;
+
+    url.searchParams.set(CLIENT_REFRESH_PARAM, CLIENT_REFRESH_VALUE);
+
+    return url.toString();
+  } catch (error) {
+    return null;
+  }
+}
+
+function refreshControlledClients() {
+  return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+    return Promise.all(
+      clients.map(client => {
+        const nextUrl = refreshedClientUrl(client.url);
+        if (!nextUrl) {
+          return undefined;
+        }
+
+        if ('navigate' in client) {
+          return client.navigate(nextUrl).catch(() => {
+            client.postMessage({
+              type: 'SPEAKREADY_PWA_REFRESH_REQUIRED',
+              cacheName: CACHE_NAME,
+            });
+          });
+        }
+
+        client.postMessage({
+          type: 'SPEAKREADY_PWA_REFRESH_REQUIRED',
+          cacheName: CACHE_NAME,
+        });
+
+        return undefined;
+      })
+    );
+  });
+}
+
 self.addEventListener('install', event => {
   self.skipWaiting();
 });
@@ -37,6 +82,7 @@ self.addEventListener('activate', event => {
         })
       );
     }).then(() => self.clients.claim())
+      .then(() => refreshControlledClients())
   );
 });
 

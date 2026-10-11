@@ -70,7 +70,12 @@ class PwaRememberedLoginTest extends TestCase
     {
         $worker = file_get_contents(public_path('sw.js'));
 
-        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v34';", $worker);
+        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v35';", $worker);
+        $this->assertStringContainsString("const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';", $worker);
+        $this->assertStringContainsString("const CLIENT_REFRESH_VALUE = 'pwa-v35';", $worker);
+        $this->assertStringContainsString("self.clients.matchAll({ type: 'window', includeUncontrolled: true })", $worker);
+        $this->assertStringContainsString('client.navigate(nextUrl)', $worker);
+        $this->assertStringContainsString('refreshControlledClients()', $worker);
     }
 
     public function test_password_login_can_opt_out_of_remembering_the_device(): void

@@ -37,7 +37,7 @@
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
-      <link rel="manifest" href="{{ asset('manifest.json?v=2') }}">
+      <link rel="manifest" href="{{ asset('manifest.json?v=3') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -4746,7 +4746,7 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=15')),
+            serviceWorkerUrl: @json(asset('sw.js?v=16')),
             csrfToken: @json(csrf_token())
          };
       </script>
@@ -4844,7 +4844,7 @@
          // PWA Service Worker
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=15').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=16').then(function(registration) {
                   window.SpeakReadyServiceWorkerRegistration = registration;
                   console.log('ServiceWorker registration successful');
                }, function(err) {

@@ -104,7 +104,7 @@
       return state.registrationPromise;
     }
 
-    const serviceWorkerUrl = config().serviceWorkerUrl || '/sw.js?v=15';
+    const serviceWorkerUrl = config().serviceWorkerUrl || '/sw.js?v=16';
 
     state.registrationPromise = navigator.serviceWorker.register(serviceWorkerUrl)
       .then((registration) => {
