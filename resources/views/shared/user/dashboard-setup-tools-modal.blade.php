@@ -10,6 +10,10 @@
         --sr-setup-accent: #2563eb;
         --sr-setup-ok: #047857;
         --sr-setup-danger: #dc2626;
+        --sr-setup-safe-top: env(safe-area-inset-top, 0px);
+        --sr-setup-safe-bottom: env(safe-area-inset-bottom, 0px);
+        --sr-setup-viewport-gap: 16px;
+        --sr-setup-viewport-gap-total: 32px;
     }
 
     .modal.sr-dashboard-setup-modal .modal-dialog {
@@ -18,7 +22,22 @@
         margin-inline: auto;
     }
 
+    .modal.sr-dashboard-setup-modal .modal-dialog.modal-dialog-centered,
+    body.user-mobile-shell .modal.sr-dashboard-setup-modal .modal-dialog.modal-dialog-centered,
+    body.user-desktop-shell .modal.sr-dashboard-setup-modal .modal-dialog.modal-dialog-centered {
+        display: flex !important;
+        align-items: center !important;
+        min-height: calc(100vh - var(--sr-setup-viewport-gap-total) - var(--sr-setup-safe-top) - var(--sr-setup-safe-bottom)) !important;
+        min-height: calc(100dvh - var(--sr-setup-viewport-gap-total) - var(--sr-setup-safe-top) - var(--sr-setup-safe-bottom)) !important;
+        margin-top: calc(var(--sr-setup-viewport-gap) + var(--sr-setup-safe-top)) !important;
+        margin-bottom: calc(var(--sr-setup-viewport-gap) + var(--sr-setup-safe-bottom)) !important;
+    }
+
     .modal.sr-dashboard-setup-modal .modal-content {
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - var(--sr-setup-viewport-gap-total) - var(--sr-setup-safe-top) - var(--sr-setup-safe-bottom));
+        max-height: calc(100dvh - var(--sr-setup-viewport-gap-total) - var(--sr-setup-safe-top) - var(--sr-setup-safe-bottom));
         overflow: hidden;
         border: 1px solid var(--sr-setup-line);
         border-radius: 18px;
@@ -90,6 +109,8 @@
     .modal.sr-dashboard-setup-modal .modal-body {
         display: grid;
         gap: 12px;
+        min-height: 0;
+        overflow: auto;
         padding-top: 14px;
         padding-bottom: 14px;
     }
@@ -325,15 +346,18 @@
     }
 
     @media (max-width: 575px) {
+        .modal.sr-dashboard-setup-modal {
+            --sr-setup-viewport-gap: 10px;
+            --sr-setup-viewport-gap-total: 20px;
+        }
+
         .modal.sr-dashboard-setup-modal .modal-dialog {
             width: min(342px, calc(100vw - 18px));
             max-width: min(342px, calc(100vw - 18px));
-            margin-top: max(10px, env(safe-area-inset-top, 0px));
-            margin-bottom: max(10px, env(safe-area-inset-bottom, 0px));
         }
 
         .modal.sr-dashboard-setup-modal .modal-body {
-            max-height: calc(100dvh - 196px);
+            max-height: none;
             overflow: auto;
         }
 
