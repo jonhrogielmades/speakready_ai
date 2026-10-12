@@ -98,11 +98,3 @@
                 0%, 100% { transform: scale(0.96); opacity: 0.9; }
                 50% { transform: scale(1.04); opacity: 1; }
             }
-            .hud-banner {
-                background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(52,211,153,0.1) 100%);
-                border: 1px solid var(--pur);
-                border-radius: 18px;
-                padding: 15px 25px;
-                margin-bottom: 25px;
-                box-shadow: 0 4px 20px rgba(59,130,246,0.15);
-            }

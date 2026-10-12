@@ -2,14 +2,17 @@
 @section('title', 'Interview Challenge')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=1') }}" data-page-style="user-game-session">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=1') }}" data-page-style="user-game-session-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=65') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=2') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=2') }}" data-page-style="user-game-session-2">
+<link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
+<link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
 @endpush
 
 @section('content')
 @include('desktop.partials.page-hero-styles')
 
-<div class="db-section active" id="sec-learning-game-session">
+<div class="db-section active learning-game-session-section" id="sec-interview-session" data-game-session-root>
  @if(session('active_game_session_id'))
  @php
  $sessionRecord = $gameSession?? null;
@@ -30,52 +33,19 @@
  }
  $isVoiceOnlyMode = $sessionRecord && $sessionRecord->response_mode === 'voice';
  $interviewerAvatarImages = [
- 'img/interviewers/Filipina_Interviewer_01.png',
- 'img/interviewers/Filipina_Interviewer_02.png',
- 'img/interviewers/Filipina_Interviewer_03.png',
- 'img/interviewers/Filipina_Interviewer_04.png',
- 'img/interviewers/Filipina_Interviewer_05.png',
+ 'img/interviewers/Filipina_Interviewer_06.png',
  ];
- $interviewerAvatarImage = $interviewerAvatarImages[array_rand($interviewerAvatarImages)];
+ $interviewerAvatarImage = $interviewerAvatarImages[0];
+ $interviewerPanelBackgroundImage = 'img/interviewer-panel-room-bg.png';
  $interviewerAvatarImageUrls = array_map(fn ($image) => asset($image), $interviewerAvatarImages);
  @endphp
 
  @if($sessionRecord && $questions->count() > 0)
-
  <!-- Get Ready Overlay -->
  <div id="get-ready-overlay" role="status" aria-live="assertive" aria-atomic="true">
  <h2>Level {{ $gameLevel->level_number }}</h2>
  <h1 id="countdown-text" style="color:#ffffff;-webkit-text-fill-color:#ffffff;background:none;">3</h1>
  <p>Prepare your mic...</p>
- </div>
-
- <!-- HUD Banner -->
- <div class="hud-banner d-flex flex-wrap justify-content-between align-items-center gap-3">
- <div class="hud-title-wrap">
- <div class="hud-title-row d-flex align-items-center gap-2 mb-1">
- <span class="badge hud-mode-badge" style="background:var(--pur);color:#fff;font-size:0.8rem;"><i class="fa-solid fa-gamepad me-1"></i> INTERVIEW CHALLENGE</span>
- <h4 class="hud-title" style="font-size:1.4rem;font-weight:800;margin:0;color:var(--tx)">Level {{ $gameLevel->level_number }}: {{ $gameLevel->title }}</h4>
- </div>
- @if($gameLevel->learning_objective)
- <div class="hud-objective" style="font-size:0.86rem;color:var(--tx2);line-height:1.45;max-width:760px;">{{ $gameLevel->learning_objective }}</div>
- @endif
-
- </div>
- 
- <div class="hud-badges d-flex flex-wrap gap-2 align-items-center">
- @if($gameLevel->time_limit_seconds)
- <div class="badge" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid #ef4444;padding:8px 12px;font-size:0.9rem;">
- <i class="fa-solid fa-stopwatch me-1"></i> <span id="game-timer">{{ $gameLevel->time_limit_seconds }}s</span>
- </div>
- @endif
- <div class="badge" style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid #34d399;padding:8px 12px;font-size:0.9rem;">
- <i class="fa-solid fa-bullseye me-1"></i> Goal: {{ $gameLevel->required_score }}%+
- </div>
- <div class="badge" style="background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid #60a5fa;padding:8px 12px;font-size:0.9rem;">
- <i class="fa-solid fa-clock me-1"></i> <span id="challengeTimer">00:00</span>
- </div>
-
- </div>
  </div>
 
  <div id="workspaceWrapper" class="learning-game-interview-layout" style="display:none;">
@@ -86,22 +56,38 @@
  <div class="desktop-session-two-column">
  <div class="desktop-interview-panel">
 
- <!-- Simulated AI Video Avatar Panel -->
- <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:250px;border-radius:18px;margin-bottom:20px;">
- <span class="question-counter-badge" id="qCounter">1/10</span>
- <span class="badge interviewer-panel-badge"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona?? 'AI Coach' }}</span>
+ <!-- Interviewer Avatar Panel -->
+ <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
+ <div class="interviewer-panel-overlay" aria-hidden="true"></div>
+ <div style="position:absolute; top:15px; left:15px; z-index:50;">
+ <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">Ready</span>
+ </div>
+ <span class="badge interviewer-panel-badge"><i class="fa-solid fa-bolt me-1"></i> interviewer</span>
+ <div class="question-timer-anchor game-session-timer-stack" aria-label="Challenge progress">
+ @if($gameLevel->time_limit_seconds)
+ <span class="session-chip danger"><i class="fa-solid fa-stopwatch"></i><span id="game-timer">{{ $gameLevel->time_limit_seconds }}s</span></span>
+ @endif
+ <span class="session-chip"><i class="fa-solid fa-bullseye"></i>{{ $gameLevel->required_score }}%+</span>
+ <span class="session-chip"><i class="fa-regular fa-clock"></i><span id="challengeTimer">00:00</span></span>
+ </div>
  @if($cameraCoachingEnabled)
- <!-- Optional mobile camera framing preview -->
- <div class="mobile-camera-preview d-block d-lg-none" style="position:absolute; top:15px; right:15px; width:80px; height:105px; border-radius:8px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
+ <div class="mobile-camera-pip d-lg-none" aria-label="Camera preview">
  <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
+ <div class="mobile-camera-placeholder" aria-hidden="true"><i class="fa-solid fa-video"></i></div>
  </div>
  @endif
 
- <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #1e1b4b, #312e81);">
- <div class="avatar-wrapper" id="aiAvatarHead" style="width:100px;height:100px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;transition:border-color 0.3s;">
- <!-- The Image Container (with border, glow, and clipping for the image itself) -->
- <div class="avatar-frame" style="width:100%;height:100%;background:rgba(255,255,255,0.1);border-radius:50%;border:3px solid #8b5cf6;overflow:hidden;position:relative;z-index:10;box-shadow: 0 0 15px rgba(139,92,246,0.3);">
- <img id="interviewerAvatarImage" src="{{ asset($interviewerAvatarImage) }}" alt="AI Avatar" style="width:100%;height:100%;object-fit:cover;">
+ <div id="aiAvatarContainer" class="interviewer-room-stage" style="--interviewer-panel-room-bg:url('{{ asset($interviewerPanelBackgroundImage) }}');width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+ <img class="interviewer-room-bg-image" src="{{ asset($interviewerPanelBackgroundImage) }}" alt="" aria-hidden="true" loading="eager" fetchpriority="high" decoding="async">
+ <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;--avatar-ring-color:#8b5cf6;">
+ <div class="avatar-side-wave avatar-side-wave-left" aria-hidden="true">
+ <span style="--wave-index:0"></span><span style="--wave-index:1"></span><span style="--wave-index:2"></span><span style="--wave-index:3"></span><span style="--wave-index:4"></span>
+ </div>
+ <div class="avatar-frame">
+ <img id="interviewerAvatarImage" src="{{ asset($interviewerAvatarImage) }}" alt="AI Interviewer" width="110" height="110" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover;">
+ </div>
+ <div class="avatar-side-wave avatar-side-wave-right" aria-hidden="true">
+ <span style="--wave-index:0"></span><span style="--wave-index:1"></span><span style="--wave-index:2"></span><span style="--wave-index:3"></span><span style="--wave-index:4"></span>
  </div>
  </div>
  
@@ -117,19 +103,26 @@
  @endfor
  </div>
  </div>
- <div class="question-caption-overlay ai-question-overlay" aria-live="polite" aria-atomic="true">
- <div id="questionCaptionText" class="question-caption-line custom-scrollbar" style="color:#ffffff;-webkit-text-fill-color:#ffffff;text-shadow:0 2px 6px rgba(0,0,0,0.92),0 0 10px rgba(0,0,0,0.65);">Loading your first question...</div>
+ <div class="question-caption-overlay" aria-live="polite" aria-atomic="true">
+ <div id="questionCaptionText" class="question-caption-line" style="color:#ffffff;-webkit-text-fill-color:#ffffff;text-shadow:0 2px 6px rgba(0,0,0,0.92),0 0 10px rgba(0,0,0,0.65);">Loading your first question...</div>
  </div>
- </div>
-
  <div id="aiQuestionText" class="visually-hidden" aria-hidden="true">Loading your first question...</div>
 
- <!-- Unified challenge controls -->
- <div class="session-nav-row animate-fade-up delay-150" id="gameSessionControls">
- <button type="button" class="btn btn-outline-info session-nav-icon" onclick="repeatQuestion()" aria-label="Repeat question" title="Repeat question"><i class="fa-solid fa-volume-high"></i></button>
- <button type="button" class="btn btn-outline-secondary session-nav-icon prev-btn-class" onclick="prevQuestion()" disabled aria-label="Previous question" title="Previous question"><i class="fa-solid fa-arrow-left"></i></button>
- <button type="button" class="btn btn-outline-warning session-nav-skip skip-btn-class" onclick="skipQuestion()">Skip <i class="fa-solid fa-forward-step ms-1"></i></button>
- <button type="button" class="bgrd btn session-nav-next next-btn-class text-white" onclick="submitAnswer()"><span class="next-label-full">Next Question</span><span class="next-label-short">Next</span><i class="fa-solid fa-arrow-right ms-2"></i></button>
+ <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150 interview-panel-actions" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
+ <div class="d-flex gap-2 w-100 flex-fill">
+ <button type="button" class="btn btn-outline-info flex-fill session-action-btn session-repeat-btn" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question"><i class="fa-solid fa-volume-high"></i><span>Repeat</span></button>
+ <button type="button" class="btn btn-outline-danger flex-fill session-action-btn prev-btn-class session-end-btn" onclick="prevQuestion()" style="border-radius:12px;" disabled aria-label="Previous question" title="Previous question"><i class="fa-solid fa-arrow-left"></i><span>Previous</span></button>
+ </div>
+ </div>
+ <div id="answerTranscriptControls" class="answer-transcript-controls interview-panel-voice-actions" aria-label="Voice recording controls" hidden>
+ <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
+ <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
+ <div class="d-flex gap-2">
+ <button type="button" id="micPauseBtn" class="btn btn-warning voice-action-btn voice-start-pause-btn" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Start recording" title="Start recording"><i class="fa-solid fa-microphone"></i><span class="voice-action-label">Start</span></button>
+ <button type="button" id="micStopBtn" class="btn btn-secondary voice-action-btn voice-stop-btn voice-control-disabled" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording" disabled><i class="fa-solid fa-stop"></i><span class="voice-action-label">Stop</span></button>
+ </div>
+ </div>
+ <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
  </div>
  </div>
 
@@ -140,38 +133,28 @@
  <div class="panel-title">
  <i class="fa-solid fa-pen-nib me-2"></i>
  <span class="panel-title-text">Your Response</span>
- <div class="response-title-actions">
+ <div class="response-title-actions game-response-actions" id="gameSessionControls">
  @if($sessionRecord->game_level_id)
  <span class="badge game-mode-badge"><i class="fa-solid fa-gamepad me-1"></i> CHALLENGE MODE</span>
  @endif
+ <button type="button" class="btn game-skip-action skip-btn-class" onclick="skipQuestion()" aria-label="Skip question" title="Skip question"><i class="fa-solid fa-forward-step"></i><span>Skip</span></button>
+ <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()" aria-label="Next question" title="Next question">
+ <span class="next-label-full">Next Question</span><span class="next-label-short">Next</span><i class="fa-solid fa-arrow-right"></i>
+ </button>
  </div>
  </div>
  
  <form id="answerForm">
- <textarea id="answerTextarea" class="oinp mb-2" style="min-height:200px;font-size:.95rem" placeholder="{{ $isVoiceOnlyMode? 'Record your answer with voice. The transcript will appear here when available...': 'Type your answer here, or use voice to auto-transcribe...' }}" @if($isVoiceOnlyMode) readonly @endif></textarea>
+ <label for="answerTextarea" class="visually-hidden">Your challenge answer</label>
+ <div class="answer-transcript-stage">
+ <textarea id="answerTextarea" class="oinp mb-2 @if($isVoiceOnlyMode) voice-only-answer-lock @endif" style="min-height:76px;font-size:.82rem" placeholder="{{ $isVoiceOnlyMode? 'Record your answer with voice. The transcript will appear here when available...': 'Type your answer using your own local school, work, internship, or project evidence...' }}" @if($isVoiceOnlyMode) readonly @endif aria-describedby="responseCountBar"></textarea>
 
- <div id="voiceControls" style="display:none;margin-bottom:20px;background:rgba(59,130,246,.05);padding:15px;border-radius:12px;border:1px solid rgba(59,130,246,.2)">
- <div class="d-flex align-items-center justify-content-between mb-2">
- <div style="font-weight:600;font-size:.9rem;color:#60a5fa"><i class="fa-solid fa-waveform me-2"></i>Voice Recording</div>
- <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:inline-flex;">00:00</span>
+ <div class="response-count-bar" id="responseCountBar" aria-live="polite">
+ <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
  </div>
- 
- <div class="voice-recording-actions d-flex justify-content-center gap-2 flex-wrap py-3">
- <button type="button" id="micPauseBtn" class="btn btn-warning voice-recording-action" onclick="toggleRecordingPause()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;font-weight:800;" aria-label="Start recording" title="Start recording">
- <i class="fa-solid fa-microphone me-1"></i><span>Start</span>
- </button>
- <button type="button" id="micStopBtn" class="btn btn-danger voice-recording-action voice-control-disabled" onclick="stopRecording()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;font-weight:800;" aria-label="Stop recording" title="Stop recording" disabled>
- <i class="fa-solid fa-stop me-1"></i><span>Stop</span>
- </button>
  </div>
- <span id="transcriptionStatus" class="transcription-status d-block text-center" style="min-height:18px;font-size:.78rem;color:var(--tx3);" aria-live="polite" aria-atomic="true"></span>
- </div>
- 
- <div class="answer-meta-row response-count-bar d-flex justify-content-between align-items-center mb-4">
- <div style="font-size:.8rem;color:var(--tx3)">
- <span id="wordCount">0 words</span> • <span id="charCount">0 characters</span>
- <span id="autoSaveIndicator" class="ms-3 text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
- </div>
+ <div class="response-autosave-row">
+ <span id="autoSaveIndicator" class="text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
  </div>
 
  </form>
@@ -323,6 +306,7 @@ let committedSpeechTranscript = '';
 
  function setGameMatchFullscreenShell(active) {
  document.body.classList.toggle('game-match-auto-fullscreen', active);
+ document.body.classList.toggle('interview-session-browser-fullscreen', active && document.body.classList.contains('user-desktop-shell'));
  document.body.classList.toggle('mobile-interview-fullscreen', active && document.body.classList.contains('user-mobile-shell'));
  refreshGameMatchFullscreenLayout();
  }
@@ -993,12 +977,19 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  challengeSessionStarted = true;
  const workspaceWrapper = document.getElementById('workspaceWrapper');
  if (workspaceWrapper) workspaceWrapper.style.display = 'block';
+ const interviewControls = document.getElementById('interviewControls');
+ if (interviewControls) {
+ interviewControls.style.opacity = '1';
+ interviewControls.style.pointerEvents = 'auto';
+ }
  enterGameMatchFullscreen({ auto: true });
  if (cameraCoachingEnabled) initCamera();
  
  if(isVoiceTranscriptionMode()) {
  const voiceControls = document.getElementById('voiceControls');
+ const answerTranscriptControls = document.getElementById('answerTranscriptControls');
  const voiceAnalyticsPanel = document.getElementById('voiceAnalyticsPanel');
+ if (answerTranscriptControls) answerTranscriptControls.hidden = false;
  if (voiceControls) voiceControls.style.display = 'block';
  if (voiceAnalyticsPanel) voiceAnalyticsPanel.style.display = 'block';
  }
@@ -1345,7 +1336,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  if (pauseBtn) {
  pauseBtn.style.display = 'inline-flex';
- pauseBtn.innerHTML = isIdle? '<i class="fa-solid fa-microphone me-1"></i><span>Start</span>': (isPaused? '<i class="fa-solid fa-play me-1"></i><span>Resume</span>': '<i class="fa-solid fa-pause me-1"></i><span>Pause</span>');
+ pauseBtn.innerHTML = isIdle? '<i class="fa-solid fa-microphone"></i><span class="voice-action-label">Start</span>': (isPaused? '<i class="fa-solid fa-play"></i><span class="voice-action-label">Resume</span>': '<i class="fa-solid fa-pause"></i><span class="voice-action-label">Pause</span>');
  const pauseLabel = isIdle? 'Start recording': (isPaused? 'Resume recording': 'Pause recording');
  pauseBtn.setAttribute('aria-label', pauseLabel);
  pauseBtn.setAttribute('title', pauseLabel);
