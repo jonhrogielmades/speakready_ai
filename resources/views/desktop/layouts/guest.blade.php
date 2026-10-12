@@ -22,7 +22,7 @@
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=9') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=18') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=19') }}" />
       <style>
          :root,
          .lm {
@@ -147,7 +147,7 @@
                    $previewGrammar = 95;
                 @endphp
                 <div class="row hero-home-layout align-items-center g-4">
-                  <div class="col-xl-5 col-lg-5 col-md-10 hero-home-copy text-center text-lg-start">
+                  <div class="col-xl-5 col-lg-5 col-md-10 hero-home-copy text-center">
                      <div class="hero-badge-wrap afu" style="animation-delay:.05s">
                         <span class="hbadge">
                      AI-Based Interview Practice System
@@ -155,13 +155,13 @@
                      </div>
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="hero-home-copy-text afu" style="font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI helps you practice role-focused job interviews with scenario setup, Coaching On or Real Interview Mode, camera detection, and evidence-based feedback.</p>
-                     <div class="hero-cta-row d-flex align-items-center justify-content-center justify-content-lg-start gap-3 flex-wrap afu" style="animation-delay:.28s">
+                     <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                         <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Get Started Free</button>
                         <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                      </div>
 
-                     <div class="hero-tech-card mt-4 mb-0 afu text-center text-lg-start" style="animation-delay:.4s">
+                     <div class="hero-tech-card mt-4 mb-0 afu text-center" style="animation-delay:.4s">
                         <p class="hero-tech-title" style="font-size:.71rem;color:var(--hero-tech-color, #000000);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
                         <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-4 flex-wrap tech-icons" style="color:var(--hero-tech-color, #000000); font-size:1.5rem;">
                            <a href="https://laravel.com" target="_blank" rel="noopener noreferrer" title="Laravel"><i class="fa-brands fa-laravel"></i></a>

@@ -2096,30 +2096,30 @@
 
           #hero .hero-home-copy .h1 {
              max-width: 620px;
-             margin-left: 0;
-             margin-right: 0;
+             margin-left: auto;
+             margin-right: auto;
              font-size: clamp(2.85rem, 4.25vw, 4.75rem) !important;
              line-height: 1.04;
-             text-align: left;
+             text-align: center;
              white-space: normal;
           }
 
           #hero .hero-home-copy-text {
              max-width: 600px;
-             margin-left: 0;
-             margin-right: 0;
+             margin-left: auto;
+             margin-right: auto;
              line-height: 1.58;
-             text-align: left;
+             text-align: center;
              margin-bottom: 24px !important;
           }
 
           #hero .hero-tech-card {
              --hero-tech-color: #111827;
              max-width: 540px;
-             margin-left: 0;
-             margin-right: 0;
+             margin-left: auto;
+             margin-right: auto;
              margin-top: 16px !important;
-             text-align: left !important;
+             text-align: center !important;
           }
 
           html:not(.lm) #hero .hero-tech-card {
@@ -2127,7 +2127,7 @@
           }
 
           #hero .hero-tech-card .tech-icons {
-             justify-content: flex-start !important;
+             justify-content: center !important;
           }
 
           #hero .hero-tech-title,
@@ -2139,17 +2139,19 @@
 
           #hero .hero-badge-wrap {
              display: flex;
-             justify-content: flex-start;
+             justify-content: center;
              width: 100%;
              max-width: 640px;
+             margin-left: auto;
+             margin-right: auto;
           }
 
           #hero .hero-cta-row {
              display: grid !important;
              grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
              width: min(100%, 580px);
-             margin-left: 0;
-             margin-right: 0;
+             margin-left: auto;
+             margin-right: auto;
              gap: 10px !important;
           }
 
