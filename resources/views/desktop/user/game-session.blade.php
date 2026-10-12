@@ -3,8 +3,8 @@
 @section('body-class', 'interview-session-shell')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=65') }}" data-page-style="interview-session">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=2026101207') }}" data-page-style="user-game-session">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=2026101207') }}" data-page-style="user-game-session-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=2026101208') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=2026101208') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
 @endpush
@@ -168,10 +168,10 @@
  <span id="voiceSessionMeta"></span>
  </div>
  </div>
- <div class="game-hidden-transcript">
+ <div class="game-transcription-display">
  <label for="answerTextarea" class="visually-hidden">Your voice transcript</label>
  <div class="answer-transcript-stage">
- <textarea id="answerTextarea" class="oinp mb-2 voice-only-answer-lock" style="min-height:76px;font-size:.82rem" placeholder="Record your answer with voice. The transcript will appear here when available..." readonly aria-readonly="true" aria-describedby="responseCountBar"></textarea>
+ <textarea id="answerTextarea" class="oinp mb-2 voice-only-answer-lock" style="min-height:76px;font-size:.82rem" placeholder="Your transcription will appear here after you click Stop..." readonly aria-readonly="true" aria-describedby="responseCountBar"></textarea>
 
  <div class="response-count-bar" id="responseCountBar" aria-live="polite">
  <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
