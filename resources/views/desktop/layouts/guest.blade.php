@@ -22,7 +22,7 @@
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=9') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=13') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=14') }}" />
       <style>
          :root,
          .lm {
@@ -181,7 +181,7 @@
 
                   <div class="col-xl-7 col-lg-7 col-md-11 hero-image-col">
                      @php
-                        $desktopHeroImage = asset('img/desktop-preview/01_Overview_Desktop_Preview.png').'?v=20260927';
+                        $desktopHeroImage = asset('img/desktop-preview/01_Overview_Desktop_Preview_4K.png').'?v=20261012';
                      @endphp
                      <div class="desktop-hero-image-row mt-3 mb-1 afu" style="animation-delay:.48s">
                         <figure class="desktop-hero-image-frame mb-0" aria-label="SpeakReady AI desktop dashboard hero image">
@@ -189,9 +189,10 @@
                               class="desktop-hero-image"
                               src="{{ $desktopHeroImage }}"
                               alt="SpeakReady AI desktop dashboard overview"
-                              width="1536"
-                              height="1024"
+                              width="3840"
+                              height="2516"
                               loading="eager"
+                              fetchpriority="high"
                               decoding="async"
                            >
                            <div class="hero-context-card hero-context-card--top-left">
