@@ -114,6 +114,8 @@
 
     #sec-interview-session[data-game-session-root] {
         --game-session-desktop-height: calc(100dvh - clamp(78px, 8vh, 96px));
+        --game-docked-response-width: min(760px, calc(100% - 56px));
+        --game-docked-response-bottom: clamp(18px, 3vh, 34px);
         width: 100% !important;
         max-width: none !important;
         margin-left: 0 !important;
@@ -155,7 +157,7 @@
 
     #sec-interview-session[data-game-session-root] .desktop-session-two-column {
         display: grid !important;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        grid-template-columns: minmax(0, 1fr) !important;
         grid-template-rows: minmax(0, 1fr) !important;
         gap: 18px !important;
         width: 100% !important;
@@ -165,6 +167,7 @@
         min-height: 0 !important;
         max-height: none !important;
         align-items: stretch !important;
+        position: relative !important;
     }
 
     #sec-interview-session[data-game-session-root] .desktop-interview-panel,
@@ -179,6 +182,26 @@
         max-height: none !important;
     }
 
+    #sec-interview-session[data-game-session-root] .desktop-interview-panel {
+        grid-column: 1 / -1 !important;
+        grid-row: 1 / -1 !important;
+        width: 100% !important;
+    }
+
+    #sec-interview-session[data-game-session-root] .desktop-response-column {
+        position: absolute !important;
+        z-index: 90 !important;
+        left: 50% !important;
+        right: auto !important;
+        bottom: var(--game-docked-response-bottom) !important;
+        width: var(--game-docked-response-width) !important;
+        max-width: var(--game-docked-response-width) !important;
+        height: auto !important;
+        min-height: 0 !important;
+        transform: translateX(-50%) !important;
+        pointer-events: none !important;
+    }
+
     #sec-interview-session[data-game-session-root] .desktop-interview-panel .ai-avatar-panel,
     #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
         flex: 1 1 0 !important;
@@ -190,8 +213,20 @@
     }
 
     #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: min(32vh, 240px) !important;
+        padding: 14px !important;
+        border-radius: 16px !important;
         overflow-x: hidden !important;
-        overflow-y: auto !important;
+        overflow-y: hidden !important;
+        pointer-events: auto !important;
+        background: rgba(255, 255, 255, 0.96) !important;
+        box-shadow: 0 20px 55px rgba(15, 23, 42, 0.28) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
     }
 
     #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel #answerForm {
@@ -200,6 +235,14 @@
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
+    }
+
+    #sec-interview-session[data-game-session-root] .desktop-response-column .panel-title {
+        margin-bottom: 10px !important;
+    }
+
+    #sec-interview-session[data-game-session-root] .desktop-response-column .game-voice-session-panel {
+        padding: 10px 12px !important;
     }
 
     body.game-match-auto-fullscreen #sec-interview-session[data-game-session-root],
