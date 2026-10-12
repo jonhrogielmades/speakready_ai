@@ -3,8 +3,8 @@
 @section('body-class', 'interview-session-shell')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=65') }}" data-page-style="interview-session">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=4') }}" data-page-style="user-game-session">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=2') }}" data-page-style="user-game-session-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=2026101201') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=2026101201') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
 @endpush
