@@ -157,16 +157,38 @@ body.game-match-auto-fullscreen {
 }
 
 @media (min-width: 992px) {
+    html body.user-desktop-shell.interview-session-shell #dashboard .db-content,
+    html body.user-desktop-shell.interview-session-shell #sec-interview-session[data-game-session-root] {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceWrapper,
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceRow,
-    html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceRow > .col-lg-12 {
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceRow > [class*="col-"] {
         width: 100% !important;
         max-width: none !important;
     }
 
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceRow {
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 0 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0 !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceRow > [class*="col-"] {
+        grid-column: 1 / -1 !important;
+        padding: 0 !important;
+    }
+
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-session-two-column {
         display: grid !important;
-        grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr) !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
         gap: 18px !important;
         align-items: stretch !important;
         width: 100% !important;
@@ -217,7 +239,7 @@ body.game-match-auto-fullscreen {
 
 @media (min-width: 992px) and (max-width: 1199.98px) {
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-session-two-column {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 0.88fr) !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
         gap: 14px !important;
     }
 
