@@ -17,12 +17,14 @@
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
+      <!-- Swiper CSS -->
+      <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <!-- all min css -->
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=9') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=15') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=11') }}" />
       <style>
          :root,
          .lm {
@@ -179,54 +181,132 @@
                      </div>
                   </div>
 
-                  <div class="col-xl-7 col-lg-7 col-md-11 hero-image-col">
-                     @php
-                        $desktopHeroImage = asset('img/desktop-preview/01_Overview_Desktop_Preview_4K.png').'?v=20261012';
-                     @endphp
-                     <div class="desktop-hero-image-row mt-3 mb-1 afu" style="animation-delay:.48s">
-                        <figure class="desktop-hero-image-frame mb-0" aria-label="SpeakReady AI desktop dashboard hero image">
-                           <img
-                              class="desktop-hero-image"
-                              src="{{ $desktopHeroImage }}"
-                              alt="SpeakReady AI desktop dashboard overview"
-                              width="3840"
-                              height="2516"
-                              loading="eager"
-                              fetchpriority="high"
-                              decoding="async"
-                           >
-                           <div class="hero-context-card hero-context-card--top-left">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-briefcase"></i> Practice</span>
-                              <strong>Role-ready drills</strong>
-                              <span>Job focus / Timing / Tone</span>
-                           </div>
-                           <div class="hero-context-card hero-context-card--middle-left">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-chart-line"></i> Readiness</span>
-                              <strong>Live score pulse</strong>
-                              <span>Boost target / Trend</span>
-                           </div>
-                           <div class="hero-context-card hero-context-card--bottom-left">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> Feedback</span>
-                              <strong>Actionable notes</strong>
-                              <span>Strengths / Next steps</span>
-                           </div>
-                           <div class="hero-context-card hero-context-card--top-right">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-shield-alt hero-context-kicker-icon" aria-hidden="true"></i> Secure</span>
-                              <strong>Private practice</strong>
-                              <span>Camera / Mic controls</span>
-                           </div>
-                           <div class="hero-context-card hero-context-card--middle-right">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-robot"></i> Coaching</span>
-                              <strong>AI session guide</strong>
-                              <span>Hints / Follow-up / Clarity</span>
-                           </div>
-                           <div class="hero-context-card hero-context-card--bottom-right">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-bolt"></i> Progress</span>
-                              <strong>Streak momentum</strong>
-                              <span>Sessions / XP / Goals</span>
-                           </div>
-                        </figure>
+                  <div class="col-xl-7 col-lg-7 col-md-11 hero-demo-preview-col">
+                     <div id="demo-preview" class="landing-section-heading mobile-demo-preview-heading hero-demo-preview-heading text-center mb-3 afu" style="animation-delay:.48s">
+                        <span class="slbl">Desktop Demo Preview</span>
+                        <h2 class="stitle">Inside <span class="gt">SpeakReady AI</span></h2>
                      </div>
+
+                     <div class="desktop-demo-preview-row mt-3 mb-1">
+                        <div class="adi">
+                     <div class="swiper desktopPreviewSwiper desktop-preview-image-swiper" aria-label="SpeakReady AI desktop demo preview carousel">
+                        @php
+                           $desktopPreviewSlides = [
+                              [
+                                 'image' => 'img/desktop-preview/01_Overview_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop overview preview',
+                                 'kicker' => 'Overview',
+                                 'title' => 'Dashboard readiness at a glance.',
+                                 'text' => 'View readiness, practice stats, skill radar, trends, and next actions from the desktop dashboard.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/02_Interview_Setup_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop interview setup preview',
+                                 'kicker' => 'Interview Setup',
+                                 'title' => 'Configure a focused interview.',
+                                 'text' => 'Set details, structure, access, scenario, and response settings before starting a tailored session.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/03_Activity_Calendar_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop activity calendar preview',
+                                 'kicker' => 'Activity Calendar',
+                                 'title' => 'Track practice days and streaks.',
+                                 'text' => 'See recent interview activity, active days, weekly progress, and recorded practice sessions in one calendar view.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/04_Interview_Modules_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop interview modules preview',
+                                 'kicker' => 'Modules',
+                                 'title' => 'Open guided preparation modules.',
+                                 'text' => 'Browse recommended lessons, learning paths, and topic filters for organized interview preparation.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/05_Interview_Challenges_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop challenges preview',
+                                 'kicker' => 'Challenges',
+                                 'title' => 'Build skill through challenge journeys.',
+                                 'text' => 'Track levels, XP, lives, streaks, accuracy, and challenge checklists in a gamified flow.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/06_AI_Coach_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop readiness coach preview',
+                                 'kicker' => 'AI Coach',
+                                 'title' => 'Ask for focused interview help.',
+                                 'text' => 'Use the desktop coach chat for resume, certificate, score explanation, and practice guidance.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/07_Interview_Progress_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop interview progress preview',
+                                 'kicker' => 'Progress',
+                                 'title' => 'Track growth across practice.',
+                                 'text' => 'Review streaks, AI insights, learning progress, and export actions from the progress workspace.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/08_Feedback_Center_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop feedback center preview',
+                                 'kicker' => 'Feedback',
+                                 'title' => 'Review coaching and next steps.',
+                                 'text' => 'See feedback summaries, priority recommendations, answer coaching, and searchable history.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/09_Interview_Reports_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop interview reports preview',
+                                 'kicker' => 'Reports',
+                                 'title' => 'Open scored interview reports.',
+                                 'text' => 'Generate, review, and export scored interview reports once practice data is available.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/10_Account_Management_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop account management preview',
+                                 'kicker' => 'Account',
+                                 'title' => 'Manage profile and security.',
+                                 'text' => 'Update profile details, target position, picture upload, password fields, and account settings.',
+                              ],
+                              [
+                                 'image' => 'img/desktop-preview/11_Notifications_Desktop_Preview.png',
+                                 'alt' => 'SpeakReady AI desktop notifications preview',
+                                 'kicker' => 'Notifications',
+                                 'title' => 'Scan alerts and activity history.',
+                                 'text' => 'Review notification state and recent account activity from the desktop notifications page.',
+                              ],
+                           ];
+                           $desktopPreviewAssetVersion = '20260927';
+                        @endphp
+                        <div class="swiper-wrapper">
+                           @foreach($desktopPreviewSlides as $slide)
+                              @php
+                                 $previewImageSrc = asset($slide['image']).'?v='.$desktopPreviewAssetVersion;
+                                 $shouldPreloadPreview = $loop->first || $loop->iteration === 2 || $loop->last;
+                              @endphp
+                              <div class="swiper-slide desktop-preview-image-slide">
+                                 <img
+                                    class="desktop-preview-shell-img"
+                                    src="{{ $shouldPreloadPreview ? $previewImageSrc : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==' }}"
+                                    @unless($shouldPreloadPreview) data-src="{{ $previewImageSrc }}" @endunless
+                                    data-preview-index="{{ $loop->index }}"
+                                    alt="{{ $slide['alt'] }}"
+                                    loading="{{ $loop->first ? 'eager' : 'lazy' }}"
+                                    decoding="async"
+                                 >
+                                 <div class="desktop-preview-copy">
+                                    <div class="desktop-preview-copy-kicker"><span>{{ $loop->iteration }}</span> {{ $slide['kicker'] }}</div>
+                                    <div class="desktop-preview-copy-body">
+                                       <h3 class="desktop-preview-copy-title">{{ $slide['title'] }}</h3>
+                                       <p class="desktop-preview-copy-text">{{ $slide['text'] }}</p>
+                                    </div>
+                                 </div>
+                              </div>
+                           @endforeach
+                        </div>
+                        <div class="swiper-pagination desktop-preview-pagination"></div>
+                        <button type="button" class="desktop-preview-autoplay-toggle" aria-label="Pause desktop demo preview">
+                           <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="swiper-button-next desktop-preview-next" aria-label="Next desktop demo preview"></button>
+                        <button type="button" class="swiper-button-prev desktop-preview-prev" aria-label="Previous desktop demo preview"></button>
+                      </div>
+                   </div>
+                </div>
                   </div>
                </div>
 
@@ -1207,6 +1287,9 @@
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       @include('desktop.partials.flash-modal', ['includeValidationErrors' => false])
+      <!-- Swiper -->
+      <script src="{{ asset('js/swiper-bundle.min.js') }}"></script>
+
       <script src="{{ asset('js/main.js?v=9') }}"></script>
       @php
          $authModalRequest = request('auth_modal');
@@ -1231,7 +1314,7 @@
       @endif
 
       <script>
-         // Initialize CounterUp when document is ready
+         // Initialize CounterUp and desktop preview carousel when document is ready
          document.addEventListener('DOMContentLoaded', function() {
              const animateCounter = function(counter) {
                  if (counter.dataset.counterReady === "true") return;
@@ -1276,6 +1359,96 @@
                  counters.forEach(animateCounter);
              }
 
+             if(typeof Swiper !== 'undefined') {
+                 document.querySelectorAll(".desktopPreviewSwiper").forEach(function(previewEl) {
+                     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                     const previewSwiper = new Swiper(previewEl, {
+                         slidesPerView: "auto",
+                         centeredSlides: true,
+                         spaceBetween: 24,
+                         speed: 180,
+                         effect: "coverflow",
+                         coverflowEffect: {
+                             rotate: 0,
+                             stretch: 72,
+                             depth: 128,
+                             modifier: 1,
+                             scale: 0.94,
+                             slideShadows: false,
+                         },
+                         loop: true,
+                         watchSlidesProgress: true,
+                         autoplay: reduceMotion ? false : {
+                             delay: 2200,
+                             disableOnInteraction: false,
+                             pauseOnMouseEnter: true,
+                         },
+                         pagination: {
+                             el: previewEl.querySelector(".desktop-preview-pagination"),
+                             clickable: true,
+                         },
+                         navigation: {
+                             nextEl: previewEl.querySelector(".desktop-preview-next"),
+                             prevEl: previewEl.querySelector(".desktop-preview-prev"),
+                         },
+                     });
+
+                     const hydrateNearbyPreviewImages = function() {
+                         const previewImages = Array.from(previewEl.querySelectorAll(".desktop-preview-shell-img[data-src]"));
+                         if (!previewImages.length) return;
+
+                         const totalSlides = new Set(
+                             Array.from(previewEl.querySelectorAll(".desktop-preview-shell-img[data-preview-index]"))
+                                 .map(function(img) { return Number(img.dataset.previewIndex); })
+                         ).size;
+                         if (!totalSlides) return;
+                         const activeIndex = Number.isInteger(previewSwiper.realIndex) ? previewSwiper.realIndex : 0;
+                         const nearbyIndexes = new Set([
+                             activeIndex,
+                             (activeIndex + 1) % totalSlides,
+                             (activeIndex - 1 + totalSlides) % totalSlides,
+                         ]);
+
+                         previewImages.forEach(function(img) {
+                             const imageIndex = Number(img.dataset.previewIndex);
+                             if (!nearbyIndexes.has(imageIndex)) return;
+
+                             img.src = img.dataset.src;
+                             img.removeAttribute("data-src");
+                         });
+                     };
+
+                     hydrateNearbyPreviewImages();
+                     previewSwiper.on("slideChange", hydrateNearbyPreviewImages);
+
+                     const autoplayToggle = previewEl.querySelector(".desktop-preview-autoplay-toggle");
+                     if (autoplayToggle) {
+                         const icon = autoplayToggle.querySelector("i");
+
+                         if (reduceMotion) {
+                             autoplayToggle.classList.add("is-paused");
+                             autoplayToggle.setAttribute("aria-label", "Play desktop demo preview");
+                             icon?.classList.remove("fa-pause");
+                             icon?.classList.add("fa-play");
+                         }
+
+                         autoplayToggle.addEventListener("click", function() {
+                             const paused = autoplayToggle.classList.toggle("is-paused");
+                             if (paused) {
+                                 previewSwiper.autoplay?.stop();
+                                 autoplayToggle.setAttribute("aria-label", "Play desktop demo preview");
+                                 icon?.classList.remove("fa-pause");
+                                 icon?.classList.add("fa-play");
+                             } else {
+                                 previewSwiper.autoplay?.start();
+                                 autoplayToggle.setAttribute("aria-label", "Pause desktop demo preview");
+                                 icon?.classList.remove("fa-play");
+                                 icon?.classList.add("fa-pause");
+                             }
+                         });
+                     }
+                 });
+             }
          });
       </script>
       <!-- PWA Service Worker Registration -->
