@@ -196,6 +196,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/feedback', [UserController::class, 'feedback'])->name('user.feedback');
     Route::get('/coach', [UserController::class, 'coach'])->name('user.coach');
     Route::post('/coach/chat', [UserController::class, 'coachChat'])->name('user.coach.chat');
+    Route::post('/coach/transcribe', [UserController::class, 'coachTranscribe'])->name('user.coach.transcribe');
     Route::get('/coach/conversation/{id}', [UserController::class, 'loadCoachConversation'])->name('user.coach.load');
     Route::delete('/coach/conversation/{id}', [UserController::class, 'deleteCoachConversation'])->name('user.coach.delete');
     Route::delete('/coach/conversations', [UserController::class, 'clearCoachConversations'])->name('user.coach.clear');

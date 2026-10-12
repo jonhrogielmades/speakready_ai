@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/coach.css?v=2') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=25') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=26') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -17,7 +17,7 @@
 @endphp
 @include('mobile.partials.page-hero-styles')
 
-<div class="db-section active" id="ai-coach-page" data-chat-url="{{ route('user.coach.chat') }}" data-conversation-url="{{ url('/coach/conversation') }}" data-clear-url="{{ route('user.coach.clear') }}" style="height:100%">
+<div class="db-section active" id="ai-coach-page" data-chat-url="{{ route('user.coach.chat') }}" data-transcribe-url="{{ route('user.coach.transcribe') }}" data-conversation-url="{{ url('/coach/conversation') }}" data-clear-url="{{ route('user.coach.clear') }}" style="height:100%">
     <div class="sr-page-hero coach-progress-hero" id="coachHero">
         <div class="sr-page-hero-inner">
             <div class="sr-page-hero-copy">
@@ -200,7 +200,22 @@
         let coachVoiceFinalText = '';
         let coachVoiceInterimText = '';
         let coachVoiceStopRequested = false;
+        let coachVoiceMediaStream = null;
+        let coachVoiceMediaRecorder = null;
+        let coachVoiceRecordedChunks = [];
+        let coachVoiceRecordingMimeType = '';
+        let coachVoiceServerTranscribing = false;
+        let coachVoiceTranscriptEditedAt = 0;
+        let coachVoiceStopEditBaseline = 0;
         const CoachSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const coachVoiceServerMimeTypes = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/mp4',
+            'audio/ogg;codecs=opus',
+            'audio/ogg',
+            'audio/wav'
+        ];
         const coachAllowedExtensions = @json($coachAllowedExtensions);
         const coachMaxFiles = 3;
         const coachMaxFileBytes = @json($coachMaxFileBytes);
@@ -306,6 +321,22 @@
             }
         }
 
+        function setCoachVoiceServerTranscribing(isTranscribing) {
+            coachVoiceServerTranscribing = isTranscribing;
+            const sendButton = document.getElementById('chatSendBtn');
+            const voiceButton = document.getElementById('coachVoiceBtn');
+            if (sendButton) {
+                sendButton.disabled = isTranscribing || coachSending;
+                sendButton.setAttribute('aria-busy', isTranscribing || coachSending ? 'true' : 'false');
+            }
+            if (voiceButton) {
+                voiceButton.disabled = isTranscribing || coachSending || !coachVoicePromptSupported();
+            }
+            if (typeof queueCoachKeyboardLayout === 'function') {
+                queueCoachKeyboardLayout();
+            }
+        }
+
         function updateCoachVoiceTranscript(text, options = {}) {
             const value = String(text || '');
             const hasText = coachVoiceSegment(value) !== '';
@@ -335,6 +366,9 @@
             coachVoiceBaseText = '';
             coachVoiceFinalText = '';
             coachVoiceInterimText = '';
+            coachVoiceTranscriptEditedAt = 0;
+            coachVoiceStopEditBaseline = 0;
+            setCoachVoiceServerTranscribing(false);
 
             if (textarea) {
                 textarea.value = '';
@@ -378,6 +412,7 @@
             coachVoiceBaseText = coachVoiceSegment(value);
             coachVoiceFinalText = '';
             coachVoiceInterimText = '';
+            coachVoiceTranscriptEditedAt = Date.now();
             setCoachVoiceTranscriptStatus(coachVoiceActive ? 'Listening...' : 'Ready to edit');
             if (typeof queueCoachKeyboardLayout === 'function') {
                 queueCoachKeyboardLayout();
@@ -394,6 +429,7 @@
             coachVoiceBaseText = coachVoiceSegment(value);
             coachVoiceFinalText = '';
             coachVoiceInterimText = '';
+            coachVoiceTranscriptEditedAt = Date.now();
             setCoachVoiceTranscriptStatus(coachVoiceActive ? 'Listening...' : 'Editing');
             if (typeof queueCoachKeyboardLayout === 'function') {
                 queueCoachKeyboardLayout();
@@ -557,11 +593,11 @@
             const input = document.getElementById('chatMsg');
 
             if (sendButton) {
-                sendButton.disabled = isSending;
-                sendButton.setAttribute('aria-busy', isSending ? 'true' : 'false');
+                sendButton.disabled = isSending || coachVoiceServerTranscribing;
+                sendButton.setAttribute('aria-busy', isSending || coachVoiceServerTranscribing ? 'true' : 'false');
             }
             if (voiceButton) {
-                voiceButton.disabled = isSending || !CoachSpeechRecognition;
+                voiceButton.disabled = isSending || coachVoiceServerTranscribing || !coachVoicePromptSupported();
             }
             if (input) {
                 input.setAttribute('aria-busy', isSending ? 'true' : 'false');
@@ -688,9 +724,17 @@
             }
         }
 
+        function coachVoiceCaptureSupported() {
+            return Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+        }
+
+        function coachVoicePromptSupported() {
+            return Boolean(CoachSpeechRecognition || coachVoiceCaptureSupported());
+        }
+
         function initializeCoachVoicePrompt() {
             const button = document.getElementById('coachVoiceBtn');
-            if (!button || CoachSpeechRecognition) return;
+            if (!button || coachVoicePromptSupported()) return;
 
             button.disabled = true;
             button.classList.add('is-disabled');
@@ -734,6 +778,7 @@
             coachVoiceRecognition.onerror = function (event) {
                 console.warn('Coach voice prompt error:', event?.error || event);
                 coachVoiceStopRequested = true;
+                stopCoachVoiceRecording();
                 setCoachVoiceState(false);
                 setCoachVoiceTranscriptStatus('Microphone unavailable', 'error');
                 showCoachFeedback('Microphone transcription could not start. Check browser microphone permission and try again.', 'error');
@@ -742,6 +787,10 @@
             coachVoiceRecognition.onend = function () {
                 const transcript = document.getElementById('coachVoiceTranscript')?.value || '';
                 setCoachVoiceState(false);
+                if (coachVoiceServerTranscribing) {
+                    setCoachVoiceTranscriptStatus('Finalizing transcript...');
+                    return;
+                }
                 if (coachVoiceSegment(transcript) !== '') {
                     setCoachVoiceTranscriptStatus('Ready to edit');
                 } else if (!coachVoiceStopRequested) {
@@ -752,33 +801,199 @@
             return coachVoiceRecognition;
         }
 
-        function startCoachVoicePrompt() {
-            if (coachSending) return;
+        function selectCoachVoiceRecordingMimeType() {
+            if (!window.MediaRecorder) return '';
 
-            if (!CoachSpeechRecognition) {
+            return coachVoiceServerMimeTypes.find(type => {
+                try {
+                    return MediaRecorder.isTypeSupported(type);
+                } catch (error) {
+                    return false;
+                }
+            }) || '';
+        }
+
+        function coachVoiceFileExtension(mimeType) {
+            const normalized = String(mimeType || '').split(';')[0].toLowerCase();
+
+            if (normalized.includes('mp4') || normalized.includes('m4a')) return 'm4a';
+            if (normalized.includes('ogg')) return 'ogg';
+            if (normalized.includes('wav')) return 'wav';
+
+            return 'webm';
+        }
+
+        function cleanupCoachVoiceMediaStream() {
+            if (coachVoiceMediaStream) {
+                coachVoiceMediaStream.getTracks().forEach(track => track.stop());
+            }
+
+            coachVoiceMediaStream = null;
+            coachVoiceMediaRecorder = null;
+        }
+
+        async function startCoachVoiceRecording() {
+            if (!coachVoiceCaptureSupported()) return false;
+
+            coachVoiceRecordedChunks = [];
+            coachVoiceRecordingMimeType = selectCoachVoiceRecordingMimeType();
+            coachVoiceMediaStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+
+            const options = coachVoiceRecordingMimeType ? { mimeType: coachVoiceRecordingMimeType } : {};
+            coachVoiceMediaRecorder = new MediaRecorder(coachVoiceMediaStream, options);
+
+            coachVoiceMediaRecorder.addEventListener('dataavailable', event => {
+                if (event.data && event.data.size > 0) {
+                    coachVoiceRecordedChunks.push(event.data);
+                }
+            });
+
+            coachVoiceMediaRecorder.addEventListener('error', event => {
+                console.warn('Coach voice recording error:', event?.error || event);
+                setCoachVoiceServerTranscribing(false);
+                setCoachVoiceTranscriptStatus('Live transcript only', 'error');
+            });
+
+            coachVoiceMediaRecorder.addEventListener('stop', () => {
+                const mimeType = coachVoiceRecordingMimeType || coachVoiceMediaRecorder?.mimeType || 'audio/webm';
+                const chunks = coachVoiceRecordedChunks.slice();
+                const editBaseline = coachVoiceStopEditBaseline || Date.now();
+
+                cleanupCoachVoiceMediaStream();
+                coachVoiceRecordedChunks = [];
+                coachVoiceStopEditBaseline = 0;
+
+                if (!chunks.length) {
+                    setCoachVoiceServerTranscribing(false);
+                    return;
+                }
+
+                const blob = new Blob(chunks, { type: mimeType });
+                if (blob.size > 0) {
+                    transcribeCoachVoiceRecording(blob, mimeType, editBaseline);
+                } else {
+                    setCoachVoiceServerTranscribing(false);
+                }
+            });
+
+            coachVoiceMediaRecorder.start();
+
+            return true;
+        }
+
+        function stopCoachVoiceRecording() {
+            const recorder = coachVoiceMediaRecorder;
+            if (recorder && recorder.state !== 'inactive') {
+                coachVoiceStopEditBaseline = Date.now();
+                setCoachVoiceServerTranscribing(true);
+                setCoachVoiceTranscriptStatus('Finalizing transcript...');
+                recorder.stop();
+                return;
+            }
+
+            cleanupCoachVoiceMediaStream();
+        }
+
+        async function transcribeCoachVoiceRecording(blob, mimeType, editBaseline) {
+            const currentText = document.getElementById('coachVoiceTranscript')?.value || document.getElementById('chatMsg')?.value || '';
+            const formData = new FormData();
+            const filename = `coach-voice.${coachVoiceFileExtension(mimeType)}`;
+
+            formData.append('audio', blob, filename);
+            formData.append('previous_transcript', currentText);
+            setCoachVoiceServerTranscribing(true);
+            setCoachVoiceTranscriptVisible(true);
+            setCoachVoiceTranscriptStatus(currentText.trim() ? 'Checking transcript...' : 'Finalizing transcript...');
+
+            try {
+                const response = await coachFetch(coachEndpoint('transcribeUrl', @json(route('user.coach.transcribe'))), {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await coachJson(response, 'Voice transcription is not available right now.');
+                const transcript = coachVoiceSegment(data.transcript || '');
+
+                if (!transcript) {
+                    setCoachVoiceTranscriptStatus(currentText.trim() ? 'Ready to edit' : 'No speech detected');
+                    if (!currentText.trim()) {
+                        showCoachFeedback('No speech was detected. Try the microphone again or type your message.', 'info');
+                    }
+                    return;
+                }
+
+                const userEditedAfterStop = coachVoiceTranscriptEditedAt > editBaseline;
+                if (!userEditedAfterStop || coachVoiceSegment(currentText) === '') {
+                    updateCoachVoiceTranscript(transcript, { forceVisible: true });
+                    setCoachVoiceTranscriptStatus('AI transcript ready');
+                    showCoachFeedback('');
+                } else {
+                    setCoachVoiceTranscriptStatus('Edited text kept');
+                    showCoachFeedback('A higher-accuracy transcript came back, but your manual edits were kept.', 'info');
+                }
+            } catch (error) {
+                console.warn('Coach server transcription failed:', error);
+                setCoachVoiceTranscriptStatus(currentText.trim() ? 'Ready to edit' : 'Live transcript only', currentText.trim() ? 'info' : 'error');
+                showCoachFeedback(currentText.trim()
+                    ? 'Server transcription was unavailable, so your editable live transcript was kept.'
+                    : (error.message || 'Voice transcription is not available right now.'), currentText.trim() ? 'info' : 'error');
+            } finally {
+                setCoachVoiceServerTranscribing(false);
+            }
+        }
+
+        async function startCoachVoicePrompt() {
+            if (coachSending || coachVoiceActive || coachVoiceServerTranscribing) return;
+
+            if (!coachVoicePromptSupported()) {
                 initializeCoachVoicePrompt();
                 return;
             }
 
             const input = document.getElementById('chatMsg');
-            const recognition = ensureCoachVoiceRecognition();
+            const recognition = CoachSpeechRecognition ? ensureCoachVoiceRecognition() : null;
             coachVoiceBaseText = input?.value.trim() || '';
             coachVoiceFinalText = '';
             coachVoiceInterimText = '';
             coachVoiceStopRequested = false;
-            recognition.lang = coachVoiceLocale();
+            let recordingStarted = false;
+            let recognitionStarted = false;
+
+            updateCoachVoiceTranscript(input?.value || '', { syncInput: false, forceVisible: true });
 
             try {
-                updateCoachVoiceTranscript(input?.value || '', { syncInput: false, forceVisible: true });
-                recognition.start();
-                setCoachVoiceState(true);
-                showCoachFeedback('');
+                recordingStarted = await startCoachVoiceRecording();
             } catch (error) {
-                console.warn('Coach voice prompt could not start:', error);
+                console.warn('Coach voice recording could not start:', error);
+            }
+
+            if (recognition) {
+                recognition.lang = coachVoiceLocale();
+                try {
+                    recognition.start();
+                    recognitionStarted = true;
+                } catch (error) {
+                    console.warn('Coach voice prompt could not start:', error);
+                }
+            }
+
+            if (!recordingStarted && !recognitionStarted) {
                 setCoachVoiceState(false);
                 setCoachVoiceTranscriptStatus('Microphone unavailable', 'error');
                 showCoachFeedback('Microphone transcription could not start. Check browser microphone permission and try again.', 'error');
+                return;
             }
+
+            setCoachVoiceState(true);
+            setCoachVoiceTranscriptStatus('Listening...');
+            showCoachFeedback(recordingStarted && !recognitionStarted
+                ? 'Recording audio for higher-accuracy transcription. Text will appear after you stop.'
+                : '');
         }
 
         function stopCoachVoicePrompt() {
@@ -792,7 +1007,11 @@
                 }
             }
 
+            stopCoachVoiceRecording();
             setCoachVoiceState(false);
+            if (coachVoiceServerTranscribing) {
+                setCoachVoiceTranscriptStatus('Finalizing transcript...');
+            }
         }
 
         function toggleCoachVoicePrompt() {
@@ -1037,6 +1256,11 @@
         async function sendMsg() {
             if (coachVoiceActive) {
                 stopCoachVoicePrompt();
+            }
+
+            if (coachVoiceServerTranscribing) {
+                showCoachFeedback('Finishing the higher-accuracy voice transcript. Review it before sending.', 'info');
+                return;
             }
 
             const ta = document.getElementById('chatMsg');

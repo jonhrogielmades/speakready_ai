@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\AiProvider;
 use App\Models\ChatbotConversation;
 use App\Models\ChatbotMessage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -93,9 +95,12 @@ class AiCoachDeveloperCreditsTest extends TestCase
             ->withHeader('User-Agent', $desktopUserAgent)
             ->get(route('user.coach'))
             ->assertOk()
-            ->assertSee('css/desktop/user/coach-2.css?v=27', false)
+            ->assertSee('css/desktop/user/coach-2.css?v=28', false)
+            ->assertSee('data-transcribe-url=', false)
             ->assertSee('id="coachVoiceTranscriptPanel"', false)
             ->assertSee('function handleCoachTranscriptInput(textarea)', false)
+            ->assertSee('function selectCoachVoiceRecordingMimeType()', false)
+            ->assertSee('Finishing the higher-accuracy voice transcript. Review it before sending.', false)
             ->assertSee('class="chat-bubble bubble-ai"', false)
             ->assertSee('<span class="coach-important">competency map</span>', false)
             ->assertSee('function highlightCoachImportantWords(html)', false);
@@ -104,9 +109,12 @@ class AiCoachDeveloperCreditsTest extends TestCase
             ->withHeader('User-Agent', $mobileUserAgent)
             ->get(route('user.coach'))
             ->assertOk()
-            ->assertSee('css/mobile/user/coach-2.css?v=25', false)
+            ->assertSee('css/mobile/user/coach-2.css?v=26', false)
+            ->assertSee('data-transcribe-url=', false)
             ->assertSee('id="coachVoiceTranscriptPanel"', false)
             ->assertSee('function handleCoachTranscriptInput(textarea)', false)
+            ->assertSee('function selectCoachVoiceRecordingMimeType()', false)
+            ->assertSee('Finishing the higher-accuracy voice transcript. Review it before sending.', false)
             ->assertSee('class="chat-bubble bubble-ai"', false)
             ->assertSee('<span class="coach-important">competency map</span>', false)
             ->assertSee('function highlightCoachImportantWords(html)', false);
@@ -136,7 +144,7 @@ class AiCoachDeveloperCreditsTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('css/mobile/user/coach-2.css?v=25', false)
+            ->assertSee('css/mobile/user/coach-2.css?v=26', false)
             ->assertSee('function newConversation(options = {})', false)
             ->assertSee('newConversation({ focusInput: false });', false)
             ->assertSee("document.body?.classList.remove('coach-input-focused', 'coach-keyboard-open');", false);
@@ -145,6 +153,46 @@ class AiCoachDeveloperCreditsTest extends TestCase
 
         $this->assertStringContainsString('body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #mob-bottom-nav', $mobileCss);
         $this->assertStringContainsString('margin-right: clamp(8px, 2.8vw, 14px) !important;', $mobileCss);
+    }
+
+    public function test_ai_coach_voice_transcription_uses_provider_for_more_reliable_final_text(): void
+    {
+        config([
+            'services.ai_transcription.provider_priority' => 'openai',
+            'services.openai.transcription_model' => 'gpt-transcribe',
+        ]);
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/transcriptions' => Http::response([
+                'text' => 'Please help me improve my customer support answer.',
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('user.coach.transcribe'), [
+            'previous_transcript' => 'please help improve customer support answer',
+            'audio' => UploadedFile::fake()
+                ->createWithContent('coach-voice.webm', str_repeat('A', 4096))
+                ->mimeType('audio/webm'),
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('transcript', 'Please help me improve my customer support answer.')
+            ->assertJsonPath('transcription_source', 'openai')
+            ->assertJsonPath('transcription_status', 'transcribed');
     }
 
     public function test_readiness_coach_repairs_chatbot_schema_and_falls_back_when_ai_is_unavailable(): void

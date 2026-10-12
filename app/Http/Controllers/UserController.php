@@ -26,6 +26,7 @@ use App\Services\LearningModuleGenerationService;
 use App\Services\LearningRecommendationService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
+use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\AccountNotificationSchema;
 use App\Support\ChatbotSchema;
@@ -62,6 +63,8 @@ class UserController extends Controller
  private const COACH_ATTACHMENT_IMAGE_EXTENSIONS = [
  'png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tif', 'tiff', 'heic', 'heif',
  ];
+ private const COACH_VOICE_RECORDING_MAX_KILOBYTES = 25600;
+ private const COACH_VOICE_RECORDING_MIME_TYPES = 'audio/webm,audio/mp4,audio/mpeg,audio/mpga,audio/m4a,audio/x-m4a,audio/wav,audio/x-wav,audio/ogg,video/webm,video/mp4,application/octet-stream';
 
  private const SCORE_METRICS = [
  'Clarity' => 'clarity_score',
@@ -2115,6 +2118,70 @@ class UserController extends Controller
  ->get();
 
  return $this->mobileView('user.coach', compact('recentConversations', 'olderConversations'));
+ }
+
+ public function coachTranscribe(Request $request)
+ {
+ if (! Setting::enabled('aic_enable')) {
+ return response()->json([
+ 'error' => 'AI Coach voice transcription is currently disabled.',
+ 'error_code' => 'coach_disabled',
+ ], 403);
+ }
+
+ $validated = $request->validate([
+ 'previous_transcript' => ['nullable', 'string', 'max:3000'],
+ 'audio' => [
+ 'required',
+ 'file',
+ 'max:'.self::COACH_VOICE_RECORDING_MAX_KILOBYTES,
+ 'mimetypes:'.self::COACH_VOICE_RECORDING_MIME_TYPES,
+ ],
+ ]);
+
+ $languageConfig = Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
+ $context = [
+ 'previous_transcript' => (string) ($validated['previous_transcript']?? ''),
+ 'target_position' => (string) (Auth::user()?->target_position?? ''),
+ 'interview_focus' => 'AI Coach voice prompt',
+ 'question_text' => 'The user is speaking an editable message to the AI interview coach.',
+ ];
+
+ $transcription = AIService::transcribeSpeechResult($validated['audio'], $languageConfig, $context);
+ $transcript = is_array($transcription) && array_key_exists('transcript', $transcription)
+ ? (string) $transcription['transcript']
+ : null;
+ $status = is_array($transcription)? trim((string) ($transcription['status']?? '')): '';
+ $errorCode = is_array($transcription)? (string) ($transcription['error_code']?? ''): '';
+ $retryAfterSeconds = is_array($transcription)? ($transcription['retry_after_seconds']?? null): null;
+
+ if ($transcript === null || ($status === 'failed' && trim($transcript) === '')) {
+ $rateLimited = $errorCode === 'rate_limited';
+ $payload = [
+ 'error' => 'AI Coach voice transcription is not available.',
+ 'error_code' => AIService::speechTranscriptionAvailable()
+ ? ($rateLimited? 'speech_transcription_rate_limited': 'speech_transcription_failed')
+ : 'speech_transcription_unavailable',
+ 'transcription_status' => $status?: 'unavailable',
+ ];
+
+ if ($rateLimited && is_numeric($retryAfterSeconds)) {
+ $payload['retry_after_seconds'] = max(1, (int) $retryAfterSeconds);
+ }
+
+ $response = response()->json($payload, $rateLimited? 429: 503);
+ if (isset($payload['retry_after_seconds'])) {
+ $response->header('Retry-After', (string) $payload['retry_after_seconds']);
+ }
+
+ return $response;
+ }
+
+ return response()->json([
+ 'transcript' => TranscriptService::clean($transcript),
+ 'transcription_source' => is_array($transcription)? (trim((string) ($transcription['provider']?? 'ai'))?: 'ai'): 'ai',
+ 'transcription_status' => $status?: (trim($transcript)!== ''? 'transcribed': 'empty'),
+ ]);
  }
 
  public function coachChat(Request $request, CoachLanguageService $coachLanguages)
