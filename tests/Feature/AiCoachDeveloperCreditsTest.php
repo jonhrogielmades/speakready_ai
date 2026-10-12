@@ -93,7 +93,9 @@ class AiCoachDeveloperCreditsTest extends TestCase
             ->withHeader('User-Agent', $desktopUserAgent)
             ->get(route('user.coach'))
             ->assertOk()
-            ->assertSee('css/desktop/user/coach-2.css?v=26', false)
+            ->assertSee('css/desktop/user/coach-2.css?v=27', false)
+            ->assertSee('id="coachVoiceTranscriptPanel"', false)
+            ->assertSee('function handleCoachTranscriptInput(textarea)', false)
             ->assertSee('class="chat-bubble bubble-ai"', false)
             ->assertSee('<span class="coach-important">competency map</span>', false)
             ->assertSee('function highlightCoachImportantWords(html)', false);
@@ -102,7 +104,9 @@ class AiCoachDeveloperCreditsTest extends TestCase
             ->withHeader('User-Agent', $mobileUserAgent)
             ->get(route('user.coach'))
             ->assertOk()
-            ->assertSee('css/mobile/user/coach-2.css?v=22', false)
+            ->assertSee('css/mobile/user/coach-2.css?v=25', false)
+            ->assertSee('id="coachVoiceTranscriptPanel"', false)
+            ->assertSee('function handleCoachTranscriptInput(textarea)', false)
             ->assertSee('class="chat-bubble bubble-ai"', false)
             ->assertSee('<span class="coach-important">competency map</span>', false)
             ->assertSee('function highlightCoachImportantWords(html)', false);
@@ -132,7 +136,7 @@ class AiCoachDeveloperCreditsTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('css/mobile/user/coach-2.css?v=22', false)
+            ->assertSee('css/mobile/user/coach-2.css?v=25', false)
             ->assertSee('function newConversation(options = {})', false)
             ->assertSee('newConversation({ focusInput: false });', false)
             ->assertSee("document.body?.classList.remove('coach-input-focused', 'coach-keyboard-open');", false);

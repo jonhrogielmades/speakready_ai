@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/coach.css?v=2') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/coach-2.css?v=26') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/coach-2.css?v=27') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -126,12 +126,19 @@
             <!-- Input Area -->
             <div class="chat-input-area" id="coach-input-area">
                 <div class="chat-attachment-preview" id="chatAttachmentPreview" aria-live="polite"></div>
+                <div class="coach-voice-transcript-panel" id="coachVoiceTranscriptPanel" hidden>
+                    <div class="coach-voice-transcript-head">
+                        <span><i class="fa-solid fa-wave-square" aria-hidden="true"></i> Transcription</span>
+                        <span id="coachVoiceTranscriptStatus" data-type="info">Ready</span>
+                    </div>
+                    <textarea class="coach-voice-transcript-text" id="coachVoiceTranscript" rows="3" placeholder="Voice transcription will appear here..." oninput="handleCoachTranscriptInput(this)"></textarea>
+                </div>
                 <div class="chat-input-wrapper">
                     <input class="chat-file-input" id="coachFiles" type="file" multiple accept="{{ $coachAllowedAccept }}">
                     <button class="chat-attachment-btn" type="button" id="coachAttachBtn" aria-label="Add attachment" title="Add resume, certificate, PDF, DOCX, or image" onclick="document.getElementById('coachFiles').click()">
                         <i class="fa-solid fa-plus"></i>
                     </button>
-                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask your AI coach..." oninput="resizeCoachTextarea(this)"></textarea>
+                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask your AI coach..." oninput="handleCoachMessageInput(this)"></textarea>
                     <div class="coach-voice-wave" id="coachVoiceWave" aria-hidden="true">
                         <span></span><span></span><span></span><span></span><span></span>
                     </div>
@@ -154,6 +161,7 @@
         let coachVoiceActive = false;
         let coachVoiceBaseText = '';
         let coachVoiceFinalText = '';
+        let coachVoiceInterimText = '';
         let coachVoiceStopRequested = false;
         const CoachSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const coachAllowedExtensions = @json($coachAllowedExtensions);
@@ -213,6 +221,128 @@
             const nextHeight = Math.min(textarea.scrollHeight, maxHeight);
             textarea.style.setProperty('height', `${nextHeight}px`, 'important');
             textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+        }
+
+        function resizeCoachTranscriptTextarea(textarea) {
+            if (!textarea) return;
+
+            const maxHeight = Number.parseFloat(getComputedStyle(textarea).maxHeight) || 160;
+            textarea.style.height = 'auto';
+            const nextHeight = Math.min(textarea.scrollHeight, maxHeight);
+            textarea.style.setProperty('height', `${nextHeight}px`, 'important');
+            textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+        }
+
+        function coachTranscriptElements() {
+            return {
+                panel: document.getElementById('coachVoiceTranscriptPanel'),
+                textarea: document.getElementById('coachVoiceTranscript'),
+                status: document.getElementById('coachVoiceTranscriptStatus'),
+                input: document.getElementById('chatMsg')
+            };
+        }
+
+        function setCoachVoiceTranscriptVisible(isVisible) {
+            const { panel } = coachTranscriptElements();
+            if (panel) {
+                panel.hidden = !isVisible;
+            }
+        }
+
+        function setCoachVoiceTranscriptStatus(message, type = 'info') {
+            const { status } = coachTranscriptElements();
+            if (!status) return;
+
+            status.textContent = message || '';
+            status.dataset.type = type;
+        }
+
+        function updateCoachComposerText(text) {
+            const { input } = coachTranscriptElements();
+            if (!input) return;
+
+            input.value = String(text || '');
+            resizeCoachTextarea(input);
+        }
+
+        function updateCoachVoiceTranscript(text, options = {}) {
+            const value = String(text || '');
+            const hasText = coachVoiceSegment(value) !== '';
+            const { textarea } = coachTranscriptElements();
+
+            setCoachVoiceTranscriptVisible(Boolean(options.forceVisible || hasText || coachVoiceActive));
+
+            if (textarea && document.activeElement !== textarea) {
+                textarea.value = value;
+                resizeCoachTranscriptTextarea(textarea);
+            }
+
+            if (options.syncInput !== false) {
+                updateCoachComposerText(value);
+            }
+
+            if (coachVoiceActive) {
+                setCoachVoiceTranscriptStatus(hasText ? 'Transcribing...' : 'Listening...');
+            } else if (hasText) {
+                setCoachVoiceTranscriptStatus('Ready to edit');
+            }
+        }
+
+        function resetCoachVoiceTranscript(options = {}) {
+            const { textarea } = coachTranscriptElements();
+
+            coachVoiceBaseText = '';
+            coachVoiceFinalText = '';
+            coachVoiceInterimText = '';
+
+            if (textarea) {
+                textarea.value = '';
+                resizeCoachTranscriptTextarea(textarea);
+            }
+
+            if (options.clearComposer) {
+                updateCoachComposerText('');
+            }
+
+            setCoachVoiceTranscriptStatus('', 'info');
+            setCoachVoiceTranscriptVisible(false);
+        }
+
+        function handleCoachMessageInput(textarea) {
+            resizeCoachTextarea(textarea);
+
+            const { panel, textarea: transcript } = coachTranscriptElements();
+            const value = String(textarea?.value || '');
+
+            if (!panel || panel.hidden) return;
+
+            if (!coachVoiceActive && coachVoiceSegment(value) === '') {
+                resetCoachVoiceTranscript();
+                return;
+            }
+
+            if (transcript && document.activeElement !== transcript) {
+                transcript.value = value;
+                resizeCoachTranscriptTextarea(transcript);
+            }
+
+            coachVoiceBaseText = coachVoiceSegment(value);
+            coachVoiceFinalText = '';
+            coachVoiceInterimText = '';
+            setCoachVoiceTranscriptStatus(coachVoiceActive ? 'Listening...' : 'Ready to edit');
+        }
+
+        function handleCoachTranscriptInput(textarea) {
+            const value = String(textarea?.value || '');
+
+            resizeCoachTranscriptTextarea(textarea);
+            updateCoachComposerText(value);
+            setCoachVoiceTranscriptVisible(true);
+
+            coachVoiceBaseText = coachVoiceSegment(value);
+            coachVoiceFinalText = '';
+            coachVoiceInterimText = '';
+            setCoachVoiceTranscriptStatus(coachVoiceActive ? 'Listening...' : 'Editing');
         }
 
         function setCoachSending(isSending) {
@@ -336,6 +466,7 @@
             if (!button) return;
             const wrapper = document.querySelector('#coach-input-area .chat-input-wrapper');
             const wave = document.getElementById('coachVoiceWave');
+            const transcriptValue = document.getElementById('coachVoiceTranscript')?.value || '';
 
             button.classList.toggle('is-recording', isActive);
             button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
@@ -343,6 +474,8 @@
             button.title = isActive ? 'Stop voice prompt' : 'Speak a message';
             wrapper?.classList.toggle('is-voice-recording', isActive);
             wave?.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+            setCoachVoiceTranscriptVisible(isActive || coachVoiceSegment(transcriptValue) !== '');
+            setCoachVoiceTranscriptStatus(isActive ? 'Listening...' : (coachVoiceSegment(transcriptValue) ? 'Ready to edit' : ''));
 
             const icon = button.querySelector('i');
             if (icon) {
@@ -386,21 +519,29 @@
                     }
                 }
 
-                const input = document.getElementById('chatMsg');
-                if (input) {
-                    input.value = coachVoiceText(coachVoiceBaseText, coachVoiceFinalText, interimText);
-                    resizeCoachTextarea(input);
-                }
+                coachVoiceInterimText = interimText;
+                updateCoachVoiceTranscript(
+                    coachVoiceText(coachVoiceBaseText, coachVoiceFinalText, coachVoiceInterimText),
+                    { forceVisible: true }
+                );
             };
 
             coachVoiceRecognition.onerror = function (event) {
                 console.warn('Coach voice prompt error:', event?.error || event);
                 coachVoiceStopRequested = true;
                 setCoachVoiceState(false);
+                setCoachVoiceTranscriptStatus('Microphone unavailable', 'error');
+                showCoachFeedback('Microphone transcription could not start. Check browser microphone permission and try again.', 'error');
             };
 
             coachVoiceRecognition.onend = function () {
+                const transcript = document.getElementById('coachVoiceTranscript')?.value || '';
                 setCoachVoiceState(false);
+                if (coachVoiceSegment(transcript) !== '') {
+                    setCoachVoiceTranscriptStatus('Ready to edit');
+                } else if (!coachVoiceStopRequested) {
+                    showCoachFeedback('No speech was detected. Try the microphone again or type your message.', 'info');
+                }
             };
 
             return coachVoiceRecognition;
@@ -418,15 +559,20 @@
             const recognition = ensureCoachVoiceRecognition();
             coachVoiceBaseText = input?.value.trim() || '';
             coachVoiceFinalText = '';
+            coachVoiceInterimText = '';
             coachVoiceStopRequested = false;
             recognition.lang = coachVoiceLocale();
 
             try {
+                updateCoachVoiceTranscript(input?.value || '', { syncInput: false, forceVisible: true });
                 recognition.start();
                 setCoachVoiceState(true);
                 showCoachFeedback('');
             } catch (error) {
                 console.warn('Coach voice prompt could not start:', error);
+                setCoachVoiceState(false);
+                setCoachVoiceTranscriptStatus('Microphone unavailable', 'error');
+                showCoachFeedback('Microphone transcription could not start. Check browser microphone permission and try again.', 'error');
             }
         }
 
@@ -673,6 +819,7 @@
             const input = document.getElementById('chatMsg');
             if (!input || coachSending) return;
 
+            resetCoachVoiceTranscript();
             input.value = prompt;
             resizeCoachTextarea(input);
             showCoachFeedback('Sending your saved answer to AI Coach...', 'info');
@@ -710,6 +857,7 @@
             
             ta.value = '';
             ta.style.height = '';
+            resetCoachVoiceTranscript();
             clearCoachAttachments();
             box.scrollTop = box.scrollHeight;
             
@@ -805,6 +953,7 @@
                     ta.value = text;
                     resizeCoachTextarea(ta);
                 }
+                updateCoachVoiceTranscript(text, { syncInput: false, forceVisible: Boolean(text) });
                 if (files.length) {
                     coachSelectedFiles = files.slice(0, coachMaxFiles);
                     renderCoachAttachments();
@@ -937,6 +1086,7 @@
             currentConversationId = null;
             setCoachTitle('New conversation');
             showCoachFeedback('');
+            resetCoachVoiceTranscript();
             
             // Remove active classes from sidebar
             document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
@@ -966,6 +1116,7 @@
                 currentConversationId = data.conversation.id;
                 setCoachTitle(data.conversation.title || 'New Conversation');
                 showCoachFeedback('');
+                resetCoachVoiceTranscript();
                 coachChatHistory = [];
                 
                 // Update UI active state
