@@ -285,6 +285,7 @@
  let recognition = null;
  let recognitionActive = false;
  let shouldAutoRestartRecognition = false;
+ let speechRecognitionStopResolver = null;
  let isRecording = false;
  let isRecordingPaused = false;
  let isStartingRecording = false;
@@ -877,7 +878,17 @@ let committedSpeechTranscript = '';
  }
 
  voiceTranscriptionPromise = (async () => {
+ const fallbackTranscript = bufferedGameSpeechTranscript();
  if (recording.blob.size > (25 * 1024 * 1024)) {
+ if (fallbackTranscript) {
+ const transcript = applyGameVoiceTranscript(questionIndex, fallbackTranscript, {
+ transcription_status: 'transcribed',
+ transcription_source: 'browser'
+ }, recording);
+ setTranscriptionStatus('Transcript added to answer.', '#22c55e');
+ updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
+ return transcript;
+ }
  setTranscriptionStatus('Recording is too large to transcribe automatically.', '#fbbf24');
  updateGameVoiceSessionPanel('recorded', 'Recording saved');
  return '';
@@ -887,12 +898,22 @@ let committedSpeechTranscript = '';
  try {
  const previousTranscript = '';
  const data = await requestGameVoiceTranscript(recording, questionIndex, previousTranscript);
- const transcript = applyGameVoiceTranscript(questionIndex, data.transcript || '', data, recording);
+ const transcriptText = cleanTranscriptText(data.transcript || '') || fallbackTranscript;
+ const transcript = applyGameVoiceTranscript(questionIndex, transcriptText, data, recording);
  setTranscriptionStatus(transcript? 'Transcript added to answer.': 'No speech was detected.', transcript? '#22c55e': '#fbbf24');
  updateGameVoiceSessionPanel(transcript? 'transcribed': 'recorded', transcript? 'Transcript ready': 'Recording ready');
  return transcript;
  } catch (error) {
  console.warn('Challenge voice transcription failed:', error);
+ if (fallbackTranscript) {
+ const transcript = applyGameVoiceTranscript(questionIndex, fallbackTranscript, {
+ transcription_status: 'transcribed',
+ transcription_source: 'browser'
+ }, recording);
+ setTranscriptionStatus('Transcript added to answer.', '#22c55e');
+ updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
+ return transcript;
+ }
  setTranscriptionStatus(gameTranscriptionErrorMessage(error), '#fbbf24');
  return '';
  } finally {
@@ -950,7 +971,6 @@ let committedSpeechTranscript = '';
  }
 
  function startSpeechRecognitionEngine() {
- if (!enableGameRealtimeTranscription) return;
  if (!recognition || recognitionActive ||!isRecording ||!shouldAutoRestartRecognition) return;
 
  try {
@@ -963,15 +983,41 @@ let committedSpeechTranscript = '';
  }
  }
 
- function finalizeInterimTranscript() {
- if (!enableGameRealtimeTranscription) {
- liveSpeechInterim = '';
- return;
+ function stopSpeechRecognitionEngine() {
+ shouldAutoRestartRecognition = false;
+ if (!recognition ||!recognitionActive) {
+ return Promise.resolve();
  }
+
+ return new Promise(resolve => {
+ let settled = false;
+ const finish = () => {
+ if (settled) return;
+ settled = true;
+ if (speechRecognitionStopResolver === finish) speechRecognitionStopResolver = null;
+ resolve();
+ };
+
+ speechRecognitionStopResolver = finish;
+ setTimeout(finish, 1200);
+ try {
+ recognition.stop();
+ } catch (error) {
+ console.error('Speech recognition failed to stop:', error);
+ finish();
+ }
+ });
+ }
+
+ function finalizeInterimTranscript() {
  if (!liveSpeechInterim) return;
  commitSpeechSegment(liveSpeechInterim);
  liveSpeechInterim = '';
  renderSpeechTranscript();
+ }
+
+ function bufferedGameSpeechTranscript() {
+ return mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
  }
 
  let lastSpeechEnd = 0;
@@ -1026,6 +1072,12 @@ let committedSpeechTranscript = '';
 
  recognition.onend = function() {
  recognitionActive = false;
+ if (speechRecognitionStopResolver) {
+ const resolveStop = speechRecognitionStopResolver;
+ speechRecognitionStopResolver = null;
+ resolveStop();
+ return;
+ }
  if (shouldAutoRestartRecognition && isRecording) {
  setTimeout(startSpeechRecognitionEngine, 250);
  }
@@ -1672,10 +1724,10 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  return;
  }
 
- shouldAutoRestartRecognition = false;
+ shouldAutoRestartRecognition = Boolean(recognition);
  isRecording = true;
  isRecordingPaused = false;
- if (enableGameRealtimeTranscription) startSpeechRecognitionEngine();
+ startSpeechRecognitionEngine();
  setRecordingControlButtons('recording');
  setTranscriptionStatus('Recording');
  clearInterval(recTimerInterval);
@@ -1737,14 +1789,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
 
  finalizeInterimTranscript();
- shouldAutoRestartRecognition = false;
- if(enableGameRealtimeTranscription && recognition) {
- try {
- recognition.stop();
- } catch (error) {
- console.error('Speech recognition failed to stop:', error);
- }
- }
+ stopSpeechRecognitionEngine();
  isRecording = false;
  isRecordingPaused = true;
  clearInterval(recTimerInterval);
@@ -1764,14 +1809,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  const stoppedQuestionIndex = currentQIdx;
  finalizeInterimTranscript();
- shouldAutoRestartRecognition = false;
- if(enableGameRealtimeTranscription && recognition) {
- try {
- recognition.stop();
- } catch (error) {
- console.error('Speech recognition failed to stop:', error);
- }
- }
+ const speechStopPromise = stopSpeechRecognitionEngine();
  isRecording = false;
  isRecordingPaused = false;
  clearInterval(recTimerInterval);
@@ -1785,10 +1823,19 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  setTranscriptionStatus('Preparing transcription...', '#fbbf24');
  if (recordingTimer) recordingTimer.innerText = '00:00';
  recTimerSeconds = 0;
- resetSpeechRecognitionBufferFromTextarea();
+ await speechStopPromise;
+ finalizeInterimTranscript();
+ const fallbackTranscript = bufferedGameSpeechTranscript();
  const recording = await stopPromise;
  if (recording?.blob) {
  await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex);
+ } else if (fallbackTranscript) {
+ applyGameVoiceTranscript(stoppedQuestionIndex, fallbackTranscript, {
+ transcription_status: 'transcribed',
+ transcription_source: 'browser'
+ }, null);
+ setTranscriptionStatus('Transcript added to answer.', '#22c55e');
+ updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
  } else {
  setTranscriptionStatus('');
  }
