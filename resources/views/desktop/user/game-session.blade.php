@@ -154,9 +154,15 @@
  <div class="voice-session-actions">
  <span id="voiceSessionBadge" class="voice-session-badge">Ready</span>
  <div class="voice-session-menu">
- <button type="button" id="voiceSessionMenuButton" class="voice-session-menu-button" aria-label="Voice session actions" title="Voice session actions" disabled>
+ <button type="button" id="voiceSessionMenuButton" class="voice-session-menu-button" aria-label="Voice session actions" title="Voice session actions" aria-haspopup="true" aria-expanded="false" aria-controls="voiceSessionMenu" onclick="toggleGameVoiceSessionMenu(event)" disabled>
  <i class="fa-solid fa-ellipsis-vertical"></i>
  </button>
+ <div id="voiceSessionMenu" class="voice-session-menu-panel" role="menu" hidden>
+ <button type="button" id="voiceSessionClearButton" class="voice-session-menu-item danger" role="menuitem" onclick="clearCurrentGameVoiceSession(event)" disabled>
+ <i class="fa-solid fa-trash-can"></i>
+ <span>Clear voice session</span>
+ </button>
+ </div>
  </div>
  </div>
  </div>
@@ -262,6 +268,7 @@
  const gameSessionId = {{ (int) $sessionRecord->id }};
  const responseMode = "voice";
  const isVoiceOnlySession = true;
+ const enableGameRealtimeTranscription = false;
  const cameraCoachingEnabled = @json($cameraCoachingEnabled);
  const interviewerAvatarImages = @json($interviewerAvatarImageUrls);
  let activeInterviewerAvatarIndex = interviewerAvatarImages.indexOf(@json(asset($interviewerAvatarImage)));
@@ -443,6 +450,19 @@ let committedSpeechTranscript = '';
  window.enterGameMatchFullscreen = enterGameMatchFullscreen;
  window.exitGameMatchFullscreen = exitGameMatchFullscreen;
  window.toggleGameMatchFullscreen = toggleGameMatchFullscreen;
+ window.toggleGameVoiceSessionMenu = toggleGameVoiceSessionMenu;
+ window.clearCurrentGameVoiceSession = clearCurrentGameVoiceSession;
+
+ document.addEventListener('click', event => {
+ const target = event.target;
+ if (!(target instanceof Element) || (!target.closest('#voiceSessionMenu') && !target.closest('#voiceSessionMenuButton'))) {
+ closeGameVoiceSessionMenu();
+ }
+ });
+
+ document.addEventListener('keydown', event => {
+ if (event.key === 'Escape') closeGameVoiceSessionMenu();
+ });
 
  function cleanTranscriptText(value) {
  return String(value || '').replace(/\s+/g, ' ').trim();
@@ -557,6 +577,7 @@ let committedSpeechTranscript = '';
  status.style.color = color || 'var(--tx3)';
  }
  updateGameVoiceSessionPanel(voiceSessionStateFromStatus(message), message || '');
+ updateGameVoiceSessionActionState();
  }
 
  function gameTranscriptionErrorMessage(error) {
@@ -618,6 +639,105 @@ let committedSpeechTranscript = '';
  }
  }
 
+ function closeGameVoiceSessionMenu() {
+ const menu = document.getElementById('voiceSessionMenu');
+ const button = document.getElementById('voiceSessionMenuButton');
+ if (menu) menu.hidden = true;
+ if (button) button.setAttribute('aria-expanded', 'false');
+ }
+
+ function setGameVoiceSessionMenuOpen(open) {
+ const menu = document.getElementById('voiceSessionMenu');
+ const button = document.getElementById('voiceSessionMenuButton');
+ if (!menu || !button || button.disabled) return;
+
+ menu.hidden = !open;
+ button.setAttribute('aria-expanded', open? 'true': 'false');
+ }
+
+ function toggleGameVoiceSessionMenu(event) {
+ if (event) {
+ event.preventDefault();
+ event.stopPropagation();
+ }
+
+ const menu = document.getElementById('voiceSessionMenu');
+ const button = document.getElementById('voiceSessionMenuButton');
+ if (!menu || !button || button.disabled) return;
+
+ setGameVoiceSessionMenuOpen(menu.hidden);
+ }
+
+ function updateGameVoiceSessionActionState() {
+ const data = answersData[currentQIdx] || {};
+ const textarea = document.getElementById('answerTextarea');
+ const hasRecording = Boolean(data.has_voice_recording || data.voice_recording?.blob);
+ const hasTranscript = Boolean(cleanTranscriptText(data.text || textarea?.value || ''));
+ const isBusy = Boolean(voiceTranscriptionPromise) || isRecording || isStartingRecording;
+ const enabled = (hasRecording || hasTranscript) && !isBusy;
+ const menuButton = document.getElementById('voiceSessionMenuButton');
+ const clearButton = document.getElementById('voiceSessionClearButton');
+
+ if (menuButton) {
+ menuButton.disabled = !enabled;
+ menuButton.setAttribute('aria-disabled', enabled? 'false': 'true');
+ menuButton.setAttribute('title', isBusy? 'Voice session is processing': (enabled? 'Voice session actions': 'Record a voice session first'));
+ }
+
+ if (clearButton) {
+ clearButton.disabled = !enabled;
+ clearButton.setAttribute('aria-disabled', enabled? 'false': 'true');
+ }
+
+ if (!enabled) closeGameVoiceSessionMenu();
+ }
+
+ function clearCurrentGameVoiceSession(event) {
+ if (event) {
+ event.preventDefault();
+ event.stopPropagation();
+ }
+
+ closeGameVoiceSessionMenu();
+
+ if (voiceTranscriptionPromise || isRecording || isStartingRecording) {
+ setTranscriptionStatus('Stop recording before clearing voice session.', '#fbbf24');
+ return;
+ }
+
+ const data = answersData[currentQIdx];
+ if (!data) return;
+
+ data.text = '';
+ data.voice_recording = null;
+ data.has_voice_recording = false;
+ data.voice_duration = 0;
+ data.wpm = 0;
+ data.filler_words = 0;
+ data.pause_count = 0;
+
+ const textarea = document.getElementById('answerTextarea');
+ const recordingTimer = document.getElementById('recordingTimer');
+ if (textarea) textarea.value = '';
+ if (recordingTimer) recordingTimer.innerText = '00:00';
+
+ preRecordingText = '';
+ committedSpeechTranscript = '';
+ liveSpeechInterim = '';
+ lastCommittedSpeech = '';
+ lastCommittedAt = 0;
+ recTimerSeconds = 0;
+
+ setElementText('vaDuration', '0s');
+ setElementText('vaWpm', 0);
+ setElementText('vaFillers', 0);
+ setTranscriptionStatus('');
+ clearGameVoiceSessionPlayback();
+ updateGameVoiceSessionPanel('idle', 'Ready');
+ triggerAnalysis();
+ updateGameVoiceSessionActionState();
+ }
+
  function clearGameVoiceSessionPlayback() {
  const playback = document.getElementById('voiceSessionPlayback');
  if (gameVoicePlaybackObjectUrl) {
@@ -630,11 +750,11 @@ let committedSpeechTranscript = '';
  playback.classList.add('audio-disabled');
  playback.load();
  }
+ updateGameVoiceSessionActionState();
  }
 
  function setGameVoiceSessionPlayback(recording) {
  const playback = document.getElementById('voiceSessionPlayback');
- const menuButton = document.getElementById('voiceSessionMenuButton');
  const meta = document.getElementById('voiceSessionMeta');
  if (!playback || !recording?.blob) return;
 
@@ -645,12 +765,12 @@ let committedSpeechTranscript = '';
  gameVoicePlaybackObjectUrl = URL.createObjectURL(recording.blob);
  playback.src = gameVoicePlaybackObjectUrl;
  playback.classList.remove('audio-disabled');
- if (menuButton) menuButton.disabled = true;
  if (meta) {
  const duration = Number(recording.duration || answersData[currentQIdx]?.voice_duration || 0);
  meta.textContent = duration > 0? `${formatGameVoiceDuration(duration)} recorded`: '';
  }
  updateGameVoiceSessionPanel(recording.transcription_status === 'transcribed'? 'transcribed': 'recorded', 'Recording ready');
+ updateGameVoiceSessionActionState();
  }
 
  function refreshGameVoiceSessionForQuestion(questionIndex = currentQIdx) {
@@ -666,6 +786,7 @@ let committedSpeechTranscript = '';
  meta.textContent = Number(data.voice_duration || 0) > 0? `${formatGameVoiceDuration(data.voice_duration)} saved`: '';
  }
  updateGameVoiceSessionPanel(data.has_voice_recording? 'recorded': 'idle', data.has_voice_recording? 'Recording saved': 'Ready');
+ updateGameVoiceSessionActionState();
  }
 
  async function requestGameVoiceTranscript(recording, questionIndex, previousTranscript = '') {
@@ -716,9 +837,7 @@ let committedSpeechTranscript = '';
  if (!cleanTranscript ||!answersData[questionIndex]) return '';
 
  const textarea = questionIndex === currentQIdx? document.getElementById('answerTextarea'): null;
- const existingText = textarea? String(textarea.value || ''): String(answersData[questionIndex].text || '');
- const previousSpeech = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
- const mergedAnswerText = mergeFullVoiceTranscriptWithAnswer(existingText, previousSpeech, cleanTranscript);
+ const mergedAnswerText = cleanTranscript;
  const wordCount = cleanTranscript.split(/\s+/).filter(word => word.length > 0).length;
  const duration = Math.max(
  Number(answersData[questionIndex].voice_duration || 0),
@@ -746,6 +865,7 @@ let committedSpeechTranscript = '';
  setElementText('vaDuration', answersData[questionIndex].voice_duration + 's');
  setElementText('vaWpm', answersData[questionIndex].wpm);
  triggerAnalysis();
+ updateGameVoiceSessionActionState();
  }
 
  return cleanTranscript;
@@ -765,7 +885,7 @@ let committedSpeechTranscript = '';
 
  setTranscriptionStatus('Transcribing voice answer...', '#fbbf24');
  try {
- const previousTranscript = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
+ const previousTranscript = '';
  const data = await requestGameVoiceTranscript(recording, questionIndex, previousTranscript);
  const transcript = applyGameVoiceTranscript(questionIndex, data.transcript || '', data, recording);
  setTranscriptionStatus(transcript? 'Transcript added to answer.': 'No speech was detected.', transcript? '#22c55e': '#fbbf24');
@@ -777,8 +897,10 @@ let committedSpeechTranscript = '';
  return '';
  } finally {
  voiceTranscriptionPromise = null;
+ updateGameVoiceSessionActionState();
  }
  })();
+ updateGameVoiceSessionActionState();
 
  return voiceTranscriptionPromise;
  }
@@ -818,6 +940,7 @@ let committedSpeechTranscript = '';
  }
 
  function renderSpeechTranscript() {
+ if (!enableGameRealtimeTranscription) return;
  const ta = document.getElementById('answerTextarea');
  if (!ta) return;
 
@@ -827,6 +950,7 @@ let committedSpeechTranscript = '';
  }
 
  function startSpeechRecognitionEngine() {
+ if (!enableGameRealtimeTranscription) return;
  if (!recognition || recognitionActive ||!isRecording ||!shouldAutoRestartRecognition) return;
 
  try {
@@ -840,6 +964,10 @@ let committedSpeechTranscript = '';
  }
 
  function finalizeInterimTranscript() {
+ if (!enableGameRealtimeTranscription) {
+ liveSpeechInterim = '';
+ return;
+ }
  if (!liveSpeechInterim) return;
  commitSpeechSegment(liveSpeechInterim);
  liveSpeechInterim = '';
@@ -1514,6 +1642,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  if (recordingTimer) recordingTimer.style.display = 'inline-flex';
  updateGameVoiceSessionPanel(isPaused? 'paused': (isIdle? 'idle': 'recording'), isPaused? 'Paused': (isIdle? 'Ready': 'Recording'));
+ updateGameVoiceSessionActionState();
  }
 
  async function startRecording(options = {}) {
@@ -1543,10 +1672,10 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  return;
  }
 
- shouldAutoRestartRecognition = Boolean(recognition);
+ shouldAutoRestartRecognition = false;
  isRecording = true;
  isRecordingPaused = false;
- startSpeechRecognitionEngine();
+ if (enableGameRealtimeTranscription) startSpeechRecognitionEngine();
  setRecordingControlButtons('recording');
  setTranscriptionStatus('Recording');
  clearInterval(recTimerInterval);
@@ -1609,7 +1738,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  finalizeInterimTranscript();
  shouldAutoRestartRecognition = false;
- if(recognition) {
+ if(enableGameRealtimeTranscription && recognition) {
  try {
  recognition.stop();
  } catch (error) {
@@ -1636,7 +1765,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  const stoppedQuestionIndex = currentQIdx;
  finalizeInterimTranscript();
  shouldAutoRestartRecognition = false;
- if(recognition) {
+ if(enableGameRealtimeTranscription && recognition) {
  try {
  recognition.stop();
  } catch (error) {
