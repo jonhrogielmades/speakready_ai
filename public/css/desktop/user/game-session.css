@@ -156,6 +156,84 @@ body.game-match-auto-fullscreen {
     overscroll-behavior: none;
 }
 
+@media (min-width: 992px) {
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceWrapper,
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceRow,
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceRow > .col-lg-12 {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-session-two-column {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr) !important;
+        gap: 18px !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-interview-panel,
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column {
+        display: flex !important;
+        flex-direction: column !important;
+        min-width: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-interview-panel .ai-avatar-panel,
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
+        height: clamp(500px, calc(100dvh - 150px), 620px) !important;
+        min-height: 500px !important;
+        max-height: 620px !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel #answerForm,
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .answer-transcript-stage {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column #answerTextarea {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-session-two-column {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0.88fr) !important;
+        gap: 14px !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel .panel-title {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .response-title-actions {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+        margin-left: 0 !important;
+    }
+}
+
 @media (max-width: 991.98px) {
     #sec-interview-session[data-game-session-root] .game-session-timer-stack {
         top: 52px !important;
