@@ -181,7 +181,7 @@
  <div class="game-transcription-display">
  <label for="answerTextarea" class="visually-hidden">Your voice transcript</label>
  <div class="answer-transcript-stage">
- <textarea id="answerTextarea" class="oinp mb-2 voice-only-answer-lock" style="min-height:76px;font-size:.82rem" placeholder="Your transcription will appear here while you speak and finalize after Stop..." readonly aria-readonly="true" aria-describedby="responseCountBar"></textarea>
+ <textarea id="answerTextarea" class="oinp mb-2 voice-only-answer-lock" style="min-height:76px;font-size:.82rem" placeholder="Your transcription will appear here after you click Stop..." readonly aria-readonly="true" aria-describedby="responseCountBar"></textarea>
 
  <div class="response-count-bar" id="responseCountBar" aria-live="polite">
  <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
@@ -272,7 +272,7 @@
  const gameSessionId = {{ (int) $sessionRecord->id }};
  const responseMode = "voice";
  const isVoiceOnlySession = true;
- const enableGameRealtimeTranscription = true;
+ const enableGameRealtimeTranscription = false;
  const cameraCoachingEnabled = @json($cameraCoachingEnabled);
  const interviewerAvatarImages = @json($interviewerAvatarImageUrls);
  let activeInterviewerAvatarIndex = interviewerAvatarImages.indexOf(@json(asset($interviewerAvatarImage)));
