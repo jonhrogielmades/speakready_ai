@@ -1944,7 +1944,7 @@ html, body {
          #landing .mobile-hero-preview-row {
             position: relative;
             z-index: 2;
-            width: min(100%, 430px);
+            width: min(100%, 520px);
             margin-left: auto;
             margin-right: auto;
             overflow: visible;
@@ -1957,14 +1957,14 @@ html, body {
             min-height: 0;
             margin-left: auto;
             margin-right: auto;
-            padding: 28px 6px 76px;
+            padding: 26px 0 66px;
             line-height: 0;
             overflow: visible;
          }
 
          #landing .mobile-hero-image {
             display: block;
-            width: min(82vw, 340px);
+            width: min(58vw, 286px);
             max-width: 100%;
             height: auto;
             margin: 0 auto;
@@ -1983,7 +1983,7 @@ html, body {
          #landing .mobile-hero-context-card {
             position: absolute;
             z-index: 5;
-            width: clamp(116px, 36vw, 150px);
+            width: clamp(118px, 27vw, 144px);
             display: grid;
             gap: 3px;
             padding: 9px 10px 10px;
@@ -2718,53 +2718,108 @@ html, body {
              }
           }
 
-          @media (max-width: 575.98px) {
-             #landing .mobile-hero-preview-row {
-                width: min(100%, 390px);
-             }
+         @media (max-width: 575.98px) {
+            #landing .mobile-hero-preview-row {
+               width: min(100%, 420px);
+            }
 
-             #landing .mobile-hero-image-frame {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 8px;
-                padding: 0 4px 10px;
-                line-height: normal;
-             }
+            #landing .mobile-hero-image-frame {
+               display: block;
+               padding: 14px 0 42px;
+               line-height: 0;
+            }
 
-             #landing .mobile-hero-image {
-                grid-column: 1 / -1;
-                width: min(92vw, 360px);
-             }
+            #landing .mobile-hero-image {
+               width: clamp(178px, 54vw, 230px);
+            }
 
-             #landing .mobile-hero-context-card {
-                position: relative;
-                inset: auto;
-                width: auto;
-                min-width: 0;
-                padding: 10px;
-                --mobile-hero-card-anchor-y: 0px;
-                --mobile-hero-card-float-y: -5px;
-                transform: translate3d(0, 0, 0);
-             }
-          }
+            #landing .mobile-hero-context-card {
+               position: absolute;
+               width: clamp(96px, 29vw, 116px);
+               min-width: 0;
+               padding: 8px 8px 9px;
+            }
 
-          @media (max-width: 374.98px) {
-             #landing .mobile-hero-image-frame {
-                grid-template-columns: 1fr;
-             }
+            #landing .mobile-hero-context-kicker {
+               gap: 4px;
+               font-size: 0.46rem;
+            }
 
-             #landing .mobile-hero-image {
-                width: min(90vw, 320px);
-             }
+            #landing .mobile-hero-context-card strong {
+               font-size: 0.64rem;
+               line-height: 1.12;
+            }
 
-             #landing .mobile-hero-context-card strong {
-                font-size: 0.72rem;
-             }
+            #landing .mobile-hero-context-card span:last-child {
+               font-size: 0.52rem;
+               line-height: 1.16;
+            }
 
-             #landing .mobile-hero-context-card span:last-child {
-                font-size: 0.58rem;
-             }
-          }
+            #landing .mobile-hero-context-card--top-left,
+            #landing .mobile-hero-context-card--top-right {
+               top: 16px;
+            }
+
+            #landing .mobile-hero-context-card--middle-left,
+            #landing .mobile-hero-context-card--middle-right {
+               top: 50%;
+               --mobile-hero-card-anchor-y: -50%;
+            }
+
+            #landing .mobile-hero-context-card--bottom-left,
+            #landing .mobile-hero-context-card--bottom-right {
+               bottom: 32px;
+            }
+
+            #landing .mobile-hero-context-card--top-left,
+            #landing .mobile-hero-context-card--middle-left,
+            #landing .mobile-hero-context-card--bottom-left {
+               left: 0;
+            }
+
+            #landing .mobile-hero-context-card--top-right,
+            #landing .mobile-hero-context-card--middle-right,
+            #landing .mobile-hero-context-card--bottom-right {
+               right: 0;
+            }
+         }
+
+         @media (max-width: 374.98px) {
+            #landing .mobile-hero-image-frame {
+               padding: 10px 0 34px;
+            }
+
+            #landing .mobile-hero-image {
+               width: clamp(158px, 52vw, 190px);
+            }
+
+            #landing .mobile-hero-context-card {
+               width: clamp(82px, 28vw, 98px);
+               padding: 7px 7px 8px;
+            }
+
+            #landing .mobile-hero-context-kicker {
+               font-size: 0.42rem;
+            }
+
+            #landing .mobile-hero-context-card strong {
+               font-size: 0.58rem;
+            }
+
+            #landing .mobile-hero-context-card span:last-child {
+               font-size: 0.47rem;
+            }
+
+            #landing .mobile-hero-context-card--top-left,
+            #landing .mobile-hero-context-card--top-right {
+               top: 12px;
+            }
+
+            #landing .mobile-hero-context-card--bottom-left,
+            #landing .mobile-hero-context-card--bottom-right {
+               bottom: 24px;
+            }
+         }
 
           .ui-mobile-wire {
             --wire-bg: #f8fafc;
