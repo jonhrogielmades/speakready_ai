@@ -2115,7 +2115,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('possible AI-generated answer pattern detected', $answer->flagged_reason);
  }
 
- public function test_game_start_stops_when_energy_is_empty_after_today_refill(): void
+ public function test_game_start_allows_empty_energy_while_challenge_lives_are_unlimited(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  Profile::create([
@@ -2129,17 +2129,20 @@ class UserSideHardeningTest extends TestCase
  $this->actingAs($user)
  ->from(route('user.learning', ['category_id' => $category->id]))
  ->post(route('user.game.start', $level))
- ->assertRedirect(route('user.learning', ['category_id' => $category->id]))
- ->assertSessionHas('error');
+ ->assertRedirect(route('user.game.match'));
 
- $this->assertDatabaseMissing('interview_sessions', [
+ $this->assertDatabaseHas('game_sessions', [
  'user_id' => $user->id,
- 'category_id' => $category->id,
+ 'game_level_id' => $level->id,
+ 'status' => 'in_progress',
+ 'energy_spent' => 0,
+ 'energy_remaining' => 0,
  ]);
+ $this->assertDatabaseCount('interview_sessions', 0);
  $this->assertSame(0, Profile::where('user_id', $user->id)->first()->energy);
  }
 
- public function test_game_start_refills_daily_energy_and_consumes_cost(): void
+ public function test_game_start_does_not_refill_or_consume_energy_while_challenge_lives_are_unlimited(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  Profile::create([
@@ -2154,16 +2157,18 @@ class UserSideHardeningTest extends TestCase
  ->post(route('user.game.start', $level))
  ->assertRedirect(route('user.game.match'));
 
- $this->assertSame(Profile::MAX_ENERGY - 1, Profile::where('user_id', $user->id)->first()->energy);
+ $this->assertSame(0, Profile::where('user_id', $user->id)->first()->energy);
  $this->assertDatabaseHas('game_sessions', [
  'user_id' => $user->id,
  'game_level_id' => $level->id,
  'status' => 'in_progress',
+ 'energy_spent' => 0,
+ 'energy_remaining' => 0,
  ]);
  $this->assertDatabaseCount('interview_sessions', 0);
  }
 
- public function test_learning_caps_existing_energy_to_three_lives(): void
+ public function test_learning_shows_unlimited_lives_without_capping_existing_energy(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  Profile::create([
@@ -2177,9 +2182,10 @@ class UserSideHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.learning', ['category_id' => $category->id]))
  ->assertOk()
- ->assertSee('3 / 3 Lives');
+ ->assertSee('Unlimited Lives')
+ ->assertDontSee('3 / 3 Lives');
 
- $this->assertSame(3, Profile::where('user_id', $user->id)->first()->energy);
+ $this->assertSame(20, Profile::where('user_id', $user->id)->first()->energy);
  }
 
  public function test_game_start_repairs_missing_game_session_tables_before_insert(): void
@@ -2286,8 +2292,8 @@ class UserSideHardeningTest extends TestCase
  && $result['level_id'] === $level->id
  && $result['status'] === 'passed'
  && $result['required_score'] === 0
- && $result['energy_spent'] === 1
- && $result['energy_remaining'] === Profile::MAX_ENERGY - 1
+ && $result['energy_spent'] === 0
+ && $result['energy_remaining'] === Profile::MAX_ENERGY
  && $result['xp_earned'] === 125
  &&! empty($result['certificate']['download_url']);
  });

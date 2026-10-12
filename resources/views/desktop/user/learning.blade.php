@@ -81,6 +81,7 @@
  
  <!-- Energy/Lives -->
  @php
+ $hasUnlimitedLives = \App\Models\Profile::challengeLivesAreUnlimited();
  $maxEnergy = \App\Models\Profile::MAX_ENERGY;
  $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy));
  @endphp
@@ -90,8 +91,8 @@
  <i class="fa-solid fa-heart"></i>
  </div>
  <div style="text-align:left;">
- <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $currentEnergy }} <span style="font-size:1rem; color:var(--tx3);">/ {{ $maxEnergy }}</span></div>
- <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Energy</div>
+ <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">@if($hasUnlimitedLives) Unlimited @else {{ $currentEnergy }} <span style="font-size:1rem; color:var(--tx3);">/ {{ $maxEnergy }}</span> @endif</div>
+ <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Lives</div>
  </div>
  </div>
  </div>
@@ -131,7 +132,7 @@
  <h5 class="journey-title" style="margin:0">Challenge Journey</h5>
  <div class="journey-header-actions">
  <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm journey-skill-tree-btn d-inline-flex align-items-center justify-content-center"><i class="fa-solid fa-tree me-1"></i> <span>Skill Tree</span></a>
- <span class="badge journey-lives"><i class="fa-solid fa-heart me-1" style="color:#ef4444"></i> {{ $currentEnergy }} / {{ $maxEnergy }} Lives</span>
+ <span class="badge journey-lives"><i class="fa-solid fa-heart me-1" style="color:#ef4444"></i> @if($hasUnlimitedLives) Unlimited Lives @else {{ $currentEnergy }} / {{ $maxEnergy }} Lives @endif</span>
  </div>
  </div>
 
@@ -305,7 +306,7 @@
  @if($score > 0 &&! $isCompleted)
  <div style="margin-top:12px;font-size:0.78rem;color:#f59e0b;font-weight:700;"><i class="fa-solid fa-arrow-trend-up me-1"></i> Best attempt: {{ $score }}%</div>
  @endif
- <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $level->energy_cost }} Energy</div>
+ <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $hasUnlimitedLives? 'Free': $level->energy_cost.' Energy' }}</div>
  </div>
  @if($status === 'active')
  <form action="{{ route('user.game.start', $level->id) }}" method="POST" class="start-challenge-form" data-sr-related-loader-form="challenge-start" data-sr-loader-label="{{ $level->title }}">
@@ -540,8 +541,8 @@
  </div>
  <div class="col-6 col-md-3">
  <div class="game-result-stat">
- <div class="game-result-stat-label">Energy</div>
- <div class="game-result-stat-value">-{{ $gameResult['energy_spent']?? 0 }} <span style="font-size:0.82rem;color:var(--tx3);">left {{ $gameResult['energy_remaining']?? 0 }}</span></div>
+ <div class="game-result-stat-label">Lives</div>
+ <div class="game-result-stat-value">@if($hasUnlimitedLives) Unlimited @else -{{ $gameResult['energy_spent']?? 0 }} <span style="font-size:0.82rem;color:var(--tx3);">left {{ $gameResult['energy_remaining']?? 0 }}</span> @endif</div>
  </div>
  </div>
  <div class="col-6 col-md-3">
@@ -555,13 +556,13 @@
  @if(! $resultPassed)
  <div class="mb-4" style="border:1px solid rgba(245,158,11,0.28);background:rgba(245,158,11,0.08);border-radius:12px;padding:14px;color:var(--tx2);">
  <strong style="color:#f59e0b;">{{ $gameResult['points_to_goal']?? 0 }} more point{{ (int)($gameResult['points_to_goal']?? 0) === 1? '': 's' }} needed.</strong>
- Retry starts a fresh attempt and costs {{ $gameResult['retry_energy_cost']?? 0 }} energy.
+ @if($hasUnlimitedLives) Retry starts a fresh attempt. @else Retry starts a fresh attempt and costs {{ $gameResult['retry_energy_cost']?? 0 }} energy. @endif
  </div>
  @elseif($nextLevel)
  <div class="mb-4" style="border:1px solid rgba(52,211,153,0.28);background:rgba(52,211,153,0.08);border-radius:12px;padding:14px;color:var(--tx2);">
  <strong style="color:#10b981;">Next level unlocked:</strong>
  Level {{ $nextLevel['level_number']?? '' }} - {{ $nextLevel['title']?? 'Next Challenge' }}.
- Starting it costs {{ $nextLevel['energy_cost']?? 0 }} energy.
+ @if($hasUnlimitedLives) Starting it is free. @else Starting it costs {{ $nextLevel['energy_cost']?? 0 }} energy. @endif
  </div>
  @elseif($resultPassed)
  <div class="mb-4" style="border:1px solid rgba(52,211,153,0.28);background:rgba(52,211,153,0.08);border-radius:12px;padding:14px;color:var(--tx2);">

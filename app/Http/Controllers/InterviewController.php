@@ -4550,7 +4550,7 @@ return response()->json([
  }
  }
 
- $energySpent = $context['energy_spent']?? $this->effectiveGameEnergyCost($gameLevel, $profile);
+ $energySpent = Profile::challengeLivesAreUnlimited()? 0: ($context['energy_spent']?? $this->effectiveGameEnergyCost($gameLevel, $profile));
  $retryEnergyCost = $this->effectiveGameEnergyCost($gameLevel, $profile);
  $nextEnergyCost = $nextLevel? $this->effectiveGameEnergyCost($nextLevel, $profile): null;
  $energyRemaining = (int) ($profile->energy?? 0);
@@ -4593,6 +4593,10 @@ return response()->json([
 
  private function effectiveGameEnergyCost(GameLevel $level, Profile $profile): int
  {
+ if (Profile::challengeLivesAreUnlimited()) {
+ return 0;
+ }
+
  $energyCost = (int) ($level->energy_cost?? 0);
 
  if ($profile->hasPerk('energy_efficiency')) {

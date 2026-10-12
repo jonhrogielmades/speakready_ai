@@ -3808,6 +3808,10 @@ class UserController extends Controller
 
  private function refreshChallengeEnergyIfNeeded(Profile $profile): void
  {
+ if (Profile::challengeLivesAreUnlimited()) {
+ return;
+ }
+
  $maxEnergy = Profile::MAX_ENERGY;
  $lastRefill = $profile->energy_last_refilled_at;
  $currentEnergy = (int) ($profile->energy?? 0);

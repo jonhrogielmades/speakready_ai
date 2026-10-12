@@ -140,18 +140,17 @@ class GameController extends Controller
  }
 
  // Check Energy
- $energyCost = $level->energy_cost;
- if ($profile->hasPerk('energy_efficiency')) {
- $energyCost = max(0, $energyCost - 1);
- }
+ $energyCost = $this->effectiveGameEnergyCost($level, $profile);
 
  if ($profile->energy < $energyCost) {
  return back()->with('error', 'Not enough energy to start this challenge. Your energy refills daily.');
  }
 
  // Consume Energy
+ if ($energyCost > 0) {
  $profile->energy = max(0, $profile->energy - $energyCost);
  $profile->save();
+ }
 
  // Combine mission text, learning goal, and custom prompt for game-mode coaching.
  $interviewFocus = trim((string) $level->mission_text);
@@ -222,6 +221,10 @@ class GameController extends Controller
 
  private function refreshEnergyIfNeeded(Profile $profile): void
  {
+ if (Profile::challengeLivesAreUnlimited()) {
+ return;
+ }
+
  $maxEnergy = Profile::MAX_ENERGY;
  $lastRefill = $profile->energy_last_refilled_at;
  $currentEnergy = (int) ($profile->energy?? 0);
@@ -1085,7 +1088,7 @@ class GameController extends Controller
  'xp_earned' => (int) ($gameSession->xp_earned?? 0),
  'skill_xp_type' => $gameLevel->skill_xp_type,
  'skill_xp_amount' => (int) ($passed? ($gameLevel->skill_xp_amount?? 0): 0),
- 'energy_spent' => (int) ($gameSession->energy_spent?? $this->effectiveGameEnergyCost($gameLevel, $profile)),
+ 'energy_spent' => Profile::challengeLivesAreUnlimited()? 0: (int) ($gameSession->energy_spent?? $this->effectiveGameEnergyCost($gameLevel, $profile)),
  'energy_remaining' => (int) ($profile->energy?? 0),
  'retry_hint' => $gameLevel->retry_hint,
  'retry_energy_cost' => $this->effectiveGameEnergyCost($gameLevel, $profile),
@@ -1110,6 +1113,10 @@ class GameController extends Controller
 
  private function effectiveGameEnergyCost(GameLevel $level, Profile $profile): int
  {
+ if (Profile::challengeLivesAreUnlimited()) {
+ return 0;
+ }
+
  $energyCost = (int) ($level->energy_cost?? 0);
 
  if ($profile->hasPerk('energy_efficiency')) {

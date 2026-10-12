@@ -12,6 +12,9 @@ class Profile extends Model
 
     public const MAX_ENERGY = 3;
 
+    // Temporary Interview Challenges override. Flip this back to false to restore 3/3 lives.
+    public const UNLIMITED_CHALLENGE_LIVES = true;
+
     protected $fillable = [
         'user_id',
         'total_sessions',
@@ -62,6 +65,11 @@ class Profile extends Model
             : [];
 
         return isset($columns[$column]);
+    }
+
+    public static function challengeLivesAreUnlimited(): bool
+    {
+        return self::UNLIMITED_CHALLENGE_LIVES;
     }
 
     public function setAttribute($key, $value)
