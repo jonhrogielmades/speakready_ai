@@ -557,8 +557,7 @@
             white-space: nowrap;
          }
 
-         .guest-header-clock,
-         .guest-brand-subtitle {
+         .guest-header-clock {
             display: inline-flex;
             align-items: center;
             gap: 4px;
@@ -572,14 +571,6 @@
             letter-spacing: 0.015em;
             white-space: nowrap;
             font-variant-numeric: tabular-nums;
-         }
-
-         .guest-brand-subtitle {
-            color: var(--tx3);
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0;
-            font-variant-numeric: normal;
          }
 
          .guest-header-clock-separator {
@@ -2067,102 +2058,17 @@
             border-radius: 14px;
          }
 
-          body.guest-desktop-shell #landing {
-             background:
-                linear-gradient(90deg, rgba(251, 191, 36, 0.08), transparent 32%),
-                linear-gradient(120deg, rgba(6, 182, 212, 0.09), transparent 58%),
-                linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
-                var(--bg);
-             background-size: auto, auto, 32px 32px, 32px 32px, auto;
-          }
-
-          html:not(.lm) body.guest-desktop-shell #landing {
-             background:
-                linear-gradient(90deg, rgba(251, 191, 36, 0.06), transparent 34%),
-                linear-gradient(120deg, rgba(14, 165, 233, 0.08), transparent 60%),
-                linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px),
-                var(--bg);
-             background-size: auto, auto, 32px 32px, 32px 32px, auto;
-          }
-
-          body.guest-desktop-shell #nbar {
-             background: rgba(255, 255, 255, 0.76);
-             border-bottom: 0;
-             box-shadow: none;
-          }
-
-          html:not(.lm) body.guest-desktop-shell #nbar {
-             background: rgba(8, 13, 26, 0.76);
-             border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-          }
-
-          body.guest-desktop-shell #nbar.scr {
-             background: rgba(255, 255, 255, 0.92);
-             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-          }
-
-          html:not(.lm) body.guest-desktop-shell #nbar.scr {
-             background: rgba(8, 13, 26, 0.94);
-             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
-          }
-
-          body.guest-desktop-shell #nbar .container,
           #hero .hero-home-container {
              width: 100%;
-             max-width: min(1640px, calc(100vw - 48px));
-          }
-
-          body.guest-desktop-shell #nbar .nav-link {
-             min-height: 48px;
-             display: inline-flex;
-             align-items: center;
-             padding: 0 18px !important;
-             border-radius: 8px;
-             font-size: 0.95rem;
-             font-weight: 700;
-          }
-
-          body.guest-desktop-shell #nbar .nav-link.active {
-             background: rgba(255, 255, 255, 0.62) !important;
-             box-shadow: inset 0 -3px 0 #f59e0b;
-          }
-
-          body.guest-desktop-shell #nbar .bgrd {
-             background: linear-gradient(135deg, #f59e0b, #f97316) !important;
-             color: #111827 !important;
-             box-shadow: 0 14px 30px rgba(245, 158, 11, 0.22);
-          }
-
-          body.guest-desktop-shell #nbar .boc {
-             min-height: 48px;
-             border-radius: 12px !important;
-          }
-
-          body.guest-desktop-shell #nbar #thbtn {
-             border-radius: 12px !important;
-          }
-
-          body.guest-desktop-shell #landing #hero {
-             min-height: 100vh;
-             min-height: 100svh;
-             padding-top: var(--nav);
-             background:
-                linear-gradient(90deg, rgba(251, 191, 36, 0.12), rgba(255, 255, 255, 0) 30%),
-                linear-gradient(105deg, rgba(255, 255, 255, 0) 48%, rgba(14, 165, 233, 0.1) 100%);
-          }
-
-          body.guest-desktop-shell #landing #hero > .aur {
-             display: none;
+             max-width: min(1440px, calc(100vw - 32px));
           }
 
           #hero .hero-home-layout {
-             min-height: calc(100vh - var(--nav));
-             min-height: calc(100svh - var(--nav));
-             justify-content: space-between;
-             padding-top: clamp(36px, 8vh, 104px);
-             padding-bottom: clamp(36px, 7vh, 86px);
+             min-height: calc(100vh - var(--nav) - 24px);
+             min-height: calc(100svh - var(--nav) - 24px);
+             justify-content: center;
+             padding-top: clamp(18px, 4vh, 44px);
+             padding-bottom: clamp(18px, 4vh, 44px);
           }
 
           #hero .hero-home-copy,
@@ -2171,29 +2077,20 @@
           }
 
           #hero .hero-home-copy .h1 {
-             max-width: 760px;
-             margin-left: 0;
-             margin-right: 0;
-             margin-bottom: 28px;
-             font-size: clamp(4rem, 5.2vw, 5.7rem) !important;
-             font-weight: 900;
-             line-height: 1.02;
-             text-align: left;
-             white-space: normal;
-          }
-
-          #hero .hero-home-copy .h1 .gt {
-             background: linear-gradient(90deg, #74542b 0%, #f59e0b 42%, #fbbf24 100%);
-             -webkit-background-clip: text;
-             background-clip: text;
+             max-width: none;
+             margin-left: auto;
+             margin-right: auto;
+             font-size: clamp(3rem, 4vw, 3.8rem) !important;
+             text-align: center;
+             white-space: nowrap;
           }
 
           #hero .hero-home-copy-text {
-             max-width: 680px;
-             margin-left: 0;
-             margin-right: 0;
-             line-height: 1.62;
-             text-align: left;
+             max-width: 540px;
+             margin-left: auto;
+             margin-right: auto;
+             line-height: 1.58;
+             text-align: center;
           }
 
           #hero .hero-tech-card {
@@ -2221,90 +2118,40 @@
 
           #hero .hero-badge-wrap {
              display: flex;
-             justify-content: flex-start;
+             justify-content: center;
              width: 100%;
              max-width: 540px;
           }
 
-          #hero .hbadge {
-             padding: 8px 16px 8px 12px;
-             background: rgba(255, 255, 255, 0.86);
-             border-color: rgba(148, 163, 184, 0.22);
-             color: #475569;
-             box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
-             text-transform: none;
-          }
-
-          html:not(.lm) #hero .hbadge {
-             background: rgba(15, 23, 42, 0.78);
-             border-color: rgba(148, 163, 184, 0.22);
-             color: #e2e8f0;
-          }
-
-          #hero .hbadge .bdot {
-             width: 9px;
-             height: 9px;
-             background: #34d399;
-             box-shadow: 0 0 0 5px rgba(52, 211, 153, 0.14);
-          }
-
           #hero .hero-cta-row {
              display: grid !important;
-             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-             width: min(100%, 560px);
-             margin-left: 0;
-             margin-right: 0;
-             gap: 14px !important;
+             grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+             width: min(100%, 640px);
+             margin-left: auto;
+             margin-right: auto;
+             gap: 12px !important;
           }
 
           #hero .hero-cta-row > .btn {
              min-width: 0;
              width: 100% !important;
-             min-height: 64px;
-             padding: 14px 22px !important;
-             border-radius: 12px !important;
-             font-size: 1.03rem !important;
-             font-weight: 800;
+             min-height: 54px;
+             padding: 12px 16px !important;
              white-space: nowrap;
-          }
-
-          #hero .hero-proof-row {
-             display: flex;
-             align-items: center;
-             gap: 34px;
-             flex-wrap: wrap;
-             color: #64748b;
-             font-size: 0.96rem;
-             font-weight: 800;
-          }
-
-          #hero .hero-proof-row span {
-             display: inline-flex;
-             align-items: center;
-             gap: 10px;
-             white-space: nowrap;
-          }
-
-          #hero .hero-proof-row i {
-             color: #f59e0b;
-          }
-
-          html:not(.lm) #hero .hero-proof-row {
-             color: #cbd5e1;
           }
 
           #hero .hero-image-col {
-             --hero-preview-max-width: clamp(780px, 52vw, 1040px);
-             --hero-preview-side-gap: clamp(22px, 1.8vw, 36px);
-             --hero-context-card-width: clamp(188px, 13.6vw, 232px);
+             --hero-preview-max-width: clamp(640px, 43vw, 780px);
+             --hero-preview-side-gap: clamp(8px, 0.8vw, 14px);
+             --hero-context-card-width: clamp(172px, 13.2vw, 220px);
              overflow: visible;
           }
 
           #hero .desktop-hero-image-row {
-             width: min(100%, calc(var(--hero-preview-max-width) + 220px));
+             width: min(100%, calc(var(--hero-preview-max-width) + 176px));
              min-width: 0;
              margin-left: auto;
-             margin-right: -18px;
+             margin-right: auto;
              position: relative;
              z-index: 2;
           }
@@ -2313,7 +2160,7 @@
              position: relative;
              box-sizing: border-box;
              width: 100%;
-             padding: clamp(74px, 6.4vw, 106px) clamp(104px, 8vw, 146px);
+             padding: clamp(52px, 4.4vw, 72px) clamp(56px, 5.2vw, 88px);
              line-height: 0;
           }
 
@@ -2322,11 +2169,10 @@
              width: 100%;
              max-width: 100%;
              height: auto;
-             max-height: clamp(400px, 54vh, 560px);
+             max-height: clamp(360px, 50vh, 520px);
              object-fit: contain;
-             opacity: 0.92;
              user-select: none;
-             filter: drop-shadow(0 28px 46px rgba(15, 23, 42, 0.18));
+             filter: drop-shadow(0 28px 42px rgba(15, 23, 42, 0.2));
              transform-origin: 50% 52%;
              animation: srHeroImageFloat 7.2s ease-in-out infinite;
              will-change: transform;
@@ -2341,12 +2187,12 @@
              z-index: 4;
              width: var(--hero-context-card-width);
              display: grid;
-             gap: 6px;
-             padding: 15px 17px 16px;
+             gap: 5px;
+             padding: 14px 16px 16px;
              border: 1px solid rgba(15, 23, 42, 0.08);
              border-radius: 8px;
-             background: rgba(255, 255, 255, 0.94);
-             box-shadow: 0 22px 46px rgba(15, 23, 42, 0.13);
+             background: rgba(255, 255, 255, 0.92);
+             box-shadow: 0 20px 42px rgba(15, 23, 42, 0.12);
              backdrop-filter: blur(16px);
              -webkit-backdrop-filter: blur(16px);
              line-height: 1.2;
@@ -2431,8 +2277,8 @@
           }
 
           #landing #hero .hero-context-card--top-left {
-             top: 22px;
-             left: 36px;
+             top: 8px;
+             left: 0;
              color: #f59e0b;
              --hero-card-float-x: 4px;
              --hero-card-float-y: -9px;
@@ -2442,8 +2288,8 @@
           }
 
           #landing #hero .hero-context-card--middle-left {
-             top: 48%;
-             left: 12px;
+             top: 50%;
+             left: -10px;
              color: #06b6d4;
              --hero-card-anchor-y: -50%;
              --hero-card-float-x: -5px;
@@ -2454,8 +2300,8 @@
           }
 
           #landing #hero .hero-context-card--bottom-left {
-             left: 66px;
-             bottom: 20px;
+             left: 22px;
+             bottom: 12px;
              color: #34d399;
              --hero-card-float-x: 3px;
              --hero-card-float-y: 8px;
@@ -2465,8 +2311,8 @@
           }
 
           #landing #hero .hero-context-card--top-right {
-             top: 24px;
-             right: 20px;
+             top: 8px;
+             right: 0;
              color: #34d399;
              --hero-card-float-x: -4px;
              --hero-card-float-y: -10px;
@@ -2476,8 +2322,8 @@
           }
 
           #landing #hero .hero-context-card--middle-right {
-             top: 51%;
-             right: -4px;
+             top: 50%;
+             right: -10px;
              color: #f59e0b;
              --hero-card-anchor-y: -50%;
              --hero-card-float-x: 5px;
@@ -2488,8 +2334,8 @@
           }
 
           #landing #hero .hero-context-card--bottom-right {
-             right: 58px;
-             bottom: 20px;
+             right: 22px;
+             bottom: 12px;
              color: #06b6d4;
              --hero-card-float-x: -3px;
              --hero-card-float-y: 9px;
@@ -5139,23 +4985,6 @@
             -webkit-text-fill-color: transparent !important;
          }
 
-         #landing #hero .hbadge {
-            color: #475569 !important;
-            -webkit-text-fill-color: #475569 !important;
-         }
-
-         html:not(.lm) #landing #hero .hbadge {
-            color: #e2e8f0 !important;
-            -webkit-text-fill-color: #e2e8f0 !important;
-         }
-
-         #landing #hero .hero-home-copy .h1 .gt {
-            background: linear-gradient(90deg, #74542b 0%, #f59e0b 42%, #fbbf24 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent !important;
-         }
-
          #landing :where(.gc, .feature-card, .accordion-item),
          #lofc .modal-content {
             background: var(--sf) !important;
@@ -5624,30 +5453,20 @@
          }
 
          #landing #hero .hero-cta-row > .bgrd.btn {
-            color: #111827 !important;
-            -webkit-text-fill-color: #111827 !important;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: linear-gradient(135deg, #2563eb, #0284c7) !important;
             border-color: transparent !important;
          }
 
          #landing #hero .hero-cta-row > .btn i {
-            color: #f59e0b !important;
-            -webkit-text-fill-color: #f59e0b !important;
-         }
-
-         #landing #hero .hero-cta-row > .bgrd.btn i {
-            color: #111827 !important;
-            -webkit-text-fill-color: #111827 !important;
+            color: #2563eb !important;
+            -webkit-text-fill-color: #2563eb !important;
          }
 
          html:not(.lm) #landing #hero .hero-cta-row > .btn i {
-            color: #fbbf24 !important;
-            -webkit-text-fill-color: #fbbf24 !important;
-         }
-
-         html:not(.lm) #landing #hero .hero-cta-row > .bgrd.btn i {
-            color: #111827 !important;
-            -webkit-text-fill-color: #111827 !important;
+            color: #60a5fa !important;
+            -webkit-text-fill-color: #60a5fa !important;
          }
 
          @supports not (background: color-mix(in srgb, #fff 50%, transparent)) {
