@@ -2,8 +2,9 @@
 #sec-interview-session[data-game-session-root] {
     --game-action-height: 40px;
     --game-session-desktop-height: calc(100dvh - clamp(78px, 8vh, 96px));
-    --game-docked-response-width: min(760px, calc(100% - 56px));
-    --game-docked-response-bottom: clamp(18px, 3vh, 34px);
+    --game-docked-response-width: min(clamp(480px, 34vw, 620px), calc(100% - 56px));
+    --game-docked-response-height: clamp(174px, 20vh, 196px);
+    --game-docked-response-bottom: clamp(82px, 10vh, 112px);
 }
 
 body.game-match-auto-fullscreen #sec-interview-session[data-game-session-root],
@@ -280,10 +281,10 @@ body.game-match-auto-fullscreen {
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
         flex: 0 0 auto !important;
         width: 100% !important;
-        height: auto !important;
+        height: var(--game-docked-response-height) !important;
         min-height: 0 !important;
-        max-height: min(32vh, 240px) !important;
-        padding: 14px !important;
+        max-height: var(--game-docked-response-height) !important;
+        padding: 12px !important;
         border-radius: 16px !important;
         display: flex !important;
         flex-direction: column !important;
@@ -310,11 +311,11 @@ body.game-match-auto-fullscreen {
     }
 
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .panel-title {
-        margin-bottom: 10px !important;
+        margin-bottom: 8px !important;
     }
 
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .game-voice-session-panel {
-        padding: 10px 12px !important;
+        padding: 8px 10px !important;
     }
 }
 
