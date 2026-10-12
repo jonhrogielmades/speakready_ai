@@ -2066,9 +2066,9 @@
           #hero .hero-home-layout {
              min-height: calc(100vh - var(--nav) - 24px);
              min-height: calc(100svh - var(--nav) - 24px);
-             justify-content: center;
-             padding-top: clamp(18px, 4vh, 44px);
-             padding-bottom: clamp(18px, 4vh, 44px);
+             justify-content: space-between;
+             padding-top: clamp(28px, 5vh, 72px);
+             padding-bottom: clamp(28px, 5vh, 72px);
           }
 
           #hero .hero-home-copy,
@@ -2077,28 +2077,29 @@
           }
 
           #hero .hero-home-copy .h1 {
-             max-width: none;
-             margin-left: auto;
-             margin-right: auto;
-             font-size: clamp(3rem, 4vw, 3.8rem) !important;
-             text-align: center;
-             white-space: nowrap;
+             max-width: 720px;
+             margin-left: 0;
+             margin-right: 0;
+             font-size: clamp(3.2rem, 4.9vw, 5.35rem) !important;
+             line-height: 1.04;
+             text-align: left;
+             white-space: normal;
           }
 
           #hero .hero-home-copy-text {
-             max-width: 540px;
-             margin-left: auto;
-             margin-right: auto;
+             max-width: 640px;
+             margin-left: 0;
+             margin-right: 0;
              line-height: 1.58;
-             text-align: center;
+             text-align: left;
           }
 
           #hero .hero-tech-card {
              --hero-tech-color: #111827;
              max-width: 540px;
-             margin-left: auto;
-             margin-right: auto;
-             text-align: center !important;
+             margin-left: 0;
+             margin-right: 0;
+             text-align: left !important;
           }
 
           html:not(.lm) #hero .hero-tech-card {
@@ -2106,7 +2107,7 @@
           }
 
           #hero .hero-tech-card .tech-icons {
-             justify-content: center !important;
+             justify-content: flex-start !important;
           }
 
           #hero .hero-tech-title,
@@ -2118,17 +2119,17 @@
 
           #hero .hero-badge-wrap {
              display: flex;
-             justify-content: center;
+             justify-content: flex-start;
              width: 100%;
-             max-width: 540px;
+             max-width: 640px;
           }
 
           #hero .hero-cta-row {
              display: grid !important;
              grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
-             width: min(100%, 640px);
-             margin-left: auto;
-             margin-right: auto;
+             width: min(100%, 620px);
+             margin-left: 0;
+             margin-right: 0;
              gap: 12px !important;
           }
 
@@ -2141,17 +2142,17 @@
           }
 
           #hero .hero-image-col {
-             --hero-preview-max-width: clamp(640px, 43vw, 780px);
-             --hero-preview-side-gap: clamp(8px, 0.8vw, 14px);
-             --hero-context-card-width: clamp(172px, 13.2vw, 220px);
+             --hero-preview-max-width: clamp(760px, 52vw, 1040px);
+             --hero-preview-side-gap: clamp(16px, 1.4vw, 28px);
+             --hero-context-card-width: clamp(168px, 12vw, 216px);
              overflow: visible;
           }
 
           #hero .desktop-hero-image-row {
-             width: min(100%, calc(var(--hero-preview-max-width) + 176px));
+             width: min(100%, calc(var(--hero-preview-max-width) + 216px));
              min-width: 0;
              margin-left: auto;
-             margin-right: auto;
+             margin-right: -16px;
              position: relative;
              z-index: 2;
           }
@@ -2160,7 +2161,7 @@
              position: relative;
              box-sizing: border-box;
              width: 100%;
-             padding: clamp(52px, 4.4vw, 72px) clamp(56px, 5.2vw, 88px);
+             padding: clamp(58px, 5vw, 92px) clamp(80px, 6vw, 124px);
              line-height: 0;
           }
 
@@ -2169,7 +2170,7 @@
              width: 100%;
              max-width: 100%;
              height: auto;
-             max-height: clamp(360px, 50vh, 520px);
+             max-height: clamp(420px, 58vh, 640px);
              object-fit: contain;
              user-select: none;
              filter: drop-shadow(0 28px 42px rgba(15, 23, 42, 0.2));
@@ -2449,6 +2450,25 @@
              #hero .hero-cta-row {
                 margin-left: auto;
                 margin-right: auto;
+             }
+
+             #hero .hero-home-copy .h1,
+             #hero .hero-home-copy-text {
+                text-align: center;
+             }
+
+             #hero .hero-badge-wrap {
+                justify-content: center;
+                margin-left: auto;
+                margin-right: auto;
+             }
+
+             #hero .hero-tech-card {
+                text-align: center !important;
+             }
+
+             #hero .hero-tech-card .tech-icons {
+                justify-content: center !important;
              }
 
              #hero .hero-cta-row {
