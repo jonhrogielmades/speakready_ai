@@ -2,7 +2,7 @@
 @section('title', 'Interview Challenge')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=67') }}" data-page-style="interview-session">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026101301') }}" data-page-style="user-game-session">
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-2.css?v=2') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
@@ -34,6 +34,7 @@
  'img/interviewers/Filipina_Interviewer_06.png',
  ];
  $interviewerAvatarImage = $interviewerAvatarImages[0];
+ $interviewerAvatarWebpImage = preg_replace('/\.png$/', '.webp', $interviewerAvatarImage);
  $interviewerPanelBackgroundImage = 'img/interviewer-panel-room-bg.png';
  $interviewerAvatarImageUrls = array_map(fn ($image) => asset($image), $interviewerAvatarImages);
  @endphp
@@ -82,7 +83,10 @@
  <span style="--wave-index:0"></span><span style="--wave-index:1"></span><span style="--wave-index:2"></span><span style="--wave-index:3"></span><span style="--wave-index:4"></span>
  </div>
  <div class="avatar-frame">
+ <picture style="display:block;width:100%;height:100%;">
+ <source srcset="{{ asset($interviewerAvatarWebpImage) }}" type="image/webp">
  <img id="interviewerAvatarImage" src="{{ asset($interviewerAvatarImage) }}" alt="AI Interviewer" width="110" height="110" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover;">
+ </picture>
  </div>
  <div class="avatar-side-wave avatar-side-wave-right" aria-hidden="true">
  <span style="--wave-index:0"></span><span style="--wave-index:1"></span><span style="--wave-index:2"></span><span style="--wave-index:3"></span><span style="--wave-index:4"></span>
@@ -923,6 +927,95 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  loadVoices();
  }
 
+ function gameSpectrumBars() {
+ return Array.from(document.querySelectorAll('.spectrum-bar'));
+ }
+
+ function gameSpeechSpectrumMaxHeight() {
+ if (window.matchMedia('(min-width: 1200px)').matches) return 78;
+ if (window.matchMedia('(min-width: 768px)').matches) return 52;
+ return 34;
+ }
+
+ function renderGameSpeechSpectrum(levels) {
+ const bars = gameSpectrumBars();
+ if (!bars.length ||!Array.isArray(levels) ||!levels.length) return;
+
+ const minHeight = window.matchMedia('(min-width: 1200px)').matches? 18: (window.matchMedia('(min-width: 768px)').matches? 10: 8);
+ const maxHeight = gameSpeechSpectrumMaxHeight();
+ const averageLevel = levels.reduce((total, level) => total + (Number(level) || 0), 0) / levels.length;
+ const movement = Math.max(0.48, Math.min(1, (averageLevel || currentAmplitude) * 1.35));
+ const desktopPop = window.matchMedia('(min-width: 1200px)').matches? 18: 12;
+
+ bars.forEach((bar, idx) => {
+ const ripple = 0.66 + (((idx % 7) / 7) * 0.34);
+ const wave = 0.42 + (Math.random() * 0.58);
+ const openCloseWave = 0.35 + (Math.random() * 0.65);
+ const pop = Math.round(2 + (movement * openCloseWave * desktopPop));
+ const height = minHeight + ((maxHeight - minHeight) * movement * ripple * wave);
+ bar.style.height = `${height.toFixed(1)}px`;
+ bar.style.opacity = String(0.68 + (Math.random() * 0.28 * movement));
+ bar.style.setProperty('--bar-pop', `${pop}px`);
+ });
+ }
+
+ function resetGameSpeechSpectrumBars() {
+ gameSpectrumBars().forEach(bar => {
+ bar.style.height = '';
+ bar.style.opacity = '';
+ bar.style.removeProperty('--bar-pop');
+ });
+ }
+
+ function stopGameSpeechSpectrumVisualizer() {
+ if (visualizerInterval) clearInterval(visualizerInterval);
+ visualizerInterval = null;
+ currentAmplitude = 0.2;
+ resetGameSpeechSpectrumBars();
+ }
+
+ function startGameSpeechSpectrumVisualizer(text = '') {
+ stopGameSpeechSpectrumVisualizer();
+ const wordCount = Math.max(1, String(text || '').trim().split(/\s+/).filter(Boolean).length);
+ let tick = 0;
+
+ visualizerInterval = setInterval(() => {
+ tick += 1;
+ currentAmplitude = Math.max(0.62, currentAmplitude * 0.92);
+
+ const bars = gameSpectrumBars();
+ const phrasePulse = (Math.sin(tick * 0.42) + 1) / 2;
+ const syllablePulse = (Math.sin(tick * 1.18) + 1) / 2;
+ const sentenceDensity = Math.min(1, 0.46 + (wordCount / 42));
+ const energy = Math.min(1, (currentAmplitude * 0.78) + (phrasePulse * 0.14) + (syllablePulse * 0.12));
+
+ renderGameSpeechSpectrum(bars.map((bar, idx) => {
+ const ringOffset = (Math.sin((idx * 0.72) + (tick * 0.3)) + 1) / 2;
+ return Math.max(0.12, Math.min(1, energy * sentenceDensity * (0.56 + (ringOffset * 0.44))));
+ }));
+ }, 42);
+ }
+
+ function pulseGameSpeechSpectrum(amount = 1) {
+ currentAmplitude = Math.max(currentAmplitude, Math.max(0.2, Math.min(1, amount)));
+ }
+
+ function startGameSpeakingWave(text = '') {
+ document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
+ const avatarHead = document.getElementById('aiAvatarHead');
+ avatarHead?.style.setProperty('--avatar-ring-color', '#34d399');
+ avatarHead?.classList.add('is-speaking');
+ startGameSpeechSpectrumVisualizer(text);
+ }
+
+ function stopGameSpeakingWave() {
+ document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
+ const avatarHead = document.getElementById('aiAvatarHead');
+ avatarHead?.style.setProperty('--avatar-ring-color', '#8b5cf6');
+ avatarHead?.classList.remove('is-speaking');
+ stopGameSpeechSpectrumVisualizer();
+ }
+
  function speakQuestion(text) {
  questionSpeechToken++;
  const token = questionSpeechToken;
@@ -933,39 +1026,31 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  if ('speechSynthesis' in window) {
  window.speechSynthesis.cancel();
+ stopGameSpeakingWave();
  let utterance = new SpeechSynthesisUtterance(text);
  utterance.lang = speechLocale;
  if (preferredVoice) utterance.voice = preferredVoice;
  utterance.rate = 0.95;
  utterance.pitch = 1.0;
 
- // Spike the amplitude every time a new word is spoken!
  utterance.onboundary = function(e) {
- if(e.name === 'word') currentAmplitude = 1.0;
+ if(e.name === 'word') pulseGameSpeechSpectrum(1);
  };
 
  utterance.onstart = function() {
- document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
- const avatarHead = document.getElementById('aiAvatarHead');
- if (avatarHead) avatarHead.style.setProperty('--avatar-ring-color', '#34d399');
- 
- // Start dynamic JS visualizer
- const bars = document.querySelectorAll('.spectrum-bar');
- visualizerInterval = setInterval(() => {
- currentAmplitude = Math.max(0.15, currentAmplitude - 0.1); // Decay slowly between words
- bars.forEach(bar => {
- // Calculate random jitter scaled by current word amplitude
- let h = 6 + (Math.random() * 80 * currentAmplitude);
- bar.style.height = h + 'px';
- });
- }, 50); // 20 FPS jitter
+ if (token!== questionSpeechToken) return;
+ startGameSpeakingWave(text);
  };
  
  utterance.onend = function() {
- document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
- const avatarHead = document.getElementById('aiAvatarHead');
- if (avatarHead) avatarHead.style.setProperty('--avatar-ring-color', '#8b5cf6');
- if(visualizerInterval) clearInterval(visualizerInterval);
+ if (token!== questionSpeechToken) return;
+ stopGameSpeakingWave();
+ scheduleAutoTranscriptionStart(token);
+ };
+
+ utterance.onerror = function() {
+ if (token!== questionSpeechToken) return;
+ stopGameSpeakingWave();
  scheduleAutoTranscriptionStart(token);
  };
 

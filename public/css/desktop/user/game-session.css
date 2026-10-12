@@ -13,6 +13,27 @@ body.interview-session-browser-fullscreen #sec-interview-session[data-game-sessi
     width: 100%;
 }
 
+#sec-interview-session[data-game-session-root] .avatar-wrapper {
+    isolation: isolate;
+}
+
+#sec-interview-session[data-game-session-root] #aiAvatarHead.is-speaking .avatar-side-wave {
+    opacity: 1;
+    visibility: visible;
+}
+
+#sec-interview-session[data-game-session-root] #aiAvatarHead.is-speaking .avatar-side-wave-left {
+    transform: translateY(-50%) scaleX(-1);
+}
+
+#sec-interview-session[data-game-session-root] #aiAvatarHead.is-speaking .avatar-side-wave-right {
+    transform: translateY(-50%) scaleX(1);
+}
+
+#sec-interview-session[data-game-session-root] .circular-spectrum .spectrum-bar {
+    will-change: height, opacity, transform;
+}
+
 #sec-interview-session[data-game-session-root] .game-session-timer-stack {
     display: flex !important;
     align-items: center;
@@ -265,6 +286,27 @@ body.game-match-auto-fullscreen {
         box-sizing: border-box !important;
     }
 
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-interview-panel #aiAvatarHead.avatar-wrapper {
+        width: clamp(320px, 21vw, 440px) !important;
+        height: clamp(320px, 21vw, 440px) !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-interview-panel .avatar-frame {
+        border-width: 6px !important;
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-interview-panel .circular-spectrum {
+        --spectrum-radius: clamp(178px, 11.6vw, 240px);
+    }
+
+    html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-interview-panel .circular-spectrum .spectrum-bar {
+        left: -7.5px !important;
+        width: 15px !important;
+        height: 30px !important;
+        max-height: 112px !important;
+        box-shadow: 0 0 26px rgba(52, 211, 153, 0.76) !important;
+    }
+
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
         display: flex !important;
         flex-direction: column !important;
@@ -291,6 +333,17 @@ body.game-match-auto-fullscreen {
 
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .game-voice-session-panel {
         padding: 10px 12px !important;
+    }
+}
+
+@media (min-width: 1200px) and (max-height: 760px) {
+    body.interview-session-shell:not(.interview-session-browser-fullscreen) #sec-interview-session[data-game-session-root] .desktop-interview-panel #aiAvatarHead.avatar-wrapper {
+        width: clamp(220px, 18vw, 320px) !important;
+        height: clamp(220px, 18vw, 320px) !important;
+    }
+
+    body.interview-session-shell:not(.interview-session-browser-fullscreen) #sec-interview-session[data-game-session-root] .desktop-interview-panel .circular-spectrum {
+        --spectrum-radius: clamp(126px, 9.4vw, 178px);
     }
 }
 

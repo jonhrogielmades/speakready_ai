@@ -2830,7 +2830,7 @@ class UserSideHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
  ->assertSee('css/mobile/interview/session.css?v=67', false)
- ->assertSee('css/mobile/user/game-session.css?v=2', false)
+ ->assertSee('css/mobile/user/game-session.css?v=2026101301', false)
  ->assertSee('data-page-style="user-game-session"', false)
  ->assertSee('id="sec-interview-session"', false)
  ->assertSee('data-game-session-root', false)
