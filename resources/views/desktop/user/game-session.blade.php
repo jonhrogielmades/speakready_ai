@@ -3,8 +3,8 @@
 @section('body-class', 'interview-session-shell')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=65') }}" data-page-style="interview-session">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=2026101201') }}" data-page-style="user-game-session">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=2026101201') }}" data-page-style="user-game-session-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=2026101202') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=2026101202') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
 @endpush
@@ -132,11 +132,11 @@
  <div class="panel response-panel mb-4 animate-fade-up delay-200">
  <div class="panel-title">
  <i class="fa-solid fa-pen-nib me-2"></i>
- <span class="panel-title-text">Voice Response</span>
+ <span class="panel-title-text">Your Response</span>
  <div class="response-title-actions game-response-actions" id="gameSessionControls">
- @if($sessionRecord->game_level_id)
- <span class="badge game-mode-badge"><i class="fa-solid fa-microphone me-1"></i> VOICE ONLY</span>
- @endif
+ <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleGameMatchFullscreen()" aria-label="Exit fullscreen" title="Exit fullscreen">
+ <i class="fa-solid fa-compress"></i>
+ </button>
  <button type="button" class="btn game-skip-action skip-btn-class" onclick="skipQuestion()" aria-label="Skip question" title="Skip question"><i class="fa-solid fa-forward-step"></i><span>Skip</span></button>
  <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()" aria-label="Next question" title="Next question">
  <span class="next-label-full">Next Question</span><span class="next-label-short">Next</span><i class="fa-solid fa-arrow-right"></i>
@@ -145,12 +145,37 @@
  </div>
  
  <form id="answerForm">
+ <div id="voiceSessionPanel" class="voice-session-panel game-voice-session-panel" data-state="idle">
+ <div class="voice-session-summary">
+ <div class="voice-session-title">
+ <i class="fa-solid fa-wave-square"></i>
+ <span>Voice Session</span>
+ </div>
+ <div class="voice-session-actions">
+ <span id="voiceSessionBadge" class="voice-session-badge">Ready</span>
+ <div class="voice-session-menu">
+ <button type="button" id="voiceSessionMenuButton" class="voice-session-menu-button" aria-label="Voice session actions" title="Voice session actions" disabled>
+ <i class="fa-solid fa-ellipsis-vertical"></i>
+ </button>
+ </div>
+ </div>
+ </div>
+ <div class="voice-session-controls">
+ <audio id="voiceSessionPlayback" class="voice-session-playback audio-disabled" controls preload="metadata" aria-label="Voice session playback"></audio>
+ </div>
+ <div class="voice-session-footer">
+ <span id="voiceSessionStatus">Ready</span>
+ <span id="voiceSessionMeta"></span>
+ </div>
+ </div>
+ <div class="game-hidden-transcript">
  <label for="answerTextarea" class="visually-hidden">Your voice transcript</label>
  <div class="answer-transcript-stage">
  <textarea id="answerTextarea" class="oinp mb-2 voice-only-answer-lock" style="min-height:76px;font-size:.82rem" placeholder="Record your answer with voice. The transcript will appear here when available..." readonly aria-readonly="true" aria-describedby="responseCountBar"></textarea>
 
  <div class="response-count-bar" id="responseCountBar" aria-live="polite">
  <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
+ </div>
  </div>
  </div>
  <div class="response-autosave-row">
@@ -264,6 +289,7 @@
 let mediaRecorderChunks = [];
 let voiceRecordingStopPromise = null;
 let voiceTranscriptionPromise = null;
+let gameVoicePlaybackObjectUrl = '';
 window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
 let gameCameraMovementBaseline = null;
 let preRecordingText = '';
@@ -309,6 +335,7 @@ let committedSpeechTranscript = '';
  document.body.classList.toggle('interview-session-browser-fullscreen', active && document.body.classList.contains('user-desktop-shell'));
  document.body.classList.toggle('mobile-interview-fullscreen', active && document.body.classList.contains('user-mobile-shell'));
  refreshGameMatchFullscreenLayout();
+ updateGameResponseFullscreenButton();
  }
 
  function removeGameMatchFullscreenRetry() {
@@ -376,6 +403,24 @@ let committedSpeechTranscript = '';
  return Promise.resolve();
  }
 
+ function toggleGameMatchFullscreen() {
+ if (document.fullscreenElement || document.body.classList.contains('game-match-auto-fullscreen')) {
+ return exitGameMatchFullscreen();
+ }
+
+ return enterGameMatchFullscreen({ retry: true });
+ }
+
+ function updateGameResponseFullscreenButton() {
+ const toggle = document.getElementById('responseFullscreenToggle');
+ if (!toggle) return;
+
+ const fullscreenOn = document.body.classList.contains('game-match-auto-fullscreen') || Boolean(document.fullscreenElement);
+ toggle.setAttribute('aria-label', fullscreenOn? 'Exit fullscreen': 'Enter fullscreen');
+ toggle.setAttribute('title', fullscreenOn? 'Exit fullscreen': 'Enter fullscreen');
+ toggle.innerHTML = fullscreenOn? '<i class="fa-solid fa-compress"></i>': '<i class="fa-solid fa-expand"></i>';
+ }
+
  function handleGameMatchFullscreenChange() {
  if (document.fullscreenElement) {
  removeGameMatchFullscreenRetry();
@@ -391,9 +436,13 @@ let committedSpeechTranscript = '';
  }
 
  document.addEventListener('fullscreenchange', handleGameMatchFullscreenChange);
- window.addEventListener('pagehide', removeGameMatchFullscreenRetry);
+ window.addEventListener('pagehide', () => {
+ removeGameMatchFullscreenRetry();
+ clearGameVoiceSessionPlayback();
+ });
  window.enterGameMatchFullscreen = enterGameMatchFullscreen;
  window.exitGameMatchFullscreen = exitGameMatchFullscreen;
+ window.toggleGameMatchFullscreen = toggleGameMatchFullscreen;
 
  function cleanTranscriptText(value) {
  return String(value || '').replace(/\s+/g, ' ').trim();
@@ -503,9 +552,11 @@ let committedSpeechTranscript = '';
 
  function setTranscriptionStatus(message, color = '') {
  const status = document.getElementById('transcriptionStatus');
- if (!status) return;
+ if (status) {
  status.textContent = message || '';
  status.style.color = color || 'var(--tx3)';
+ }
+ updateGameVoiceSessionPanel(voiceSessionStateFromStatus(message), message || '');
  }
 
  function gameTranscriptionErrorMessage(error) {
@@ -517,6 +568,104 @@ let committedSpeechTranscript = '';
  return 'Automatic transcription is unavailable right now.';
  }
  return error?.message || 'Automatic transcription failed. Please try again.';
+ }
+
+ function formatGameVoiceDuration(seconds) {
+ const safeSeconds = Math.max(0, Math.round(Number(seconds || 0)));
+ const minutes = Math.floor(safeSeconds / 60);
+ const remainder = String(safeSeconds % 60).padStart(2, '0');
+ return `${minutes}:${remainder}`;
+ }
+
+ function voiceSessionStateFromStatus(message) {
+ const text = String(message || '').toLowerCase();
+ if (!text) return 'idle';
+ if (text.includes('paused')) return 'paused';
+ if (text.includes('preparing') || text.includes('transcrib')) return 'transcribing';
+ if (text.includes('recording') && !text.includes('stopped')) return 'recording';
+ if (text.includes('failed') || text.includes('unavailable') || text.includes('timed out') || text.includes('too large') || text.includes('rate limited')) return 'error';
+ if (text.includes('no speech') || text.includes('recording stopped')) return 'recorded';
+ if (text.includes('transcript') || text.includes('ready')) return 'transcribed';
+ return 'idle';
+ }
+
+ function updateGameVoiceSessionPanel(state = 'idle', message = '') {
+ const panel = document.getElementById('voiceSessionPanel');
+ if (!panel) return;
+
+ const normalizedState = state || 'idle';
+ const badge = document.getElementById('voiceSessionBadge');
+ const status = document.getElementById('voiceSessionStatus');
+ const meta = document.getElementById('voiceSessionMeta');
+ const labels = {
+ idle: 'Ready',
+ recording: 'Recording',
+ paused: 'Paused',
+ saving: 'Saving',
+ transcribing: 'Transcribing',
+ transcribed: 'Ready',
+ recorded: 'Ready',
+ error: 'Check mic',
+ unavailable: 'Unavailable'
+ };
+
+ panel.hidden = false;
+ panel.dataset.state = normalizedState;
+ if (badge) badge.textContent = labels[normalizedState] || 'Ready';
+ if (status) status.textContent = message || labels[normalizedState] || 'Ready';
+ if (meta && (normalizedState === 'recording' || normalizedState === 'paused')) {
+ meta.textContent = formatGameVoiceDuration(recTimerSeconds);
+ }
+ }
+
+ function clearGameVoiceSessionPlayback() {
+ const playback = document.getElementById('voiceSessionPlayback');
+ if (gameVoicePlaybackObjectUrl) {
+ URL.revokeObjectURL(gameVoicePlaybackObjectUrl);
+ gameVoicePlaybackObjectUrl = '';
+ }
+
+ if (playback) {
+ playback.removeAttribute('src');
+ playback.classList.add('audio-disabled');
+ playback.load();
+ }
+ }
+
+ function setGameVoiceSessionPlayback(recording) {
+ const playback = document.getElementById('voiceSessionPlayback');
+ const menuButton = document.getElementById('voiceSessionMenuButton');
+ const meta = document.getElementById('voiceSessionMeta');
+ if (!playback || !recording?.blob) return;
+
+ if (gameVoicePlaybackObjectUrl) {
+ URL.revokeObjectURL(gameVoicePlaybackObjectUrl);
+ }
+
+ gameVoicePlaybackObjectUrl = URL.createObjectURL(recording.blob);
+ playback.src = gameVoicePlaybackObjectUrl;
+ playback.classList.remove('audio-disabled');
+ if (menuButton) menuButton.disabled = true;
+ if (meta) {
+ const duration = Number(recording.duration || answersData[currentQIdx]?.voice_duration || 0);
+ meta.textContent = duration > 0? `${formatGameVoiceDuration(duration)} recorded`: '';
+ }
+ updateGameVoiceSessionPanel(recording.transcription_status === 'transcribed'? 'transcribed': 'recorded', 'Recording ready');
+ }
+
+ function refreshGameVoiceSessionForQuestion(questionIndex = currentQIdx) {
+ const data = answersData[questionIndex] || {};
+ if (data.voice_recording?.blob) {
+ setGameVoiceSessionPlayback(data.voice_recording);
+ return;
+ }
+
+ clearGameVoiceSessionPlayback();
+ const meta = document.getElementById('voiceSessionMeta');
+ if (meta) {
+ meta.textContent = Number(data.voice_duration || 0) > 0? `${formatGameVoiceDuration(data.voice_duration)} saved`: '';
+ }
+ updateGameVoiceSessionPanel(data.has_voice_recording? 'recorded': 'idle', data.has_voice_recording? 'Recording saved': 'Ready');
  }
 
  async function requestGameVoiceTranscript(recording, questionIndex, previousTranscript = '') {
@@ -586,6 +735,7 @@ let committedSpeechTranscript = '';
  recording.transcript = cleanTranscript;
  recording.transcription_status = data.transcription_status || 'transcribed';
  recording.transcription_source = data.transcription_source || 'ai';
+ if (questionIndex === currentQIdx) setGameVoiceSessionPlayback(recording);
  }
 
  if (questionIndex === currentQIdx) {
@@ -609,6 +759,7 @@ let committedSpeechTranscript = '';
  voiceTranscriptionPromise = (async () => {
  if (recording.blob.size > (25 * 1024 * 1024)) {
  setTranscriptionStatus('Recording is too large to transcribe automatically.', '#fbbf24');
+ updateGameVoiceSessionPanel('recorded', 'Recording saved');
  return '';
  }
 
@@ -618,6 +769,7 @@ let committedSpeechTranscript = '';
  const data = await requestGameVoiceTranscript(recording, questionIndex, previousTranscript);
  const transcript = applyGameVoiceTranscript(questionIndex, data.transcript || '', data, recording);
  setTranscriptionStatus(transcript? 'Transcript added to answer.': 'No speech was detected.', transcript? '#22c55e': '#fbbf24');
+ updateGameVoiceSessionPanel(transcript? 'transcribed': 'recorded', transcript? 'Transcript ready': 'Recording ready');
  return transcript;
  } catch (error) {
  console.warn('Challenge voice transcription failed:', error);
@@ -1035,6 +1187,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  document.getElementById('answerTextarea').value = answersData[idx].text;
  resetSpeechRecognitionBufferFromTextarea();
  setTranscriptionStatus('');
+ refreshGameVoiceSessionForQuestion(idx);
  
  speakQuestion(questionText);
  
@@ -1242,13 +1395,17 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  if (mediaRecorderChunks.length > 0) {
  const blob = new Blob(mediaRecorderChunks, { type: mimeType });
  if (blob.size >= 128) {
- answersData[recordingQuestionIndex].voice_recording = {
+ const savedRecording = {
  blob,
  mime_type: mimeType,
  filename: voiceFileName(recordingQuestionIndex, mimeType),
  duration
  };
+ answersData[recordingQuestionIndex].voice_recording = savedRecording;
  answersData[recordingQuestionIndex].has_voice_recording = true;
+ if (recordingQuestionIndex === currentQIdx) {
+ setGameVoiceSessionPlayback(savedRecording);
+ }
  }
  }
 
@@ -1356,6 +1513,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
 
  if (recordingTimer) recordingTimer.style.display = 'inline-flex';
+ updateGameVoiceSessionPanel(isPaused? 'paused': (isIdle? 'idle': 'recording'), isPaused? 'Paused': (isIdle? 'Ready': 'Recording'));
  }
 
  async function startRecording(options = {}) {
@@ -1407,6 +1565,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  const wpm = Math.round((wordCount / activeSeconds) * 60);
  setElementText('vaWpm', wpm);
  answersData[currentQIdx].wpm = wpm;
+ updateGameVoiceSessionPanel('recording', 'Recording');
 
  // Optional body-language detection is descriptive and never affects scoring.
  if (cameraCoachingEnabled && recTimerSeconds % 2 === 0) {
@@ -1764,13 +1923,13 @@ modelState.failed = true;
  if (typeof window.createSpeakReadyTour === 'function') {
 const stepsMobile = [
 { element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each challenge question and guides the Learning Game flow.', side: 'bottom', align: 'start' }},
-{ element: '#answerForm', popover: { title: 'Your Response', description: 'Use the response box and voice controls to answer each challenge question.', side: 'top', align: 'start' }},
+{ element: '#answerForm', popover: { title: 'Your Response', description: 'Use the voice controls to record each challenge answer.', side: 'top', align: 'start' }},
 { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness or challenge scoring.', side: 'top', align: 'start' }}
 ];
 
 const stepsDesktop = [
 { element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each challenge question and guides the Learning Game flow.', side: 'right', align: 'start' }},
-{ element: '#answerForm', popover: { title: 'Your Response', description: 'Use the response box and voice controls to answer each challenge question.', side: 'right', align: 'start' }},
+{ element: '#answerForm', popover: { title: 'Your Response', description: 'Use the voice controls to record each challenge answer.', side: 'right', align: 'start' }},
 { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness or challenge scoring.', side: 'left', align: 'start' }}
 ];
  const visibleTourSteps = steps => steps.filter(step => document.querySelector(step.element));

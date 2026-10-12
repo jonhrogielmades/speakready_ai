@@ -1,6 +1,12 @@
 /* Learning Game challenge extras layered over the Interview Session layout. */
 #sec-interview-session[data-game-session-root] {
     --game-action-height: 40px;
+    --game-session-desktop-height: calc(100dvh - clamp(78px, 8vh, 96px));
+}
+
+body.game-match-auto-fullscreen #sec-interview-session[data-game-session-root],
+body.interview-session-browser-fullscreen #sec-interview-session[data-game-session-root] {
+    --game-session-desktop-height: calc(100dvh - clamp(32px, 4vw, 60px));
 }
 
 #sec-interview-session[data-game-session-root] .learning-game-interview-layout {
@@ -113,6 +119,26 @@ html[data-theme="dark"] #sec-interview-session[data-game-session-root] .game-mod
     font-weight: 800;
 }
 
+#sec-interview-session[data-game-session-root] .game-hidden-transcript {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+#sec-interview-session[data-game-session-root] .game-voice-session-panel {
+    margin: 0;
+}
+
+#sec-interview-session[data-game-session-root] .game-voice-session-panel .voice-session-title span {
+    overflow-wrap: anywhere;
+}
+
 #sec-interview-session[data-game-session-root] #cameraPanel .stat-row {
     display: flex;
     justify-content: space-between;
@@ -193,7 +219,8 @@ body.game-match-auto-fullscreen {
         align-items: stretch !important;
         width: 100% !important;
         min-width: 0 !important;
-        height: auto !important;
+        height: var(--game-session-desktop-height) !important;
+        min-height: min(620px, var(--game-session-desktop-height)) !important;
         max-height: none !important;
     }
 
@@ -203,16 +230,16 @@ body.game-match-auto-fullscreen {
         flex-direction: column !important;
         min-width: 0 !important;
         width: auto !important;
-        height: auto !important;
+        height: 100% !important;
         max-height: none !important;
         overflow: visible !important;
     }
 
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-interview-panel .ai-avatar-panel,
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
-        height: clamp(500px, calc(100dvh - 150px), 620px) !important;
-        min-height: 500px !important;
-        max-height: 620px !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
         margin-bottom: 0 !important;
     }
 

@@ -113,6 +113,7 @@
     }
 
     #sec-interview-session[data-game-session-root] {
+        --game-session-desktop-height: calc(100dvh - clamp(78px, 8vh, 96px));
         width: 100% !important;
         max-width: none !important;
         margin-left: 0 !important;
@@ -128,6 +129,8 @@
         width: 100% !important;
         max-width: none !important;
         min-width: 0 !important;
+        height: var(--game-session-desktop-height) !important;
+        min-height: min(620px, var(--game-session-desktop-height)) !important;
     }
 
     #sec-interview-session[data-game-session-root] #workspaceRow {
@@ -154,6 +157,9 @@
         width: 100% !important;
         max-width: none !important;
         min-width: 0 !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
         align-items: stretch !important;
     }
 
@@ -164,5 +170,35 @@
         min-width: 0 !important;
         display: flex !important;
         flex-direction: column !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+
+    #sec-interview-session[data-game-session-root] .desktop-interview-panel .ai-avatar-panel,
+    #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
+        flex: 1 1 auto !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin-bottom: 0 !important;
+    }
+
+    #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel #answerForm {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    body.game-match-auto-fullscreen #sec-interview-session[data-game-session-root],
+    body.interview-session-browser-fullscreen #sec-interview-session[data-game-session-root] {
+        --game-session-desktop-height: calc(100dvh - clamp(32px, 4vw, 60px));
     }
 }
