@@ -117,6 +117,7 @@
         --game-docked-response-width: min(clamp(480px, 34vw, 620px), calc(100% - 56px));
         --game-docked-response-height: clamp(174px, 20vh, 196px);
         --game-docked-response-bottom: clamp(82px, 10vh, 112px);
+        --game-docked-response-right: clamp(18px, 3vw, 48px);
         width: 100% !important;
         max-width: none !important;
         margin-left: 0 !important;
@@ -192,14 +193,14 @@
     #sec-interview-session[data-game-session-root] .desktop-response-column {
         position: absolute !important;
         z-index: 90 !important;
-        left: 50% !important;
-        right: auto !important;
+        left: auto !important;
+        right: var(--game-docked-response-right) !important;
         bottom: var(--game-docked-response-bottom) !important;
         width: var(--game-docked-response-width) !important;
         max-width: var(--game-docked-response-width) !important;
         height: auto !important;
         min-height: 0 !important;
-        transform: translateX(-50%) !important;
+        transform: none !important;
         pointer-events: none !important;
     }
 
