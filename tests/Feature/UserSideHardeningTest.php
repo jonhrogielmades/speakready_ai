@@ -1799,10 +1799,66 @@ class UserSideHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session->id))
  ->assertOk()
+ ->assertSee('Your Answer')
  ->assertSee('Voice Answer')
  ->assertSee(route('interview.answer.voiceRecording', $answer), false)
- ->assertSee('Transcript unavailable. Your voice recording was still saved for playback and review.')
- ->assertSee('Transcript unavailable. Listen to the saved voice answer above.');
+ ->assertSee('Transcript unavailable. Your voice recording was still saved for playback and review.');
+ }
+
+ public function test_voice_mode_answer_review_shows_recording_instead_of_visible_answer_text(): void
+ {
+ Storage::fake('local');
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, [
+ 'response_mode' => 'voice',
+ 'status' => 'ended',
+ 'action_plan' => ['ended_early' => true],
+ ]);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Tell me about a time you helped a customer.',
+ ]);
+
+ $voicePath = 'voice-recordings/test-answer.webm';
+ Storage::disk('local')->put($voicePath, 'voice-bytes');
+
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'This internal transcript should not render as the visible answer.',
+ 'delivery_transcript' => 'This internal transcript can still support coaching evidence.',
+ 'response_mode' => 'voice',
+ 'ai_feedback' => 'The voice answer has feedback.',
+ 'better_sample_answer' => 'Give a direct answer and add one true result.',
+ 'score' => 74,
+ 'is_skipped' => false,
+ 'voice_duration' => 16,
+ 'voice_recording_disk' => 'local',
+ 'voice_recording_path' => $voicePath,
+ 'voice_recording_mime_type' => 'audio/webm',
+ 'voice_recording_byte_size' => 10,
+ 'voice_recording_transcription_status' => 'transcribed',
+ ]);
+
+ $response = $this->actingAs($user)
+ ->get(route('user.review', $session->id))
+ ->assertOk()
+ ->assertSee('Your Answer')
+ ->assertSee('Voice Answer')
+ ->assertSee(route('interview.answer.voiceRecording', $answer), false);
+
+ $html = $response->getContent();
+
+ $this->assertMatchesRegularExpression(
+ '/<span>Your Answer<\/span>\s*<div\b[\s\S]*?<audio controls preload="metadata" src="'.preg_quote(route('interview.answer.voiceRecording', $answer), '/').'"/',
+ $html
+ );
+ $this->assertStringNotContainsString(
+ '<p>This internal transcript should not render as the visible answer.</p>',
+ $html
+ );
  }
 
  public function test_voice_answer_upload_adds_internal_transcript_for_ai_feedback(): void

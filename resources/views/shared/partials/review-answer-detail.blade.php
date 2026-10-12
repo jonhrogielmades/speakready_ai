@@ -3,7 +3,8 @@
  $answerText = trim((string) ($answer->answer_text ?? ''));
  $hasVoiceRecording = trim((string) ($answer->voice_recording_path ?? '')) !== '';
  $hasVoiceEvidence = trim((string) ($answer->delivery_transcript ?? '')) !== '';
- $isVoiceOnlyAnswer = strtolower((string) ($answer->response_mode ?? '')) === 'voice' && $hasVoiceRecording;
+ $isVoiceModeAnswer = strtolower((string) ($answer->response_mode ?? '')) === 'voice' && $hasVoiceRecording;
+ $isVoiceOnlyAnswer = $isVoiceModeAnswer && $answerText === '';
 
  $answerDisplay = $answerText !== ''
  ? $answerText
@@ -47,7 +48,11 @@
  </section>
  <section>
  <span>Your Answer</span>
+ @if($isVoiceModeAnswer)
+ @include('shared.partials.interview-answer-voice-recording', ['answer' => $answer])
+ @else
  <p>{{ $answerDisplay }}</p>
+ @endif
  </section>
  <section class="review-answer-possible-section">
  <span>Possible Answer</span>

@@ -16,7 +16,7 @@
  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
  <h6 style="color:#0284c7;font-weight:800;margin:0;"><i class="fa-solid fa-wave-square me-2"></i>Voice Answer</h6>
  @if(!empty($voiceMeta))
- <span class="retry-chip">{{ implode(' / ', $voiceMeta) }}</span>
+ <em class="retry-chip" style="font-style:normal;">{{ implode(' / ', $voiceMeta) }}</em>
  @endif
  </div>
  <audio controls preload="metadata" src="{{ $voiceRecordingUrl }}" style="width:100%;display:block;"></audio>
