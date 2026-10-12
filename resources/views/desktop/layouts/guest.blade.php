@@ -22,7 +22,7 @@
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=9') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=15') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=16') }}" />
       <style>
          :root,
          .lm {
@@ -98,32 +98,26 @@
                      <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}" class="logo-i" style="background: #ffffff; padding: 0; flex-shrink: 0;">
                      <span class="guest-brand-copy">
                         <span class="guest-brand-name">{{ $systemName ?? 'SpeakReady AI' }}</span>
-                        @php
-                           $guestHeaderNow = now();
-                        @endphp
-                        <time class="guest-header-clock" id="guestHeaderClock" datetime="{{ $guestHeaderNow->toIso8601String() }}" aria-label="Current date and time">
-                           <span id="guestHeaderDate">{{ $guestHeaderNow->format('D, M j') }}</span>
-                           <span class="guest-header-clock-separator" aria-hidden="true">&bull;</span>
-                           <span id="guestHeaderTime">{{ $guestHeaderNow->format('g:i A') }}</span>
-                        </time>
+                        <span class="guest-brand-subtitle">AI-Based Interview Practice</span>
                      </span>
                   </a>
                   <div class="d-none d-xl-flex align-items-center gap-1 mx-auto">
-                     <a href="#hero" class="nav-link">Home</a>
+                     <a href="#hero" class="nav-link active">Home</a>
                      <a href="#features" class="nav-link">Features</a>
                      <a href="#benefits" class="nav-link">Interview Categories</a>
+                     <a href="#how" class="nav-link">How It Works</a>
                      <a href="#developers" class="nav-link">Developers</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                     <button class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">
-                     <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
-                     <i class="fa-solid fa-moon" id="mooni"></i>
-                     </button>
                      <button class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">
                      <i class="fa-regular fa-user fa-sm"></i> Login
                      </button>
                      <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
-                     Register <i class="fa-solid fa-arrow-right fa-sm"></i>
+                     <i class="fa-solid fa-download fa-sm"></i> Get App
+                     </button>
+                     <button class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">
+                     <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
+                     <i class="fa-solid fa-moon" id="mooni"></i>
                      </button>
                      <button class="boc d-xl-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
                      <i class="fa-solid fa-bars" aria-hidden="true"></i>
@@ -149,33 +143,22 @@
                 <div class="row hero-home-layout align-items-center g-4">
                   <div class="col-xl-5 col-lg-5 col-md-10 hero-home-copy text-center text-lg-start">
                      <div class="hero-badge-wrap afu" style="animation-delay:.05s">
-                        <span class="hbadge">
-                     AI-Based Interview Practice System
+                         <span class="hbadge">
+                           <span class="bdot" aria-hidden="true"></span>
+                      AI interview readiness platform
                         </span>
                      </div>
-                     <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
-                     <p class="hero-home-copy-text afu" style="font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI helps you practice role-focused job interviews with scenario setup, Coaching On or Real Interview Mode, camera detection, and evidence-based feedback.</p>
+                      <h1 class="h1 afu" style="animation-delay:.12s">Engineered for<br>Interviews.<br><span class="gt">Ready for Roles.</span></h1>
+                      <p class="hero-home-copy-text afu" style="font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">Build confidence with role-focused practice, AI coaching, readiness scoring, and clear feedback before the real interview starts.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center justify-content-lg-start gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Get Started Free</button>
-                        <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
-                        <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
+                         <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')"><i class="fa-solid fa-microphone me-2"></i>Start Practicing</button>
+                         <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                      </div>
 
-                     <div class="hero-tech-card mt-4 mb-0 afu text-center text-lg-start" style="animation-delay:.4s">
-                        <p class="hero-tech-title" style="font-size:.71rem;color:var(--hero-tech-color, #000000);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
-                        <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-4 flex-wrap tech-icons" style="color:var(--hero-tech-color, #000000); font-size:1.5rem;">
-                           <a href="https://laravel.com" target="_blank" rel="noopener noreferrer" title="Laravel"><i class="fa-brands fa-laravel"></i></a>
-                           <a href="https://php.net" target="_blank" rel="noopener noreferrer" title="PHP"><i class="fa-brands fa-php"></i></a>
-                           <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer" title="MySQL"><i class="fa-solid fa-database"></i></a>
-                           @php
-                              $title = 'OpenAI';
-                              $link = 'https://openai.com';
-                           @endphp
-                           <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" title="{{ $title }}">
-                              <i class="fa-solid fa-robot"></i>
-                           </a>
-                           <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank" rel="noopener noreferrer" title="Web Speech API"><i class="fa-solid fa-microphone"></i></a>
-                        </div>
+                      <div class="hero-proof-row mt-4 mb-0 afu" style="animation-delay:.4s" aria-label="SpeakReady AI highlights">
+                         <span><i class="fa-solid fa-shield-alt" aria-hidden="true"></i> Private practice</span>
+                         <span><i class="fa-solid fa-robot" aria-hidden="true"></i> AI coach guidance</span>
+                         <span><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Readiness tracking</span>
                      </div>
                   </div>
 
