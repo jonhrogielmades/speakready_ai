@@ -38,8 +38,11 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('data-layout-shell="mobile"', false)
                 ->assertSee('data-guest-layout="mobile"', false)
                 ->assertSee('css/mobile/style.css?v=36', false)
-                ->assertSee('mobilePreviewSwiper', false)
-                ->assertSee('mobile-preview-image-swiper', false)
+                ->assertSee('css/mobile/guest.css?v=27', false)
+                ->assertSee('mobile-hero-preview-row', false)
+                ->assertSee('mobile-hero-image-frame', false)
+                ->assertSee('Get Started Free', false)
+                ->assertDontSee('Login for Free', false)
                 ->assertSee(route('auth.google.login', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
                 ->assertSee(route('auth.google.register', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
                 ->assertSee('id="mbtog"', false)
@@ -67,7 +70,8 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=36', false)
-            ->assertSee('mobilePreviewSwiper', false)
+            ->assertSee('css/mobile/guest.css?v=27', false)
+            ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=9', false);
     }
 
@@ -81,7 +85,8 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=36', false)
-            ->assertSee('mobilePreviewSwiper', false)
+            ->assertSee('css/mobile/guest.css?v=27', false)
+            ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=9', false);
     }
 
