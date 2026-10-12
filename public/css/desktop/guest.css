@@ -2298,11 +2298,11 @@
           }
 
           #landing #hero .hero-context-card--top-left {
-             top: 8px;
-             left: 0;
+             top: clamp(26px, 3vw, 44px);
+             left: clamp(42px, 4.6vw, 78px);
              color: #0284c7;
-             --hero-card-float-x: 4px;
-             --hero-card-float-y: -9px;
+             --hero-card-float-x: 3px;
+             --hero-card-float-y: -7px;
              --hero-card-rotate-mid: -0.8deg;
              --hero-card-duration: 6.1s;
              --hero-card-float-delay: -0.3s;
@@ -2310,33 +2310,33 @@
 
           #landing #hero .hero-context-card--middle-left {
              top: 50%;
-             left: -10px;
+             left: clamp(20px, 3.2vw, 56px);
              color: #06b6d4;
              --hero-card-anchor-y: -50%;
-             --hero-card-float-x: -5px;
-             --hero-card-float-y: -6px;
+             --hero-card-float-x: -3px;
+             --hero-card-float-y: -5px;
              --hero-card-rotate-mid: 0.9deg;
              --hero-card-duration: 6.8s;
              --hero-card-float-delay: -1.1s;
           }
 
           #landing #hero .hero-context-card--bottom-left {
-             left: 22px;
-             bottom: 12px;
+             left: clamp(52px, 5vw, 84px);
+             bottom: clamp(20px, 2.4vw, 34px);
              color: #34d399;
-             --hero-card-float-x: 3px;
-             --hero-card-float-y: 8px;
+             --hero-card-float-x: 2px;
+             --hero-card-float-y: 6px;
              --hero-card-rotate-mid: 0.7deg;
              --hero-card-duration: 7s;
              --hero-card-float-delay: -2.2s;
           }
 
           #landing #hero .hero-context-card--top-right {
-             top: 8px;
-             right: 0;
+             top: clamp(26px, 3vw, 44px);
+             right: clamp(42px, 4.6vw, 78px);
              color: #34d399;
-             --hero-card-float-x: -4px;
-             --hero-card-float-y: -10px;
+             --hero-card-float-x: -3px;
+             --hero-card-float-y: -7px;
              --hero-card-rotate-mid: 0.8deg;
              --hero-card-duration: 6.3s;
              --hero-card-float-delay: -1.7s;
@@ -2344,22 +2344,22 @@
 
           #landing #hero .hero-context-card--middle-right {
              top: 50%;
-             right: -10px;
+             right: clamp(20px, 3.2vw, 56px);
              color: #0ea5e9;
              --hero-card-anchor-y: -50%;
-             --hero-card-float-x: 5px;
-             --hero-card-float-y: -7px;
+             --hero-card-float-x: 3px;
+             --hero-card-float-y: -5px;
              --hero-card-rotate-mid: -0.9deg;
              --hero-card-duration: 6.6s;
              --hero-card-float-delay: -0.8s;
           }
 
           #landing #hero .hero-context-card--bottom-right {
-             right: 22px;
-             bottom: 12px;
+             right: clamp(52px, 5vw, 84px);
+             bottom: clamp(20px, 2.4vw, 34px);
              color: #06b6d4;
-             --hero-card-float-x: -3px;
-             --hero-card-float-y: 9px;
+             --hero-card-float-x: -2px;
+             --hero-card-float-y: 6px;
              --hero-card-rotate-mid: -0.7deg;
              --hero-card-duration: 7.1s;
              --hero-card-float-delay: -2.8s;
