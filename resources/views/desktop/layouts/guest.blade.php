@@ -22,7 +22,7 @@
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=9') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=12') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=13') }}" />
       <style>
          :root,
          .lm {

@@ -2198,8 +2198,6 @@
              line-height: 1.2;
              text-align: left;
              box-sizing: border-box;
-             max-height: 124px;
-             overflow: hidden;
              --hero-card-anchor-y: 0px;
              --hero-card-float-x: 0px;
              --hero-card-float-y: -8px;
@@ -2207,35 +2205,14 @@
              --hero-card-rotate-mid: 0.7deg;
              --hero-card-duration: 6.4s;
              --hero-card-float-delay: 0s;
-             --hero-card-open-cycle: 8.8s;
-             --hero-card-open-delay: 0s;
-             --hero-card-shadow-open: 0 20px 42px rgba(15, 23, 42, 0.12);
-             --hero-card-shadow-closed: 0 12px 28px rgba(15, 23, 42, 0.1);
              transform: translate3d(0, var(--hero-card-anchor-y), 0) rotate(var(--hero-card-rotate-start));
-             animation-name: srHeroContextCardFloat, srHeroContextCardOpenClose;
-             animation-duration: var(--hero-card-duration), var(--hero-card-open-cycle);
-             animation-timing-function: ease-in-out, cubic-bezier(0.4, 0, 0.2, 1);
-             animation-delay: var(--hero-card-float-delay), var(--hero-card-open-delay);
-             animation-iteration-count: infinite, infinite;
-             will-change: transform, max-height, padding;
-          }
-
-          #landing #hero .hero-context-card:hover {
-             max-height: 124px;
-             padding-top: 14px;
-             padding-bottom: 16px;
-             animation-name: srHeroContextCardFloat;
-             animation-duration: var(--hero-card-duration);
-             animation-timing-function: ease-in-out;
-             animation-delay: var(--hero-card-float-delay);
-             animation-iteration-count: infinite;
+             animation: srHeroContextCardFloat var(--hero-card-duration) ease-in-out var(--hero-card-float-delay) infinite;
+             will-change: transform;
           }
 
           html:not(.lm) #landing #hero .hero-context-card {
              border-color: rgba(148, 163, 184, 0.32);
              background: rgba(15, 23, 42, 0.84);
-             --hero-card-shadow-open: 0 22px 48px rgba(0, 0, 0, 0.36);
-             --hero-card-shadow-closed: 0 14px 30px rgba(0, 0, 0, 0.3);
              box-shadow: 0 22px 48px rgba(0, 0, 0, 0.36);
           }
 
@@ -2271,7 +2248,6 @@
              font-weight: 900;
              letter-spacing: 0;
              line-height: 1.18;
-             animation: srHeroContextContentOpenClose var(--hero-card-open-cycle) ease-in-out var(--hero-card-open-delay) infinite;
           }
 
           #landing #hero .hero-context-card span:last-child {
@@ -2281,14 +2257,6 @@
              font-weight: 700;
              letter-spacing: 0;
              line-height: 1.3;
-             animation: srHeroContextContentOpenClose var(--hero-card-open-cycle) ease-in-out var(--hero-card-open-delay) infinite;
-          }
-
-          #landing #hero .hero-context-card:hover strong,
-          #landing #hero .hero-context-card:hover span:last-child {
-             animation: none;
-             opacity: 1;
-             transform: translateY(0);
           }
 
           html:not(.lm) #landing #hero .hero-context-card strong {
@@ -2308,7 +2276,6 @@
              --hero-card-rotate-mid: -0.8deg;
              --hero-card-duration: 6.1s;
              --hero-card-float-delay: -0.3s;
-             --hero-card-open-delay: -0.4s;
           }
 
           #landing #hero .hero-context-card--middle-left {
@@ -2321,7 +2288,6 @@
              --hero-card-rotate-mid: 0.9deg;
              --hero-card-duration: 6.8s;
              --hero-card-float-delay: -1.1s;
-             --hero-card-open-delay: -1.7s;
           }
 
           #landing #hero .hero-context-card--bottom-left {
@@ -2333,7 +2299,6 @@
              --hero-card-rotate-mid: 0.7deg;
              --hero-card-duration: 7s;
              --hero-card-float-delay: -2.2s;
-             --hero-card-open-delay: -3s;
           }
 
           #landing #hero .hero-context-card--top-right {
@@ -2345,7 +2310,6 @@
              --hero-card-rotate-mid: 0.8deg;
              --hero-card-duration: 6.3s;
              --hero-card-float-delay: -1.7s;
-             --hero-card-open-delay: -4.2s;
           }
 
           #landing #hero .hero-context-card--middle-right {
@@ -2358,7 +2322,6 @@
              --hero-card-rotate-mid: -0.9deg;
              --hero-card-duration: 6.6s;
              --hero-card-float-delay: -0.8s;
-             --hero-card-open-delay: -5.4s;
           }
 
           #landing #hero .hero-context-card--bottom-right {
@@ -2370,7 +2333,6 @@
              --hero-card-rotate-mid: -0.7deg;
              --hero-card-duration: 7.1s;
              --hero-card-float-delay: -2.8s;
-             --hero-card-open-delay: -6.6s;
           }
 
           @keyframes srHeroImageFloat {
@@ -2396,44 +2358,6 @@
                    calc(var(--hero-card-anchor-y) + var(--hero-card-float-y)),
                    0
                 ) rotate(var(--hero-card-rotate-mid));
-             }
-          }
-
-          @keyframes srHeroContextCardOpenClose {
-             0%,
-             11%,
-             58%,
-             100% {
-                max-height: 124px;
-                padding-top: 14px;
-                padding-bottom: 16px;
-                box-shadow: var(--hero-card-shadow-open);
-                clip-path: inset(0 0 0 0 round 8px);
-             }
-
-             71%,
-             87% {
-                max-height: 44px;
-                padding-top: 11px;
-                padding-bottom: 10px;
-                box-shadow: var(--hero-card-shadow-closed);
-                clip-path: inset(0 0 0 0 round 8px);
-             }
-          }
-
-          @keyframes srHeroContextContentOpenClose {
-             0%,
-             12%,
-             56%,
-             100% {
-                opacity: 1;
-                transform: translateY(0);
-             }
-
-             68%,
-             90% {
-                opacity: 0;
-                transform: translateY(-4px);
              }
           }
 
@@ -2652,9 +2576,7 @@
           @media (prefers-reduced-motion: reduce) {
              #landing #hero .desktop-hero-image,
              #landing #hero .hero-context-card,
-             #landing #hero .hero-context-card::after,
-             #landing #hero .hero-context-card strong,
-             #landing #hero .hero-context-card span:last-child {
+             #landing #hero .hero-context-card::after {
                 animation: none !important;
              }
 
@@ -2663,14 +2585,7 @@
              }
 
              #landing #hero .hero-context-card {
-                max-height: 124px !important;
                 transform: translate3d(0, var(--hero-card-anchor-y), 0) rotate(var(--hero-card-rotate-start)) !important;
-             }
-
-             #landing #hero .hero-context-card strong,
-             #landing #hero .hero-context-card span:last-child {
-                opacity: 1 !important;
-                transform: none !important;
              }
           }
 
