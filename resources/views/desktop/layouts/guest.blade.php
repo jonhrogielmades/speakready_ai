@@ -22,7 +22,7 @@
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=9') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=14') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=15') }}" />
       <style>
          :root,
          .lm {
@@ -211,7 +211,7 @@
                               <span>Strengths / Next steps</span>
                            </div>
                            <div class="hero-context-card hero-context-card--top-right">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-shield-halved"></i> Secure</span>
+                              <span class="hero-context-kicker"><i class="fa-solid fa-shield-alt hero-context-kicker-icon" aria-hidden="true"></i> Secure</span>
                               <strong>Private practice</strong>
                               <span>Camera / Mic controls</span>
                            </div>

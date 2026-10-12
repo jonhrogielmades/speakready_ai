@@ -2241,6 +2241,15 @@
              text-transform: uppercase;
           }
 
+          #landing #hero .hero-context-kicker-icon {
+             width: 1em;
+             min-width: 1em;
+             display: inline-flex;
+             align-items: center;
+             justify-content: center;
+             line-height: 1;
+          }
+
           #landing #hero .hero-context-card strong {
              display: block;
              color: var(--tx, #0f172a);

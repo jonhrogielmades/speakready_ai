@@ -1,80 +1,52 @@
-         <!-- DEMO PREVIEW GALLERY -->
-         <section id="demo-preview" class="sp position-relative">
+         <!-- MOBILE HERO PREVIEW -->
+         <section id="demo-preview" class="sp position-relative mobile-static-demo-preview">
             <div class="aur aur-a" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
             <div class="container position-relative" style="z-index:1">
-               <div class="text-center mb-5 rv">
-                  <span class="slbl">Mobile Demo Preview</span>
-                  <h2 class="stitle">Inside <span class="gt">SpeakReady AI</span></h2>
-               </div>
-               
-               <div class="row justify-content-center">
-                   <div class="col-lg-10">
-                       <div class="gc p-2">
-                           <div class="swiper demoSwiper rounded" style="overflow:hidden">
-                               <div class="swiper-wrapper">
-                                   <!-- Slide 1: Overview -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-gauge-high fa-4x mb-4" style="color:var(--pur)"></i>
-                                           <h3 class="fs-3 fw-bold">Overview</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Track all your interview sessions and readiness.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 2: Mock Interview -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-microphone-lines fa-4x mb-4" style="color:#34d399"></i>
-                                           <h3 class="fs-3 fw-bold">Mock Interview</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Interactive AI avatar asking local job interview questions.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 3: Job Interview Prep -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-briefcase fa-4x mb-4" style="color:#ef4444"></i>
-                                           <h3 class="fs-3 fw-bold">Job Interview Prep</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Stay focused on role-fit, HR screening, resume, and behavioral interview scenarios.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 4: Interview Coach -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-robot fa-4x mb-4" style="color:#f59e0b"></i>
-                                           <h3 class="fs-3 fw-bold">Interview Coach</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Get personalized job interview advice and answer strategies.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 5: Progress Tracking -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-chart-line fa-4x mb-4" style="color:#3b82f6"></i>
-                                           <h3 class="fs-3 fw-bold">Progress Tracking</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Visual charts tracking your improvement over time.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 6: Feedback Center -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-clipboard-check fa-4x mb-4" style="color:#10b981"></i>
-                                           <h3 class="fs-3 fw-bold">Feedback Center</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Actionable insights on content, tone, and delivery.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 7: Reports -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-file-invoice fa-4x mb-4" style="color:#6366f1"></i>
-                                           <h3 class="fs-3 fw-bold">Reports</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Detailed summaries and exportable reports of your performance.</p>
-                                       </div>
-                                   </div>
-                               </div>
-                               <div class="swiper-pagination"></div>
-                               <div class="swiper-button-next" style="color:var(--pur)"></div>
-                               <div class="swiper-button-prev" style="color:var(--pur)"></div>
-                           </div>
-                       </div>
-                   </div>
+               @php
+                  $mobileHeroImage = asset('img/mobile-preview/01-home-dashboard-hd.png').'?v=20261012';
+               @endphp
+               <div class="mobile-hero-preview-row rv">
+                  <figure class="mobile-hero-image-frame mb-0" aria-label="SpeakReady AI mobile dashboard hero image">
+                     <img
+                        class="mobile-hero-image"
+                        src="{{ $mobileHeroImage }}"
+                        alt="SpeakReady AI mobile dashboard overview"
+                        width="1260"
+                        height="2520"
+                        loading="lazy"
+                        decoding="async"
+                     >
+                     <div class="mobile-hero-context-card mobile-hero-context-card--top-left">
+                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-briefcase mobile-hero-context-kicker-icon" aria-hidden="true"></i> Practice</span>
+                        <strong>Role-ready drills</strong>
+                        <span>Job focus / Timing / Tone</span>
+                     </div>
+                     <div class="mobile-hero-context-card mobile-hero-context-card--middle-left">
+                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-chart-line mobile-hero-context-kicker-icon" aria-hidden="true"></i> Readiness</span>
+                        <strong>Live score pulse</strong>
+                        <span>Boost target / Trend</span>
+                     </div>
+                     <div class="mobile-hero-context-card mobile-hero-context-card--bottom-left">
+                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-clipboard-check mobile-hero-context-kicker-icon" aria-hidden="true"></i> Feedback</span>
+                        <strong>Actionable notes</strong>
+                        <span>Strengths / Next steps</span>
+                     </div>
+                     <div class="mobile-hero-context-card mobile-hero-context-card--top-right">
+                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-shield-alt mobile-hero-context-kicker-icon" aria-hidden="true"></i> Secure</span>
+                        <strong>Private practice</strong>
+                        <span>Camera / Mic controls</span>
+                     </div>
+                     <div class="mobile-hero-context-card mobile-hero-context-card--middle-right">
+                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-robot mobile-hero-context-kicker-icon" aria-hidden="true"></i> Coaching</span>
+                        <strong>AI session guide</strong>
+                        <span>Hints / Follow-up / Clarity</span>
+                     </div>
+                     <div class="mobile-hero-context-card mobile-hero-context-card--bottom-right">
+                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-bolt mobile-hero-context-kicker-icon" aria-hidden="true"></i> Progress</span>
+                        <strong>Streak momentum</strong>
+                        <span>Sessions / XP / Goals</span>
+                     </div>
+                  </figure>
                </div>
             </div>
          </section>
