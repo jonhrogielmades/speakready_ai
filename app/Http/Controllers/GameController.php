@@ -27,7 +27,7 @@ use Illuminate\Validation\Rule;
 
 class GameController extends Controller
 {
- private const ACCEPTED_RESPONSE_MODES = ['text', 'voice', 'hybrid', 'voice_and_text'];
+ private const ACCEPTED_RESPONSE_MODES = ['voice'];
 
  private const VOICE_RECORDING_MAX_KILOBYTES = 25600;
 

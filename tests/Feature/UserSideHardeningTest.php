@@ -2521,11 +2521,26 @@ class UserSideHardeningTest extends TestCase
  'game_session_id' => $session->id,
  'question_index' => 0,
  'answer_text' => 'This is typed only and should not count for voice mode.',
- 'response_mode' => 'text',
+ 'response_mode' => 'voice',
  ])
  ->assertStatus(422)
  ->assertJsonValidationErrors('voice_audio')
  ->assertJsonPath('message', 'Please record your voice answer before submitting this challenge response.');
+
+ $this->assertDatabaseCount('game_answers', 0);
+
+ $this->actingAs($user)
+ ->postJson(route('user.game.answer'), [
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'answer_text' => 'This is typed only and should not count for voice mode.',
+ 'response_mode' => 'text',
+ 'voice_audio' => UploadedFile::fake()
+ ->createWithContent('challenge-answer.webm', str_repeat('A', 4096))
+ ->mimeType('audio/webm'),
+ ])
+ ->assertStatus(422)
+ ->assertJsonValidationErrors('response_mode');
 
  $this->assertDatabaseCount('game_answers', 0);
  }
@@ -2694,7 +2709,13 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('id="questionCaptionText"', false)
  ->assertSee('game-session-timer-stack', false)
  ->assertSee('game-mode-badge', false)
+ ->assertSee('VOICE ONLY')
+ ->assertSee('Voice Response')
+ ->assertSee('const responseMode = "voice";', false)
+ ->assertSee('readonly aria-readonly="true"', false)
  ->assertDontSee('hud-mode-badge', false)
+ ->assertDontSee('CHALLENGE MODE')
+ ->assertDontSee('Type your answer using', false)
  ->assertDontSee('id="sec-learning-game-session"', false)
  ->assertSee('enterGameMatchFullscreen({ auto: true, entry: true })', false)
  ->assertSee('enterGameMatchFullscreen({ auto: true })', false)
@@ -2707,6 +2728,9 @@ class UserSideHardeningTest extends TestCase
  ->assertDontSee('Voice Analytics')
  ->assertDontSee('Challenge Notes')
  ->assertDontSee('Finish Interview');
+
+ $session->refresh();
+ $this->assertSame('voice', $session->response_mode);
 
  $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
@@ -2730,7 +2754,13 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('desktop-session-two-column', false)
  ->assertSee('game-session-timer-stack', false)
  ->assertSee('game-mode-badge', false)
+ ->assertSee('VOICE ONLY')
+ ->assertSee('Voice Response')
+ ->assertSee('const responseMode = "voice";', false)
+ ->assertSee('readonly aria-readonly="true"', false)
  ->assertDontSee('hud-mode-badge', false)
+ ->assertDontSee('CHALLENGE MODE')
+ ->assertDontSee('Type your answer using', false)
  ->assertDontSee('id="sec-learning-game-session"', false)
  ->assertSee('enterGameMatchFullscreen({ auto: true, entry: true })', false)
  ->assertSee('enterGameMatchFullscreen({ auto: true })', false)

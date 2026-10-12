@@ -31,7 +31,6 @@
  $num = 0;
  $questions = collect([]);
  }
- $isVoiceOnlyMode = $sessionRecord && $sessionRecord->response_mode === 'voice';
  $interviewerAvatarImages = [
  'img/interviewers/Filipina_Interviewer_06.png',
  ];
@@ -132,10 +131,10 @@
  <div class="panel response-panel mb-4 animate-fade-up delay-200">
  <div class="panel-title">
  <i class="fa-solid fa-pen-nib me-2"></i>
- <span class="panel-title-text">Your Response</span>
+ <span class="panel-title-text">Voice Response</span>
  <div class="response-title-actions game-response-actions" id="gameSessionControls">
  @if($sessionRecord->game_level_id)
- <span class="badge game-mode-badge"><i class="fa-solid fa-gamepad me-1"></i> CHALLENGE MODE</span>
+ <span class="badge game-mode-badge"><i class="fa-solid fa-microphone me-1"></i> VOICE ONLY</span>
  @endif
  <button type="button" class="btn game-skip-action skip-btn-class" onclick="skipQuestion()" aria-label="Skip question" title="Skip question"><i class="fa-solid fa-forward-step"></i><span>Skip</span></button>
  <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()" aria-label="Next question" title="Next question">
@@ -145,9 +144,9 @@
  </div>
  
  <form id="answerForm">
- <label for="answerTextarea" class="visually-hidden">Your challenge answer</label>
+ <label for="answerTextarea" class="visually-hidden">Your voice transcript</label>
  <div class="answer-transcript-stage">
- <textarea id="answerTextarea" class="oinp mb-2 @if($isVoiceOnlyMode) voice-only-answer-lock @endif" style="min-height:76px;font-size:.82rem" placeholder="{{ $isVoiceOnlyMode? 'Record your answer with voice. The transcript will appear here when available...': 'Type your answer using your own local school, work, internship, or project evidence...' }}" @if($isVoiceOnlyMode) readonly @endif aria-describedby="responseCountBar"></textarea>
+ <textarea id="answerTextarea" class="oinp mb-2 voice-only-answer-lock" style="min-height:76px;font-size:.82rem" placeholder="Record your answer with voice. The transcript will appear here when available..." readonly aria-readonly="true" aria-describedby="responseCountBar"></textarea>
 
  <div class="response-count-bar" id="responseCountBar" aria-live="polite">
  <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
@@ -235,8 +234,8 @@
  <script>
  const questions = {!! json_encode($questions)!!};
  const gameSessionId = {{ (int) $sessionRecord->id }};
- const responseMode = "{{ $sessionRecord->response_mode }}";
- const isVoiceOnlySession = responseMode === "voice";
+ const responseMode = "voice";
+ const isVoiceOnlySession = true;
  const cameraCoachingEnabled = @json($cameraCoachingEnabled);
  const interviewerAvatarImages = @json($interviewerAvatarImageUrls);
  let activeInterviewerAvatarIndex = interviewerAvatarImages.indexOf(@json(asset($interviewerAvatarImage)));

@@ -17,7 +17,7 @@ return new class extends Migration
                 $table->string('difficulty')->nullable();
                 $table->string('target_position')->nullable();
                 $table->integer('num_questions')->default(0);
-                $table->string('response_mode')->default('hybrid');
+                $table->string('response_mode')->default('voice');
                 $table->text('interview_focus')->nullable();
                 $table->string('company_persona')->nullable();
                 $table->integer('time_limit')->default(0);
@@ -50,7 +50,7 @@ return new class extends Migration
                 $table->text('question_text');
                 $table->text('answer_text')->nullable();
                 $table->boolean('is_skipped')->default(false);
-                $table->string('response_mode')->default('text');
+                $table->string('response_mode')->default('voice');
                 $table->integer('elapsed_seconds')->default(0);
                 $table->integer('wpm')->default(0);
                 $table->integer('voice_duration')->default(0);

@@ -253,7 +253,7 @@ class GameSchema
  $table->text('question_text');
  $table->text('answer_text')->nullable();
  $table->boolean('is_skipped')->default(false);
- $table->string('response_mode')->default('text');
+ $table->string('response_mode')->default('voice');
  $table->integer('elapsed_seconds')->default(0);
  $table->integer('wpm')->default(0);
  $table->integer('voice_duration')->default(0);
@@ -308,7 +308,7 @@ class GameSchema
  $table->boolean('is_skipped')->default(false);
  }
  if (self::isMissing($missing, 'response_mode')) {
- $table->string('response_mode')->default('text');
+ $table->string('response_mode')->default('voice');
  }
  if (self::isMissing($missing, 'elapsed_seconds')) {
  $table->integer('elapsed_seconds')->default(0);
