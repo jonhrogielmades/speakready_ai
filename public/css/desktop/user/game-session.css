@@ -191,11 +191,20 @@ body.game-match-auto-fullscreen {
         margin-right: 0 !important;
     }
 
+    html body.user-desktop-shell.interview-session-shell #sec-interview-session[data-game-session-root] {
+        height: var(--game-session-desktop-height) !important;
+        min-height: var(--game-session-desktop-height) !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceWrapper,
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceRow,
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceRow > [class*="col-"] {
         width: 100% !important;
         max-width: none !important;
+        height: 100% !important;
+        min-height: 0 !important;
     }
 
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] #workspaceRow {
@@ -220,7 +229,7 @@ body.game-match-auto-fullscreen {
         width: 100% !important;
         min-width: 0 !important;
         height: var(--game-session-desktop-height) !important;
-        min-height: min(620px, var(--game-session-desktop-height)) !important;
+        min-height: 0 !important;
         max-height: none !important;
     }
 
@@ -237,10 +246,12 @@ body.game-match-auto-fullscreen {
 
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-interview-panel .ai-avatar-panel,
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
+        flex: 1 1 0 !important;
         height: 100% !important;
         min-height: 0 !important;
         max-height: none !important;
         margin-bottom: 0 !important;
+        box-sizing: border-box !important;
     }
 
     html body.user-desktop-shell #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {

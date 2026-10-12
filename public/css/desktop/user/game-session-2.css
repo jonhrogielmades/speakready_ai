@@ -118,9 +118,12 @@
         max-width: none !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
+        height: var(--game-session-desktop-height) !important;
+        min-height: var(--game-session-desktop-height) !important;
         display: block !important;
         align-items: stretch !important;
         justify-content: stretch !important;
+        box-sizing: border-box !important;
     }
 
     #sec-interview-session[data-game-session-root] #workspaceWrapper,
@@ -129,8 +132,9 @@
         width: 100% !important;
         max-width: none !important;
         min-width: 0 !important;
-        height: var(--game-session-desktop-height) !important;
-        min-height: min(620px, var(--game-session-desktop-height)) !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
     }
 
     #sec-interview-session[data-game-session-root] #workspaceRow {
@@ -177,11 +181,12 @@
 
     #sec-interview-session[data-game-session-root] .desktop-interview-panel .ai-avatar-panel,
     #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
-        flex: 1 1 auto !important;
+        flex: 1 1 0 !important;
         height: 100% !important;
         min-height: 0 !important;
         max-height: none !important;
         margin-bottom: 0 !important;
+        box-sizing: border-box !important;
     }
 
     #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel {
