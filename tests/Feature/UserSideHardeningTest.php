@@ -2749,12 +2749,14 @@ class UserSideHardeningTest extends TestCase
  'elapsed_seconds' => 12,
  ]);
 
- $this->actingAs($user)
+ $desktopResponse = $this->actingAs($user)
  ->withSession([
  'active_game_session_id' => $session->id,
  'game_level_id' => $level->id,
  ])
- ->get(route('user.game.match'))
+ ->get(route('user.game.match'));
+
+ $desktopResponse
  ->assertOk()
  ->assertSee('Finish Challenge')
  ->assertSee('let currentQIdx = 1;', false)
@@ -2790,6 +2792,17 @@ class UserSideHardeningTest extends TestCase
  ->assertDontSee('Voice Analytics')
  ->assertDontSee('Challenge Notes')
  ->assertDontSee('Finish Interview');
+
+ $dom = new \DOMDocument();
+ libxml_use_internal_errors(true);
+ $dom->loadHTML($desktopResponse->getContent());
+ libxml_clear_errors();
+ $xpath = new \DOMXPath($dom);
+ $desktopLayout = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " desktop-session-two-column ")]')->item(0);
+
+ $this->assertNotNull($desktopLayout);
+ $this->assertSame(1, $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " desktop-interview-panel ")]', $desktopLayout)->length);
+ $this->assertSame(1, $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " desktop-response-column ")]', $desktopLayout)->length);
 
  $session->refresh();
  $this->assertSame('voice', $session->response_mode);

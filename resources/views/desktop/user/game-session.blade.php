@@ -124,6 +124,7 @@
  <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
  </div>
  </div>
+  </div>
 
  <div class="desktop-response-column">
 
@@ -160,7 +161,7 @@
  </div>
  </div>
  </div>
- </div>
+  </div>
 
  @if($cameraCoachingEnabled)
  <!-- Side Panels -->
