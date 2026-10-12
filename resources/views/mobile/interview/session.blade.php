@@ -2358,7 +2358,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function preferredTranscriptionEngine() {
  if (!isHybridTranscriptionMode()) return null;
  if (microphoneRequiresSecureOrigin()) return null;
- if (recognition) return 'browser';
+ if (BrowserSpeechRecognition) return 'browser';
  if (canUseServerTranscription()) return 'server';
  return null;
  }

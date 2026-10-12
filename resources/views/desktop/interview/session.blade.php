@@ -720,7 +720,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
  const displayRealtimeTranscriptInTextarea = true;
 
- let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (canUseServerTranscription()? 'server': (BrowserSpeechRecognition? 'browser': null)): null;
+ let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null)): null;
  const transcriptOverlapMaxWords = 240;
  const voiceSessionRecordings = new Map();
  let voiceSessionRecorder = null;
@@ -2360,8 +2360,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function preferredTranscriptionEngine() {
  if (!isHybridTranscriptionMode()) return null;
  if (microphoneRequiresSecureOrigin()) return null;
+ if (BrowserSpeechRecognition) return 'browser';
  if (canUseServerTranscription()) return 'server';
- if (recognition) return 'browser';
  return null;
  }
 
