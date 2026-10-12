@@ -345,6 +345,11 @@ let committedSpeechTranscript = '';
  return Promise.resolve(false);
  }
 
+ if (options.auto &&!options.retry) {
+ armGameMatchFullscreenRetry();
+ return Promise.resolve(false);
+ }
+
  return root.requestFullscreen({ navigationUI: 'hide' }).then(() => {
  removeGameMatchFullscreenRetry();
  gameMatchFullscreenRequested = true;
@@ -1823,6 +1828,7 @@ const stepsDesktop = [
  };
 
  setCountdownState('3');
+ enterGameMatchFullscreen({ auto: true, entry: true });
 
  const finishCountdown = () => {
  overlay.classList.add('is-exiting');

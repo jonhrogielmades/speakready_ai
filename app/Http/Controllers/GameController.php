@@ -331,7 +331,7 @@ class GameController extends Controller
  ], 422);
  }
 
- $answerText = TranscriptService::clean($validated['answer_text']?? '');
+ $answerText = TranscriptService::cleanLiveSpeech($validated['answer_text']?? '');
  $voiceUpload = $this->submittedVoiceRecording($validated);
  if (! $isSkipped && $answerText === '' && $this->hasSubmittedVoiceRecording($validated) && $voiceUpload) {
  $transcription = $this->transcribeUploadedGameSpeechAnswer(
@@ -339,7 +339,7 @@ class GameController extends Controller
  $gameSession,
  (string) $questions[$questionIndex]
  );
- $transcribedAnswer = TranscriptService::clean($transcription['transcript']?? '');
+ $transcribedAnswer = TranscriptService::cleanLiveSpeech($transcription['transcript']?? '');
  if ($transcribedAnswer!== '') {
  $answerText = $transcribedAnswer;
  $validated['voice_recording_transcription_status'] = 'transcribed';
@@ -450,7 +450,7 @@ class GameController extends Controller
  }
 
  return response()->json([
- 'transcript' => TranscriptService::clean($transcript),
+ 'transcript' => TranscriptService::cleanLiveSpeech($transcript),
  'transcription_source' => $transcriptionSource,
  'transcription_status' => $transcriptionStatus?: 'transcribed',
  'pronunciation_analysis' => $speechAssessment,
@@ -929,7 +929,7 @@ class GameController extends Controller
  }
 
  return [
- 'transcript' => $transcript!== null? TranscriptService::clean($transcript): null,
+ 'transcript' => $transcript!== null? TranscriptService::cleanLiveSpeech($transcript): null,
  'transcription_source' => $transcriptionSource,
  'transcription_status' => $transcriptionStatus,
  'error_code' => $transcriptionErrorCode,

@@ -82,6 +82,35 @@ final class TranscriptService
         'vue' => 'Vue',
     ];
 
+    private const DUPLICATE_SAFE_WORDS = [
+        'i',
+        "i'm",
+        'the',
+        'a',
+        'an',
+        'and',
+        'to',
+        'of',
+        'for',
+        'in',
+        'on',
+        'it',
+        'is',
+        'was',
+        'were',
+        'am',
+        'are',
+        'my',
+        'we',
+        'you',
+        'that',
+        'this',
+        'with',
+        'um',
+        'uh',
+        'like',
+    ];
+
     public static function clean(?string $transcript): string
     {
         $text = trim((string) $transcript);
@@ -92,6 +121,11 @@ final class TranscriptService
         // Deduplicate overlapping live chunks at the chunk boundary instead of
         // deleting adjacent speech from a complete transcript or typed answer.
         return $text;
+    }
+
+    public static function cleanLiveSpeech(?string $transcript): string
+    {
+        return self::collapseRepeatedLiveSpeech(self::clean($transcript));
     }
 
     public static function correctWords(?string $transcript): string
@@ -205,6 +239,73 @@ final class TranscriptService
         }
 
         return $correction;
+    }
+
+    private static function collapseRepeatedLiveSpeech(string $text): string
+    {
+        $words = preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY);
+        if (! is_array($words) || count($words) < 2) {
+            return trim($text);
+        }
+
+        $index = 0;
+        while ($index < count($words)) {
+            $collapsed = false;
+            $maxWindow = min(12, intdiv(count($words) - $index, 2));
+
+            for ($size = $maxWindow; $size >= 1; $size--) {
+                $first = self::normalizedSpeechPhrase(array_slice($words, $index, $size));
+                $second = self::normalizedSpeechPhrase(array_slice($words, $index + $size, $size));
+
+                if ($first !== '' && $first === $second && self::shouldCollapseDuplicateWindow($size, $first)) {
+                    array_splice($words, $index + $size, $size);
+                    $index = max(0, $index - $size);
+                    $collapsed = true;
+                    break;
+                }
+            }
+
+            if (! $collapsed) {
+                $index++;
+            }
+        }
+
+        $collapsedText = implode(' ', $words);
+
+        return trim(preg_replace('/\s+/u', ' ', $collapsedText) ?? $collapsedText);
+    }
+
+    private static function normalizedSpeechPhrase(array $words): string
+    {
+        $normalized = array_map(
+            static fn (string $word): string => self::normalizeSpeechWord($word),
+            $words
+        );
+
+        return trim(implode(' ', array_filter($normalized, static fn (string $word): bool => $word !== '')));
+    }
+
+    private static function normalizeSpeechWord(string $word): string
+    {
+        $normalized = str_replace("\xE2\x80\x99", "'", $word);
+        $normalized = function_exists('mb_strtolower')
+            ? mb_strtolower($normalized, 'UTF-8')
+            : strtolower($normalized);
+
+        $normalized = preg_replace('/[^\p{L}\p{N}\'\x{2019}]+/u', '', $normalized) ?? $normalized;
+
+        return trim($normalized, "-'");
+    }
+
+    private static function shouldCollapseDuplicateWindow(int $size, string $normalizedPhrase): bool
+    {
+        if ($normalizedPhrase === '') {
+            return false;
+        }
+
+        return $size >= 2
+            || strlen($normalizedPhrase) > 2
+            || in_array($normalizedPhrase, self::DUPLICATE_SAFE_WORDS, true);
     }
 
     private static function isAllUpper(string $value): bool

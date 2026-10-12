@@ -38,6 +38,16 @@ class TranscriptServiceTest extends TestCase
         );
     }
 
+    public function test_it_can_collapse_live_speech_chunk_repetitions_when_requested(): void
+    {
+        $transcript = 'I handled customer concern I handled customer concern and solved it solved it';
+
+        $this->assertSame(
+            'I handled customer concern and solved it',
+            TranscriptService::cleanLiveSpeech($transcript)
+        );
+    }
+
     public function test_it_does_not_delete_a_repeated_long_phrase_from_a_complete_transcript(): void
     {
         $phrase = 'I reviewed the customer issue with the team and documented the root cause before deployment';
