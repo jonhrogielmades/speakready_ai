@@ -12,8 +12,8 @@ return new class extends Migration
  if (Schema::hasTable('game_sessions') && Schema::hasColumn('game_sessions', 'response_mode')) {
  DB::table('game_sessions')
  ->where('status', 'in_progress')
- ->where('response_mode', '!=', 'voice')
- ->update(['response_mode' => 'voice']);
+ ->whereNotIn('response_mode', ['hybrid', 'voice_and_text'])
+ ->update(['response_mode' => 'hybrid']);
  }
 
  if (! Schema::hasTable('game_answers')) {

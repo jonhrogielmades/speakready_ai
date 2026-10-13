@@ -97,7 +97,7 @@ class GameSchema
  $table->string('difficulty')->nullable();
  $table->string('target_position')->nullable();
  $table->integer('num_questions')->default(0);
- $table->string('response_mode')->default('voice');
+ $table->string('response_mode')->default('hybrid');
  $table->text('interview_focus')->nullable();
  $table->string('company_persona')->nullable();
  $table->integer('time_limit')->default(0);
@@ -178,7 +178,7 @@ class GameSchema
  $table->integer('num_questions')->default(0);
  }
  if (self::isMissing($missing, 'response_mode')) {
- $table->string('response_mode')->default('voice');
+ $table->string('response_mode')->default('hybrid');
  }
  if (self::isMissing($missing, 'interview_focus')) {
  $table->text('interview_focus')->nullable();
@@ -253,7 +253,7 @@ class GameSchema
  $table->text('question_text');
  $table->text('answer_text')->nullable();
  $table->boolean('is_skipped')->default(false);
- $table->string('response_mode')->default('voice');
+ $table->string('response_mode')->default('hybrid');
  $table->integer('elapsed_seconds')->default(0);
  $table->integer('wpm')->default(0);
  $table->integer('voice_duration')->default(0);
@@ -308,7 +308,7 @@ class GameSchema
  $table->boolean('is_skipped')->default(false);
  }
  if (self::isMissing($missing, 'response_mode')) {
- $table->string('response_mode')->default('voice');
+ $table->string('response_mode')->default('hybrid');
  }
  if (self::isMissing($missing, 'elapsed_seconds')) {
  $table->integer('elapsed_seconds')->default(0);

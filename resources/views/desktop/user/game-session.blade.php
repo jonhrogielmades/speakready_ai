@@ -178,9 +178,9 @@
  </div>
  </div>
  <div class="game-transcription-display">
- <label for="answerTextarea" class="visually-hidden">Your voice transcript</label>
+ <label for="answerTextarea" class="visually-hidden">Your answer</label>
  <div class="answer-transcript-stage">
- <textarea id="answerTextarea" class="oinp mb-2 voice-only-answer-lock" style="min-height:76px;font-size:.82rem" placeholder="Your transcription will appear here after you click Stop..." readonly aria-readonly="true" aria-describedby="responseCountBar"></textarea>
+ <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer, or record with voice. Voice transcript appears here after Stop..." aria-describedby="responseCountBar"></textarea>
 
  <div class="response-count-bar" id="responseCountBar" aria-live="polite">
  <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
@@ -269,8 +269,8 @@
  <script>
  const questions = {!! json_encode($questions)!!};
  const gameSessionId = {{ (int) $sessionRecord->id }};
- const responseMode = "voice";
- const isVoiceOnlySession = true;
+ const responseMode = "hybrid";
+ const isVoiceOnlySession = false;
  const enableGameRealtimeTranscription = false;
  const cameraCoachingEnabled = @json($cameraCoachingEnabled);
  const interviewerAvatarImages = @json($interviewerAvatarImageUrls);
@@ -1794,7 +1794,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
 
  async function startVoiceAudioRecording(silent = false) {
- if (!isVoiceOnlySession) return true;
+ if (!isVoiceTranscriptionMode()) return true;
 
  if (!voiceRecordingSupported()) {
  if (!silent) alert('Voice recording is not supported in this browser.');
@@ -1868,7 +1868,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  stopVoiceRecordingTracks();
  mediaRecorder = null;
  mediaRecorderChunks = [];
- if (!silent) alert('Microphone access is required for voice-only challenge answers.');
+ if (!silent) alert('Microphone access is required for voice recording.');
  return false;
  }
  }
@@ -1933,6 +1933,11 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  return Boolean(data.has_voice_recording || (data.voice_recording && data.voice_recording.blob));
  }
 
+ function answerHasText(questionIndex) {
+ const data = answersData[questionIndex] || {};
+ return cleanTranscriptText(data.text || '') !== '';
+ }
+
  function setRecordingControlButtons(state) {
  const pauseBtn = document.getElementById('micPauseBtn');
  const stopBtn = document.getElementById('micStopBtn');
@@ -1966,8 +1971,8 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  async function startRecording(options = {}) {
  const silent = options && options.silent === true;
- if(!recognition &&!isVoiceOnlySession) {
- if(!silent) alert("Speech recognition not supported in this browser.");
+ if(!recognition &&!voiceRecordingSupported()) {
+ if(!silent) alert("Voice recording is not supported in this browser.");
  return;
  }
  if (isRecording || isStartingRecording) return;
@@ -2115,8 +2120,8 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  await voiceRecordingStopPromise;
  }
 
- if (!isSkipped && isVoiceOnlySession &&!answerHasVoiceRecording(currentQIdx)) {
- throw new Error('Please record your voice answer before continuing.');
+ if (!isSkipped && !answerHasText(currentQIdx) && !answerHasVoiceRecording(currentQIdx)) {
+ throw new Error('Please type your answer or record your voice before continuing.');
  }
 
  const formData = new FormData();
@@ -2136,7 +2141,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  formData.append('notes', sessionNotesValue());
 
  const voiceRecording = answersData[currentQIdx].voice_recording;
- if (!isSkipped && isVoiceOnlySession && voiceRecording && voiceRecording.blob) {
+ if (!isSkipped && voiceRecording && voiceRecording.blob) {
  const duration = voiceRecording.duration || answersData[currentQIdx].voice_duration || 0;
  formData.append('voice_audio', voiceRecording.blob, voiceRecording.filename || voiceFileName(currentQIdx, voiceRecording.mime_type));
  formData.append('voice_recording_duration_seconds', duration);
@@ -2159,7 +2164,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  throw new Error(message);
  }
 
- if (!isSkipped && isVoiceOnlySession) {
+ if (!isSkipped && voiceRecording && voiceRecording.blob) {
  answersData[currentQIdx].has_voice_recording = true;
  }
 
@@ -2291,7 +2296,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  const stopPromise = (isRecording || isRecordingPaused || isStartingRecording)? stopRecording(): Promise.resolve();
 
  Promise.resolve(stopPromise).then(() => {
- const shouldSkipCurrent = !answerHasVoiceRecording(currentQIdx);
+ const shouldSkipCurrent = !answerHasText(currentQIdx) && !answerHasVoiceRecording(currentQIdx);
  return saveCurrentAnswer(shouldSkipCurrent);
  }).then(() => {
  finishChallenge();

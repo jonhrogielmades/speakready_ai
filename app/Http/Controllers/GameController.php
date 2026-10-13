@@ -27,7 +27,7 @@ use Illuminate\Validation\Rule;
 
 class GameController extends Controller
 {
- private const ACCEPTED_RESPONSE_MODES = ['voice'];
+ private const ACCEPTED_RESPONSE_MODES = ['hybrid', 'voice_and_text', 'voice'];
 
  private const VOICE_RECORDING_MAX_KILOBYTES = 25600;
 
@@ -189,7 +189,7 @@ class GameController extends Controller
  'difficulty' => $level->difficulty,
  'target_position' => $level->target_position,
  'num_questions' => count($questions),
- 'response_mode' => 'voice',
+ 'response_mode' => 'hybrid',
  'interview_focus' => $interviewFocus,
  'company_persona' => $level->ai_persona,
  'time_limit' => $timeLimit,
@@ -269,8 +269,8 @@ class GameController extends Controller
  return redirect()->route('user.learning')->with('error', 'Learning Game data is missing.');
  }
 
- if ($gameSession->response_mode!== 'voice') {
- $gameSession->forceFill(['response_mode' => 'voice'])->save();
+ if ($gameSession->response_mode!== 'hybrid') {
+ $gameSession->forceFill(['response_mode' => 'hybrid'])->save();
  }
 
  // Determine if mobile view
@@ -319,22 +319,23 @@ class GameController extends Controller
  }
 
  $isSkipped = filter_var($validated['is_skipped']?? false, FILTER_VALIDATE_BOOLEAN);
- $responseMode = 'voice';
+ $responseMode = 'hybrid';
  $existingAnswer = GameAnswer::where('game_session_id', $gameSession->id)
  ->where('question_index', $questionIndex)
  ->first();
+ $answerText = TranscriptService::cleanLiveSpeech($validated['answer_text']?? '');
  if (! $isSkipped
+ && $answerText === ''
  &&! $this->hasSubmittedVoiceRecording($validated)
  &&! $this->answerHasStoredVoiceRecording($existingAnswer)) {
  return response()->json([
- 'message' => 'Please record your voice answer before submitting this challenge response.',
+ 'message' => 'Please type your answer or record your voice before submitting this challenge response.',
  'errors' => [
- 'voice_audio' => ['Please record your voice answer before submitting.'],
+ 'answer_text' => ['Please type your answer or record your voice before submitting.'],
  ],
  ], 422);
  }
 
- $answerText = TranscriptService::cleanLiveSpeech($validated['answer_text']?? '');
  $voiceUpload = $this->submittedVoiceRecording($validated);
  if (! $isSkipped && $answerText === '' && $this->hasSubmittedVoiceRecording($validated) && $voiceUpload) {
  $transcription = $this->transcribeUploadedGameSpeechAnswer(
@@ -613,7 +614,7 @@ class GameController extends Controller
  'question_text' => $questionText,
  'answer_text' => '',
  'is_skipped' => true,
- 'response_mode' => 'voice',
+ 'response_mode' => 'hybrid',
  ]);
  }
  }

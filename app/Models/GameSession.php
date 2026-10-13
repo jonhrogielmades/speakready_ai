@@ -38,7 +38,7 @@ class GameSession extends Model
  ];
 
  protected $attributes = [
- 'response_mode' => 'voice',
+ 'response_mode' => 'hybrid',
  ];
 
  protected $casts = [

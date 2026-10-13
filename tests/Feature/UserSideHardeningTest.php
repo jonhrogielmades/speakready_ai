@@ -2318,14 +2318,14 @@ class UserSideHardeningTest extends TestCase
  ->assertRedirect(route('user.game.match'));
 
  $session = GameSession::where('user_id', $user->id)->firstOrFail();
- $this->assertSame('voice', $session->response_mode);
+ $this->assertSame('hybrid', $session->response_mode);
 
  $this->actingAs($user)
  ->post(route('user.game.answer'), [
  'game_session_id' => $session->id,
  'question_index' => 0,
  'answer_text' => 'I explained the situation task action and result with enough detail for this learning game.',
- 'response_mode' => 'voice',
+ 'response_mode' => 'hybrid',
  'voice_duration' => 18,
  'voice_recording_duration_seconds' => 18,
  'voice_recording_transcription_status' => 'transcribed',
@@ -2374,7 +2374,7 @@ class UserSideHardeningTest extends TestCase
  ]);
 
  $gameAnswer = GameAnswer::where('game_session_id', $session->id)->firstOrFail();
- $this->assertSame('voice', $gameAnswer->response_mode);
+ $this->assertSame('hybrid', $gameAnswer->response_mode);
  $this->assertNotEmpty($gameAnswer->voice_recording_path);
  Storage::disk('local')->assertExists($gameAnswer->voice_recording_path);
 
@@ -2532,7 +2532,7 @@ class UserSideHardeningTest extends TestCase
  'game_session_id' => $session->id,
  'question_index' => 0,
  'answer_text' => 'I handled customer concern I handled customer concern and solved it solved it',
- 'response_mode' => 'voice',
+ 'response_mode' => 'hybrid',
  'voice_duration' => 18,
  'voice_recording_duration_seconds' => 18,
  'voice_recording_transcription_status' => 'transcribed',
@@ -2546,7 +2546,7 @@ class UserSideHardeningTest extends TestCase
  $answer = GameAnswer::where('game_session_id', $session->id)->firstOrFail();
 
  $this->assertSame('I handled customer concern and solved it', $answer->answer_text);
- $this->assertSame('voice', $answer->response_mode);
+ $this->assertSame('hybrid', $answer->response_mode);
  $this->assertSame('local', $answer->voice_recording_disk);
  $this->assertSame('audio/webm', $answer->voice_recording_mime_type);
  $this->assertSame('transcribed', $answer->voice_recording_transcription_status);
@@ -2564,7 +2564,7 @@ class UserSideHardeningTest extends TestCase
  ->assertForbidden();
  }
 
- public function test_game_answer_requires_recorded_voice_for_challenge_session(): void
+ public function test_game_answer_accepts_hybrid_text_and_rejects_empty_answer(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
@@ -2576,26 +2576,41 @@ class UserSideHardeningTest extends TestCase
  ->assertRedirect(route('user.game.match'));
 
  $session = GameSession::where('user_id', $user->id)->firstOrFail();
- $this->assertSame('voice', $session->response_mode);
+ $this->assertSame('hybrid', $session->response_mode);
 
  $this->actingAs($user)
  ->postJson(route('user.game.answer'), [
  'game_session_id' => $session->id,
  'question_index' => 0,
- 'answer_text' => 'This is typed only and should not count for voice mode.',
- 'response_mode' => 'voice',
+ 'answer_text' => 'This typed answer should count in hybrid mode.',
+ 'response_mode' => 'hybrid',
+ ])
+ ->assertOk()
+ ->assertJson(['success' => true]);
+
+ $this->assertDatabaseCount('game_answers', 1);
+ $answer = GameAnswer::where('game_session_id', $session->id)->firstOrFail();
+ $this->assertSame('This typed answer should count in hybrid mode.', $answer->answer_text);
+ $this->assertSame('hybrid', $answer->response_mode);
+
+ $this->actingAs($user)
+ ->postJson(route('user.game.answer'), [
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'answer_text' => '',
+ 'response_mode' => 'hybrid',
  ])
  ->assertStatus(422)
- ->assertJsonValidationErrors('voice_audio')
- ->assertJsonPath('message', 'Please record your voice answer before submitting this challenge response.');
+ ->assertJsonValidationErrors('answer_text')
+ ->assertJsonPath('message', 'Please type your answer or record your voice before submitting this challenge response.');
 
- $this->assertDatabaseCount('game_answers', 0);
+ $this->assertDatabaseCount('game_answers', 1);
 
  $this->actingAs($user)
  ->postJson(route('user.game.answer'), [
  'game_session_id' => $session->id,
  'question_index' => 0,
- 'answer_text' => 'This is typed only and should not count for voice mode.',
+ 'answer_text' => 'This uses an unsupported game response mode.',
  'response_mode' => 'text',
  'voice_audio' => UploadedFile::fake()
  ->createWithContent('challenge-answer.webm', str_repeat('A', 4096))
@@ -2604,7 +2619,7 @@ class UserSideHardeningTest extends TestCase
  ->assertStatus(422)
  ->assertJsonValidationErrors('response_mode');
 
- $this->assertDatabaseCount('game_answers', 0);
+ $this->assertDatabaseCount('game_answers', 1);
  }
 
  public function test_game_interviewer_reply_acknowledges_answer_before_next_challenge_question(): void
@@ -2619,7 +2634,7 @@ class UserSideHardeningTest extends TestCase
  'status' => 'in_progress',
  'num_questions' => 2,
  'questions' => ['Describe a customer escalation.', 'What result proved it worked?'],
- 'response_mode' => 'voice',
+ 'response_mode' => 'hybrid',
  'target_position' => 'Customer Support Specialist',
  ]);
 
@@ -2628,7 +2643,7 @@ class UserSideHardeningTest extends TestCase
  'question_index' => 0,
  'question_text' => 'Describe a customer escalation.',
  'answer_text' => 'I handled a customer escalation by calming the caller and improving the response time.',
- 'response_mode' => 'voice',
+ 'response_mode' => 'hybrid',
  ]);
 
  $this->actingAs($user)
@@ -2836,9 +2851,12 @@ class UserSideHardeningTest extends TestCase
  ->assertSee("const transcriptText = cleanTranscriptText(data.transcript || '') || fallbackTranscript;", false)
  ->assertSee('Your Response')
  ->assertSee('Voice Session')
- ->assertSee('const responseMode = "voice";', false)
- ->assertSee('readonly aria-readonly="true"', false)
- ->assertSee('Your transcription will appear here after you click Stop...', false)
+ ->assertSee('const responseMode = "hybrid";', false)
+ ->assertSee('const isVoiceOnlySession = false;', false)
+ ->assertSee('Type your answer, or record with voice. Voice transcript appears here after Stop...', false)
+ ->assertDontSee('readonly aria-readonly="true"', false)
+ ->assertDontSee('voice-only-answer-lock', false)
+ ->assertDontSee('Your transcription will appear here after you click Stop...', false)
  ->assertDontSee('prev-btn-class', false)
  ->assertDontSee('Previous question', false)
  ->assertDontSee('skip-btn-class', false)
@@ -2875,7 +2893,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame(1, $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " desktop-response-column ")]', $desktopLayout)->length);
 
  $session->refresh();
- $this->assertSame('voice', $session->response_mode);
+ $this->assertSame('hybrid', $session->response_mode);
 
  $this->actingAs($user)
  ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
@@ -2918,9 +2936,12 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('Submit Answer')
  ->assertSee('onclick="endChallenge()"', false)
  ->assertSee('end-challenge-btn-class', false)
- ->assertSee('const responseMode = "voice";', false)
- ->assertSee('readonly aria-readonly="true"', false)
- ->assertSee('Your transcription will appear here after you click Stop...', false)
+ ->assertSee('const responseMode = "hybrid";', false)
+ ->assertSee('const isVoiceOnlySession = false;', false)
+ ->assertSee('Type your answer, or record with voice. Voice transcript appears here after Stop...', false)
+ ->assertDontSee('readonly aria-readonly="true"', false)
+ ->assertDontSee('voice-only-answer-lock', false)
+ ->assertDontSee('Your transcription will appear here after you click Stop...', false)
  ->assertDontSee('prev-btn-class', false)
  ->assertDontSee('Previous question', false)
  ->assertDontSee('skip-btn-class', false)
