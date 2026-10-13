@@ -298,6 +298,7 @@
 let mediaRecorderChunks = [];
 let voiceRecordingStopPromise = null;
 let voiceTranscriptionPromise = null;
+let recordingStopPromise = null;
 let gameVoicePlaybackObjectUrl = '';
 window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
 let gameCameraMovementBaseline = null;
@@ -320,6 +321,7 @@ let committedSpeechTranscript = '';
  ]);
  let gameMatchFullscreenRequested = false;
  let gameMatchFullscreenRetryQueued = false;
+let gameMatchFullscreenBusy = false;
  const gameMatchFullscreenRetryEvents = ['pointerdown', 'keydown', 'touchstart', 'click'];
 
  function randomizeInterviewerAvatar() {
@@ -385,12 +387,11 @@ let committedSpeechTranscript = '';
  if (document.fullscreenElement || typeof root.requestFullscreen!== 'function') {
  return Promise.resolve(false);
  }
-
- if (options.auto &&!options.retry) {
- armGameMatchFullscreenRetry();
+ if (gameMatchFullscreenBusy) {
  return Promise.resolve(false);
  }
 
+ gameMatchFullscreenBusy = true;
  return root.requestFullscreen({ navigationUI: 'hide' }).then(() => {
  removeGameMatchFullscreenRetry();
  gameMatchFullscreenRequested = true;
@@ -401,6 +402,8 @@ let committedSpeechTranscript = '';
  armGameMatchFullscreenRetry();
  setGameMatchFullscreenShell(true);
  return false;
+ }).finally(() => {
+ gameMatchFullscreenBusy = false;
  });
  }
 
@@ -417,7 +420,17 @@ let committedSpeechTranscript = '';
  }
 
  function toggleGameMatchFullscreen() {
- if (document.fullscreenElement || document.body.classList.contains('game-match-auto-fullscreen')) {
+ if (gameMatchFullscreenBusy) return Promise.resolve(false);
+
+ if (document.fullscreenElement) {
+ return exitGameMatchFullscreen();
+ }
+
+ if (document.body.classList.contains('game-match-auto-fullscreen')) {
+ const root = document.documentElement;
+ if (typeof root.requestFullscreen === 'function') {
+ return enterGameMatchFullscreen({ retry: true });
+ }
  return exitGameMatchFullscreen();
  }
 
@@ -868,7 +881,7 @@ let committedSpeechTranscript = '';
  }
 
  if (questionIndex === currentQIdx) {
- if (textarea) restoreGameAnswerTextAfterRecording(mergedAnswerText);
+ if (textarea) restoreGameAnswerTextAfterRecording(mergedAnswerText, questionIndex);
  committedSpeechTranscript = cleanTranscript;
  liveSpeechInterim = '';
  resetSpeechRecognitionBufferFromTextarea();
@@ -887,7 +900,9 @@ let committedSpeechTranscript = '';
  }
 
  voiceTranscriptionPromise = (async () => {
- const fallbackTranscript = bufferedGameSpeechTranscript();
+ const fallbackTranscript = Object.prototype.hasOwnProperty.call(options, 'fallbackTranscript')
+ ? cleanTranscriptText(options.fallbackTranscript)
+ : bufferedGameSpeechTranscript();
  const recordingStartText = typeof options.recordingStartText === 'string'? cleanTranscriptText(options.recordingStartText): null;
  if (recording.blob.size > (25 * 1024 * 1024)) {
  if (fallbackTranscript) {
@@ -965,15 +980,13 @@ let committedSpeechTranscript = '';
  ta.placeholder = gameRecordingTextareaPlaceholder;
  }
 
- function restoreGameAnswerTextAfterRecording(text = null) {
- const ta = document.getElementById('answerTextarea');
- if (!ta) return;
- ta.placeholder = gameAnswerTextareaPlaceholder;
- if (text!== null) {
- ta.value = text;
- if (answersData[currentQIdx]) {
- answersData[currentQIdx].text = text;
- }
+ function restoreGameAnswerTextAfterRecording(text = null, questionIndex = currentQIdx) {
+ const ta = questionIndex === currentQIdx? document.getElementById('answerTextarea'): null;
+ if (ta) ta.placeholder = gameAnswerTextareaPlaceholder;
+ if (text!== null && answersData[questionIndex]) {
+ const restoredText = cleanTranscriptText(text);
+ answersData[questionIndex].text = restoredText;
+ if (ta) ta.value = restoredText;
  }
  }
 
@@ -1970,6 +1983,22 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  return voiceRecordingStopPromise;
  }
 
+ function waitForGameRecordingStartToSettle(timeoutMs = 3000) {
+ if (!isStartingRecording) return Promise.resolve();
+
+ return new Promise(resolve => {
+ const startedAt = Date.now();
+ const check = () => {
+ if (!isStartingRecording || Date.now() - startedAt >= timeoutMs) {
+ resolve();
+ return;
+ }
+ setTimeout(check, 50);
+ };
+ check();
+ });
+ }
+
  function answerHasVoiceRecording(questionIndex) {
  const data = answersData[questionIndex] || {};
  return Boolean(data.has_voice_recording || (data.voice_recording && data.voice_recording.blob));
@@ -2120,9 +2149,22 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
 
  async function stopRecording() {
+ if (recordingStopPromise) return recordingStopPromise;
+ recordingStopPromise = stopRecordingInternal().finally(() => {
+ recordingStopPromise = null;
+ });
+ return recordingStopPromise;
+ }
+
+ async function stopRecordingInternal() {
  if (isStartingRecording &&!isRecording) {
  stopRequestedWhileStarting = true;
- return voiceRecordingStopPromise || Promise.resolve(null);
+ await waitForGameRecordingStartToSettle();
+ if (!isRecording &&!isRecordingPaused &&!mediaRecorder &&!voiceRecordingStopPromise) {
+ restoreGameAnswerTextAfterRecording(recordingAnswerTextAtStart);
+ setRecordingControlButtons('idle');
+ return null;
+ }
  }
 
  const stoppedQuestionIndex = currentQIdx;
@@ -2155,9 +2197,9 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
  }
  if (recording?.blob) {
- await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex, { recordingStartText: recordingBaseText });
+ await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex, { recordingStartText: recordingBaseText, fallbackTranscript });
  } else if (!fallbackTranscript) {
- restoreGameAnswerTextAfterRecording(recordingBaseText);
+ restoreGameAnswerTextAfterRecording(recordingBaseText, stoppedQuestionIndex);
  setTranscriptionStatus('');
  }
  recordingAnswerTextAtStart = '';
@@ -2166,8 +2208,14 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
 
  async function saveCurrentAnswer(isSkipped = false) {
+ if (recordingStopPromise) {
+ await recordingStopPromise;
+ }
  if (voiceRecordingStopPromise) {
  await voiceRecordingStopPromise;
+ }
+ if (voiceTranscriptionPromise) {
+ await voiceTranscriptionPromise;
  }
 
  if (!isSkipped && !answerHasText(currentQIdx) && !answerHasVoiceRecording(currentQIdx)) {
