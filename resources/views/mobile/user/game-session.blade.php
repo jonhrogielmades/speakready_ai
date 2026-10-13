@@ -2,7 +2,7 @@
 @section('title', 'Interview Challenge')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=67') }}" data-page-style="interview-session">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026101302') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026101304') }}" data-page-style="user-game-session">
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-2.css?v=2') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
@@ -139,9 +139,8 @@
  <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleGameMatchFullscreen()" aria-label="Exit fullscreen" title="Exit fullscreen">
  <i class="fa-solid fa-compress"></i>
  </button>
- <button type="button" class="btn game-skip-action skip-btn-class" onclick="skipQuestion()" aria-label="Skip question" title="Skip question"><i class="fa-solid fa-forward-step"></i><span>Skip</span></button>
- <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()" aria-label="Next question" title="Next question">
- <span class="next-label-full">Next Question</span><span class="next-label-short">Next</span><i class="fa-solid fa-arrow-right"></i>
+ <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()" aria-label="Submit answer" title="Submit answer">
+ <span class="next-label-full">Submit Answer</span><span class="next-label-short">Submit</span><i class="fa-solid fa-paper-plane"></i>
  </button>
  </div>
  </div>
@@ -1645,12 +1644,16 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  if (idx === questions.length - 1) {
  document.querySelectorAll('.next-btn-class').forEach(el => {
  el.innerHTML = '<span class="next-label-full">Finish Challenge</span><span class="next-label-short">Finish</span><i class="fa-solid fa-flag-checkered ms-2"></i>';
+ el.setAttribute('aria-label', 'Finish challenge');
+ el.setAttribute('title', 'Finish challenge');
  el.classList.add('btn-success');
  el.classList.remove('bgrd', 'btn-primary');
  });
  } else {
  document.querySelectorAll('.next-btn-class').forEach(el => {
- el.innerHTML = '<span class="next-label-full">Next Question</span><span class="next-label-short">Next</span><i class="fa-solid fa-arrow-right ms-2"></i>';
+ el.innerHTML = '<span class="next-label-full">Submit Answer</span><span class="next-label-short">Submit</span><i class="fa-solid fa-paper-plane ms-2"></i>';
+ el.setAttribute('aria-label', 'Submit answer');
+ el.setAttribute('title', 'Submit answer');
  el.classList.add('bgrd');
  el.classList.remove('btn-success');
  });
@@ -2187,7 +2190,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
 
  function setGameAdvanceActionsDisabled(disabled) {
- document.querySelectorAll('.next-btn-class,.skip-btn-class').forEach(el => {
+ document.querySelectorAll('.next-btn-class').forEach(el => {
  el.disabled = disabled;
  el.setAttribute('aria-disabled', disabled? 'true': 'false');
  });
@@ -2278,38 +2281,10 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }
  }
 
- async function skipQuestion() {
- if (isFinishingChallenge) return;
- const isFinalQuestion = currentQIdx >= questions.length - 1;
- const submittedQuestionIndex = currentQIdx;
- setGameAdvanceActionsDisabled(true);
- if (isFinalQuestion) {
- showChallengeFinishModal('Saving this skipped answer...');
- }
- try {
- if (isRecording || isRecordingPaused || isStartingRecording) {
- await stopRecording();
- }
- await saveCurrentAnswer(true);
- if (submittedQuestionIndex < questions.length - 1) {
- await playGameInterviewerTransition(submittedQuestionIndex, true);
- await loadQuestion(submittedQuestionIndex + 1);
- setGameAdvanceActionsDisabled(false);
- } else {
- finishChallenge();
- }
- } catch(error) {
- console.error(error);
- hideChallengeFinishModal();
- setGameAdvanceActionsDisabled(false);
- alert('We could not save your skipped answer. Please try again before continuing.');
- }
- }
-
  function endChallenge() {
  if (isFinishingChallenge) return;
  showChallengeFinishModal('Ending challenge and saving your progress...');
- document.querySelectorAll('.next-btn-class,.skip-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = true);
+ document.querySelectorAll('.next-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = true);
  const stopPromise = (isRecording || isRecordingPaused || isStartingRecording)? stopRecording(): Promise.resolve();
 
  Promise.resolve(stopPromise).then(() => {
@@ -2320,7 +2295,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  }).catch(error => {
  console.error(error);
  hideChallengeFinishModal();
- document.querySelectorAll('.next-btn-class,.skip-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = false);
+ document.querySelectorAll('.next-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = false);
  alert(error.message || 'We could not end the challenge. Please try again.');
  });
  }
@@ -2329,7 +2304,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  if (isFinishingChallenge) return;
  isFinishingChallenge = true;
  showChallengeFinishModal('Scoring your answers and preparing your result modal...');
- document.querySelectorAll('.next-btn-class,.skip-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = true);
+ document.querySelectorAll('.next-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = true);
  let video = document.getElementById('userCamera');
  if (video && video.srcObject) {
  video.srcObject.getTracks().forEach(track => track.stop());

@@ -62,32 +62,33 @@
     min-width: 0;
 }
 
-#sec-interview-session[data-game-session-root] .game-skip-action {
-    min-height: var(--game-action-height);
-    height: var(--game-action-height);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border: 1px solid rgba(245, 158, 11, 0.28);
-    border-radius: 10px;
-    padding: 0 12px;
-    background: rgba(245, 158, 11, 0.12);
-    color: #b45309;
-    font-size: 0.76rem;
-    font-weight: 900;
-    line-height: 1;
-    white-space: nowrap;
+html body #sec-interview-session[data-game-session-root] .ai-avatar-panel #interviewControls.interview-panel-actions {
+    width: max-content !important;
+    max-width: calc(100% - 168px) !important;
 }
 
-#sec-interview-session[data-game-session-root] .game-skip-action:hover,
-#sec-interview-session[data-game-session-root] .game-skip-action:focus {
-    border-color: rgba(245, 158, 11, 0.46);
-    background: rgba(245, 158, 11, 0.18);
-    color: #92400e;
+html body #sec-interview-session[data-game-session-root] .ai-avatar-panel #interviewControls.interview-panel-actions > div:first-child {
+    width: auto !important;
+    max-width: 100% !important;
+    flex: 0 1 auto !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px !important;
 }
 
-#sec-interview-session[data-game-session-root] .game-skip-action:disabled,
+html body #sec-interview-session[data-game-session-root] .ai-avatar-panel #interviewControls.interview-panel-actions .session-action-btn {
+    width: auto !important;
+    min-width: 82px !important;
+    max-width: none !important;
+    padding: 0 10px !important;
+    gap: 6px !important;
+    overflow: visible !important;
+}
+
+html body #sec-interview-session[data-game-session-root] .ai-avatar-panel #interviewControls.interview-panel-actions .session-end-btn {
+    min-width: 122px !important;
+}
+
 #sec-interview-session[data-game-session-root] .response-send-answer-btn:disabled {
     opacity: 0.58;
     cursor: not-allowed;
@@ -270,17 +271,6 @@ body.game-match-auto-fullscreen {
 @media (max-width: 575.98px) {
     #sec-interview-session[data-game-session-root] .game-response-actions {
         gap: 6px !important;
-    }
-
-    #sec-interview-session[data-game-session-root] .game-skip-action {
-        width: var(--game-action-height);
-        min-width: var(--game-action-height);
-        padding: 0;
-        font-size: 0;
-    }
-
-    #sec-interview-session[data-game-session-root] .game-skip-action i {
-        font-size: 0.82rem;
     }
 
     #sec-interview-session[data-game-session-root] .next-label-full {
