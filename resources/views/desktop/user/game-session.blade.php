@@ -321,6 +321,7 @@ let committedSpeechTranscript = '';
  'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
  'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
  ]);
+ const transcriptOverlapMaxWords = 240;
  let gameMatchFullscreenRequested = false;
  let gameMatchFullscreenRetryQueued = false;
 let gameMatchFullscreenBusy = false;
@@ -507,7 +508,7 @@ let gameMatchFullscreenBusy = false;
  const additionWords = wordsForTranscript(additionClean);
  const existingNormalized = existingWords.map(normalizeTranscriptForMatch);
  const additionNormalized = additionWords.map(normalizeTranscriptForMatch);
- const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, 24);
+ const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, transcriptOverlapMaxWords);
  let overlap = 0;
 
  for (let size = maxOverlap; size > 0; size--) {
@@ -536,7 +537,7 @@ let gameMatchFullscreenBusy = false;
  let index = 0;
  while (index < words.length) {
  let collapsed = false;
- const maxWindow = Math.min(12, Math.floor((words.length - index) / 2));
+ const maxWindow = Math.min(transcriptOverlapMaxWords, Math.floor((words.length - index) / 2));
 
  for (let size = maxWindow; size >= 1; size--) {
  const first = words.slice(index, index + size).map(normalizeTranscriptForMatch).join(' ');
@@ -861,7 +862,7 @@ let gameMatchFullscreenBusy = false;
  const existingText = textarea? String(textarea.value || ''): String(answersData[questionIndex].text || '');
  const recordingStartText = typeof options.recordingStartText === 'string'? cleanTranscriptText(options.recordingStartText): null;
  const mergedAnswerText = recordingStartText!== null
- ? mergeTranscriptParts(recordingStartText, cleanTranscript)
+ ? mergeFullVoiceTranscriptWithAnswer(recordingStartText, '', cleanTranscript)
  : (options.appendTranscript === true? mergeTranscriptParts(existingText, cleanTranscript): cleanTranscript);
  const wordCount = cleanTranscript.split(/\s+/).filter(word => word.length > 0).length;
  const duration = Math.max(
@@ -902,20 +903,8 @@ let gameMatchFullscreenBusy = false;
  }
 
  voiceTranscriptionPromise = (async () => {
- const fallbackTranscript = Object.prototype.hasOwnProperty.call(options, 'fallbackTranscript')
- ? cleanTranscriptText(options.fallbackTranscript)
- : bufferedGameSpeechTranscript();
  const recordingStartText = typeof options.recordingStartText === 'string'? cleanTranscriptText(options.recordingStartText): null;
  if (recording.blob.size > (25 * 1024 * 1024)) {
- if (fallbackTranscript) {
- const transcript = applyGameVoiceTranscript(questionIndex, fallbackTranscript, {
- transcription_status: 'transcribed',
- transcription_source: 'browser'
- }, recording, { recordingStartText });
- setTranscriptionStatus('Transcript added to answer.', '#22c55e');
- updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
- return transcript;
- }
  if (recordingStartText!== null && questionIndex === currentQIdx) restoreGameAnswerTextAfterRecording(recordingStartText);
  setTranscriptionStatus('Recording is too large to transcribe automatically.', '#fbbf24');
  updateGameVoiceSessionPanel('recorded', 'Recording saved');
@@ -926,7 +915,7 @@ let gameMatchFullscreenBusy = false;
  try {
  const previousTranscript = recordingStartText || '';
  const data = await requestGameVoiceTranscript(recording, questionIndex, previousTranscript);
- const transcriptText = cleanTranscriptText(data.transcript || '') || fallbackTranscript;
+ const transcriptText = cleanTranscriptText(data.transcript || '');
  const transcript = applyGameVoiceTranscript(questionIndex, transcriptText, data, recording, { recordingStartText });
  if (!transcript && recordingStartText!== null && questionIndex === currentQIdx) restoreGameAnswerTextAfterRecording(recordingStartText);
  setTranscriptionStatus(transcript? 'Transcript added to answer.': 'No speech was detected.', transcript? '#22c55e': '#fbbf24');
@@ -934,15 +923,6 @@ let gameMatchFullscreenBusy = false;
  return transcript;
  } catch (error) {
  console.warn('Challenge voice transcription failed:', error);
- if (fallbackTranscript) {
- const transcript = applyGameVoiceTranscript(questionIndex, fallbackTranscript, {
- transcription_status: 'transcribed',
- transcription_source: 'browser'
- }, recording, { recordingStartText });
- setTranscriptionStatus('Transcript added to answer.', '#22c55e');
- updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
- return transcript;
- }
  if (recordingStartText!== null && questionIndex === currentQIdx) restoreGameAnswerTextAfterRecording(recordingStartText);
  setTranscriptionStatus(gameTranscriptionErrorMessage(error), '#fbbf24');
  return '';
@@ -2187,22 +2167,14 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  recTimerSeconds = 0;
  await speechStopPromise;
  finalizeInterimTranscript();
- const fallbackTranscript = bufferedGameSpeechTranscript();
  const recording = await stopPromise;
  const recordingBaseText = currentRecordingBaseText(stoppedQuestionIndex);
- if (fallbackTranscript) {
- applyGameVoiceTranscript(stoppedQuestionIndex, fallbackTranscript, {
- transcription_status: 'transcribed',
- transcription_source: 'browser'
- }, recording || null, { recordingStartText: recordingBaseText });
- setTranscriptionStatus('Transcript added to answer.', '#22c55e');
- updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
- }
  if (recording?.blob) {
- await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex, { recordingStartText: recordingBaseText, fallbackTranscript });
- } else if (!fallbackTranscript) {
+ await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex, { recordingStartText: recordingBaseText });
+ } else {
  restoreGameAnswerTextAfterRecording(recordingBaseText, stoppedQuestionIndex);
- setTranscriptionStatus('');
+ setTranscriptionStatus('No complete recording was saved for AI transcription.', '#fbbf24');
+ updateGameVoiceSessionPanel('recorded', 'Recording unavailable');
  }
  recordingAnswerTextAtStart = '';
  recordingManualEditedSinceStart = false;

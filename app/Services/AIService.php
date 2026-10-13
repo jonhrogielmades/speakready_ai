@@ -3240,9 +3240,14 @@ PROMPT;
 
  public static function speechTranscriptionAvailable(): bool
  {
- return self::openAiTranscriptionCredentials()!== null
- || self::providerCredentials('gemini', (string) config('services.gemini.transcription_model', config('services.gemini.model', 'gemini-3.6-flash')))['api_key']!== ''
+ return self::apiSpeechTranscriptionAvailable()
  || filter_var(config('services.local_speech.enabled', false), FILTER_VALIDATE_BOOLEAN);
+ }
+
+ public static function apiSpeechTranscriptionAvailable(): bool
+ {
+ return self::openAiTranscriptionCredentials()!== null
+ || self::providerCredentials('gemini', (string) config('services.gemini.transcription_model', config('services.gemini.model', 'gemini-3.6-flash')))['api_key']!== '';
  }
 
  private static function speechTranscriptionProviders(): array

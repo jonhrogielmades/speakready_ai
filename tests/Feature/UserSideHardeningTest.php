@@ -2564,6 +2564,56 @@ class UserSideHardeningTest extends TestCase
  ->assertForbidden();
  }
 
+ public function test_game_voice_transcription_uses_ai_api_provider(): void
+ {
+ Storage::fake('local');
+ config([
+ 'services.ai_transcription.provider_priority' => 'openai',
+ 'services.local_speech.enabled' => false,
+ 'services.openai.transcription_model' => 'gpt-transcribe',
+ ]);
+
+ Http::fake([
+ 'https://api.openai.com/v1/audio/transcriptions' => Http::response([
+ 'text' => 'AI provider challenge transcript.',
+ ], 200),
+ ]);
+
+ AiProvider::create([
+ 'name' => 'OpenAI',
+ 'api_endpoint' => 'https://api.openai.com/v1',
+ 'api_key' => Crypt::encryptString('test-key'),
+ 'status' => 'active',
+ ]);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category);
+ $session = GameSession::create([
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'status' => 'in_progress',
+ 'num_questions' => 1,
+ 'questions' => ['Describe a customer challenge.'],
+ 'response_mode' => 'hybrid',
+ ]);
+
+ $this->actingAs($user)
+ ->postJson(route('user.game.transcribe'), [
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'previous_transcript' => '',
+ 'audio' => UploadedFile::fake()
+ ->createWithContent('challenge-answer.webm', str_repeat('A', 4096))
+ ->mimeType('audio/webm'),
+ ])
+ ->assertOk()
+ ->assertJsonPath('transcript', 'AI provider challenge transcript.')
+ ->assertJsonPath('transcription_source', 'openai')
+ ->assertJsonPath('transcription_status', 'transcribed');
+ }
+
  public function test_game_answer_accepts_hybrid_text_and_rejects_empty_answer(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -2843,9 +2893,11 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('function bufferedGameSpeechTranscript', false)
  ->assertSee('function hideGameAnswerTextDuringRecording', false)
  ->assertSee('function restoreGameAnswerTextAfterRecording', false)
+ ->assertSee('const transcriptOverlapMaxWords = 240;', false)
+ ->assertSee("? mergeFullVoiceTranscriptWithAnswer(recordingStartText, '', cleanTranscript)", false)
  ->assertSee('let recordingStopPromise = null;', false)
  ->assertSee('async function stopRecordingInternal', false)
- ->assertSee('await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex, { recordingStartText: recordingBaseText, fallbackTranscript });', false)
+ ->assertSee('await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex, { recordingStartText: recordingBaseText });', false)
  ->assertSee('if (voiceTranscriptionPromise) {', false)
  ->assertSee('recordingAnswerTextAtStart = preRecordingText;', false)
  ->assertSee(route('user.game.interviewerReply'), false)
@@ -2855,7 +2907,9 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('async function loadQuestion', false)
  ->assertSee('async function submitAnswer', false)
  ->assertSee('shouldAutoRestartRecognition = Boolean(recognition);', false)
- ->assertSee("const transcriptText = cleanTranscriptText(data.transcript || '') || fallbackTranscript;", false)
+ ->assertSee("const transcriptText = cleanTranscriptText(data.transcript || '');", false)
+ ->assertDontSee("transcription_source: 'browser'", false)
+ ->assertDontSee("const transcriptText = cleanTranscriptText(data.transcript || '') || fallbackTranscript;", false)
  ->assertSee('Your Response')
  ->assertSee('Voice Session')
  ->assertSee('const responseMode = "hybrid";', false)
@@ -2936,9 +2990,11 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('function bufferedGameSpeechTranscript', false)
  ->assertSee('function hideGameAnswerTextDuringRecording', false)
  ->assertSee('function restoreGameAnswerTextAfterRecording', false)
+ ->assertSee('const transcriptOverlapMaxWords = 240;', false)
+ ->assertSee("? mergeFullVoiceTranscriptWithAnswer(recordingStartText, '', cleanTranscript)", false)
  ->assertSee('let recordingStopPromise = null;', false)
  ->assertSee('async function stopRecordingInternal', false)
- ->assertSee('await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex, { recordingStartText: recordingBaseText, fallbackTranscript });', false)
+ ->assertSee('await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex, { recordingStartText: recordingBaseText });', false)
  ->assertSee('if (voiceTranscriptionPromise) {', false)
  ->assertSee('recordingAnswerTextAtStart = preRecordingText;', false)
  ->assertSee(route('user.game.interviewerReply'), false)
@@ -2947,6 +3003,9 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('async function playGameInterviewerTransition', false)
  ->assertSee('async function loadQuestion', false)
  ->assertSee('async function submitAnswer', false)
+ ->assertSee("const transcriptText = cleanTranscriptText(data.transcript || '');", false)
+ ->assertDontSee("transcription_source: 'browser'", false)
+ ->assertDontSee("const transcriptText = cleanTranscriptText(data.transcript || '') || fallbackTranscript;", false)
  ->assertSee('Your Response')
  ->assertSee('Voice Session')
  ->assertSee('End Challenge')

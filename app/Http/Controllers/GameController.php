@@ -436,7 +436,7 @@ class GameController extends Controller
  $rateLimited = $transcriptionErrorCode === 'rate_limited';
  $payload = [
  'error' => 'Challenge voice transcription is not available.',
- 'error_code' => AIService::speechTranscriptionAvailable()? ($rateLimited? 'speech_transcription_rate_limited': 'speech_transcription_failed'): 'speech_transcription_unavailable',
+ 'error_code' => AIService::apiSpeechTranscriptionAvailable()? ($rateLimited? 'speech_transcription_rate_limited': 'speech_transcription_failed'): 'speech_transcription_unavailable',
  'transcription_status' => $transcriptionStatus?: 'unavailable',
  'pronunciation_analysis' => $speechAssessment,
  ];
@@ -1110,7 +1110,6 @@ class GameController extends Controller
  ): array {
  $localSpeechService = app(LocalSpeechAssessmentService::class);
  $speechAssessment = $localSpeechService->assessUploadedAudio($audioFile, null, $this->currentLanguageConfig());
- $localTranscript = $localSpeechService->transcriptFrom($speechAssessment);
  $transcript = null;
  $transcriptionSource = 'ai';
  $transcriptionStatus = null;
@@ -1131,20 +1130,6 @@ class GameController extends Controller
  }
  $transcriptionErrorCode = (string) ($aiTranscription['error_code']?? '');
  $transcriptionRetryAfterSeconds = $aiTranscription['retry_after_seconds']?? null;
- }
-
- if (
- $localTranscript!== null
- && (
- $transcript === null
- || ($transcriptionStatus === 'failed' && trim((string) $transcript) === '')
- )
- ) {
- $transcript = $localTranscript;
- $transcriptionSource = 'local_speech';
- $transcriptionStatus = 'transcribed';
- $transcriptionErrorCode = null;
- $transcriptionRetryAfterSeconds = null;
  }
 
  return [
