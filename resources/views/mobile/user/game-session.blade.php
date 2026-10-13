@@ -302,10 +302,14 @@ let gameVoicePlaybackObjectUrl = '';
 window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
 let gameCameraMovementBaseline = null;
 let preRecordingText = '';
+let recordingAnswerTextAtStart = '';
+let recordingManualEditedSinceStart = false;
 let committedSpeechTranscript = '';
  let liveSpeechInterim = '';
  let lastCommittedSpeech = '';
  let lastCommittedAt = 0;
+ const gameAnswerTextareaPlaceholder = 'Type your answer, or record with voice. Voice transcript appears here after Stop...';
+ const gameRecordingTextareaPlaceholder = 'Recording... transcript will appear here after Stop.';
 
  const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
  const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
@@ -834,12 +838,16 @@ let committedSpeechTranscript = '';
  }
  }
 
- function applyGameVoiceTranscript(questionIndex, transcript, data = {}, recording = null) {
+ function applyGameVoiceTranscript(questionIndex, transcript, data = {}, recording = null, options = {}) {
  const cleanTranscript = cleanTranscriptText(transcript);
  if (!cleanTranscript ||!answersData[questionIndex]) return '';
 
  const textarea = questionIndex === currentQIdx? document.getElementById('answerTextarea'): null;
- const mergedAnswerText = cleanTranscript;
+ const existingText = textarea? String(textarea.value || ''): String(answersData[questionIndex].text || '');
+ const recordingStartText = typeof options.recordingStartText === 'string'? cleanTranscriptText(options.recordingStartText): null;
+ const mergedAnswerText = recordingStartText!== null
+ ? mergeTranscriptParts(recordingStartText, cleanTranscript)
+ : (options.appendTranscript === true? mergeTranscriptParts(existingText, cleanTranscript): cleanTranscript);
  const wordCount = cleanTranscript.split(/\s+/).filter(word => word.length > 0).length;
  const duration = Math.max(
  Number(answersData[questionIndex].voice_duration || 0),
@@ -860,7 +868,7 @@ let committedSpeechTranscript = '';
  }
 
  if (questionIndex === currentQIdx) {
- if (textarea) textarea.value = mergedAnswerText;
+ if (textarea) restoreGameAnswerTextAfterRecording(mergedAnswerText);
  committedSpeechTranscript = cleanTranscript;
  liveSpeechInterim = '';
  resetSpeechRecognitionBufferFromTextarea();
@@ -873,23 +881,25 @@ let committedSpeechTranscript = '';
  return cleanTranscript;
  }
 
- async function transcribeStoppedVoiceRecording(recording, questionIndex = currentQIdx) {
+ async function transcribeStoppedVoiceRecording(recording, questionIndex = currentQIdx, options = {}) {
  if (!recording?.blob || voiceTranscriptionPromise) {
  return voiceTranscriptionPromise || '';
  }
 
  voiceTranscriptionPromise = (async () => {
  const fallbackTranscript = bufferedGameSpeechTranscript();
+ const recordingStartText = typeof options.recordingStartText === 'string'? cleanTranscriptText(options.recordingStartText): null;
  if (recording.blob.size > (25 * 1024 * 1024)) {
  if (fallbackTranscript) {
  const transcript = applyGameVoiceTranscript(questionIndex, fallbackTranscript, {
  transcription_status: 'transcribed',
  transcription_source: 'browser'
- }, recording);
+ }, recording, { recordingStartText });
  setTranscriptionStatus('Transcript added to answer.', '#22c55e');
  updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
  return transcript;
  }
+ if (recordingStartText!== null && questionIndex === currentQIdx) restoreGameAnswerTextAfterRecording(recordingStartText);
  setTranscriptionStatus('Recording is too large to transcribe automatically.', '#fbbf24');
  updateGameVoiceSessionPanel('recorded', 'Recording saved');
  return '';
@@ -897,10 +907,11 @@ let committedSpeechTranscript = '';
 
  setTranscriptionStatus('Transcribing voice answer...', '#fbbf24');
  try {
- const previousTranscript = '';
+ const previousTranscript = recordingStartText || '';
  const data = await requestGameVoiceTranscript(recording, questionIndex, previousTranscript);
  const transcriptText = cleanTranscriptText(data.transcript || '') || fallbackTranscript;
- const transcript = applyGameVoiceTranscript(questionIndex, transcriptText, data, recording);
+ const transcript = applyGameVoiceTranscript(questionIndex, transcriptText, data, recording, { recordingStartText });
+ if (!transcript && recordingStartText!== null && questionIndex === currentQIdx) restoreGameAnswerTextAfterRecording(recordingStartText);
  setTranscriptionStatus(transcript? 'Transcript added to answer.': 'No speech was detected.', transcript? '#22c55e': '#fbbf24');
  updateGameVoiceSessionPanel(transcript? 'transcribed': 'recorded', transcript? 'Transcript ready': 'Recording ready');
  return transcript;
@@ -910,11 +921,12 @@ let committedSpeechTranscript = '';
  const transcript = applyGameVoiceTranscript(questionIndex, fallbackTranscript, {
  transcription_status: 'transcribed',
  transcription_source: 'browser'
- }, recording);
+ }, recording, { recordingStartText });
  setTranscriptionStatus('Transcript added to answer.', '#22c55e');
  updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
  return transcript;
  }
+ if (recordingStartText!== null && questionIndex === currentQIdx) restoreGameAnswerTextAfterRecording(recordingStartText);
  setTranscriptionStatus(gameTranscriptionErrorMessage(error), '#fbbf24');
  return '';
  } finally {
@@ -944,6 +956,31 @@ let committedSpeechTranscript = '';
  liveSpeechInterim = '';
  lastCommittedSpeech = '';
  lastCommittedAt = 0;
+ }
+
+ function hideGameAnswerTextDuringRecording() {
+ const ta = document.getElementById('answerTextarea');
+ if (!ta) return;
+ ta.value = '';
+ ta.placeholder = gameRecordingTextareaPlaceholder;
+ }
+
+ function restoreGameAnswerTextAfterRecording(text = null) {
+ const ta = document.getElementById('answerTextarea');
+ if (!ta) return;
+ ta.placeholder = gameAnswerTextareaPlaceholder;
+ if (text!== null) {
+ ta.value = text;
+ if (answersData[currentQIdx]) {
+ answersData[currentQIdx].text = text;
+ }
+ }
+ }
+
+ function currentRecordingBaseText(questionIndex = currentQIdx) {
+ const ta = questionIndex === currentQIdx? document.getElementById('answerTextarea'): null;
+ if (recordingManualEditedSinceStart && ta) return mergeTranscriptParts(recordingAnswerTextAtStart, ta.value);
+ return cleanTranscriptText(recordingAnswerTextAtStart || answersData[questionIndex]?.text || '');
  }
 
  function commitSpeechSegment(segment) {
@@ -1616,7 +1653,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  
  const answerTextarea = document.getElementById('answerTextarea');
  const sessionNotes = document.getElementById('sessionNotes');
- if (answerTextarea) answerTextarea.addEventListener('input', triggerAnalysis);
+ if (answerTextarea) answerTextarea.addEventListener('input', handleGameAnswerInput);
  if (sessionNotes) sessionNotes.addEventListener('change', autoSaveState);
  return true;
  }
@@ -1725,6 +1762,13 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  setElementText('vaFillers', fillers);
  answersData[currentQIdx].text = text;
  answersData[currentQIdx].filler_words = fillers;
+ }
+
+ function handleGameAnswerInput() {
+ if (isRecording || isRecordingPaused || isStartingRecording) {
+ recordingManualEditedSinceStart = true;
+ }
+ triggerAnalysis();
  }
 
  function updateStarIcon(id, status) {
@@ -1977,6 +2021,9 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
 
  if (!isRecordingPaused) {
  resetSpeechRecognitionBufferFromTextarea();
+ recordingAnswerTextAtStart = preRecordingText;
+ recordingManualEditedSinceStart = false;
+ hideGameAnswerTextDuringRecording();
  lastSpeechEnd = 0;
  }
  isStartingRecording = true;
@@ -1985,6 +2032,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  isStartingRecording = false;
  if (!voiceRecorderStarted) {
  isRecordingPaused = false;
+ restoreGameAnswerTextAfterRecording(recordingAnswerTextAtStart);
  setRecordingControlButtons('idle');
  return;
  }
@@ -2097,19 +2145,23 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  finalizeInterimTranscript();
  const fallbackTranscript = bufferedGameSpeechTranscript();
  const recording = await stopPromise;
+ const recordingBaseText = currentRecordingBaseText(stoppedQuestionIndex);
  if (fallbackTranscript) {
  applyGameVoiceTranscript(stoppedQuestionIndex, fallbackTranscript, {
  transcription_status: 'transcribed',
  transcription_source: 'browser'
- }, recording || null);
+ }, recording || null, { recordingStartText: recordingBaseText });
  setTranscriptionStatus('Transcript added to answer.', '#22c55e');
  updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
  }
  if (recording?.blob) {
- await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex);
+ await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex, { recordingStartText: recordingBaseText });
  } else if (!fallbackTranscript) {
+ restoreGameAnswerTextAfterRecording(recordingBaseText);
  setTranscriptionStatus('');
  }
+ recordingAnswerTextAtStart = '';
+ recordingManualEditedSinceStart = false;
  return recording;
  }
 
