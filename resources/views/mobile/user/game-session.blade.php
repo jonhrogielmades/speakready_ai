@@ -2092,16 +2092,17 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  finalizeInterimTranscript();
  const fallbackTranscript = bufferedGameSpeechTranscript();
  const recording = await stopPromise;
- if (recording?.blob) {
- await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex);
- } else if (fallbackTranscript) {
+ if (fallbackTranscript) {
  applyGameVoiceTranscript(stoppedQuestionIndex, fallbackTranscript, {
  transcription_status: 'transcribed',
  transcription_source: 'browser'
- }, null);
+ }, recording || null);
  setTranscriptionStatus('Transcript added to answer.', '#22c55e');
  updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
- } else {
+ }
+ if (recording?.blob) {
+ await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex);
+ } else if (!fallbackTranscript) {
  setTranscriptionStatus('');
  }
  return recording;
