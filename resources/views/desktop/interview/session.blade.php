@@ -4818,9 +4818,8 @@ return fallbackText;
  updateMobileFullscreenToggle();
  refreshInterviewFullscreenLayout();
  }).catch(() => {
- interviewAutoFullscreenRequested = false;
- interviewSessionBrowserFullscreenRequested = false;
- document.body.classList.remove('interview-session-browser-fullscreen');
+ interviewAutoFullscreenRequested = options.auto === true;
+ interviewSessionBrowserFullscreenRequested = true;
  updateMobileFullscreenToggle();
  refreshInterviewFullscreenLayout();
  });
@@ -6680,10 +6679,8 @@ setFinishViewReviewReady(false);
  }
 
  document.addEventListener('DOMContentLoaded', () => {
- const shouldAutoFullscreenFromSetup = consumeSetupAutoFullscreenPreference();
- if (shouldAutoFullscreenFromSetup) {
+ consumeSetupAutoFullscreenPreference();
  enterInterviewFullscreen({ auto: true, requestBrowser: false });
- }
 
  updateMobileFullscreenToggle();
  document.addEventListener('fullscreenchange', handleBrowserFullscreenChange);

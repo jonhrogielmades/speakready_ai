@@ -1705,8 +1705,9 @@ exitSetupBrowserFullscreen();
 function beginPreparedInterview() {
 if (!setupLoadingReady || setupLoadingSubmitStarted) return;
 setSetupLoadingSubmitting(true);
-rememberSetupAutoFullscreenPreference();
+requestSetupBrowserFullscreen().finally(() => {
 submitSetupFormAfterLoadingFrame();
+});
  }
 
  if (setupForm && setupTransitionOverlay) {
