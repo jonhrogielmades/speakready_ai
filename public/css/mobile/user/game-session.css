@@ -62,30 +62,6 @@
     min-width: 0;
 }
 
-#sec-interview-session[data-game-session-root] .game-mode-badge {
-    min-height: var(--game-action-height);
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    border-radius: 10px;
-    padding: 0 10px;
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    font-size: 0.68rem;
-    font-weight: 900;
-    line-height: 1;
-    white-space: nowrap;
-}
-
-:root:not(.lm) #sec-interview-session[data-game-session-root] .game-mode-badge,
-html[data-theme="dark"] #sec-interview-session[data-game-session-root] .game-mode-badge,
-.dm #sec-interview-session[data-game-session-root] .game-mode-badge {
-    border-color: rgba(248, 113, 113, 0.28);
-    background: rgba(127, 29, 29, 0.28);
-    color: #fecaca;
-}
-
 #sec-interview-session[data-game-session-root] .game-skip-action {
     min-height: var(--game-action-height);
     height: var(--game-action-height);
@@ -132,6 +108,36 @@ html[data-theme="dark"] #sec-interview-session[data-game-session-root] .game-mod
     color: var(--tx3);
     font-size: 0.72rem;
     font-weight: 800;
+}
+
+#sec-interview-session[data-game-session-root] .game-transcription-display {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin-top: 12px;
+}
+
+#sec-interview-session[data-game-session-root] .game-transcription-display .answer-transcript-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea {
+    flex: 1 1 auto;
+    min-height: 180px;
+    resize: none;
+    cursor: default;
+}
+
+#sec-interview-session[data-game-session-root] .game-voice-session-panel {
+    margin: 0;
+}
+
+#sec-interview-session[data-game-session-root] .game-voice-session-panel .voice-session-title span {
+    overflow-wrap: anywhere;
 }
 
 #sec-interview-session[data-game-session-root] #cameraPanel .stat-row {
@@ -264,10 +270,6 @@ body.game-match-auto-fullscreen {
 @media (max-width: 575.98px) {
     #sec-interview-session[data-game-session-root] .game-response-actions {
         gap: 6px !important;
-    }
-
-    #sec-interview-session[data-game-session-root] .game-mode-badge {
-        display: none;
     }
 
     #sec-interview-session[data-game-session-root] .game-skip-action {
