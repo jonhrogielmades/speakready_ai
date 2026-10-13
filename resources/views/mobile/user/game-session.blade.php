@@ -113,7 +113,7 @@
  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150 interview-panel-actions" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
  <div class="d-flex gap-2 w-100 flex-fill">
  <button type="button" class="btn btn-outline-info flex-fill session-action-btn session-repeat-btn" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question"><i class="fa-solid fa-volume-high"></i><span>Repeat</span></button>
- <button type="button" class="btn btn-outline-danger flex-fill session-action-btn prev-btn-class session-end-btn" onclick="prevQuestion()" style="border-radius:12px;" disabled aria-label="Previous question" title="Previous question"><i class="fa-solid fa-arrow-left"></i><span>Previous</span></button>
+ <button type="button" class="btn btn-outline-danger flex-fill session-action-btn end-challenge-btn-class session-end-btn" onclick="endChallenge()" style="border-radius:12px;" aria-label="End challenge" title="End challenge"><i class="fa-solid fa-flag-checkered"></i><span>End Challenge</span></button>
  </div>
  </div>
  <div id="answerTranscriptControls" class="answer-transcript-controls interview-panel-voice-actions" aria-label="Voice recording controls" hidden>
@@ -1121,7 +1121,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  
  speakQuestion(questionText);
  
- document.querySelectorAll('.prev-btn-class').forEach(el => el.disabled = (idx === 0));
+ document.querySelectorAll('.end-challenge-btn-class').forEach(el => el.disabled = false);
  
  if (idx === questions.length - 1) {
  document.querySelectorAll('.next-btn-class').forEach(el => {
@@ -1143,13 +1143,6 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  function repeatQuestion() {
  if(questions && questions[currentQIdx]) {
  speakQuestion(questions[currentQIdx].question_text);
- }
- }
-
- function prevQuestion() {
- if(isRecording || isRecordingPaused || isStartingRecording) stopRecording();
- if (currentQIdx > 0) {
- loadQuestion(currentQIdx - 1);
  }
  }
 
@@ -1718,18 +1711,30 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  });
  }
 
- function prevQuestion() {
- if(isRecording || isRecordingPaused || isStartingRecording) stopRecording();
- if (currentQIdx > 0) {
- loadQuestion(currentQIdx - 1);
- }
+ function endChallenge() {
+ if (isFinishingChallenge) return;
+ showChallengeFinishModal('Ending challenge and saving your progress...');
+ document.querySelectorAll('.next-btn-class,.skip-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = true);
+ const stopPromise = (isRecording || isRecordingPaused || isStartingRecording)? stopRecording(): Promise.resolve();
+
+ Promise.resolve(stopPromise).then(() => {
+ const shouldSkipCurrent = !answerHasVoiceRecording(currentQIdx);
+ return saveCurrentAnswer(shouldSkipCurrent);
+ }).then(() => {
+ finishChallenge();
+ }).catch(error => {
+ console.error(error);
+ hideChallengeFinishModal();
+ document.querySelectorAll('.next-btn-class,.skip-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = false);
+ alert(error.message || 'We could not end the challenge. Please try again.');
+ });
  }
 
  function finishChallenge() {
  if (isFinishingChallenge) return;
  isFinishingChallenge = true;
  showChallengeFinishModal('Scoring your answers and preparing your result modal...');
- document.querySelectorAll('.next-btn-class,.skip-btn-class,.prev-btn-class').forEach(el => el.disabled = true);
+ document.querySelectorAll('.next-btn-class,.skip-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = true);
  let video = document.getElementById('userCamera');
  if (video && video.srcObject) {
  video.srcObject.getTracks().forEach(track => track.stop());
