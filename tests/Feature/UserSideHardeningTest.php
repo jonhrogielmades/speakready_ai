@@ -2607,6 +2607,48 @@ class UserSideHardeningTest extends TestCase
  $this->assertDatabaseCount('game_answers', 0);
  }
 
+ public function test_game_interviewer_reply_acknowledges_answer_before_next_challenge_question(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category);
+ $session = GameSession::create([
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'status' => 'in_progress',
+ 'num_questions' => 2,
+ 'questions' => ['Describe a customer escalation.', 'What result proved it worked?'],
+ 'response_mode' => 'voice',
+ 'target_position' => 'Customer Support Specialist',
+ ]);
+
+ GameAnswer::create([
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'question_text' => 'Describe a customer escalation.',
+ 'answer_text' => 'I handled a customer escalation by calming the caller and improving the response time.',
+ 'response_mode' => 'voice',
+ ]);
+
+ $this->actingAs($user)
+ ->postJson(route('user.game.interviewerReply'), [
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'answer_text' => 'I handled a customer escalation by calming the caller and improving the response time.',
+ ])
+ ->assertOk()
+ ->assertJsonPath('success', true)
+ ->assertJsonPath('source', 'local_fallback')
+ ->assertJsonPath('next_question_index', 1)
+ ->assertJsonPath('next_question_text', 'What result proved it worked?')
+ ->assertJsonFragment(['provider' => 'local'])
+ ->assertJson(fn ($json) => $json
+ ->where('reply_text', fn ($value) => str_contains($value, 'customer') && str_contains($value, 'next challenge question'))
+ ->etc()
+ );
+ }
+
  public function test_game_match_rejects_regular_interview_even_with_stale_game_key(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -2783,6 +2825,12 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('const enableGameRealtimeTranscription = false;', false)
  ->assertSee('function clearCurrentGameVoiceSession', false)
  ->assertSee('function bufferedGameSpeechTranscript', false)
+ ->assertSee(route('user.game.interviewerReply'), false)
+ ->assertSee('function renderGameQuestionCaption', false)
+ ->assertSee('async function requestGameInterviewerReply', false)
+ ->assertSee('async function playGameInterviewerTransition', false)
+ ->assertSee('async function loadQuestion', false)
+ ->assertSee('async function submitAnswer', false)
  ->assertSee('shouldAutoRestartRecognition = Boolean(recognition);', false)
  ->assertSee("const transcriptText = cleanTranscriptText(data.transcript || '') || fallbackTranscript;", false)
  ->assertSee('Your Response')
@@ -2854,6 +2902,12 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('const enableGameRealtimeTranscription = false;', false)
  ->assertSee('function clearCurrentGameVoiceSession', false)
  ->assertSee('function bufferedGameSpeechTranscript', false)
+ ->assertSee(route('user.game.interviewerReply'), false)
+ ->assertSee('function renderGameQuestionCaption', false)
+ ->assertSee('async function requestGameInterviewerReply', false)
+ ->assertSee('async function playGameInterviewerTransition', false)
+ ->assertSee('async function loadQuestion', false)
+ ->assertSee('async function submitAnswer', false)
  ->assertSee('Your Response')
  ->assertSee('Voice Session')
  ->assertSee('End Challenge')

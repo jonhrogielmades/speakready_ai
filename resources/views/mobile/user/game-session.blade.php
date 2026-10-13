@@ -1230,6 +1230,10 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  let preferredVoice = null;
  let autoStartAfterQuestionTimer = null;
  let questionSpeechToken = 0;
+ let activeSpeechCompletion = null;
+ let captionInterval = null;
+ const gameCaptionWordMs = 280;
+ const gameSpeechTimeoutWordMs = 430;
 
  function isVoiceTranscriptionMode() {
  return responseMode === 'voice' || responseMode === 'hybrid' || responseMode === 'voice_and_text';
@@ -1332,12 +1336,163 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  currentAmplitude = Math.max(currentAmplitude, Math.max(0.2, Math.min(1, amount)));
  }
 
- function startGameSpeakingWave(text = '') {
+ function clearGameCaptionInterval() {
+ if (captionInterval) {
+ clearInterval(captionInterval);
+ captionInterval = null;
+ }
+ }
+
+ function gameCaptionWordsFor(text) {
+ const words = [];
+ const pattern = /\S+/g;
+ let match;
+
+ while ((match = pattern.exec(String(text || '')))!== null) {
+ words.push({
+ text: match[0],
+ start: match.index,
+ end: match.index + match[0].length,
+ });
+ }
+
+ return words;
+ }
+
+ function renderGameQuestionCaption(words, activeIndex) {
+ const caption = document.getElementById('questionCaptionText');
+ if (!caption) return;
+
+ if (!words.length || activeIndex < 0) {
+ caption.classList.remove('has-caption', 'is-speaking', 'is-static');
+ caption.innerHTML = '';
+ return;
+ }
+
+ const safeIndex = Math.min(activeIndex, words.length - 1);
+ const windowSize = window.matchMedia('(max-width: 575.98px)').matches? 5: 7;
+ const start = Math.max(0, Math.min(
+ safeIndex - Math.floor(windowSize / 2),
+ Math.max(0, words.length - windowSize)
+ ));
+ const visibleWords = words.slice(start, start + windowSize);
+
+ caption.innerHTML = '';
+ visibleWords.forEach((word, offset) => {
+ const span = document.createElement('span');
+ const index = start + offset;
+ const isActiveWord = index === safeIndex;
+ span.className = 'question-caption-word' + (isActiveWord? ' active': '');
+ span.style.setProperty('opacity', '1', 'important');
+ span.style.setProperty('color', isActiveWord? '#fde047': '#ffffff', 'important');
+ span.style.setProperty('-webkit-text-fill-color', isActiveWord? '#fde047': '#ffffff', 'important');
+ span.style.setProperty('text-shadow', '0 2px 6px rgba(0, 0, 0, 0.98), 0 0 4px rgba(0, 0, 0, 0.95)', 'important');
+ if (isActiveWord) span.setAttribute('aria-current', 'true');
+ span.textContent = word.text;
+ caption.appendChild(span);
+ });
+
+ caption.classList.remove('is-static');
+ caption.classList.add('has-caption', 'is-speaking');
+ }
+
+ function clearGameQuestionCaption() {
+ const caption = document.getElementById('questionCaptionText');
+ if (!caption) return;
+ caption.classList.remove('has-caption', 'is-speaking', 'is-static');
+ caption.innerHTML = '';
+ }
+
+ function renderStaticGameQuestionCaption(text) {
+ const caption = document.getElementById('questionCaptionText');
+ if (!caption) return;
+
+ const cleanText = String(text || '').trim();
+ if (!cleanText) {
+ clearGameQuestionCaption();
+ return;
+ }
+
+ caption.innerHTML = '';
+ caption.textContent = cleanText;
+ caption.classList.remove('is-speaking');
+ caption.classList.add('has-caption', 'is-static');
+ caption.style.setProperty('color', '#ffffff', 'important');
+ caption.style.setProperty('-webkit-text-fill-color', '#ffffff', 'important');
+ caption.style.setProperty('opacity', '1', 'important');
+ caption.style.setProperty('visibility', 'visible', 'important');
+ caption.style.setProperty('text-shadow', '0 2px 6px rgba(0, 0, 0, 0.98), 0 0 10px rgba(0, 0, 0, 0.72)', 'important');
+ }
+
+ function gameWordIndexFromChar(words, charIndex) {
+ const safeChar = Number(charIndex) || 0;
+ const found = words.findIndex(word => safeChar >= word.start && safeChar < word.end);
+ if (found >= 0) return found;
+
+ for (let idx = words.length - 1; idx >= 0; idx--) {
+ if (words[idx].start <= safeChar) return idx;
+ }
+
+ return 0;
+ }
+
+ function estimatedGameSpeechTimeoutMs(text) {
+ const words = String(text || '').trim().split(/\s+/).filter(Boolean).length;
+ return Math.max(5200, Math.min(70000, 2400 + (words * gameSpeechTimeoutWordMs)));
+ }
+
+ function resolveGameSpeechCompletion(token, status = 'finished') {
+ if (!activeSpeechCompletion || activeSpeechCompletion.token!== token) return;
+
+ clearTimeout(activeSpeechCompletion.timeoutId);
+ const resolve = activeSpeechCompletion.resolve;
+ activeSpeechCompletion = null;
+ resolve(status);
+ }
+
+ function resolveAnyGameSpeechCompletion(status = 'cancelled') {
+ if (!activeSpeechCompletion) return;
+
+ clearTimeout(activeSpeechCompletion.timeoutId);
+ const resolve = activeSpeechCompletion.resolve;
+ activeSpeechCompletion = null;
+ resolve(status);
+ }
+
+ function startGameSpeakingUi(text = '', boundaryAware = false) {
+ clearGameCaptionInterval();
  document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
  const avatarHead = document.getElementById('aiAvatarHead');
  avatarHead?.style.setProperty('--avatar-ring-color', '#34d399');
  avatarHead?.classList.add('is-speaking');
+ document.getElementById('aiQuestionText').innerText = text;
+ const words = gameCaptionWordsFor(text);
+ let currentWordIdx = words.length? 0: -1;
+ let boundaryFired = false;
+ renderGameQuestionCaption(words, currentWordIdx);
  startGameSpeechSpectrumVisualizer(text);
+
+ captionInterval = setInterval(() => {
+ if (boundaryAware && boundaryFired) return;
+
+ if (currentWordIdx < words.length - 1) {
+ currentWordIdx++;
+ renderGameQuestionCaption(words, currentWordIdx);
+ pulseGameSpeechSpectrum(1);
+ } else {
+ clearGameCaptionInterval();
+ }
+ }, gameCaptionWordMs);
+
+ return {
+ markBoundary: (charIndex = null) => {
+ boundaryFired = true;
+ clearGameCaptionInterval();
+ currentWordIdx = charIndex === null? Math.min(currentWordIdx + 1, words.length - 1): gameWordIndexFromChar(words, charIndex);
+ renderGameQuestionCaption(words, currentWordIdx);
+ pulseGameSpeechSpectrum(1);
+ },
+ };
  }
 
  function stopGameSpeakingWave() {
@@ -1348,48 +1503,80 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  stopGameSpeechSpectrumVisualizer();
  }
 
+ function finishGameSpeakingUi(text, token) {
+ if (token!== questionSpeechToken) return;
+ stopGameSpeakingWave();
+ clearGameCaptionInterval();
+ renderStaticGameQuestionCaption(text);
+ document.getElementById('aiQuestionText').innerText = text;
+ scheduleAutoTranscriptionStart(token);
+ resolveGameSpeechCompletion(token);
+ }
+
+ function cancelGameSpeechOutput() {
+ resolveAnyGameSpeechCompletion();
+ if ('speechSynthesis' in window) {
+ window.speechSynthesis.cancel();
+ }
+ clearGameCaptionInterval();
+ clearGameQuestionCaption();
+ stopGameSpeakingWave();
+ }
+
  function speakQuestion(text) {
- questionSpeechToken++;
- const token = questionSpeechToken;
+ cancelGameSpeechOutput();
+ const token = ++questionSpeechToken;
+ const completion = new Promise(resolve => {
+ const timeoutId = setTimeout(() => {
+ if (token === questionSpeechToken) {
+ finishGameSpeakingUi(text, token);
+ }
+ }, estimatedGameSpeechTimeoutMs(text));
+ activeSpeechCompletion = { token, resolve, timeoutId };
+ });
 
  if (isRecording || isRecordingPaused) {
  stopRecording();
  }
 
  if ('speechSynthesis' in window) {
- window.speechSynthesis.cancel();
- stopGameSpeakingWave();
  let utterance = new SpeechSynthesisUtterance(text);
  utterance.lang = speechLocale;
  if (preferredVoice) utterance.voice = preferredVoice;
  utterance.rate = 0.95;
  utterance.pitch = 1.0;
+ let speechUi = null;
 
  utterance.onboundary = function(e) {
- if(e.name === 'word') pulseGameSpeechSpectrum(1);
+ if(e.name === 'word' || (typeof e.charIndex === 'number' && e.charIndex >= 0)) {
+ if (speechUi) speechUi.markBoundary(e.charIndex);
+ pulseGameSpeechSpectrum(1);
+ }
  };
 
  utterance.onstart = function() {
  if (token!== questionSpeechToken) return;
- startGameSpeakingWave(text);
+ speechUi = startGameSpeakingUi(text, true);
  };
  
  utterance.onend = function() {
  if (token!== questionSpeechToken) return;
- stopGameSpeakingWave();
- scheduleAutoTranscriptionStart(token);
+ finishGameSpeakingUi(text, token);
  };
 
  utterance.onerror = function() {
  if (token!== questionSpeechToken) return;
- stopGameSpeakingWave();
- scheduleAutoTranscriptionStart(token);
+ finishGameSpeakingUi(text, token);
  };
 
  window.speechSynthesis.speak(utterance);
  } else {
+ renderStaticGameQuestionCaption(text);
  scheduleAutoTranscriptionStart(token);
+ resolveGameSpeechCompletion(token);
  }
+
+ return completion;
  }
 
  function startChallengeSession() {
@@ -1435,15 +1622,14 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  return true;
  }
 
- function loadQuestion(idx) {
+ async function loadQuestion(idx) {
  currentQIdx = idx;
  const q = questions[idx];
  randomizeInterviewerAvatar();
  
  const questionText = q.question_text || '';
  document.getElementById('aiQuestionText').innerText = questionText;
- const questionCaptionText = document.getElementById('questionCaptionText');
- if (questionCaptionText) questionCaptionText.innerText = questionText;
+ renderStaticGameQuestionCaption(questionText);
  document.getElementById('qCounter').innerText = (idx + 1) + '/' + questions.length;
 
  // Restore answer state if navigated back
@@ -1452,7 +1638,7 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  setTranscriptionStatus('');
  refreshGameVoiceSessionForQuestion(idx);
  
- speakQuestion(questionText);
+ await speakQuestion(questionText);
  
  document.querySelectorAll('.end-challenge-btn-class').forEach(el => el.disabled = false);
  
@@ -2000,50 +2186,124 @@ setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movement
  });
  }
 
- function submitAnswer() {
- if (isFinishingChallenge) return;
- const stopPromise = (isRecording || isRecordingPaused || isStartingRecording)? stopRecording(): Promise.resolve();
- const isFinalQuestion = currentQIdx >= questions.length - 1;
- document.querySelectorAll('.next-btn-class,.skip-btn-class').forEach(el => el.disabled = true);
- if (isFinalQuestion) {
- showChallengeFinishModal('Saving your final answer...');
- }
- Promise.resolve(stopPromise).then(() => saveCurrentAnswer(false)).then(() => {
- if (currentQIdx < questions.length - 1) {
- document.querySelectorAll('.next-btn-class,.skip-btn-class').forEach(el => el.disabled = false);
- loadQuestion(currentQIdx + 1);
- } else {
- finishChallenge();
- }
- }).catch(error => {
- console.error(error);
- hideChallengeFinishModal();
- document.querySelectorAll('.next-btn-class,.skip-btn-class').forEach(el => el.disabled = false);
- alert(error.message || 'We could not save your answer. Please try again before continuing.');
+ function setGameAdvanceActionsDisabled(disabled) {
+ document.querySelectorAll('.next-btn-class,.skip-btn-class').forEach(el => {
+ el.disabled = disabled;
+ el.setAttribute('aria-disabled', disabled? 'true': 'false');
  });
  }
 
- function skipQuestion() {
- if (isFinishingChallenge) return;
- const stopPromise = (isRecording || isRecordingPaused || isStartingRecording)? stopRecording(): Promise.resolve();
- const isFinalQuestion = currentQIdx >= questions.length - 1;
- document.querySelectorAll('.next-btn-class,.skip-btn-class').forEach(el => el.disabled = true);
- if (isFinalQuestion) {
- showChallengeFinishModal('Saving this skipped answer...');
+ function localGameInterviewerTransition(questionIndex, isSkipped = false) {
+ if (questionIndex >= questions.length - 1) {
+ return 'Thank you. Your challenge responses are ready for scoring.';
  }
- Promise.resolve(stopPromise).then(() => saveCurrentAnswer(true)).then(() => {
- if (currentQIdx < questions.length - 1) {
- document.querySelectorAll('.next-btn-class,.skip-btn-class').forEach(el => el.disabled = false);
- loadQuestion(currentQIdx + 1);
+
+ if (isSkipped) {
+ return 'No problem. We will keep the pace moving and go to the next challenge question.';
+ }
+
+ const answerText = cleanTranscriptText(answersData[questionIndex]?.text || '');
+ const words = answerText.split(/\s+/).filter(word => word.length > 3).slice(0, 3);
+ if (words.length) {
+ return `Thank you for sharing that context around ${words.join(', ')}. Let's continue with the next challenge question.`;
+ }
+
+ return 'Thank you for that response. Let us continue with the next challenge question.';
+ }
+
+ async function requestGameInterviewerReply(questionIndex, isSkipped = false) {
+ const formData = new FormData();
+ formData.append('_token', '{{ csrf_token() }}');
+ formData.append('game_session_id', gameSessionId);
+ formData.append('question_index', questionIndex);
+ formData.append('answer_text', answersData[questionIndex]?.text || '');
+ formData.append('is_skipped', isSkipped);
+
+ try {
+ const response = await fetch('{{ route("user.game.interviewerReply") }}', {
+ method: 'POST',
+ body: formData,
+ headers: {
+ 'Accept': 'application/json',
+ 'X-Requested-With': 'XMLHttpRequest'
+ },
+ });
+ const data = await response.json().catch(() => ({}));
+ if (!response.ok || !data.success) {
+ throw new Error(data.error || data.message || 'Interviewer reply failed.');
+ }
+
+ return cleanTranscriptText(data.reply_text || '') || localGameInterviewerTransition(questionIndex, isSkipped);
+ } catch (error) {
+ console.warn('Game interviewer reply unavailable; using local transition.', error);
+ return localGameInterviewerTransition(questionIndex, isSkipped);
+ }
+ }
+
+ async function playGameInterviewerTransition(questionIndex, isSkipped = false) {
+ if (questionIndex >= questions.length - 1) return;
+
+ const preparingText = 'Interviewer is preparing the next question...';
+ document.getElementById('aiQuestionText').innerText = preparingText;
+ renderStaticGameQuestionCaption(preparingText);
+ const replyText = await requestGameInterviewerReply(questionIndex, isSkipped);
+ await speakQuestion(replyText);
+ }
+
+ async function submitAnswer() {
+ if (isFinishingChallenge) return;
+ const isFinalQuestion = currentQIdx >= questions.length - 1;
+ const submittedQuestionIndex = currentQIdx;
+ setGameAdvanceActionsDisabled(true);
+ if (isFinalQuestion) {
+ showChallengeFinishModal('Saving your final answer...');
+ }
+ try {
+ if (isRecording || isRecordingPaused || isStartingRecording) {
+ await stopRecording();
+ }
+ await saveCurrentAnswer(false);
+ if (submittedQuestionIndex < questions.length - 1) {
+ await playGameInterviewerTransition(submittedQuestionIndex, false);
+ await loadQuestion(submittedQuestionIndex + 1);
+ setGameAdvanceActionsDisabled(false);
  } else {
  finishChallenge();
  }
- }).catch(error => {
+ } catch(error) {
  console.error(error);
  hideChallengeFinishModal();
- document.querySelectorAll('.next-btn-class,.skip-btn-class').forEach(el => el.disabled = false);
+ setGameAdvanceActionsDisabled(false);
+ alert(error.message || 'We could not save your answer. Please try again before continuing.');
+ }
+ }
+
+ async function skipQuestion() {
+ if (isFinishingChallenge) return;
+ const isFinalQuestion = currentQIdx >= questions.length - 1;
+ const submittedQuestionIndex = currentQIdx;
+ setGameAdvanceActionsDisabled(true);
+ if (isFinalQuestion) {
+ showChallengeFinishModal('Saving this skipped answer...');
+ }
+ try {
+ if (isRecording || isRecordingPaused || isStartingRecording) {
+ await stopRecording();
+ }
+ await saveCurrentAnswer(true);
+ if (submittedQuestionIndex < questions.length - 1) {
+ await playGameInterviewerTransition(submittedQuestionIndex, true);
+ await loadQuestion(submittedQuestionIndex + 1);
+ setGameAdvanceActionsDisabled(false);
+ } else {
+ finishChallenge();
+ }
+ } catch(error) {
+ console.error(error);
+ hideChallengeFinishModal();
+ setGameAdvanceActionsDisabled(false);
  alert('We could not save your skipped answer. Please try again before continuing.');
- });
+ }
  }
 
  function endChallenge() {
