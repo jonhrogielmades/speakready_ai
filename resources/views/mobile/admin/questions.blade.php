@@ -79,13 +79,6 @@
                                 @endforeach
                             </div>
                         @endif
-                        @if($q->source_name)
-                            <div class="mt-1">
-                                <span class="badge bg-info text-dark" style="font-size:.65rem">
-                                    <i class="fa-solid fa-link me-1"></i>{{ Str::limit($q->source_name, 32) }}
-                                </span>
-                            </div>
-                        @endif
                     </td>
                     <td data-label="Category" style="border-bottom:1px solid var(--bd);padding:12px 8px"><span class="question-category" title="{{ $q->category->title ?? 'N/A' }}">{{ $q->category->title ?? 'N/A' }}</span></td>
                     <td data-label="Type / Diff" style="border-bottom:1px solid var(--bd);padding:12px 8px">
