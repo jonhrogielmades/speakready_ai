@@ -1078,9 +1078,9 @@ class AdminController extends Controller
 
  public function fetchLatestActivities(Request $request)
  {
- $activitiesQuery = \App\Models\ActivityLog::with('user')->orderBy('id', 'desc');
+ $activitiesQuery = \App\Models\ActivityLog::importantForAdmin()->with('user')->orderBy('id', 'desc');
  $latestActivities = $activitiesQuery->take(15)->get();
- $newCount = \App\Models\ActivityLog::whereNull('read_at')->count();
+ $newCount = \App\Models\ActivityLog::importantForAdmin()->whereNull('read_at')->count();
  $authActivities = $latestActivities
  ->whereNull('read_at')
  ->values()
@@ -1131,19 +1131,19 @@ class AdminController extends Controller
 
  public function markAllActivitiesRead()
  {
- \App\Models\ActivityLog::whereNull('read_at')->update(['read_at' => now()]);
+ \App\Models\ActivityLog::importantForAdmin()->whereNull('read_at')->update(['read_at' => now()]);
  return response()->json(['success' => true]);
  }
 
  public function clearAllActivities()
  {
- \App\Models\ActivityLog::truncate();
+ \App\Models\ActivityLog::importantForAdmin()->delete();
  return response()->json(['success' => true]);
  }
 
  public function markActivityRead($id)
  {
- $log = \App\Models\ActivityLog::find($id);
+ $log = \App\Models\ActivityLog::importantForAdmin()->find($id);
  if ($log) {
  $log->update(['read_at' => now()]);
  }
@@ -1152,7 +1152,7 @@ class AdminController extends Controller
 
  public function deleteActivity($id)
  {
- $log = \App\Models\ActivityLog::find($id);
+ $log = \App\Models\ActivityLog::importantForAdmin()->find($id);
  if ($log) {
  $log->delete();
  }

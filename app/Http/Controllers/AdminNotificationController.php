@@ -22,13 +22,14 @@ class AdminNotificationController extends Controller
             ->paginate(15, ['*'], 'announcements_page')
             ->withQueryString();
 
-        $activities = ActivityLog::with('user')
+        $activities = ActivityLog::importantForAdmin()
+            ->with('user')
             ->orderBy('id', 'desc')
             ->paginate(25, ['*'], 'activities_page')
             ->withQueryString();
 
-        $activityCount = ActivityLog::count();
-        $unreadActivityCount = ActivityLog::whereNull('read_at')->count();
+        $activityCount = ActivityLog::importantForAdmin()->count();
+        $unreadActivityCount = ActivityLog::importantForAdmin()->whereNull('read_at')->count();
         $globalBroadcastCount = Announcement::where('target', 'all')->count();
         $directAlertCount = Announcement::where('target', 'specific')->count();
         $announcementCount = Announcement::count();

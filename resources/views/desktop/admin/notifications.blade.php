@@ -28,7 +28,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
             <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-bullhorn me-2" style="color:#3b82f6;"></i>Notifications</h4>
-            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Broadcast announcements, send alerts, and review every user activity.</p>
+            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Broadcast announcements, send alerts, and review important user activity.</p>
         </div>
         <div>
             <button type="button" class="btn-premium" data-bs-toggle="modal" data-bs-target="#sendNotificationModal">
@@ -64,7 +64,7 @@
             <div class="premium-card text-center p-4 h-100">
                 <div style="font-size:1.5rem;color:#f59e0b;margin-bottom:8px;"><i class="fa-solid fa-list-check"></i></div>
                 <div style="font-size:2rem;font-weight:700;">{{ number_format($activityCount) }}</div>
-                <div style="font-size:0.85rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Activity Logs</div>
+                <div style="font-size:0.85rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Important Activity Logs</div>
                 <div style="font-size:0.78rem;color:var(--tx3);margin-top:4px;">{{ number_format($unreadActivityCount) }} unread</div>
             </div>
         </div>
@@ -75,8 +75,8 @@
             <div class="premium-card mb-4 activity-history-card">
                 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
                     <div>
-                        <h6 class="fw-bold mb-1"><i class="fa-solid fa-list-check me-2" style="color:#f59e0b;"></i>All Activities</h6>
-                        <p class="mb-0" style="font-size:0.9rem;color:var(--tx2);">Full live activity history from the admin notification feed.</p>
+                        <h6 class="fw-bold mb-1"><i class="fa-solid fa-list-check me-2" style="color:#f59e0b;"></i>All Activities <span class="stat-badge warning ms-2" style="font-size:0.68rem;vertical-align:middle;">Important only</span></h6>
+                        <p class="mb-0" style="font-size:0.9rem;color:var(--tx2);">Only important security, account, system, destructive, and milestone events appear in this feed.</p>
                     </div>
                     @if($activityCount > 0)
                     <div class="d-flex flex-wrap gap-2">
@@ -139,7 +139,7 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="6" class="text-center text-muted py-4">No activity logs have been recorded yet.</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted py-4">No important activity logs have been recorded yet.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -323,7 +323,7 @@ function markAllActivitiesReadFromPage(event) {
 
 function clearAllActivitiesFromPage(event) {
     event.preventDefault();
-    if (!confirm('Are you sure you want to completely clear all activity logs? This cannot be undone.')) {
+    if (!confirm('Are you sure you want to clear all important activity logs? This cannot be undone.')) {
         return;
     }
 

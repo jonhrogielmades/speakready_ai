@@ -699,7 +699,7 @@
           function clearAllActivities(event) {
               event.preventDefault();
               event.stopPropagation();
-              if(confirm('Are you sure you want to completely clear all activity logs? This cannot be undone.')) {
+              if(confirm('Are you sure you want to clear all important activity logs? This cannot be undone.')) {
                   fetch(`/admin/api/activities/clear-all`, {
                       method: 'DELETE',
                       headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
