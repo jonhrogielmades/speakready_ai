@@ -95,7 +95,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
+        <div class="col-12">
             <div class="card boc feedback-content-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-body p-4">
                     <h6 class="fw-bold mb-3" style="color: var(--tx);">Interview Feedback Audit List</h6>
