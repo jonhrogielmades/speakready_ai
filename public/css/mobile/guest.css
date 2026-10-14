@@ -6242,29 +6242,28 @@ html, body {
           animation-duration: 0.7s !important;
       }
 
-      body.guest-mobile-shell #hero .hero-install-btn,
-      body.guest-mobile-shell #hero .hero-learn-btn {
-          color: #ffffff !important;
-          border-color: transparent !important;
-          -webkit-text-fill-color: #ffffff !important;
+      html.lm body.guest-mobile-shell #landing #hero .hero-cta-row > :is(.hero-install-btn, .hero-learn-btn) {
+          color: #0f172a !important;
+          -webkit-text-fill-color: #0f172a !important;
+          background: rgba(255, 255, 255, 0.74) !important;
+          border-color: rgba(37, 99, 235, 0.24) !important;
       }
 
-      body.guest-mobile-shell #hero .hero-install-btn {
-          background: #0ea5e9 !important;
+      html:not(.lm) body.guest-mobile-shell #landing #hero .hero-cta-row > :is(.hero-install-btn, .hero-learn-btn) {
+          color: #f8fafc !important;
+          -webkit-text-fill-color: #f8fafc !important;
+          background: rgba(15, 23, 42, 0.68) !important;
+          border-color: rgba(248, 250, 252, 0.28) !important;
       }
 
-      body.guest-mobile-shell #hero .hero-install-btn:hover,
-      body.guest-mobile-shell #hero .hero-install-btn:focus-visible {
-          background: #0284c7 !important;
+      html.lm body.guest-mobile-shell #landing #hero .hero-cta-row > :is(.hero-install-btn, .hero-learn-btn) i {
+          color: #2563eb !important;
+          -webkit-text-fill-color: #2563eb !important;
       }
 
-      body.guest-mobile-shell #hero .hero-learn-btn {
-          background: #8b5cf6 !important;
-      }
-
-      body.guest-mobile-shell #hero .hero-learn-btn:hover,
-      body.guest-mobile-shell #hero .hero-learn-btn:focus-visible {
-          background: #7c3aed !important;
+      html:not(.lm) body.guest-mobile-shell #landing #hero .hero-cta-row > :is(.hero-install-btn, .hero-learn-btn) i {
+          color: #60a5fa !important;
+          -webkit-text-fill-color: #60a5fa !important;
       }
 
       body.guest-shell #loginTransitionOverlay {
