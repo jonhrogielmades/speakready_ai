@@ -346,12 +346,12 @@ class AdminReliabilityTest extends TestCase
             ->post(route('admin.settings.update'), [
                 'site_name' => 'SpeakReady',
                 'acc_registration' => 'true',
-                'sec_2fa' => 'true',
+                'sec_strong_pass' => 'true',
             ])
             ->assertRedirect(route('admin.settings.index'));
 
         $this->assertTrue(Setting::getVal('acc_registration'));
-        $this->assertTrue(Setting::getVal('sec_2fa'));
+        $this->assertTrue(Setting::getVal('sec_strong_pass'));
         $this->assertFalse(Setting::getVal('int_follow_up'));
 
         $this->actingAs($admin)
@@ -361,7 +361,7 @@ class AdminReliabilityTest extends TestCase
             ->assertRedirect(route('admin.settings.index'));
 
         $this->assertFalse(Setting::getVal('acc_registration'));
-        $this->assertFalse(Setting::getVal('sec_2fa'));
+        $this->assertFalse(Setting::getVal('sec_strong_pass'));
     }
 
     public function test_admin_language_settings_include_tagalog_and_cebuano(): void
@@ -785,9 +785,50 @@ class AdminReliabilityTest extends TestCase
             ->assertSee('settings-grid', false)
             ->assertSee('Interview Prep Tools')
             ->assertDontSee('Enable Interview Prep Quizzes')
-            ->assertDontSee('name="ll_quizzes"', false);
+            ->assertDontSee('name="ll_quizzes"', false)
+            ->assertDontSee('Two-Factor Authentication Flag');
 
         $this->assertArrayNotHasKey('ll_quizzes', SystemSettings::definitions());
+        $this->assertArrayNotHasKey('sec_2fa', SystemSettings::definitions());
+    }
+
+    public function test_every_visible_system_setting_is_registered_and_reachable_from_a_modal(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $response = $this->actingAs($admin)->get(route('admin.settings.index'))->assertOk();
+
+        foreach ([
+            'settings-general',
+            'settings-account',
+            'settings-roles',
+            'settings-interview',
+            'settings-ai-coach',
+            'settings-learning',
+            'settings-notifications',
+            'settings-security',
+            'settings-files',
+            'settings-info',
+        ] as $modalId) {
+            $response->assertSee('data-bs-target="#'.$modalId.'"', false)
+                ->assertSee('id="'.$modalId.'"', false);
+        }
+
+        $visibleKeys = [
+            'sys_name', 'sys_contact_email', 'sys_contact_number', 'sys_language', 'sys_desc', 'sys_footer',
+            'acc_registration', 'acc_verify_email', 'acc_session_timeout',
+            'role_user_perm_0', 'role_user_perm_1', 'role_user_perm_2', 'role_user_perm_3',
+            'int_default_questions', 'int_max_questions', 'int_time_limit', 'int_follow_up', 'int_ai_eval',
+            'aic_enable', 'aic_sample', 'aic_follow', 'aic_recommend',
+            'll_modules', 'll_certs', 'll_achievements',
+            'notif_sys', 'notif_email', 'notif_reminders', 'notif_achieve',
+            'sec_strong_pass', 'sec_login_limit', 'sec_lockout',
+            'file_max_size', 'file_types',
+        ];
+
+        foreach ($visibleKeys as $key) {
+            $this->assertArrayHasKey($key, SystemSettings::definitions());
+            $response->assertSee('name="'.$key.'"', false);
+        }
     }
 
     public function test_settings_page_overrides_hard_coded_white_text_for_theme_contrast(): void

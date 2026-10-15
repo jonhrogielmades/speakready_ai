@@ -39,7 +39,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4 admin-settings-header">
         <div class="admin-settings-heading">
             <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-sliders me-2"></i>System Settings</h4>
-            <p style="font-size:0.95rem;margin:0;">Configure platform behavior, access, learning tools, notifications, and appearance.</p>
+            <p style="font-size:0.95rem;margin:0;">Configure platform behavior, access, learning tools, notifications, and uploads.</p>
         </div>
         <button type="submit" form="systemSettingsForm" class="btn btn-primary settings-save-top admin-settings-save-top">
             <i class="fa-solid fa-floppy-disk me-2"></i>Save All
@@ -358,10 +358,6 @@
             <div class="custom-switch-container">
                 <div><h6 class="mb-1">Require Strong Passwords</h6><small>Require mixed case letters, numbers, and symbols on new password changes.</small></div>
                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="sec_strong_pass" value="true" {{ $checked('sec_strong_pass') }}></div>
-            </div>
-            <div class="custom-switch-container">
-                <div><h6 class="mb-1">Two-Factor Authentication Flag</h6><small>Stores the platform preference for future or connected 2FA flows.</small></div>
-                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="sec_2fa" value="true" {{ $checked('sec_2fa') }}></div>
             </div>
             <div class="row g-3 mt-1 admin-settings-fields-grid">
                 <div class="col-md-6">
