@@ -792,6 +792,27 @@ class AdminReliabilityTest extends TestCase
         $this->assertArrayNotHasKey('sec_2fa', SystemSettings::definitions());
     }
 
+    public function test_admin_sidebar_groups_navigation_by_purpose(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('>Overview</div>', false)
+            ->assertSee('>Administration</div>', false)
+            ->assertSee('>Interview Content</div>', false)
+            ->assertSee('>Interview Monitoring</div>', false)
+            ->assertSee('>Communications</div>', false)
+            ->assertSee('>System</div>', false)
+            ->assertSee('title="User Management"', false)
+            ->assertSee('title="Interview Categories"', false)
+            ->assertSee('title="Question Bank"', false)
+            ->assertSee('title="Session Monitoring"', false)
+            ->assertSee('title="Contact Messages"', false)
+            ->assertSee('title="System Settings"', false);
+    }
+
     public function test_every_visible_system_setting_is_registered_and_reachable_from_a_modal(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);

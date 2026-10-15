@@ -162,23 +162,27 @@
                 </button>
              </div>
             <div class="db-nav">
-               <div class="db-nav-section">Interview Modules</div>
+               <div class="db-nav-section">Overview</div>
                <a href="{{ route('admin.dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" title="Interview Dashboard"><i class="fa-solid fa-gauge-high"></i><span class="db-nav-label">Interview Dashboard</span></a>
+
+               <div class="db-nav-section">Administration</div>
                <a href="{{ route('admin.users.index') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" title="User Management"><i class="fa-solid fa-users"></i><span class="db-nav-label">User Management</span></a>
+
+               <div class="db-nav-section">Interview Content</div>
                <a href="{{ route('admin.categories') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}" title="Interview Categories"><i class="fa-solid fa-list"></i><span class="db-nav-label">Interview Categories</span></a>
                <a href="{{ route('admin.questions') }}" class="db-nl db-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}" title="Question Bank"><i class="fa-solid fa-circle-question"></i><span class="db-nav-label">Question Bank</span></a>
                <a href="{{ route('admin.modules') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}" title="Interview Lessons"><i class="fa-solid fa-book-open"></i><span class="db-nav-label">Interview Lessons</span></a>
                <a href="{{ route('admin.game') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}" title="Interview Games"><i class="fa-solid fa-gamepad"></i><span class="db-nav-label">Interview Games</span></a>
-               
+
                <div class="db-nav-section">Interview Monitoring</div>
                <a href="{{ route('admin.sessions.index') }}" class="db-nl db-nav-indigo {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}" title="Session Monitoring"><i class="fa-solid fa-video"></i><span class="db-nav-label">Session Monitoring</span></a>
                <a href="{{ route('admin.feedback.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.feedback.*') ? 'active' : '' }}" title="Feedback Audit"><i class="fa-solid fa-clipboard-check"></i><span class="db-nav-label">Feedback Audit</span></a>
+
+               <div class="db-nav-section">Communications</div>
                <a href="{{ route('admin.contacts.index') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}" title="Contact Messages"><i class="fa-solid fa-envelope"></i><span class="db-nav-label">Contact Messages</span></a>
-               
+
                <div class="db-nav-section">System</div>
-               
                <a href="{{ route('admin.ai.providers') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.ai.providers*') || request()->routeIs('admin.ai.evaluation*') ? 'active' : '' }}" title="AI Providers"><i class="fa-solid fa-microchip"></i><span class="db-nav-label">AI Providers</span></a>
-               
                <a href="{{ route('admin.settings.index') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" title="System Settings"><i class="fa-solid fa-gear"></i><span class="db-nav-label">System Settings</span></a>
             </div>
          </div>

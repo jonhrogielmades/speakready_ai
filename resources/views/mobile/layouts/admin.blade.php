@@ -3211,9 +3211,13 @@
                   <span>More</span>
                   <button class="mob-profile-close mob-profile-pages-close-btn" type="button" onclick="event.stopPropagation(); closeMobileProfile();" aria-label="Close more menu"><i class="fa-solid fa-xmark"></i></button>
                </div>
-               <div class="mob-profile-section-title">Interview Modules</div>
+               <div class="mob-profile-section-title">Overview</div>
                <div class="mob-profile-grid">
                   <a href="{{ route('admin.dashboard') }}" data-mobile-more-link="dashboard" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+               </div>
+
+               <div class="mob-profile-section-title">Interview Content</div>
+               <div class="mob-profile-grid">
                    <a href="{{ route('admin.categories') }}" data-mobile-more-link="categories" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i><span>Categories</span></a>
                    <a href="{{ route('admin.questions') }}" data-mobile-more-link="questions" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i><span>Questions</span></a>
                    <a href="{{ route('admin.modules') }}" data-mobile-more-link="lessons" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i><span>Lessons</span></a>
@@ -3223,6 +3227,10 @@
                <div class="mob-profile-section-title">Interview Monitoring</div>
                <div class="mob-profile-grid">
                   <a href="{{ route('admin.sessions.archive') }}" data-mobile-more-link="archive" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.sessions.archive') ? 'active' : '' }}"><i class="fa-solid fa-box-archive"></i><span>Archive</span></a>
+               </div>
+
+               <div class="mob-profile-section-title">Communications</div>
+               <div class="mob-profile-grid">
                   <a href="{{ route('admin.contacts.index') }}" data-mobile-more-link="contacts" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i><span>Contacts</span></a>
                   <a href="{{ route('admin.notifications.index') }}" data-mobile-more-link="notifications" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
                </div>
