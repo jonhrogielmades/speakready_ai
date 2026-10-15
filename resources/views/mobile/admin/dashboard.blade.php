@@ -259,23 +259,6 @@
                 </div>
             </div>
 
-            <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-updates mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold m-0"><i class="fa-solid fa-arrows-rotate me-2 text-success"></i>User Updates</h6>
-                    <a href="{{ route('admin.notifications.index') }}" class="btn btn-sm admin-dashboard-mini-action" style="border-radius:8px;border:1px solid var(--bd);color:var(--tx2);background:var(--bg3);">View All</a>
-                </div>
-                @forelse($recentUserUpdates as $activity)
-                    <div class="p-3 mb-2 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
-                        <div style="color:var(--tx);font-weight:700;font-size:0.86rem;">{{ $activity->description ?: ucwords(str_replace('_', ' ', $activity->action)) }}</div>
-                        <div style="color:var(--tx3);font-size:0.74rem;margin-top:4px;">
-                            {{ $activity->user?->name ?? 'System' }} &bull; {{ optional($activity->created_at)->diffForHumans() }}
-                        </div>
-                    </div>
-                @empty
-                    <div class="p-3 rounded text-center" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx3);font-size:0.85rem;">No user updates yet.</div>
-                @endforelse
-            </div>
-
             <!-- Feature 15: System Monitoring -->
             <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-health mb-4">
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-server me-2 text-info"></i>System Health</h6>
@@ -294,21 +277,6 @@
                 <div class="mt-3">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Storage Usage</span><span class="text-warning fw-bold">65%</span></div>
                     <div class="progress-track" style="height:6px;"><div class="progress-fill" style="width:65%;background:#fbbf24;"></div></div>
-                </div>
-            </div>
-
-            <!-- Feature 8: Question Bank Statistics -->
-            <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-compact mb-4">
-                <h6 class="fw-bold mb-3">Question Bank Stats</h6>
-                <div class="text-center mb-3">
-                    <h3 class="fw-bold text-primary mb-0">500</h3>
-                    <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Total Questions</div>
-                </div>
-                <div class="d-flex flex-wrap gap-2 justify-content-center">
-                    <span class="badge" style="background:var(--bg3);color:var(--tx);border:1px solid var(--bd);">Behavioral: 150</span>
-                    <span class="badge" style="background:var(--bg3);color:var(--tx);border:1px solid var(--bd);">Technical: 180</span>
-                    <span class="badge" style="background:var(--bg3);color:var(--tx);border:1px solid var(--bd);">Situational: 100</span>
-                    <span class="badge" style="background:var(--bg3);color:var(--tx);border:1px solid var(--bd);">Personal: 70</span>
                 </div>
             </div>
 
