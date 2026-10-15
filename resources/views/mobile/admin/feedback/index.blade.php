@@ -123,7 +123,6 @@
                         <table class="table align-middle" id="mainFeedbackTable" style="color: var(--tx); --bs-table-bg: transparent; --bs-table-color: var(--tx);">
                             <thead style="background: transparent;">
                                 <tr>
-                                    <th style="color: var(--tx3); border-bottom: 1px solid var(--bd);">Audit ID</th>
                                     <th style="color: var(--tx3); border-bottom: 1px solid var(--bd);">User</th>
                                     <th style="color: var(--tx3); border-bottom: 1px solid var(--bd);">Question</th>
                                     <th style="color: var(--tx3); border-bottom: 1px solid var(--bd);">Score</th>
@@ -135,7 +134,6 @@
                             <tbody>
                                 @forelse($feedbacks as $fb)
                                 <tr>
-                                    <td data-label="Audit ID" style="border-bottom: 1px solid var(--bd);">#{{ $fb->id }}</td>
                                     <td data-label="User" style="border-bottom: 1px solid var(--bd);">
                                         <div class="fw-semibold">{{ $fb->interviewSession?->user?->name ?? 'Unknown User' }}</div>
                                         @if($fb->interviewSession?->user?->email)
@@ -170,7 +168,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 feedback-empty-cell" style="color: var(--tx3); border-bottom: 1px solid var(--bd);">No feedback records found.</td>
+                                    <td colspan="6" class="text-center py-4 feedback-empty-cell" style="color: var(--tx3); border-bottom: 1px solid var(--bd);">No feedback records found.</td>
                                 </tr>
                                 @endforelse
                             </tbody>

@@ -176,30 +176,26 @@
     }
     #mainFeedbackTable th:nth-child(1),
     #mainFeedbackTable td:nth-child(1) {
-        width: 8%;
+        width: 18%;
     }
     #mainFeedbackTable th:nth-child(2),
     #mainFeedbackTable td:nth-child(2) {
-        width: 15%;
+        width: 34%;
     }
     #mainFeedbackTable th:nth-child(3),
     #mainFeedbackTable td:nth-child(3) {
-        width: 31%;
+        width: 9%;
     }
     #mainFeedbackTable th:nth-child(4),
     #mainFeedbackTable td:nth-child(4) {
-        width: 9%;
+        width: 15%;
     }
     #mainFeedbackTable th:nth-child(5),
     #mainFeedbackTable td:nth-child(5) {
-        width: 14%;
+        width: 15%;
     }
     #mainFeedbackTable th:nth-child(6),
     #mainFeedbackTable td:nth-child(6) {
-        width: 14%;
-    }
-    #mainFeedbackTable th:nth-child(7),
-    #mainFeedbackTable td:nth-child(7) {
         width: 9%;
     }
     #mainFeedbackTable th {
@@ -471,21 +467,20 @@
             letter-spacing: 0.04em;
             text-align: left;
         }
-        #mainFeedbackTable tbody td:nth-child(1)::before { content: "Audit ID"; }
-        #mainFeedbackTable tbody td:nth-child(2)::before { content: "User"; }
-        #mainFeedbackTable tbody td:nth-child(4)::before { content: "Score"; }
-        #mainFeedbackTable tbody td:nth-child(5)::before { content: "Generated Date"; }
-        #mainFeedbackTable tbody td:nth-child(6)::before { content: "Status"; }
+        #mainFeedbackTable tbody td:nth-child(1)::before { content: "User"; }
+        #mainFeedbackTable tbody td:nth-child(3)::before { content: "Score"; }
+        #mainFeedbackTable tbody td:nth-child(4)::before { content: "Generated Date"; }
+        #mainFeedbackTable tbody td:nth-child(5)::before { content: "Status"; }
         
-        #mainFeedbackTable tbody td:nth-child(3) {
+        #mainFeedbackTable tbody td:nth-child(2) {
             order: -1;
             justify-content: flex-start;
             border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
             padding-bottom: 12px !important;
             margin-bottom: 4px;
         }
-        #mainFeedbackTable tbody td:nth-child(3)::before { content: none; }
-        #mainFeedbackTable tbody td:nth-child(3) .text-truncate {
+        #mainFeedbackTable tbody td:nth-child(2)::before { content: none; }
+        #mainFeedbackTable tbody td:nth-child(2) .text-truncate {
             max-width: 100% !important;
             white-space: normal;
             overflow: visible;
