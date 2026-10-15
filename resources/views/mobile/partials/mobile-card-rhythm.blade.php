@@ -126,7 +126,6 @@
             #mainUsersTable,
             #mainSessionsTable,
             #mainArchiveTable,
-            #mainAuditLogsTable,
             #mainFeedbackTable,
             #mainCategoriesTable,
             #modulesTable,

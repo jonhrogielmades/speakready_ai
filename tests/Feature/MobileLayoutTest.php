@@ -1061,14 +1061,6 @@ class MobileLayoutTest extends TestCase
             'name' => 'Mobile Settings Admin',
         ]);
 
-        ActivityLog::create([
-            'user_id' => $admin->id,
-            'action' => 'admin_settings_mobile_reviewed',
-            'description' => 'Reviewed system settings from mobile layout tests.',
-            'ip_address' => '127.0.0.1',
-            'read_at' => now(),
-        ]);
-
         $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
         $this->actingAs($admin)
@@ -1087,12 +1079,9 @@ class MobileLayoutTest extends TestCase
             ->assertSee('settings-save-top admin-settings-save-top', false)
             ->assertSee('admin-settings-backup-actions', false)
             ->assertSee('admin-settings-save-bar', false)
-            ->assertSee('id="mainAuditLogsTable"', false)
-            ->assertSee('data-label="Date"', false)
-            ->assertSee('data-label="Action"', false)
-            ->assertSee('data-label="User"', false)
+            ->assertDontSee('id="mainAuditLogsTable"', false)
+            ->assertDontSee('Audit Logs', false)
             ->assertSee('admin-settings-info-list', false)
-            ->assertSee('Reviewed system settings from mobile layout tests.', false)
             ->assertDontSee('class="db-sidebar"', false);
     }
 
