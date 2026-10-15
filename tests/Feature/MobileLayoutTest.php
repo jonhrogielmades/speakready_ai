@@ -238,7 +238,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-dashboard-title-text"', false)
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
-            ->assertSee('css/mobile/admin/dashboard.css?v=5', false)
+            ->assertSee('css/mobile/admin/dashboard.css?v=6', false)
             ->assertSee('id="mobFullscreenBtn"', false)
             ->assertSee('data-user-fullscreen-toggle', false)
             ->assertSee('js/user-ui.js?v=21', false)
@@ -310,6 +310,11 @@ class MobileLayoutTest extends TestCase
             ->assertSee('pagesMenu.hidden = isAccountMode;', false)
             ->assertSee('accountMenu.style.display', false)
             ->assertSee('function hideMobileNotificationDropdown()', false)
+            ->assertDontSee('Communications Center')
+            ->assertDontSee('Scheduled Maintenance on Oct 20.')
+            ->assertDontSee('Welcome to SpeakReady Beta.')
+            ->assertDontSee('id="commsTabs"', false)
+            ->assertDontSee('data-bs-target="#announcements"', false)
             ->assertDontSee('class="db-sidebar"', false);
     }
 
@@ -331,7 +336,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-dashboard-title-text"', false)
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
-            ->assertSee('css/desktop/admin/dashboard.css?v=3', false)
+            ->assertSee('css/desktop/admin/dashboard.css?v=4', false)
             ->assertSee('sw.js?v=23', false)
             ->assertDontSee('SpeakReadyPushConfig', false)
             ->assertDontSee('\\/admin\\/notifications\\/push\\/key', false)

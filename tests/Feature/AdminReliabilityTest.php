@@ -813,6 +813,20 @@ class AdminReliabilityTest extends TestCase
             ->assertSee('title="System Settings"', false);
     }
 
+    public function test_admin_dashboard_does_not_render_the_placeholder_communications_panel(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertDontSee('Communications Center')
+            ->assertDontSee('Scheduled Maintenance on Oct 20.')
+            ->assertDontSee('Welcome to SpeakReady Beta.')
+            ->assertDontSee('id="commsTabs"', false)
+            ->assertDontSee('data-bs-target="#announcements"', false);
+    }
+
     public function test_every_visible_system_setting_is_registered_and_reachable_from_a_modal(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);

@@ -1,7 +1,7 @@
 @extends('desktop.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/dashboard.css?v=3') }}" data-page-style="admin-dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/dashboard.css?v=4') }}" data-page-style="admin-dashboard">
 @endpush
 
 @section('content')
@@ -163,43 +163,6 @@
                             @endforelse
                         </tbody>
                     </table>
-                </div>
-            </div>
-
-            <!-- Feature 12 & 13: Communications Center -->
-            <div class="premium-card dashboard-panel dashboard-panel-comms mb-4">
-                <ul class="nav nav-pills mb-3" id="commsTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#announcements" type="button" style="border-radius:8px;font-size:0.9rem;">Announcements</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#notifications" type="button" style="border-radius:8px;font-size:0.9rem;">Notifications</button>
-                    </li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane fade show active" id="announcements">
-                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded" style="background:var(--bg3);">
-                            <div style="font-size:0.9rem;"><span class="stat-badge success me-2">Active</span> Scheduled Maintenance on Oct 20.</div>
-                            <button class="btn btn-sm text-primary"><i class="fa-solid fa-pen"></i></button>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background:var(--bg3);">
-                            <div style="font-size:0.9rem;"><span class="stat-badge danger me-2">Expired</span> Welcome to SpeakReady Beta.</div>
-                            <button class="btn btn-sm text-primary"><i class="fa-solid fa-pen"></i></button>
-                        </div>
-                    </div>
-                    <div class="tab-pane fade" id="notifications">
-                        <div class="row text-center mt-3">
-                            <div class="col-4">
-                                <h4 class="fw-bold text-primary mb-0">1,200</h4><span style="font-size:0.75rem;color:var(--tx3)">Sent</span>
-                            </div>
-                            <div class="col-4">
-                                <h4 class="fw-bold text-warning mb-0">450</h4><span style="font-size:0.75rem;color:var(--tx3)">Unread</span>
-                            </div>
-                            <div class="col-4">
-                                <h4 class="fw-bold text-success mb-0">12</h4><span style="font-size:0.75rem;color:var(--tx3)">Broadcasts</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
