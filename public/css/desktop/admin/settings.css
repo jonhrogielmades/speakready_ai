@@ -527,3 +527,85 @@
             gap: 12px;
         }
     }
+
+    /* Modal-first settings workflow: keep the page compact and scroll inside each form. */
+    body.admin-mobile-shell.modal-open,
+    body:has(#sec-admin-settings .settings-modal.show).modal-open {
+        overflow: hidden !important;
+    }
+
+    #sec-admin-settings .settings-jump {
+        width: 100%;
+        font: inherit;
+        cursor: pointer;
+        text-align: center;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    #sec-admin-settings .settings-modal .modal-dialog {
+        width: calc(100% - 2rem);
+        max-width: 760px;
+        margin: 1rem auto;
+    }
+
+    #sec-admin-settings .settings-modal .modal-content {
+        overflow: hidden;
+        border-radius: 14px !important;
+    }
+
+    #sec-admin-settings .settings-modal .modal-header {
+        margin: 0;
+        padding: 20px 24px 14px;
+        align-items: flex-start;
+    }
+
+    #sec-admin-settings .settings-modal-heading {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    #sec-admin-settings .settings-modal .modal-header p {
+        margin-top: 6px;
+        max-width: none;
+        text-align: left;
+    }
+
+    #sec-admin-settings .settings-modal .modal-body {
+        padding: 22px 24px;
+    }
+
+    #sec-admin-settings .settings-modal .modal-footer {
+        gap: 10px;
+        padding: 14px 24px 18px;
+        border-top: 1px solid var(--settings-card-border);
+    }
+
+    #sec-admin-settings .settings-modal .modal-footer .btn {
+        min-width: 120px;
+    }
+
+    @media (max-width: 767.98px) {
+        #sec-admin-settings .settings-modal .modal-dialog {
+            width: calc(100% - 1rem);
+            margin: .5rem auto;
+        }
+
+        #sec-admin-settings .settings-modal .modal-header {
+            padding: 16px 14px 12px;
+            flex-direction: row;
+        }
+
+        #sec-admin-settings .settings-modal .modal-body {
+            padding: 16px 14px;
+        }
+
+        #sec-admin-settings .settings-modal .modal-footer {
+            padding: 12px 14px 14px;
+        }
+
+        #sec-admin-settings .settings-modal .modal-footer .btn {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+    }

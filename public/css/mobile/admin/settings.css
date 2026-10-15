@@ -862,3 +862,62 @@ body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .f
         grid-template-columns: 1fr;
     }
 }
+
+/* Modal-first settings workflow: keep the page compact and scroll inside each form. */
+body.admin-mobile-shell.modal-open,
+body:has(#sec-admin-settings .settings-modal.show).modal-open {
+    overflow: hidden !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-jump {
+    width: 100%;
+    font: inherit;
+    cursor: pointer;
+    text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-modal .modal-dialog {
+    width: calc(100% - 1rem);
+    max-width: 760px;
+    margin: .5rem auto;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-modal .modal-content {
+    overflow: hidden;
+    border-radius: 14px !important;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-modal .modal-header {
+    margin: 0;
+    padding: 16px 14px 12px;
+    align-items: flex-start;
+    flex-direction: row;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-modal-heading {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-modal .modal-header p {
+    margin-top: 6px;
+    max-width: none;
+    text-align: left;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-modal .modal-body {
+    padding: 16px 14px;
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-modal .modal-footer {
+    gap: 10px;
+    padding: 12px 14px 14px;
+    border-top: 1px solid var(--settings-card-border);
+}
+
+body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .settings-modal .modal-footer .btn {
+    flex: 1 1 0;
+    min-width: 0;
+}

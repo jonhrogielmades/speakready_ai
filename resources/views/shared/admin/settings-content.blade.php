@@ -53,11 +53,11 @@
     <div class="row g-3 settings-grid admin-settings-jump-grid mb-4">
         @foreach($cards as $card)
             <div class="col-6 col-md-4 col-lg-3">
-                <a href="#{{ $card['id'] }}" class="settings-jump">
+                <button type="button" class="settings-jump" data-bs-toggle="modal" data-bs-target="#{{ $card['id'] }}" aria-controls="{{ $card['id'] }}">
                     <span class="settings-jump-icon"><i class="fa-solid {{ $card['icon'] }}"></i></span>
                     <span class="settings-jump-label">{{ $card['label'] }}</span>
                     <span class="settings-jump-kicker">Settings</span>
-                </a>
+                </button>
             </div>
         @endforeach
     </div>
@@ -65,11 +65,17 @@
     <form id="systemSettingsForm" class="admin-settings-form" action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
-        <section class="settings-panel" id="settings-general">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-globe"></i>General</h5>
-                <p>Branding, contact details, public copy, and default language.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-general" tabindex="-1" aria-labelledby="settings-general-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-general-title"><i class="fa-solid fa-globe"></i>General</h5>
+                            <p>Branding, contact details, public copy, and default language.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             <div class="row g-3 admin-settings-fields-grid">
                 <div class="col-md-6">
                     <label class="form-label">System Name</label>
@@ -100,13 +106,26 @@
                     <input type="text" class="form-control" name="sys_footer" value="{{ $value('sys_footer', '&copy; 2026 SpeakReady AI. All Rights Reserved.') }}">
                 </div>
             </div>
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-account">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-user-gear"></i>Account</h5>
-                <p>Registration, verified-account checks, and session lifetime.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-account" tabindex="-1" aria-labelledby="settings-account-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-account-title"><i class="fa-solid fa-user-gear"></i>Account</h5>
+                            <p>Registration, verified-account checks, and session lifetime.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             <div class="custom-switch-container">
                 <div>
                     <h6 class="mb-1">Enable User Registration</h6>
@@ -131,13 +150,26 @@
                     <input type="number" class="form-control" name="acc_session_timeout" min="5" max="1440" value="{{ $value('acc_session_timeout', 120) }}">
                 </div>
             </div>
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-roles">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-users-gear"></i>Roles</h5>
-                <p>Administrator access stays always on. Candidate permissions are enforced in user routes.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-roles" tabindex="-1" aria-labelledby="settings-roles-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-roles-title"><i class="fa-solid fa-users-gear"></i>Roles</h5>
+                            <p>Administrator access stays always on. Candidate permissions are enforced in user routes.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             <h6 class="settings-mini-title">Administrator Permissions</h6>
             <div class="row g-2 mb-4 admin-settings-check-grid">
                 @foreach(['View', 'Create', 'Edit', 'Delete', 'Export'] as $perm)
@@ -160,13 +192,26 @@
                     </div>
                 @endforeach
             </div>
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-interview">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-microphone-lines"></i>Interview</h5>
-                <p>Question counts, time limits, follow-up behavior, and AI evaluation.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-interview" tabindex="-1" aria-labelledby="settings-interview-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-interview-title"><i class="fa-solid fa-microphone-lines"></i>Interview</h5>
+                            <p>Question counts, time limits, follow-up behavior, and AI evaluation.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             <div class="row g-3 mb-3 admin-settings-fields-grid">
                 <div class="col-md-4">
                     <label class="form-label">Default Number of Questions</label>
@@ -202,13 +247,26 @@
                 <div><h6 class="mb-1">Enable AI Evaluation</h6><small>Use AI feedback when finalizing interview reports. If disabled, local scoring fallback is used.</small></div>
                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="int_ai_eval" value="true" {{ $checked('int_ai_eval') }}></div>
             </div>
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-ai-coach">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-robot"></i>Interview Coach</h5>
-                <p>Enable or limit the user-side job interview coach features.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-ai-coach" tabindex="-1" aria-labelledby="settings-ai-coach-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-ai-coach-title"><i class="fa-solid fa-robot"></i>Interview Coach</h5>
+                            <p>Enable or limit the user-side job interview coach features.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             @foreach([
                 'aic_enable' => ['Enable Interview Coach', 'Allow users to open and chat with the job interview coach.'],
                 'aic_sample' => ['Enable Fact-Grounded Revision Guidance', 'Allow improved-answer coaching based on user facts.'],
@@ -220,13 +278,26 @@
                     <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="{{ $key }}" value="true" {{ $checked($key) }}></div>
                 </div>
             @endforeach
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-learning">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-briefcase"></i>Interview Prep Tools</h5>
-                <p>Control optional interview-prep tools, certificates, and achievement features.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-learning" tabindex="-1" aria-labelledby="settings-learning-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-learning-title"><i class="fa-solid fa-briefcase"></i>Interview Prep Tools</h5>
+                            <p>Control optional interview-prep tools, certificates, and achievement features.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             @foreach([
                 'll_modules' => ['Enable Interview Prep Modules', 'Allow users to browse and complete job interview preparation modules.'],
                 'll_quizzes' => ['Enable Interview Prep Quizzes', 'Allow interview-prep quiz/progress submissions.'],
@@ -238,13 +309,26 @@
                     <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="{{ $key }}" value="true" {{ $checked($key) }}></div>
                 </div>
             @endforeach
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-notifications">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-bell"></i>Notifications</h5>
-                <p>Control in-app notifications and optional email delivery channels.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-notifications" tabindex="-1" aria-labelledby="settings-notifications-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-notifications-title"><i class="fa-solid fa-bell"></i>Notifications</h5>
+                            <p>Control in-app notifications and optional email delivery channels.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             @foreach([
                 'notif_sys' => ['System Notifications', 'Allow admins to send platform notifications.'],
                 'notif_email' => ['Email Notifications', 'Send supported notifications through email too.'],
@@ -256,13 +340,26 @@
                     <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="{{ $key }}" value="true" {{ $checked($key) }}></div>
                 </div>
             @endforeach
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-security">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-shield"></i>Security</h5>
-                <p>Password rules, login throttling, and optional two-factor availability flag.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-security" tabindex="-1" aria-labelledby="settings-security-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-security-title"><i class="fa-solid fa-shield"></i>Security</h5>
+                            <p>Password rules, login throttling, and optional two-factor availability flag.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             <div class="custom-switch-container">
                 <div><h6 class="mb-1">Require Strong Passwords</h6><small>Require mixed case letters, numbers, and symbols on new password changes.</small></div>
                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="sec_strong_pass" value="true" {{ $checked('sec_strong_pass') }}></div>
@@ -281,13 +378,26 @@
                     <input type="number" class="form-control" name="sec_lockout" min="1" max="1440" value="{{ $value('sec_lockout', 15) }}">
                 </div>
             </div>
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-backup">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-database"></i>Backup</h5>
-                <p>Export or restore a settings backup and choose the saved backup schedule preference.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-backup" tabindex="-1" aria-labelledby="settings-backup-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-backup-title"><i class="fa-solid fa-database"></i>Backup</h5>
+                            <p>Export or restore a settings backup and choose the saved backup schedule preference.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             <div class="row g-3 align-items-end admin-settings-fields-grid admin-settings-backup-grid">
                 <div class="col-md-4">
                     <label class="form-label">Automatic Backup Schedule</label>
@@ -310,13 +420,26 @@
                     </button>
                 </div>
             </div>
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-files">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-folder-open"></i>Files</h5>
-                <p>File limits applied to user coach attachments and uploads that use system settings.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-files" tabindex="-1" aria-labelledby="settings-files-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-files-title"><i class="fa-solid fa-folder-open"></i>Files</h5>
+                            <p>File limits applied to user coach attachments and uploads that use system settings.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             <div class="row g-3 admin-settings-fields-grid">
                 <div class="col-md-4">
                     <label class="form-label">Maximum Upload Size (MB)</label>
@@ -328,13 +451,26 @@
                     <small>Comma separated extensions.</small>
                 </div>
             </div>
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-appearance">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-palette"></i>Appearance</h5>
-                <p>Logo, favicon, and accent colors shared with layouts.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-appearance" tabindex="-1" aria-labelledby="settings-appearance-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-appearance-title"><i class="fa-solid fa-palette"></i>Appearance</h5>
+                            <p>Logo, favicon, and accent colors shared with layouts.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             <div class="row g-3 admin-settings-fields-grid">
                 <div class="col-md-6">
                     <label class="form-label">Upload System Logo</label>
@@ -356,13 +492,26 @@
                     <input type="color" class="form-control form-control-color" name="color_secondary" value="{{ $value('color_secondary', '#34d399') }}">
                 </div>
             </div>
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-retention">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-clock-rotate-left"></i>Retention</h5>
-                <p>Retention values are saved for cleanup jobs and reporting policy display.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-retention" tabindex="-1" aria-labelledby="settings-retention-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-retention-title"><i class="fa-solid fa-clock-rotate-left"></i>Retention</h5>
+                            <p>Retention values are saved for cleanup jobs and reporting policy display.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             <div class="row g-3 admin-settings-fields-grid">
                 <div class="col-md-4">
                     <label class="form-label">Interview Data Retention (Days)</label>
@@ -377,13 +526,26 @@
                     <input type="number" class="form-control" name="retention_archive" min="1" max="3650" value="{{ $value('retention_archive', 730) }}">
                 </div>
             </div>
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="settings-panel" id="settings-reports">
-            <div class="settings-panel-head">
-                <h5><i class="fa-solid fa-chart-pie"></i>Reports</h5>
-                <p>Report header, footer, logo preference, and approval label.</p>
-            </div>
+        <section class="modal fade settings-modal" id="settings-reports" tabindex="-1" aria-labelledby="settings-reports-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header settings-panel-head">
+                        <div class="settings-modal-heading">
+                            <h5 id="settings-reports-title"><i class="fa-solid fa-chart-pie"></i>Reports</h5>
+                            <p>Report header, footer, logo preference, and approval label.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body settings-modal-body">
             <div class="row g-3 admin-settings-fields-grid">
                 <div class="col-md-6">
                     <label class="form-label">Report Header Text</label>
@@ -405,26 +567,40 @@
                     <input type="text" class="form-control" name="rep_signature" value="{{ $value('rep_signature', 'Approved By') }}">
                 </div>
             </div>
+                    </div>
+                    <div class="modal-footer settings-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
+                    </div>
+                </div>
+            </div>
         </section>
-
-        <div class="btn-save-fixed admin-settings-save-bar mt-4">
-            <span>Save all functional settings changes.</span>
-            <button type="submit" class="btn btn-primary px-4 admin-settings-save-bottom"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
-        </div>
     </form>
 
-    <section class="settings-panel" id="settings-info">
-        <div class="settings-panel-head">
-            <h5><i class="fa-solid fa-circle-info"></i>System Info</h5>
-            <p>Runtime details detected from the current application environment.</p>
+    <section class="modal fade settings-modal" id="settings-info" tabindex="-1" aria-labelledby="settings-info-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+            <div class="modal-content settings-modal-content">
+                <div class="modal-header settings-panel-head">
+                    <div class="settings-modal-heading">
+                        <h5 id="settings-info-title"><i class="fa-solid fa-circle-info"></i>System Info</h5>
+                        <p>Runtime details detected from the current application environment.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body settings-modal-body">
+                    <ul class="list-group list-group-flush rounded admin-settings-info-list">
+                        @foreach($systemInfo as $label => $info)
+                            <li class="list-group-item d-flex justify-content-between align-items-center admin-settings-info-item">
+                                <span>{{ $label }}</span>
+                                <span class="{{ $label === 'Server Status' ? 'text-success' : 'text-muted' }}">{{ $info }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+                <div class="modal-footer settings-modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
-        <ul class="list-group list-group-flush rounded admin-settings-info-list">
-            @foreach($systemInfo as $label => $info)
-                <li class="list-group-item d-flex justify-content-between align-items-center admin-settings-info-item">
-                    <span>{{ $label }}</span>
-                    <span class="{{ $label === 'Server Status' ? 'text-success' : 'text-muted' }}">{{ $info }}</span>
-                </li>
-            @endforeach
-        </ul>
     </section>
 </div>
