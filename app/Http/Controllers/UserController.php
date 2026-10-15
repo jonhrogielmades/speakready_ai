@@ -4548,10 +4548,6 @@ class UserController extends Controller
 
  $module = LearningModule::with(['chapters', 'resources', 'quizzes.questions', 'activities'])->where('status', 'published')->findOrFail($id);
 
- if (! Setting::enabled('ll_quizzes')) {
- $module->setRelation('quizzes', collect());
- }
-
  // Track view
  $module->increment('views');
  $moduleProgress = LearningProgress::firstOrNew([
@@ -4586,12 +4582,6 @@ class UserController extends Controller
  'quiz_score' => 'nullable|integer|min:0|max:100',
  'learning_hours' => 'nullable|numeric|min:0|max:1000',
  ]);
-
- if (array_key_exists('quiz_score', $validated) && ! Setting::enabled('ll_quizzes')) {
- return redirect()
- ->route('user.modules.show', $module->id)
- ->with('error', 'Module quizzes are currently disabled by the administrator.');
- }
 
  $progress = LearningProgress::firstOrNew([
  'user_id' => Auth::id(),

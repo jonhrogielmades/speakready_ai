@@ -782,7 +782,12 @@ class AdminReliabilityTest extends TestCase
             ->get(route('admin.settings.index'))
             ->assertOk()
             ->assertSee('id="sec-admin-settings"', false)
-            ->assertSee('settings-grid', false);
+            ->assertSee('settings-grid', false)
+            ->assertSee('Interview Prep Tools')
+            ->assertDontSee('Enable Interview Prep Quizzes')
+            ->assertDontSee('name="ll_quizzes"', false);
+
+        $this->assertArrayNotHasKey('ll_quizzes', SystemSettings::definitions());
     }
 
     public function test_settings_page_overrides_hard_coded_white_text_for_theme_contrast(): void

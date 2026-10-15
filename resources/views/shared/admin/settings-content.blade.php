@@ -296,7 +296,6 @@
                     <div class="modal-body settings-modal-body">
             @foreach([
                 'll_modules' => ['Enable Interview Prep Modules', 'Allow users to browse and complete job interview preparation modules.'],
-                'll_quizzes' => ['Enable Interview Prep Quizzes', 'Allow interview-prep quiz/progress submissions.'],
                 'll_certs' => ['Enable Interview Certificates', 'Allow interview challenge certificate downloads.'],
                 'll_achievements' => ['Enable Interview Achievements', 'Allow interview-focused perks and achievement unlocks.'],
             ] as $key => [$title, $copy])

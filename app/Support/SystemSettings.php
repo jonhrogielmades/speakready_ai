@@ -43,7 +43,6 @@ class SystemSettings
         'aic_recommend' => ['value' => true, 'group' => 'ai_coach', 'type' => 'boolean'],
 
         'll_modules' => ['value' => true, 'group' => 'learning_lab', 'type' => 'boolean'],
-        'll_quizzes' => ['value' => true, 'group' => 'learning_lab', 'type' => 'boolean'],
         'll_certs' => ['value' => true, 'group' => 'learning_lab', 'type' => 'boolean'],
         'll_achievements' => ['value' => true, 'group' => 'learning_lab', 'type' => 'boolean'],
 
