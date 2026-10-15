@@ -15,7 +15,6 @@
         ['id' => 'settings-appearance', 'icon' => 'fa-palette', 'label' => 'Appearance'],
         ['id' => 'settings-retention', 'icon' => 'fa-clock-rotate-left', 'label' => 'Retention'],
         ['id' => 'settings-reports', 'icon' => 'fa-chart-pie', 'label' => 'Reports'],
-        ['id' => 'settings-audit', 'icon' => 'fa-list-check', 'label' => 'Audit Logs'],
         ['id' => 'settings-info', 'icon' => 'fa-circle-info', 'label' => 'System Info'],
     ];
 @endphp
@@ -413,35 +412,6 @@
             <button type="submit" class="btn btn-primary px-4 admin-settings-save-bottom"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
         </div>
     </form>
-
-    <section class="settings-panel" id="settings-audit">
-        <div class="settings-panel-head">
-            <h5><i class="fa-solid fa-list-check"></i>Audit Logs</h5>
-            <p>Recent real activity records from the admin audit feed.</p>
-        </div>
-        <div class="table-responsive" id="mainAuditLogsTableWrapper">
-            <table class="table table-dark table-hover" id="mainAuditLogsTable">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Action</th>
-                        <th>User</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($auditLogs as $activity)
-                        <tr>
-                            <td data-label="Date">{{ optional($activity->created_at)->format('Y-m-d H:i') }}</td>
-                            <td data-label="Action">{{ $activity->description ?: ucwords(str_replace('_', ' ', $activity->action)) }}</td>
-                            <td data-label="User">{{ $activity->user?->name ?? 'System' }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="3" class="text-center text-muted admin-settings-empty-cell">No audit activity yet.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </section>
 
     <section class="settings-panel" id="settings-info">
         <div class="settings-panel-head">

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
-use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use App\Models\Setting;
 use App\Support\SystemSettings;
@@ -18,13 +17,9 @@ class AdminSettingController extends Controller
     public function index()
     {
         $settings = SystemSettings::forView();
-        $auditLogs = ActivityLog::with('user')
-            ->latest('id')
-            ->take(12)
-            ->get();
         $systemInfo = $this->systemInfo();
 
-        return $this->mobileView('admin.settings', compact('settings', 'auditLogs', 'systemInfo'));
+        return $this->mobileView('admin.settings', compact('settings', 'systemInfo'));
     }
 
     /**
