@@ -528,6 +528,23 @@
         }
     }
 
+    /*
+     * The shared section transition uses transform/opacity and creates a
+     * stacking context. Keep it off this page so Bootstrap's backdrop stays
+     * behind the settings modal.
+     */
+    #sec-admin-settings.db-section.active {
+        animation: none !important;
+    }
+
+    body.admin-shell .settings-modal {
+        z-index: 1060 !important;
+    }
+
+    body.admin-shell .modal-backdrop {
+        z-index: 1050 !important;
+    }
+
     /* Modal-first settings workflow: keep the page compact and scroll inside each form. */
     body.admin-mobile-shell.modal-open,
     body:has(#sec-admin-settings .settings-modal.show).modal-open {

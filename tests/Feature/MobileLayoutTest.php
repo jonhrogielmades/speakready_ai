@@ -1070,7 +1070,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-mobile-shell mobile-shell"', false)
             ->assertSee('id="sec-admin-settings"', false)
             ->assertSee('admin-settings-shell', false)
-            ->assertSee('css/mobile/admin/settings.css?v=5', false)
+            ->assertSee('css/mobile/admin/settings.css?v=6', false)
             ->assertSee('admin-settings-header', false)
             ->assertSee('admin-settings-jump-grid', false)
             ->assertSee('id="systemSettingsForm"', false)

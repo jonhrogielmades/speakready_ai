@@ -792,7 +792,7 @@ class AdminReliabilityTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.settings.index'))
             ->assertOk()
-            ->assertSee('css/desktop/admin/settings.css?v=4', false)
+            ->assertSee('css/desktop/admin/settings.css?v=5', false)
             ->assertSee('data-page-style="admin-settings"', false);
 
         foreach (['desktop', 'mobile'] as $device) {

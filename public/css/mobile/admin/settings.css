@@ -847,6 +847,19 @@ body.admin-mobile-shell #mob-content #sec-admin-settings.admin-settings-shell .f
     }
 }
 
+/* Keep the shared section transition from placing the modal below Bootstrap's backdrop. */
+#sec-admin-settings.db-section.active {
+    animation: none !important;
+}
+
+body.admin-mobile-shell .settings-modal {
+    z-index: 1060 !important;
+}
+
+body.admin-mobile-shell .modal-backdrop {
+    z-index: 1050 !important;
+}
+
 /* Modal-first settings workflow: keep the page compact and scroll inside each form. */
 body.admin-mobile-shell.modal-open,
 body:has(#sec-admin-settings .settings-modal.show).modal-open {
