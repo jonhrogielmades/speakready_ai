@@ -134,10 +134,10 @@
                             <tbody>
                                 @forelse($feedbacks as $fb)
                                 <tr>
-                                    <td data-label="User" style="border-bottom: 1px solid var(--bd);">
-                                        <div class="fw-semibold">{{ $fb->interviewSession?->user?->name ?? 'Unknown User' }}</div>
+                                    <td data-label="User" class="feedback-user-cell" style="border-bottom: 1px solid var(--bd);">
+                                        <div class="fw-semibold feedback-user-name">{{ $fb->interviewSession?->user?->name ?? 'Unknown User' }}</div>
                                         @if($fb->interviewSession?->user?->email)
-                                            <div style="font-size:.72rem;color:var(--tx3);">{{ $fb->interviewSession->user->email }}</div>
+                                            <div class="feedback-user-email">{{ $fb->interviewSession->user->email }}</div>
                                         @endif
                                     </td>
                                     <td data-label="Question" class="feedback-question-cell" style="border-bottom: 1px solid var(--bd);">

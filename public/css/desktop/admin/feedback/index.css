@@ -209,6 +209,28 @@
         font-size: .84rem;
         line-height: 1.25;
     }
+    #mainFeedbackTable .feedback-user-cell {
+        min-width: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    #mainFeedbackTable .feedback-user-name,
+    #mainFeedbackTable .feedback-user-email {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    #mainFeedbackTable .feedback-user-email {
+        margin-top: 2px;
+        color: var(--tx3);
+        font-size: .72rem;
+        line-height: 1.2;
+    }
+    #mainFeedbackTable .feedback-question-cell {
+        min-width: 0;
+    }
     #mainFeedbackTable .text-truncate {
         max-width: 100% !important;
     }
