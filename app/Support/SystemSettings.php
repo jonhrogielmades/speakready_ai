@@ -62,7 +62,6 @@ class SystemSettings
         'sec_login_limit' => ['value' => 5, 'group' => 'security', 'type' => 'integer'],
         'sec_lockout' => ['value' => 15, 'group' => 'security', 'type' => 'integer'],
 
-        'backup_schedule' => ['value' => 'never', 'group' => 'backup', 'type' => 'string'],
         'file_max_size' => ['value' => 10, 'group' => 'files', 'type' => 'integer'],
         'file_types' => ['value' => 'PDF, DOCX, PPTX, PNG, JPG', 'group' => 'files', 'type' => 'string'],
 
@@ -179,7 +178,6 @@ class SystemSettings
 
             'sec_login_limit' => ['nullable', 'integer', 'min:1', 'max:20'],
             'sec_lockout' => ['nullable', 'integer', 'min:1', 'max:1440'],
-            'backup_schedule' => ['nullable', Rule::in(['daily', 'weekly', 'monthly', 'never'])],
             'file_max_size' => ['nullable', 'integer', 'min:1', 'max:100'],
             'file_types' => ['nullable', 'string', 'max:255'],
 

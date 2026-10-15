@@ -10,11 +10,7 @@
         ['id' => 'settings-learning', 'icon' => 'fa-briefcase', 'label' => 'Interview Prep'],
         ['id' => 'settings-notifications', 'icon' => 'fa-bell', 'label' => 'Notifications'],
         ['id' => 'settings-security', 'icon' => 'fa-shield', 'label' => 'Security'],
-        ['id' => 'settings-backup', 'icon' => 'fa-database', 'label' => 'Backup'],
         ['id' => 'settings-files', 'icon' => 'fa-folder-open', 'label' => 'Files'],
-        ['id' => 'settings-appearance', 'icon' => 'fa-palette', 'label' => 'Appearance'],
-        ['id' => 'settings-retention', 'icon' => 'fa-clock-rotate-left', 'label' => 'Retention'],
-        ['id' => 'settings-reports', 'icon' => 'fa-chart-pie', 'label' => 'Reports'],
         ['id' => 'settings-info', 'icon' => 'fa-circle-info', 'label' => 'System Info'],
     ];
 @endphp
@@ -387,48 +383,6 @@
             </div>
         </section>
 
-        <section class="modal fade settings-modal" id="settings-backup" tabindex="-1" aria-labelledby="settings-backup-title" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-                <div class="modal-content settings-modal-content">
-                    <div class="modal-header settings-panel-head">
-                        <div class="settings-modal-heading">
-                            <h5 id="settings-backup-title"><i class="fa-solid fa-database"></i>Backup</h5>
-                            <p>Export or restore a settings backup and choose the saved backup schedule preference.</p>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body settings-modal-body">
-            <div class="row g-3 align-items-end admin-settings-fields-grid admin-settings-backup-grid">
-                <div class="col-md-4">
-                    <label class="form-label">Automatic Backup Schedule</label>
-                    <select class="form-select" name="backup_schedule">
-                        @foreach(['daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'never' => 'Never'] as $key => $label)
-                            <option value="{{ $key }}" {{ $value('backup_schedule', 'never') == $key ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Restore Settings Backup</label>
-                    <input type="file" class="form-control" name="settings_backup_file" accept=".json,application/json">
-                </div>
-                <div class="col-md-4 d-flex gap-2 flex-wrap admin-settings-backup-actions">
-                    <button type="submit" class="btn btn-outline-light admin-settings-backup-btn" formaction="{{ route('admin.settings.backup') }}">
-                        <i class="fa-solid fa-download me-2"></i>Download
-                    </button>
-                    <button type="submit" class="btn btn-outline-warning admin-settings-backup-btn" formaction="{{ route('admin.settings.restore') }}">
-                        <i class="fa-solid fa-upload me-2"></i>Restore
-                    </button>
-                </div>
-            </div>
-                    </div>
-                    <div class="modal-footer settings-modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <section class="modal fade settings-modal" id="settings-files" tabindex="-1" aria-labelledby="settings-files-title" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
                 <div class="modal-content settings-modal-content">
@@ -460,121 +414,6 @@
             </div>
         </section>
 
-        <section class="modal fade settings-modal" id="settings-appearance" tabindex="-1" aria-labelledby="settings-appearance-title" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-                <div class="modal-content settings-modal-content">
-                    <div class="modal-header settings-panel-head">
-                        <div class="settings-modal-heading">
-                            <h5 id="settings-appearance-title"><i class="fa-solid fa-palette"></i>Appearance</h5>
-                            <p>Logo, favicon, and accent colors shared with layouts.</p>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body settings-modal-body">
-            <div class="row g-3 admin-settings-fields-grid">
-                <div class="col-md-6">
-                    <label class="form-label">Upload System Logo</label>
-                    <input type="file" class="form-control" name="system_logo" accept="image/*">
-                    @if(!empty($settings['system_logo']))
-                        <img src="{{ asset($settings['system_logo']) }}" class="mt-2 settings-logo-preview" alt="Current system logo">
-                    @endif
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Upload Favicon</label>
-                    <input type="file" class="form-control" name="system_favicon" accept="image/*,.ico">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Primary Color</label>
-                    <input type="color" class="form-control form-control-color" name="color_primary" value="{{ $value('color_primary', '#3b82f6') }}">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Secondary Color</label>
-                    <input type="color" class="form-control form-control-color" name="color_secondary" value="{{ $value('color_secondary', '#34d399') }}">
-                </div>
-            </div>
-                    </div>
-                    <div class="modal-footer settings-modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="modal fade settings-modal" id="settings-retention" tabindex="-1" aria-labelledby="settings-retention-title" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-                <div class="modal-content settings-modal-content">
-                    <div class="modal-header settings-panel-head">
-                        <div class="settings-modal-heading">
-                            <h5 id="settings-retention-title"><i class="fa-solid fa-clock-rotate-left"></i>Retention</h5>
-                            <p>Retention values are saved for cleanup jobs and reporting policy display.</p>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body settings-modal-body">
-            <div class="row g-3 admin-settings-fields-grid">
-                <div class="col-md-4">
-                    <label class="form-label">Interview Data Retention (Days)</label>
-                    <input type="number" class="form-control" name="retention_interview" min="1" max="3650" value="{{ $value('retention_interview', 365) }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Feedback Retention (Days)</label>
-                    <input type="number" class="form-control" name="retention_feedback" min="1" max="3650" value="{{ $value('retention_feedback', 365) }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Archive Duration (Days)</label>
-                    <input type="number" class="form-control" name="retention_archive" min="1" max="3650" value="{{ $value('retention_archive', 730) }}">
-                </div>
-            </div>
-                    </div>
-                    <div class="modal-footer settings-modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="modal fade settings-modal" id="settings-reports" tabindex="-1" aria-labelledby="settings-reports-title" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-                <div class="modal-content settings-modal-content">
-                    <div class="modal-header settings-panel-head">
-                        <div class="settings-modal-heading">
-                            <h5 id="settings-reports-title"><i class="fa-solid fa-chart-pie"></i>Reports</h5>
-                            <p>Report header, footer, logo preference, and approval label.</p>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body settings-modal-body">
-            <div class="row g-3 admin-settings-fields-grid">
-                <div class="col-md-6">
-                    <label class="form-label">Report Header Text</label>
-                    <input type="text" class="form-control" name="rep_header" value="{{ $value('rep_header', 'SpeakReady AI Official Report') }}">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Report Footer Text</label>
-                    <input type="text" class="form-control" name="rep_footer" value="{{ $value('rep_footer', 'Generated by SpeakReady AI System.') }}">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Include System Logo</label>
-                    <select class="form-select" name="rep_logo">
-                        <option value="yes" {{ $value('rep_logo', 'yes') === 'yes' ? 'selected' : '' }}>Yes</option>
-                        <option value="no" {{ $value('rep_logo', 'yes') === 'no' ? 'selected' : '' }}>No</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Signature Area Title</label>
-                    <input type="text" class="form-control" name="rep_signature" value="{{ $value('rep_signature', 'Approved By') }}">
-                </div>
-            </div>
-                    </div>
-                    <div class="modal-footer settings-modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings</button>
-                    </div>
-                </div>
-            </div>
-        </section>
     </form>
 
     <section class="modal fade settings-modal" id="settings-info" tabindex="-1" aria-labelledby="settings-info-title" aria-hidden="true">

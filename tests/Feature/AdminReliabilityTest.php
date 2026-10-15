@@ -414,7 +414,6 @@ class AdminReliabilityTest extends TestCase
                 'int_time_limit' => 2,
                 'mail_host' => 'smtp.example.com',
                 'mail_port' => 2525,
-                'backup_schedule' => 'weekly',
                 'file_max_size' => 2,
                 'file_types' => 'PDF, TXT',
                 'color_primary' => '#123456',
@@ -793,7 +792,7 @@ class AdminReliabilityTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.settings.index'))
             ->assertOk()
-            ->assertSee('css/desktop/admin/settings.css?v=3', false)
+            ->assertSee('css/desktop/admin/settings.css?v=4', false)
             ->assertSee('data-page-style="admin-settings"', false);
 
         foreach (['desktop', 'mobile'] as $device) {

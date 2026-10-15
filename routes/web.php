@@ -257,8 +257,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // System Settings
     Route::get('/admin/settings', [AdminSettingController::class, 'index'])->name('admin.settings.index');
     Route::post('/admin/settings', [AdminSettingController::class, 'update'])->name('admin.settings.update');
-    Route::post('/admin/settings/backup', [AdminSettingController::class, 'downloadBackup'])->name('admin.settings.backup');
-    Route::post('/admin/settings/restore', [AdminSettingController::class, 'restoreBackup'])->name('admin.settings.restore');
 
     Route::prefix('admin/users')->name('admin.users.')->group(function () {
         Route::get('/', [AdminUserController::class, 'index'])->name('index');

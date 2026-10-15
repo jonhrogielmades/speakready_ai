@@ -6,7 +6,6 @@ use App\Helpers\ActivityLogger;
 use Illuminate\Http\Request;
 use App\Models\Setting;
 use App\Support\SystemSettings;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AdminSettingController extends Controller
@@ -54,79 +53,6 @@ class AdminSettingController extends Controller
         $this->logSettingsActivity($request, 'admin_settings_updated', 'updated system settings', $saved);
 
         return redirect()->route('admin.settings.index')->with('message', 'Settings updated successfully.');
-    }
-
-    public function downloadBackup(Request $request)
-    {
-        $payload = [
-            'exported_at' => now()->toIso8601String(),
-            'app' => SystemSettings::value('sys_name', config('app.name')),
-            'settings' => Setting::orderBy('key')
-                ->get(['key', 'value', 'type', 'group'])
-                ->mapWithKeys(fn (Setting $setting): array => [
-                    $setting->key => [
-                        'value' => $setting->value,
-                        'type' => $setting->type,
-                        'group' => $setting->group,
-                    ],
-                ])
-                ->all(),
-        ];
-
-        $this->logSettingsActivity($request, 'admin_settings_backup_downloaded', 'downloaded a settings backup', []);
-
-        $fileName = 'speakready-settings-'.now()->format('Ymd-His').'.json';
-
-        return response()->streamDownload(function () use ($payload): void {
-            echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        }, $fileName, [
-            'Content-Type' => 'application/json',
-        ]);
-    }
-
-    public function restoreBackup(Request $request)
-    {
-        $request->validate([
-            'settings_backup_file' => ['required', 'file', 'mimes:json,txt', 'max:2048'],
-        ]);
-
-        $contents = file_get_contents($request->file('settings_backup_file')->getRealPath());
-        $payload = json_decode((string) $contents, true);
-
-        if (! is_array($payload) || ! is_array($payload['settings'] ?? null)) {
-            return redirect()
-                ->route('admin.settings.index')
-                ->with('error', 'The selected settings backup could not be read.');
-        }
-
-        $restored = [];
-        DB::transaction(function () use ($payload, &$restored): void {
-            foreach ($payload['settings'] as $key => $setting) {
-                if (! in_array($key, SystemSettings::keys(), true)) {
-                    continue;
-                }
-
-                $value = is_array($setting) && array_key_exists('value', $setting)
-                    ? $setting['value']
-                    : $setting;
-
-                $type = SystemSettings::typeFor($key);
-                if ($type === 'boolean') {
-                    $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
-                } elseif ($type === 'integer') {
-                    $value = (int) $value;
-                }
-
-                Setting::setVal($key, $value, SystemSettings::groupFor($key), $type);
-                $restored[] = $key;
-            }
-        });
-
-        $this->logSettingsActivity($request, 'admin_settings_backup_restored', 'restored a settings backup', $restored);
-
-        return redirect()
-            ->route('admin.settings.index')
-            ->with('message', count($restored).' setting(s) restored successfully.');
     }
 
     private function persistRequestSettings(Request $request): array

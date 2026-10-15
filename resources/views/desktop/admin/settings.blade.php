@@ -1,7 +1,7 @@
 @extends('desktop.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/settings.css?v=3') }}" data-page-style="admin-settings">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/settings.css?v=4') }}" data-page-style="admin-settings">
 @endpush
 
 @section('content')
