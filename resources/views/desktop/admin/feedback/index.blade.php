@@ -124,6 +124,7 @@
                             <thead style="background: transparent;">
                                 <tr>
                                     <th style="color: var(--tx3); border-bottom: 1px solid var(--bd);">Audit ID</th>
+                                    <th style="color: var(--tx3); border-bottom: 1px solid var(--bd);">User</th>
                                     <th style="color: var(--tx3); border-bottom: 1px solid var(--bd);">Question</th>
                                     <th style="color: var(--tx3); border-bottom: 1px solid var(--bd);">Score</th>
                                     <th style="color: var(--tx3); border-bottom: 1px solid var(--bd);">Generated Date</th>
@@ -134,19 +135,25 @@
                             <tbody>
                                 @forelse($feedbacks as $fb)
                                 <tr>
-                                    <td style="border-bottom: 1px solid var(--bd);">#{{ $fb->id }}</td>
-                                    <td style="border-bottom: 1px solid var(--bd);">
+                                    <td data-label="Audit ID" style="border-bottom: 1px solid var(--bd);">#{{ $fb->id }}</td>
+                                    <td data-label="User" style="border-bottom: 1px solid var(--bd);">
+                                        <div class="fw-semibold">{{ $fb->interviewSession?->user?->name ?? 'Unknown User' }}</div>
+                                        @if($fb->interviewSession?->user?->email)
+                                            <div style="font-size:.72rem;color:var(--tx3);">{{ $fb->interviewSession->user->email }}</div>
+                                        @endif
+                                    </td>
+                                    <td data-label="Question" style="border-bottom: 1px solid var(--bd);">
                                         <div class="text-truncate" style="max-width: 250px;" title="{{ $fb->question ? $fb->question->question_text : 'N/A' }}">
                                             {{ $fb->question ? $fb->question->question_text : 'N/A' }}
                                         </div>
                                     </td>
-                                    <td style="border-bottom: 1px solid var(--bd);">
+                                    <td data-label="Score" style="border-bottom: 1px solid var(--bd);">
                                         <span class="badge" style="{{ $fb->score >= 80 ? 'background: rgba(16, 185, 129, 0.1); color: #10b981;' : ($fb->score >= 50 ? 'background: rgba(245, 158, 11, 0.1); color: #f59e0b;' : 'background: var(--danger-bg); color: var(--danger-tx);') }}">
                                             {{ $fb->score ?? 'N/A' }}%
                                         </span>
                                     </td>
-                                    <td style="border-bottom: 1px solid var(--bd);">{{ $fb->created_at->format('M d, Y') }}</td>
-                                    <td style="border-bottom: 1px solid var(--bd);">
+                                    <td data-label="Generated Date" style="border-bottom: 1px solid var(--bd);">{{ $fb->created_at->format('M d, Y') }}</td>
+                                    <td data-label="Status" style="border-bottom: 1px solid var(--bd);">
                                         @if($fb->audit_status == 'approved')
                                             <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i class="fa-solid fa-check-circle me-1"></i> Approved</span>
                                         @elseif($fb->audit_status == 'under_review')
@@ -157,13 +164,13 @@
                                             <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25"><i class="fa-solid fa-archive me-1"></i> Archived</span>
                                         @endif
                                     </td>
-                                    <td style="border-bottom: 1px solid var(--bd);">
+                                    <td data-label="Action" style="border-bottom: 1px solid var(--bd);">
                                         <a href="{{ route('admin.feedback.show', $fb) }}" class="btn btn-sm btn-outline-primary feedback-review-btn" style="border-radius: 6px;"><i class="fa-solid fa-eye"></i>Review</a>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-4" style="color: var(--tx3); border-bottom: 1px solid var(--bd);">No feedback records found.</td>
+                                    <td colspan="7" class="text-center py-4" style="color: var(--tx3); border-bottom: 1px solid var(--bd);">No feedback records found.</td>
                                 </tr>
                                 @endforelse
                             </tbody>

@@ -11,7 +11,7 @@ class AdminFeedbackController extends Controller
 {
     public function index(Request $request)
     {
-        $query = $this->filteredFeedbackQuery($request)->with('question');
+        $query = $this->filteredFeedbackQuery($request)->with(['question', 'interviewSession.user']);
 
         // Overview Cards Stats
         $stats = [
