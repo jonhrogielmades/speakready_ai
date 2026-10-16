@@ -1297,13 +1297,45 @@ document.addEventListener("DOMContentLoaded", function() {
             { element: '#profileWrap', popover: { title: 'Account And Language', description: 'Manage profile settings, language translation, notifications, and sign-out options.', side: 'bottom', align: 'end' }}
         ];
 
-        window.createSpeakReadyTour({
+        const dashboardTour = window.createSpeakReadyTour({
             completionKey,
             serverDetectedMobile,
             stepsMobile,
             stepsDesktop,
-            autoStartDelay: 350,
+            autoStart: false,
         });
+
+        const registrationAlertModal = document.getElementById('srFlashModal');
+        const setupToolsModal = document.getElementById('dashboardSetupToolsModal');
+        let tourStartScheduled = false;
+
+        const isModalOpen = (element) => Boolean(element && (
+            element.classList.contains('show') ||
+            element.getAttribute('aria-hidden') === 'false'
+        ));
+
+        function startDashboardTourWhenReady() {
+            if (!dashboardTour || dashboardTour.isCompleted() || tourStartScheduled) return;
+
+            const setupState = window.__speakReadyDashboardSetupState;
+            if (isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || setupState?.pending) return;
+
+            tourStartScheduled = true;
+            window.setTimeout(() => {
+                tourStartScheduled = false;
+
+                if (dashboardTour.isCompleted() || isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || window.__speakReadyDashboardSetupState?.pending) {
+                    return;
+                }
+
+                dashboardTour.start();
+            }, 350);
+        }
+
+        registrationAlertModal?.addEventListener('hidden.bs.modal', startDashboardTourWhenReady);
+        setupToolsModal?.addEventListener('hidden.bs.modal', startDashboardTourWhenReady);
+        window.addEventListener('speakready:dashboard-setup-ready', startDashboardTourWhenReady);
+        window.setTimeout(startDashboardTourWhenReady, 450);
 
     });
 </script>

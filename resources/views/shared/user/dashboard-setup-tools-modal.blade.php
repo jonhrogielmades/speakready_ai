@@ -526,6 +526,10 @@
             const storageKey = 'speakready.dashboardSetupTools.v1';
             const snoozeKey = 'speakready.dashboardSetupTools.snoozed';
             const shouldAutoShow = modalElement?.dataset.srSetupAutoShow === 'true';
+            const setupState = window.__speakReadyDashboardSetupState = window.__speakReadyDashboardSetupState || {
+                pending: false,
+                ready: false,
+            };
             let completed = false;
             let submitActive = false;
 
@@ -585,6 +589,19 @@
                 } catch (error) {
                     return false;
                 }
+            }
+
+            function isModalOpen(element) {
+                return Boolean(element && (
+                    element.classList.contains('show') ||
+                    element.getAttribute('aria-hidden') === 'false'
+                ));
+            }
+
+            function markSetupReady() {
+                setupState.pending = false;
+                setupState.ready = true;
+                window.dispatchEvent(new CustomEvent('speakready:dashboard-setup-ready'));
             }
 
             function setStatus(message, type = 'info') {
@@ -760,6 +777,7 @@
 
             modalElement?.addEventListener('hidden.bs.modal', () => {
                 if (!completed && !submitActive) safeSessionSet(snoozeKey, '1');
+                markSetupReady();
             });
 
             form.addEventListener('submit', async (event) => {
@@ -820,16 +838,37 @@
                 }
             });
 
-            if (shouldAutoShow && !hasCompletedSetup() && !safeSessionGet(snoozeKey) && window.bootstrap && modalElement) {
-                window.setTimeout(() => {
-                    if (hasCompletedSetup() || safeSessionGet(snoozeKey)) return;
+            const shouldPromptForSetup = shouldAutoShow && !hasCompletedSetup() && !safeSessionGet(snoozeKey) && window.bootstrap && modalElement;
+            const registrationAlertModal = document.getElementById('srFlashModal');
 
-                    window.bootstrap.Modal.getOrCreateInstance(modalElement, {
-                        backdrop: 'static',
-                        keyboard: true,
-                    }).show();
-                }, 220);
+            if (!shouldPromptForSetup) {
+                markSetupReady();
+                return;
             }
+
+            setupState.pending = true;
+            setupState.ready = false;
+
+            function showSetupToolsModal() {
+                if (hasCompletedSetup() || safeSessionGet(snoozeKey)) {
+                    markSetupReady();
+                    return;
+                }
+
+                if (isModalOpen(registrationAlertModal)) {
+                    registrationAlertModal.addEventListener('hidden.bs.modal', () => {
+                        window.setTimeout(showSetupToolsModal, 120);
+                    }, { once: true });
+                    return;
+                }
+
+                window.bootstrap.Modal.getOrCreateInstance(modalElement, {
+                    backdrop: 'static',
+                    keyboard: true,
+                }).show();
+            }
+
+            window.setTimeout(showSetupToolsModal, 220);
         }
 
         if (document.readyState === 'loading') {
