@@ -8554,6 +8554,215 @@ body.dm.user-mobile-shell .sr-dashboard-coach-modal .btn-close {
     }
 }
 
+/* Mobile readiness trend: compact, touch-friendly chart-card treatment. */
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart {
+    --trend-card-bg: #ffffff;
+    --trend-card-border: #dfe3ea;
+    --trend-card-soft: #f8fafc;
+    --trend-title: #0f172a;
+    --trend-muted: #64748b;
+    padding: 0 !important;
+    background: var(--trend-card-bg) !important;
+    border: 1px solid var(--trend-card-border) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root:not(.lm) body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart {
+    --trend-card-bg: #151c2d;
+    --trend-card-border: rgba(148, 163, 184, 0.2);
+    --trend-card-soft: rgba(30, 41, 59, 0.72);
+    --trend-title: #f8fafc;
+    --trend-muted: #b7c3d6;
+    box-shadow: 0 12px 30px rgba(2, 6, 23, 0.24) !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 10px 12px !important;
+    min-height: 66px !important;
+    margin: 0 !important;
+    padding: 13px 14px 11px !important;
+    border-bottom: 1px solid var(--trend-card-border) !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-header > div:first-child {
+    flex: 1 1 110px;
+    min-width: 0;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-title-row {
+    gap: 0 !important;
+    margin: 0 !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-title {
+    color: var(--trend-title) !important;
+    font-size: 0.94rem !important;
+    line-height: 1.2 !important;
+    font-weight: 800 !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-subtitle {
+    margin: 4px 0 0 !important;
+    color: var(--trend-muted) !important;
+    font-size: 0.66rem !important;
+    line-height: 1.3 !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-range {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 0;
+    padding: 1px;
+    border: 1px solid #2563eb;
+    border-radius: 7px;
+    background: var(--trend-card-bg);
+    overflow: hidden;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-range-btn {
+    min-width: 34px;
+    min-height: 30px;
+    padding: 6px 6px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #0f2c75;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.61rem;
+    font-weight: 800;
+    line-height: 1;
+    transition: background-color .18s ease, color .18s ease;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-range-btn + .sr-trend-range-btn {
+    border-left: 1px solid rgba(37, 99, 235, 0.24);
+    border-radius: 0;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-range-btn:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.36);
+    outline-offset: -2px;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-range-btn.is-active {
+    color: #ffffff;
+    background: #2563eb;
+}
+
+:root:not(.lm) body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-range {
+    border-color: #60a5fa;
+}
+
+:root:not(.lm) body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-range-btn {
+    color: #bfdbfe;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-chart-wrap {
+    height: clamp(198px, 48vh, 224px) !important;
+    min-height: 198px !important;
+    margin: 0 !important;
+    padding: 10px 6px 0 !important;
+    background: var(--trend-card-bg) !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-meta {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+    padding: 9px 12px 11px;
+    border-top: 1px solid var(--trend-card-border);
+    color: var(--trend-muted);
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-legend,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    min-width: 0;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-legend-item,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-summary > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    font-size: 0.61rem;
+    font-weight: 700;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-legend-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #2563eb;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-legend-dot.is-goal {
+    width: 12px;
+    height: 0;
+    border-top: 2px dashed #0f9f91;
+    border-radius: 0;
+    background: transparent;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-summary strong {
+    color: var(--trend-title);
+    font-weight: 850;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-summary strong.is-positive {
+    color: #0f9f91;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-summary strong.is-negative {
+    color: #dc2626;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-detail-btn {
+    min-height: 34px !important;
+    padding: 7px 9px !important;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 8px !important;
+    background: var(--trend-card-soft);
+    color: #2563eb;
+    font-size: 0.62rem;
+    font-weight: 800;
+}
+
+:root:not(.lm) body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-detail-btn {
+    color: #93c5fd;
+    border-color: rgba(147, 197, 253, 0.24);
+}
+
+@media (max-width: 380px) {
+    body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-header {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-range {
+        width: 100%;
+    }
+
+    body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-range-btn {
+        flex: 1 1 25%;
+    }
+}
+
     #card-skill-radar {
         --sr-radar-title-color: #1e293b;
         --sr-radar-muted-color: #475569;

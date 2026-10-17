@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=48') }}" data-page-style="dashboard-v48">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=49') }}" data-page-style="dashboard-v49">
 @endpush
 
 @section('content')
@@ -18,6 +18,7 @@
     $welcomeName = $firstName;
     $rating = round(($avgScore ?? 0) / 20, 1);
     $goalPercent = isset($upcomingGoal) ? max(0, min(100, round($upcomingGoal->percent ?? 0))) : 0;
+    $goalTarget = isset($upcomingGoal) ? max(0, min(100, (int) round($upcomingGoal->target ?? 100))) : 100;
     $moduleCount = isset($learningLabProgress) ? count($learningLabProgress) : 0;
     $sessionsMeter = max(0, min(100, (int) round((($totalSessions ?? 0) / 10) * 100)));
     $ratingMeter = max(0, min(100, (int) round(($rating / 5) * 100)));
@@ -44,7 +45,8 @@
     $xpMeter = max(0, min(100, (int) round((($xpValue % 1000) / 1000) * 100)));
     $streakMeter = max(0, min(100, (int) round((($currentStreak ?? 0) / 7) * 100)));
     $hasRadarScores = collect($radarData ?? [])->contains(fn ($score) => is_numeric($score) && (int) $score > 0);
-    $trendScores = collect($scoreTrend ?? [])->pluck('score')->filter(fn ($score) => is_numeric($score))->map(fn ($score) => (int) round($score))->values();
+    $dashboardTrendPoints = collect($dashboardTrend ?? $scoreTrend ?? []);
+    $trendScores = $dashboardTrendPoints->pluck('score')->filter(fn ($score) => is_numeric($score))->map(fn ($score) => (int) round($score))->values();
     $trendAverage = $trendScores->isNotEmpty() ? (int) round($trendScores->avg()) : $scoreVal;
     $trendFirst = $trendScores->first();
     $trendLast = $trendScores->last();
@@ -304,41 +306,30 @@
                 <div class="sr-trend-header">
                     <div>
                         <div class="sr-trend-title-row">
-                            <div class="sr-trend-icon"><i class="fa-solid fa-chart-line"></i></div>
                             <h5 class="sr-trend-title">Readiness Trend</h5>
                         </div>
-                        <p class="sr-trend-subtitle">Recent completed interview sessions, scored from 0 to 100.</p>
+                        <p class="sr-trend-subtitle">Track your interview readiness over time.</p>
                     </div>
-                </div>
-                <div class="sr-trend-actions justify-content-between mb-2">
-                    <a href="{{ route('user.progress') }}" class="sr-trend-detail-btn">View Details <i class="fa-solid fa-chevron-right"></i></a>
-                    <select class="sr-trend-filter" id="readinessTrendRange" aria-label="Readiness trend range">
-                        <option value="5">Recent 5 Sessions</option>
-                        <option value="10" selected>Recent 10 Sessions</option>
-                    </select>
-                </div>
-                <div class="sr-trend-metrics">
-                    <div class="sr-trend-metric" style="--metric-color:#2563eb">
-                        <div class="sr-trend-metric-icon"><i class="fa-solid fa-gauge-high"></i></div>
-                        <div>
-                            <div class="sr-trend-metric-label">Average Score</div>
-                            <div class="sr-trend-metric-value"><strong>{{ $trendAverage }}</strong> /100</div>
-                        </div>
-                    </div>
-                    <div class="sr-trend-metric" style="--metric-color:#16a34a">
-                        <div class="sr-trend-metric-icon"><i class="fa-solid {{ $trendImprovement >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i></div>
-                        <div>
-                            <div class="sr-trend-metric-label">Improvement</div>
-                            <div class="sr-trend-metric-value"><strong>{{ $trendImprovement >= 0 ? '+' : '' }}{{ $trendImprovement }}%</strong> <span style="font-size:.82rem;font-weight:700;color:var(--trend-muted)">vs first</span></div>
-                        </div>
+                    <div class="sr-trend-range" id="readinessTrendRange" role="group" aria-label="Readiness trend range">
+                        <button type="button" class="sr-trend-range-btn is-active" data-trend-range="7" aria-pressed="true">7D</button>
+                        <button type="button" class="sr-trend-range-btn" data-trend-range="30" aria-pressed="false">30D</button>
+                        <button type="button" class="sr-trend-range-btn" data-trend-range="90" aria-pressed="false">90D</button>
+                        <button type="button" class="sr-trend-range-btn" data-trend-range="365" aria-pressed="false">1Y</button>
                     </div>
                 </div>
                 <div class="sr-chart-box sr-trend-chart-wrap">
-                    <canvas id="progressChart"></canvas>
+                    <canvas id="progressChart" aria-label="Readiness score trend chart"></canvas>
                 </div>
-                <div class="sr-trend-note {{ $hasTrendScores ? '' : 'is-empty' }}">
-                    <i class="{{ $trendNoteIcon }}"></i>
-                    <span><strong>{{ $trendNoteTitle }}.</strong> {{ $trendNoteBody }}</span>
+                <div class="sr-trend-meta">
+                    <div class="sr-trend-legend" aria-label="Chart legend">
+                        <span class="sr-trend-legend-item"><i class="sr-trend-legend-dot is-score"></i>Readiness</span>
+                        <span class="sr-trend-legend-item"><i class="sr-trend-legend-dot is-goal"></i>Goal · {{ $goalTarget }}%</span>
+                    </div>
+                    <div class="sr-trend-summary" aria-live="polite">
+                        <span>Avg <strong id="readinessTrendAverage">{{ $trendAverage }}%</strong></span>
+                        <span>Change <strong id="readinessTrendChange" class="{{ $trendImprovement >= 0 ? 'is-positive' : 'is-negative' }}">{{ $trendImprovement >= 0 ? '+' : '' }}{{ $trendImprovement }}%</strong></span>
+                        <a href="{{ route('user.progress') }}" class="sr-trend-detail-btn" aria-label="View readiness details">Details <i class="fa-solid fa-chevron-right"></i></a>
+                    </div>
                 </div>
             </section>
 
@@ -588,17 +579,28 @@ document.addEventListener("DOMContentLoaded", function() {
             return Number.isFinite(numericValue) ? Math.max(0, Math.min(100, Math.round(numericValue))) : null;
         };
         const chartDataObj = {
-            recent: {
-                labels: @json(collect($scoreTrend ?? [])->pluck('date')->values()),
-                data: @json(collect($scoreTrend ?? [])->pluck('score')->values()).map(normalizeTrendValue)
-            }
+            recent: @json($dashboardTrendPoints->values())
         };
-        const trendRangeSelect = document.getElementById('readinessTrendRange');
+        const trendRangeButtons = Array.from(document.querySelectorAll('#readinessTrendRange [data-trend-range]'));
+        const goalTarget = normalizeTrendValue(@json($goalTarget));
+        const trendRangeDays = { 7: 7, 30: 30, 90: 90, 365: 365 };
+        const pointTimestamp = (point) => {
+            const timestamp = Date.parse(point?.date_iso || point?.date || '');
+
+            return Number.isFinite(timestamp) ? timestamp : null;
+        };
         const trendSlice = (count) => {
-            const range = Number(count || 10);
+            const range = Number(count || 30);
+            const cutoff = Date.now() - ((trendRangeDays[range] || 30) * 24 * 60 * 60 * 1000);
+            const points = chartDataObj.recent.filter((point) => {
+                const timestamp = pointTimestamp(point);
+
+                return timestamp !== null && timestamp >= cutoff;
+            });
+
             return {
-                labels: chartDataObj.recent.labels.slice(-range),
-                data: chartDataObj.recent.data.slice(-range)
+                labels: points.map((point) => point.date),
+                data: points.map((point) => normalizeTrendValue(point.score))
             };
         };
         const displayTrend = (trend) => {
@@ -606,15 +608,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
             return {
                 labels: hasData ? trend.labels : ['No scored sessions'],
-                data: hasData ? trend.data : [null]
+                data: hasData ? trend.data : [null],
+                goalData: hasData ? trend.data.map(() => goalTarget) : [null]
             };
         };
-        const initialTrendRange = isCompactTrend() ? 5 : 10;
-
-        if (trendRangeSelect) {
-            trendRangeSelect.value = String(initialTrendRange);
-        }
-
+        const initialTrendRange = Number(document.querySelector('#readinessTrendRange .is-active')?.dataset.trendRange || 30);
         const initialTrend = displayTrend(trendSlice(initialTrendRange));
 
         const gradientLine = createTrendGradient(progressCtx, initialPalette);
@@ -623,20 +621,34 @@ document.addEventListener("DOMContentLoaded", function() {
             type: 'line',
             data: {
                 labels: initialTrend.labels,
-                datasets: [{
-                    label: 'Readiness Score',
-                    data: initialTrend.data,
-                    borderColor: trendLineColor,
-                    backgroundColor: gradientLine,
-                    borderWidth: isCompactTrend() ? 2 : 3,
-                    tension: 0.38,
-                    fill: true,
-                    pointBackgroundColor: trendPointFill,
-                    pointBorderColor: trendLineColor,
-                    pointBorderWidth: isCompactTrend() ? 2 : 3,
-                    pointRadius: isCompactTrend() ? 3 : 5,
-                    pointHoverRadius: isCompactTrend() ? 5 : 6
-                }]
+                datasets: [
+                    {
+                        label: 'Readiness Score',
+                        data: initialTrend.data,
+                        borderColor: trendLineColor,
+                        backgroundColor: gradientLine,
+                        borderWidth: isCompactTrend() ? 2 : 3,
+                        tension: 0.38,
+                        fill: true,
+                        pointBackgroundColor: trendPointFill,
+                        pointBorderColor: trendLineColor,
+                        pointBorderWidth: isCompactTrend() ? 2 : 3,
+                        pointRadius: isCompactTrend() ? 3 : 5,
+                        pointHoverRadius: isCompactTrend() ? 5 : 6
+                    },
+                    {
+                        label: 'Readiness Goal',
+                        data: initialTrend.goalData,
+                        borderColor: isLightMode ? '#0f9f91' : '#5eead4',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [6, 5],
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        tension: 0,
+                        fill: false
+                    }
+                ]
             },
             options: {
                 responsive: true,
@@ -663,7 +675,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                     return ' No readiness score yet';
                                 }
 
-                                return ' Readiness Score: ' + context.parsed.y + '%';
+                                return ' ' + context.dataset.label + ': ' + context.parsed.y + '%';
                             }
                         }
                     }
@@ -673,10 +685,11 @@ document.addEventListener("DOMContentLoaded", function() {
                         beginAtZero: true,
                         max: 100,
                         ticks: {
-                            stepSize: 25,
-                            padding: isCompactTrend() ? 4 : 8,
+                            stepSize: 20,
+                            padding: isCompactTrend() ? 4 : 10,
                             color: txColor,
-                            font: { size: isCompactTrend() ? 10 : 12, weight: 600 }
+                            font: { size: isCompactTrend() ? 10 : 12, weight: 600 },
+                            callback: (value) => `${value}%`
                         },
                         grid: { color: gridColor, lineWidth: isLightMode ? 1.1 : 1.35, borderDash: [6, 6], drawTicks: false },
                         border: { display: false }
@@ -687,7 +700,7 @@ document.addEventListener("DOMContentLoaded", function() {
                             font: { size: isCompactTrend() ? 9 : 11, weight: 600 },
                             maxRotation: 0,
                             autoSkip: true,
-                            maxTicksLimit: isCompactTrend() ? 4 : 8,
+                            maxTicksLimit: isCompactTrend() ? 4 : 12,
                             color: txColor
                         },
                         grid: { display: false },
@@ -697,16 +710,52 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
 
-        const applyTrendRange = (range) => {
+        const updateTrendSummary = (trend) => {
+            const values = trend.data.filter((value) => value !== null);
+            const averageElement = document.getElementById('readinessTrendAverage');
+            const changeElement = document.getElementById('readinessTrendChange');
+
+            if (!averageElement || !changeElement) return;
+
+            if (!values.length) {
+                averageElement.textContent = '—';
+                changeElement.textContent = '—';
+                changeElement.classList.remove('is-positive', 'is-negative');
+                return;
+            }
+
+            const average = Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+            const first = values[0];
+            const last = values[values.length - 1];
+            const change = first > 0 ? Math.round(((last - first) / first) * 100) : 0;
+
+            averageElement.textContent = `${average}%`;
+            changeElement.textContent = `${change >= 0 ? '+' : ''}${change}%`;
+            changeElement.classList.toggle('is-positive', change >= 0);
+            changeElement.classList.toggle('is-negative', change < 0);
+        };
+
+        const applyTrendRange = (range, activeButton = null) => {
             const nextTrend = displayTrend(trendSlice(range));
             progressChart.data.labels = nextTrend.labels;
             progressChart.data.datasets[0].data = nextTrend.data;
+            progressChart.data.datasets[1].data = nextTrend.goalData;
+            updateTrendSummary(nextTrend);
+            trendRangeButtons.forEach((button) => {
+                const isActive = button === activeButton || button.dataset.trendRange === String(range);
+                button.classList.toggle('is-active', isActive);
+                button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
             progressChart.update();
         };
 
-        trendRangeSelect?.addEventListener('change', (event) => {
-            applyTrendRange(event.target.value);
+        trendRangeButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                applyTrendRange(button.dataset.trendRange, button);
+            });
         });
+
+        updateTrendSummary(initialTrend);
 
         let trendResizeTimer = null;
         window.addEventListener('resize', () => {
@@ -717,11 +766,11 @@ document.addEventListener("DOMContentLoaded", function() {
             progressChart.data.datasets[0].pointBorderWidth = compact ? 2 : 3;
             progressChart.data.datasets[0].pointRadius = compact ? 3 : 5;
             progressChart.data.datasets[0].pointHoverRadius = compact ? 5 : 6;
-            progressChart.options.scales.y.ticks.padding = compact ? 4 : 8;
+            progressChart.options.scales.y.ticks.padding = compact ? 4 : 10;
             progressChart.options.scales.y.ticks.font.size = compact ? 10 : 12;
             progressChart.options.scales.x.ticks.padding = compact ? 6 : 10;
             progressChart.options.scales.x.ticks.font.size = compact ? 9 : 11;
-            progressChart.options.scales.x.ticks.maxTicksLimit = compact ? 4 : 8;
+            progressChart.options.scales.x.ticks.maxTicksLimit = compact ? 4 : 12;
             progressChart.update('none');
             }, 120);
         });
@@ -824,10 +873,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if (progressChart && progressCtx) {
             const progressDataset = progressChart.data.datasets[0];
+            const goalDataset = progressChart.data.datasets[1];
             progressDataset.borderColor = palette.trendLineColor;
             progressDataset.backgroundColor = createTrendGradient(progressCtx, palette);
             progressDataset.pointBackgroundColor = palette.trendPointFill;
             progressDataset.pointBorderColor = palette.trendLineColor;
+            if (goalDataset) {
+                goalDataset.borderColor = palette.isLightMode ? '#0f9f91' : '#5eead4';
+            }
             progressChart.options.plugins.emptyChartMessage.color = palette.mutedColor;
             progressChart.options.plugins.tooltip.backgroundColor = palette.isLightMode ? '#ffffff' : 'rgba(15, 23, 42, 0.94)';
             progressChart.options.plugins.tooltip.titleColor = palette.isLightMode ? '#0f172a' : '#fff';
