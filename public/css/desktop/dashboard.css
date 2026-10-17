@@ -10599,3 +10599,214 @@ body.user-desktop-shell:not(.admin-shell) .sr-dashboard #card-achievements.sr-ac
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* Desktop readiness trend: compact chart-card treatment inspired by the reference panel. */
+@media (min-width: 992px) {
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart {
+        --trend-card-bg: #ffffff;
+        --trend-card-border: #dfe3ea;
+        --trend-card-soft: #f8fafc;
+        --trend-title: #0f172a;
+        --trend-muted: #64748b;
+        padding: 0 !important;
+        background: var(--trend-card-bg) !important;
+        border: 1px solid var(--trend-card-border) !important;
+        border-radius: 9px !important;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #card-progress-chart {
+        --trend-card-bg: #151c2d;
+        --trend-card-border: rgba(148, 163, 184, 0.2);
+        --trend-card-soft: rgba(30, 41, 59, 0.72);
+        --trend-title: #f8fafc;
+        --trend-muted: #b7c3d6;
+        box-shadow: 0 12px 30px rgba(2, 6, 23, 0.24) !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        min-height: 72px;
+        margin: 0 !important;
+        padding: 16px 18px 14px;
+        border-bottom: 1px solid var(--trend-card-border);
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-title-row {
+        gap: 0 !important;
+        margin: 0 !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-title {
+        color: var(--trend-title) !important;
+        font-size: 1rem !important;
+        line-height: 1.2 !important;
+        font-weight: 800 !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-subtitle {
+        margin: 4px 0 0 !important;
+        color: var(--trend-muted) !important;
+        font-size: 0.72rem !important;
+        line-height: 1.35 !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-range {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        gap: 0;
+        padding: 1px;
+        border: 1px solid #2563eb;
+        border-radius: 7px;
+        background: var(--trend-card-bg);
+        overflow: hidden;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-range-btn {
+        min-width: 40px;
+        min-height: 30px;
+        padding: 6px 9px;
+        border: 0;
+        border-radius: 5px;
+        background: transparent;
+        color: #0f2c75;
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.68rem;
+        font-weight: 800;
+        line-height: 1;
+        transition: background-color .18s ease, color .18s ease;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-range-btn + .sr-trend-range-btn {
+        border-left: 1px solid rgba(37, 99, 235, 0.24);
+        border-radius: 0;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-range-btn:hover,
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-range-btn:focus-visible {
+        background: rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-range-btn.is-active {
+        color: #ffffff;
+        background: #2563eb;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-range-btn.is-active + .sr-trend-range-btn {
+        border-left-color: transparent;
+    }
+
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-range {
+        border-color: #60a5fa;
+    }
+
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-range-btn {
+        color: #bfdbfe;
+    }
+
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-range-btn + .sr-trend-range-btn {
+        border-left-color: rgba(147, 197, 253, 0.24);
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-chart-wrap {
+        height: 292px !important;
+        margin: 0 !important;
+        padding: 14px 14px 0;
+        background: var(--trend-card-bg);
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        min-height: 56px;
+        padding: 10px 18px 12px;
+        border-top: 1px solid var(--trend-card-border);
+        color: var(--trend-muted);
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-legend,
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-summary {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-legend-item,
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-summary > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        font-size: 0.68rem;
+        font-weight: 700;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-legend-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2563eb;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-legend-dot.is-goal {
+        width: 14px;
+        height: 0;
+        border-top: 2px dashed #0f9f91;
+        border-radius: 0;
+        background: transparent;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-summary {
+        justify-content: flex-end;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-summary strong {
+        color: var(--trend-title);
+        font-weight: 850;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-summary strong.is-positive {
+        color: #0f9f91;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-summary strong.is-negative {
+        color: #dc2626;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-detail-btn {
+        min-height: 28px;
+        padding: 6px 9px;
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        border-radius: 6px;
+        background: var(--trend-card-soft);
+        color: #2563eb;
+        font-size: 0.66rem;
+        font-weight: 800;
+    }
+
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-detail-btn {
+        color: #93c5fd;
+        border-color: rgba(147, 197, 253, 0.24);
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-header {
+        gap: 14px;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-progress-chart .sr-trend-chart-wrap {
+        height: 264px !important;
+    }
+}

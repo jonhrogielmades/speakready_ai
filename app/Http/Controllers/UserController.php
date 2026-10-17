@@ -286,9 +286,25 @@ class UserController extends Controller
  ->map(function ($session) {
  return [
  'date' => $session->created_at->format('M d'),
+  'date_iso' => $session->created_at->toIso8601String(),
  'score' => (int) round($session->score->overall_readiness_score?? 0),
  ];
  });
+  // Keep a year of dated points available for the desktop trend range controls.
+  $dashboardTrend = (clone $completedSessions)
+  ->with('score')
+  ->whereHas('score')
+  ->where('created_at', '>=', now()->subYear())
+  ->orderBy('created_at', 'asc')
+  ->get()
+  ->map(function ($session) {
+  return [
+  'date' => $session->created_at->format('M d'),
+  'date_iso' => $session->created_at->toIso8601String(),
+  'score' => (int) round($session->score->overall_readiness_score?? 0),
+  ];
+  })
+  ->values();
  $dashboardScoreVal = max(0, min(100, (int) round($profile->readiness_score?? $avgScore?? 0)));
  $dashboardScoreText = $dashboardScoreVal >= 80 ? 'Interview Ready' : ($dashboardScoreVal >= 60 ? 'Boost' : 'Practice Mode');
  $dashboardTrendScores = $scoreTrend->pluck('score')->filter(fn ($score) => is_numeric($score))->values();
@@ -311,8 +327,8 @@ class UserController extends Controller
  'current_streak' => $currentStreak,
  ]);
 
- return $this->mobileView('dashboard', compact(
- 'profile', 'totalSessions', 'avgScore', 'scoreTrend',
+  return $this->mobileView('dashboard', compact(
+  'profile', 'totalSessions', 'avgScore', 'scoreTrend', 'dashboardTrend',
  'radarData', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
  'learningLabProgress', 'recentNotifications', 'upcomingGoal',
  'dashboardMockScenarios', 'dashboardBubbleMessages'
