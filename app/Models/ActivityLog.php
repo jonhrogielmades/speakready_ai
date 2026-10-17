@@ -38,6 +38,36 @@ class ActivityLog extends Model
         'admin_settings_backup_restored',
     ];
 
+    /**
+     * Activities that deserve a place in the user's notifications feed.
+     *
+     * Routine interactions such as starting a session, sending a coach
+     * message, or saving incremental learning progress remain in the audit
+     * log, but do not create noise in the user's important activity history.
+     */
+    public const USER_IMPORTANT_ACTIONS = [
+        'user_registered',
+        'user_logged_in',
+        'user_logged_out',
+        'reactivation_requested',
+        'profile_updated',
+        'password_changed',
+        'language_updated',
+        'account_deleted',
+        'interview_completed',
+        'interview_session_deleted',
+        'interview_sessions_cleared',
+        'learning_game_completed',
+        'learning_game_certificate_issued',
+        'learning_game_certificate_downloaded',
+        'perk_unlocked',
+        'job_application_created',
+        'job_application_updated',
+        'job_application_deleted',
+        'ai_coach_conversation_deleted',
+        'ai_coach_conversations_cleared',
+    ];
+
     protected $fillable = [
         'user_id',
         'action',
@@ -58,5 +88,10 @@ class ActivityLog extends Model
     public function scopeImportantForAdmin(Builder $query): Builder
     {
         return $query->whereIn('action', self::ADMIN_IMPORTANT_ACTIONS);
+    }
+
+    public function scopeImportantForUser(Builder $query): Builder
+    {
+        return $query->whereIn('action', self::USER_IMPORTANT_ACTIONS);
     }
 }

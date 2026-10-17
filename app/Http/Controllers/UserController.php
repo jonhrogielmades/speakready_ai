@@ -3891,15 +3891,19 @@ class UserController extends Controller
 
  $notifications = Auth::user()
  ->notifications()
+ ->whereJsonContains('data->importance', 'important')
  ->paginate(15, ['*'], 'notifications_page')
  ->withQueryString();
 
- $activityLogs = ActivityLog::where('user_id', Auth::id())
+ $activityLogs = ActivityLog::importantForUser()
+ ->where('user_id', Auth::id())
  ->orderBy('id', 'desc')
  ->paginate(20, ['*'], 'activities_page')
  ->withQueryString();
 
- $activityCount = ActivityLog::where('user_id', Auth::id())->count();
+ $activityCount = ActivityLog::importantForUser()
+ ->where('user_id', Auth::id())
+ ->count();
 
  return $this->mobileView('user.notifications', compact('notifications', 'activityLogs', 'activityCount'));
  }
@@ -3909,8 +3913,10 @@ class UserController extends Controller
  AccountNotificationSchema::ensure();
 
  $user = Auth::user();
- $unreadCount = $user->unreadNotifications()->count();
- $notifications = $user->notifications()
+ $importantNotifications = $user->notifications()
+ ->whereJsonContains('data->importance', 'important');
+ $unreadCount = (clone $importantNotifications)->whereNull('read_at')->count();
+ $notifications = (clone $importantNotifications)
  ->latest()
  ->take(5)
  ->get();
@@ -3925,7 +3931,10 @@ class UserController extends Controller
  {
  AccountNotificationSchema::ensure();
 
- $notification = Auth::user()->notifications()->where('id', $id)->first();
+ $notification = Auth::user()->notifications()
+ ->whereJsonContains('data->importance', 'important')
+ ->where('id', $id)
+ ->first();
  if ($notification) {
  $notification->markAsRead();
 
@@ -3939,7 +3948,10 @@ class UserController extends Controller
  {
  AccountNotificationSchema::ensure();
 
- Auth::user()->unreadNotifications()->update(['read_at' => now()]);
+ Auth::user()->notifications()
+ ->whereJsonContains('data->importance', 'important')
+ ->whereNull('read_at')
+ ->update(['read_at' => now()]);
 
  return response()->json(['success' => true]);
  }
@@ -3957,7 +3969,10 @@ class UserController extends Controller
  {
  AccountNotificationSchema::ensure();
 
- $notification = Auth::user()->notifications()->where('id', $id)->first();
+ $notification = Auth::user()->notifications()
+ ->whereJsonContains('data->importance', 'important')
+ ->where('id', $id)
+ ->first();
  if ($notification) {
  $notification->delete();
 
@@ -3971,7 +3986,9 @@ class UserController extends Controller
  {
  AccountNotificationSchema::ensure();
 
- ActivityLog::where('user_id', Auth::id())->delete();
+ ActivityLog::importantForUser()
+ ->where('user_id', Auth::id())
+ ->delete();
 
  return response()->json(['success' => true]);
  }
@@ -3980,7 +3997,10 @@ class UserController extends Controller
  {
  AccountNotificationSchema::ensure();
 
- $activity = ActivityLog::where('user_id', Auth::id())->where('id', $id)->first();
+ $activity = ActivityLog::importantForUser()
+ ->where('user_id', Auth::id())
+ ->where('id', $id)
+ ->first();
  if ($activity) {
  $activity->delete();
 

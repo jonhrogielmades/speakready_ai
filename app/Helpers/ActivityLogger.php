@@ -35,7 +35,10 @@ class ActivityLogger
         $defaults = self::importantNotificationDefaults($action);
         $shouldNotify = $notify || $defaults !== [];
 
-        if ($shouldNotify && self::notificationsEnabledFor($action)) {
+        $canNotifyUser = (bool) ($user->is_admin ?? false)
+            || in_array($action, ActivityLog::USER_IMPORTANT_ACTIONS, true);
+
+        if ($shouldNotify && $canNotifyUser && self::notificationsEnabledFor($action)) {
             $notificationOptions = array_merge($defaults, $notificationOptions);
             $title = $notificationOptions['title'] ?? ucfirst(str_replace('_', ' ', $action));
             $message = $notificationOptions['message'] ?? $description;

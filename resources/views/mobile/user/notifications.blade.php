@@ -13,7 +13,7 @@
             <div class="notif-hero-icon"><i class="fa-regular fa-bell"></i></div>
             <div>
                 <h4 class="notif-hero-title">Notifications</h4>
-                <p class="notif-hero-subtitle">Track progress updates, alerts, and activity reminders.</p>
+                <p class="notif-hero-subtitle">Track important alerts, account changes, and progress milestones.</p>
             </div>
         </div>
         <svg class="notif-hero-art" viewBox="0 0 180 160" aria-hidden="true">
@@ -98,7 +98,7 @@
                 <div class="activity-history-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
                 <div>
                     <h5 class="activity-history-title">Activity history</h5>
-                    <p class="activity-history-subtitle">Every account activity recorded for you.</p>
+                    <p class="activity-history-subtitle">Important account, security, and progress events.</p>
                 </div>
             </div>
             <div class="activity-history-header-meta">
@@ -131,7 +131,7 @@
             @empty
             <div class="notifications-empty-state notifications-empty-state-wide">
                 <div class="notifications-empty-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                <p class="mb-0">No account activity has been recorded yet.</p>
+                <p class="mb-0">No important account activity has been recorded yet.</p>
             </div>
             @endforelse
         </div>

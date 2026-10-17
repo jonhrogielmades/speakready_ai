@@ -528,7 +528,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ]);
  }
 
- public function test_notifications_page_shows_current_users_full_activity_history(): void
+ public function test_notifications_page_shows_current_users_important_activity_history(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -541,28 +541,31 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ]);
  }
 
+ $importantActivity = ActivityLog::create([
+ 'user_id' => $user->id,
+ 'action' => 'profile_updated',
+ 'description' => 'Important profile update.',
+ ]);
+
  ActivityLog::create([
  'user_id' => $otherUser->id,
  'action' => 'other_activity',
  'description' => 'Other user activity should stay private.',
  ]);
- $latestActivity = ActivityLog::where('user_id', $user->id)
- ->where('action', 'practice_activity_18')
- ->firstOrFail();
-
  $this->actingAs($user)
  ->get(route('user.notifications'))
  ->assertOk()
  ->assertSee('id="notificationActionStatus"', false)
  ->assertSee(route('user.activities.clearAll'), false)
- ->assertSee(route('user.activities.delete', $latestActivity->id), false)
- ->assertSee("deleteActivityLog('".$latestActivity->id."')", false)
+ ->assertSee(route('user.activities.delete', $importantActivity->id), false)
+ ->assertSee("deleteActivityLog('".$importantActivity->id."')", false)
  ->assertSee('function notificationJsonRequest', false)
  ->assertSee("'Accept': 'application/json'", false)
  ->assertSee('Activity history')
- ->assertSee('Candidate activity item 1')
- ->assertSee('Candidate activity item 18')
- ->assertSee('18 total')
+ ->assertDontSee('Candidate activity item 1')
+ ->assertDontSee('Candidate activity item 18')
+ ->assertSee('Important profile update.')
+ ->assertSee('1 total')
  ->assertDontSee('Other user activity should stay private.');
  }
 
@@ -577,7 +580,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ->assertOk()
  ->assertSee('id="notificationActionStatus"', false)
  ->assertSee('You have no notifications at the moment.')
- ->assertSee('No account activity has been recorded yet.')
+ ->assertSee('No important account activity has been recorded yet.')
  ->assertSee('function notificationJsonRequest', false);
 
  $this->assertAccountNotificationSchemaReady();

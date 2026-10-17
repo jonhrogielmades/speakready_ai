@@ -215,7 +215,7 @@ class PageSmokeTest extends TestCase
  $notification = $user->notifications()->firstOrFail();
  $activity = ActivityLog::create([
  'user_id' => $user->id,
- 'action' => 'route_smoke_activity',
+ 'action' => 'profile_updated',
  'description' => 'Verify activity history actions.',
  ]);
  $level = GameLevel::where('category_id', $gameCategory->id)->firstOrFail();

@@ -69,15 +69,26 @@ class SystemNotification extends Notification
             'title' => $this->title,
             'message' => $this->message,
             'type' => $this->type,
-            'icon' => $icon
+            'icon' => $icon,
+            'importance' => 'important',
         ];
     }
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject($this->title)
-            ->line($this->message);
+        $appName = config('app.name', 'SpeakReady AI');
+        $recipientName = trim((string) ($notifiable->name ?? ''));
+        $greeting = $recipientName !== '' ? 'Hello '.$recipientName.',' : 'Hello there,';
+
+        $mail = (new MailMessage)
+            ->subject($this->title.' | '.$appName)
+            ->greeting($greeting)
+            ->line($this->message)
+            ->salutation('Keep moving forward,');
+
+        $mail->action('View update', $this->url ?: route('user.notifications'));
+
+        return $mail;
     }
 
     public function toWebPush(object $notifiable): array

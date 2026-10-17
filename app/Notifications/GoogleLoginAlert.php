@@ -39,7 +39,9 @@ class GoogleLoginAlert extends Notification
                     ->greeting('Hello ' . $notifiable->name . ',')
                     ->line('We noticed a new login to your SpeakReady AI account using your Google account.')
                     ->line('If this was you, you can safely ignore this email.')
-                    ->line('If you did not perform this action, please secure your account and contact support immediately.');
+                    ->line('If you did not perform this action, please secure your account and contact support immediately.')
+                    ->action('Review account activity', route('user.notifications'))
+                    ->salutation('Stay secure,');
     }
 
     /**
