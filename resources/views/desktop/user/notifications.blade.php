@@ -2,7 +2,7 @@
 @section('title', 'Notifications')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/notifications.css?v=8') }}" data-page-style="user-notifications">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/notifications.css?v=9') }}" data-page-style="user-notifications">
 @endpush
 
 @section('content')
@@ -70,12 +70,12 @@
                     <span class="notification-meta"><i class="fa-regular fa-clock"></i>{{ $notification->created_at->diffForHumans() }}</span>
                 </div>
                 <p class="notification-message">{{ $notificationData['message'] ?? '' }}</p>
-                <div class="notification-actions">
-                    @if(!$isRead)
-                    <button class="notification-action-btn read" data-notification-id="{{ $notification->id }}" data-read-url="{{ route('user.notifications.read', $notification->id) }}" onclick="markRead('{{ $notification->id }}')"><i class="fa-solid fa-check"></i>Mark as read</button>
-                    @endif
-                    <button class="notification-action-btn delete" data-notification-id="{{ $notification->id }}" data-delete-url="{{ route('user.notifications.delete', $notification->id) }}" onclick="deleteNotification('{{ $notification->id }}')"><i class="fa-solid fa-trash"></i>Delete</button>
-                </div>
+            </div>
+            <div class="notification-actions">
+                @if(!$isRead)
+                <button class="notification-action-btn read" data-notification-id="{{ $notification->id }}" data-read-url="{{ route('user.notifications.read', $notification->id) }}" onclick="markRead('{{ $notification->id }}')"><i class="fa-solid fa-check"></i>Mark as read</button>
+                @endif
+                <button class="notification-action-btn delete" data-notification-id="{{ $notification->id }}" data-delete-url="{{ route('user.notifications.delete', $notification->id) }}" onclick="deleteNotification('{{ $notification->id }}')"><i class="fa-solid fa-trash"></i>Delete</button>
             </div>
         </div>
         @empty

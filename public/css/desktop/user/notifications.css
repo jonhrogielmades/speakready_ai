@@ -2189,3 +2189,57 @@
         box-sizing: border-box !important;
     }
 }
+
+/* Keep each desktop notification in one clean three-column row. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notifications-page .notification-row {
+        grid-template-columns: 48px minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 18px !important;
+        min-height: 92px !important;
+        padding: 16px 18px !important;
+        border-radius: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notifications-page .notification-content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0 !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notifications-page .notification-head {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 8px 10px !important;
+        margin: 0 0 8px !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notifications-page .notification-message {
+        margin: 0 !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notifications-page .notification-actions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        align-self: center !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        min-width: max-content !important;
+        margin: 0 !important;
+        grid-area: auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notifications-page .notification-action-btn {
+        min-width: 0 !important;
+        min-height: 42px !important;
+        padding: 9px 14px !important;
+        border-radius: 11px !important;
+        white-space: nowrap !important;
+    }
+}
