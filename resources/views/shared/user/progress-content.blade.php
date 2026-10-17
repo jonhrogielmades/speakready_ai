@@ -262,12 +262,6 @@
  $historyInitialPageSize = ($serverDetectedMobile?? false)? $historyMobilePageSize: $historyDesktopPageSize;
  $historyInitialPageCount = max(1, (int) ceil($historySessions->count() / $historyInitialPageSize));
  @endphp
- <div class="history-list-heading" aria-hidden="true" hidden>
- <span>Date</span>
- <span>Scenario</span>
- <span>Score &amp; rating</span>
- <span>Actions</span>
- </div>
  <div class="history-list" id="historyList" data-history-page-size-desktop="{{ $historyDesktopPageSize }}" data-history-page-size-mobile="{{ $historyMobilePageSize }}">
  @foreach($historySessions as $session)
  @php
