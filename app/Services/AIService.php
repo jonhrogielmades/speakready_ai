@@ -3967,7 +3967,7 @@ PROMPT;
  });
 
  return $response;
- } catch (\Exception $e) {
+ } catch (\Throwable $e) {
  if (! self::externalAiDisabledForTests()) {
  Log::error("AI Chat Error ({$currentProvider}): ".self::safeProviderErrorMessage($e));
  }
@@ -7912,6 +7912,11 @@ PROMPT;
  'systemInstruction' => [
  'parts' => [['text' => $sysMsg]],
  ],
+ 'generationConfig' => [
+ 'temperature' => self::chatTemperature(),
+ 'topP' => 0.85,
+ 'maxOutputTokens' => self::chatMaxTokens(),
+ ],
  ]);
 
  if ($response->successful()) {
@@ -7951,6 +7956,8 @@ PROMPT;
  'Content-Type' => 'application/json',
  ])->post(self::openAiChatEndpoint($credentials['endpoint']), [
  'model' => $credentials['model'],
+ 'temperature' => self::chatTemperature(),
+ 'max_tokens' => self::chatMaxTokens(),
  'messages' => self::formatHistoryForStandard($message, $history, $systemPrompt),
  ]);
 
@@ -7974,8 +7981,8 @@ PROMPT;
  ])->post(self::cohereChatEndpoint($credentials['endpoint']), [
  'model' => $credentials['model'],
  'messages' => $messages,
- 'temperature' => 0.7,
- 'max_tokens' => (int) env('AI_CHAT_MAX_TOKENS', 1000),
+ 'temperature' => self::chatTemperature(),
+ 'max_tokens' => self::chatMaxTokens(),
  ]);
 
  if ($response->successful()) {
@@ -7998,7 +8005,8 @@ PROMPT;
  $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([...self::openAiCompatibleHeaders($provider, $credentials['api_key']),
  ])->post(self::providerChatEndpoint($provider, $credentials['endpoint']), [
  'model' => $credentials['model'],
- 'max_tokens' => (int) env('AI_CHAT_MAX_TOKENS', 1000),
+ 'temperature' => self::chatTemperature(),
+ 'max_tokens' => self::chatMaxTokens(),
  'messages' => self::formatHistoryForStandard($message, $history, $systemPrompt),
  ]);
 
@@ -8009,6 +8017,18 @@ PROMPT;
  Log::error(self::PROVIDER_LABELS[$provider].' Chat Error: '.self::safeProviderResponseBody($response));
 
  return 'Sorry, I am having trouble connecting to my brain right now.';
+ }
+
+ private static function chatTemperature(): float
+ {
+ $temperature = (float) config('services.ai_chat.temperature', 0.2);
+
+ return max(0.0, min(0.4, $temperature));
+ }
+
+ private static function chatMaxTokens(): int
+ {
+ return max(256, min(4000, (int) config('services.ai_chat.max_tokens', 1000)));
  }
 
  public static function generateJson($prompt, $provider = 'openai', array $requestOptions = [])

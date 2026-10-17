@@ -73,6 +73,7 @@ class ChatbotSchema
                 self::foreignId($table, 'chatbot_conversation_id', 'chatbot_conversations');
                 $table->string('role');
                 $table->text('content');
+                $table->json('quality_metadata')->nullable();
                 $table->timestamps();
             });
 
@@ -93,6 +94,9 @@ class ChatbotSchema
             }
             if (self::isMissing($missing, 'content')) {
                 $table->text('content')->nullable();
+            }
+            if (self::isMissing($missing, 'quality_metadata')) {
+                $table->json('quality_metadata')->nullable();
             }
             if (self::isMissing($missing, 'created_at')) {
                 $table->timestamp('created_at')->nullable();
@@ -146,6 +150,7 @@ class ChatbotSchema
             'chatbot_conversation_id',
             'role',
             'content',
+            'quality_metadata',
             'created_at',
             'updated_at',
         ];

@@ -9,7 +9,14 @@ class ChatbotMessage extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['chatbot_conversation_id', 'role', 'content'];
+    protected $fillable = ['chatbot_conversation_id', 'role', 'content', 'quality_metadata'];
+
+    protected function casts(): array
+    {
+        return [
+            'quality_metadata' => 'array',
+        ];
+    }
 
     public function conversation()
     {

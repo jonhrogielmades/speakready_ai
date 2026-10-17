@@ -149,6 +149,18 @@ return [
  'min_reliability_percent' => env('AI_FEEDBACK_REVIEW_MIN_RELIABILITY_PERCENT', 95),
  ],
 
+ 'ai_coach' => [
+ 'min_reliability_percent' => env('AI_COACH_MIN_RELIABILITY_PERCENT', 95),
+ 'timeout_seconds' => env('AI_COACH_CHAT_TIMEOUT', 20),
+ 'attempts' => env('AI_COACH_CHAT_ATTEMPTS', 1),
+ 'max_providers' => env('AI_COACH_CHAT_MAX_PROVIDERS', 3),
+ ],
+
+ 'ai_chat' => [
+ 'temperature' => env('AI_CHAT_TEMPERATURE', 0.2),
+ 'max_tokens' => env('AI_CHAT_MAX_TOKENS', 1000),
+ ],
+
  'question_recommender' => [
  'enabled' => env('QUESTION_RECOMMENDER_ENABLED', true),
  'python' => env('QUESTION_RECOMMENDER_PYTHON', env('LOCAL_SPEECH_PYTHON', 'python')),

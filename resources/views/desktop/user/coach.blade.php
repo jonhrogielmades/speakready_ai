@@ -49,7 +49,7 @@
                     <div>
                         <div class="coach-disclaimer">
                             <i class="fa-regular fa-circle-info" aria-hidden="true"></i>
-                            The coach can make mistakes. Verify advice and keep every personal claim truthful.
+                            Responses pass automated evidence safeguards, but AI can still be wrong. Verify advice and keep every personal claim truthful.
                         </div>
                     </div>
                 </div>

@@ -61,7 +61,7 @@ class SystemSettings
         'sec_lockout' => ['value' => 15, 'group' => 'security', 'type' => 'integer'],
 
         'file_max_size' => ['value' => 10, 'group' => 'files', 'type' => 'integer'],
-        'file_types' => ['value' => 'PDF, DOCX, PPTX, PNG, JPG', 'group' => 'files', 'type' => 'string'],
+        'file_types' => ['value' => 'PDF, DOC, DOCX, ODT, TXT, RTF, CSV, MD, JSON, HTML, HTM, PPT, PPTX, XLS, XLSX, PNG, JPG, JPEG, WEBP, GIF, BMP, TIF, TIFF, HEIC, HEIF', 'group' => 'files', 'type' => 'string'],
 
         'system_logo' => ['value' => 'img/logo.png', 'group' => 'appearance', 'type' => 'string'],
         'system_favicon' => ['value' => 'favicon.ico', 'group' => 'appearance', 'type' => 'string'],

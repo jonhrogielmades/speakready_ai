@@ -435,7 +435,14 @@ AI_PROVIDER_RETRIES=2
 AI_PROVIDER_RETRY_DELAY_MS=250
 AI_JSON_MAX_TOKENS=4096
 AI_CHAT_MAX_TOKENS=1000
+AI_CHAT_TEMPERATURE=0.2
+AI_COACH_CHAT_TIMEOUT=20
+AI_COACH_CHAT_ATTEMPTS=1
+AI_COACH_CHAT_MAX_PROVIDERS=3
+AI_COACH_MIN_RELIABILITY_PERCENT=95
 ```
+
+AI Coach chat uses a low temperature for more consistent guidance, bounded provider failover, and a deterministic evidence gate before responses are saved. `AI_COACH_MIN_RELIABILITY_PERCENT` is the required safeguard pass rate (clamped to 95-100), not a statistical accuracy claim; every critical check must also pass. Unsupported personal facts, scores, guarantees, external sources, high-risk numbers, file claims, topic drift, and prompt-boundary leaks fail closed to a local response. The final gate decision is stored with each coach reply for auditing. Users must still verify personal claims, scores, employers, credentials, dates, and results before using them in an interview.
 
 The `AI_VOICE_ANALYSIS_*` values are reserved for hosted voice-analysis tuning. Current voice recording, transcription, and delivery coaching behavior is controlled by the transcription, TTS, and feedback settings below.
 

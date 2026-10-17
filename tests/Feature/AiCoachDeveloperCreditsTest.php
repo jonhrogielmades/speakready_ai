@@ -233,6 +233,7 @@ class AiCoachDeveloperCreditsTest extends TestCase
         $this->assertTrue(Schema::hasColumn('chatbot_messages', 'chatbot_conversation_id'));
         $this->assertTrue(Schema::hasColumn('chatbot_messages', 'role'));
         $this->assertTrue(Schema::hasColumn('chatbot_messages', 'content'));
+        $this->assertTrue(Schema::hasColumn('chatbot_messages', 'quality_metadata'));
         $this->assertSame(1, ChatbotConversation::count());
         $this->assertSame(2, ChatbotMessage::count());
     }
@@ -409,6 +410,213 @@ class AiCoachDeveloperCreditsTest extends TestCase
                 && str_contains($instruction, 'natural Filipino (Tagalog)')
                 && str_contains($instruction, 'latest user message takes priority');
         });
+    }
+
+    public function test_ai_coach_uses_grounded_profile_context_and_low_variance_provider_settings(): void
+    {
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'message' => [
+                        'content' => 'Start with one truthful customer-service example and verify the result before using it.',
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'target_position' => 'Customer Service Representative',
+            'preferred_language' => 'en',
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'Help me prepare for a customer service interview.',
+            'history' => [],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('response_quality.status', 'passed')
+            ->assertJsonPath('response_quality.reliability_percent', 100)
+            ->assertJsonPath('response_quality.minimum_reliability_percent', 95)
+            ->assertJsonPath('response_quality.checks_passed', 13)
+            ->assertJsonPath('response_quality.checks_total', 13)
+            ->assertJsonPath('response_quality.verification_required', true)
+            ->assertJsonPath('response_quality.accuracy_guaranteed', false)
+            ->assertJsonPath('response_quality.response_source', 'ai_provider')
+            ->assertJsonPath('response_quality.provider_response_replaced', false);
+
+        $savedQuality = ChatbotMessage::where('role', 'ai')->latest('id')->firstOrFail()->quality_metadata;
+        $this->assertSame('coach_reliability_v2', $savedQuality['version'] ?? null);
+        $this->assertSame(100, $savedQuality['reliability_percent'] ?? null);
+        $this->assertSame('deterministic_safeguards_not_statistical_accuracy', $savedQuality['score_basis'] ?? null);
+
+        Http::assertSent(function ($request): bool {
+            $payload = $request->data();
+            $messages = (array) ($payload['messages'] ?? []);
+            $system = (string) data_get($messages, '0.content');
+            $latest = (string) data_get($messages, '1.content');
+
+            return ($payload['temperature'] ?? null) === 0.2
+                && is_int($payload['max_tokens'] ?? null)
+                && ($payload['max_tokens'] ?? 0) >= 256
+                && str_contains($system, 'Reliability contract')
+                && str_contains($latest, 'SPEAKREADY USER PROFILE CONTEXT JSON')
+                && str_contains($latest, 'Customer Service Representative');
+        });
+    }
+
+    public function test_ai_coach_blocks_an_unsupported_provider_guarantee_before_saving_it(): void
+    {
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'message' => [
+                        'content' => 'You are guaranteed to get hired and pass the interview.',
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'Help me prepare for a job interview.',
+            'history' => [],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('response_quality.status', 'repaired')
+            ->assertJsonPath('response_quality.reliability_percent', 100)
+            ->assertJsonPath('response_quality.verification_required', true)
+            ->assertJsonPath('response_quality.accuracy_guaranteed', false)
+            ->assertJsonPath('response_quality.response_source', 'local_reliability_fallback')
+            ->assertJsonPath('response_quality.provider_response_replaced', true)
+            ->assertJsonMissing(['response' => 'You are guaranteed to get hired and pass the interview.']);
+
+        $answer = (string) $response->json('response');
+        $this->assertStringContainsString('I paused that response', $answer);
+        $this->assertStringNotContainsString('guaranteed to get hired', strtolower($answer));
+        $this->assertDatabaseHas('chatbot_messages', [
+            'role' => 'ai',
+            'content' => $answer,
+        ]);
+
+        $saved = ChatbotMessage::where('role', 'ai')->latest('id')->firstOrFail();
+        $this->assertSame('repaired', data_get($saved->quality_metadata, 'status'));
+        $this->assertContains(
+            'unsupported_hiring_or_accuracy_guarantee',
+            (array) data_get($saved->quality_metadata, 'rejected_risk_flags', [])
+        );
+    }
+
+    public function test_ai_coach_does_not_treat_a_prior_ai_hallucination_as_user_evidence(): void
+    {
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'message' => [
+                        'content' => 'You worked at Acme Corp for 3 years.',
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'Help me prepare for my interview.',
+            'history' => [
+                ['role' => 'ai', 'content' => 'You worked at Acme Corp for 3 years.'],
+            ],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('response_quality.status', 'repaired')
+            ->assertJsonPath('response_quality.provider_response_replaced', true)
+            ->assertJsonMissing(['response' => 'You worked at Acme Corp for 3 years.']);
+
+        $this->assertDatabaseMissing('chatbot_messages', [
+            'role' => 'ai',
+            'content' => 'You worked at Acme Corp for 3 years.',
+        ]);
+
+        $saved = ChatbotMessage::where('role', 'ai')->latest('id')->firstOrFail();
+        $this->assertContains(
+            'unsupported_personal_fact',
+            (array) data_get($saved->quality_metadata, 'rejected_risk_flags', [])
+        );
+    }
+
+    public function test_ai_coach_allows_a_personal_fact_explicitly_supplied_by_the_user(): void
+    {
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'message' => [
+                        'content' => 'You worked at Acme Corp for 3 years.',
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'For my interview: I worked at Acme Corp for 3 years.',
+            'history' => [],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('response', 'You worked at Acme Corp for 3 years.')
+            ->assertJsonPath('response_quality.status', 'passed')
+            ->assertJsonPath('response_quality.reliability_percent', 100)
+            ->assertJsonPath('response_quality.provider_response_replaced', false);
     }
 
     public function test_ai_coach_accepts_interview_related_file_upload_context(): void
