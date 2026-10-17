@@ -6,6 +6,8 @@
     $learningAverage = $learningItems->isNotEmpty()
         ? (int) round($learningItems->avg(fn ($progress) => max(0, min(100, (int) ($progress->progress_percentage ?? 0)))))
         : null;
+    $learningPageSize = 3;
+    $learningPageCount = max(1, (int) ceil($learningItems->count() / $learningPageSize));
     $visibleSkillComparison = collect($skillComparison ?? [])
         ->reject(function ($metric) {
             $label = strtolower(trim((string) ($metric['label'] ?? '')));
@@ -27,14 +29,15 @@
             </div>
 
             @if($learningItems->isNotEmpty())
-                <div class="learning-list">
-                    @foreach($learningItems->take(3) as $progress)
+                <div class="learning-list" id="learningProgressList" data-learning-page-size="{{ $learningPageSize }}">
+                    @foreach($learningItems as $progress)
                         @php
                             $module = $progress->learningModule;
                             $percent = max(0, min(100, (int) ($progress->progress_percentage ?? 0)));
                             $color = $learningColors[$loop->index % count($learningColors)];
+                            $learningRecordHidden = $loop->index >= $learningPageSize;
                         @endphp
-                        <a class="learning-module" href="{{ route('user.modules.show', $module->id) }}" style="--module-color: {{ $color }};">
+                        <a class="learning-module{{ $learningRecordHidden ? ' is-learning-page-hidden' : '' }}" href="{{ route('user.modules.show', $module->id) }}" style="--module-color: {{ $color }};" data-learning-record @if($learningRecordHidden) hidden aria-hidden="true" @else aria-hidden="false" @endif>
                             <div class="learning-module-icon"><i class="fa-solid fa-book-open-reader"></i></div>
                             <div>
                                 <div class="learning-module-top">
@@ -48,6 +51,19 @@
                         </a>
                     @endforeach
                 </div>
+                @if($learningItems->count() > $learningPageSize)
+                    <nav class="learning-pager" id="learningProgressPager" aria-label="Learning progress pagination">
+                        <button type="button" class="learning-pager-btn" id="learningProgressPrev" disabled>
+                            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                            <span>Previous</span>
+                        </button>
+                        <span class="learning-page-status" id="learningProgressPageStatus" aria-live="polite">Page 1 of {{ $learningPageCount }}</span>
+                        <button type="button" class="learning-pager-btn" id="learningProgressNext" @if($learningPageCount <= 1) disabled @endif>
+                            <span>Next</span>
+                            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                        </button>
+                    </nav>
+                @endif
                 <div class="learning-summary">
                     <div class="learning-summary-icon"><i class="fa-solid fa-chart-simple"></i></div>
                     <div>

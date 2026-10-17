@@ -528,48 +528,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ]);
  }
 
- public function test_notifications_page_shows_current_users_important_activity_history(): void
- {
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-
- for ($i = 1; $i <= 18; $i++) {
- ActivityLog::create([
- 'user_id' => $user->id,
- 'action' => 'practice_activity_'.$i,
- 'description' => 'Candidate activity item '.$i,
- ]);
- }
-
- $importantActivity = ActivityLog::create([
- 'user_id' => $user->id,
- 'action' => 'profile_updated',
- 'description' => 'Important profile update.',
- ]);
-
- ActivityLog::create([
- 'user_id' => $otherUser->id,
- 'action' => 'other_activity',
- 'description' => 'Other user activity should stay private.',
- ]);
- $this->actingAs($user)
- ->get(route('user.notifications'))
- ->assertOk()
- ->assertSee('id="notificationActionStatus"', false)
- ->assertSee(route('user.activities.clearAll'), false)
- ->assertSee(route('user.activities.delete', $importantActivity->id), false)
- ->assertSee("deleteActivityLog('".$importantActivity->id."')", false)
- ->assertSee('function notificationJsonRequest', false)
- ->assertSee("'Accept': 'application/json'", false)
- ->assertSee('Activity history')
- ->assertDontSee('Candidate activity item 1')
- ->assertDontSee('Candidate activity item 18')
- ->assertSee('Important profile update.')
- ->assertSee('1 total')
- ->assertDontSee('Other user activity should stay private.');
- }
-
- public function test_notifications_page_repairs_missing_notification_and_activity_tables(): void
+ public function test_notifications_page_repairs_missing_notification_table(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
 
@@ -580,73 +539,8 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ->assertOk()
  ->assertSee('id="notificationActionStatus"', false)
  ->assertSee('You have no notifications at the moment.')
- ->assertSee('No important account activity has been recorded yet.')
+ ->assertDontSee('Activity history')
  ->assertSee('function notificationJsonRequest', false);
-
- $this->assertAccountNotificationSchemaReady();
- }
-
- public function test_activity_history_actions_are_scoped_to_the_current_user(): void
- {
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-
- $ownActivity = ActivityLog::create([
- 'user_id' => $user->id,
- 'action' => 'profile_updated',
- 'description' => 'User updated their profile.',
- ]);
-
- $otherActivity = ActivityLog::create([
- 'user_id' => $otherUser->id,
- 'action' => 'login',
- 'description' => 'Other user logged in.',
- ]);
-
- $this->actingAs($user)
- ->delete(route('user.activities.delete', $otherActivity->id))
- ->assertNotFound();
-
- $this->assertDatabaseHas('activity_logs', ['id' => $otherActivity->id]);
-
- $this->actingAs($user)
- ->delete(route('user.activities.delete', $ownActivity->id))
- ->assertOk()
- ->assertJson(['success' => true]);
-
- $this->assertDatabaseMissing('activity_logs', ['id' => $ownActivity->id]);
- $this->assertDatabaseHas('activity_logs', ['id' => $otherActivity->id]);
-
- ActivityLog::create([
- 'user_id' => $user->id,
- 'action' => 'language_updated',
- 'description' => 'User changed preferred language.',
- ]);
-
- $this->actingAs($user)
- ->delete(route('user.activities.clearAll'))
- ->assertOk()
- ->assertJson(['success' => true]);
-
- $this->assertDatabaseMissing('activity_logs', ['user_id' => $user->id]);
- $this->assertDatabaseHas('activity_logs', ['id' => $otherActivity->id]);
- }
-
- public function test_activity_clear_action_repairs_missing_activity_logs_table(): void
- {
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-
- Schema::disableForeignKeyConstraints();
- try {
- Schema::dropIfExists('activity_logs');
- } finally {
- Schema::enableForeignKeyConstraints();
- }
-
- $this->actingAs($user)
- ->delete(route('user.activities.clearAll'))
- ->assertOk()
- ->assertJson(['success' => true]);
 
  $this->assertAccountNotificationSchemaReady();
  }

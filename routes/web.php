@@ -189,8 +189,6 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::delete('/notifications/push/unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('user.notifications.push.unsubscribe');
     Route::post('/notifications/read-all', [UserController::class, 'markAllNotificationsAsRead'])->name('user.notifications.readAll');
     Route::delete('/notifications/clear-all', [UserController::class, 'clearAllNotifications'])->name('user.notifications.clearAll');
-    Route::delete('/notifications/activities/clear-all', [UserController::class, 'clearAllActivities'])->name('user.activities.clearAll');
-    Route::delete('/notifications/activities/{id}', [UserController::class, 'deleteActivity'])->name('user.activities.delete');
     Route::post('/notifications/{id}/read', [UserController::class, 'markNotificationAsRead'])->name('user.notifications.read');
     Route::delete('/notifications/{id}', [UserController::class, 'deleteNotification'])->name('user.notifications.delete');
     Route::get('/feedback', [UserController::class, 'feedback'])->name('user.feedback');

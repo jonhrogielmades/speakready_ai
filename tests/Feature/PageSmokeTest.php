@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\ChatbotConversation;
 use App\Models\ChatbotMessage;
@@ -213,11 +212,6 @@ class PageSmokeTest extends TestCase
  ]);
  $user->notify(new \App\Notifications\UserActivityNotification('Route Test', 'Verify notification actions.'));
  $notification = $user->notifications()->firstOrFail();
- $activity = ActivityLog::create([
- 'user_id' => $user->id,
- 'action' => 'profile_updated',
- 'description' => 'Verify activity history actions.',
- ]);
  $level = GameLevel::where('category_id', $gameCategory->id)->firstOrFail();
 
  $this->actingAs($user)
@@ -327,14 +321,13 @@ class PageSmokeTest extends TestCase
  ->assertOk()
  ->assertSee(route('user.notifications.readAll'), false)
  ->assertSee(route('user.notifications.clearAll'), false)
- ->assertSee(route('user.activities.clearAll'), false)
- ->assertSee(route('user.activities.delete', $activity), false)
+ ->assertDontSee('Activity history')
+ ->assertDontSee('/notifications/activities', false)
  ->assertSee(url('/notifications'), false)
  ->assertSee('id="notificationActionStatus"', false)
  ->assertSee('function notificationJsonRequest', false)
  ->assertSee("markRead('".$notification->id."')", false)
- ->assertSee("deleteNotification('".$notification->id."')", false)
- ->assertSee("deleteActivityLog('".$activity->id."')", false);
+ ->assertSee("deleteNotification('".$notification->id."')", false);
 
  $this->actingAs($user)
  ->get(route('user.account'))

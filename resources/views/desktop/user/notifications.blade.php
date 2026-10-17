@@ -2,7 +2,7 @@
 @section('title', 'Notifications')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/notifications.css?v=6') }}" data-page-style="user-notifications">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/notifications.css?v=7') }}" data-page-style="user-notifications">
 @endpush
 
 @section('content')
@@ -90,54 +90,6 @@
         {{ $notifications->links('pagination::bootstrap-5') }}
     </div>
 
-    <div class="activity-history-section animate-fade-up" style="animation-delay: 0.28s;">
-        <div class="activity-history-header">
-            <div class="activity-history-heading">
-                <div class="activity-history-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                <div>
-                    <h5 class="activity-history-title">Activity history</h5>
-                    <p class="activity-history-subtitle">Important account, security, and progress events.</p>
-                </div>
-            </div>
-            <div class="activity-history-header-meta">
-                <span class="activity-history-count">{{ number_format($activityCount) }} total</span>
-                @if($activityCount > 0)
-                <button class="activity-history-action-btn clear" type="button" data-clear-activities-url="{{ route('user.activities.clearAll') }}" onclick="clearAllActivitiesPage()"><i class="fa-solid fa-trash-can"></i><span>Clear all</span></button>
-                @endif
-            </div>
-        </div>
-
-        <div class="premium-panel activity-history-list">
-            @forelse($activityLogs as $activity)
-            @php
-                $activityTitle = ucwords(str_replace('_', ' ', $activity->action));
-            @endphp
-            <div class="activity-history-row" id="activity-{{ $activity->id }}">
-                <div class="activity-history-row-icon"><i class="fa-solid fa-list-check"></i></div>
-                <div class="activity-history-row-content">
-                    <div class="activity-history-row-head">
-                        <h6 class="activity-history-row-title">{{ $activityTitle }}</h6>
-                        <span class="activity-history-time"><i class="fa-regular fa-clock"></i>{{ $activity->created_at->diffForHumans() }}</span>
-                    </div>
-                    <p class="activity-history-message">{{ $activity->description ?: 'Activity recorded.' }}</p>
-                    <div class="activity-history-row-foot">
-                        <span class="activity-history-date">{{ $activity->created_at->format('M d, Y h:i A') }}</span>
-                        <button class="activity-history-action-btn delete" type="button" data-activity-id="{{ $activity->id }}" data-delete-activity-url="{{ route('user.activities.delete', $activity->id) }}" onclick="deleteActivityLog('{{ $activity->id }}')"><i class="fa-solid fa-trash"></i><span>Delete</span></button>
-                    </div>
-                </div>
-            </div>
-            @empty
-            <div class="notifications-empty-state notifications-empty-state-wide">
-                <div class="notifications-empty-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                <p class="mb-0">No important account activity has been recorded yet.</p>
-            </div>
-            @endforelse
-        </div>
-
-        <div class="notifications-pagination mt-4 d-flex justify-content-center">
-            {{ $activityLogs->links('pagination::bootstrap-5') }}
-        </div>
-    </div>
 </div>
 
 @push('scripts')
@@ -159,12 +111,6 @@ function notificationRowActionUrl(id, attribute, suffix) {
     return button?.getAttribute(attribute) || `${baseUrl}/${encodeURIComponent(id)}${suffix}`;
 }
 
-function activityRowActionUrl(id, attribute, fallback) {
-    const selector = `[data-activity-id="${String(id).replace(/"/g, '\\"')}"][${attribute}]`;
-    const button = document.querySelector(selector);
-
-    return button?.getAttribute(attribute) || fallback;
-}
 
 function showNotificationPageError(message) {
     const status = document.getElementById('notificationActionStatus');
@@ -247,27 +193,7 @@ function deleteNotification(id) {
     }
 }
 
-function clearAllActivitiesPage() {
-    if(confirm('Are you sure you want to clear all activity history?')) {
-        notificationJsonRequest(notificationPageActionUrl('data-clear-activities-url', @json(route('user.activities.clearAll'))), 'DELETE')
-        .then(data => {
-            if(data.success) {
-                window.location.reload();
-            }
-        });
-    }
-}
 
-function deleteActivityLog(id) {
-    if(confirm('Are you sure you want to delete this activity?')) {
-        notificationJsonRequest(activityRowActionUrl(id, 'data-delete-activity-url', @json(url('/notifications/activities')).replace(/\/$/, '') + `/${encodeURIComponent(id)}`), 'DELETE')
-        .then(data => {
-            if(data.success) {
-                window.location.reload();
-            }
-        });
-    }
-}
 </script>
 @endpush
 @endsection

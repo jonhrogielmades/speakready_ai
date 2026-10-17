@@ -542,6 +542,66 @@
  progressCharts.forEach(applyProgressChartTheme);
  };
 
+ // Learning Progress: show three modules at a time with Previous/Next controls.
+ const learningRoot = document.getElementById('learning-progress');
+ if (learningRoot) {
+ const learningList = document.getElementById('learningProgressList');
+ const learningRecords = Array.from(learningRoot.querySelectorAll('[data-learning-record]'));
+ const learningPager = document.getElementById('learningProgressPager');
+ const learningPrevBtn = document.getElementById('learningProgressPrev');
+ const learningNextBtn = document.getElementById('learningProgressNext');
+ const learningPageStatus = document.getElementById('learningProgressPageStatus');
+ const parsedLearningPageSize = Number.parseInt(learningList?.dataset.learningPageSize ?? '3', 10);
+ const learningPageSize = Number.isFinite(parsedLearningPageSize) && parsedLearningPageSize > 0? parsedLearningPageSize: 3;
+ let currentLearningPage = 1;
+
+ const renderLearningPage = () => {
+ const totalPages = Math.max(1, Math.ceil(learningRecords.length / learningPageSize));
+ currentLearningPage = Math.min(Math.max(currentLearningPage, 1), totalPages);
+ const start = (currentLearningPage - 1) * learningPageSize;
+ const visibleRecords = new Set(learningRecords.slice(start, start + learningPageSize));
+
+ learningRecords.forEach(record => {
+ const isVisible = visibleRecords.has(record);
+ record.hidden = ! isVisible;
+ record.classList.toggle('is-learning-page-hidden', ! isVisible);
+ record.setAttribute('aria-hidden', isVisible? 'false': 'true');
+ });
+
+ if (learningPager) {
+ learningPager.hidden = learningRecords.length <= learningPageSize;
+ }
+ if (learningPrevBtn) {
+ learningPrevBtn.disabled = currentLearningPage <= 1;
+ }
+ if (learningNextBtn) {
+ learningNextBtn.disabled = currentLearningPage >= totalPages;
+ }
+ if (learningPageStatus) {
+ learningPageStatus.textContent = `Page ${currentLearningPage} of ${totalPages}`;
+ }
+ };
+
+ if (learningPrevBtn) {
+ learningPrevBtn.addEventListener('click', function() {
+ if (currentLearningPage > 1) {
+ currentLearningPage -= 1;
+ renderLearningPage();
+ }
+ });
+ }
+ if (learningNextBtn) {
+ learningNextBtn.addEventListener('click', function() {
+ const totalPages = Math.max(1, Math.ceil(learningRecords.length / learningPageSize));
+ if (currentLearningPage < totalPages) {
+ currentLearningPage += 1;
+ renderLearningPage();
+ }
+ });
+ }
+ renderLearningPage();
+ }
+
  // Feature 2: History Search and Pagination
  const historyRoot = document.getElementById('history-table');
  if(historyRoot) {

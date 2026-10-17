@@ -10876,3 +10876,88 @@ html body #sec-progress-tracking #progress-stats.progress-stats-grid .progress-s
     font-size: 0.58rem !important;
     line-height: 1.15 !important;
 }
+
+/* Learning Progress pagination: three modules per mobile page. */
+html body #sec-progress-tracking #learning-progress .learning-list [data-learning-record][hidden],
+html body #sec-progress-tracking #learning-progress .learning-list [data-learning-record].is-learning-page-hidden {
+    display: none !important;
+}
+
+html body #sec-progress-tracking #learning-progress .learning-pager {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+    padding-top: 12px !important;
+    border-top: 1px solid rgba(148, 163, 184, 0.18) !important;
+}
+
+html body #sec-progress-tracking #learning-progress .learning-pager[hidden] {
+    display: none !important;
+}
+
+html body #sec-progress-tracking #learning-progress .learning-pager-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 38px !important;
+    padding: 0 10px !important;
+    border: 1px solid rgba(124, 58, 237, 0.28) !important;
+    border-radius: 9px !important;
+    appearance: none !important;
+    background: rgba(124, 58, 237, 0.08) !important;
+    color: #6d28d9 !important;
+    font-size: 0.74rem !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    transition: background-color .18s ease, border-color .18s ease, opacity .18s ease !important;
+}
+
+html body #sec-progress-tracking #learning-progress .learning-pager-btn:hover:not(:disabled) {
+    background: rgba(124, 58, 237, 0.14) !important;
+    border-color: rgba(124, 58, 237, 0.4) !important;
+}
+
+html body #sec-progress-tracking #learning-progress .learning-pager-btn:disabled {
+    opacity: 0.48 !important;
+    cursor: not-allowed !important;
+}
+
+html body #sec-progress-tracking #learning-progress .learning-page-status {
+    color: var(--tx3) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+}
+
+:root:not(.lm) body #sec-progress-tracking #learning-progress .learning-pager-btn,
+body.dm #sec-progress-tracking #learning-progress .learning-pager-btn {
+    background: rgba(139, 92, 246, 0.16) !important;
+    border-color: rgba(196, 181, 253, 0.28) !important;
+    color: #ddd6fe !important;
+}
+
+:root:not(.lm) body #sec-progress-tracking #learning-progress .learning-pager-btn:hover:not(:disabled),
+body.dm #sec-progress-tracking #learning-progress .learning-pager-btn:hover:not(:disabled) {
+    background: rgba(139, 92, 246, 0.24) !important;
+    border-color: rgba(196, 181, 253, 0.42) !important;
+}
+
+@media (max-width: 360px) {
+    html body #sec-progress-tracking #learning-progress .learning-pager {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    html body #sec-progress-tracking #learning-progress .learning-page-status {
+        grid-column: 1 / -1 !important;
+        order: -1 !important;
+    }
+}

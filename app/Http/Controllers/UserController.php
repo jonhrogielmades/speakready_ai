@@ -3895,17 +3895,7 @@ class UserController extends Controller
  ->paginate(15, ['*'], 'notifications_page')
  ->withQueryString();
 
- $activityLogs = ActivityLog::importantForUser()
- ->where('user_id', Auth::id())
- ->orderBy('id', 'desc')
- ->paginate(20, ['*'], 'activities_page')
- ->withQueryString();
-
- $activityCount = ActivityLog::importantForUser()
- ->where('user_id', Auth::id())
- ->count();
-
- return $this->mobileView('user.notifications', compact('notifications', 'activityLogs', 'activityCount'));
+ return $this->mobileView('user.notifications', compact('notifications'));
  }
 
  public function fetchNotifications()
@@ -3975,34 +3965,6 @@ class UserController extends Controller
  ->first();
  if ($notification) {
  $notification->delete();
-
- return response()->json(['success' => true]);
- }
-
- return response()->json(['success' => false], 404);
- }
-
- public function clearAllActivities()
- {
- AccountNotificationSchema::ensure();
-
- ActivityLog::importantForUser()
- ->where('user_id', Auth::id())
- ->delete();
-
- return response()->json(['success' => true]);
- }
-
- public function deleteActivity($id)
- {
- AccountNotificationSchema::ensure();
-
- $activity = ActivityLog::importantForUser()
- ->where('user_id', Auth::id())
- ->where('id', $id)
- ->first();
- if ($activity) {
- $activity->delete();
 
  return response()->json(['success' => true]);
  }

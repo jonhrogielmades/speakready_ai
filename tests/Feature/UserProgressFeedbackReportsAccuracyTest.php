@@ -257,6 +257,58 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $this->assertSame(3, count($hiddenHistoryCards[0]));
  }
 
+ public function test_learning_progress_uses_three_entry_previous_next_pagination_on_desktop_and_mobile(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+ foreach (range(1, 5) as $index) {
+ $module = LearningModule::create([
+ 'title' => "Pagination Learning Module {$index}",
+ 'description' => 'A learning module used to verify progress pagination.',
+ 'status' => 'published',
+ 'mapped_skills' => ['clarity'],
+ ]);
+
+ LearningProgress::create([
+ 'user_id' => $user->id,
+ 'learning_module_id' => $module->id,
+ 'progress_percentage' => $index * 10,
+ ]);
+ }
+
+ $desktopResponse = $this->actingAs($user)->get(route('user.progress'));
+ $desktopContent = $desktopResponse->getContent();
+
+ $desktopResponse->assertOk()
+ ->assertSee('css/desktop/user/progress.css?v=64', false)
+ ->assertSee('data-learning-page-size="3"', false)
+ ->assertSee('id="learningProgressPager"', false)
+ ->assertSee('id="learningProgressPrev"', false)
+ ->assertSee('id="learningProgressNext"', false)
+ ->assertSee('Page 1 of 2')
+ ->assertSee('Previous')
+ ->assertSee('Next');
+
+ $this->assertSame(5, substr_count($desktopContent, 'data-learning-record'));
+ preg_match_all('/class="learning-module[^\"]*"[^>]*\shidden\b/', $desktopContent, $desktopHiddenRecords);
+ $this->assertSame(2, count($desktopHiddenRecords[0]));
+
+ $mobileResponse = $this->actingAs($user)
+ ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1')
+ ->get(route('user.progress'));
+ $mobileContent = $mobileResponse->getContent();
+
+ $mobileResponse->assertOk()
+ ->assertSee('css/mobile/user/progress.css?v=48', false)
+ ->assertSee('data-learning-page-size="3"', false)
+ ->assertSee('id="learningProgressPager"', false)
+ ->assertSee('Page 1 of 2');
+
+ $this->assertSame(5, substr_count($mobileContent, 'data-learning-record'));
+ preg_match_all('/class="learning-module[^\"]*"[^>]*\shidden\b/', $mobileContent, $mobileHiddenRecords);
+ $this->assertSame(2, count($mobileHiddenRecords[0]));
+ }
+
  public function test_progress_star_card_does_not_treat_default_zero_as_reliable_star_evidence(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

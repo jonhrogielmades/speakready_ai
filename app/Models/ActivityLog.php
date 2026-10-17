@@ -89,9 +89,4 @@ class ActivityLog extends Model
     {
         return $query->whereIn('action', self::ADMIN_IMPORTANT_ACTIONS);
     }
-
-    public function scopeImportantForUser(Builder $query): Builder
-    {
-        return $query->whereIn('action', self::USER_IMPORTANT_ACTIONS);
-    }
 }
