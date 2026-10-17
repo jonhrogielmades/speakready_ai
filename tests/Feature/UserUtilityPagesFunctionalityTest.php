@@ -61,6 +61,29 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
  }
 
+ public function test_account_profile_does_not_save_when_no_values_changed(): void
+ {
+ $user = User::factory()->create([
+ 'is_admin' => false,
+ 'status' => 'active',
+ 'target_position' => 'Data Analyst',
+ ]);
+
+ $this->actingAs($user)
+ ->post(route('user.account.profile'), [
+ 'name' => $user->name,
+ 'email' => $user->email,
+ 'target_position' => $user->target_position,
+ ])
+ ->assertRedirect()
+ ->assertSessionHas('info', 'No changes to save.');
+
+ $this->assertDatabaseMissing('activity_logs', [
+ 'user_id' => $user->id,
+ 'action' => 'profile_updated',
+ ]);
+ }
+
  public function test_account_page_repairs_missing_notification_and_activity_tables(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

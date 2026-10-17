@@ -58,6 +58,16 @@
         </div>
     @endif
 
+    @if(session('info'))
+        <div class="alert alert-info alert-dismissible fade show" role="alert" style="border-radius:12px">
+            {{ session('info') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <div id="accountProfileNoChangesAlert" class="alert alert-info" role="alert" hidden style="border-radius:12px">
+        <i class="fa-solid fa-circle-info me-2" aria-hidden="true"></i>No changes to save.
+    </div>
 
     <div class="row g-4 account-grid">
         <div class="col-lg-7 animate-fade-up" style="animation-delay: 0.1s;">
@@ -321,6 +331,48 @@
         });
         cropCanvas.addEventListener('pointerup', () => { cropDragging = false; });
         cropCanvas.addEventListener('pointercancel', () => { cropDragging = false; });
+    }
+
+    const accountProfileForm = document.getElementById('accountProfileForm');
+    const accountProfileNoChangesAlert = document.getElementById('accountProfileNoChangesAlert');
+
+    function accountProfileSnapshot() {
+        if (!accountProfileForm) return '';
+
+        return Array.from(accountProfileForm.elements)
+            .filter(field => field.name && !field.disabled && !['submit', 'button', 'reset'].includes(field.type) && field.name !== '_token')
+            .map(field => {
+                if (field.type === 'file') {
+                    return `${field.name}:${Array.from(field.files || []).map(file => [file.name, file.size, file.lastModified, file.type].join(':')).join(',')}`;
+                }
+
+                if (field.type === 'checkbox' || field.type === 'radio') {
+                    return `${field.name}:${field.checked ? field.value : ''}`;
+                }
+
+                return `${field.name}:${field.value}`;
+            })
+            .join('|');
+    }
+
+    const initialAccountProfileSnapshot = accountProfileSnapshot();
+
+    function hideAccountProfileNoChangesAlert() {
+        if (accountProfileNoChangesAlert) accountProfileNoChangesAlert.hidden = true;
+    }
+
+    if (accountProfileForm) {
+        accountProfileForm.addEventListener('input', hideAccountProfileNoChangesAlert);
+        accountProfileForm.addEventListener('change', hideAccountProfileNoChangesAlert);
+        accountProfileForm.addEventListener('submit', event => {
+            if (accountProfileSnapshot() !== initialAccountProfileSnapshot) return;
+
+            event.preventDefault();
+            if (accountProfileNoChangesAlert) {
+                accountProfileNoChangesAlert.hidden = false;
+                accountProfileNoChangesAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
     }
 
     function togglePasswordVisibility(inputId, btn) {

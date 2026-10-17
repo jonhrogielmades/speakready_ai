@@ -4119,6 +4119,10 @@ class UserController extends Controller
  $user->profile_photo_path = 'data:'.$mimeType.';base64,'.$imageData;
  }
 
+ if (! $user->isDirty()) {
+ return redirect()->back()->with('info', 'No changes to save.');
+ }
+
  $user->save();
 
  ActivityLogger::log(
