@@ -8,7 +8,7 @@ use Symfony\Component\Process\Process;
 
 class LocalSpeechAssessmentService
 {
-    public const VERSION = 2;
+    public const VERSION = 3;
 
     private const STATUS_VALUES = ['measured', 'partial', 'not_measured', 'unavailable', 'failed'];
 
@@ -141,6 +141,7 @@ class LocalSpeechAssessmentService
         $assessment['reliability'] = $this->reliability($assessment['reliability'] ?? []);
         $assessment['limitations'] = $this->stringList($assessment['limitations'] ?? []);
         $assessment['recommendations'] = $this->stringList($assessment['recommendations'] ?? []);
+        $assessment['quality_gate'] = $this->qualityGate($assessment);
 
         return $assessment;
     }
@@ -151,9 +152,12 @@ class LocalSpeechAssessmentService
             return null;
         }
 
-        $minimumConfidence = max(0, min(100, (int) config('services.local_speech.min_transcript_confidence', 60)));
+        $minimumConfidence = max(
+            app(AlgorithmReliabilityService::class)->thresholds()['confidence'],
+            min(100, (int) config('services.local_speech.min_transcript_confidence', 95))
+        );
         $confidence = data_get($assessment, 'asr.confidence');
-        if (! is_numeric($confidence) || (int) round((float) $confidence) < $minimumConfidence) {
+        if (! is_numeric($confidence) || (float) $confidence < $minimumConfidence) {
             return null;
         }
 
@@ -164,9 +168,16 @@ class LocalSpeechAssessmentService
 
     public function scoreFrom(?array $assessment): ?int
     {
-        $minimumReliability = max(0, min(100, (int) config('services.local_speech.min_scoring_reliability', 80)));
+        if (data_get($assessment, 'quality_gate.pronunciation_score_eligible') !== true) {
+            return null;
+        }
+
+        $minimumReliability = max(
+            app(AlgorithmReliabilityService::class)->minimumReliabilityPercent(),
+            min(100, (int) config('services.local_speech.min_scoring_reliability', 95))
+        );
         $reliability = data_get($assessment, 'reliability.score');
-        if (! is_numeric($reliability) || (int) round((float) $reliability) < $minimumReliability) {
+        if (! is_numeric($reliability) || (float) $reliability < $minimumReliability) {
             return null;
         }
 
@@ -179,7 +190,7 @@ class LocalSpeechAssessmentService
             }
 
             $method = strtolower(trim((string) data_get($assessment, $componentName.'.method', '')));
-            if ($componentName === 'gop' && ($method === '' || str_contains($method, 'proxy') || str_contains($method, 'not_clinical'))) {
+            if ($componentName === 'gop' && ! $this->isTrueGopMethod($method)) {
                 continue;
             }
 
@@ -195,7 +206,7 @@ class LocalSpeechAssessmentService
 
     private function emptyAssessment(string $status, string $reason, array $limitations): array
     {
-        return [
+        $assessment = [
             'version' => self::VERSION,
             'status' => $this->validStatus($status),
             'reason' => $reason,
@@ -212,6 +223,10 @@ class LocalSpeechAssessmentService
             'limitations' => $limitations,
             'recommendations' => [],
         ];
+
+        $assessment['quality_gate'] = $this->qualityGate($assessment);
+
+        return $assessment;
     }
 
     private function component($value, string $name): array
@@ -222,7 +237,7 @@ class LocalSpeechAssessmentService
 
         foreach (['score', 'confidence', 'reliability_score'] as $field) {
             if (is_numeric($component[$field] ?? null)) {
-                $component[$field] = max(0, min(100, (int) round((float) $component[$field])));
+                $component[$field] = max(0, min(100, (int) floor((float) $component[$field] + PHP_FLOAT_EPSILON)));
             }
         }
 
@@ -233,7 +248,7 @@ class LocalSpeechAssessmentService
     {
         $value = is_array($value) ? $value : [];
         $score = is_numeric($value['score'] ?? null)
-            ? max(0, min(100, (int) round((float) $value['score'])))
+            ? max(0, min(100, (int) floor((float) $value['score'] + PHP_FLOAT_EPSILON)))
             : 0;
 
         return [
@@ -246,11 +261,85 @@ class LocalSpeechAssessmentService
     private function reliabilityBand(int $score): string
     {
         return match (true) {
-            $score >= 85 => 'High',
-            $score >= 65 => 'Moderate',
+            $score >= 95 => 'High',
+            $score >= 65 => 'Below 95% Gate',
             $score > 0 => 'Limited',
             default => 'Unavailable',
         };
+    }
+
+    /** @return array<string, mixed> */
+    private function qualityGate(array $assessment): array
+    {
+        $reliability = data_get($assessment, 'reliability.score');
+        $minimumConfidence = max(
+            app(AlgorithmReliabilityService::class)->thresholds()['confidence'],
+            min(100, (int) config('services.local_speech.min_transcript_confidence', 95))
+        );
+        $asrConfidence = data_get($assessment, 'asr.confidence');
+        $asrQualified = data_get($assessment, 'asr.status') === 'measured'
+            && is_numeric($asrConfidence)
+            && is_finite((float) $asrConfidence)
+            && (float) $asrConfidence >= $minimumConfidence
+            && trim((string) data_get($assessment, 'asr.transcript', '')) !== '';
+        $wordAlignmentMeasured = data_get($assessment, 'forced_alignment.status') === 'measured'
+            && is_array(data_get($assessment, 'forced_alignment.word_alignments'))
+            && data_get($assessment, 'forced_alignment.word_alignments') !== [];
+        $phonemeAlignmentMeasured = data_get($assessment, 'phoneme_alignment.status') === 'measured'
+            && is_array(data_get($assessment, 'phoneme_alignment.phoneme_alignments'))
+            && data_get($assessment, 'phoneme_alignment.phoneme_alignments') !== [];
+        $method = strtolower(trim((string) data_get($assessment, 'gop.method', '')));
+        $gopConfidence = data_get($assessment, 'gop.confidence');
+        $trueGopMeasured = data_get($assessment, 'gop.status') === 'measured'
+            && $this->isTrueGopMethod($method)
+            && is_numeric($gopConfidence)
+            && is_finite((float) $gopConfidence)
+            && (float) $gopConfidence >= app(AlgorithmReliabilityService::class)->thresholds()['confidence'];
+        $evidenceCount = count(array_filter([
+            $asrQualified,
+            $wordAlignmentMeasured,
+            $phonemeAlignmentMeasured,
+            $trueGopMeasured,
+        ]));
+        $gate = app(AlgorithmReliabilityService::class)->evaluate(
+            'local_speech_gop',
+            ['reliability' => $reliability],
+            ['reliability'],
+            $evidenceCount,
+            4,
+            'measured_speech_components_and_true_gop_confidence'
+        );
+
+        foreach ([
+            'asr_confidence' => $asrQualified,
+            'word_alignment_measured' => $wordAlignmentMeasured,
+            'phoneme_alignment_measured' => $phonemeAlignmentMeasured,
+            'true_gop_confidence' => $trueGopMeasured,
+        ] as $check => $passed) {
+            $gate['checks'][$check] = $passed;
+            if (! $passed) {
+                $gate['failed_checks'][] = $check;
+            }
+        }
+        $gate['failed_checks'] = array_values(array_unique($gate['failed_checks']));
+        $gate['passed'] = $gate['failed_checks'] === [];
+        $gate['status'] = $gate['passed'] ? 'qualified' : 'blocked';
+        $gate['eligible_for_automated_decision'] = $gate['passed'];
+        $gate['decision_support_only'] = ! $gate['passed'];
+        $gate['transcript_eligible'] = $asrQualified;
+        $gate['pronunciation_score_eligible'] = $gate['passed'];
+
+        return $gate;
+    }
+
+    private function isTrueGopMethod(string $method): bool
+    {
+        $method = strtolower(trim($method));
+
+        return $method !== ''
+            && str_contains($method, 'gop')
+            && ! str_contains($method, 'proxy')
+            && ! str_contains($method, 'not_clinical');
     }
 
     private function stringList($value): array

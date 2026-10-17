@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class LearningGameScoringService
 {
-    private const SCORECARD_VERSION = 1;
+    private const SCORECARD_VERSION = 2;
 
     private const OWNERSHIP_PATTERN = '\b(?:I|my|me|we|our)\b';
 
@@ -23,7 +23,6 @@ class LearningGameScoringService
             ->all();
 
         $score = (int) round(collect($perQuestion)->avg('score') ?? 0);
-        $passed = $score >= (int) $level->required_score;
         $averages = [
             'clarity' => (int) round(collect($perQuestion)->avg('clarity_score') ?? 0),
             'relevance' => (int) round(collect($perQuestion)->avg('relevance_score') ?? 0),
@@ -33,6 +32,18 @@ class LearningGameScoringService
             'star_method' => (int) round(collect($perQuestion)->avg('star_method_score') ?? 0),
             'goal_coverage' => (int) round(collect($perQuestion)->avg('criteria_score') ?? 0),
         ];
+        $reliabilityScore = $this->scoreReliability($perQuestion);
+        $answered = collect($perQuestion)->filter(fn (array $item): bool => (int) ($item['score'] ?? 0) > 0)->count();
+        $qualityGate = app(AlgorithmReliabilityService::class)->evaluate(
+            'learning_game_evidence_rubric',
+            ['reliability' => $reliabilityScore],
+            ['reliability'],
+            $answered,
+            1,
+            'answer_completeness_and_evidence_coverage'
+        );
+        $scoreThresholdMet = $score >= (int) $level->required_score;
+        $passed = $scoreThresholdMet && $qualityGate['passed'];
 
         return [
             'score' => $score,
@@ -41,7 +52,11 @@ class LearningGameScoringService
             'per_question' => $perQuestion,
             'averages' => $averages,
             'scorecard_version' => self::SCORECARD_VERSION,
-            'ai_feedback_scorecard' => $this->scorecard($level, $perQuestion, $score, $passed, $averages),
+            'score_threshold_met' => $scoreThresholdMet,
+            'score_eligible' => $qualityGate['passed'],
+            'quality_gate' => $qualityGate,
+            'accuracy_guaranteed' => false,
+            'ai_feedback_scorecard' => $this->scorecard($level, $perQuestion, $score, $passed, $averages, $qualityGate),
         ];
     }
 
@@ -194,7 +209,7 @@ class LearningGameScoringService
         ];
     }
 
-    private function scorecard(GameLevel $level, array $perQuestion, int $score, bool $passed, array $averages): array
+    private function scorecard(GameLevel $level, array $perQuestion, int $score, bool $passed, array $averages, array $qualityGate): array
     {
         $metrics = [];
         foreach (['clarity', 'relevance', 'confidence', 'grammar', 'professionalism', 'goal_coverage', 'star_method'] as $metric) {
@@ -238,20 +253,25 @@ class LearningGameScoringService
             ->values()
             ->all();
 
-        $reliabilityScore = $this->scoreReliability($perQuestion);
+        $reliabilityScore = (int) ($qualityGate['metrics']['reliability'] ?? 0);
 
         return [
-            'title' => 'AI Feedback Scorecard',
+            'title' => 'Evidence-Based Feedback Scorecard',
             'version' => self::SCORECARD_VERSION,
             'overall_score' => $score,
             'required_score' => (int) $level->required_score,
             'status' => $passed ? 'passed' : 'needs_retry',
-            'summary' => $this->scorecardSummary($passed, $score, $strongestKey, $weakestKey),
+            'summary' => $this->scorecardSummary($passed, $score, $strongestKey, $weakestKey, (bool) $qualityGate['passed']),
             'metrics' => $metrics,
             'priority_actions' => $priorityActions,
             'question_feedback' => $questionFeedback,
             'reliability_score' => $reliabilityScore,
             'reliability_band' => $this->reliabilityBand($reliabilityScore),
+            'minimum_reliability_percent' => $qualityGate['thresholds']['reliability'],
+            'quality_gate' => $qualityGate,
+            'score_eligible' => $qualityGate['passed'],
+            'accuracy_guaranteed' => false,
+            'score_basis' => 'deterministic_answer_evidence_rubric_not_outcome_prediction',
             'evidence_policy' => 'Scores are based only on submitted challenge answers, level goals, transcript timing, and text evidence. Optional camera estimates are excluded.',
             'guidance_note' => 'Use this as coaching guidance, not a guarantee of real hiring performance.',
             'body_language_included' => false,
@@ -300,7 +320,7 @@ class LearningGameScoringService
         }
 
         $answered = collect($perQuestion)->filter(fn (array $item): bool => (int) ($item['score'] ?? 0) > 0)->count();
-        $avgWords = (int) round(collect($perQuestion)->avg('evidence_flags.word_count') ?? 0);
+        $avgWords = (int) floor((float) (collect($perQuestion)->avg('evidence_flags.word_count') ?? 0) + PHP_FLOAT_EPSILON);
         $shortAnswers = collect($perQuestion)->filter(fn (array $item): bool => (int) data_get($item, 'evidence_flags.word_count', 0) > 0 && (int) data_get($item, 'evidence_flags.word_count', 0) < 15)->count();
         $evidenceCoverage = collect($perQuestion)->avg(function (array $item): int {
             return collect([
@@ -311,17 +331,21 @@ class LearningGameScoringService
         }) ?? 0;
 
         $score = 25
-            + (int) round(($answered / max(1, $total)) * 35)
+            + (int) floor((($answered / max(1, $total)) * 35) + PHP_FLOAT_EPSILON)
             + min(20, $avgWords)
-            + (int) round(($evidenceCoverage / 3) * 15)
+            + (int) floor((($evidenceCoverage / 3) * 15) + PHP_FLOAT_EPSILON)
             + ($total >= 2 ? 5 : 0)
             - ($shortAnswers * 8);
 
         return min(95, $this->clamp($score));
     }
 
-    private function scorecardSummary(bool $passed, int $score, ?string $strongestKey, string $weakestKey): string
+    private function scorecardSummary(bool $passed, int $score, ?string $strongestKey, string $weakestKey, bool $qualityGatePassed): string
     {
+        if (! $qualityGatePassed) {
+            return "Provisional score {$score}%. Submit complete, specific evidence before relying on this result.";
+        }
+
         $strongest = $strongestKey ? Str::lower($this->metricLabel($strongestKey)) : 'evidence';
         $weakest = Str::lower($this->metricLabel($weakestKey));
 
@@ -415,8 +439,8 @@ class LearningGameScoringService
     private function reliabilityBand(int $score): string
     {
         return match (true) {
-            $score >= 85 => 'High',
-            $score >= 65 => 'Moderate',
+            $score >= 95 => 'High',
+            $score >= 65 => 'Below 95% Gate',
             default => 'Limited',
         };
     }

@@ -23,7 +23,7 @@ class LocalSpeechAssessmentServiceTest extends TestCase
         $this->assertNull(app(LocalSpeechAssessmentService::class)->scoreFrom($assessment));
     }
 
-    public function test_it_normalizes_local_speech_payload_and_extracts_score(): void
+    public function test_it_normalizes_but_blocks_speech_payload_below_the_95_percent_gate(): void
     {
         $service = app(LocalSpeechAssessmentService::class);
 
@@ -53,9 +53,47 @@ class LocalSpeechAssessmentServiceTest extends TestCase
         $this->assertSame(LocalSpeechAssessmentService::VERSION, $assessment['version']);
         $this->assertSame('partial', $assessment['status']);
         $this->assertSame(100, $assessment['pronunciation']['score']);
-        $this->assertSame(72, $service->scoreFrom($assessment));
+        $this->assertNull($service->scoreFrom($assessment));
+        $this->assertNull($service->transcriptFrom($assessment));
+        $this->assertSame('Below 95% Gate', $assessment['reliability']['band']);
+        $this->assertFalse($assessment['quality_gate']['passed']);
+        $this->assertFalse($assessment['quality_gate']['transcript_eligible']);
+    }
+
+    public function test_only_high_confidence_true_gop_payload_is_score_eligible(): void
+    {
+        config([
+            'services.local_speech.min_transcript_confidence' => 70,
+            'services.local_speech.min_scoring_reliability' => 70,
+        ]);
+        $service = app(LocalSpeechAssessmentService::class);
+
+        $assessment = $service->normalizeAssessment([
+            'status' => 'measured',
+            'asr' => [
+                'status' => 'measured',
+                'transcript' => 'I improved the process.',
+                'confidence' => 96,
+            ],
+            'forced_alignment' => ['status' => 'measured', 'word_alignments' => [['label' => 'I']]],
+            'phoneme_alignment' => ['status' => 'measured', 'phoneme_alignments' => [['label' => 'AY']]],
+            'gop' => [
+                'status' => 'measured',
+                'score' => 92,
+                'confidence' => 97,
+                'method' => 'custom_acoustic_gop',
+            ],
+            'reliability' => [
+                'score' => 96,
+                'measured_components' => ['asr', 'forced_alignment', 'phoneme_alignment', 'gop'],
+            ],
+        ]);
+
+        $this->assertSame(92, $service->scoreFrom($assessment));
         $this->assertSame('I improved the process.', $service->transcriptFrom($assessment));
         $this->assertSame('High', $assessment['reliability']['band']);
+        $this->assertTrue($assessment['quality_gate']['passed']);
+        $this->assertSame(95, $assessment['quality_gate']['thresholds']['reliability']);
     }
 
     public function test_reliability_score_is_not_treated_as_pronunciation_score(): void
@@ -75,6 +113,24 @@ class LocalSpeechAssessmentServiceTest extends TestCase
 
         $this->assertNull($service->scoreFrom($assessment));
         $this->assertSame(82, $assessment['reliability']['score']);
+    }
+
+    public function test_high_aggregate_reliability_cannot_hide_low_gop_confidence(): void
+    {
+        $service = app(LocalSpeechAssessmentService::class);
+        $assessment = $service->normalizeAssessment([
+            'status' => 'measured',
+            'asr' => ['status' => 'measured', 'transcript' => 'A complete answer.', 'confidence' => 99],
+            'forced_alignment' => ['status' => 'measured', 'word_alignments' => [['label' => 'A']]],
+            'phoneme_alignment' => ['status' => 'measured', 'phoneme_alignments' => [['label' => 'AH']]],
+            'gop' => ['status' => 'measured', 'score' => 90, 'confidence' => 94.999, 'method' => 'custom_acoustic_gop'],
+            'reliability' => ['score' => 99],
+        ]);
+
+        $this->assertNull($service->scoreFrom($assessment));
+        $this->assertFalse($assessment['quality_gate']['passed']);
+        $this->assertSame(94, $assessment['gop']['confidence']);
+        $this->assertContains('true_gop_confidence', $assessment['quality_gate']['failed_checks']);
     }
 
     public function test_it_rejects_proxy_pronunciation_scores_even_when_the_payload_claims_high_reliability(): void

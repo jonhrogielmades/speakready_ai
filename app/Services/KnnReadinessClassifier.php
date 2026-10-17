@@ -101,6 +101,7 @@ class KnnReadinessClassifier
         $rawConfidence = $this->confidenceFor($selected, $voteTotals, $k, count($targetFeatures));
         $confidence = $this->calibratedConfidence($rawConfidence, $trainingCollection->count());
         $predictedBand = $this->bandForScore($predictedScore);
+        $meetsReliabilityGate = $confidence >= app(AlgorithmReliabilityService::class)->minimumReliabilityPercent();
 
         return (object) [
             'available' => true,
@@ -117,6 +118,10 @@ class KnnReadinessClassifier
             'confidence' => $confidence,
             'reliability_band' => $this->reliabilityBand($confidence),
             'raw_confidence' => $rawConfidence,
+            'meets_reliability_gate' => $meetsReliabilityGate,
+            'eligible_for_automated_decision' => $meetsReliabilityGate,
+            'decision_support_only' => ! $meetsReliabilityGate,
+            'accuracy_guaranteed' => false,
             'label_votes' => $this->roundedVotes($voteTotals),
             'nearest_neighbors' => $selected->take(5)->values()->all(),
             'message' => "KNN compared your latest scored interview with {$selected->count()} similar scored sessions and predicts {$predictedBand}.",
@@ -318,6 +323,10 @@ class KnnReadinessClassifier
             'confidence' => 0,
             'reliability_band' => 'Unavailable',
             'raw_confidence' => 0,
+            'meets_reliability_gate' => false,
+            'eligible_for_automated_decision' => false,
+            'decision_support_only' => true,
+            'accuracy_guaranteed' => false,
             'label_votes' => [],
             'nearest_neighbors' => [],
             'message' => $message,

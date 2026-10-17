@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\GameLevel;
 use App\Services\LearningGameScoringService;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class LearningGameScoringServiceTest extends TestCase
 {
@@ -36,7 +36,7 @@ class LearningGameScoringServiceTest extends TestCase
 
         $scorecard = $result['ai_feedback_scorecard'];
 
-        $this->assertSame('AI Feedback Scorecard', $scorecard['title']);
+        $this->assertSame('Evidence-Based Feedback Scorecard', $scorecard['title']);
         $this->assertArrayHasKey('clarity', $scorecard['metrics']);
         $this->assertArrayHasKey('relevance', $scorecard['metrics']);
         $this->assertArrayHasKey('confidence', $scorecard['metrics']);
@@ -46,6 +46,9 @@ class LearningGameScoringServiceTest extends TestCase
         $this->assertNotEmpty($scorecard['question_feedback']);
         $this->assertFalse($scorecard['body_language_included']);
         $this->assertStringContainsString('submitted challenge answers', $scorecard['evidence_policy']);
+        $this->assertTrue($scorecard['quality_gate']['passed']);
+        $this->assertTrue($result['score_eligible']);
+        $this->assertFalse($result['accuracy_guaranteed']);
     }
 
     public function test_skipped_answers_have_limited_scorecard_reliability(): void
@@ -65,6 +68,8 @@ class LearningGameScoringServiceTest extends TestCase
 
         $this->assertSame(0, $result['averages']['confidence']);
         $this->assertSame('Limited', $result['ai_feedback_scorecard']['reliability_band']);
+        $this->assertFalse($result['quality_gate']['passed']);
+        $this->assertFalse($result['score_eligible']);
         $this->assertSame('Submit a complete answer before relying on this challenge score.', $result['per_question'][0]['scorecard_feedback']);
     }
 }

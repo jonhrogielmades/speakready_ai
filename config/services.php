@@ -77,13 +77,15 @@ return [
  'tts_timeout' => env('AI_TTS_TIMEOUT', 30),
  'transcription_model' => env('OPENAI_TRANSCRIPTION_MODEL', 'gpt-transcribe'),
  'transcription_timeout' => env('AI_TRANSCRIPTION_TIMEOUT', 45),
+ 'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'high'),
  ],
 
  'gemini' => [
  'tts_model' => env('GEMINI_TTS_MODEL', 'gemini-3.1-flash-tts-preview'),
  'tts_voice' => env('GEMINI_TTS_VOICE', 'Leda'),
  'tts_style' => env('GEMINI_TTS_STYLE', 'Say in a warm, clear, professional female interviewer voice with natural English pronunciation and medium, measured pacing'),
- 'transcription_model' => env('GEMINI_TRANSCRIPTION_MODEL', env('GEMINI_MODEL', 'gemini-3.6-flash')),
+ 'transcription_model' => env('GEMINI_TRANSCRIPTION_MODEL', env('GEMINI_MODEL', 'gemini-4-argon')),
+ 'thinking_level' => env('GEMINI_THINKING_LEVEL', 'high'),
  ],
 
  'elevenlabs' => [
@@ -98,6 +100,14 @@ return [
  'tts_style' => env('ELEVENLABS_TTS_STYLE', 0.15),
  'tts_speed' => env('ELEVENLABS_TTS_SPEED', 0.90),
  'tts_speaker_boost' => env('ELEVENLABS_TTS_SPEAKER_BOOST', true),
+ ],
+
+ 'algorithms' => [
+ 'min_quality_percent' => env('ALGORITHM_MIN_QUALITY_PERCENT', 95),
+ 'min_accuracy_percent' => env('ALGORITHM_MIN_ACCURACY_PERCENT', 95),
+ 'min_reliability_percent' => env('ALGORITHM_MIN_RELIABILITY_PERCENT', 95),
+ 'min_confidence_percent' => env('ALGORITHM_MIN_CONFIDENCE_PERCENT', 95),
+ 'min_evidence_count' => env('ALGORITHM_MIN_EVIDENCE_COUNT', 100),
  ],
 
  'local_speech' => [
@@ -118,8 +128,8 @@ return [
  'gop_backend' => env('LOCAL_GOP_BACKEND', 'mfa'),
  'gop_command' => env('LOCAL_GOP_COMMAND'),
  'require_true_gop_for_score' => env('LOCAL_PRONUNCIATION_REQUIRE_TRUE_GOP', true),
- 'min_transcript_confidence' => env('LOCAL_SPEECH_MIN_TRANSCRIPT_CONFIDENCE', 60),
- 'min_scoring_reliability' => env('LOCAL_SPEECH_MIN_SCORING_RELIABILITY', 80),
+ 'min_transcript_confidence' => env('LOCAL_SPEECH_MIN_TRANSCRIPT_CONFIDENCE', 95),
+ 'min_scoring_reliability' => env('LOCAL_SPEECH_MIN_SCORING_RELIABILITY', 95),
  ],
 
  'local_feedback_model' => [
@@ -133,7 +143,7 @@ return [
  'require_validation' => env('LOCAL_FEEDBACK_MODEL_REQUIRE_VALIDATION', true),
  'validation_fraction' => env('LOCAL_FEEDBACK_MODEL_VALIDATION_FRACTION', 0.20),
  'min_validation_examples' => env('LOCAL_FEEDBACK_MODEL_MIN_VALIDATION_EXAMPLES', 100),
- 'max_validation_mae' => env('LOCAL_FEEDBACK_MODEL_MAX_VALIDATION_MAE', 10),
+ 'max_validation_mae' => env('LOCAL_FEEDBACK_MODEL_MAX_VALIDATION_MAE', 5),
  'min_validation_within_10_rate' => env('LOCAL_FEEDBACK_MODEL_MIN_WITHIN_10_RATE', 0.95),
  'min_validation_skill' => env('LOCAL_FEEDBACK_MODEL_MIN_VALIDATION_SKILL', 0.10),
  'min_human_reviewed_ratio' => env('LOCAL_FEEDBACK_MODEL_MIN_HUMAN_REVIEWED_RATIO', 1.0),
@@ -159,6 +169,24 @@ return [
  'ai_chat' => [
  'temperature' => env('AI_CHAT_TEMPERATURE', 0.2),
  'max_tokens' => env('AI_CHAT_MAX_TOKENS', 1000),
+ ],
+
+ 'ai_providers' => [
+ 'min_quality_percent' => env('AI_PROVIDER_MIN_QUALITY_PERCENT', 95),
+ 'min_accuracy_percent' => env('AI_PROVIDER_MIN_ACCURACY_PERCENT', 95),
+ 'min_reliability_percent' => env('AI_PROVIDER_MIN_RELIABILITY_PERCENT', 95),
+ 'min_schema_percent' => env('AI_PROVIDER_MIN_SCHEMA_PERCENT', 100),
+ 'min_safety_percent' => env('AI_PROVIDER_MIN_SAFETY_PERCENT', 100),
+ 'min_success_rate_percent' => env('AI_PROVIDER_MIN_SUCCESS_RATE_PERCENT', 95),
+ 'min_benchmark_samples' => env('AI_PROVIDER_MIN_BENCHMARK_SAMPLES', 3),
+ 'circuit_breaker_enabled' => env('AI_PROVIDER_CIRCUIT_BREAKER_ENABLED', true),
+ 'circuit_breaker_in_tests' => env('AI_PROVIDER_CIRCUIT_BREAKER_IN_TESTS', false),
+ 'circuit_failure_threshold' => env('AI_PROVIDER_CIRCUIT_FAILURE_THRESHOLD', 3),
+ 'circuit_cooldown_seconds' => env('AI_PROVIDER_CIRCUIT_COOLDOWN_SECONDS', 120),
+ 'allow_custom_endpoints' => env('AI_PROVIDER_ALLOW_CUSTOM_ENDPOINTS', false),
+ 'max_response_bytes' => env('AI_PROVIDER_MAX_RESPONSE_BYTES', 1048576),
+ 'max_retry_delay_ms' => env('AI_PROVIDER_MAX_RETRY_DELAY_MS', 5000),
+ 'json_mode_fallback' => env('AI_PROVIDER_JSON_MODE_FALLBACK', false),
  ],
 
  'question_recommender' => [

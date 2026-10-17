@@ -7,6 +7,7 @@ use App\Exceptions\AiSpeechTranscriptionException;
 use App\Models\AiProvider;
 use App\Models\AiProviderLog;
 use App\Models\Setting;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\StrayRequestException;
 use Illuminate\Http\UploadedFile;
@@ -83,10 +84,10 @@ class AIService
  ];
 
  private const PROVIDER_DEFAULT_MODELS = [
- 'openai' => 'gpt-4o-mini',
- 'gemini' => 'gemini-3.6-flash',
- 'groq' => 'llama-3.1-8b-instant',
- 'cohere' => 'command-r7b-12-2024',
+ 'openai' => 'gpt-6-astra',
+ 'gemini' => 'gemini-4-argon',
+ 'groq' => 'openai/gpt-oss-120b',
+ 'cohere' => 'command-a-plus-05-2026',
  ];
 
  private const OPENAI_PROCESS_CONNECTIONS = [
@@ -1600,16 +1601,14 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  'Authorization' => "Bearer {$apiKey}",
  'Content-Type' => 'application/json',
  ]);
- $payload = [
+ $payload = array_merge([
  'model' => $model,
- 'temperature' => 0.1,
- 'max_tokens' => (int) env('AI_JSON_MAX_TOKENS', 4096),
  'response_format' => $responseFormat,
  'messages' => [
  ['role' => 'system', 'content' => $sysMsg],
  ['role' => 'user', 'content' => $prompt],
  ],
- ];
+ ], self::openAiGenerationParameters($model, (int) env('AI_JSON_MAX_TOKENS', 4096), 0.1));
  $response = $request->post($endpoint, $payload);
 
  if (self::openAiShouldFallbackToJsonObject($response, $responseFormat)) {
@@ -1649,7 +1648,7 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  private static function openAiShouldFallbackToJsonObject($response, array $responseFormat): bool
  {
  if (($responseFormat['type']?? null)!== 'json_schema'
- ||! filter_var(env('OPENAI_JSON_MODE_FALLBACK', true), FILTER_VALIDATE_BOOL)
+ ||! filter_var(env('OPENAI_JSON_MODE_FALLBACK', false), FILTER_VALIDATE_BOOL)
  ||! in_array($response->status(), [400, 422], true)) {
  return false;
  }
@@ -1664,6 +1663,31 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  private static function openAiChatEndpoint(?string $configuredEndpoint): string
  {
  return self::chatCompletionsEndpoint($configuredEndpoint, self::PROVIDER_DEFAULT_ENDPOINTS['openai']);
+ }
+
+ private static function openAiGenerationParameters(string $model, int $maximumTokens, float $temperature): array
+ {
+ $maximumTokens = max(128, min(65536, $maximumTokens));
+ $isReasoningModel = preg_match('/^(?:gpt-[6-9](?:[.\-]|$)|o[1-9](?:-|$))/i', trim($model)) === 1;
+
+ if (! $isReasoningModel) {
+ return [
+ 'temperature' => max(0.0, min(2.0, $temperature)),
+ 'max_tokens' => $maximumTokens,
+ ];
+ }
+
+ $maximumTokens = max(4096, $maximumTokens);
+
+ $effort = strtolower(trim((string) config('services.openai.reasoning_effort', 'high')));
+ if (! in_array($effort, ['low', 'medium', 'high', 'xhigh', 'max'], true)) {
+ $effort = 'high';
+ }
+
+ return [
+ 'reasoning_effort' => $effort,
+ 'max_completion_tokens' => $maximumTokens,
+ ];
  }
 
  private static function chatCompletionsEndpoint(?string $configuredEndpoint, string $defaultBase): string
@@ -2260,7 +2284,7 @@ EOT;
  'timeout_seconds' => $runtimeInt('timeout_seconds', 'AI_FEEDBACK_TIMEOUT', 6, 2, 60),
  'attempts' => $runtimeInt('http_attempts', 'AI_FEEDBACK_HTTP_ATTEMPTS', 1, 1, 2),
  'response_format' => self::feedbackResponseFormat(),
- 'model' => trim((string) env('OPENAI_FEEDBACK_MODEL', env('OPENAI_MODEL', 'gpt-4o-mini'))),
+ 'model' => trim((string) env('OPENAI_FEEDBACK_MODEL', env('OPENAI_MODEL', self::PROVIDER_DEFAULT_MODELS['openai']))),
  ];
  $deadlineSeconds = $runtimeInt('deadline_seconds', 'AI_FEEDBACK_DEADLINE_SECONDS', 10, 3, 180);
  $retryDelayMs = $runtimeInt('retry_delay_ms', 'AI_FEEDBACK_RETRY_DELAY_MS', 200, 0, 1000);
@@ -3168,7 +3192,7 @@ PROMPT;
 
  private static function transcribeSpeechWithGemini(UploadedFile $audioFile, array|string|null $targetLanguage = null, array $context = []):?string
  {
- $model = trim((string) config('services.gemini.transcription_model', config('services.gemini.model', 'gemini-3.6-flash')))?: 'gemini-3.6-flash';
+ $model = trim((string) config('services.gemini.transcription_model', config('services.gemini.model', self::PROVIDER_DEFAULT_MODELS['gemini'])))?: self::PROVIDER_DEFAULT_MODELS['gemini'];
  $credentials = self::providerCredentials('gemini', $model);
  if ($credentials['api_key'] === '') {
  return null;
@@ -3185,6 +3209,18 @@ PROMPT;
  }
 
  $mimeType = self::audioMimeType($audioFile);
+ $generationConfig = ['maxOutputTokens' => 1024];
+ if (! str_starts_with(strtolower($model), 'gemini-4-')) {
+ $generationConfig['temperature'] = 0;
+ }
+ $generationConfig = self::geminiJsonResponseConfig($generationConfig, $model, [
+ 'type' => 'object',
+ 'additionalProperties' => false,
+ 'properties' => [
+ 'transcript' => ['type' => 'string'],
+ ],
+ 'required' => ['transcript'],
+ ]);
 
  try {
  $response = self::providerRequest(
@@ -3212,11 +3248,7 @@ PROMPT;
  ],
  ],
  ],
- 'generationConfig' => [
- 'temperature' => 0,
- 'maxOutputTokens' => 1024,
- 'responseMimeType' => 'application/json',
- ],
+ 'generationConfig' => $generationConfig,
  ]);
  } catch (\Throwable $e) {
  Log::warning('Gemini Transcription Error: '.self::safeProviderErrorMessage($e));
@@ -3247,7 +3279,7 @@ PROMPT;
  public static function apiSpeechTranscriptionAvailable(): bool
  {
  return self::openAiTranscriptionCredentials()!== null
- || self::providerCredentials('gemini', (string) config('services.gemini.transcription_model', config('services.gemini.model', 'gemini-3.6-flash')))['api_key']!== '';
+ || self::providerCredentials('gemini', (string) config('services.gemini.transcription_model', config('services.gemini.model', self::PROVIDER_DEFAULT_MODELS['gemini'])))['api_key']!== '';
  }
 
  private static function speechTranscriptionProviders(): array
@@ -3261,7 +3293,7 @@ PROMPT;
  return array_values(array_filter(array_unique($providers), function (string $provider): bool {
  return match ($provider) {
  'openai' => self::openAiTranscriptionCredentials()!== null,
- 'gemini' => self::providerCredentials('gemini', (string) config('services.gemini.transcription_model', config('services.gemini.model', 'gemini-3.6-flash')))['api_key']!== '',
+ 'gemini' => self::providerCredentials('gemini', (string) config('services.gemini.transcription_model', config('services.gemini.model', self::PROVIDER_DEFAULT_MODELS['gemini'])))['api_key']!== '',
  default => false,
  };
  }));
@@ -3759,6 +3791,17 @@ PROMPT;
  return null;
  }
 
+ $endpoint = trim((string) $endpoint);
+ $endpointCheck = app(AiProviderReliabilityService::class)->validateEndpoint('openai', $endpoint);
+ if (! $endpointCheck['valid']) {
+ Log::error($logContext.': untrusted OpenAI endpoint rejected.', [
+ 'host' => $endpointCheck['host'],
+ 'reason' => $endpointCheck['reason'],
+ ]);
+
+ return null;
+ }
+
  return [
  'api_key' => $apiKey,
  'endpoint' => $endpoint,
@@ -4000,14 +4043,20 @@ PROMPT;
 
  try {
  $text = self::recordProviderAttempt($currentProvider, 'attachment_text_extraction', function () use ($currentProvider, $path, $mimeType, $extension) {
- return match ($currentProvider) {
+ $candidate = match ($currentProvider) {
  'gemini' => self::extractAttachmentTextWithGemini($path, $mimeType, $extension),
  'openai' => self::extractAttachmentTextWithOpenAI($path, $mimeType, $extension),
  default => '',
  };
+
+ $candidate = self::sanitizeAttachmentExtractionText($candidate);
+ if ($candidate === '') {
+ throw new \RuntimeException("AI provider {$currentProvider} returned no trustworthy attachment text.");
+ }
+
+ return $candidate;
  });
 
- $text = self::sanitizeAttachmentExtractionText($text);
  if ($text!== '') {
  return $text;
  }
@@ -4075,7 +4124,11 @@ PROMPT;
  ]);
 
  if ($response->successful()) {
- return (string) $response->json('candidates.0.content.parts.0.text', '');
+ return self::providerTextResponse(
+ 'gemini',
+ $response,
+ $response->json('candidates.0.content.parts.0.text', '')
+ );
  }
 
  Log::warning('Gemini Attachment Extraction Error: '.self::safeProviderResponseBody($response));
@@ -4095,10 +4148,8 @@ PROMPT;
  $response = self::providerRequest(45, 1)->withHeaders([
  'Authorization' => "Bearer {$credentials['api_key']}",
  'Content-Type' => 'application/json',
- ])->post(self::openAiChatEndpoint($credentials['endpoint']), [
+ ])->post(self::openAiChatEndpoint($credentials['endpoint']), array_merge([
  'model' => $credentials['model'],
- 'temperature' => 0,
- 'max_tokens' => (int) env('AI_ATTACHMENT_EXTRACTION_MAX_TOKENS', 2048),
  'messages' => [
  [
  'role' => 'system',
@@ -4118,10 +4169,18 @@ PROMPT;
  ],
  ],
  ],
- ]);
+ ], self::openAiGenerationParameters(
+ $credentials['model'],
+ (int) env('AI_ATTACHMENT_EXTRACTION_MAX_TOKENS', 2048),
+ 0.0
+ )));
 
  if ($response->successful()) {
- return (string) $response->json('choices.0.message.content', '');
+ return self::providerTextResponse(
+ 'openai',
+ $response,
+ $response->json('choices.0.message.content', '')
+ );
  }
 
  Log::warning('OpenAI Attachment Extraction Error: '.self::safeProviderResponseBody($response));
@@ -4266,10 +4325,12 @@ PROMPT;
  {
  $providers = [];
  foreach (self::activeProviderKeys() as $key) {
+ $credentials = self::providerCredentials($key);
  $providers[] = [
  'key' => $key,
  'label' => self::PROVIDER_LABELS[$key],
- 'enabled' => self::providerHasCredentials($key),
+ 'enabled' => $credentials['api_key']!== '',
+ 'model' => $credentials['model'],
  ];
  }
 
@@ -4447,6 +4508,21 @@ PROMPT;
  $model = $modelEnv? trim((string) env($modelEnv, self::PROVIDER_DEFAULT_MODELS[$provider]?? '')): (self::PROVIDER_DEFAULT_MODELS[$provider]?? '');
  }
 
+ if ($apiKey!== '' && $model === '') {
+ Log::error('AI provider configuration rejected an empty model.', ['provider' => $provider]);
+ $apiKey = '';
+ }
+
+ $endpointCheck = app(AiProviderReliabilityService::class)->validateEndpoint($provider, $endpoint);
+ if ($apiKey!== '' &&! $endpointCheck['valid']) {
+ Log::error('AI provider configuration rejected an untrusted endpoint.', [
+ 'provider' => $provider,
+ 'host' => $endpointCheck['host'],
+ 'reason' => $endpointCheck['reason'],
+ ]);
+ $apiKey = '';
+ }
+
  return [
  'api_key' => $apiKey,
  'endpoint' => $endpoint,
@@ -4491,10 +4567,11 @@ PROMPT;
  $timeoutSeconds = isset($requestOptions['timeout_seconds'])? (int) $requestOptions['timeout_seconds']: null;
  $attempts = isset($requestOptions['attempts'])? (int) $requestOptions['attempts']: null;
  $responseFormat = isset($requestOptions['response_format']) && is_array($requestOptions['response_format'])? $requestOptions['response_format']: null;
+ $responseValidator = isset($requestOptions['response_validator']) && is_callable($requestOptions['response_validator'])? $requestOptions['response_validator']: null;
  $model = trim((string) ($requestOptions['model']?? ''))?: null;
  $module = trim((string) ($requestOptions['module']?? 'structured_json'))?: 'structured_json';
 
- return self::recordProviderAttempt($provider, $module, function () use ($provider, $prompt, $timeoutSeconds, $attempts, $responseFormat, $model) {
+ return self::recordProviderAttempt($provider, $module, function () use ($provider, $prompt, $timeoutSeconds, $attempts, $responseFormat, $responseValidator, $model) {
  $response = match ($provider) {
  'openai' => self::callOpenAI(
  $prompt,
@@ -4504,14 +4581,18 @@ PROMPT;
  $responseFormat,
  $model
  ),
- 'gemini' => self::callGemini($prompt, $timeoutSeconds, $attempts),
+ 'gemini' => self::callGemini($prompt, $timeoutSeconds, $attempts, $responseFormat),
  'cohere' => self::callCohere($prompt, $timeoutSeconds, $attempts, $responseFormat),
- 'groq' => self::callGroq($prompt, $timeoutSeconds, $attempts),
+ 'groq' => self::callGroq($prompt, $timeoutSeconds, $attempts, $responseFormat),
  default => [],
  };
 
  if (empty($response)) {
  throw new \RuntimeException("AI provider {$provider} returned an empty or invalid JSON response.");
+ }
+
+ if ($responseValidator &&! $responseValidator($response)) {
+ throw new \RuntimeException("AI provider {$provider} returned JSON that failed semantic response validation.");
  }
 
  return $response;
@@ -4537,6 +4618,10 @@ PROMPT;
  $startedAt = microtime(true);
  $dbProvider = self::dbProviderFor($provider);
 
+ if (self::providerCircuitIsOpen($provider, $module)) {
+ throw new \RuntimeException("AI provider {$provider} is temporarily paused after repeated {$module} failures.");
+ }
+
  try {
  $result = $callback();
  self::writeProviderLog($dbProvider?->id, $module, $provider, $startedAt, 'success');
@@ -4546,6 +4631,20 @@ PROMPT;
  self::writeProviderLog($dbProvider?->id, $module, $provider, $startedAt, 'failed', self::safeProviderErrorMessage($e));
  throw $e;
  }
+ }
+
+ private static function providerCircuitIsOpen(string $provider, string $module): bool
+ {
+ if (app()->environment('testing')
+ &&! filter_var(config('services.ai_providers.circuit_breaker_in_tests', false), FILTER_VALIDATE_BOOLEAN)) {
+ return false;
+ }
+
+ return rescue(
+ fn (): bool => (bool) app(AiProviderReliabilityService::class)->circuitState($provider, $module)['open'],
+ false,
+ false
+ );
  }
 
  private static function safeProviderErrorMessage(\Throwable $error): string
@@ -7628,6 +7727,22 @@ PROMPT;
  return [];
  }
 
+ $maxBytes = max(1024, min(10 * 1024 * 1024, (int) config('services.ai_providers.max_response_bytes', 1024 * 1024)));
+ if (strlen($content) > $maxBytes) {
+ Log::warning('AI provider JSON response exceeded the configured size limit.', [
+ 'content_length' => strlen($content),
+ 'maximum_bytes' => $maxBytes,
+ ]);
+
+ return [];
+ }
+
+ if (! mb_check_encoding($content, 'UTF-8')) {
+ Log::warning('AI provider JSON response was not valid UTF-8.');
+
+ return [];
+ }
+
  // Strip markdown backticks if present
  $content = preg_replace('/^```json\s*|```\s*$/i', '', trim($content));
  $content = preg_replace('/^```\s*|```\s*$/i', '', trim($content));
@@ -7663,7 +7778,7 @@ PROMPT;
  }
  }
 
- $decoded = json_decode($content, true);
+ $decoded = json_decode($content, true, 64);
 
  if (json_last_error()!== JSON_ERROR_NONE) {
  Log::error('JSON Parsing Error.', [
@@ -7682,16 +7797,65 @@ PROMPT;
  $timeout = max(1, min(60, $timeoutSeconds?? (int) env('AI_PROVIDER_TIMEOUT', 45)));
  $connectTimeout = max(1, min($timeout, (int) env('AI_PROVIDER_CONNECT_TIMEOUT', 5)));
  $requestAttempts = max(1, min(3, $attempts?? (int) env('AI_PROVIDER_RETRIES', 2)));
+ $retryWhen??= self::providerRetryPolicy(...);
 
  return Http::connectTimeout($connectTimeout)
  ->timeout($timeout)
- ->retry($requestAttempts, (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250), $retryWhen, throw: $throw);
+ ->retry(
+ $requestAttempts,
+ fn (int $attempt, \Throwable $error): int => self::providerRetryDelayMilliseconds($attempt, $error),
+ $retryWhen,
+ throw: $throw
+ );
  }
 
- private static function callGemini($prompt,?int $timeoutSeconds = null,?int $attempts = null)
+ private static function providerRetryPolicy(\Throwable $error): bool
+ {
+ if ($error instanceof ConnectionException) {
+ return true;
+ }
+
+ if (! $error instanceof RequestException) {
+ return false;
+ }
+
+ return in_array($error->response?->status(), [408, 425, 429, 500, 502, 503, 504], true);
+ }
+
+ private static function providerRetryDelayMilliseconds(int $attempt, \Throwable $error): int
+ {
+ $maximum = max(0, min(30000, (int) config('services.ai_providers.max_retry_delay_ms', 5000)));
+ $retryAfter = $error instanceof RequestException && $error->response
+ ? self::retryAfterSecondsFromResponse($error->response)
+ : null;
+
+ if ($retryAfter!== null) {
+ return min($maximum, $retryAfter * 1000);
+ }
+
+ $base = max(0, min(5000, (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250)));
+ if ($base === 0 || $maximum === 0) {
+ return 0;
+ }
+
+ $exponential = min($maximum, $base * (2 ** max(0, $attempt - 1)));
+ $jitter = random_int(0, min(250, max(1, (int) floor($exponential * 0.25))));
+
+ return min($maximum, $exponential + $jitter);
+ }
+
+ private static function callGemini($prompt,?int $timeoutSeconds = null,?int $attempts = null,?array $responseFormat = null)
  {
  $credentials = self::providerCredentials('gemini');
  $url = self::geminiGenerateContentEndpoint($credentials['endpoint'], $credentials['model'], $credentials['api_key']);
+
+ $generationConfig = self::geminiGenerationConfig(
+ $credentials['model'],
+ (int) env('AI_JSON_MAX_TOKENS', 4096),
+ 0.1
+ );
+ $schema = self::providerResponseSchema($responseFormat);
+ $generationConfig = self::geminiJsonResponseConfig($generationConfig, $credentials['model'], $schema);
 
  $response = self::providerRequest($timeoutSeconds, $attempts)->post($url, [
  'contents' => [
@@ -7701,14 +7865,14 @@ PROMPT;
  ],
  ],
  ],
- 'generationConfig' => [
- 'temperature' => 0.1,
- 'maxOutputTokens' => (int) env('AI_JSON_MAX_TOKENS', 4096),
- 'responseMimeType' => 'application/json',
- ],
+ 'generationConfig' => $generationConfig,
  ]);
 
  if ($response->successful()) {
+ if (! self::providerCompletionFinishedCleanly('gemini', $response)) {
+ return [];
+ }
+
  $content = $response->json('candidates.0.content.parts.0.text');
 
  return self::parseJsonResponse($content);
@@ -7716,6 +7880,62 @@ PROMPT;
  Log::error('Gemini Error: '.self::safeProviderResponseBody($response));
 
  return [];
+ }
+
+ private static function geminiGenerationConfig(
+ string $model,
+ int $maximumTokens,
+ float $temperature,
+ bool $includeTopP = false
+ ): array {
+ $model = strtolower(trim($model));
+ $isGeminiFour = str_starts_with($model, 'gemini-4-');
+ $supportsThinkingLevel = preg_match('/^gemini-(?:3(?:[.\-]|$)|4(?:[.\-]|$))/', $model) === 1;
+ $maximumTokens = max(128, min(65536, $maximumTokens));
+
+ if ($isGeminiFour) {
+ $maximumTokens = max(32768, $maximumTokens);
+ } elseif ($supportsThinkingLevel) {
+ $maximumTokens = max(8192, $maximumTokens);
+ }
+
+ $config = ['maxOutputTokens' => $maximumTokens];
+ if (! $isGeminiFour) {
+ $config['temperature'] = max(0.0, min(2.0, $temperature));
+ if ($includeTopP) {
+ $config['topP'] = 0.85;
+ }
+ }
+
+ if ($supportsThinkingLevel) {
+ $thinkingLevel = strtolower(trim((string) config('services.gemini.thinking_level', 'high')));
+ if (! in_array($thinkingLevel, ['low', 'medium', 'high'], true)) {
+ $thinkingLevel = 'high';
+ }
+ $config['thinkingConfig'] = ['thinkingLevel' => $thinkingLevel];
+ }
+
+ return $config;
+ }
+
+ private static function geminiJsonResponseConfig(array $config, string $model,?array $schema = null): array
+ {
+ if (str_starts_with(strtolower(trim($model)), 'gemini-4-')) {
+ $textFormat = ['mimeType' => 'application/json'];
+ if ($schema!== null) {
+ $textFormat['schema'] = $schema;
+ }
+ $config['responseFormat'] = ['text' => $textFormat];
+
+ return $config;
+ }
+
+ $config['responseMimeType'] = 'application/json';
+ if ($schema!== null) {
+ $config['responseJsonSchema'] = $schema;
+ }
+
+ return $config;
  }
 
  private static function geminiGenerateContentEndpoint(string $configuredEndpoint, string $model, string $apiKey): string
@@ -7767,9 +7987,14 @@ PROMPT;
  'max_tokens' => (int) env('AI_JSON_MAX_TOKENS', 4096),
  'temperature' => 0.1,
  'response_format' => self::cohereResponseFormat($responseFormat),
+ 'safety_mode' => 'STRICT',
  ]);
 
  if ($response->successful()) {
+ if (! self::providerCompletionFinishedCleanly('cohere', $response)) {
+ return [];
+ }
+
  $content = self::cohereTextFromResponse($response);
 
  return self::parseJsonResponse($content);
@@ -7801,10 +8026,42 @@ PROMPT;
  private static function cohereResponseFormat(?array $responseFormat = null): array
  {
  if (($responseFormat['type']?? null) === 'json_schema') {
- return ['type' => 'json_object'];
+ $schema = self::providerResponseSchema($responseFormat);
+
+ return array_filter([
+ 'type' => 'json_object',
+ 'schema' => $schema!== null? self::cohereCompatibleSchema($schema): null,
+ ], fn ($value): bool => $value!== null);
  }
 
  return is_array($responseFormat) && $responseFormat!== []? $responseFormat: ['type' => 'json_object'];
+ }
+
+ private static function providerResponseSchema(?array $responseFormat):?array
+ {
+ if (! is_array($responseFormat) || ($responseFormat['type']?? null)!== 'json_schema') {
+ return null;
+ }
+
+ $schema = data_get($responseFormat, 'json_schema.schema', $responseFormat['schema']?? null);
+
+ return is_array($schema) && $schema!== []? $schema: null;
+ }
+
+ private static function cohereCompatibleSchema(array $schema): array
+ {
+ $unsupportedKeywords = ['minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'minItems', 'maxItems'];
+ $compatible = [];
+
+ foreach ($schema as $key => $value) {
+ if (in_array((string) $key, $unsupportedKeywords, true)) {
+ continue;
+ }
+
+ $compatible[$key] = is_array($value)? self::cohereCompatibleSchema($value): $value;
+ }
+
+ return $compatible;
  }
 
  private static function cohereTextFromResponse($response): string
@@ -7824,9 +8081,9 @@ PROMPT;
  return is_string($generatedText)? $generatedText: '';
  }
 
- private static function callGroq($prompt,?int $timeoutSeconds = null,?int $attempts = null)
+ private static function callGroq($prompt,?int $timeoutSeconds = null,?int $attempts = null,?array $responseFormat = null)
  {
- return self::callOpenAiCompatibleProvider('groq', $prompt, $timeoutSeconds, $attempts);
+ return self::callOpenAiCompatibleProvider('groq', $prompt, $timeoutSeconds, $attempts, $responseFormat);
  }
 
  private static function callOpenAiCompatibleProvider(
@@ -7855,7 +8112,7 @@ PROMPT;
 
  if (! $response->successful()
  && ($responseFormat['type']?? null) === 'json_schema'
- && in_array($response->status(), [400, 422], true)) {
+ && self::providerShouldFallbackToJsonObject($response)) {
  Log::warning(self::PROVIDER_LABELS[$provider].' rejected strict JSON Schema; retrying with JSON object mode.', [
  'model' => $credentials['model'],
  'status' => $response->status(),
@@ -7865,6 +8122,10 @@ PROMPT;
  }
 
  if ($response->successful()) {
+ if (! self::providerCompletionFinishedCleanly($provider, $response)) {
+ return [];
+ }
+
  return self::parseJsonResponse($response->json('choices.0.message.content'));
  }
 
@@ -7881,6 +8142,90 @@ PROMPT;
  ];
 
  return $headers;
+ }
+
+ private static function providerShouldFallbackToJsonObject($response): bool
+ {
+ if (! filter_var(config('services.ai_providers.json_mode_fallback', true), FILTER_VALIDATE_BOOL)
+ ||! in_array($response->status(), [400, 422], true)) {
+ return false;
+ }
+
+ $error = strtolower((string) $response->body());
+
+ return str_contains($error, 'json_schema')
+ || str_contains($error, 'response_format')
+ || str_contains($error, 'structured output')
+ || str_contains($error, 'schema');
+ }
+
+ private static function providerCompletionFinishedCleanly(string $provider, $response): bool
+ {
+ $provider = self::normalizeProviderName($provider);
+ $finishReason = match ($provider) {
+ 'gemini' => strtoupper(trim((string) $response->json('candidates.0.finishReason', ''))),
+ 'cohere' => strtoupper(trim((string) $response->json('finish_reason', ''))),
+ default => strtolower(trim((string) $response->json('choices.0.finish_reason', ''))),
+ };
+ $acceptedReasons = match ($provider) {
+ 'gemini' => ['', 'STOP'],
+ 'cohere' => ['', 'COMPLETE', 'STOP_SEQUENCE'],
+ default => ['', 'stop'],
+ };
+
+ if (! in_array($finishReason, $acceptedReasons, true)) {
+ Log::warning('AI provider response did not finish cleanly.', [
+ 'provider' => $provider,
+ 'finish_reason' => $finishReason,
+ ]);
+
+ return false;
+ }
+
+ if ($provider === 'gemini') {
+ $blockReason = trim((string) $response->json('promptFeedback.blockReason', ''));
+ if ($blockReason!== '') {
+ Log::warning('Gemini blocked an AI provider response.', ['block_reason' => $blockReason]);
+
+ return false;
+ }
+ }
+
+ if (in_array($provider, ['openai', 'groq'], true)) {
+ $refusal = trim((string) $response->json('choices.0.message.refusal', ''));
+ if ($refusal!== '') {
+ Log::warning('AI provider refused a response.', ['provider' => $provider]);
+
+ return false;
+ }
+ }
+
+ return true;
+ }
+
+ private static function providerTextResponse(string $provider, $response, mixed $content): string
+ {
+ if (! self::providerCompletionFinishedCleanly($provider, $response) ||! is_string($content)) {
+ return '';
+ }
+
+ $maximumBytes = max(1024, min(10 * 1024 * 1024, (int) config('services.ai_providers.max_response_bytes', 1024 * 1024)));
+ if (strlen($content) > $maximumBytes ||! mb_check_encoding($content, 'UTF-8')) {
+ Log::warning('AI provider text response failed integrity validation.', [
+ 'provider' => self::normalizeProviderName($provider),
+ 'content_length' => strlen($content),
+ 'maximum_bytes' => $maximumBytes,
+ ]);
+
+ return '';
+ }
+
+ $content = trim($content);
+ if ($content === '' || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $content) === 1) {
+ return '';
+ }
+
+ return $content;
  }
 
  private static function formatHistoryForGemini($message, $history)
@@ -7907,20 +8252,27 @@ PROMPT;
 
  $sysMsg = $systemPrompt?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on job interview preparation. Help users prepare for local HR screening, BPO/customer support, IT, fresh graduate, resume, and behavioral interview scenarios. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to job interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to role-focused interview preparation.';
 
+ $generationConfig = self::geminiGenerationConfig(
+ $credentials['model'],
+ self::chatMaxTokens(),
+ self::chatTemperature(),
+ true
+ );
+
  $response = self::providerRequest($timeoutSeconds, $attempts)->post($url, [
  'contents' => self::formatHistoryForGemini($message, $history),
  'systemInstruction' => [
  'parts' => [['text' => $sysMsg]],
  ],
- 'generationConfig' => [
- 'temperature' => self::chatTemperature(),
- 'topP' => 0.85,
- 'maxOutputTokens' => self::chatMaxTokens(),
- ],
+ 'generationConfig' => $generationConfig,
  ]);
 
  if ($response->successful()) {
- return $response->json('candidates.0.content.parts.0.text');
+ return self::providerTextResponse(
+ 'gemini',
+ $response,
+ $response->json('candidates.0.content.parts.0.text')
+ );
  }
  Log::error('Gemini Chat Error: '.self::safeProviderResponseBody($response));
 
@@ -7954,15 +8306,21 @@ PROMPT;
  $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([
  'Authorization' => "Bearer {$credentials['api_key']}",
  'Content-Type' => 'application/json',
- ])->post(self::openAiChatEndpoint($credentials['endpoint']), [
+ ])->post(self::openAiChatEndpoint($credentials['endpoint']), array_merge([
  'model' => $credentials['model'],
- 'temperature' => self::chatTemperature(),
- 'max_tokens' => self::chatMaxTokens(),
  'messages' => self::formatHistoryForStandard($message, $history, $systemPrompt),
- ]);
+ ], self::openAiGenerationParameters(
+ $credentials['model'],
+ self::chatMaxTokens(),
+ self::chatTemperature()
+ )));
 
  if ($response->successful()) {
- return $response->json('choices.0.message.content');
+ return self::providerTextResponse(
+ 'openai',
+ $response,
+ $response->json('choices.0.message.content')
+ );
  }
  Log::error('OpenAI Chat Error: '.self::safeProviderResponseBody($response));
 
@@ -7986,7 +8344,7 @@ PROMPT;
  ]);
 
  if ($response->successful()) {
- return self::cohereTextFromResponse($response);
+ return self::providerTextResponse('cohere', $response, self::cohereTextFromResponse($response));
  }
  Log::error('Cohere Chat Error: '.self::safeProviderResponseBody($response));
 
@@ -8011,7 +8369,11 @@ PROMPT;
  ]);
 
  if ($response->successful()) {
- return (string) $response->json('choices.0.message.content', '');
+ return self::providerTextResponse(
+ $provider,
+ $response,
+ $response->json('choices.0.message.content', '')
+ );
  }
 
  Log::error(self::PROVIDER_LABELS[$provider].' Chat Error: '.self::safeProviderResponseBody($response));
@@ -8049,7 +8411,7 @@ PROMPT;
  if (! empty($response)) {
  return json_encode($response);
  }
- } catch (\Exception $e) {
+ } catch (\Throwable $e) {
  Log::error("AI JSON Generation Error ($currentProvider): ".self::safeProviderErrorMessage($e));
  }
  }

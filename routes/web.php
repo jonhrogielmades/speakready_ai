@@ -356,6 +356,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/providers', [\App\Http\Controllers\AdminAiController::class, 'storeProvider'])->name('providers.store');
         Route::put('/providers/{provider}', [\App\Http\Controllers\AdminAiController::class, 'updateProvider'])->name('providers.update');
         Route::delete('/providers/{provider}', [\App\Http\Controllers\AdminAiController::class, 'destroyProvider'])->name('providers.destroy');
+        Route::post('/providers/{provider}/test', [\App\Http\Controllers\AdminAiController::class, 'testProvider'])->name('providers.test');
         Route::post('/providers/{provider}/primary', [\App\Http\Controllers\AdminAiController::class, 'setPrimaryProvider'])->name('providers.primary');
         Route::post('/providers/{provider}/fallback', [\App\Http\Controllers\AdminAiController::class, 'setFallbackProvider'])->name('providers.fallback');
     });

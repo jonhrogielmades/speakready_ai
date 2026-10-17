@@ -39,10 +39,6 @@ class LocalFeedbackModelService
             return false;
         }
 
-        if (! filter_var(config('services.local_feedback_model.require_validation', true), FILTER_VALIDATE_BOOLEAN)) {
-            return true;
-        }
-
         return $this->qualityStatus()['production_ready'];
     }
 
@@ -58,7 +54,25 @@ class LocalFeedbackModelService
             return $this->failedQuality('model_unreadable');
         }
 
-        $cacheKey = $path.'|'.hash('sha256', $contents);
+        $algorithmPolicy = app(AlgorithmReliabilityService::class);
+        $minimumValidationExamples = max(
+            100,
+            $algorithmPolicy->minimumEvidenceCount(),
+            (int) config('services.local_feedback_model.min_validation_examples', 100)
+        );
+        $maximumValidationMae = min(5.0, max(0.0, (float) config('services.local_feedback_model.max_validation_mae', 5)));
+        $minimumWithinTenRate = max(0.95, min(1.0, (float) config('services.local_feedback_model.min_validation_within_10_rate', 0.95)));
+        $minimumValidationSkill = max(0.10, min(1.0, (float) config('services.local_feedback_model.min_validation_skill', 0.10)));
+        $minimumHumanReviewedRatio = 1.0;
+        $policyFingerprint = json_encode([
+            $minimumValidationExamples,
+            $maximumValidationMae,
+            $minimumWithinTenRate,
+            $minimumValidationSkill,
+            $minimumHumanReviewedRatio,
+            $algorithmPolicy->thresholds(),
+        ]);
+        $cacheKey = $path.'|'.hash('sha256', $contents).'|'.hash('sha256', (string) $policyFingerprint);
         if (isset(self::$qualityCache[$cacheKey])) {
             return self::$qualityCache[$cacheKey];
         }
@@ -94,6 +108,7 @@ class LocalFeedbackModelService
                 || (float) $withinTen > 1
                 || ! is_numeric($skillScore)
                 || ! is_finite((float) $skillScore)
+                || (float) $skillScore < -1
                 || (float) $skillScore > 1
                 || ! is_numeric($fieldValidationExamples)
                 || (int) $fieldValidationExamples !== $validationExamples) {
@@ -105,11 +120,18 @@ class LocalFeedbackModelService
             $skillScores[] = (float) $skillScore;
 
             $fieldModel = is_array($models[$field] ?? null) ? $models[$field] : [];
-            $hasWeights = is_array($fieldModel['weights'] ?? null) && $fieldModel['weights'] !== [];
-            $hasMembers = is_array($fieldModel['members'] ?? null) && $fieldModel['members'] !== [];
+            $hasWeights = is_array($fieldModel['weights'] ?? null)
+                && $this->hasFiniteCoefficients($fieldModel['weights']);
+            $hasMembers = is_array($fieldModel['members'] ?? null)
+                && $fieldModel['members'] !== []
+                && collect($fieldModel['members'])->every(fn ($member): bool => is_array($member)
+                    && is_array($member['weights'] ?? null)
+                    && $this->hasFiniteCoefficients($member['weights']));
             if (($fieldModel['algorithm'] ?? null) !== 'scaled_bagged_elastic_net_sgd'
                 || ! is_numeric($fieldModel['fallback'] ?? null)
+                || ! is_finite((float) ($fieldModel['fallback'] ?? 0))
                 || ! is_numeric($fieldModel['confidence'] ?? null)
+                || ! is_finite((float) ($fieldModel['confidence'] ?? 0))
                 || (float) $fieldModel['confidence'] < 0
                 || (float) $fieldModel['confidence'] > 1
                 || (! $hasWeights && ! $hasMembers)) {
@@ -117,11 +139,6 @@ class LocalFeedbackModelService
             }
         }
 
-        $minimumValidationExamples = max(1, (int) config('services.local_feedback_model.min_validation_examples', 100));
-        $maximumValidationMae = max(0.0, (float) config('services.local_feedback_model.max_validation_mae', 10));
-        $minimumWithinTenRate = max(0.0, min(1.0, (float) config('services.local_feedback_model.min_validation_within_10_rate', 0.95)));
-        $minimumValidationSkill = max(-1.0, min(1.0, (float) config('services.local_feedback_model.min_validation_skill', 0.10)));
-        $minimumHumanReviewedRatio = max(0.0, min(1.0, (float) config('services.local_feedback_model.min_human_reviewed_ratio', 1.0)));
         $reasons = [];
         $artifactCompatible = true;
 
@@ -159,6 +176,22 @@ class LocalFeedbackModelService
             $reasons[] = 'trainer_quality_gate_failed';
         }
 
+        $qualityGate = $algorithmPolicy->evaluate(
+            'local_feedback_model',
+            [
+                'quality' => $validationMaes !== [] ? 100 - max($validationMaes) : null,
+                'accuracy' => $withinTenRates !== [] ? min($withinTenRates) * 100 : null,
+                'reliability' => $humanReviewedRatio * 100,
+            ],
+            ['quality', 'accuracy', 'reliability'],
+            $validationExamples,
+            $minimumValidationExamples,
+            'held_out_error_rates_and_human_reviewed_labels'
+        );
+        if (! $qualityGate['passed']) {
+            $reasons[] = 'algorithm_quality_gate_failed';
+        }
+
         return self::$qualityCache[$cacheKey] = [
             'validated' => $artifactCompatible
                 && $validationExamples >= $minimumValidationExamples
@@ -173,6 +206,15 @@ class LocalFeedbackModelService
             'human_reviewed_ratio' => round($humanReviewedRatio, 6),
             'missing_fields' => $missingFields,
             'missing_models' => $missingModels,
+            'quality_gate' => $qualityGate,
+            'accuracy_guaranteed' => false,
+            'thresholds' => [
+                'minimum_validation_examples' => $minimumValidationExamples,
+                'maximum_validation_mae' => $maximumValidationMae,
+                'minimum_validation_within_10_rate' => $minimumWithinTenRate,
+                'minimum_validation_skill' => $minimumValidationSkill,
+                'minimum_human_reviewed_ratio' => $minimumHumanReviewedRatio,
+            ],
         ];
     }
 
@@ -264,6 +306,8 @@ class LocalFeedbackModelService
 
     private function failedQuality(string $reason): array
     {
+        $policy = app(AlgorithmReliabilityService::class);
+
         return [
             'validated' => false,
             'production_ready' => false,
@@ -275,6 +319,38 @@ class LocalFeedbackModelService
             'human_reviewed_ratio' => 0.0,
             'missing_fields' => self::REQUIRED_SCORE_FIELDS,
             'missing_models' => self::REQUIRED_SCORE_FIELDS,
+            'quality_gate' => $policy->evaluate(
+                'local_feedback_model',
+                [],
+                ['quality', 'accuracy', 'reliability'],
+                0,
+                max(100, $policy->minimumEvidenceCount()),
+                'held_out_error_rates_and_human_reviewed_labels'
+            ),
+            'accuracy_guaranteed' => false,
         ];
+    }
+
+    private function hasFiniteCoefficients(array $values): bool
+    {
+        if ($values === []) {
+            return false;
+        }
+
+        foreach ($values as $value) {
+            if (is_array($value)) {
+                if (! $this->hasFiniteCoefficients($value)) {
+                    return false;
+                }
+
+                continue;
+            }
+
+            if (! is_numeric($value) || ! is_finite((float) $value)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

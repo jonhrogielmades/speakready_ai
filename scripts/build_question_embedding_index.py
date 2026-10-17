@@ -269,6 +269,47 @@ def sentence_bert_vectors(documents: list[str], model_name: str) -> list[list[fl
     return [[round(float(value), 8) for value in vector] for vector in encoded]
 
 
+def index_quality_summary(records: list[dict[str, Any]], embeddings: list[list[float]], dimensions: int) -> dict[str, Any]:
+    record_count = len(records)
+    valid_records = 0
+    source_backed_records = 0
+    unique_questions: set[str] = set()
+
+    for record, embedding in zip(records, embeddings):
+        question = clean_text(record.get("question_text"), 1200)
+        embedding_valid = (
+            len(embedding) == dimensions
+            and dimensions >= 32
+            and all(math.isfinite(float(value)) for value in embedding)
+            and sum(float(value) ** 2 for value in embedding) > 0
+        )
+        if question and clean_text(record.get("id")) and clean_text(record.get("dataset_key")) and embedding_valid:
+            valid_records += 1
+        if normalize_list(record.get("source_keys"), 12):
+            source_backed_records += 1
+        if question:
+            unique_questions.add(normalized_text(question))
+
+    def percentage(count: int) -> float:
+        if not record_count:
+            return 0.0
+        return math.floor((((count / record_count) * 100) + 1e-12) * 100) / 100
+
+    valid_percent = percentage(valid_records)
+    source_percent = percentage(source_backed_records)
+    unique_percent = percentage(len(unique_questions))
+
+    return {
+        "record_count": record_count,
+        "valid_record_percent": valid_percent,
+        "source_backed_percent": source_percent,
+        "unique_question_percent": unique_percent,
+        "production_ready": record_count > 0 and min(valid_percent, source_percent, unique_percent) >= 95.0,
+        "accuracy_guaranteed": False,
+        "score_basis": "embedding_integrity_source_provenance_and_duplicate_checks",
+    }
+
+
 def build_index(input_paths: list[Path], output_path: Path, backend: str, model_name: str, max_rows: int) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     for input_path in input_paths:
@@ -313,6 +354,24 @@ def build_index(input_paths: list[Path], output_path: Path, backend: str, model_
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(artifact, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    quality = index_quality_summary(records, embeddings, int(artifact["embedding_dimensions"]))
+    quality_manifest = {
+        "schema_version": 1,
+        "index_schema_version": artifact["schema_version"],
+        "database_type": artifact["database_type"],
+        "embedding_backend": artifact["embedding_backend"],
+        "embedding_model": artifact["embedding_model"],
+        "embedding_dimensions": artifact["embedding_dimensions"],
+        "created_at_utc": artifact["created_at_utc"],
+        "index_file": output_path.name,
+        "index_size_bytes": output_path.stat().st_size,
+        "index_sha256": file_sha256(output_path),
+        **quality,
+    }
+    quality_path = Path(str(output_path) + ".quality.json")
+    quality_path.write_text(json.dumps(quality_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    artifact["quality_manifest"] = quality_manifest
+    artifact["quality_manifest_path"] = str(quality_path)
     return artifact
 
 
@@ -354,6 +413,8 @@ def main() -> int:
                 "dimensions": artifact["embedding_dimensions"],
                 "inputs": [str(path) for path in resolved_inputs],
                 "output": str(output_path.resolve()),
+                "quality_manifest": artifact["quality_manifest_path"],
+                "production_ready": artifact["quality_manifest"]["production_ready"],
             },
             indent=2,
         )

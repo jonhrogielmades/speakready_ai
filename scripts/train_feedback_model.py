@@ -29,7 +29,7 @@ MODEL_TYPE = "hashed_linear_feedback_scorer_v3"
 RANDOM_SEED = 1337
 DEFAULT_VALIDATION_FRACTION = 0.20
 DEFAULT_MIN_VALIDATION_EXAMPLES = 100
-DEFAULT_MAX_VALIDATION_MAE = 10.0
+DEFAULT_MAX_VALIDATION_MAE = 5.0
 DEFAULT_MIN_WITHIN_TEN_RATE = 0.95
 DEFAULT_MIN_VALIDATION_SKILL = 0.10
 DEFAULT_MIN_HUMAN_REVIEWED_RATIO = 1.0
@@ -620,11 +620,11 @@ def main() -> int:
         metrics,
         data_summary,
         len(validation_rows),
-        max(1, args.min_validation_examples),
-        max(0.0, args.max_validation_mae),
-        max(0.0, min(1.0, args.min_within_ten_rate)),
-        max(-1.0, min(1.0, args.min_validation_skill)),
-        max(0.0, min(1.0, args.min_human_reviewed_ratio)),
+        max(100, args.min_validation_examples),
+        min(5.0, max(0.0, args.max_validation_mae)),
+        max(0.95, min(1.0, args.min_within_ten_rate)),
+        max(0.10, min(1.0, args.min_validation_skill)),
+        1.0,
     )
 
     artifact = {

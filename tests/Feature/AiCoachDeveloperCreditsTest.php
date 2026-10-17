@@ -466,9 +466,15 @@ class AiCoachDeveloperCreditsTest extends TestCase
             $system = (string) data_get($messages, '0.content');
             $latest = (string) data_get($messages, '1.content');
 
-            return ($payload['temperature'] ?? null) === 0.2
+            $usesLegacySampling = ($payload['temperature'] ?? null) === 0.2
                 && is_int($payload['max_tokens'] ?? null)
-                && ($payload['max_tokens'] ?? 0) >= 256
+                && ($payload['max_tokens'] ?? 0) >= 256;
+            $usesReasoningModel = in_array(($payload['reasoning_effort'] ?? null), ['low', 'medium', 'high', 'xhigh', 'max'], true)
+                && is_int($payload['max_completion_tokens'] ?? null)
+                && ($payload['max_completion_tokens'] ?? 0) >= 256
+                && !array_key_exists('temperature', $payload);
+
+            return ($usesLegacySampling || $usesReasoningModel)
                 && str_contains($system, 'Reliability contract')
                 && str_contains($latest, 'SPEAKREADY USER PROFILE CONTEXT JSON')
                 && str_contains($latest, 'Customer Service Representative');

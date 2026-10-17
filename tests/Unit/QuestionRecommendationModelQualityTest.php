@@ -53,6 +53,8 @@ class QuestionRecommendationModelQualityTest extends TestCase
 
         $this->assertTrue($service->trainedModelAvailable());
         $this->assertTrue($service->trainedModelQuality()['production_ready']);
+        $this->assertTrue($service->trainedModelQuality()['quality_gate']['passed']);
+        $this->assertFalse($service->trainedModelQuality()['accuracy_guaranteed']);
     }
 
     public function test_high_training_score_without_held_out_split_is_rejected(): void
@@ -83,5 +85,28 @@ class QuestionRecommendationModelQualityTest extends TestCase
 
         $this->assertFalse($service->trainedModelAvailable());
         $this->assertContains('validation_model_hash_mismatch', $service->trainedModelQuality()['reasons']);
+    }
+
+    public function test_runtime_thresholds_cannot_be_lowered_below_95_percent_or_200_examples(): void
+    {
+        config([
+            'services.question_recommender.trained_model_min_evaluation_examples' => 1,
+            'services.question_recommender.trained_model_min_precision_at_5' => 0.10,
+        ]);
+        file_put_contents($this->modelPath.DIRECTORY_SEPARATOR.'validation_metrics.json', json_encode([
+            'schema_version' => 1,
+            'data_split' => 'held_out',
+            'evaluation_examples' => 199,
+            'model_sha256' => hash_file('sha256', $this->modelPath.DIRECTORY_SEPARATOR.'model.safetensors'),
+            'metrics' => ['precision_at_5' => 0.94],
+        ]));
+
+        $quality = app(QuestionRecommendationService::class)->trainedModelQuality();
+
+        $this->assertFalse($quality['production_ready']);
+        $this->assertSame(200, $quality['thresholds']['minimum_evaluation_examples']);
+        $this->assertSame(0.95, $quality['thresholds']['minimum_precision_at_5']);
+        $this->assertContains('precision_at_5_below_target', $quality['reasons']);
+        $this->assertContains('insufficient_evaluation_examples', $quality['reasons']);
     }
 }

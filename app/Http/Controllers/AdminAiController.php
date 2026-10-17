@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AiProvider;
 use App\Models\AiProviderLog;
 use App\Services\AiProviderEvaluationService;
+use App\Services\AiProviderReliabilityService;
 use App\Services\AIService;
 use App\Services\CsvExportService;
 use App\Support\AiProviderSchema;
@@ -14,11 +15,14 @@ use Illuminate\Support\Str;
 
 class AdminAiController extends Controller
 {
- public function providers()
+ public function providers(AiProviderReliabilityService $reliability)
  {
  AiProviderSchema::ensure(createIfMissing: true);
 
  $activeProvider = AiProvider::safePrimaryOrActive();
+ if ($activeProvider &&! AIService::providerIsConfigured($activeProvider->name)) {
+ $activeProvider = null;
+ }
  $todayStart = today()->startOfDay();
  $tomorrowStart = today()->addDay()->startOfDay();
  $monthStart = now()->startOfMonth();
@@ -34,7 +38,7 @@ class AdminAiController extends Controller
 
  $avgResponseTime = $todayTotals->avg_response_time?? 0;
 
- $successRate = $totalRequests > 0? round(($successfulRequests / $totalRequests) * 100, 2): 100;
+ $successRate = $totalRequests > 0? round(($successfulRequests / $totalRequests) * 100, 2): null;
 
  $monthlyCost = AiProviderLog::where('created_at', '>=', $monthStart)
  ->where('created_at', '<', $nextMonthStart)
@@ -93,9 +97,10 @@ class AdminAiController extends Controller
  );
  $stats = new \stdClass;
  $stats->name = $providerOption['label'];
+ $stats->model = $providerOption['model']?? 'Not configured';
 
  if ($dbProvider) {
- $stats->is_configured = true;
+ $stats->is_configured = (bool) $providerOption['enabled'];
  $stats->status = $dbProvider->status;
  $stats->is_primary = $dbProvider->is_primary;
  $stats->is_fallback = $dbProvider->is_fallback;
@@ -103,7 +108,7 @@ class AdminAiController extends Controller
  $stats->requests_today = (int) ($providerTodayStats->requests_today?? 0);
  $stats->successful_requests = (int) ($providerTodayStats->successful_requests?? 0);
  $stats->avg_response_time = $providerTodayStats->avg_response_time?? 0;
- $stats->success_rate = $stats->requests_today > 0? round(($stats->successful_requests / $stats->requests_today) * 100, 2): 100;
+ $stats->success_rate = $stats->requests_today > 0? round(($stats->successful_requests / $stats->requests_today) * 100, 2): null;
  $stats->monthly_cost = $monthlyCostByProvider[$dbProvider->id]?? 0;
  } else {
  $stats->is_configured = $providerOption['enabled'];
@@ -113,15 +118,21 @@ class AdminAiController extends Controller
  $stats->requests_today = 0;
  $stats->successful_requests = 0;
  $stats->avg_response_time = 0;
- $stats->success_rate = 100;
+ $stats->success_rate = null;
  $stats->monthly_cost = 0;
  }
 
  return $stats;
  });
 
- $primary = $providers->first(fn (AiProvider $provider): bool => $provider->is_primary && $provider->status === 'active' &&! empty($provider->api_key));
- $fallback = $providers->first(fn (AiProvider $provider): bool => $provider->is_fallback);
+ $primary = $providers->first(
+ fn (AiProvider $provider): bool => $provider->is_primary
+ && $this->providerRoutingError($provider, $reliability) === null
+ );
+ $fallback = $providers->first(
+ fn (AiProvider $provider): bool => $provider->is_fallback
+ && $this->providerRoutingError($provider, $reliability) === null
+ );
 
  return $this->mobileView('admin.ai.providers', compact(
  'providers', 'providerStats', 'primary', 'fallback',
@@ -313,26 +324,46 @@ class AdminAiController extends Controller
  return $this->mobileView('admin.ai.evaluation-report', $dashboard);
  }
 
- public function storeProvider(Request $request)
+ public function storeProvider(Request $request, AiProviderReliabilityService $reliability)
  {
- $request->validate([
- 'name' => 'required|string',
- 'api_endpoint' => 'required|url',
- 'api_key' => 'required|string',
+ $validated = $request->validate([
+ 'name' => 'required|string|max:80',
+ 'api_endpoint' => 'required|url|max:2048',
+ 'api_key' => 'required|string|max:8192',
  'status' => 'required|in:active,inactive',
  ]);
 
- if (! AIService::providerIsSupported($request->name)) {
+ $providerKey = AIService::normalizeProviderKey($validated['name']);
+ if (! AIService::providerIsSupported($providerKey)) {
  return redirect()->back()
  ->withInput()
  ->with('error', 'This AI provider is not in the active provider pool. Use OpenAI, Gemini, Groq, or Cohere.');
  }
 
+ if (trim($validated['api_key']) === '') {
+ return redirect()->back()
+ ->withInput()
+ ->withErrors(['api_key' => 'The API key cannot be blank.']);
+ }
+
+ $endpointCheck = $reliability->validateEndpoint($providerKey, $validated['api_endpoint']);
+ if (! $endpointCheck['valid']) {
+ return redirect()->back()
+ ->withInput()
+ ->withErrors(['api_endpoint' => $endpointCheck['reason']]);
+ }
+
+ if ($this->providerRecordExists($providerKey)) {
+ return redirect()->back()
+ ->withInput()
+ ->withErrors(['name' => 'This AI provider is already configured. Update the existing provider instead.']);
+ }
+
  $provider = AiProvider::create([
- 'name' => $request->name,
- 'api_endpoint' => $request->api_endpoint,
- 'api_key' => Crypt::encryptString($request->api_key),
- 'status' => $request->status,
+ 'name' => $this->providerLabel($providerKey),
+ 'api_endpoint' => trim($validated['api_endpoint']),
+ 'api_key' => Crypt::encryptString(trim($validated['api_key'])),
+ 'status' => $validated['status'],
  ]);
 
  if (AiProvider::count() == 1 && $provider->status === 'active') {
@@ -342,24 +373,48 @@ class AdminAiController extends Controller
  return redirect()->route('admin.ai.providers')->with('message', 'AI Provider added successfully.');
  }
 
- public function updateProvider(Request $request, AiProvider $provider)
+ public function updateProvider(Request $request, AiProvider $provider, AiProviderReliabilityService $reliability)
  {
- $request->validate([
- 'name' => 'required|string',
- 'api_endpoint' => 'required|url',
+ $validated = $request->validate([
+ 'name' => 'required|string|max:80',
+ 'api_endpoint' => 'required|url|max:2048',
+ 'api_key' => 'nullable|string|max:8192',
  'status' => 'required|in:active,inactive',
  ]);
 
- if (! AIService::providerIsSupported($request->name)) {
+ $providerKey = AIService::normalizeProviderKey($validated['name']);
+ if (! AIService::providerIsSupported($providerKey)) {
  return redirect()->back()
  ->withInput()
  ->with('error', 'This AI provider is not in the active provider pool. Use OpenAI, Gemini, Groq, or Cohere.');
  }
 
- $data = $request->only(['name', 'api_endpoint', 'status']);
+ $endpointCheck = $reliability->validateEndpoint($providerKey, $validated['api_endpoint']);
+ if (! $endpointCheck['valid']) {
+ return redirect()->back()
+ ->withInput()
+ ->withErrors(['api_endpoint' => $endpointCheck['reason']]);
+ }
+
+ if ($this->providerRecordExists($providerKey, $provider->id)) {
+ return redirect()->back()
+ ->withInput()
+ ->withErrors(['name' => 'This AI provider is already configured. Update the existing provider instead.']);
+ }
+
+ $data = [
+ 'name' => $this->providerLabel($providerKey),
+ 'api_endpoint' => trim($validated['api_endpoint']),
+ 'status' => $validated['status'],
+ ];
 
  if ($request->filled('api_key')) {
- $data['api_key'] = Crypt::encryptString($request->api_key);
+ $data['api_key'] = Crypt::encryptString(trim((string) $request->api_key));
+ }
+
+ if ($validated['status'] === 'inactive') {
+ $data['is_primary'] = false;
+ $data['is_fallback'] = false;
  }
 
  $provider->update($data);
@@ -382,10 +437,60 @@ class AdminAiController extends Controller
  return redirect()->route('admin.ai.providers')->with('message', 'Provider deleted successfully.');
  }
 
- public function setPrimaryProvider(AiProvider $provider)
+ public function testProvider(AiProvider $provider, AiProviderReliabilityService $reliability)
  {
- if (! AIService::providerIsConfigured($provider->name) || $provider->status!== 'active' || empty($provider->api_key)) {
- return redirect()->back()->with('error', 'Only active providers with an API key can be set as primary.');
+ if ($error = $this->providerRoutingError($provider, $reliability)) {
+ return redirect()->back()->with('error', $error);
+ }
+
+ $providerKey = AIService::normalizeProviderKey($provider->name);
+ $nonce = Str::lower(Str::random(20));
+ $response = json_decode((string) AIService::generateJson(
+ "Provider connection verification. Return status ready and nonce {$nonce}. Do not add any other fields.",
+ $providerKey,
+ [
+ 'module' => 'provider_connection_test',
+ 'timeout_seconds' => 20,
+ 'attempts' => 1,
+ 'max_providers' => 1,
+ 'response_validator' => fn (array $result): bool => ($result['status']?? null) === 'ready'
+ && is_string($result['nonce']?? null)
+ && hash_equals($nonce, $result['nonce']),
+ 'response_format' => [
+ 'type' => 'json_schema',
+ 'json_schema' => [
+ 'name' => 'provider_connection_test',
+ 'strict' => true,
+ 'schema' => [
+ 'type' => 'object',
+ 'additionalProperties' => false,
+ 'properties' => [
+ 'status' => ['type' => 'string', 'enum' => ['ready']],
+ 'nonce' => ['type' => 'string'],
+ ],
+ 'required' => ['status', 'nonce'],
+ ],
+ ],
+ ]
+ ]
+ ), true);
+
+ $verified = is_array($response)
+ && ($response['status']?? null) === 'ready'
+ && is_string($response['nonce']?? null)
+ && hash_equals($nonce, $response['nonce']);
+
+ if (! $verified) {
+ return redirect()->back()->with('error', "{$provider->name} connection test failed validation. Review its key, endpoint, model, and provider logs.");
+ }
+
+ return redirect()->back()->with('message', "{$provider->name} connection test passed with a schema-validated response.");
+ }
+
+ public function setPrimaryProvider(AiProvider $provider, AiProviderReliabilityService $reliability)
+ {
+ if ($error = $this->providerRoutingError($provider, $reliability)) {
+ return redirect()->back()->with('error', $error);
  }
 
  AiProvider::where('id', '!=', 0)->update(['is_primary' => false]);
@@ -394,15 +499,56 @@ class AdminAiController extends Controller
  return redirect()->back()->with('message', 'Primary provider updated.');
  }
 
- public function setFallbackProvider(AiProvider $provider)
+ public function setFallbackProvider(AiProvider $provider, AiProviderReliabilityService $reliability)
  {
- if (! AIService::providerIsConfigured($provider->name) || $provider->status!== 'active' || empty($provider->api_key)) {
- return redirect()->back()->with('error', 'Only active providers with an API key can be set as fallback.');
+ if ($error = $this->providerRoutingError($provider, $reliability)) {
+ return redirect()->back()->with('error', $error);
  }
 
  AiProvider::where('id', '!=', 0)->update(['is_fallback' => false]);
  $provider->update(['is_fallback' => true]);
 
  return redirect()->back()->with('message', 'Fallback provider updated.');
+ }
+
+ private function providerRecordExists(string $providerKey,?int $exceptId = null): bool
+ {
+ return AiProvider::query()
+ ->when($exceptId, fn ($query) => $query->where('id', '!=', $exceptId))
+ ->get(['id', 'name'])
+ ->contains(fn (AiProvider $provider): bool => AIService::normalizeProviderKey($provider->name) === $providerKey);
+ }
+
+ private function providerLabel(string $providerKey): string
+ {
+ $option = collect(AIService::supportedProviderOptions())->firstWhere('key', $providerKey);
+
+ return (string) ($option['label']?? ucfirst($providerKey));
+ }
+
+ private function providerRoutingError(AiProvider $provider, AiProviderReliabilityService $reliability):?string
+ {
+ $providerKey = AIService::normalizeProviderKey($provider->name);
+ if ($provider->status!== 'active'
+ || empty($provider->api_key)
+ ||! AIService::providerIsSupported($providerKey)
+ ||! AIService::providerIsConfigured($providerKey)) {
+ return 'Only an active, fully configured provider with a trusted endpoint, model, and API key can be assigned a routing role.';
+ }
+
+ $endpointCheck = $reliability->validateEndpoint($providerKey, (string) $provider->api_endpoint);
+ if (! $endpointCheck['valid']) {
+ return 'This provider cannot be routed because its endpoint is not trusted: '.$endpointCheck['reason'];
+ }
+
+ try {
+ if (trim(Crypt::decryptString($provider->api_key)) === '') {
+ return 'This provider cannot be routed because its API key is empty.';
+ }
+ } catch (\Throwable) {
+ return 'This provider cannot be routed because its API key cannot be decrypted.';
+ }
+
+ return null;
  }
 }

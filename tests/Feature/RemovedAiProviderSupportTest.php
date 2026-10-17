@@ -201,6 +201,156 @@ class RemovedAiProviderSupportTest extends TestCase
  }
  }
 
+ public function test_all_structured_providers_receive_a_machine_enforced_schema(): void
+ {
+ $schema = [
+ 'type' => 'json_schema',
+ 'json_schema' => [
+ 'name' => 'provider_contract',
+ 'strict' => true,
+ 'schema' => [
+ 'type' => 'object',
+ 'additionalProperties' => false,
+ 'properties' => [
+ 'provider' => ['type' => 'string'],
+ ],
+ 'required' => ['provider'],
+ ],
+ ],
+ ];
+ $cases = [
+ 'openai' => ['OPENAI_API_KEY', 'openai_test_token', 'api.openai.com/*', $this->openAiCompatibleResponse('openai')],
+ 'gemini' => ['GEMINI_API_KEY', 'gemini_test_token', 'generativelanguage.googleapis.com/*', [
+ 'candidates' => [[
+ 'finishReason' => 'STOP',
+ 'content' => ['parts' => [['text' => '{"provider":"gemini"}']]],
+ ]],
+ ]],
+ 'groq' => ['GROQ_API_KEY', 'groq_test_token', 'api.groq.com/*', $this->openAiCompatibleResponse('groq')],
+ 'cohere' => ['COHERE_API_KEY', 'cohere_test_token', 'api.cohere.com/*', [
+ 'finish_reason' => 'COMPLETE',
+ 'message' => ['content' => [['type' => 'text', 'text' => '{"provider":"cohere"}']]],
+ ]],
+ ];
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ foreach ($cases as $provider => [$envKey, $token, $fake, $response]) {
+ $this->setEnvValue($envKey, $token);
+ Http::fake([$fake => Http::response($response, 200)]);
+
+ $result = $providerMethod->invoke(null, $provider, 'Return the provider contract.', [
+ 'response_format' => $schema,
+ ]);
+
+ $this->assertSame($provider, $result['provider']);
+ Http::assertSent(function ($request) use ($provider): bool {
+ if ($provider === 'gemini') {
+ return data_get($request->data(), 'generationConfig.responseJsonSchema.properties.provider.type') === 'string'
+ || data_get($request->data(), 'generationConfig.responseFormat.text.schema.properties.provider.type') === 'string';
+ }
+
+ if ($provider === 'cohere') {
+ return data_get($request->data(), 'response_format.type') === 'json_object'
+ && data_get($request->data(), 'response_format.schema.properties.provider.type') === 'string'
+ && data_get($request->data(), 'safety_mode') === 'STRICT';
+ }
+
+ return data_get($request->data(), 'response_format.type') === 'json_schema'
+ && data_get($request->data(), 'response_format.json_schema.strict') === true
+ && data_get($request->data(), 'response_format.json_schema.schema.properties.provider.type') === 'string';
+ });
+ }
+ }
+
+ public function test_provider_does_not_retry_authentication_errors(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('AI_PROVIDER_RETRY_DELAY_MS', '0');
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ Http::fakeSequence()
+ ->push(['error' => ['message' => 'invalid key']], 401)
+ ->push($this->openAiCompatibleResponse('openai'), 200);
+
+ $failed = false;
+ try {
+ $providerMethod->invoke(null, 'openai', 'Return JSON.', ['attempts' => 2]);
+ } catch (\Throwable) {
+ $failed = true;
+ }
+
+ $this->assertTrue($failed, 'Expected the authentication error to fail without retrying.');
+ $this->assertCount(1, Http::recorded());
+ }
+
+ public function test_provider_retries_transient_errors(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('AI_PROVIDER_RETRY_DELAY_MS', '0');
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ Http::fakeSequence()
+ ->push(['error' => ['message' => 'temporarily unavailable']], 503)
+ ->push($this->openAiCompatibleResponse('openai'), 200);
+
+ $result = $providerMethod->invoke(null, 'openai', 'Return JSON.', ['attempts' => 2]);
+
+ $this->assertSame('openai', $result['provider']);
+ $this->assertCount(2, Http::recorded());
+ }
+
+ public function test_openai_reasoning_models_use_supported_generation_parameters(): void
+ {
+ config()->set('services.openai.reasoning_effort', 'high');
+ $parameters = new \ReflectionMethod(AIService::class, 'openAiGenerationParameters');
+ $parameters->setAccessible(true);
+
+ $reasoning = $parameters->invoke(null, 'gpt-6-astra', 4096, 0.2);
+ $reasoningWithSmallBudget = $parameters->invoke(null, 'gpt-6-astra', 1000, 0.2);
+ $legacy = $parameters->invoke(null, 'gpt-4.1-mini', 2048, 0.3);
+
+ $this->assertSame([
+ 'reasoning_effort' => 'high',
+ 'max_completion_tokens' => 4096,
+ ], $reasoning);
+ $this->assertSame(4096, $reasoningWithSmallBudget['max_completion_tokens']);
+ $this->assertSame([
+ 'temperature' => 0.3,
+ 'max_tokens' => 2048,
+ ], $legacy);
+ }
+
+ public function test_gemini_four_uses_high_thinking_without_ignored_sampling_parameters(): void
+ {
+ config()->set('services.gemini.thinking_level', 'high');
+ $parameters = new \ReflectionMethod(AIService::class, 'geminiGenerationConfig');
+ $parameters->setAccessible(true);
+
+ $argon = $parameters->invoke(null, 'gemini-4-argon', 4096, 0.2, true);
+ $flash = $parameters->invoke(null, 'gemini-3.8-flash', 4096, 0.2, true);
+ $jsonParameters = new \ReflectionMethod(AIService::class, 'geminiJsonResponseConfig');
+ $jsonParameters->setAccessible(true);
+ $argonJson = $jsonParameters->invoke(null, $argon, 'gemini-4-argon', [
+ 'type' => 'object',
+ 'properties' => ['provider' => ['type' => 'string']],
+ ]);
+
+ $this->assertSame(32768, $argon['maxOutputTokens']);
+ $this->assertSame(['thinkingLevel' => 'high'], $argon['thinkingConfig']);
+ $this->assertArrayNotHasKey('temperature', $argon);
+ $this->assertArrayNotHasKey('topP', $argon);
+ $this->assertSame(8192, $flash['maxOutputTokens']);
+ $this->assertSame(0.2, $flash['temperature']);
+ $this->assertSame(0.85, $flash['topP']);
+ $this->assertSame(
+ 'string',
+ data_get($argonJson, 'responseFormat.text.schema.properties.provider.type')
+ );
+ }
+
  private function openAiCompatibleResponse(string $provider): array
  {
  return [

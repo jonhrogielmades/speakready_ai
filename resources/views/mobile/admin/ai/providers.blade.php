@@ -19,11 +19,17 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter:invert(1)"></button>
     </div>
     @endif
+    @if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171">
+        {{ $errors->first() }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter:invert(1)"></button>
+    </div>
+    @endif
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3 ai-providers-header">
         <div class="ai-providers-heading">
             <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-microchip me-2"></i>AI Providers Dashboard</h4>
-            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Manage AI Providers and view system metrics.</p>
+            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Manage trusted AI providers and verify the 95% reliability gate.</p>
         </div>
         <div class="ai-providers-actions">
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProviderModal"><i class="fa-solid fa-plus me-2"></i>Add AI Provider</button>
@@ -71,7 +77,7 @@
         <div class="col-6 col-md-4 col-xl-2">
             <div class="premium-card text-center p-3 h-100 ai-overview-card">
                 <div style="font-size:1.5rem;margin-bottom:8px;" class="text-success"><i class="fa-solid fa-percent"></i></div>
-                <div style="font-size:1.5rem;font-weight:700;" class="text-success">{{ $successRate }}%</div>
+                <div style="font-size:1.5rem;font-weight:700;" class="{{ $successRate === null ? 'text-muted' : ($successRate >= 95 ? 'text-success' : 'text-warning') }}">{{ $successRate === null ? 'No data' : number_format($successRate, 2).'%' }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Success Rate</div>
             </div>
         </div>
@@ -135,10 +141,12 @@
                         <i class="fa-solid fa-robot text-primary"></i>
                         <span>{{ $activeProvider ? $activeProvider->name : 'N/A' }}</span>
                     </div>
-                    @if($successRate > 95)
-                        <span class="stat-badge success"><i class="fa-solid fa-circle fa-2xs me-1"></i> Online</span>
-                    @elseif($successRate > 80)
-                        <span class="stat-badge warning"><i class="fa-solid fa-circle fa-2xs me-1"></i> Slow</span>
+                    @if($successRate === null)
+                        <span class="stat-badge text-muted"><i class="fa-solid fa-circle-question me-1"></i> No evidence</span>
+                    @elseif($successRate >= 95)
+                        <span class="stat-badge success"><i class="fa-solid fa-circle fa-2xs me-1"></i> Reliable</span>
+                    @elseif($successRate >= 80)
+                        <span class="stat-badge warning"><i class="fa-solid fa-circle fa-2xs me-1"></i> Degraded</span>
                     @else
                         <span class="stat-badge danger"><i class="fa-solid fa-circle fa-2xs me-1"></i> Offline</span>
                     @endif
@@ -154,7 +162,7 @@
                 <h6 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-star me-2"></i>Primary Provider</h6>
                 @if($primary)
                     <h4 class="fw-bold">{{ $primary->name }}</h4>
-                    <p class="mb-0 text-muted" style="font-size:0.85rem;">Currently handling all system requests.</p>
+                    <p class="mb-0 text-muted" style="font-size:0.85rem;">Default provider; evaluated interview routing still requires the 95% quality gate.</p>
                 @else
                     <p class="mb-0 text-warning">No primary provider selected. System will not generate AI responses.</p>
                 @endif
@@ -165,7 +173,7 @@
                 <h6 class="fw-bold mb-3 text-warning"><i class="fa-solid fa-life-ring me-2"></i>Fallback Provider</h6>
                 @if($fallback)
                     <h4 class="fw-bold">{{ $fallback->name }}</h4>
-                    <p class="mb-0 text-muted" style="font-size:0.85rem;">System will automatically switch to this if primary fails.</p>
+                    <p class="mb-0 text-muted" style="font-size:0.85rem;">Used after a primary failure only when its response passes validation.</p>
                 @else
                     <p class="mb-0 text-warning">No fallback provider selected. System risks downtime if primary fails.</p>
                 @endif
@@ -216,6 +224,11 @@
                     <span style="color:var(--tx2);">Requests Today</span>
                     <span class="fw-bold">{{ number_format($provider->requests_today) }}</span>
                 </div>
+
+                <div class="d-flex justify-content-between gap-3 mb-2" style="font-size:0.9rem;">
+                    <span style="color:var(--tx2);">Runtime Model</span>
+                    <span class="fw-bold text-end text-break">{{ $provider->model }}</span>
+                </div>
                 
                 <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
                     <span style="color:var(--tx2);">Avg Latency</span>
@@ -224,7 +237,7 @@
                 
                 <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
                     <span style="color:var(--tx2);">Success Rate</span>
-                    <span class="fw-bold text-success">{{ $provider->success_rate }}%</span>
+                    <span class="fw-bold {{ $provider->success_rate === null ? 'text-muted' : ($provider->success_rate >= 95 ? 'text-success' : 'text-warning') }}">{{ $provider->success_rate === null ? 'No data' : number_format($provider->success_rate, 2).'%' }}</span>
                 </div>
                 
                 <div class="d-flex justify-content-between" style="font-size:0.9rem;">
@@ -263,7 +276,10 @@
                         <td data-label="API Key">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="key-hidden">sk-********************************</span>
-                                <button class="btn btn-sm text-info p-0 test-conn-btn" title="Test Connection"><i class="fa-solid fa-plug-circle-check"></i></button>
+                                <form action="{{ route('admin.ai.providers.test', $provider->id) }}" method="POST">
+                                    @csrf
+                                    <button class="btn btn-sm text-info p-0" type="submit" title="Run schema-validated connection test"><i class="fa-solid fa-plug-circle-check"></i></button>
+                                </form>
                             </div>
                         </td>
                         <td data-label="Role">
@@ -408,17 +424,6 @@
     </div>
 </div>
 <script>
-    document.querySelectorAll('.test-conn-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            let icon = this.querySelector('i');
-            icon.className = 'fa-solid fa-spinner fa-spin text-warning';
-            setTimeout(() => {
-                icon.className = 'fa-solid fa-check text-success';
-                alert('Connection test successful!');
-            }, 1500);
-        });
-    });
-
     document.querySelectorAll('.edit-provider-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             let id = this.getAttribute('data-id');

@@ -2691,8 +2691,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function localSpeechReliabilityBand(score) {
  if (!Number.isFinite(score) || score <= 0) return 'Unavailable';
- if (score >= 85) return 'High';
- if (score >= 65) return 'Moderate';
+ if (score >= 95) return 'High';
+ if (score >= 65) return 'Below 95% Gate';
  return 'Limited';
  }
 

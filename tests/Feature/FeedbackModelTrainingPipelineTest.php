@@ -275,6 +275,11 @@ class FeedbackModelTrainingPipelineTest extends TestCase
 
  $this->assertTrue($service->available());
  $this->assertTrue($service->qualityStatus()['production_ready']);
+ $this->assertTrue($service->qualityStatus()['quality_gate']['passed']);
+ $this->assertSame(100, $service->qualityStatus()['thresholds']['minimum_validation_examples']);
+ $this->assertSame(5.0, $service->qualityStatus()['thresholds']['maximum_validation_mae']);
+ $this->assertSame(1.0, $service->qualityStatus()['thresholds']['minimum_human_reviewed_ratio']);
+ $this->assertFalse($service->qualityStatus()['accuracy_guaranteed']);
 
  $artifact = json_decode((string) file_get_contents($modelPath), true);
  unset($artifact['models']['grammar_score']);

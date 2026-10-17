@@ -89,6 +89,9 @@ class QuestionRecommendationPipelineTest extends TestCase
  $this->assertSame('Behavioral', $matches[0]['type']);
  $this->assertSame('speakready_reliable_question_bank', $matches[0]['source_type']);
  $this->assertSame('lexical_similarity', $matches[0]['selection_pipeline']);
+ $this->assertTrue(app(QuestionRecommendationService::class)->indexQuality()['production_ready']);
+ $this->assertFalse($matches[0]['accuracy_guaranteed']);
+ $this->assertTrue($matches[0]['decision_support_only']);
  }
 
  public function test_testing_environment_skips_sentence_bert_recommender_index(): void
@@ -107,8 +110,26 @@ class QuestionRecommendationPipelineTest extends TestCase
  'id' => 'q1',
  'dataset_key' => 'ph_job_interview',
  'question_text' => 'Tell me about a time you resolved a conflict.',
- 'embedding' => array_fill(0, 384, 0.0),
+ 'source_keys' => ['phpunit_hr_dataset'],
+ 'embedding' => array_merge([1.0], array_fill(0, 383, 0.0)),
  ]],
+ ], JSON_UNESCAPED_SLASHES));
+ $indexPath = Storage::disk('datasets')->path($index);
+ Storage::disk('datasets')->put($index.'.quality.json', json_encode([
+ 'schema_version' => 1,
+ 'index_schema_version' => 1,
+ 'database_type' => 'question_embedding_database',
+ 'embedding_backend' => 'sentence-bert',
+ 'embedding_model' => 'sentence-transformers/all-MiniLM-L6-v2',
+ 'embedding_dimensions' => 384,
+ 'record_count' => 1,
+ 'valid_record_percent' => 100,
+ 'source_backed_percent' => 100,
+ 'unique_question_percent' => 100,
+ 'index_size_bytes' => filesize($indexPath),
+ 'index_sha256' => hash_file('sha256', $indexPath),
+ 'production_ready' => true,
+ 'accuracy_guaranteed' => false,
  ], JSON_UNESCAPED_SLASHES));
 
  $category = Category::create([
@@ -140,6 +161,70 @@ class QuestionRecommendationPipelineTest extends TestCase
  Log::shouldHaveReceived('debug')
  ->once()
  ->with('Skipping Sentence-BERT question recommender during tests. Use a lexical_hash test index to exercise recommendations.');
+ }
+
+ public function test_question_embedding_index_fails_closed_after_artifact_tampering(): void
+ {
+ Storage::fake('datasets');
+
+ $input = 'normalized/questions/phpunit/tamper_source.jsonl';
+ $output = 'embeddings/questions/phpunit/tamper_index.json';
+ Storage::disk('datasets')->put($input, json_encode([
+ 'id' => 'tamper-q1',
+ 'dataset_key' => 'ph_job_interview',
+ 'category' => 'Job Interview',
+ 'country' => 'General',
+ 'question_text' => 'Describe a time you improved an onboarding process.',
+ 'type' => 'Behavioral',
+ 'difficulty' => 'Medium',
+ 'expected_guide' => 'Use verified evidence and explain the result.',
+ 'mapped_skills' => ['Onboarding', 'Process Improvement'],
+ 'source_keys' => ['phpunit_hr_dataset'],
+ ], JSON_UNESCAPED_SLASHES)."\n");
+
+ $this->artisan('ai:build-question-embedding-index', [
+ '--input' => $input,
+ '--output' => $output,
+ '--backend' => 'lexical_hash',
+ ])->assertSuccessful();
+
+ $indexPath = Storage::disk('datasets')->path($output);
+ $service = app(QuestionRecommendationService::class);
+ $this->assertTrue($service->indexQuality($indexPath)['production_ready']);
+
+ file_put_contents($indexPath, " ", FILE_APPEND);
+
+ $quality = $service->indexQuality($indexPath);
+ $this->assertFalse($quality['production_ready']);
+ $this->assertContains('embedding_index_hash_mismatch', $quality['reasons']);
+ $this->assertContains('embedding_index_size_mismatch', $quality['reasons']);
+ }
+
+ public function test_question_embedding_build_command_rejects_an_index_below_the_quality_gate(): void
+ {
+ Storage::fake('datasets');
+
+ $input = 'normalized/questions/phpunit/unverified_source.jsonl';
+ $output = 'embeddings/questions/phpunit/unverified_index.json';
+ Storage::disk('datasets')->put($input, json_encode([
+ 'id' => 'unverified-q1',
+ 'dataset_key' => 'ph_job_interview',
+ 'question_text' => 'What makes this interview question reliable?',
+ 'type' => 'Behavioral',
+ 'difficulty' => 'Medium',
+ 'source_keys' => [],
+ ], JSON_UNESCAPED_SLASHES)."\n");
+
+ $this->artisan('ai:build-question-embedding-index', [
+ '--input' => $input,
+ '--output' => $output,
+ '--backend' => 'lexical_hash',
+ ])->assertFailed();
+
+ $quality = app(QuestionRecommendationService::class)
+ ->indexQuality(Storage::disk('datasets')->path($output));
+ $this->assertFalse($quality['production_ready']);
+ $this->assertContains('embedding_index_quality_gate_failed', $quality['reasons']);
  }
 
  public function test_mock_interview_setup_defers_source_backed_questions_until_after_opening(): void

@@ -48,6 +48,12 @@ def bounded_score(value: Any, fallback: float = 0.0) -> float:
     return max(0.0, min(100.0, parsed))
 
 
+def conservative_score(value: Any, fallback: float = 0.0, decimals: int = 2) -> float:
+    bounded = bounded_score(value, fallback)
+    scale = 10**max(0, decimals)
+    return math.floor((bounded + 1e-12) * scale) / scale
+
+
 def import_unavailable(name: str, package: str) -> dict[str, Any]:
     return component(
         name,
@@ -105,7 +111,7 @@ def run_whisper(args: argparse.Namespace) -> dict[str, Any]:
         model=model_name,
         transcript=bounded_text(result.get("text"), 20000),
         language=result.get("language"),
-        confidence=round(confidence),
+        confidence=conservative_score(confidence),
         segments=segments,
     )
 
@@ -169,7 +175,7 @@ def run_faster_whisper(args: argparse.Namespace) -> dict[str, Any]:
         model=model_name,
         transcript=bounded_text(" ".join(transcript_parts), 20000),
         language=getattr(info, "language", None),
-        confidence=round(asr_confidence),
+        confidence=conservative_score(asr_confidence),
         segments=segments,
     )
 
@@ -440,7 +446,7 @@ def run_gop(args: argparse.Namespace, reference_text: str, alignment: dict[str, 
                 if not isinstance(decoded.get("score"), (int, float)):
                     return component("gop", "failed", provider="custom", reason="gop_score_missing")
                 decoded["score"] = round(bounded_score(decoded.get("score")))
-                decoded["confidence"] = round(bounded_score(decoded.get("confidence"), 80))
+                decoded["confidence"] = conservative_score(decoded.get("confidence"), 80)
                 return decoded
         except Exception as error:
             return component("gop", "failed", provider="custom", error=bounded_text(error, 800))
@@ -485,26 +491,59 @@ def reliability(asr: dict[str, Any], pronunciation: dict[str, Any], alignment: d
         if item.get("status") == "measured":
             components.append(name)
 
-    score = 0.0
-    if asr.get("status") == "measured" and bounded_text(asr.get("transcript")):
-        score += 0.25 * bounded_score(asr.get("confidence"), 65)
-    if pronunciation.get("status") == "measured":
-        score += 0.05 * min(55.0, bounded_score(pronunciation.get("reliability_score"), 40))
-    if alignment.get("status") == "measured" and alignment.get("word_alignments"):
-        score += 0.20 * 85.0
-    if phoneme_alignment.get("status") == "measured" and phoneme_alignment.get("phoneme_alignments"):
-        score += 0.15 * 85.0
-    if gop.get("status") == "measured":
-        method = bounded_text(gop.get("method")).lower()
-        if "proxy" in method or "not_clinical" in method:
-            score += 0.35 * 20.0
-        else:
-            score += 0.35 * bounded_score(gop.get("confidence"), 80)
+    asr_measured = asr.get("status") == "measured" and bool(bounded_text(asr.get("transcript")))
+    word_alignment_measured = alignment.get("status") == "measured" and bool(alignment.get("word_alignments"))
+    phoneme_alignment_measured = phoneme_alignment.get("status") == "measured" and bool(phoneme_alignment.get("phoneme_alignments"))
+    gop_method = bounded_text(gop.get("method")).lower()
+    true_gop_measured = (
+        gop.get("status") == "measured"
+        and "gop" in gop_method
+        and "proxy" not in gop_method
+        and "not_clinical" not in gop_method
+    )
+    asr_confidence = bounded_score(asr.get("confidence"), 0) if asr_measured else 0.0
+    gop_confidence = bounded_score(gop.get("confidence"), 0) if true_gop_measured else 0.0
 
-    score = min(95, int(round(score)))
-    band = "High" if score >= 85 else "Moderate" if score >= 65 else "Limited" if score > 0 else "Unavailable"
+    if true_gop_measured:
+        # This is evidence-completeness reliability, not pronunciation accuracy.
+        # A production-qualified result requires high-confidence ASR, successful
+        # word/phoneme alignment, and an explicitly confident true GOP scorer.
+        score = 0.0
+        score += 0.20 * asr_confidence
+        score += 0.20 * 100.0 if word_alignment_measured else 0.0
+        score += 0.15 * 100.0 if phoneme_alignment_measured else 0.0
+        score += 0.45 * gop_confidence
+        score = min(100, int(math.floor(score + 1e-12)))
+    else:
+        # Transcript-agreement proxies and incomplete pipelines are useful only
+        # as limited coaching signals and can never cross the production gate.
+        score = 0.0
+        score += 0.45 * bounded_score(asr.get("confidence"), 0) if asr_measured else 0.0
+        score += 0.15 * 100.0 if word_alignment_measured else 0.0
+        if pronunciation.get("status") == "measured":
+            score += 0.20 * min(55.0, bounded_score(pronunciation.get("reliability_score"), 0))
+        if gop.get("status") == "measured":
+            score += 0.20 * 20.0
+        score = min(94, int(math.floor(score + 1e-12)))
 
-    return {"score": score, "band": band, "measured_components": components}
+    band = "High" if score >= 95 else "Below 95% Gate" if score >= 65 else "Limited" if score > 0 else "Unavailable"
+
+    return {
+        "score": score,
+        "band": band,
+        "measured_components": components,
+        "minimum_reliability_percent": 95,
+        "production_qualified": (
+            score >= 95
+            and asr_confidence >= 95
+            and word_alignment_measured
+            and phoneme_alignment_measured
+            and true_gop_measured
+            and gop_confidence >= 95
+        ),
+        "accuracy_guaranteed": False,
+        "score_basis": "measured_component_completeness_not_pronunciation_accuracy",
+    }
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -550,7 +589,7 @@ def main() -> int:
         )
         gop = run_gop(args, reference_text, alignment, pronunciation)
         reliability_payload = reliability(asr, pronunciation, alignment, phoneme_alignment, gop)
-        status = "measured" if reliability_payload["score"] >= 65 else "partial" if reliability_payload["score"] > 0 else "not_measured"
+        status = "measured" if reliability_payload["production_qualified"] else "partial" if reliability_payload["score"] > 0 else "not_measured"
 
         limitations = []
         for item in [asr, pronunciation, alignment, phoneme_alignment, gop]:

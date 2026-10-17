@@ -15,6 +15,8 @@
     $userRequestNote = $userRequestContext['note'] ?? 'Only generated questions and feedback tied to the selected user request are shown.';
     $questionRouting = $interviewRouting['question_generation'] ?? [];
     $feedbackRouting = $interviewRouting['feedback_generation'] ?? [];
+    $providerThresholds = $providerPolicy['thresholds'] ?? [];
+    $minimumEvidenceCount = $providerPolicy['minimum_evidence_count'] ?? 3;
     $routingMeta = function (array $routing): string {
         $parts = array_values(array_filter([
             ($routing['rank_score'] ?? null) !== null ? 'Rank '.$routing['rank_score'].'%' : null,
@@ -22,7 +24,20 @@
             ($routing['reliability_score'] ?? null) !== null ? 'Reliability '.$routing['reliability_score'].'%' : null,
         ]));
 
-        return $parts !== [] ? implode(' · ', $parts) : 'Run comparison evidence to route interviews by ranking.';
+        if ($parts !== []) {
+            return implode(' · ', $parts);
+        }
+
+        if (!empty($routing['has_evidence'])) {
+            $failed = array_map(
+                fn ($check) => str_replace('_', ' ', (string) $check),
+                (array) ($routing['candidate_failed_checks'] ?? [])
+            );
+
+            return 'Blocked by gate'.($failed !== [] ? ': '.implode(', ', $failed) : '.');
+        }
+
+        return 'Run comparison evidence to qualify a provider.';
     };
 @endphp
 
@@ -159,6 +174,16 @@
         <span>{{ $activeConfiguredProviders }}/{{ $minimumProviders }} active APIs</span>
     </div>
 
+    <div class="alert alert-info mb-4" role="status">
+        <strong>Fail-closed provider policy:</strong>
+        quality {{ $providerThresholds['quality_score'] ?? 95 }}%,
+        accuracy {{ $providerThresholds['accuracy_score'] ?? 95 }}%,
+        reliability {{ $providerThresholds['reliability_score'] ?? 95 }}%, and
+        request success {{ $providerThresholds['result_success_rate'] ?? 95 }}% or higher;
+        schema and safety must reach {{ $providerThresholds['schema_score'] ?? 100 }}%, with at least {{ $minimumEvidenceCount }} successful samples.
+        <small class="d-block mt-1">These are measured promotion gates, not a promise that probabilistic output is factually correct 95–100% of the time. Outputs still pass task-specific validation.</small>
+    </div>
+
     <div id="ai-provider-evaluation-live"
         data-ai-eval-live
         data-live-url="{{ $realtimeUrl }}"
@@ -190,13 +215,13 @@
         </div>
         <div class="ai-eval-card">
             <span class="ai-eval-card-icon text-primary"><i class="fa-solid fa-circle-question"></i></span>
-            <strong>{{ $questionRouting['provider_name'] ?? 'No Ranking' }}</strong>
+            <strong>{{ $questionRouting['provider_name'] ?? 'No Eligible Provider' }}</strong>
             <small>Interview Questions Use</small>
             <b>{{ $routingMeta($questionRouting) }}</b>
         </div>
         <div class="ai-eval-card">
             <span class="ai-eval-card-icon text-success"><i class="fa-solid fa-comments"></i></span>
-            <strong>{{ $feedbackRouting['provider_name'] ?? 'No Ranking' }}</strong>
+            <strong>{{ $feedbackRouting['provider_name'] ?? 'No Eligible Provider' }}</strong>
             <small>Interview Feedback Uses</small>
             <b>{{ $routingMeta($feedbackRouting) }}</b>
         </div>

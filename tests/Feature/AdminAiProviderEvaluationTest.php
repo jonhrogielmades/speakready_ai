@@ -426,7 +426,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  $this->assertDatabaseHas('ai_provider_evaluation_results', [
  'provider_key' => 'groq',
  'task_type' => 'question_generation',
- 'status' => 'success',
+ 'status' => 'failed',
  ]);
  $this->assertDatabaseHas('ai_provider_evaluation_results', [
  'provider_key' => 'groq',
@@ -436,7 +436,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  $this->assertDatabaseHas('ai_provider_evaluation_results', [
  'provider_key' => 'cohere',
  'task_type' => 'question_generation',
- 'status' => 'success',
+ 'status' => 'failed',
  ]);
  $this->assertDatabaseHas('ai_provider_evaluation_results', [
  'provider_key' => 'cohere',
@@ -493,6 +493,7 @@ class AdminAiProviderEvaluationTest extends TestCase
 
  public function test_interview_provider_selector_uses_highest_ranked_question_and_feedback_results(): void
  {
+ config()->set('services.ai_providers.min_benchmark_samples', 1);
  $this->clearProviderEnv();
  $openAi = $this->configuredProvider('OpenAI', true);
  $groq = $this->configuredProvider('Groq', false);
@@ -512,12 +513,12 @@ class AdminAiProviderEvaluationTest extends TestCase
  ]);
 
  foreach ([
- [$openAi, 'openai', 'OpenAI', 'question_generation', 78, 76, 100, 900],
- [$groq, 'groq', 'Groq', 'question_generation', 94, 93, 100, 1200],
- [$cohere, 'cohere', 'Cohere', 'question_generation', 86, 91, 100, 700],
- [$openAi, 'openai', 'OpenAI', 'feedback_generation', 80, 78, 100, 850],
- [$groq, 'groq', 'Groq', 'feedback_generation', 86, 84, 100, 800],
- [$cohere, 'cohere', 'Cohere', 'feedback_generation', 97, 96, 100, 1400],
+ [$openAi, 'openai', 'OpenAI', 'question_generation', 96, 95, 100, 900],
+ [$groq, 'groq', 'Groq', 'question_generation', 99, 98, 100, 1200],
+ [$cohere, 'cohere', 'Cohere', 'question_generation', 97, 96, 100, 700],
+ [$openAi, 'openai', 'OpenAI', 'feedback_generation', 95, 95, 100, 850],
+ [$groq, 'groq', 'Groq', 'feedback_generation', 96, 95, 100, 800],
+ [$cohere, 'cohere', 'Cohere', 'feedback_generation', 99, 98, 100, 1400],
  ] as [$provider, $providerKey, $providerName, $taskType, $quality, $accuracy, $schema, $latency]) {
  AiProviderEvaluationResult::create([
  'run_id' => $run->id,
@@ -529,7 +530,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  'status' => 'success',
  'response_time_ms' => $latency,
  'quality_score' => $quality,
- 'reliability_score' => 95,
+ 'reliability_score' => 100,
  'schema_score' => $schema,
  'accuracy_score' => $accuracy,
  'safety_score' => 100,
@@ -542,6 +543,44 @@ class AdminAiProviderEvaluationTest extends TestCase
 
  $this->assertSame('groq', $selector->bestProviderKeyForInterviewTask('question_generation'));
  $this->assertSame('cohere', $selector->bestProviderKeyForInterviewTask('feedback_generation'));
+ }
+
+ public function test_interview_provider_selector_fails_closed_below_95_percent(): void
+ {
+ config()->set('services.ai_providers.min_benchmark_samples', 1);
+ $this->clearProviderEnv();
+ $provider = $this->configuredProvider('OpenAI', true);
+ $run = AiProviderEvaluationRun::create([
+ 'benchmark_version' => AiProviderEvaluationService::USER_REQUEST_COMPARISON_VERSION,
+ 'status' => 'completed',
+ 'started_at' => now(),
+ 'completed_at' => now(),
+ 'provider_count' => 1,
+ 'case_count' => 1,
+ ]);
+
+ AiProviderEvaluationResult::create([
+ 'run_id' => $run->id,
+ 'provider_id' => $provider->id,
+ 'provider_key' => 'openai',
+ 'provider_name' => 'OpenAI',
+ 'task_type' => 'question_generation',
+ 'case_key' => 'below_gate',
+ 'status' => 'failed',
+ 'response_time_ms' => 700,
+ 'quality_score' => 94,
+ 'reliability_score' => 100,
+ 'schema_score' => 100,
+ 'accuracy_score' => 100,
+ 'safety_score' => 100,
+ 'output_excerpt' => '{}',
+ 'evidence' => ['warnings' => []],
+ ]);
+
+ $selector = app(AiProviderEvaluationService::class);
+
+ $this->assertNull($selector->bestProviderKeyForInterviewTask('question_generation'));
+ $this->assertTrue($selector->hasProviderEvidenceForInterviewTask('question_generation'));
  }
 
  public function test_interview_provider_selector_penalizes_inconsistent_evaluation_results(): void
@@ -579,7 +618,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  'evidence' => ['warnings' => $runNumber === 1? []: ['Provider failed.']],
  ]);
 
- foreach ([[$groq, 'groq', 'Groq', 88], [$cohere, 'cohere', 'Cohere', 82]] as [$provider, $key, $name, $score]) {
+ foreach ([[$groq, 'groq', 'Groq', 98], [$cohere, 'cohere', 'Cohere', 96]] as [$provider, $key, $name, $score]) {
  AiProviderEvaluationResult::create([
  'run_id' => $run->id,
  'provider_id' => $provider->id,
@@ -605,6 +644,7 @@ class AdminAiProviderEvaluationTest extends TestCase
 
  public function test_interview_provider_selector_uses_live_log_reliability_when_scores_are_close(): void
  {
+ config()->set('services.ai_providers.min_benchmark_samples', 1);
  $this->clearProviderEnv();
  $openAi = $this->configuredProvider('OpenAI', true);
  $groq = $this->configuredProvider('Groq', false);
@@ -619,9 +659,9 @@ class AdminAiProviderEvaluationTest extends TestCase
  ]);
 
  foreach ([
- [$openAi, 'openai', 'OpenAI', 87, 87],
- [$groq, 'groq', 'Groq', 92, 92],
- [$cohere, 'cohere', 'Cohere', 94, 94],
+ [$openAi, 'openai', 'OpenAI', 96, 96],
+ [$groq, 'groq', 'Groq', 98, 98],
+ [$cohere, 'cohere', 'Cohere', 99, 99],
  ] as [$provider, $key, $name, $quality, $accuracy]) {
  AiProviderEvaluationResult::create([
  'run_id' => $run->id,
@@ -633,7 +673,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  'status' => 'success',
  'response_time_ms' => 900,
  'quality_score' => $quality,
- 'reliability_score' => 95,
+ 'reliability_score' => 100,
  'schema_score' => 100,
  'accuracy_score' => $accuracy,
  'safety_score' => 100,
@@ -788,6 +828,8 @@ class AdminAiProviderEvaluationTest extends TestCase
 
  private function rankedEvaluationRun(AiProvider $openAi, AiProvider $groq, AiProvider $cohere): AiProviderEvaluationRun
  {
+ config()->set('services.ai_providers.min_benchmark_samples', 1);
+
  $run = AiProviderEvaluationRun::create([
  'benchmark_version' => AiProviderEvaluationService::USER_REQUEST_COMPARISON_VERSION,
  'status' => 'completed',
@@ -802,12 +844,12 @@ class AdminAiProviderEvaluationTest extends TestCase
  ]);
 
  foreach ([
- [$openAi, 'openai', 'OpenAI', 'question_generation', 78, 76, 100, 900],
- [$groq, 'groq', 'Groq', 'question_generation', 94, 93, 100, 1200],
- [$cohere, 'cohere', 'Cohere', 'question_generation', 86, 91, 100, 700],
- [$openAi, 'openai', 'OpenAI', 'feedback_generation', 80, 78, 100, 850],
- [$groq, 'groq', 'Groq', 'feedback_generation', 86, 84, 100, 800],
- [$cohere, 'cohere', 'Cohere', 'feedback_generation', 97, 96, 100, 1400],
+ [$openAi, 'openai', 'OpenAI', 'question_generation', 99, 99, 100, 900],
+ [$groq, 'groq', 'Groq', 'question_generation', 97, 97, 100, 1200],
+ [$cohere, 'cohere', 'Cohere', 'question_generation', 96, 96, 100, 700],
+ [$openAi, 'openai', 'OpenAI', 'feedback_generation', 95, 95, 100, 850],
+ [$groq, 'groq', 'Groq', 'feedback_generation', 97, 97, 100, 800],
+ [$cohere, 'cohere', 'Cohere', 'feedback_generation', 99, 99, 100, 1400],
  ] as [$provider, $providerKey, $providerName, $taskType, $quality, $accuracy, $schema, $latency]) {
  AiProviderEvaluationResult::create([
  'run_id' => $run->id,
@@ -819,7 +861,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  'status' => 'success',
  'response_time_ms' => $latency,
  'quality_score' => $quality,
- 'reliability_score' => 95,
+ 'reliability_score' => 100,
  'schema_score' => $schema,
  'accuracy_score' => $accuracy,
  'safety_score' => 100,
@@ -836,6 +878,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  return AiProvider::create([
  'name' => $name,
  'api_endpoint' => match (strtolower($name)) {
+ 'gemini' => 'https://generativelanguage.googleapis.com/v1beta',
  'groq' => 'https://api.groq.com/openai/v1',
  'cohere' => 'https://api.cohere.com/v2/chat',
  default => 'https://api.openai.com/v1',

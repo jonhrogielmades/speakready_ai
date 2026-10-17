@@ -4178,10 +4178,20 @@ return response()->json([
  }
 
  try {
- $rankedProvider = app(AiProviderEvaluationService::class)->bestProviderKeyForInterviewTask($taskType);
+ $evaluation = app(AiProviderEvaluationService::class);
+ $rankedProvider = $evaluation->bestProviderKeyForInterviewTask($taskType);
 
  if ($rankedProvider && AIService::providerIsConfigured($rankedProvider)) {
  return $rankedProvider;
+ }
+
+ if ($evaluation->hasProviderEvidenceForInterviewTask($taskType)) {
+ Log::warning('AI provider routing was blocked because no evaluated provider passed every reliability gate.', [
+ 'task_type' => $taskType,
+ 'fallback_provider' => 'local',
+ ]);
+
+ return 'local';
  }
  } catch (\Throwable $error) {
  Log::warning('AI provider ranking lookup failed; using configured default provider.', [

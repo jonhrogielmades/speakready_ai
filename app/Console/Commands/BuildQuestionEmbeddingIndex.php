@@ -92,7 +92,17 @@ class BuildQuestionEmbeddingIndex extends Command
  return self::FAILURE;
  }
 
- $this->line(trim($result->getOutput()));
+ $outputText = trim($result->getOutput());
+ $quality = $recommendations->indexQuality($outputPath);
+ if (($quality['production_ready']?? false)!== true) {
+ $this->error('Question embedding index failed the production quality and integrity gate.');
+ $this->line($outputText);
+ $this->line('Failed checks: '.implode(', ', (array) ($quality['reasons']?? ['unknown_quality_failure'])));
+
+ return self::FAILURE;
+ }
+
+ $this->line($outputText);
  $this->info("Question embedding database saved to {$outputPath}");
 
  return self::SUCCESS;

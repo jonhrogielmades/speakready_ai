@@ -73,6 +73,9 @@ class KnnReadinessClassifierTest extends TestCase
         $this->assertLessThan(95, $result->confidence);
         $this->assertLessThanOrEqual($result->raw_confidence, $result->confidence);
         $this->assertNotSame('Very High', $result->reliability_band);
+        $this->assertFalse($result->meets_reliability_gate);
+        $this->assertFalse($result->eligible_for_automated_decision);
+        $this->assertFalse($result->accuracy_guaranteed);
         $this->assertGreaterThan(0, $result->raw_confidence);
         $this->assertArrayHasKey('Ready for Simulation', $result->label_votes);
     }

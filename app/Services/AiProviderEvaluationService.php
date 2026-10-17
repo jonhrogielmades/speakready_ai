@@ -24,11 +24,6 @@ class AiProviderEvaluationService
     private const INTERVIEW_RANKING_TASKS = ['question_generation', 'feedback_generation'];
     private const INTERVIEW_RANKING_LOOKBACK_DAYS = 30;
     private const INTERVIEW_RANKING_RUN_LIMIT = 5;
-    private const INTERVIEW_RANKING_MIN_QUALITY_SCORE = 60;
-    private const INTERVIEW_RANKING_MIN_ACCURACY_SCORE = 60;
-    private const INTERVIEW_RANKING_MIN_SCHEMA_SCORE = 70;
-    private const INTERVIEW_RANKING_MIN_SAFETY_SCORE = 80;
-
     public const EXPORT_COLUMNS = [
         'Row Type',
         'Provider',
@@ -109,6 +104,12 @@ class AiProviderEvaluationService
             'generatedOutputs' => $this->generatedOutputs($days, $selectedRun, $userRequestContext['session_id'] ?? null),
             'userRequestContext' => $userRequestContext,
             'interviewRouting' => $this->interviewRoutingRecommendations(),
+            'providerPolicy' => [
+                'version' => AiProviderReliabilityService::VERSION,
+                'thresholds' => $this->reliabilityPolicy()->thresholds(),
+                'minimum_evidence_count' => $this->reliabilityPolicy()->minimumBenchmarkSamples(),
+                'accuracy_guaranteed' => false,
+            ],
         ];
     }
 
@@ -200,6 +201,33 @@ class AiProviderEvaluationService
         $winner = $this->bestInterviewProviderRankingRow($taskType, $activeProviderKeys);
 
         return $winner['provider_key'] ?? null;
+    }
+
+    public function hasProviderEvidenceForInterviewTask(string $taskType): bool
+    {
+        AiProviderEvaluationSchema::ensure();
+
+        $taskType = trim($taskType);
+        if (! in_array($taskType, self::INTERVIEW_RANKING_TASKS, true)) {
+            return false;
+        }
+
+        $activeProviderKeys = $this->activeConfiguredProviderKeys();
+        if ($activeProviderKeys === []) {
+            return false;
+        }
+
+        $rows = $this->interviewProviderRankingRows(
+            $taskType,
+            $activeProviderKeys,
+            self::USER_REQUEST_COMPARISON_VERSION
+        );
+
+        if ($rows->isEmpty()) {
+            $rows = $this->interviewProviderRankingRows($taskType, $activeProviderKeys);
+        }
+
+        return $rows->isNotEmpty();
     }
 
     public function clearAllEvidence(): array
@@ -668,7 +696,16 @@ class AiProviderEvaluationService
             }
 
             $responseTime = (int) round((microtime(true) - $startedAt) * 1000);
-            $status = ($score['schema_score'] ?? 0) > 0 ? 'success' : 'failed';
+            $score['reliability_score'] = $this->latencyScore($responseTime);
+            $qualityGate = $this->reliabilityPolicy()->evaluate([
+                ...$score,
+                'result_success_rate' => 100,
+                'successful_evidence_count' => 1,
+            ], false);
+            $score['evidence'] = array_merge((array) ($score['evidence'] ?? []), [
+                'quality_gate' => $qualityGate,
+            ]);
+            $status = $qualityGate['passed'] ? 'success' : 'failed';
 
             return $this->resultPayload($run, $provider, $case, $status, $responseTime, $score, $output);
         } catch (\Throwable $error) {
@@ -707,7 +744,7 @@ class AiProviderEvaluationService
             'status' => $status,
             'response_time_ms' => $responseTime,
             'quality_score' => $this->scoreValue($score['quality_score'] ?? 0),
-            'reliability_score' => $this->scoreValue($this->latencyScore($responseTime)),
+            'reliability_score' => $this->scoreValue($score['reliability_score'] ?? $this->latencyScore($responseTime)),
             'schema_score' => $this->scoreValue($score['schema_score'] ?? 0),
             'accuracy_score' => $this->scoreValue($score['accuracy_score'] ?? 0),
             'safety_score' => $this->scoreValue($score['safety_score'] ?? 0),
@@ -1731,10 +1768,17 @@ class AiProviderEvaluationService
 
         return collect(self::INTERVIEW_RANKING_TASKS)
             ->mapWithKeys(function (string $taskType) use ($activeProviderKeys, $providersByKey): array {
-                $winner = $activeProviderKeys === []
-                    ? null
-                    : $this->bestInterviewProviderRankingRow($taskType, $activeProviderKeys);
+                $rankedProviders = $activeProviderKeys === []
+                    ? collect()
+                    : $this->interviewProviderRankingRows($taskType, $activeProviderKeys, self::USER_REQUEST_COMPARISON_VERSION);
+                if ($rankedProviders->isEmpty() && $activeProviderKeys !== []) {
+                    $rankedProviders = $this->interviewProviderRankingRows($taskType, $activeProviderKeys);
+                }
+
+                $winner = $rankedProviders->first(fn (array $row): bool => $row['meets_quality_gate']);
+                $bestCandidate = $rankedProviders->first();
                 $provider = $winner ? $providersByKey->get($winner['provider_key']) : null;
+                $candidateProvider = $bestCandidate ? $providersByKey->get($bestCandidate['provider_key']) : null;
 
                 return [$taskType => [
                     'task_type' => $taskType,
@@ -1749,9 +1793,14 @@ class AiProviderEvaluationService
                     'successful_evidence_count' => $winner['successful_evidence_count'] ?? 0,
                     'total_evidence_count' => $winner['total_evidence_count'] ?? 0,
                     'meets_quality_gate' => (bool) ($winner['meets_quality_gate'] ?? false),
+                    'candidate_provider_name' => $candidateProvider['provider_name'] ?? null,
+                    'candidate_failed_checks' => $bestCandidate['quality_gate']['failed_checks'] ?? [],
+                    'has_evidence' => $bestCandidate !== null,
                     'label' => $winner
                         ? (($provider['provider_name'] ?? $winner['provider_key']).' · Rank '.$winner['rank_score'].'%')
-                        : 'No ranked provider evidence yet',
+                        : ($bestCandidate
+                            ? 'No provider passed every 95% reliability gate'
+                            : 'No ranked provider evidence yet'),
                 ]];
             })
             ->all();
@@ -1769,8 +1818,7 @@ class AiProviderEvaluationService
             $rankedProviders = $this->interviewProviderRankingRows($taskType, $activeProviderKeys);
         }
 
-        return $rankedProviders->first(fn (array $row): bool => $row['meets_quality_gate'])
-            ?? $rankedProviders->first();
+        return $rankedProviders->first(fn (array $row): bool => $row['meets_quality_gate']);
     }
 
     private function interviewProviderRankingRows(string $taskType, array $activeProviderKeys, ?string $benchmarkVersion = null): Collection
@@ -1802,7 +1850,7 @@ class AiProviderEvaluationService
         return $rankingResults
             ->groupBy('provider_key')
             ->map(fn (Collection $rows): array => $this->interviewProviderRankingRow($rows, $taskType, $runWeights))
-            ->filter(fn (array $row): bool => $row['successful_evidence_count'] > 0 && $row['rank_score'] > 0)
+            ->filter(fn (array $row): bool => $row['total_evidence_count'] > 0)
             ->sort(fn (array $a, array $b): int => $this->compareInterviewProviderRankRows($a, $b))
             ->values();
     }
@@ -1863,6 +1911,15 @@ class AiProviderEvaluationService
             + ($schemaScore * 0.15)
             + ($safetyScore * 0.10)
         );
+        $qualityGate = $this->reliabilityPolicy()->evaluate([
+            'quality_score' => $qualityScore,
+            'accuracy_score' => $accuracyScore,
+            'reliability_score' => $reliabilityScore,
+            'schema_score' => $schemaScore,
+            'safety_score' => $safetyScore,
+            'result_success_rate' => $successRate,
+            'successful_evidence_count' => $successfulEvidenceCount,
+        ]);
 
         return [
             'provider_key' => $providerKey,
@@ -1879,12 +1936,14 @@ class AiProviderEvaluationService
             'operational_request_count' => $operational['requests'] ?? 0,
             'successful_evidence_count' => $successfulEvidenceCount,
             'total_evidence_count' => $totalEvidenceCount,
-            'meets_quality_gate' => $qualityScore >= self::INTERVIEW_RANKING_MIN_QUALITY_SCORE
-                && $accuracyScore >= self::INTERVIEW_RANKING_MIN_ACCURACY_SCORE
-                && $schemaScore >= self::INTERVIEW_RANKING_MIN_SCHEMA_SCORE
-                && $safetyScore >= self::INTERVIEW_RANKING_MIN_SAFETY_SCORE
-                && $successRate >= 50,
+            'meets_quality_gate' => (bool) $qualityGate['passed'],
+            'quality_gate' => $qualityGate,
         ];
+    }
+
+    private function reliabilityPolicy(): AiProviderReliabilityService
+    {
+        return app(AiProviderReliabilityService::class);
     }
 
     private function compareInterviewProviderRankRows(array $a, array $b): int
@@ -2062,19 +2121,20 @@ class AiProviderEvaluationService
         }
 
         return match (true) {
-            $overallScore >= 85 => 'Strong evidence for accurate and reliable use in this system.',
-            $overallScore >= 70 => 'Acceptable evidence, with normal monitoring recommended.',
-            $overallScore >= 55 => 'Usable but should be reviewed before being preferred.',
-            default => 'Needs review before being used as the main provider.',
+            $overallScore >= 95 => 'Strong measured evidence. Keep monitoring; this is not a factual-accuracy guarantee.',
+            $overallScore >= 85 => 'Good evidence, but still below the 95% provider promotion target.',
+            $overallScore >= 70 => 'Below the provider promotion target and not eligible for automatic preference.',
+            default => 'Insufficient evidence for automatic provider preference.',
         };
     }
 
     private function scoreLabel(int $score): string
     {
         return match (true) {
-            $score >= 85 => 'Strong',
-            $score >= 70 => 'Acceptable',
-            $score >= 55 => 'Needs Review',
+            $score >= 95 => 'Strong',
+            $score >= 85 => 'Below 95 Gate',
+            $score >= 70 => 'Needs Review',
+            $score >= 55 => 'High Risk',
             $score > 0 => 'High Risk',
             default => 'No Evidence',
         };
@@ -2133,7 +2193,9 @@ class AiProviderEvaluationService
             return 0;
         }
 
-        return max(0, min(100, (int) round((float) $value)));
+        // Stored provider scores are integers, so truncate rather than allowing
+        // a sub-threshold decimal (for example 94.9) to be promoted to 95.
+        return max(0, min(100, (int) floor((float) $value + PHP_FLOAT_EPSILON)));
     }
 
     private function cleanDays(int $days): int

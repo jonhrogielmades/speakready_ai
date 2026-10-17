@@ -12,6 +12,8 @@ use Symfony\Component\Process\Process;
 
 class QuestionRecommendationService
 {
+ private static array $indexQualityCache = [];
+
  public function enabled(): bool
  {
  return filter_var(config('services.question_recommender.enabled', true), FILTER_VALIDATE_BOOLEAN);
@@ -22,7 +24,146 @@ class QuestionRecommendationService
  return $this->enabled()
  && is_file($this->indexPath())
  && is_readable($this->indexPath())
- && is_file($this->scriptPath());
+ && is_file($this->scriptPath())
+ && $this->indexQuality()['production_ready'];
+ }
+
+ public function indexQuality(?string $indexPath = null): array
+ {
+ $path = $indexPath === null ? $this->indexPath() : $this->resolvePath($indexPath);
+ if (! is_file($path) || ! is_readable($path)) {
+ return $this->failedIndexQuality('embedding_index_missing');
+ }
+
+ $manifestPath = $path.'.quality.json';
+ if (! is_file($manifestPath) || ! is_readable($manifestPath)) {
+ return $this->failedIndexQuality('embedding_index_quality_manifest_missing');
+ }
+
+ $manifestContents = @file_get_contents($manifestPath);
+ if (! is_string($manifestContents)) {
+ return $this->failedIndexQuality('embedding_index_quality_manifest_unreadable');
+ }
+
+ $indexSize = @filesize($path);
+ $indexModifiedAt = @filemtime($path);
+ $cacheKey = $path.'|'.(string) $indexSize.'|'.(string) $indexModifiedAt.'|'.hash('sha256', $manifestContents);
+ if (isset(self::$indexQualityCache[$cacheKey])) {
+ return self::$indexQualityCache[$cacheKey];
+ }
+
+ $manifest = json_decode($manifestContents, true);
+ if (! is_array($manifest)) {
+ return self::$indexQualityCache[$cacheKey] = $this->failedIndexQuality('embedding_index_quality_manifest_invalid');
+ }
+
+ $recordCount = max(0, (int) ($manifest['record_count']?? 0));
+ $dimensions = max(0, (int) ($manifest['embedding_dimensions']?? 0));
+ $integrityPercent = $this->manifestPercentage($manifest['valid_record_percent']?? null);
+ $sourcePercent = $this->manifestPercentage($manifest['source_backed_percent']?? null);
+ $uniquePercent = $this->manifestPercentage($manifest['unique_question_percent']?? null);
+ $expectedHash = strtolower(trim((string) ($manifest['index_sha256']?? '')));
+ $actualHash = @hash_file('sha256', $path);
+ $hashMatches = preg_match('/^[a-f0-9]{64}$/', $expectedHash) === 1
+ && is_string($actualHash)
+ && hash_equals($expectedHash, strtolower($actualHash));
+ $sizeMatches = is_numeric($indexSize)
+ && (int) $indexSize > 0
+ && (int) ($manifest['index_size_bytes']?? 0) === (int) $indexSize;
+ $schemaValid = (int) ($manifest['schema_version']?? 0) === 1
+ && (int) ($manifest['index_schema_version']?? 0) === 1
+ && ($manifest['database_type']?? null) === 'question_embedding_database'
+ && in_array($manifest['embedding_backend']?? null, ['sentence-bert', 'lexical_hash'], true)
+ && $dimensions >= 32
+ && $dimensions <= 4096
+ && $integrityPercent !== null
+ && $sourcePercent !== null
+ && $uniquePercent !== null;
+ $gate = app(AlgorithmReliabilityService::class)->evaluate(
+ 'question_embedding_retrieval',
+ [
+ 'quality' => $integrityPercent !== null && $uniquePercent !== null? min($integrityPercent, $uniquePercent): null,
+ 'reliability' => $sourcePercent,
+ ],
+ ['quality', 'reliability'],
+ $recordCount,
+ 1,
+ 'embedding_integrity_source_provenance_and_duplicate_checks'
+ );
+ $reasons = [];
+ if (! $schemaValid) {
+ $reasons[] = 'embedding_index_schema_invalid';
+ }
+ if ($recordCount === 0) {
+ $reasons[] = 'embedding_index_empty';
+ }
+ if (! $hashMatches) {
+ $reasons[] = 'embedding_index_hash_mismatch';
+ }
+ if (! $sizeMatches) {
+ $reasons[] = 'embedding_index_size_mismatch';
+ }
+ if (! $gate['passed']) {
+ $reasons[] = 'embedding_index_quality_gate_failed';
+ }
+
+ // Retrieval has no held-out ranking-accuracy metric in this artifact, so it
+ // remains decision support even when structural/source checks pass.
+ $gate['eligible_for_automated_decision'] = false;
+ $gate['decision_support_only'] = true;
+
+ return self::$indexQualityCache[$cacheKey] = [
+ 'production_ready' => $schemaValid && $recordCount > 0 && $hashMatches && $sizeMatches && $reasons === [],
+ 'reasons' => $reasons,
+ 'record_count' => $recordCount,
+ 'valid_record_percent' => $integrityPercent,
+ 'source_backed_percent' => $sourcePercent,
+ 'unique_question_percent' => $uniquePercent,
+ 'embedding_backend' => $manifest['embedding_backend']?? null,
+ 'embedding_dimensions' => $dimensions,
+ 'index_sha256' => is_string($actualHash)? strtolower($actualHash): null,
+ 'quality_manifest_path' => $manifestPath,
+ 'quality_gate' => $gate,
+ 'accuracy_guaranteed' => false,
+ ];
+ }
+
+ private function manifestPercentage(mixed $value):?float
+ {
+ if (! is_numeric($value) || ! is_finite((float) $value)) {
+ return null;
+ }
+
+ $value = (float) $value;
+
+ return $value >= 0 && $value <= 100? round($value, 2): null;
+ }
+
+ private function failedIndexQuality(string $reason): array
+ {
+ $gate = app(AlgorithmReliabilityService::class)->evaluate(
+ 'question_embedding_retrieval',
+ [],
+ ['quality', 'reliability'],
+ 0,
+ 1,
+ 'embedding_integrity_source_provenance_and_duplicate_checks'
+ );
+ $gate['eligible_for_automated_decision'] = false;
+ $gate['decision_support_only'] = true;
+
+ return [
+ 'production_ready' => false,
+ 'reasons' => [$reason],
+ 'record_count' => 0,
+ 'valid_record_percent' => 0.0,
+ 'source_backed_percent' => 0.0,
+ 'unique_question_percent' => 0.0,
+ 'embedding_backend' => null,
+ 'embedding_dimensions' => 0,
+ 'quality_gate' => $gate,
+ 'accuracy_guaranteed' => false,
+ ];
  }
 
  public function pythonBinary(): string
@@ -82,10 +223,6 @@ class QuestionRecommendationService
  return false;
  }
 
- if (! filter_var(config('services.question_recommender.trained_model_require_validation', true), FILTER_VALIDATE_BOOLEAN)) {
- return true;
- }
-
  return $this->trainedModelQuality()['production_ready'];
  }
 
@@ -93,24 +230,12 @@ class QuestionRecommendationService
  {
  $path = $this->trainedModelValidationPath();
  if (! is_file($path) || ! is_readable($path)) {
- return [
- 'production_ready' => false,
- 'reasons' => ['validation_metrics_missing'],
- 'evaluation_examples' => 0,
- 'precision_at_5' => null,
- 'model_sha256' => null,
- ];
+ return $this->failedTrainedModelQuality('validation_metrics_missing');
  }
 
  $payload = json_decode((string) file_get_contents($path), true);
  if (! is_array($payload)) {
- return [
- 'production_ready' => false,
- 'reasons' => ['validation_metrics_invalid'],
- 'evaluation_examples' => 0,
- 'precision_at_5' => null,
- 'model_sha256' => null,
- ];
+ return $this->failedTrainedModelQuality('validation_metrics_invalid');
  }
 
  $evaluationExamples = (int) ($payload['evaluation_examples']?? 0);
@@ -118,34 +243,102 @@ class QuestionRecommendationService
  $expectedModelHash = strtolower(trim((string) ($payload['model_sha256']?? '')));
  $modelFile = $this->trainedModelPath().DIRECTORY_SEPARATOR.'model.safetensors';
  $modelHash = is_file($modelFile) && is_readable($modelFile)? hash_file('sha256', $modelFile): false;
- $minimumExamples = max(1, (int) config('services.question_recommender.trained_model_min_evaluation_examples', 200));
- $minimumPrecision = max(0, min(1, (float) config('services.question_recommender.trained_model_min_precision_at_5', 0.95)));
+ $algorithmPolicy = app(AlgorithmReliabilityService::class);
+ $minimumExamples = max(
+ 200,
+ $algorithmPolicy->minimumEvidenceCount(),
+ (int) config('services.question_recommender.trained_model_min_evaluation_examples', 200)
+ );
+ $minimumPrecision = max(0.95, min(1, (float) config('services.question_recommender.trained_model_min_precision_at_5', 0.95)));
  $reasons = [];
+ $validPrecision = is_numeric($precisionAtFive)
+ && is_finite((float) $precisionAtFive)
+ && (float) $precisionAtFive >= 0
+ && (float) $precisionAtFive <= 1;
+ $schemaValid = (int) ($payload['schema_version']?? 0) === 1;
+ $heldOut = ($payload['data_split']?? null) === 'held_out';
+ $hashMatches = $expectedModelHash !== ''
+ && preg_match('/^[a-f0-9]{64}$/', $expectedModelHash) === 1
+ && is_string($modelHash)
+ && hash_equals($expectedModelHash, strtolower($modelHash));
 
- if ((int) ($payload['schema_version']?? 0)!== 1) {
+ if (! $schemaValid) {
  $reasons[] = 'unsupported_validation_schema';
  }
  if ($evaluationExamples < $minimumExamples) {
  $reasons[] = 'insufficient_evaluation_examples';
  }
- if (! is_numeric($precisionAtFive)) {
+ if (! $validPrecision) {
  $reasons[] = 'precision_at_5_missing';
  } elseif ((float) $precisionAtFive < $minimumPrecision) {
  $reasons[] = 'precision_at_5_below_target';
  }
- if (($payload['data_split']?? null)!== 'held_out') {
+ if (! $heldOut) {
  $reasons[] = 'held_out_split_not_confirmed';
  }
- if ($expectedModelHash === '' || ! is_string($modelHash) || ! hash_equals($expectedModelHash, strtolower($modelHash))) {
+ if (! $hashMatches) {
  $reasons[] = 'validation_model_hash_mismatch';
  }
 
+ $qualityGate = $algorithmPolicy->evaluate(
+ 'question_reranker',
+ [
+ 'quality' => $validPrecision? (float) $precisionAtFive * 100: null,
+ 'accuracy' => $validPrecision? (float) $precisionAtFive * 100: null,
+ 'reliability' => $schemaValid && $heldOut && $hashMatches? 100: 0,
+ ],
+ ['quality', 'accuracy', 'reliability'],
+ $evaluationExamples,
+ $minimumExamples,
+ 'held_out_precision_at_5_and_model_hash_integrity'
+ );
+ if (! $qualityGate['passed']) {
+ $reasons[] = 'algorithm_quality_gate_failed';
+ }
+
  return [
- 'production_ready' => $reasons === [],
- 'reasons' => $reasons,
+ 'production_ready' => $reasons === [] && $qualityGate['passed'],
+ 'reasons' => array_values(array_unique($reasons)),
  'evaluation_examples' => $evaluationExamples,
- 'precision_at_5' => is_numeric($precisionAtFive)? round((float) $precisionAtFive, 6): null,
+ 'precision_at_5' => $validPrecision? round((float) $precisionAtFive, 6): null,
  'model_sha256' => is_string($modelHash)? strtolower($modelHash): null,
+ 'quality_gate' => $qualityGate,
+ 'accuracy_guaranteed' => false,
+ 'thresholds' => [
+ 'minimum_evaluation_examples' => $minimumExamples,
+ 'minimum_precision_at_5' => $minimumPrecision,
+ ],
+ ];
+ }
+
+ private function failedTrainedModelQuality(string $reason): array
+ {
+ $policy = app(AlgorithmReliabilityService::class);
+ $minimumExamples = max(
+ 200,
+ $policy->minimumEvidenceCount(),
+ (int) config('services.question_recommender.trained_model_min_evaluation_examples', 200)
+ );
+
+ return [
+ 'production_ready' => false,
+ 'reasons' => [$reason],
+ 'evaluation_examples' => 0,
+ 'precision_at_5' => null,
+ 'model_sha256' => null,
+ 'quality_gate' => $policy->evaluate(
+ 'question_reranker',
+ [],
+ ['quality', 'accuracy', 'reliability'],
+ 0,
+ $minimumExamples,
+ 'held_out_precision_at_5_and_model_hash_integrity'
+ ),
+ 'accuracy_guaranteed' => false,
+ 'thresholds' => [
+ 'minimum_evaluation_examples' => $minimumExamples,
+ 'minimum_precision_at_5' => max(0.95, min(1, (float) config('services.question_recommender.trained_model_min_precision_at_5', 0.95))),
+ ],
  ];
  }
 
@@ -433,6 +626,7 @@ class QuestionRecommendationService
  'trained_model_labels' => array_values(array_filter((array) ($match['trained_model_labels']?? []))),
  'recommendation_reason' => $match['recommendation_reason']?? 'trained-model rerank',
  'selection_pipeline' => $match['selection_pipeline']?? 'trained_question_model_rerank',
+ 'accuracy_guaranteed' => false,
  ])
  ->values()
  ->all();
@@ -480,6 +674,8 @@ class QuestionRecommendationService
  return [];
  }
 
+ $indexQuality = $this->indexQuality();
+
  return collect($decoded['matches']?? [])
  ->filter(fn ($match): bool => is_array($match) && filled($match['question_text']?? null))
  ->take(max(1, min(30, $limit)))
@@ -497,6 +693,9 @@ class QuestionRecommendationService
  'embedding_similarity' => $match['similarity']?? null,
  'recommendation_reason' => $match['recommendation_reason']?? null,
  'selection_pipeline' => $match['selection_pipeline']?? null,
+ 'accuracy_guaranteed' => false,
+ 'decision_support_only' => true,
+ 'algorithm_quality' => $indexQuality['quality_gate'],
  ])
  ->values()
  ->all();

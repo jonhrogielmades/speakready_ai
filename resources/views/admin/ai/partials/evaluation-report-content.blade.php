@@ -7,6 +7,8 @@
     $userRequestLabel = $userRequestContext['label'] ?? 'No user request selected yet';
     $questionRouting = $interviewRouting['question_generation'] ?? [];
     $feedbackRouting = $interviewRouting['feedback_generation'] ?? [];
+    $providerThresholds = $providerPolicy['thresholds'] ?? [];
+    $minimumEvidenceCount = $providerPolicy['minimum_evidence_count'] ?? 3;
     $routingMeta = function (array $routing): string {
         $parts = array_values(array_filter([
             ($routing['rank_score'] ?? null) !== null ? 'Rank '.$routing['rank_score'].'%' : null,
@@ -14,7 +16,13 @@
             ($routing['reliability_score'] ?? null) !== null ? 'Reliability '.$routing['reliability_score'].'%' : null,
         ]));
 
-        return $parts !== [] ? implode(' · ', $parts) : 'No routing evidence yet';
+        if ($parts !== []) {
+            return implode(' · ', $parts);
+        }
+
+        return !empty($routing['has_evidence'])
+            ? 'Evidence exists, but no provider passed every reliability gate.'
+            : 'No routing evidence yet';
     };
 @endphp
 
@@ -48,11 +56,12 @@
             <div><span>Overall score</span><strong>{{ $bestProvider['overall_score'] ?? 0 }}%</strong></div>
             <div><span>Configured providers</span><strong>{{ $summary['configured_providers'] }}</strong></div>
             <div><span>Panelist 3+ API check</span><strong>{{ $activeConfiguredProviders }}/{{ $minimumProviders }} active APIs</strong></div>
-            <div><span>Interview question provider</span><strong>{{ $questionRouting['provider_name'] ?? 'No ranking' }}</strong><small>{{ $routingMeta($questionRouting) }}</small></div>
-            <div><span>Interview feedback provider</span><strong>{{ $feedbackRouting['provider_name'] ?? 'No ranking' }}</strong><small>{{ $routingMeta($feedbackRouting) }}</small></div>
+            <div><span>Interview question provider</span><strong>{{ $questionRouting['provider_name'] ?? 'No eligible provider' }}</strong><small>{{ $routingMeta($questionRouting) }}</small></div>
+            <div><span>Interview feedback provider</span><strong>{{ $feedbackRouting['provider_name'] ?? 'No eligible provider' }}</strong><small>{{ $routingMeta($feedbackRouting) }}</small></div>
         </div>
 
         <p class="ai-report-note">{{ $summary['panelist_requirement_label'] ?? 'Panelist requirement: evaluate 3 or more AI APIs.' }}</p>
+        <p class="ai-report-note">Provider promotion requires quality, accuracy, reliability, and request success at {{ $providerThresholds['quality_score'] ?? 95 }}% or higher; schema and safety at {{ $providerThresholds['schema_score'] ?? 100 }}%; and at least {{ $minimumEvidenceCount }} successful samples. These measured gates are not a factual-accuracy guarantee.</p>
 
         <h2>Provider Matrix</h2>
         <table class="ai-report-table ai-report-mobile-table">

@@ -327,7 +327,7 @@ class TrustworthyAssessmentService
  }
  $answerConfidences = $answers->pluck('scoring_confidence')->filter(fn ($value) => is_numeric($value) && (int) $value > 0);
  if ($answerConfidences->isNotEmpty()) {
- $confidence = min($confidence, (int) round($answerConfidences->avg()));
+ $confidence = min($confidence, (int) floor((float) $answerConfidences->avg() + PHP_FLOAT_EPSILON));
  }
  $deliveryScores = $answers->pluck('delivery_stability_score')->filter(fn ($value) => $value!== null);
  $starApplicable = $answers->contains(fn ($answer) => QuestionIntentService::starApplicable($answer->question));
@@ -339,11 +339,22 @@ class TrustworthyAssessmentService
  'professionalism' => $metrics['professionalism'],
  'star' => $starScore,
  ], $starApplicable, $languageScoring);
+ $qualityGate = app(AlgorithmReliabilityService::class)->evaluate(
+ 'trustworthy_assessment_rubric',
+ ['reliability' => $confidence],
+ ['reliability'],
+ $answered,
+ 1,
+ 'answer_evidence_coverage_and_scoring_confidence'
+ );
 
  return [
  'overall' => $overall,
  'readiness_band' => $this->readinessBand($overall),
  'scoring_confidence' => $confidence,
+ 'algorithm_quality' => $qualityGate,
+ 'eligible_for_automated_decision' => $qualityGate['passed'],
+ 'accuracy_guaranteed' => false,
  'delivery_stability' => (int) round($deliveryScores->avg()?? 0),
  'evidence_map' => $answerEvidence,
  'rubric' => [
@@ -363,6 +374,8 @@ class TrustworthyAssessmentService
  ],
  'body_language_included' => false,
  'delivery_stability_included' => false,
+ 'algorithm_quality' => $qualityGate,
+ 'accuracy_guaranteed' => false,
  ],
  ];
  }

@@ -659,7 +659,11 @@ class GameController extends Controller
  if ($profile->hasPerk('first_impressions')) {
  $gameResultScore = min(100, $gameResultScore + 5);
  $scoreResult['score'] = $gameResultScore;
- $scoreResult['status'] = $gameResultScore >= (int) $gameLevel->required_score? 'passed': 'failed';
+ $scoreResult['score_threshold_met'] = $gameResultScore >= (int) $gameLevel->required_score;
+ $scoreResult['status'] = $scoreResult['score_threshold_met']
+ && data_get($scoreResult, 'quality_gate.passed') === true
+ ? 'passed'
+ : 'failed';
  $scoreResult['points_to_goal'] = max(0, (int) $gameLevel->required_score - $gameResultScore);
  }
 
@@ -1254,7 +1258,10 @@ class GameController extends Controller
  ->where('game_level_id', $gameLevel->id)
  ->first();
  $score = (int) ($gameSession->score?? 0);
- $passed = ($gameSession->result_status === 'passed') || $score >= (int) $gameLevel->required_score;
+ $storedQualityGate = data_get($gameSession->goal_breakdown, 'quality_gate.passed');
+ $passed = $storedQualityGate !== null
+ ? $gameSession->result_status === 'passed' && $storedQualityGate === true
+ : (($gameSession->result_status === 'passed') || $score >= (int) $gameLevel->required_score);
  $nextLevel = $passed? $this->nextChallengeLevelFor($gameLevel): null;
  $certificate = null;
  if ($passed &&! $nextLevel && $gameLevel->category) {
@@ -1267,7 +1274,11 @@ class GameController extends Controller
  }
  }
 
- $message = $passed? 'Passed! You cleared Level '.$gameLevel->level_number.' with '.$score.'%.': 'You scored '.$score.'% and need '.$gameLevel->required_score.'% to clear this level.';
+ $message = $passed
+ ? 'Passed! You cleared Level '.$gameLevel->level_number.' with '.$score.'%.'
+ : ($storedQualityGate === false
+ ? 'Your '.$score.'% score is provisional because the answer evidence did not meet the 95% reliability gate. Add a complete, specific example and retry.'
+ : 'You scored '.$score.'% and need '.$gameLevel->required_score.'% to clear this level.');
 
  return [
  'game_session_id' => $gameSession->id,

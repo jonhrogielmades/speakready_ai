@@ -179,6 +179,17 @@ class LearningRecommendationService
  ]);
  }
 
+ $sessions = $sessions
+ ->filter(fn (InterviewSession $session): bool => $this->sessionSignalsQualified($session))
+ ->values();
+
+ if ($sessions->isEmpty()) {
+ return collect([
+ $this->signal('clarity', 45, 'Start with answer clarity until a 95% reliable scored interview is available.'),
+ $this->signal('star_method', 40, 'Learn STAR early so your practice answers include verifiable evidence.'),
+ ]);
+ }
+
  $scoreSignals = $this->scoreSignals($sessions);
  $feedbackSignals = $this->feedbackSignals($sessions);
  $categorySignals = $this->categorySignals($sessions);
@@ -232,7 +243,8 @@ class LearningRecommendationService
  $signals->push($this->signal(
  $skill,
  $priority,
- "{$rule['label']} score is at {$basis}%, so this module is a good next step."
+ "{$rule['label']} score is at {$basis}%, so this module is a good next step.",
+ true
  ));
  }
  }
@@ -241,7 +253,8 @@ class LearningRecommendationService
  $signals->push($this->signal(
  'star_method',
  20,
- 'Your scores are strong; a STAR practice module can help make answers more evidence-based.'
+ 'Your scores are strong; a STAR practice module can help make answers more evidence-based.',
+ true
  ));
  }
 
@@ -270,7 +283,7 @@ class LearningRecommendationService
  return null;
  }
 
- return $this->signal($skill, 28 + ($hits * 4), 'Recent feedback mentions '.self::SKILL_RULES[$skill]['label'].'.');
+ return $this->signal($skill, 28 + ($hits * 4), 'Recent feedback mentions '.self::SKILL_RULES[$skill]['label'].'.', true);
  })
  ->filter()
  ->values();
@@ -284,15 +297,15 @@ class LearningRecommendationService
  ->map(fn (string $title) => $this->normalize($title))
  ->flatMap(function (string $category) {
  if (str_contains($category, 'behavior')) {
- return [$this->signal('star_method', 24, 'Your recent interview category benefits from STAR evidence.')];
+ return [$this->signal('star_method', 24, 'Your recent interview category benefits from STAR evidence.', true)];
  }
 
  if (str_contains($category, 'technical')) {
- return [$this->signal('relevance', 20, 'Technical interviews benefit from tighter answer-to-question alignment.')];
+ return [$this->signal('relevance', 20, 'Technical interviews benefit from tighter answer-to-question alignment.', true)];
  }
 
  if (str_contains($category, 'communication')) {
- return [$this->signal('clarity', 20, 'Communication practice benefits from clear answer structure.')];
+ return [$this->signal('clarity', 20, 'Communication practice benefits from clear answer structure.', true)];
  }
 
  return [];
@@ -346,6 +359,7 @@ class LearningRecommendationService
  'score' => $signalScore,
  'skill' => $signal->skill,
  'reason' => $signal->reason,
+ 'qualified' => (bool) ($signal->qualified?? false),
  ];
  }
  }
@@ -397,16 +411,44 @@ class LearningRecommendationService
  'module' => $module,
  'progress' => $item->progress,
  'url' => route('user.modules.show', $module->id),
+ 'quality_gate_passed' => (bool) ($item->signal?->qualified?? false),
+ 'decision_support_only' => ! (bool) ($item->signal?->qualified?? false),
+ 'accuracy_guaranteed' => false,
  ];
  }
 
- private function signal(string $skill, int $priority, string $reason): object
+ private function signal(string $skill, int $priority, string $reason, bool $qualified = false): object
  {
  return (object) [
  'skill' => $skill,
  'priority' => $priority,
  'reason' => $reason,
+ 'qualified' => $qualified,
  ];
+ }
+
+ private function sessionSignalsQualified(InterviewSession $session): bool
+ {
+ $required = app(AlgorithmReliabilityService::class)->minimumReliabilityPercent();
+ $score = $session->score;
+ $rubricGatePassed = data_get($score?->rubric, 'algorithm_quality.passed') === true;
+ $scoreConfidence = is_numeric($score?->scoring_confidence)
+ ? max(0, min(100, (int) round((float) $score->scoring_confidence)))
+ : 0;
+
+ if ($rubricGatePassed && $scoreConfidence >= $required) {
+ return true;
+ }
+
+ $summary = is_array($session->feedback?->coaching_summary)
+ ? $session->feedback->coaching_summary
+ : [];
+ $reviewPassed = data_get($summary, 'review_context.detailed_review_validation.status') === 'passed';
+ $reviewReliability = data_get($summary, 'review_context.detailed_review_validation.minimum_scoreable_reliability_percent');
+
+ return $reviewPassed
+ && is_numeric($reviewReliability)
+ && (int) round((float) $reviewReliability) >= $required;
  }
 
  private function moduleSearchText(LearningModule $module): string

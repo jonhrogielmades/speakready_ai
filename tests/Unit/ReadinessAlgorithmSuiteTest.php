@@ -64,6 +64,9 @@ class ReadinessAlgorithmSuiteTest extends TestCase
         $this->assertFalse($result->algorithms->contains(
             fn ($algorithm): bool => $algorithm->confidence >= 95 && $algorithm->reliability_band === 'Very High'
         ));
+        $this->assertSame(0, $result->qualified_count);
+        $this->assertFalse($result->eligible_for_automated_decision);
+        $this->assertFalse($result->accuracy_guaranteed);
     }
 
     public function test_it_returns_safe_unavailable_results_without_a_scored_target(): void

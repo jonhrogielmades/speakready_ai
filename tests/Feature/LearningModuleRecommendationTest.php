@@ -10,6 +10,7 @@ use App\Models\LearningProgress;
 use App\Models\Score;
 use App\Models\User;
 use App\Services\LearningRecommendationService;
+use App\Services\TrustworthyAssessmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -33,6 +34,9 @@ class LearningModuleRecommendationTest extends TestCase
             'professionalism_score' => 86,
             'confidence_score' => 84,
             'overall_readiness_score' => 72,
+            'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+            'scoring_confidence' => 95,
+            'rubric' => ['algorithm_quality' => ['passed' => true]],
         ]);
         Feedback::create([
             'interview_session_id' => $session->id,
@@ -47,7 +51,7 @@ class LearningModuleRecommendationTest extends TestCase
         $this->assertSame('Clarity', $recommendations->first()->skill);
     }
 
-    public function test_modules_page_shows_personalized_recommendations(): void
+    public function test_modules_page_lists_the_module_selected_by_qualified_recommendation_signals(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category('Communication');
@@ -62,14 +66,19 @@ class LearningModuleRecommendationTest extends TestCase
             'professionalism_score' => 82,
             'confidence_score' => 78,
             'overall_readiness_score' => 71,
+            'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+            'scoring_confidence' => 95,
+            'rubric' => ['algorithm_quality' => ['passed' => true]],
         ]);
+
+        $recommendations = app(LearningRecommendationService::class)->forUser($user->id, 1);
+        $this->assertSame('Clear Answer Structure', $recommendations->first()->module->title);
+        $this->assertTrue($recommendations->first()->quality_gate_passed);
 
         $this->actingAs($user)
             ->get(route('user.modules.index'))
             ->assertOk()
-            ->assertSee('Recommended For You')
-            ->assertSee('Clear Answer Structure')
-            ->assertSee('Clarity score', false);
+            ->assertSee('Clear Answer Structure');
     }
 
     public function test_modules_page_focuses_on_action_modules_only(): void

@@ -74,15 +74,15 @@ class TrainFeedbackModel extends Command
  '--validation-fraction',
  (string) max(0.05, min(0.40, (float) config('services.local_feedback_model.validation_fraction', 0.20))),
  '--min-validation-examples',
- (string) max(1, (int) config('services.local_feedback_model.min_validation_examples', 100)),
+ (string) max(100, (int) config('services.local_feedback_model.min_validation_examples', 100)),
  '--max-validation-mae',
- (string) max(0, (float) config('services.local_feedback_model.max_validation_mae', 10)),
+ (string) min(5, max(0, (float) config('services.local_feedback_model.max_validation_mae', 5))),
  '--min-within-ten-rate',
- (string) max(0, min(1, (float) config('services.local_feedback_model.min_validation_within_10_rate', 0.95))),
+ (string) max(0.95, min(1, (float) config('services.local_feedback_model.min_validation_within_10_rate', 0.95))),
  '--min-validation-skill',
- (string) max(-1, min(1, (float) config('services.local_feedback_model.min_validation_skill', 0.10))),
+ (string) max(0.10, min(1, (float) config('services.local_feedback_model.min_validation_skill', 0.10))),
  '--min-human-reviewed-ratio',
- (string) max(0, min(1, (float) config('services.local_feedback_model.min_human_reviewed_ratio', 1.0))),
+ '1',
  ];
 
  $this->info("Training local feedback model with {$examples} examples...");

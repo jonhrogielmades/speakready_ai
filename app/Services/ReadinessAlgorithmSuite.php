@@ -652,11 +652,16 @@ class ReadinessAlgorithmSuite
         arsort($votes, SORT_NUMERIC);
         $consensusBand = $votes === [] ? null : (string) array_key_first($votes);
         $availableCount = $algorithms->filter(fn (object $algorithm): bool => $algorithm->available)->count();
+        $qualifiedCount = $algorithms->filter(fn (object $algorithm): bool => (bool) ($algorithm->meets_reliability_gate?? false))->count();
 
         return (object) [
             'available' => $availableCount > 0,
             'algorithm_count' => $algorithms->count(),
             'available_count' => $availableCount,
+            'qualified_count' => $qualifiedCount,
+            'eligible_for_automated_decision' => $availableCount > 0 && $qualifiedCount === $availableCount,
+            'decision_support_only' => $availableCount === 0 || $qualifiedCount !== $availableCount,
+            'accuracy_guaranteed' => false,
             'training_examples' => $trainingExamples,
             'consensus_band' => $consensusBand,
             'consensus_votes' => $votes,
@@ -1181,6 +1186,9 @@ class ReadinessAlgorithmSuite
         string $message,
         array $meta = []
     ): object {
+        $confidence = $this->clampInt($confidence);
+        $meetsReliabilityGate = $confidence >= app(AlgorithmReliabilityService::class)->minimumReliabilityPercent();
+
         return (object) [
             'key' => $key,
             'name' => $name,
@@ -1189,8 +1197,12 @@ class ReadinessAlgorithmSuite
             'available' => true,
             'prediction' => $prediction,
             'score' => $score,
-            'confidence' => $this->clampInt($confidence),
+            'confidence' => $confidence,
             'reliability_band' => $reliability,
+            'meets_reliability_gate' => $meetsReliabilityGate,
+            'eligible_for_automated_decision' => $meetsReliabilityGate,
+            'decision_support_only' => ! $meetsReliabilityGate,
+            'accuracy_guaranteed' => false,
             'formula' => $formula,
             'purpose' => $purpose,
             'message' => $message,
@@ -1210,6 +1222,10 @@ class ReadinessAlgorithmSuite
             'score' => null,
             'confidence' => 0,
             'reliability_band' => 'Unavailable',
+            'meets_reliability_gate' => false,
+            'eligible_for_automated_decision' => false,
+            'decision_support_only' => true,
+            'accuracy_guaranteed' => false,
             'formula' => '',
             'purpose' => '',
             'message' => $message,
