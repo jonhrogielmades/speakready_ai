@@ -2023,6 +2023,73 @@
     }
 }
 
+/* Strong desktop three-column layout: icon | message | actions. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column {
+        grid-template-columns: 58px minmax(0, 1fr) minmax(260px, 300px) !important;
+        align-items: center !important;
+        gap: 20px !important;
+        min-height: 116px !important;
+        padding: 18px 20px !important;
+        border-radius: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-icon-box {
+        width: 56px !important;
+        height: 56px !important;
+        min-width: 56px !important;
+        border-radius: 14px !important;
+        font-size: 1.2rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-content {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-title {
+        font-size: 1.04rem !important;
+        line-height: 1.28 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-message {
+        font-size: 0.86rem !important;
+        line-height: 1.5 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-actions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-action-btn {
+        min-height: 46px !important;
+        padding: 11px 15px !important;
+        border-radius: 11px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1180px) {
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column {
+        grid-template-columns: 52px minmax(0, 1fr) minmax(220px, 250px) !important;
+        gap: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-icon-box {
+        width: 50px !important;
+        height: 50px !important;
+        min-width: 50px !important;
+    }
+}
+
 /* Medium desktop sizing for the User Notifications page. */
 @media (min-width: 992px) {
     html body.user-desktop-shell:not(.admin-shell) #notifications-page {

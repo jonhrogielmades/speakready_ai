@@ -2,7 +2,7 @@
 @section('title', 'Notifications')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/notifications.css?v=9') }}" data-page-style="user-notifications">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/notifications.css?v=10') }}" data-page-style="user-notifications">
 @endpush
 
 @section('content')
@@ -55,7 +55,7 @@
             ];
             $colorSettings = $colors[$typeClass] ?? $colors['info'];
         @endphp
-        <div class="notification-row {{ !$isRead ? 'is-unread' : '' }}" id="notif-{{ $notification->id }}">
+        <div class="notification-row notification-row--three-column {{ !$isRead ? 'is-unread' : '' }}" id="notif-{{ $notification->id }}">
             <div class="notification-icon-box" style="background:{{ $colorSettings['bg'] }};color:{{ $colorSettings['text'] }};">
                 <i class="fa-solid {{ $icon }}"></i>
             </div>
