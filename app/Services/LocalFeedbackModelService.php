@@ -10,6 +10,20 @@ class LocalFeedbackModelService
 {
     public const VERSION = 1;
 
+    private const VALIDATED_SCHEMA_VERSION = 3;
+    private const VALIDATED_MODEL_TYPE = 'hashed_linear_feedback_scorer_v3';
+
+    private const REQUIRED_SCORE_FIELDS = [
+        'score',
+        'clarity_score',
+        'relevance_score',
+        'grammar_score',
+        'professionalism_score',
+        'star_method_score',
+    ];
+
+    private static array $qualityCache = [];
+
     public function enabled(): bool
     {
         return filter_var(config('services.local_feedback_model.enabled', false), FILTER_VALIDATE_BOOLEAN);
@@ -17,10 +31,149 @@ class LocalFeedbackModelService
 
     public function available(): bool
     {
-        return $this->enabled()
-            && is_file($this->modelPath())
-            && is_readable($this->modelPath())
-            && is_file($this->predictionScriptPath());
+        if (! $this->enabled()
+            || ! is_file($this->modelPath())
+            || ! is_readable($this->modelPath())
+            || ! is_file($this->predictionScriptPath())
+            || ! is_readable($this->predictionScriptPath())) {
+            return false;
+        }
+
+        if (! filter_var(config('services.local_feedback_model.require_validation', true), FILTER_VALIDATE_BOOLEAN)) {
+            return true;
+        }
+
+        return $this->qualityStatus()['production_ready'];
+    }
+
+    public function qualityStatus(?string $modelPath = null): array
+    {
+        $path = $modelPath !== null ? $this->resolvePath($modelPath) : $this->modelPath();
+        if (! is_file($path) || ! is_readable($path)) {
+            return $this->failedQuality('model_missing');
+        }
+
+        $contents = @file_get_contents($path);
+        if (! is_string($contents)) {
+            return $this->failedQuality('model_unreadable');
+        }
+
+        $cacheKey = $path.'|'.hash('sha256', $contents);
+        if (isset(self::$qualityCache[$cacheKey])) {
+            return self::$qualityCache[$cacheKey];
+        }
+
+        $artifact = json_decode($contents, true);
+        if (! is_array($artifact)) {
+            return self::$qualityCache[$cacheKey] = $this->failedQuality('invalid_model_json');
+        }
+
+        $summary = is_array($artifact['quality_summary'] ?? null) ? $artifact['quality_summary'] : [];
+        $metrics = is_array($artifact['metrics'] ?? null) ? $artifact['metrics'] : [];
+        $models = is_array($artifact['models'] ?? null) ? $artifact['models'] : [];
+        $validationExamples = (int) ($artifact['validation_examples'] ?? $summary['validation_examples'] ?? 0);
+        $humanReviewedRatio = (float) data_get($artifact, 'dataset_summary.human_reviewed_ratio', $summary['human_reviewed_ratio'] ?? 0);
+        $validationMaes = [];
+        $withinTenRates = [];
+        $skillScores = [];
+        $missingFields = [];
+        $missingModels = [];
+
+        foreach (self::REQUIRED_SCORE_FIELDS as $field) {
+            $fieldMetrics = is_array($metrics[$field] ?? null) ? $metrics[$field] : [];
+            $mae = data_get($fieldMetrics, 'validation.mean_absolute_error', $fieldMetrics['validation_mean_absolute_error'] ?? null);
+            $withinTen = data_get($fieldMetrics, 'validation.within_10_rate');
+            $skillScore = data_get($fieldMetrics, 'validation.skill_score');
+            $fieldValidationExamples = data_get($fieldMetrics, 'validation.examples');
+            if (! is_numeric($mae)
+                || ! is_finite((float) $mae)
+                || (float) $mae < 0
+                || ! is_numeric($withinTen)
+                || ! is_finite((float) $withinTen)
+                || (float) $withinTen < 0
+                || (float) $withinTen > 1
+                || ! is_numeric($skillScore)
+                || ! is_finite((float) $skillScore)
+                || (float) $skillScore > 1
+                || ! is_numeric($fieldValidationExamples)
+                || (int) $fieldValidationExamples !== $validationExamples) {
+                $missingFields[] = $field;
+                continue;
+            }
+            $validationMaes[] = (float) $mae;
+            $withinTenRates[] = (float) $withinTen;
+            $skillScores[] = (float) $skillScore;
+
+            $fieldModel = is_array($models[$field] ?? null) ? $models[$field] : [];
+            $hasWeights = is_array($fieldModel['weights'] ?? null) && $fieldModel['weights'] !== [];
+            $hasMembers = is_array($fieldModel['members'] ?? null) && $fieldModel['members'] !== [];
+            if (($fieldModel['algorithm'] ?? null) !== 'scaled_bagged_elastic_net_sgd'
+                || ! is_numeric($fieldModel['fallback'] ?? null)
+                || ! is_numeric($fieldModel['confidence'] ?? null)
+                || (float) $fieldModel['confidence'] < 0
+                || (float) $fieldModel['confidence'] > 1
+                || (! $hasWeights && ! $hasMembers)) {
+                $missingModels[] = $field;
+            }
+        }
+
+        $minimumValidationExamples = max(1, (int) config('services.local_feedback_model.min_validation_examples', 100));
+        $maximumValidationMae = max(0.0, (float) config('services.local_feedback_model.max_validation_mae', 10));
+        $minimumWithinTenRate = max(0.0, min(1.0, (float) config('services.local_feedback_model.min_validation_within_10_rate', 0.95)));
+        $minimumValidationSkill = max(-1.0, min(1.0, (float) config('services.local_feedback_model.min_validation_skill', 0.10)));
+        $minimumHumanReviewedRatio = max(0.0, min(1.0, (float) config('services.local_feedback_model.min_human_reviewed_ratio', 1.0)));
+        $reasons = [];
+        $artifactCompatible = true;
+
+        if ((int) ($artifact['schema_version'] ?? 0) !== self::VALIDATED_SCHEMA_VERSION) {
+            $reasons[] = 'unsupported_model_schema';
+            $artifactCompatible = false;
+        }
+        if (($artifact['model_type'] ?? null) !== self::VALIDATED_MODEL_TYPE) {
+            $reasons[] = 'unsupported_model_type';
+            $artifactCompatible = false;
+        }
+
+        if ($validationExamples < $minimumValidationExamples) {
+            $reasons[] = 'insufficient_validation_examples';
+        }
+        if ($missingFields !== []) {
+            $reasons[] = 'missing_field_validation_metrics';
+        }
+        if ($missingModels !== []) {
+            $reasons[] = 'missing_field_models';
+        }
+        if ($validationMaes !== [] && max($validationMaes) > $maximumValidationMae) {
+            $reasons[] = 'validation_mae_above_limit';
+        }
+        if ($withinTenRates !== [] && min($withinTenRates) < $minimumWithinTenRate) {
+            $reasons[] = 'validation_within_10_rate_below_target';
+        }
+        if ($skillScores !== [] && min($skillScores) < $minimumValidationSkill) {
+            $reasons[] = 'validation_skill_below_target';
+        }
+        if ($humanReviewedRatio < $minimumHumanReviewedRatio) {
+            $reasons[] = 'insufficient_human_reviewed_labels';
+        }
+        if (($summary['production_ready'] ?? false) !== true) {
+            $reasons[] = 'trainer_quality_gate_failed';
+        }
+
+        return self::$qualityCache[$cacheKey] = [
+            'validated' => $artifactCompatible
+                && $validationExamples >= $minimumValidationExamples
+                && $missingFields === []
+                && $missingModels === [],
+            'production_ready' => $reasons === [],
+            'reasons' => array_values(array_unique($reasons)),
+            'validation_examples' => $validationExamples,
+            'worst_validation_mae' => $validationMaes !== [] ? round(max($validationMaes), 3) : null,
+            'lowest_validation_within_10_rate' => $withinTenRates !== [] ? round(min($withinTenRates), 6) : null,
+            'lowest_validation_skill_score' => $skillScores !== [] ? round(min($skillScores), 6) : null,
+            'human_reviewed_ratio' => round($humanReviewedRatio, 6),
+            'missing_fields' => $missingFields,
+            'missing_models' => $missingModels,
+        ];
     }
 
     public function pythonBinary(): string
@@ -107,5 +260,21 @@ class LocalFeedbackModelService
         }
 
         return $decoded;
+    }
+
+    private function failedQuality(string $reason): array
+    {
+        return [
+            'validated' => false,
+            'production_ready' => false,
+            'reasons' => [$reason],
+            'validation_examples' => 0,
+            'worst_validation_mae' => null,
+            'lowest_validation_within_10_rate' => null,
+            'lowest_validation_skill_score' => null,
+            'human_reviewed_ratio' => 0.0,
+            'missing_fields' => self::REQUIRED_SCORE_FIELDS,
+            'missing_models' => self::REQUIRED_SCORE_FIELDS,
+        ];
     }
 }

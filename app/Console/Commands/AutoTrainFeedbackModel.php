@@ -33,7 +33,7 @@ class AutoTrainFeedbackModel extends Command
         $outputPath = $output !== '' ? $modelService->resolvePath($output) : $modelService->modelPath();
         $minExamples = (int) ($this->option('min-examples') !== null && $this->option('min-examples') !== ''
             ? $this->option('min-examples')
-            : config('services.local_feedback_model.auto_train_min_examples', 100));
+            : config('services.local_feedback_model.auto_train_min_examples', 500));
         $epochs = (int) ($this->option('epochs') !== null && $this->option('epochs') !== ''
             ? $this->option('epochs')
             : config('services.local_feedback_model.auto_train_epochs', 80));
@@ -55,7 +55,8 @@ class AutoTrainFeedbackModel extends Command
         $checksum = hash_file('sha256', $datasetPath) ?: '';
         $model = $this->readModelArtifact($outputPath);
         $previousChecksum = is_array($model) ? (string) ($model['training_dataset_checksum'] ?? '') : '';
-        $previousExamples = is_array($model) ? (int) ($model['training_examples'] ?? 0) : 0;
+        $previousExamples = is_array($model) ? (int) ($model['total_examples'] ?? $model['training_examples'] ?? 0) : 0;
+        $currentQuality = $modelService->qualityStatus($outputPath);
 
         $this->table(['Metric', 'Value'], [
             ['Training rows', $examples],
@@ -63,6 +64,7 @@ class AutoTrainFeedbackModel extends Command
             ['Dataset checksum', $checksum],
             ['Previous rows', $previousExamples],
             ['Previous checksum', $previousChecksum ?: 'none'],
+            ['Current model production ready', $currentQuality['production_ready'] ? 'yes' : 'no'],
             ['Model output', $outputPath],
         ]);
 
@@ -78,10 +80,17 @@ class AutoTrainFeedbackModel extends Command
             return self::SUCCESS;
         }
 
-        if ($checksum !== '' && hash_equals($previousChecksum, $checksum) && ! $force) {
+        if ($checksum !== ''
+            && hash_equals($previousChecksum, $checksum)
+            && $currentQuality['production_ready']
+            && ! $force) {
             $this->info('Skipped training: the local feedback model is already current for this dataset.');
 
             return self::SUCCESS;
+        }
+
+        if ($checksum !== '' && hash_equals($previousChecksum, $checksum) && ! $currentQuality['production_ready']) {
+            $this->warn('The dataset is unchanged, but the current model failed the production quality gate. Evaluating a new candidate.');
         }
 
         if ((bool) $this->option('dry-run')) {

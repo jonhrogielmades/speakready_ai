@@ -13,7 +13,7 @@ class KnnReadinessClassifier
     private const MAX_TRAINING_ROWS = 300;
     private const MIN_COMMON_FEATURES = 2;
     private const EPSILON = 0.001;
-    private const VERY_RELIABLE_MIN = 95;
+    private const UNVALIDATED_CONFIDENCE_CEILING = 94;
 
     private const FEATURE_WEIGHTS = [
         'clarity_score' => 0.22,
@@ -99,7 +99,7 @@ class KnnReadinessClassifier
             ? $this->clampInt((int) round($weightedScore / $totalWeight))
             : $this->overallScoreFor($target);
         $rawConfidence = $this->confidenceFor($selected, $voteTotals, $k, count($targetFeatures));
-        $confidence = $this->veryReliableConfidence($rawConfidence, $selected->count() + count($targetFeatures));
+        $confidence = $this->calibratedConfidence($rawConfidence, $trainingCollection->count());
         $predictedBand = $this->bandForScore($predictedScore);
 
         return (object) [
@@ -288,11 +288,15 @@ class KnnReadinessClassifier
         return $confidence >= 95 ? 'Very High' : ($confidence >= 80 ? 'High' : ($confidence >= 60 ? 'Moderate' : 'Limited'));
     }
 
-    private function veryReliableConfidence(int $rawConfidence, int $evidenceStrength): int
+    private function calibratedConfidence(int $rawConfidence, int $trainingExamples): int
     {
-        $bonus = min(5, max(0, (int) floor($evidenceStrength / 2)));
+        $sampleFactor = min(1.0, sqrt(max(0, $trainingExamples) / 100));
+        $evidenceMultiplier = 0.55 + (0.45 * $sampleFactor);
 
-        return $this->clampInt(max($rawConfidence, self::VERY_RELIABLE_MIN + $bonus));
+        return min(
+            self::UNVALIDATED_CONFIDENCE_CEILING,
+            $this->clampInt((int) round($rawConfidence * $evidenceMultiplier))
+        );
     }
 
     private function unavailable(string $reason, string $message, ?Score $target, int $k, int $trainingExamples = 0): object

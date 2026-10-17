@@ -60,14 +60,93 @@ class QuestionRecommendationService
  return $this->resolvePath((string) config('services.question_recommender.trained_model_label_map_path', 'storage/app/private/models/questions/latest/trained_model/speakready_question_labels.json'));
  }
 
+ public function trainedModelValidationPath(): string
+ {
+ return $this->resolvePath((string) config('services.question_recommender.trained_model_validation_path', 'storage/app/private/models/questions/latest/trained_model/validation_metrics.json'));
+ }
+
  public function trainedModelAvailable(): bool
  {
- return filter_var(config('services.question_recommender.trained_model_enabled', true), FILTER_VALIDATE_BOOLEAN)
+ $filesAvailable = filter_var(config('services.question_recommender.trained_model_enabled', true), FILTER_VALIDATE_BOOLEAN)
  && is_dir($this->trainedModelPath())
  && is_file($this->trainedModelPath().DIRECTORY_SEPARATOR.'config.json')
+ && is_readable($this->trainedModelPath().DIRECTORY_SEPARATOR.'config.json')
  && is_file($this->trainedModelPath().DIRECTORY_SEPARATOR.'tokenizer.json')
+ && is_readable($this->trainedModelPath().DIRECTORY_SEPARATOR.'tokenizer.json')
  && is_file($this->trainedModelPath().DIRECTORY_SEPARATOR.'model.safetensors')
- && is_file($this->rerankScriptPath());
+ && is_readable($this->trainedModelPath().DIRECTORY_SEPARATOR.'model.safetensors')
+ && is_file($this->rerankScriptPath())
+ && is_readable($this->rerankScriptPath());
+
+ if (! $filesAvailable) {
+ return false;
+ }
+
+ if (! filter_var(config('services.question_recommender.trained_model_require_validation', true), FILTER_VALIDATE_BOOLEAN)) {
+ return true;
+ }
+
+ return $this->trainedModelQuality()['production_ready'];
+ }
+
+ public function trainedModelQuality(): array
+ {
+ $path = $this->trainedModelValidationPath();
+ if (! is_file($path) || ! is_readable($path)) {
+ return [
+ 'production_ready' => false,
+ 'reasons' => ['validation_metrics_missing'],
+ 'evaluation_examples' => 0,
+ 'precision_at_5' => null,
+ 'model_sha256' => null,
+ ];
+ }
+
+ $payload = json_decode((string) file_get_contents($path), true);
+ if (! is_array($payload)) {
+ return [
+ 'production_ready' => false,
+ 'reasons' => ['validation_metrics_invalid'],
+ 'evaluation_examples' => 0,
+ 'precision_at_5' => null,
+ 'model_sha256' => null,
+ ];
+ }
+
+ $evaluationExamples = (int) ($payload['evaluation_examples']?? 0);
+ $precisionAtFive = data_get($payload, 'metrics.precision_at_5');
+ $expectedModelHash = strtolower(trim((string) ($payload['model_sha256']?? '')));
+ $modelFile = $this->trainedModelPath().DIRECTORY_SEPARATOR.'model.safetensors';
+ $modelHash = is_file($modelFile) && is_readable($modelFile)? hash_file('sha256', $modelFile): false;
+ $minimumExamples = max(1, (int) config('services.question_recommender.trained_model_min_evaluation_examples', 200));
+ $minimumPrecision = max(0, min(1, (float) config('services.question_recommender.trained_model_min_precision_at_5', 0.95)));
+ $reasons = [];
+
+ if ((int) ($payload['schema_version']?? 0)!== 1) {
+ $reasons[] = 'unsupported_validation_schema';
+ }
+ if ($evaluationExamples < $minimumExamples) {
+ $reasons[] = 'insufficient_evaluation_examples';
+ }
+ if (! is_numeric($precisionAtFive)) {
+ $reasons[] = 'precision_at_5_missing';
+ } elseif ((float) $precisionAtFive < $minimumPrecision) {
+ $reasons[] = 'precision_at_5_below_target';
+ }
+ if (($payload['data_split']?? null)!== 'held_out') {
+ $reasons[] = 'held_out_split_not_confirmed';
+ }
+ if ($expectedModelHash === '' || ! is_string($modelHash) || ! hash_equals($expectedModelHash, strtolower($modelHash))) {
+ $reasons[] = 'validation_model_hash_mismatch';
+ }
+
+ return [
+ 'production_ready' => $reasons === [],
+ 'reasons' => $reasons,
+ 'evaluation_examples' => $evaluationExamples,
+ 'precision_at_5' => is_numeric($precisionAtFive)? round((float) $precisionAtFive, 6): null,
+ 'model_sha256' => is_string($modelHash)? strtolower($modelHash): null,
+ ];
  }
 
  public function candidatePoolLimit(int $requestedLimit): int

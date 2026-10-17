@@ -52,10 +52,18 @@ class ReadinessAlgorithmSuiteTest extends TestCase
         $this->assertNotEmpty($result->consensus_band);
 
         foreach ($result->algorithms as $algorithm) {
-            $this->assertGreaterThanOrEqual(95, $algorithm->confidence, $algorithm->name.' confidence should be in the very reliable band.');
-            $this->assertLessThanOrEqual(100, $algorithm->confidence, $algorithm->name.' confidence should never exceed 100.');
-            $this->assertSame('Very High', $algorithm->reliability_band, $algorithm->name.' should report very high reliability.');
+            $this->assertGreaterThan(0, $algorithm->confidence, $algorithm->name.' should expose measured confidence.');
+            $this->assertLessThan(95, $algorithm->confidence, $algorithm->name.' cannot claim unvalidated 95% confidence.');
+            $this->assertLessThanOrEqual(
+                $algorithm->meta['raw_confidence'],
+                $algorithm->confidence,
+                $algorithm->name.' confidence must not be inflated above its raw evidence.'
+            );
         }
+
+        $this->assertFalse($result->algorithms->contains(
+            fn ($algorithm): bool => $algorithm->confidence >= 95 && $algorithm->reliability_band === 'Very High'
+        ));
     }
 
     public function test_it_returns_safe_unavailable_results_without_a_scored_target(): void

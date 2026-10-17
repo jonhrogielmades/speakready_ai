@@ -24,9 +24,15 @@ SCORE_FIELDS = [
     "star_method_score",
 ]
 HASH_BUCKETS = 512
-MODEL_SCHEMA_VERSION = 2
-MODEL_TYPE = "hashed_linear_feedback_scorer_v2"
+MODEL_SCHEMA_VERSION = 3
+MODEL_TYPE = "hashed_linear_feedback_scorer_v3"
 RANDOM_SEED = 1337
+DEFAULT_VALIDATION_FRACTION = 0.20
+DEFAULT_MIN_VALIDATION_EXAMPLES = 100
+DEFAULT_MAX_VALIDATION_MAE = 10.0
+DEFAULT_MIN_WITHIN_TEN_RATE = 0.95
+DEFAULT_MIN_VALIDATION_SKILL = 0.10
+DEFAULT_MIN_HUMAN_REVIEWED_RATIO = 1.0
 
 ACTION_VERBS = (
     "adapted",
@@ -265,6 +271,95 @@ def file_sha256(path: str) -> str:
     return digest.hexdigest()
 
 
+def stable_row_key(row: dict[str, Any]) -> str:
+    data = row.get("input", {}) if isinstance(row.get("input", {}), dict) else {}
+    metadata = row.get("metadata", {}) if isinstance(row.get("metadata", {}), dict) else {}
+    for group_field in ("session_id", "answer_id", "record_id"):
+        group_value = data.get(group_field)
+        if group_value is not None and str(group_value).strip():
+            return f"{group_field}:{group_value}"
+
+    parts = [
+        row.get("source", ""),
+        data.get("question", ""),
+        data.get("answer", ""),
+        metadata.get("created_at", ""),
+    ]
+    return "row:" + hashlib.sha256("|".join(str(value) for value in parts).encode("utf-8")).hexdigest()
+
+
+def split_rows(rows: list[dict[str, Any]], validation_fraction: float) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Create a deterministic group-aware holdout to prevent session leakage."""
+    if len(rows) < 10 or validation_fraction <= 0:
+        return rows[:], []
+
+    validation_fraction = max(0.05, min(0.40, validation_fraction))
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        grouped.setdefault(stable_row_key(row), []).append(row)
+
+    ranked_groups = sorted(
+        grouped.items(),
+        key=lambda item: hashlib.sha256(f"{RANDOM_SEED}|{item[0]}".encode("utf-8")).hexdigest(),
+    )
+    if len(ranked_groups) < 2:
+        # A holdout from the same interview/session would leak context into
+        # validation. Keep all rows for training and let the quality gate fail
+        # closed until a genuinely independent group exists.
+        return rows[:], []
+
+    validation_target = max(1, int(round(len(rows) * validation_fraction)))
+    validation: list[dict[str, Any]] = []
+    training: list[dict[str, Any]] = []
+
+    for index, (_, group_rows) in enumerate(ranked_groups):
+        groups_remaining = len(ranked_groups) - index - 1
+        if len(validation) < validation_target and groups_remaining > 0:
+            validation.extend(group_rows)
+        else:
+            training.extend(group_rows)
+
+    return training, validation
+
+
+def is_human_reviewed(row: dict[str, Any]) -> bool:
+    source = str(row.get("source", "")).strip().lower()
+    metadata = row.get("metadata", {}) if isinstance(row.get("metadata", {}), dict) else {}
+    status = str(metadata.get("audit_status", "")).strip().lower()
+    origin = str(metadata.get("data_origin", "")).strip().lower()
+    label_policy = str(metadata.get("label_policy", "")).strip().lower()
+    return (
+        source == "interview_answers"
+        and status in {"approved", "archived"}
+        and origin == "human_reviewed_interview_answer"
+        and label_policy == "approved_or_archived_admin_review"
+    )
+
+
+def dataset_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    sources: dict[str, int] = {}
+    origins: dict[str, int] = {}
+    human_reviewed = 0
+
+    for row in rows:
+        source = str(row.get("source", "unknown") or "unknown")
+        metadata = row.get("metadata", {}) if isinstance(row.get("metadata", {}), dict) else {}
+        origin = str(metadata.get("data_origin", "unspecified") or "unspecified")
+        sources[source] = sources.get(source, 0) + 1
+        origins[origin] = origins.get(origin, 0) + 1
+        if is_human_reviewed(row):
+            human_reviewed += 1
+
+    total = len(rows)
+    return {
+        "total_examples": total,
+        "human_reviewed_examples": human_reviewed,
+        "human_reviewed_ratio": round(human_reviewed / total, 6) if total else 0.0,
+        "sources": dict(sorted(sources.items())),
+        "data_origins": dict(sorted(origins.items())),
+    }
+
+
 def target_value(row: dict[str, Any], field: str) -> float | None:
     output = row.get("output", {})
     if not isinstance(output, dict) or field not in output:
@@ -331,43 +426,163 @@ def predict_model(field_model: dict[str, Any], features: dict[str, float]) -> fl
     return clamp(fallback + confidence * (raw - fallback))
 
 
-def train_field(samples: list[tuple[dict[str, float], float]], epochs: int, field: str) -> tuple[dict[str, Any], dict[str, Any]]:
-    names = sorted({name for features, _ in samples for name, value in features.items() if value != 0.0})
-    scales = feature_scales(samples, names)
-    mean_target = statistics.mean(target for _, target in samples)
-    confidence = round(len(samples) / (len(samples) + 40.0), 6)
-    ensemble_size = 7 if len(samples) >= 250 else 5 if len(samples) >= 75 else 3 if len(samples) >= 25 else 1
+def error_metrics(field_model: dict[str, Any], samples: list[tuple[dict[str, float], float]]) -> dict[str, Any]:
+    if not samples:
+        return {
+            "examples": 0,
+            "mean_absolute_error": None,
+            "root_mean_squared_error": None,
+            "median_absolute_error": None,
+            "mean_error_bias": None,
+            "within_5_rate": None,
+            "within_10_rate": None,
+            "within_15_rate": None,
+        }
+
+    residuals = [predict_model(field_model, features) - target for features, target in samples]
+    absolute_errors = [abs(value) for value in residuals]
+    return {
+        "examples": len(samples),
+        "mean_absolute_error": round(statistics.mean(absolute_errors), 3),
+        "root_mean_squared_error": round(math.sqrt(statistics.mean(value * value for value in residuals)), 3),
+        "median_absolute_error": round(statistics.median(absolute_errors), 3),
+        "mean_error_bias": round(statistics.mean(residuals), 3),
+        "within_5_rate": round(sum(error <= 5 for error in absolute_errors) / len(absolute_errors), 6),
+        "within_10_rate": round(sum(error <= 10 for error in absolute_errors) / len(absolute_errors), 6),
+        "within_15_rate": round(sum(error <= 15 for error in absolute_errors) / len(absolute_errors), 6),
+    }
+
+
+def add_baseline_skill(metrics: dict[str, Any], samples: list[tuple[dict[str, float], float]], baseline: float) -> dict[str, Any]:
+    if not samples or metrics.get("mean_absolute_error") is None:
+        metrics["baseline_mean_absolute_error"] = None
+        metrics["skill_score"] = None
+        return metrics
+
+    baseline_mae = statistics.mean(abs(baseline - target) for _, target in samples)
+    model_mae = float(metrics["mean_absolute_error"])
+    metrics["baseline_mean_absolute_error"] = round(baseline_mae, 3)
+    metrics["skill_score"] = round(1.0 - (model_mae / baseline_mae), 6) if baseline_mae > 0 else 0.0
+    return metrics
+
+
+def train_field(
+    training_samples: list[tuple[dict[str, float], float]],
+    validation_samples: list[tuple[dict[str, float], float]],
+    epochs: int,
+    field: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    names = sorted({name for features, _ in training_samples for name, value in features.items() if value != 0.0})
+    scales = feature_scales(training_samples, names)
+    mean_target = statistics.mean(target for _, target in training_samples)
+    sample_confidence = len(training_samples) / (len(training_samples) + 100.0)
+    ensemble_size = 7 if len(training_samples) >= 250 else 5 if len(training_samples) >= 75 else 3 if len(training_samples) >= 25 else 1
     seed_offset = int(hashlib.sha1(field.encode("utf-8")).hexdigest()[:6], 16)
     members = [
         {
             "seed": RANDOM_SEED + index,
-            "weights": train_member(samples, scales, mean_target, epochs, RANDOM_SEED + seed_offset + index),
+            "weights": train_member(training_samples, scales, mean_target, epochs, RANDOM_SEED + seed_offset + index),
         }
         for index in range(ensemble_size)
     ]
     field_model = {
         "algorithm": "scaled_bagged_elastic_net_sgd",
         "fallback": round(mean_target, 3),
-        "confidence": confidence,
-        "examples": len(samples),
+        "confidence": round(sample_confidence, 6),
+        "examples": len(training_samples),
         "feature_count": len(names),
         "scales": {name: round(value, 8) for name, value in sorted(scales.items()) if name == "bias" or abs(value - 1.0) >= 0.000001},
         "weights": members[0]["weights"],
         "members": members,
     }
-    errors = [abs(predict_model(field_model, features) - target) for features, target in samples]
-    mean_error = statistics.mean(errors) if errors else 100.0
+    provisional_validation_metrics = error_metrics(field_model, validation_samples)
+
+    if validation_samples and provisional_validation_metrics["mean_absolute_error"] is not None:
+        validation_confidence = max(0.0, 1.0 - float(provisional_validation_metrics["mean_absolute_error"]) / 30.0)
+        field_model["confidence"] = round(min(sample_confidence, validation_confidence), 6)
+    else:
+        field_model["confidence"] = round(min(sample_confidence, 0.25), 6)
+
+    training_metrics = add_baseline_skill(error_metrics(field_model, training_samples), training_samples, mean_target)
+    validation_metrics = add_baseline_skill(error_metrics(field_model, validation_samples), validation_samples, mean_target)
+
     metrics = {
-        "examples": len(samples),
-        "mean_absolute_error": round(mean_error, 3),
-        "training_mean_absolute_error": round(mean_error, 3),
-        "validation_mean_absolute_error": None,
+        "examples": len(training_samples),
+        "training_examples": len(training_samples),
+        "validation_examples": len(validation_samples),
+        "mean_absolute_error": training_metrics["mean_absolute_error"],
+        "training_mean_absolute_error": training_metrics["mean_absolute_error"],
+        "validation_mean_absolute_error": validation_metrics["mean_absolute_error"],
+        "training": training_metrics,
+        "validation": validation_metrics,
         "mean_target": round(mean_target, 3),
-        "confidence": confidence,
+        "confidence": field_model["confidence"],
         "feature_count": len(names),
         "ensemble_size": ensemble_size,
     }
     return field_model, metrics
+
+
+def quality_summary(
+    metrics: dict[str, Any],
+    data_summary: dict[str, Any],
+    validation_examples: int,
+    minimum_validation_examples: int,
+    maximum_validation_mae: float,
+    minimum_within_ten_rate: float,
+    minimum_validation_skill: float,
+    minimum_human_reviewed_ratio: float,
+) -> dict[str, Any]:
+    validation_maes = [
+        float(value["validation"]["mean_absolute_error"])
+        for value in metrics.values()
+        if value.get("validation", {}).get("mean_absolute_error") is not None
+    ]
+    within_ten_rates = [
+        float(value["validation"]["within_10_rate"])
+        for value in metrics.values()
+        if value.get("validation", {}).get("within_10_rate") is not None
+    ]
+    skill_scores = [
+        float(value["validation"]["skill_score"])
+        for value in metrics.values()
+        if value.get("validation", {}).get("skill_score") is not None
+    ]
+    human_ratio = float(data_summary.get("human_reviewed_ratio", 0.0))
+    reasons: list[str] = []
+
+    if validation_examples < minimum_validation_examples:
+        reasons.append("insufficient_validation_examples")
+    if len(validation_maes) != len(SCORE_FIELDS):
+        reasons.append("missing_field_validation_metrics")
+    if validation_maes and max(validation_maes) > maximum_validation_mae:
+        reasons.append("validation_mae_above_limit")
+    if within_ten_rates and min(within_ten_rates) < minimum_within_ten_rate:
+        reasons.append("validation_within_10_rate_below_target")
+    if len(skill_scores) != len(SCORE_FIELDS):
+        reasons.append("validation_skill_missing")
+    elif min(skill_scores) < minimum_validation_skill:
+        reasons.append("validation_skill_below_target")
+    if human_ratio < minimum_human_reviewed_ratio:
+        reasons.append("insufficient_human_reviewed_labels")
+
+    return {
+        "validated": validation_examples >= minimum_validation_examples and len(validation_maes) == len(SCORE_FIELDS),
+        "production_ready": not reasons,
+        "reasons": reasons,
+        "validation_examples": validation_examples,
+        "worst_validation_mae": round(max(validation_maes), 3) if validation_maes else None,
+        "lowest_validation_within_10_rate": round(min(within_ten_rates), 6) if within_ten_rates else None,
+        "lowest_validation_skill_score": round(min(skill_scores), 6) if skill_scores else None,
+        "human_reviewed_ratio": round(human_ratio, 6),
+        "thresholds": {
+            "minimum_validation_examples": minimum_validation_examples,
+            "maximum_validation_mae": maximum_validation_mae,
+            "minimum_within_10_rate": minimum_within_ten_rate,
+            "minimum_validation_skill": minimum_validation_skill,
+            "minimum_human_reviewed_ratio": minimum_human_reviewed_ratio,
+        },
+    }
 
 
 def main() -> int:
@@ -375,28 +590,58 @@ def main() -> int:
     parser.add_argument("--train", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--epochs", type=int, default=80)
+    parser.add_argument("--validation-fraction", type=float, default=DEFAULT_VALIDATION_FRACTION)
+    parser.add_argument("--min-validation-examples", type=int, default=DEFAULT_MIN_VALIDATION_EXAMPLES)
+    parser.add_argument("--max-validation-mae", type=float, default=DEFAULT_MAX_VALIDATION_MAE)
+    parser.add_argument("--min-within-ten-rate", type=float, default=DEFAULT_MIN_WITHIN_TEN_RATE)
+    parser.add_argument("--min-validation-skill", type=float, default=DEFAULT_MIN_VALIDATION_SKILL)
+    parser.add_argument("--min-human-reviewed-ratio", type=float, default=DEFAULT_MIN_HUMAN_REVIEWED_RATIO)
     args = parser.parse_args()
 
     rows = read_jsonl(args.train)
     if not rows:
         raise SystemExit("No training rows found.")
 
-    feature_rows = [(row, text_features(row)) for row in rows]
+    training_rows, validation_rows = split_rows(rows, args.validation_fraction)
+    training_features = [(row, text_features(row)) for row in training_rows]
+    validation_features = [(row, text_features(row)) for row in validation_rows]
     models: dict[str, Any] = {}
     metrics: dict[str, Any] = {}
 
     for field in SCORE_FIELDS:
-        samples = [(features, target) for row, features in feature_rows if (target := target_value(row, field)) is not None]
-        if not samples:
+        training_samples = [(features, target) for row, features in training_features if (target := target_value(row, field)) is not None]
+        validation_samples = [(features, target) for row, features in validation_features if (target := target_value(row, field)) is not None]
+        if not training_samples:
             continue
-        models[field], metrics[field] = train_field(samples, args.epochs, field)
+        models[field], metrics[field] = train_field(training_samples, validation_samples, args.epochs, field)
+
+    data_summary = dataset_summary(rows)
+    artifact_quality = quality_summary(
+        metrics,
+        data_summary,
+        len(validation_rows),
+        max(1, args.min_validation_examples),
+        max(0.0, args.max_validation_mae),
+        max(0.0, min(1.0, args.min_within_ten_rate)),
+        max(-1.0, min(1.0, args.min_validation_skill)),
+        max(0.0, min(1.0, args.min_human_reviewed_ratio)),
+    )
 
     artifact = {
         "schema_version": MODEL_SCHEMA_VERSION,
         "model_type": MODEL_TYPE,
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "training_examples": len(rows),
+        "total_examples": len(rows),
+        "training_examples": len(training_rows),
+        "validation_examples": len(validation_rows),
         "training_dataset_checksum": file_sha256(args.train),
+        "split": {
+            "method": "deterministic_group_holdout_sha256",
+            "seed": RANDOM_SEED,
+            "validation_fraction": max(0.0, min(0.40, args.validation_fraction)),
+        },
+        "dataset_summary": data_summary,
+        "quality_summary": artifact_quality,
         "hash_buckets": HASH_BUCKETS,
         "score_fields": SCORE_FIELDS,
         "feature_pipeline": {
@@ -417,7 +662,16 @@ def main() -> int:
         json.dump(artifact, handle, ensure_ascii=False, indent=2)
         handle.write("\n")
 
-    print(json.dumps({"status": "trained", "examples": len(rows), "output": args.output, "metrics": metrics}, indent=2))
+    print(json.dumps({
+        "status": "trained",
+        "examples": len(rows),
+        "training_examples": len(training_rows),
+        "validation_examples": len(validation_rows),
+        "production_ready": artifact_quality["production_ready"],
+        "quality_summary": artifact_quality,
+        "output": args.output,
+        "metrics": metrics,
+    }, indent=2))
     return 0
 
 

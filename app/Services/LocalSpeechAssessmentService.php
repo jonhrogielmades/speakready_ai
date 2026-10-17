@@ -8,7 +8,7 @@ use Symfony\Component\Process\Process;
 
 class LocalSpeechAssessmentService
 {
-    public const VERSION = 1;
+    public const VERSION = 2;
 
     private const STATUS_VALUES = ['measured', 'partial', 'not_measured', 'unavailable', 'failed'];
 
@@ -147,6 +147,16 @@ class LocalSpeechAssessmentService
 
     public function transcriptFrom(?array $assessment): ?string
     {
+        if (data_get($assessment, 'asr.status') !== 'measured') {
+            return null;
+        }
+
+        $minimumConfidence = max(0, min(100, (int) config('services.local_speech.min_transcript_confidence', 60)));
+        $confidence = data_get($assessment, 'asr.confidence');
+        if (! is_numeric($confidence) || (int) round((float) $confidence) < $minimumConfidence) {
+            return null;
+        }
+
         $transcript = trim((string) data_get($assessment, 'asr.transcript', ''));
 
         return $transcript !== '' ? $transcript : null;
@@ -154,7 +164,26 @@ class LocalSpeechAssessmentService
 
     public function scoreFrom(?array $assessment): ?int
     {
-        foreach (['gop.score', 'pronunciation.score'] as $path) {
+        $minimumReliability = max(0, min(100, (int) config('services.local_speech.min_scoring_reliability', 80)));
+        $reliability = data_get($assessment, 'reliability.score');
+        if (! is_numeric($reliability) || (int) round((float) $reliability) < $minimumReliability) {
+            return null;
+        }
+
+        $requireTrueGop = filter_var(config('services.local_speech.require_true_gop_for_score', true), FILTER_VALIDATE_BOOLEAN);
+        $paths = $requireTrueGop ? ['gop'] : ['gop', 'pronunciation'];
+
+        foreach ($paths as $componentName) {
+            if (data_get($assessment, $componentName.'.status') !== 'measured') {
+                continue;
+            }
+
+            $method = strtolower(trim((string) data_get($assessment, $componentName.'.method', '')));
+            if ($componentName === 'gop' && ($method === '' || str_contains($method, 'proxy') || str_contains($method, 'not_clinical'))) {
+                continue;
+            }
+
+            $path = $componentName.'.score';
             $value = data_get($assessment, $path);
             if (is_numeric($value)) {
                 return max(0, min(100, (int) round((float) $value)));
@@ -209,7 +238,7 @@ class LocalSpeechAssessmentService
 
         return [
             'score' => $score,
-            'band' => trim((string) ($value['band'] ?? $this->reliabilityBand($score))),
+            'band' => $this->reliabilityBand($score),
             'measured_components' => array_values(array_slice($this->stringList($value['measured_components'] ?? []), 0, 10)),
         ];
     }

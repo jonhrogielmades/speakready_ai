@@ -92,6 +92,7 @@ class FeedbackModelTrainingPipelineTest extends TestCase
  $this->assertSame(84, data_get($row, 'output.score'));
  $this->assertSame(88, data_get($row, 'output.professionalism_score'));
  $this->assertSame(100, data_get($row, 'output.star_method_score'));
+ $this->assertSame('human_reviewed_interview_answer', data_get($row, 'metadata.data_origin'));
  }
 
  public function test_trained_local_model_is_not_used_for_ai_only_feedback_provider(): void
@@ -201,6 +202,88 @@ class FeedbackModelTrainingPipelineTest extends TestCase
  $this->assertSame('verified', data_get($feedback, 'feedback_quality.status'));
  }
 
+ public function test_unvalidated_local_model_is_blocked_from_runtime_scoring(): void
+ {
+ $modelPath = storage_path('framework/testing/phpunit-unvalidated-feedback-model.json');
+ file_put_contents($modelPath, json_encode([
+ 'schema_version' => 2,
+ 'model_type' => 'hashed_linear_feedback_scorer_v2',
+ 'training_examples' => 2000,
+ 'models' => ['score' => ['weights' => ['bias' => 0.8], 'fallback' => 80]],
+ 'metrics' => ['score' => ['validation_mean_absolute_error' => null]],
+ ]));
+
+ config([
+ 'services.local_feedback_model.enabled' => true,
+ 'services.local_feedback_model.require_validation' => true,
+ 'services.local_feedback_model.model_path' => $modelPath,
+ 'services.local_feedback_model.predict_script' => 'scripts/predict_feedback.py',
+ ]);
+
+ $service = app(LocalFeedbackModelService::class);
+ $quality = $service->qualityStatus();
+
+ $this->assertFalse($service->available());
+ $this->assertFalse($quality['production_ready']);
+ $this->assertContains('missing_field_validation_metrics', $quality['reasons']);
+ }
+
+ public function test_only_validated_human_reviewed_model_passes_runtime_gate(): void
+ {
+ $modelPath = storage_path('framework/testing/phpunit-validated-feedback-model.json');
+ $metrics = [];
+ $models = [];
+ foreach (['score', 'clarity_score', 'relevance_score', 'grammar_score', 'professionalism_score', 'star_method_score'] as $field) {
+ $metrics[$field] = [
+ 'validation' => [
+ 'examples' => 100,
+ 'mean_absolute_error' => 4.5,
+ 'within_10_rate' => 0.97,
+ 'skill_score' => 0.35,
+ ],
+ ];
+ $models[$field] = [
+ 'algorithm' => 'scaled_bagged_elastic_net_sgd',
+ 'fallback' => 80,
+ 'confidence' => 0.85,
+ 'weights' => ['bias' => 0.8],
+ ];
+ }
+ file_put_contents($modelPath, json_encode([
+ 'schema_version' => 3,
+ 'model_type' => 'hashed_linear_feedback_scorer_v3',
+ 'validation_examples' => 100,
+ 'dataset_summary' => ['human_reviewed_ratio' => 1.0],
+ 'quality_summary' => ['production_ready' => true],
+ 'models' => $models,
+ 'metrics' => $metrics,
+ ]));
+
+ config([
+ 'services.local_feedback_model.enabled' => true,
+ 'services.local_feedback_model.require_validation' => true,
+ 'services.local_feedback_model.model_path' => $modelPath,
+ 'services.local_feedback_model.predict_script' => 'scripts/predict_feedback.py',
+ 'services.local_feedback_model.min_validation_examples' => 20,
+ 'services.local_feedback_model.max_validation_mae' => 10,
+ 'services.local_feedback_model.min_validation_within_10_rate' => 0.95,
+ 'services.local_feedback_model.min_validation_skill' => 0.10,
+ 'services.local_feedback_model.min_human_reviewed_ratio' => 0.80,
+ ]);
+
+ $service = app(LocalFeedbackModelService::class);
+
+ $this->assertTrue($service->available());
+ $this->assertTrue($service->qualityStatus()['production_ready']);
+
+ $artifact = json_decode((string) file_get_contents($modelPath), true);
+ unset($artifact['models']['grammar_score']);
+ file_put_contents($modelPath, json_encode($artifact));
+
+ $this->assertFalse($service->available());
+ $this->assertContains('missing_field_models', $service->qualityStatus()['reasons']);
+ }
+
  public function test_auto_train_command_exports_and_detects_pending_training(): void
  {
  $category = Category::create(['title' => 'Job Interview']);
@@ -258,7 +341,7 @@ class FeedbackModelTrainingPipelineTest extends TestCase
  $this->assertTrue(Storage::disk('datasets')->exists($path));
  }
 
- public function test_train_command_writes_stronger_v2_model_artifact(): void
+ public function test_train_command_writes_schema_v3_model_artifact(): void
  {
  $path = 'normalized/training/phpunit_stronger_feedback_train.jsonl';
  Storage::disk('datasets')->put($path, json_encode([
@@ -304,12 +387,14 @@ class FeedbackModelTrainingPipelineTest extends TestCase
 
  $model = json_decode((string) file_get_contents($modelPath), true);
 
- $this->assertSame(2, $model['schema_version']);
- $this->assertSame('hashed_linear_feedback_scorer_v2', $model['model_type']);
+ $this->assertSame(3, $model['schema_version']);
+ $this->assertSame('hashed_linear_feedback_scorer_v3', $model['model_type']);
  $this->assertSame('scaled_bagged_elastic_net_sgd', data_get($model, 'models.score.algorithm'));
  $this->assertSame('sparse_rms_no_centering', data_get($model, 'feature_pipeline.scaling'));
  $this->assertGreaterThan(0, data_get($model, 'models.score.feature_count'));
  $this->assertNotEmpty(data_get($model, 'models.score.members'));
+ $this->assertSame(0, data_get($model, 'validation_examples'));
+ $this->assertFalse(data_get($model, 'quality_summary.production_ready'));
  }
 
  private function setEnvValue(string $key, string $value): void

@@ -478,6 +478,24 @@ When that index exists, mock interviews use it for source-backed similarity
 matching before falling back to the ordered question bank. For CI or machines
 without ML packages, use `--backend=lexical_hash` only as a smoke-test backend.
 
+The optional trained question reranker is fail-closed. It runs only when its
+`validation_metrics.json` proves evaluation on a held-out set with at least 200
+examples and precision@5 of at least 0.95. The validation file must also bind
+the evidence to the exact `model.safetensors` file by SHA-256, so stale metrics
+from an older model cannot enable a replacement model. Without that evidence,
+SpeakReady keeps the source-backed Sentence-BERT ordering instead of trusting
+an unvalidated classifier. The required validation artifact shape is:
+
+```json
+{
+  "schema_version": 1,
+  "data_split": "held_out",
+  "evaluation_examples": 500,
+  "model_sha256": "<sha256-of-model.safetensors>",
+  "metrics": { "precision_at_5": 0.97 }
+}
+```
+
 ### Local Feedback Model Training
 
 SpeakReady can train a private local feedback scoring model from reviewed interview answers. This is meant for answer scoring and coaching support, not question generation or general chat.
@@ -500,24 +518,40 @@ The default model artifact is stored privately at:
 storage/app/private/models/feedback/latest/model.json
 ```
 
-The trainer writes a schema v2 artifact with richer text/context features,
-sparse feature scaling, small-data confidence shrinkage, validation metrics
-when enough examples exist, and a lightweight ensemble for larger datasets.
-The predictor remains compatible with older schema v1 artifacts.
+The trainer writes a schema v3 artifact with richer text/context features,
+sparse feature scaling, small-data confidence shrinkage, a deterministic
+group-aware holdout split, per-score MAE/RMSE/tolerance metrics, label-origin
+provenance, and a lightweight ensemble for larger datasets. The predictor
+remains compatible with older artifacts, but the runtime will not use an old
+or unvalidated artifact when the production validation gate is enabled.
 
 After training, the local model is used as the final interview feedback fallback when API providers fail. Keep hosted providers first so detailed reviews try API providers before the local model:
 
 ```env
 LOCAL_FEEDBACK_MODEL_ENABLED=true
+LOCAL_FEEDBACK_MODEL_REQUIRE_VALIDATION=true
+LOCAL_FEEDBACK_MODEL_VALIDATION_FRACTION=0.20
+LOCAL_FEEDBACK_MODEL_MIN_VALIDATION_EXAMPLES=100
+LOCAL_FEEDBACK_MODEL_MAX_VALIDATION_MAE=10
+LOCAL_FEEDBACK_MODEL_MIN_WITHIN_10_RATE=0.95
+LOCAL_FEEDBACK_MODEL_MIN_VALIDATION_SKILL=0.10
+LOCAL_FEEDBACK_MODEL_MIN_HUMAN_REVIEWED_RATIO=1.0
 AI_FEEDBACK_PROVIDER_PRIORITY=openai,gemini,groq,cohere
 ```
 
-Automatic retraining can run through Laravel's scheduler. It exports reviewed labels first, compares the dataset checksum with the current model, and trains only when the labels changed:
+These thresholds mean that every score field needs at least 100 held-out
+examples, at least 95% of held-out predictions must be within 10 points of the reviewed label,
+the worst field MAE must be at most 10, and all labels must come from approved
+or archived real interview answers. Every score model must also
+beat a mean-label baseline by at least 10%. Synthetic bootstrap data can
+exercise the pipeline, but cannot make a model production-ready.
+
+Automatic retraining can run through Laravel's scheduler. It exports reviewed labels first, compares the dataset checksum with the current model, and trains when the labels changed or the current artifact fails the production gate:
 
 ```env
 LOCAL_FEEDBACK_MODEL_AUTO_TRAIN=true
 LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_TIME=02:30
-LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_MIN_EXAMPLES=100
+LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_MIN_EXAMPLES=500
 LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_EPOCHS=80
 ```
 
@@ -533,7 +567,12 @@ For production auto training, make sure Laravel's scheduler runs every minute th
 php artisan schedule:run
 ```
 
-Use at least 100 reviewed answers before trusting the model for real scoring. With fewer examples, pass `--force` to train a smoke-test model only:
+Use at least 500 reviewed answers so a 20% group-aware split can provide the
+minimum 100 independent validation answers before real scoring is considered.
+Passing `--force` saves a smoke-test artifact, but the runtime quality gate will
+still refuse to use it if validation or provenance checks fail. A failed forced
+artifact is redirected to the private `models/feedback/smoke` directory rather
+than replacing the configured production model:
 
 ```bash
 php artisan ai:train-feedback-model --force
@@ -590,9 +629,18 @@ MFA_ACOUSTIC_MODEL=
 FFMPEG_COMMAND=ffmpeg
 LOCAL_GOP_BACKEND=mfa
 LOCAL_GOP_COMMAND=
+LOCAL_PRONUNCIATION_REQUIRE_TRUE_GOP=true
+LOCAL_SPEECH_MIN_TRANSCRIPT_CONFIDENCE=60
+LOCAL_SPEECH_MIN_SCORING_RELIABILITY=80
 ```
 
-Install the selected Python tools first. If `LOCAL_GOP_COMMAND` is not configured, the app does not invent a true GOP score; it reports GOP as unavailable or uses limited proxy evidence where supported.
+Install the selected Python tools first. If `LOCAL_GOP_COMMAND` is not configured,
+the app does not invent a true GOP score. CTC transcript agreement remains
+available as limited coaching evidence, but it is not saved as a pronunciation
+score. Local ASR is accepted as a fallback transcript only when the backend
+reports the configured minimum confidence. A pronunciation score is exposed
+only for measured true-GOP output whose combined speech evidence passes the
+configured reliability threshold.
 
 ## Container Deployment
 

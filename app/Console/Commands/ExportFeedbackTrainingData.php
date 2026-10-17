@@ -84,8 +84,8 @@ class ExportFeedbackTrainingData extends Command
         $this->info("Exported ".count($rows)." feedback training rows to datasets:{$output}");
         $this->line("Manifest written to datasets:{$manifestPath}");
 
-        if (count($rows) < 25) {
-            $this->warn('This is enough to test the pipeline, but collect at least 100 reviewed answers before trusting the model.');
+        if (count($rows) < 500) {
+            $this->warn('This can exercise the pipeline, but collect at least 500 reviewed answers before production evaluation.');
         }
 
         return self::SUCCESS;
@@ -101,6 +101,8 @@ class ExportFeedbackTrainingData extends Command
         $session = $answer->interviewSession;
         $question = $answer->question;
         $sessionScore = $session?->score;
+        $auditStatus = strtolower(trim((string) ($answer->audit_status ?? '')));
+        $isHumanReviewed = in_array($auditStatus, ['approved', 'archived'], true);
         $professionalism = $this->scoreValue(
             $this->columnExists('interview_answers', 'professionalism_score')
                 ? $answer->getAttribute('professionalism_score')
@@ -140,6 +142,8 @@ class ExportFeedbackTrainingData extends Command
             ],
             'metadata' => [
                 'audit_status' => $answer->audit_status ?? null,
+                'data_origin' => $isHumanReviewed ? 'human_reviewed_interview_answer' : 'unreviewed_interview_answer',
+                'label_policy' => $isHumanReviewed ? 'approved_or_archived_admin_review' : 'unreviewed_scored_answer',
                 'scoring_confidence' => $this->scoreValue($answer->scoring_confidence ?? 0),
                 'created_at' => optional($answer->created_at)->toIso8601String(),
             ],

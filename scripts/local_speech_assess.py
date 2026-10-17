@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
+import math
 import os
 import re
 import shutil
@@ -20,7 +21,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Optional
 
-VERSION = 1
+VERSION = 2
 
 
 def component(name: str, status: str = "not_measured", **values: Any) -> dict[str, Any]:
@@ -35,6 +36,16 @@ def normalize_text(value: str) -> str:
 
 def bounded_text(value: Any, limit: int = 4000) -> str:
     return str(value or "").strip()[:limit]
+
+
+def bounded_score(value: Any, fallback: float = 0.0) -> float:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        parsed = fallback
+    if not math.isfinite(parsed):
+        parsed = fallback
+    return max(0.0, min(100.0, parsed))
 
 
 def import_unavailable(name: str, package: str) -> dict[str, Any]:
@@ -74,6 +85,19 @@ def run_whisper(args: argparse.Namespace) -> dict[str, Any]:
             }
         )
 
+    usable_segments = [segment for segment in segments if isinstance(segment.get("avg_logprob"), (int, float))]
+    average_log_probability = (
+        sum(float(segment["avg_logprob"]) for segment in usable_segments) / len(usable_segments)
+        if usable_segments
+        else -1.2
+    )
+    speech_probability = 1.0 - (
+        sum(float(segment.get("no_speech_prob") or 0.0) for segment in usable_segments) / len(usable_segments)
+        if usable_segments
+        else 0.25
+    )
+    confidence = bounded_score(math.exp(min(0.0, average_log_probability)) * max(0.0, speech_probability) * 100)
+
     return component(
         "asr",
         "measured",
@@ -81,6 +105,7 @@ def run_whisper(args: argparse.Namespace) -> dict[str, Any]:
         model=model_name,
         transcript=bounded_text(result.get("text"), 20000),
         language=result.get("language"),
+        confidence=round(confidence),
         segments=segments,
     )
 
@@ -102,16 +127,40 @@ def run_faster_whisper(args: argparse.Namespace) -> dict[str, Any]:
 
     transcript_parts = []
     segments = []
+    segment_log_probabilities = []
+    segment_speech_probabilities = []
     for segment in segments_raw[:80]:
         text = bounded_text(getattr(segment, "text", ""), 500)
         transcript_parts.append(text)
+        average_log_probability = getattr(segment, "avg_logprob", None)
+        no_speech_probability = getattr(segment, "no_speech_prob", None)
+        if isinstance(average_log_probability, (int, float)):
+            segment_log_probabilities.append(float(average_log_probability))
+            segment_speech_probabilities.append(
+                1.0 - float(no_speech_probability)
+                if isinstance(no_speech_probability, (int, float))
+                else 0.75
+            )
         segments.append(
             {
                 "start": getattr(segment, "start", None),
                 "end": getattr(segment, "end", None),
                 "text": text,
+                "avg_logprob": average_log_probability,
+                "no_speech_prob": no_speech_probability,
             }
         )
+
+    if segment_log_probabilities:
+        average_log_probability = sum(segment_log_probabilities) / len(segment_log_probabilities)
+        speech_probability = sum(segment_speech_probabilities) / len(segment_speech_probabilities)
+        asr_confidence = bounded_score(
+            math.exp(min(0.0, average_log_probability)) * max(0.0, speech_probability) * 100
+        )
+    else:
+        # Language detection probability is not transcription confidence.
+        # Stay below the default acceptance gate when segment evidence is absent.
+        asr_confidence = 50.0
 
     return component(
         "asr",
@@ -120,6 +169,7 @@ def run_faster_whisper(args: argparse.Namespace) -> dict[str, Any]:
         model=model_name,
         transcript=bounded_text(" ".join(transcript_parts), 20000),
         language=getattr(info, "language", None),
+        confidence=round(asr_confidence),
         segments=segments,
     )
 
@@ -161,6 +211,7 @@ def run_transformers_asr(args: argparse.Namespace, provider: str) -> dict[str, A
         provider=provider,
         model=model_name,
         transcript=bounded_text(result.get("text") if isinstance(result, dict) else result, 20000),
+        confidence=50,
         segments=segments,
     )
 
@@ -223,7 +274,8 @@ def run_pronunciation(args: argparse.Namespace, reference_text: str, asr_transcr
         provider=backend,
         model=model_name,
         score=score,
-        confidence=min(95, max(20, score)),
+        confidence=min(55, max(20, score)),
+        reliability_score=min(55, max(20, score)),
         method="local_ctc_transcript_agreement",
         hypothesis=hypothesis,
         reference=bounded_text(reference_text, 2000),
@@ -384,6 +436,11 @@ def run_gop(args: argparse.Namespace, reference_text: str, alignment: dict[str, 
                 decoded.setdefault("name", "gop")
                 decoded.setdefault("status", "measured")
                 decoded.setdefault("provider", "custom")
+                decoded.setdefault("method", "custom_acoustic_gop")
+                if not isinstance(decoded.get("score"), (int, float)):
+                    return component("gop", "failed", provider="custom", reason="gop_score_missing")
+                decoded["score"] = round(bounded_score(decoded.get("score")))
+                decoded["confidence"] = round(bounded_score(decoded.get("confidence"), 80))
                 return decoded
         except Exception as error:
             return component("gop", "failed", provider="custom", error=bounded_text(error, 800))
@@ -428,12 +485,23 @@ def reliability(asr: dict[str, Any], pronunciation: dict[str, Any], alignment: d
         if item.get("status") == "measured":
             components.append(name)
 
-    score = min(95, len(components) * 18)
-    if "asr" in components:
-        score += 5
-    if "gop" in components:
-        score += 10
-    score = min(95, score)
+    score = 0.0
+    if asr.get("status") == "measured" and bounded_text(asr.get("transcript")):
+        score += 0.25 * bounded_score(asr.get("confidence"), 65)
+    if pronunciation.get("status") == "measured":
+        score += 0.05 * min(55.0, bounded_score(pronunciation.get("reliability_score"), 40))
+    if alignment.get("status") == "measured" and alignment.get("word_alignments"):
+        score += 0.20 * 85.0
+    if phoneme_alignment.get("status") == "measured" and phoneme_alignment.get("phoneme_alignments"):
+        score += 0.15 * 85.0
+    if gop.get("status") == "measured":
+        method = bounded_text(gop.get("method")).lower()
+        if "proxy" in method or "not_clinical" in method:
+            score += 0.35 * 20.0
+        else:
+            score += 0.35 * bounded_score(gop.get("confidence"), 80)
+
+    score = min(95, int(round(score)))
     band = "High" if score >= 85 else "Moderate" if score >= 65 else "Limited" if score > 0 else "Unavailable"
 
     return {"score": score, "band": band, "measured_components": components}

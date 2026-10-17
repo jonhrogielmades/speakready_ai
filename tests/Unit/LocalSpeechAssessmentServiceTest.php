@@ -33,6 +33,7 @@ class LocalSpeechAssessmentServiceTest extends TestCase
                 'status' => 'measured',
                 'provider' => 'whisper',
                 'transcript' => 'I improved the process.',
+                'confidence' => 90,
             ],
             'pronunciation' => [
                 'status' => 'measured',
@@ -41,6 +42,7 @@ class LocalSpeechAssessmentServiceTest extends TestCase
             'gop' => [
                 'status' => 'measured',
                 'score' => 72,
+                'method' => 'custom_acoustic_gop',
             ],
             'reliability' => [
                 'score' => 88,
@@ -73,5 +75,63 @@ class LocalSpeechAssessmentServiceTest extends TestCase
 
         $this->assertNull($service->scoreFrom($assessment));
         $this->assertSame(82, $assessment['reliability']['score']);
+    }
+
+    public function test_it_rejects_proxy_pronunciation_scores_even_when_the_payload_claims_high_reliability(): void
+    {
+        config([
+            'services.local_speech.require_true_gop_for_score' => true,
+            'services.local_speech.min_scoring_reliability' => 80,
+        ]);
+        $service = app(LocalSpeechAssessmentService::class);
+
+        $assessment = $service->normalizeAssessment([
+            'status' => 'measured',
+            'asr' => ['status' => 'measured', 'transcript' => 'I improved the process.'],
+            'pronunciation' => ['status' => 'measured', 'score' => 98, 'method' => 'local_ctc_transcript_agreement'],
+            'gop' => [
+                'status' => 'measured',
+                'score' => 98,
+                'method' => 'ctc_pronunciation_proxy_not_clinical_gop',
+            ],
+            'reliability' => ['score' => 95, 'band' => 'Perfect'],
+        ]);
+
+        $this->assertNull($service->scoreFrom($assessment));
+        $this->assertSame('High', $assessment['reliability']['band']);
+    }
+
+    public function test_it_rejects_real_gop_score_when_overall_evidence_is_below_threshold(): void
+    {
+        config([
+            'services.local_speech.require_true_gop_for_score' => true,
+            'services.local_speech.min_scoring_reliability' => 80,
+        ]);
+        $service = app(LocalSpeechAssessmentService::class);
+
+        $assessment = $service->normalizeAssessment([
+            'status' => 'partial',
+            'gop' => ['status' => 'measured', 'score' => 91, 'method' => 'custom_acoustic_gop'],
+            'reliability' => ['score' => 60],
+        ]);
+
+        $this->assertNull($service->scoreFrom($assessment));
+    }
+
+    public function test_it_rejects_low_confidence_local_transcript(): void
+    {
+        config(['services.local_speech.min_transcript_confidence' => 60]);
+        $service = app(LocalSpeechAssessmentService::class);
+
+        $assessment = $service->normalizeAssessment([
+            'status' => 'measured',
+            'asr' => [
+                'status' => 'measured',
+                'transcript' => 'An uncertain local transcript.',
+                'confidence' => 42,
+            ],
+        ]);
+
+        $this->assertNull($service->transcriptFrom($assessment));
     }
 }
