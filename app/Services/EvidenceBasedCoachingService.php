@@ -1303,7 +1303,7 @@ final class EvidenceBasedCoachingService
  $total = count($checks);
  $percent = $total > 0? (int) round(($passed / $total) * 100): 0;
 
- return [
+ $quality = [
  'status' => $percent === 100? 'verified': 'limited',
  'checks_passed' => $passed,
  'checks_total' => $total,
@@ -1312,6 +1312,15 @@ final class EvidenceBasedCoachingService
  'scope' => 'Checks for answer proof, safe scoring, next steps, and safety notes.',
  'limitation' => '100% checks passed means the required checks passed. It does not mean the review is perfect.',
  ];
+
+ if (is_numeric($normalizedQuality['reliability_percent']?? null)) {
+ $quality['reliability_percent'] = $this->boundedInt($normalizedQuality['reliability_percent'], 0, 100);
+ }
+ if (is_scalar($normalizedQuality['reliability_band']?? null)) {
+ $quality['reliability_band'] = trim((string) $normalizedQuality['reliability_band']);
+ }
+
+ return $quality;
  }
 
  private function priorityActions(

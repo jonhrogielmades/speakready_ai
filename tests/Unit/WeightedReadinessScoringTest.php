@@ -349,12 +349,31 @@ class WeightedReadinessScoringTest extends TestCase
 
         $this->assertSame(10, $normalized['score']);
         $this->assertSame(10, $normalized['star_method_score']);
+        $this->assertSame(25, $normalized['scoring_confidence']);
+        $this->assertLessThan(95, $normalized['feedback_quality']['reliability_percent']);
         $this->assertLessThanOrEqual(10, $normalized['relevance_score']);
         $this->assertStringContainsString('The answer was too short', $normalized['ai_feedback']);
         $this->assertStringContainsString('The saved answer was very short', $normalized['ai_feedback']);
         $this->assertStringNotContainsString($answer['question'], $normalized['ai_feedback']);
         $this->assertStringNotContainsString('For the question', $normalized['ai_feedback']);
         $this->assertStringContainsString('Next attempt:', $normalized['ai_feedback']);
+    }
+
+    public function test_skipped_answers_never_report_high_scoring_confidence(): void
+    {
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [[], [
+            'id' => 21,
+            'question_type' => 'Behavioral',
+            'question' => 'Tell me about a time you handled conflict.',
+            'answer' => '(Skipped or no answer)',
+            'is_skipped' => true,
+        ], []]);
+
+        $this->assertSame(0, $normalized['score']);
+        $this->assertSame(0, $normalized['scoring_confidence']);
+        $this->assertTrue($normalized['insufficient_data']);
+        $this->assertLessThan(95, $normalized['feedback_quality']['reliability_percent']);
+        $this->assertNotSame('High', $normalized['feedback_quality']['reliability_band']);
     }
 
     public function test_it_uses_bounded_local_scores_when_provider_feedback_is_missing(): void

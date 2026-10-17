@@ -92,6 +92,7 @@
  <span><i class="fa-solid fa-shield-check"></i> Review reliability</span>
  <strong>{{ $reviewEvidence->reliability->score === null ? 'Pending' : $reviewEvidence->reliability->score.'%' }} - {{ $reviewEvidence->reliability->label }}</strong>
  <p>{{ $reviewEvidence->reliability->description }}</p>
+ <p>{{ $reviewEvidence->reliability->quality_label }}. Reliability measures evidence safeguards and score stability; it is not a guarantee of perfect accuracy.</p>
  @if($reviewEvidence->reliability->context_label !== '')
  <p>{{ $reviewEvidence->reliability->context_label }}</p>
  @endif

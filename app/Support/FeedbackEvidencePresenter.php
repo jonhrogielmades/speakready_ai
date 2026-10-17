@@ -40,12 +40,15 @@ final class FeedbackEvidencePresenter
         $questionText = trim((string) ($answer->question->question_text ?? data_get($alignment, 'question', '')));
         $status = self::alignmentStatus($answer, $alignment);
         $statusLabel = self::statusLabel($status, data_get($alignment, 'status_label'));
-        $confidence = self::scoreValue(data_get($alignment, 'scoring_confidence', $answer->scoring_confidence));
+        $scoringConfidence = self::scoreValue(data_get($alignment, 'scoring_confidence'))
+            ?? self::scoreValue($answer->scoring_confidence);
         $qualityPercent = self::scoreValue(data_get($coaching, 'feedback_quality.completeness_percent'));
-        $evidenceQuotes = self::feedbackTextList(data_get($alignment, 'evidence_quotes', data_get($evidenceMap, 'supporting_excerpts', [])), $question, 3, 240);
-        if ($evidenceQuotes === [] && $answerText !== '' && ! (bool) ($answer->is_skipped ?? false)) {
-            $evidenceQuotes[] = self::limitText($answerText, 220);
+        $qualityReliability = self::scoreValue(data_get($coaching, 'feedback_quality.reliability_percent'));
+        $confidence = $qualityReliability ?? $scoringConfidence;
+        if (in_array($status, ['skipped', 'insufficient_evidence', 'not_evaluated'], true)) {
+            $confidence = null;
         }
+        $evidenceQuotes = self::feedbackTextList(data_get($alignment, 'evidence_quotes', data_get($evidenceMap, 'supporting_excerpts', [])), $question, 3, 240);
 
         $missingPoints = self::feedbackTextList(data_get($alignment, 'missing_points', data_get($evidenceMap, 'missing_evidence', [])), $question, 3, 180);
         $nextSteps = self::feedbackTextList(data_get($alignment, 'next_attempt_steps', []), $question, 4, 190);
@@ -91,7 +94,8 @@ final class FeedbackEvidencePresenter
             'confidence_color' => self::confidenceColor($confidence, $status),
             'confidence_note' => self::confidenceNote($confidence, $status),
             'feedback_quality' => $qualityPercent,
-            'quality_label' => $qualityPercent === null ? 'Checks pending' : $qualityPercent.'% checked',
+            'feedback_reliability' => $qualityReliability,
+            'quality_label' => self::qualityLabel($qualityPercent, $qualityReliability),
             'rubric_level' => trim((string) ($answer->rubric_level ?? '')),
             'evaluation_source' => self::evaluationSource(data_get($alignment, 'evaluation_source')),
             'evidence_quotes' => $evidenceQuotes,
@@ -115,16 +119,25 @@ final class FeedbackEvidencePresenter
 
     private static function sessionReliability(InterviewSession $session, Collection $answerCards): object
     {
+        $coverage = is_array($session->feedback?->coaching_summary ?? null) ? $session->feedback->coaching_summary : [];
+        $reviewContext = is_array(data_get($coverage, 'review_context')) ? data_get($coverage, 'review_context') : [];
         $scoreConfidence = self::scoreValue($session->score?->scoring_confidence);
         $answerConfidence = $answerCards
             ->pluck('confidence')
             ->filter(fn ($value): bool => is_numeric($value))
             ->values();
-        $confidence = $scoreConfidence ?? ($answerConfidence->isNotEmpty() ? (int) round($answerConfidence->avg()) : null);
-        $lowCount = $answerCards->filter(fn (object $answer): bool => $answer->confidence === null || $answer->confidence < 55)->count();
+        $answerAverage = $answerConfidence->isNotEmpty() ? (int) round($answerConfidence->avg()) : null;
+        $reviewReliability = self::scoreValue(data_get($reviewContext, 'feedback_quality.reliability_percent'));
+        $validatedReliability = data_get($reviewContext, 'detailed_review_validation.status') === 'verified'
+            ? self::scoreValue(data_get($reviewContext, 'detailed_review_validation.minimum_scoreable_reliability_percent'))
+            : null;
+        $confidence = self::conservativeScore([
+            $answerAverage,
+            $reviewReliability,
+            $validatedReliability,
+        ]) ?? $scoreConfidence;
+        $lowCount = $answerCards->filter(fn (object $answer): bool => $answer->confidence === null || $answer->confidence < 80)->count();
         $answerCount = $answerCards->count();
-        $coverage = is_array($session->feedback?->coaching_summary ?? null) ? $session->feedback->coaching_summary : [];
-        $reviewContext = is_array(data_get($coverage, 'review_context')) ? data_get($coverage, 'review_context') : [];
         $quality = self::scoreValue(data_get($reviewContext, 'feedback_quality.completeness_percent', data_get($coverage, 'feedback_quality.completeness_percent')));
 
         return (object) [
@@ -134,7 +147,7 @@ final class FeedbackEvidencePresenter
             'description' => self::sessionReliabilityDescription($confidence, $lowCount, $answerCount),
             'context_label' => self::reviewContextLabel($reviewContext),
             'low_confidence_count' => $lowCount,
-            'quality_label' => $quality === null ? 'Quality checks pending' : $quality.'% quality checks',
+            'quality_label' => self::qualityLabel($quality, $reviewReliability),
             'version_label' => 'Rubric v'.(int) ($session->score?->score_version ?? 0),
         ];
     }
@@ -312,29 +325,31 @@ final class FeedbackEvidencePresenter
 
     private static function confidenceLabel(?int $confidence, string $status): string
     {
-        if (in_array($status, ['skipped', 'insufficient_evidence', 'not_evaluated'], true) && $confidence === null) {
+        if (in_array($status, ['skipped', 'insufficient_evidence', 'not_evaluated'], true)) {
             return 'Not enough evidence';
         }
 
         return match (true) {
             $confidence === null => 'Confidence pending',
-            $confidence >= 80 => 'High confidence',
-            $confidence >= 55 => 'Medium confidence',
+            $confidence >= 95 => 'High evidence reliability',
+            $confidence >= 80 => 'Moderate evidence reliability',
+            $confidence >= 55 => 'Limited evidence reliability',
             default => 'Low confidence',
         };
     }
 
     private static function confidenceColor(?int $confidence, string $status): string
     {
-        if (in_array($status, ['skipped', 'insufficient_evidence', 'not_evaluated'], true) && $confidence === null) {
+        if (in_array($status, ['skipped', 'insufficient_evidence', 'not_evaluated'], true)) {
             return '#64748b';
         }
 
         return match (true) {
             $confidence === null => '#64748b',
-            $confidence >= 80 => '#10b981',
-            $confidence >= 55 => '#2563eb',
-            default => '#f59e0b',
+            $confidence >= 95 => '#10b981',
+            $confidence >= 80 => '#2563eb',
+            $confidence >= 55 => '#f59e0b',
+            default => '#ef4444',
         };
     }
 
@@ -346,8 +361,9 @@ final class FeedbackEvidencePresenter
 
         return match (true) {
             $confidence === null => 'The app did not store a confidence value for this answer.',
-            $confidence >= 80 => 'Enough answer detail was available for a stable review.',
-            $confidence >= 55 => 'The review is usable, but one or more details were limited.',
+            $confidence >= 95 => 'The answer passed the required evidence and score safeguards.',
+            $confidence >= 80 => 'The review is usable, but it did not meet the 95% evidence-reliability threshold.',
+            $confidence >= 55 => 'Several safeguards passed, but the review still has meaningful uncertainty.',
             default => 'Treat this as a coaching hint and retry with more complete detail.',
         };
     }
@@ -360,8 +376,9 @@ final class FeedbackEvidencePresenter
 
         $prefix = match (true) {
             $confidence === null => 'Confidence is not stored for this session.',
-            $confidence >= 80 => 'The session feedback has strong answer evidence.',
-            $confidence >= 55 => 'The session feedback is usable, with some uncertainty.',
+            $confidence >= 95 => 'The review passed the high-reliability evidence threshold.',
+            $confidence >= 80 => 'The review is usable, but it remains below the high-reliability threshold.',
+            $confidence >= 55 => 'The review has meaningful uncertainty and should be checked carefully.',
             default => 'The session feedback should be treated as a coaching draft.',
         };
 
@@ -369,7 +386,7 @@ final class FeedbackEvidencePresenter
             return $prefix.' '.$lowCount.' '.Str::plural('answer', $lowCount).' need more evidence or clearer scoring.';
         }
 
-        return $prefix.' Every answer has enough evidence for the displayed coaching notes.';
+        return $prefix.' All displayed answer notes have linked evidence and completed safeguards.';
     }
 
     private static function reviewContextLabel(array $context): string
@@ -395,8 +412,28 @@ final class FeedbackEvidencePresenter
         if ((bool) ($context['insufficient_data'] ?? false)) {
             $parts[] = 'limited answer detail';
         }
+        if (data_get($context, 'detailed_review_validation.status') === 'verified') {
+            $parts[] = 'final evidence gate passed';
+        }
 
         return implode(' - ', array_values(array_unique($parts)));
+    }
+
+    private static function qualityLabel(?int $completeness, ?int $reliability): string
+    {
+        if ($completeness === null && $reliability === null) {
+            return 'Quality checks pending';
+        }
+
+        $parts = [];
+        if ($completeness !== null) {
+            $parts[] = $completeness.'% safeguards checked';
+        }
+        if ($reliability !== null) {
+            $parts[] = $reliability.'% evidence reliability';
+        }
+
+        return implode(' - ', $parts);
     }
 
     private static function scoreLabel(InterviewAnswer $answer, string $status): string
@@ -523,6 +560,16 @@ final class FeedbackEvidencePresenter
         }
 
         return max(0, min(100, (int) round((float) $value)));
+    }
+
+    private static function conservativeScore(array $values): ?int
+    {
+        $scores = array_values(array_filter(
+            array_map(fn ($value): ?int => self::scoreValue($value), $values),
+            fn ($value): bool => $value !== null
+        ));
+
+        return $scores === [] ? null : min($scores);
     }
 
     private static function cleanText(string $text): string

@@ -17,6 +17,10 @@ use Illuminate\Support\Str;
 
 class DetailedFeedbackReviewService
 {
+ private const REVIEW_VALIDATION_SCHEMA = 'detailed_review_validation_v1';
+
+ private const MINIMUM_RELIABILITY_PERCENT = 95;
+
  public function __construct(
  private readonly TrustworthyAssessmentService $assessment,
  private readonly EvidenceBasedCoachingService $coaching
@@ -78,7 +82,33 @@ class DetailedFeedbackReviewService
  return false;
  }
 
- $this->persistProviderFeedback($session, $answers, $feedback, $providerKey);
+ $validation = $this->providerFeedbackValidation($answers, $feedback, $providerKey);
+ if (($validation['status']?? null) !== 'verified') {
+ Log::warning('Detailed review API response failed the final reliability gate; keeping saved feedback.', [
+ 'session_id' => $session->id,
+ 'user_id' => $session->user_id,
+ 'provider' => $providerKey,
+ 'required_reliability_percent' => $validation['required_reliability_percent']?? null,
+ 'minimum_scoreable_reliability_percent' => $validation['minimum_scoreable_reliability_percent']?? null,
+ 'reasons' => $validation['reasons']?? [],
+ ]);
+
+ return false;
+ }
+
+ try {
+ $this->persistProviderFeedback($session, $answers, $feedback, $providerKey, $validation);
+ } catch (\Throwable $error) {
+ Log::warning('Detailed review API response could not be persisted safely; keeping saved feedback.', [
+ 'session_id' => $session->id,
+ 'user_id' => $session->user_id,
+ 'provider' => $providerKey,
+ 'error_type' => $error::class,
+ 'message' => Str::limit($error->getMessage(), 300),
+ ]);
+
+ return false;
+ }
 
  return true;
  }
@@ -101,6 +131,15 @@ class DetailedFeedbackReviewService
 
  $summarySource = trim((string) data_get($session->feedback->coaching_summary?? [], 'overall_summary_source', ''));
  if ($summarySource !== 'ai_provider_validated') {
+ return true;
+ }
+
+ $validationStatus = trim((string) data_get(
+ $session->feedback->coaching_summary?? [],
+ 'review_context.detailed_review_validation.status',
+ ''
+ ));
+ if ($validationStatus !== 'verified') {
  return true;
  }
 
@@ -129,9 +168,9 @@ class DetailedFeedbackReviewService
  return false;
  }
 
- private function persistProviderFeedback(InterviewSession $session, Collection $answers, array $feedback, string $providerKey): void
+ private function persistProviderFeedback(InterviewSession $session, Collection $answers, array $feedback, string $providerKey, array $validation): void
  {
- DB::transaction(function () use ($session, $answers, $feedback, $providerKey): void {
+ DB::transaction(function () use ($session, $answers, $feedback, $providerKey, $validation): void {
  $feedbackById = collect($feedback['per_question_feedback']?? [])
  ->filter(fn ($item): bool => is_array($item) && isset($item['id']))
  ->keyBy(fn (array $item): string => (string) $item['id']);
@@ -141,6 +180,9 @@ class DetailedFeedbackReviewService
  'relevance_score' => 0,
  'grammar_score' => 0,
  'professionalism_score' => 0,
+ 'score' => 0,
+ 'star_method_score' => 0,
+ 'star_applicable_count' => 0,
  ];
 
  foreach ($answers as $answer) {
@@ -150,7 +192,7 @@ class DetailedFeedbackReviewService
 
  $item = $feedbackById->get((string) $answer->id);
  if (! is_array($item)) {
- continue;
+ throw new \RuntimeException("Validated feedback item {$answer->id} disappeared before persistence.");
  }
 
  $clarity = $this->scoreValue($item['clarity_score']?? 0);
@@ -163,6 +205,11 @@ class DetailedFeedbackReviewService
  $totals['relevance_score'] += $relevance;
  $totals['grammar_score'] += $grammar;
  $totals['professionalism_score'] += $professionalism;
+ $totals['score'] += $answerScore;
+ if ((bool) ($item['star_applicable']?? false)) {
+ $totals['star_method_score'] += $this->scoreValue($item['star_method_score']?? 0);
+ $totals['star_applicable_count']++;
+ }
 
  $answerText = $this->answerContent($answer);
  $evidence = $this->assessment->answerEvidence($answerText, $item['ai_feedback']?? null, $answer->question);
@@ -179,6 +226,10 @@ class DetailedFeedbackReviewService
  is_scalar($item['better_sample_answer_source']?? null)? (string) $item['better_sample_answer_source']: null,
  is_scalar($item['better_sample_answer_provider']?? null)? (string) $item['better_sample_answer_provider']: null
  );
+ if (data_get($coachingFeedback, 'feedback_quality.status') !== 'verified'
+ || (int) data_get($coachingFeedback, 'feedback_quality.completeness_percent', 0) !== 100) {
+ throw new \RuntimeException("Detailed review coaching checks failed for answer {$answer->id}.");
+ }
 
  $answer->forceFill([
  'ai_feedback' => trim((string) ($item['ai_feedback']?? '')),
@@ -188,7 +239,7 @@ class DetailedFeedbackReviewService
  'relevance_score' => $relevance,
  'grammar_score' => $grammar,
  'score' => $answerScore,
- 'scoring_confidence' => $this->scoreValue($item['scoring_confidence']?? 80),
+ 'scoring_confidence' => $this->scoreValue($item['scoring_confidence']?? 0),
  'evidence_map' => $evidence,
  'rubric_level' => $rubric['level'],
  'recommendation_text' => $rubric['next_level'],
@@ -208,11 +259,11 @@ class DetailedFeedbackReviewService
 
  $evaluatedAnswers = $this->originalAnswers($session->fresh(['answers.question']) ?? $session);
  $sessionFeedback = is_array($feedback['session_feedback']?? null)? $feedback['session_feedback']: [];
- $starScore = $this->scoreValue($sessionFeedback['star_method_score']?? 0);
+ $starScore = $totals['star_applicable_count'] > 0
+ ? $this->scoreValue($totals['star_method_score'] / $totals['star_applicable_count'])
+ : 0;
  $metadata = $this->assessment->sessionMetadata($session, $evaluatedAnswers, $metrics, $starScore);
- $overall = array_key_exists('overall_readiness_score', $sessionFeedback)
- ? $this->scoreValue($sessionFeedback['overall_readiness_score'])
- : $metadata['overall'];
+ $overall = $this->scoreValue($totals['score'] / $count);
  $metadata['overall'] = $overall;
  $metadata['readiness_band'] = $this->assessment->readinessBand($overall);
 
@@ -246,7 +297,8 @@ class DetailedFeedbackReviewService
  'coaching_summary' => $this->sessionCoachingSummary(
  $evaluatedAnswers,
  $sessionFeedback,
- is_array($feedback['review_context']?? null)? $feedback['review_context']: []
+ is_array($feedback['review_context']?? null)? $feedback['review_context']: [],
+ $validation
  ),
  ]);
 
@@ -256,11 +308,11 @@ class DetailedFeedbackReviewService
  });
  }
 
- private function sessionCoachingSummary(Collection $answers, array $sessionFeedback, array $reviewContext = []): array
+ private function sessionCoachingSummary(Collection $answers, array $sessionFeedback, array $reviewContext = [], array $validation = []): array
  {
  $summary = $this->coaching->sessionSummary($answers->values());
- if ($reviewContext !== []) {
- $summary['review_context'] = $this->summaryReviewContext($reviewContext);
+ if ($reviewContext !== [] || $validation !== []) {
+ $summary['review_context'] = $this->summaryReviewContext($reviewContext, $validation);
  }
  $overallSummary = trim((string) ($sessionFeedback['overall_summary']?? ''));
  if ($overallSummary !== '') {
@@ -271,7 +323,7 @@ class DetailedFeedbackReviewService
  return $summary;
  }
 
- private function summaryReviewContext(array $reviewContext): array
+ private function summaryReviewContext(array $reviewContext, array $validation = []): array
  {
  return [
  'schema_version' => trim((string) ($reviewContext['schema_version']?? 'interview_feedback_v9')),
@@ -292,8 +344,172 @@ class DetailedFeedbackReviewService
  (array) ($reviewContext['risk_flags']?? [])
  ))),
  'feedback_quality' => is_array($reviewContext['feedback_quality']?? null)? $reviewContext['feedback_quality']: [],
+ 'detailed_review_validation' => $this->summaryReviewValidation($validation),
  'limitation' => trim((string) ($reviewContext['limitation']?? 'This is AI coaching feedback checked against saved answer evidence, not a human hiring decision.')),
  ];
+ }
+
+ private function providerFeedbackValidation(Collection $answers, array $feedback, string $providerKey): array
+ {
+ $expectedIds = $answers
+ ->filter(fn ($answer): bool => $answer instanceof InterviewAnswer)
+ ->map(fn (InterviewAnswer $answer): string => (string) $answer->id)
+ ->values()
+ ->all();
+ $items = is_array($feedback['per_question_feedback']?? null)
+ ? array_values(array_filter($feedback['per_question_feedback'], fn ($item): bool => is_array($item)))
+ : [];
+ $suppliedIds = array_map(
+ fn (array $item): string => is_scalar($item['id']?? null)? (string) $item['id']: '',
+ $items
+ );
+ $sortedExpectedIds = $expectedIds;
+ $sortedSuppliedIds = $suppliedIds;
+ sort($sortedExpectedIds, SORT_STRING);
+ sort($sortedSuppliedIds, SORT_STRING);
+
+ $aggregateQuality = is_array($feedback['feedback_quality']?? null)? $feedback['feedback_quality']: [];
+ $reviewContext = is_array($feedback['review_context']?? null)? $feedback['review_context']: [];
+ $contextQuality = is_array($reviewContext['feedback_quality']?? null)? $reviewContext['feedback_quality']: [];
+ $sessionFeedback = is_array($feedback['session_feedback']?? null)? $feedback['session_feedback']: [];
+ $answersData = $this->answersData($answers);
+ $requiredReliability = $this->minimumReliabilityPercent();
+ $scoreableReliabilities = [];
+ $answerChecks = [];
+
+ $itemsById = collect($items)->keyBy(fn (array $item): string => (string) ($item['id']?? ''));
+ foreach ($answers as $answer) {
+ if (! $answer instanceof InterviewAnswer) {
+ continue;
+ }
+
+ $id = (string) $answer->id;
+ $item = $itemsById->get($id);
+ if (! is_array($item)) {
+ $answerChecks[$id] = ['complete' => false];
+
+ continue;
+ }
+
+ $quality = is_array($item['feedback_quality']?? null)? $item['feedback_quality']: [];
+ $qualityChecks = is_array($quality['checks']?? null)? $quality['checks']: [];
+ $isSkipped = (bool) ($item['is_skipped']?? false);
+ $isTooShort = (bool) ($item['is_too_short']?? false);
+ $isScoreable = ! $isSkipped && ! $isTooShort;
+ $reliability = is_numeric($quality['reliability_percent']?? null)
+ ? $this->scoreValue($quality['reliability_percent'])
+ : null;
+ if ($isScoreable && $reliability !== null) {
+ $scoreableReliabilities[] = $reliability;
+ }
+
+ $qualityVerified = ($quality['status']?? null) === 'verified'
+ && (int) ($quality['completeness_percent']?? 0) === 100
+ && (int) ($quality['checks_total']?? 0) > 0
+ && (int) ($quality['checks_passed']?? -1) === (int) ($quality['checks_total']?? 0)
+ && $qualityChecks !== []
+ && collect($qualityChecks)->every(fn ($passed): bool => $passed === true);
+ $scoreHandlingIsSafe = $isScoreable
+ ? $reliability !== null && $reliability >= $requiredReliability
+ : (bool) ($item['insufficient_data']?? false)
+ && $this->scoreValue($item['scoring_confidence']?? 100) <= ($isSkipped? 0: 25)
+ && $this->scoreValue($item['score']?? 100) <= ($isSkipped? 0: 10);
+ $visibleFeedbackIsUsable = $isScoreable
+ ? AIService::visibleReviewFeedbackIsProviderUsable((string) ($item['ai_feedback']?? ''), $this->answerData($answer))
+ : trim((string) ($item['ai_feedback']?? '')) !== '';
+ $possibleAnswerIsUsable = ! $isScoreable
+ || AIService::visibleReviewPossibleAnswerIsProviderUsable((string) ($item['better_sample_answer']?? ''), $this->answerData($answer));
+
+ $answerChecks[$id] = [
+ 'complete' => true,
+ 'provider_evidence_validated' => ($item['evaluation_source']?? null) === 'ai_evidence_validated',
+ 'all_safeguards_passed' => $qualityVerified,
+ 'score_handling_safe' => $scoreHandlingIsSafe,
+ 'visible_feedback_usable' => $visibleFeedbackIsUsable,
+ 'possible_answer_usable' => $possibleAnswerIsUsable,
+ ];
+ }
+
+ $minimumScoreableReliability = $scoreableReliabilities !== []? min($scoreableReliabilities): null;
+ $checks = [
+ 'api_provider_supported' => $this->isApiProviderKey($providerKey),
+ 'provider_metadata_matches' => AIService::normalizeProviderKey($feedback['_provider_key']?? null) === $providerKey,
+ 'exact_answer_count' => count($items) === count($expectedIds),
+ 'unique_answer_ids' => count($suppliedIds) === count(array_unique($suppliedIds)) && ! in_array('', $suppliedIds, true),
+ 'exact_answer_coverage' => $sortedExpectedIds === $sortedSuppliedIds,
+ 'every_answer_verified' => count($answerChecks) === count($expectedIds)
+ && collect($answerChecks)->every(fn (array $checks): bool => collect($checks)->every(fn ($passed): bool => $passed === true)),
+ 'aggregate_safeguards_passed' => ($aggregateQuality['status']?? null) === 'verified'
+ && (int) ($aggregateQuality['completeness_percent']?? 0) === 100
+ && (int) ($aggregateQuality['checks_total']?? 0) > 0
+ && (int) ($aggregateQuality['checks_passed']?? -1) === (int) ($aggregateQuality['checks_total']?? 0)
+ && is_numeric($aggregateQuality['reliability_percent']?? null),
+ 'scoreable_reliability_threshold_met' => $scoreableReliabilities === []
+ || $minimumScoreableReliability >= $requiredReliability,
+ 'review_context_matches_provider' => ($reviewContext['schema_version']?? null) === 'interview_feedback_v9'
+ && ($reviewContext['provider_source']?? null) === 'ai_provider'
+ && AIService::normalizeProviderKey($reviewContext['provider_key']?? null) === $providerKey,
+ 'review_context_quality_matches' => ($contextQuality['status']?? null) === ($aggregateQuality['status']?? null)
+ && (int) ($contextQuality['completeness_percent']?? -1) === (int) ($aggregateQuality['completeness_percent']?? -2)
+ && is_numeric($contextQuality['reliability_percent']?? null)
+ && $this->scoreValue($contextQuality['reliability_percent']) === $this->scoreValue($aggregateQuality['reliability_percent']?? -1),
+ 'review_context_coverage_complete' => (int) data_get($reviewContext, 'coverage.answer_count', -1) === count($expectedIds)
+ && (int) data_get($reviewContext, 'coverage.provider_validated_count', -1) === count($expectedIds),
+ 'session_feedback_usable' => AIService::visibleSessionFeedbackIsProviderUsable($sessionFeedback, $answersData),
+ ];
+ $failedChecks = array_keys(array_filter($checks, fn (bool $passed): bool => ! $passed));
+
+ return [
+ 'schema_version' => self::REVIEW_VALIDATION_SCHEMA,
+ 'status' => $failedChecks === []? 'verified': 'rejected',
+ 'required_reliability_percent' => $requiredReliability,
+ 'aggregate_reliability_percent' => is_numeric($aggregateQuality['reliability_percent']?? null)
+ ? $this->scoreValue($aggregateQuality['reliability_percent'])
+ : null,
+ 'minimum_scoreable_reliability_percent' => $minimumScoreableReliability,
+ 'answers_expected' => count($expectedIds),
+ 'answers_validated' => count(array_filter($answerChecks, fn (array $item): bool => ($item['complete']?? false) === true)),
+ 'scoreable_answers' => count($scoreableReliabilities),
+ 'insufficient_answers' => count($expectedIds) - count($scoreableReliabilities),
+ 'checks' => $checks,
+ 'answer_checks' => $answerChecks,
+ 'reasons' => $failedChecks,
+ 'validated_at' => now()->toIso8601String(),
+ ];
+ }
+
+ private function summaryReviewValidation(array $validation): array
+ {
+ if ($validation === []) {
+ return [];
+ }
+
+ return [
+ 'schema_version' => trim((string) ($validation['schema_version']?? self::REVIEW_VALIDATION_SCHEMA)),
+ 'status' => trim((string) ($validation['status']?? 'rejected')),
+ 'required_reliability_percent' => $this->scoreValue($validation['required_reliability_percent']?? self::MINIMUM_RELIABILITY_PERCENT),
+ 'aggregate_reliability_percent' => is_numeric($validation['aggregate_reliability_percent']?? null)
+ ? $this->scoreValue($validation['aggregate_reliability_percent'])
+ : null,
+ 'minimum_scoreable_reliability_percent' => is_numeric($validation['minimum_scoreable_reliability_percent']?? null)
+ ? $this->scoreValue($validation['minimum_scoreable_reliability_percent'])
+ : null,
+ 'answers_expected' => max(0, (int) ($validation['answers_expected']?? 0)),
+ 'answers_validated' => max(0, (int) ($validation['answers_validated']?? 0)),
+ 'scoreable_answers' => max(0, (int) ($validation['scoreable_answers']?? 0)),
+ 'insufficient_answers' => max(0, (int) ($validation['insufficient_answers']?? 0)),
+ 'checks' => is_array($validation['checks']?? null)? $validation['checks']: [],
+ 'validated_at' => trim((string) ($validation['validated_at']?? '')),
+ 'limitation' => 'This confirms required evidence and scoring safeguards passed. It does not guarantee perfect accuracy or replace human review.',
+ ];
+ }
+
+ private function minimumReliabilityPercent(): int
+ {
+ return max(
+ self::MINIMUM_RELIABILITY_PERCENT,
+ min(100, (int) config('services.ai_feedback_review.min_reliability_percent', self::MINIMUM_RELIABILITY_PERCENT))
+ );
  }
 
  private function configuredProvider(?string $preferredProvider):?string

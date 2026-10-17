@@ -7011,10 +7011,10 @@ PROMPT;
  private static function questionScoringConfidence(bool $hasProviderScores, bool $isSkipped, bool $isTooShort, string $feedback, string $answerText, array $profile, string $questionText = '', array $scoreCalibration = []): int
  {
  if ($isSkipped) {
- return 95;
+ return 0;
  }
  if ($isTooShort) {
- return 90;
+ return 25;
  }
 
  if ($hasProviderScores) {

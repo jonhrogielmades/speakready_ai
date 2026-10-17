@@ -145,6 +145,10 @@ return [
  'auto_train_epochs' => env('LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_EPOCHS', 80),
  ],
 
+ 'ai_feedback_review' => [
+ 'min_reliability_percent' => env('AI_FEEDBACK_REVIEW_MIN_RELIABILITY_PERCENT', 95),
+ ],
+
  'question_recommender' => [
  'enabled' => env('QUESTION_RECOMMENDER_ENABLED', true),
  'python' => env('QUESTION_RECOMMENDER_PYTHON', env('LOCAL_SPEECH_PYTHON', 'python')),

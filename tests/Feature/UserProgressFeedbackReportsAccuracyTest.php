@@ -682,8 +682,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  && $evidence->answers->count() === 1
  && $evidence->answers->first()->score === 68
  && $evidence->answers->first()->label === 'Answer 1'
- && str_contains($evidence->answers->first()->evidence_quote, 'I listened to the customer')
- && ! str_contains($evidence->answers->first()->evidence_quote, 'Explain a time you handled an irate customer'));
+ && $evidence->answers->first()->evidence_quotes === []
+ && $evidence->answers->first()->evidence_quote === '');
  }
 
  public function test_feedback_center_answer_review_hides_prompt_text_inside_answer_feedback(): void
@@ -734,6 +734,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  && $evidence->answers->count() === 1
  && str_contains($evidence->answers->first()->feedback, 'The answer was too short')
  && str_contains($evidence->answers->first()->feedback, 'The answer did not give enough clear detail')
+ && $evidence->answers->first()->evidence_quotes === []
+ && $evidence->answers->first()->confidence === null
  && ! str_contains($evidence->answers->first()->feedback, $leakedPrompt)
  && ! str_contains($evidence->answers->first()->feedback, 'For the answer')
  && ! str_contains($evidence->answers->first()->feedback, 'The answer text was')

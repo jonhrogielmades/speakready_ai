@@ -16,11 +16,13 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
+use App\Services\DetailedFeedbackReviewService;
 use App\Services\EvidenceBasedCoachingService;
 use App\Services\LocalFeedbackModelService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
 use App\Services\TrustworthyAssessmentService;
+use App\Support\FeedbackEvidencePresenter;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -1642,7 +1644,9 @@ class ReliabilityHardeningTest extends TestCase
  ->assertDontSee('Why It Matters')
  ->assertDontSee('Success check')
  ->assertDontSee('This note checks only')
- ->assertSee('Possible Answer');
+ ->assertSee('Possible Answer')
+ ->assertSee('High evidence reliability')
+ ->assertSee('not a guarantee of perfect accuracy');
 
  $savedAnswer = $answer->fresh();
  $savedFeedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
@@ -1656,7 +1660,112 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame('interview_feedback_v9', data_get($savedFeedback->coaching_summary, 'review_context.schema_version'));
  $this->assertSame('openai', data_get($savedFeedback->coaching_summary, 'review_context.provider_key'));
  $this->assertSame('ai_provider', data_get($savedFeedback->coaching_summary, 'review_context.provider_source'));
+ $this->assertSame('verified', data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation.status'));
+ $this->assertSame(95, data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation.required_reliability_percent'));
+ $this->assertSame(1, data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation.answers_expected'));
+ $this->assertSame(1, data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation.answers_validated'));
+ $this->assertGreaterThanOrEqual(95, (int) data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation.minimum_scoreable_reliability_percent'));
+ $this->assertTrue(collect((array) data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation.checks'))->every(fn ($passed): bool => $passed === true));
+ $this->assertGreaterThanOrEqual(95, (int) data_get($savedAnswer->coaching_feedback, 'feedback_quality.reliability_percent'));
  $this->assertStringContainsString('AI review used details', (string) data_get($savedFeedback->coaching_summary, 'overall_summary'));
+ $presentedReview = FeedbackEvidencePresenter::forSession($session->fresh(['answers.question', 'score', 'feedback']));
+ $this->assertNotNull($presentedReview);
+ $this->assertGreaterThanOrEqual(95, (int) $presentedReview->reliability->score);
+ $this->assertSame('High evidence reliability', $presentedReview->reliability->label);
+ $this->assertStringContainsString('evidence reliability', $presentedReview->reliability->quality_label);
+ $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider(
+ $session->fresh(['answers.question', 'score', 'feedback'])
+ ));
+ Http::assertSentCount(1);
+ }
+
+ public function test_detailed_review_keeps_saved_feedback_when_provider_output_misses_required_reliability(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('AI_FEEDBACK_PROVIDER_PRIORITY', 'openai');
+ $this->setEnvValue('AI_FEEDBACK_MAX_PROVIDERS', '1');
+ config()->set('services.ai_feedback_review.min_reliability_percent', 100);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Describe how you improved a support handoff.',
+ 'expected_guide' => 'Explain the handoff issue, your action, and the final result.',
+ ]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'I mapped the support handoff issue, documented missed approvals, coordinated the checklist update, and confirmed the final result with my supervisor.',
+ 'response_mode' => 'text',
+ 'ai_feedback' => 'Keep this previously saved review if the new response does not pass the gate.',
+ 'better_sample_answer' => 'Previously saved possible answer.',
+ 'score' => 68,
+ 'clarity_score' => 68,
+ 'relevance_score' => 68,
+ 'grammar_score' => 68,
+ 'scoring_confidence' => 60,
+ 'ai_provider' => 'localmodel',
+ ]);
+
+ $this->fakeOpenAiFeedback([$answer]);
+
+ $refreshed = $this->app
+ ->make(DetailedFeedbackReviewService::class)
+ ->refreshWithProvidersIfNeeded($session);
+
+ $this->assertFalse($refreshed);
+ $this->assertSame('localmodel', $answer->fresh()->ai_provider);
+ $this->assertSame('Keep this previously saved review if the new response does not pass the gate.', $answer->fresh()->ai_feedback);
+ $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
+ $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+ Http::assertSentCount(1);
+ }
+
+ public function test_detailed_review_marks_skipped_answers_as_insufficient_instead_of_claiming_high_reliability(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('AI_FEEDBACK_PROVIDER_PRIORITY', 'openai');
+ $this->setEnvValue('AI_FEEDBACK_MAX_PROVIDERS', '1');
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Tell me about a time you resolved a customer issue.',
+ ]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => '',
+ 'response_mode' => 'text',
+ 'is_skipped' => true,
+ 'ai_provider' => 'localmodel',
+ ]);
+
+ $this->fakeOpenAiFeedback([$answer]);
+
+ $refreshed = $this->app
+ ->make(DetailedFeedbackReviewService::class)
+ ->refreshWithProvidersIfNeeded($session);
+
+ $this->assertTrue($refreshed);
+ $savedAnswer = $answer->fresh();
+ $savedFeedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+ $this->assertSame(0, (int) $savedAnswer->score);
+ $this->assertSame(0, (int) $savedAnswer->scoring_confidence);
+ $this->assertSame('verified', data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation.status'));
+ $this->assertSame(1, data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation.insufficient_answers'));
+ $this->assertNull(data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation.minimum_scoreable_reliability_percent'));
+ $this->assertLessThan(95, (int) data_get($savedFeedback->coaching_summary, 'review_context.feedback_quality.reliability_percent'));
+
+ $presentedReview = FeedbackEvidencePresenter::forSession($session->fresh(['answers.question', 'score', 'feedback']));
+ $this->assertNotNull($presentedReview);
+ $this->assertLessThan(95, (int) $presentedReview->reliability->score);
+ $this->assertSame('Limited evidence reliability', $presentedReview->reliability->label);
+ $this->assertSame('Not enough evidence', $presentedReview->answers->first()->confidence_label);
  Http::assertSentCount(1);
  }
 
