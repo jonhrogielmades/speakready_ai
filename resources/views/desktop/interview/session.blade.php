@@ -1072,11 +1072,21 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return true;
  }
 
- function renderSpeechTranscript() {
+ function renderSpeechTranscript(options = {}) {
  if (!isHybridTranscriptionMode() ||!displayRealtimeTranscriptInTextarea) return;
 
  const recognizedTranscript = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
  const renderedTranscript = mergeTranscriptParts(preRecordingText, recognizedTranscript);
+ const revealTranscript = options.reveal === true;
+ const transcriptCaptureLocked = Boolean(recordingStartPromise || isRecording || isRecordingPaused);
+ if (transcriptCaptureLocked &&!revealTranscript) {
+ const answerState = answersData[currentQIdx] || defaultAnswerState();
+ answerState.speech_transcript = cleanTranscriptText(renderedTranscript);
+ answersData[currentQIdx] = answerState;
+ updateAnswerTranscriptionOverlay();
+ triggerAnalysis();
+ return;
+ }
  if (!writeHybridTranscriptToTextarea(renderedTranscript)) return;
  triggerAnalysis();
  }
@@ -3363,6 +3373,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const stage = document.querySelector('.answer-transcript-stage');
  const overlay = document.getElementById('answerTranscriptionOverlay');
  const hasText = textarea? String(textarea.value || '').trim() !== '': String(answersData[currentQIdx]?.text || '').trim() !== '';
+ const transcriptCaptureLocked = isHybridTranscriptionMode()
+ && Boolean(recordingStartPromise || isRecording || isRecordingPaused);
  const shouldShow = isHybridTranscriptionMode()
  && !isRecordingPaused
  && Boolean(isRecording || recordingStartPromise);
@@ -3373,6 +3385,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  if (overlay) overlay.hidden =!shouldShow;
  if (textarea) {
+ textarea.readOnly = isVoiceOnlyMode() || transcriptCaptureLocked;
+ textarea.setAttribute('aria-readonly', String(textarea.readOnly));
+ textarea.classList.toggle('hybrid-transcription-lock', transcriptCaptureLocked);
  textarea.classList.toggle('has-transcription-overlay', shouldShow);
  textarea.placeholder = shouldShow? '': responseModePlaceholder();
  }
@@ -5643,7 +5658,10 @@ return fallbackText;
  return false;
  });
  }
- if (isHybridTranscriptionMode() && answersData[currentQIdx]) {
+ if (isHybridTranscriptionMode()) {
+ renderSpeechTranscript({ reveal: true });
+ }
+  if (isHybridTranscriptionMode() && answersData[currentQIdx]) {
  const textareaText = currentAnswerTextareaText();
  answersData[currentQIdx].text = textareaText;
  answersData[currentQIdx].speech_transcript = cleanTranscriptText(textareaText);

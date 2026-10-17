@@ -254,7 +254,9 @@
         color: #fbbf24;
     }
     .response-panel #answerTextarea.voice-only-answer-lock,
-    html body #sec-interview-session #answerTextarea.voice-only-answer-lock {
+    .response-panel #answerTextarea.hybrid-transcription-lock,
+    html body #sec-interview-session #answerTextarea.voice-only-answer-lock,
+    html body #sec-interview-session #answerTextarea.hybrid-transcription-lock {
         border-style: dashed !important;
         border-color: rgba(148, 163, 184, 0.72) !important;
         background: rgba(148, 163, 184, 0.1) !important;
@@ -265,7 +267,9 @@
         resize: none !important;
     }
     .response-panel #answerTextarea.voice-only-answer-lock::placeholder,
-    html body #sec-interview-session #answerTextarea.voice-only-answer-lock::placeholder {
+    .response-panel #answerTextarea.hybrid-transcription-lock::placeholder,
+    html body #sec-interview-session #answerTextarea.voice-only-answer-lock::placeholder,
+    html body #sec-interview-session #answerTextarea.hybrid-transcription-lock::placeholder {
         color: var(--tx3) !important;
         -webkit-text-fill-color: var(--tx3) !important;
         opacity: 0.9 !important;
