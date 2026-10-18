@@ -71,7 +71,9 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 
 // Contact Form Route
 Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
-Route::post('/newsletter/subscribe', [ContactController::class, 'subscribe'])->name('newsletter.subscribe');
+Route::post('/newsletter/subscribe', [ContactController::class, 'subscribe'])
+    ->middleware('throttle:6,1')
+    ->name('newsletter.subscribe');
 
 // Public Legal Routes
 Route::get('/privacy-policy', [LegalPageController::class, 'privacy'])->name('legal.privacy');
@@ -205,6 +207,7 @@ Route::middleware(['auth', 'user'])->group(function () {
 
     Route::get('/missions', [UserMissionController::class, 'index'])->name('user.missions');
     Route::post('/missions/generate', [UserMissionController::class, 'generate'])->name('user.missions.generate');
+    Route::post('/missions/submit', [UserMissionController::class, 'submit'])->name('user.missions.submit');
 
     Route::get('/personal-mastery', [UserMasteryController::class, 'index'])->name('user.mastery');
     Route::post('/personal-mastery/stories', [UserMasteryController::class, 'storeStory'])->name('user.mastery.stories.store');
@@ -260,6 +263,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/', [AdminUserController::class, 'index'])->name('index');
         Route::get('/export', [AdminUserController::class, 'export'])->name('export');
         Route::post('/', [AdminUserController::class, 'store'])->name('store');
+        Route::post('/{user}/restore', [AdminUserController::class, 'restore'])->whereNumber('user')->name('restore');
         Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
         Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');
         Route::get('/{user}', [AdminUserController::class, 'show'])->name('show');
@@ -305,6 +309,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/modules', [AdminController::class, 'storeModule'])->name('admin.modules.store');
     Route::put('/admin/modules/{module}', [AdminController::class, 'updateModule'])->name('admin.modules.update');
     Route::delete('/admin/modules/{module}', [AdminController::class, 'destroyModule'])->name('admin.modules.destroy');
+    Route::post('/admin/modules/{module}/resources', [AdminController::class, 'storeModuleResource'])->name('admin.modules.resources.store');
+    Route::put('/admin/modules/{module}/resources/{resource}', [AdminController::class, 'updateModuleResource'])->name('admin.modules.resources.update');
+    Route::delete('/admin/modules/{module}/resources/{resource}', [AdminController::class, 'destroyModuleResource'])->name('admin.modules.resources.destroy');
+    Route::post('/admin/modules/{module}/quizzes', [AdminController::class, 'storeModuleQuiz'])->name('admin.modules.quizzes.store');
+    Route::put('/admin/modules/{module}/quizzes/{quiz}', [AdminController::class, 'updateModuleQuiz'])->name('admin.modules.quizzes.update');
+    Route::delete('/admin/modules/{module}/quizzes/{quiz}', [AdminController::class, 'destroyModuleQuiz'])->name('admin.modules.quizzes.destroy');
+    Route::post('/admin/modules/{module}/quizzes/{quiz}/questions', [AdminController::class, 'storeModuleQuizQuestion'])->name('admin.modules.quizzes.questions.store');
+    Route::put('/admin/modules/{module}/quizzes/{quiz}/questions/{question}', [AdminController::class, 'updateModuleQuizQuestion'])->name('admin.modules.quizzes.questions.update');
+    Route::delete('/admin/modules/{module}/quizzes/{quiz}/questions/{question}', [AdminController::class, 'destroyModuleQuizQuestion'])->name('admin.modules.quizzes.questions.destroy');
     // Admin Routes - Learning Games
     Route::get('/admin/game', [\App\Http\Controllers\AdminGameController::class, 'index'])->name('admin.game');
     Route::post('/admin/game', [\App\Http\Controllers\AdminGameController::class, 'store'])->name('admin.game.store');

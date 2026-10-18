@@ -67,6 +67,12 @@ class UserController extends Controller
  private const COACH_VOICE_RECORDING_MAX_KILOBYTES = 25600;
  private const COACH_VOICE_RECORDING_MIME_TYPES = 'audio/webm,audio/mp4,audio/mpeg,audio/mpga,audio/m4a,audio/x-m4a,audio/wav,audio/x-wav,audio/ogg,video/webm,video/mp4,application/octet-stream';
 
+ private const MODULE_PROGRESS_MILESTONES = [
+ 'started' => 25,
+ 'quiz_reviewed' => 75,
+ 'completed' => 100,
+ ];
+
  private const SCORE_METRICS = [
  'Clarity' => 'clarity_score',
  'Relevance' => 'relevance_score',
@@ -4668,29 +4674,66 @@ class UserController extends Controller
  $module = LearningModule::where('status', 'published')->findOrFail($id);
 
  $validated = $request->validate([
- 'progress_percentage' => 'required|integer|min:0|max:100',
- 'quiz_score' => 'nullable|integer|min:0|max:100',
- 'learning_hours' => 'nullable|numeric|min:0|max:1000',
+ 'milestone' => [
+ 'nullable',
+ 'required_without:progress_percentage',
+ 'prohibits:progress_percentage',
+ Rule::in(array_keys(self::MODULE_PROGRESS_MILESTONES)),
+ ],
+ 'progress_percentage' => [
+ 'nullable',
+ 'required_without:milestone',
+ 'prohibits:milestone',
+ 'integer',
+ Rule::in(array_values(self::MODULE_PROGRESS_MILESTONES)),
+ ],
+ 'quiz_score' => ['prohibited'],
+ 'learning_hours' => ['prohibited'],
  ]);
+
+ $milestone = $validated['milestone']?? array_search(
+ (int) $validated['progress_percentage'],
+ self::MODULE_PROGRESS_MILESTONES,
+ true
+ );
 
  $progress = LearningProgress::firstOrNew([
  'user_id' => Auth::id(),
  'learning_module_id' => $module->id,
  ]);
  $previousPercentage = max(0, min(100, (int) ($progress->progress_percentage?? 0)));
- $progressPercentage = max($previousPercentage, (int) $validated['progress_percentage']);
+ $hasQuizzes = $module->quizzes()->exists();
+
+ if ($milestone === 'quiz_reviewed' && ! $hasQuizzes) {
+ return back()->withErrors([
+ 'milestone' => 'This module has no quiz review milestone.',
+ ]);
+ }
+
+ if ($milestone === 'quiz_reviewed' && $previousPercentage < self::MODULE_PROGRESS_MILESTONES['started']) {
+ return back()->withErrors([
+ 'milestone' => 'Mark the module as started before saving quiz review progress.',
+ ]);
+ }
+
+ $completionRequirement = $hasQuizzes
+ ? self::MODULE_PROGRESS_MILESTONES['quiz_reviewed']
+ : self::MODULE_PROGRESS_MILESTONES['started'];
+ if ($milestone === 'completed' && $previousPercentage < $completionRequirement) {
+ return back()->withErrors([
+ 'milestone' => $hasQuizzes
+ ? 'Review the module quiz before marking the module as completed.'
+ : 'Mark the module as started before marking it as completed.',
+ ]);
+ }
+
+ $progressPercentage = max($previousPercentage, self::MODULE_PROGRESS_MILESTONES[$milestone]);
  $status = $progressPercentage >= 100? 'completed': ($progressPercentage > 0? 'in_progress': 'enrolled');
 
  $progress->status = $status;
  $progress->progress_percentage = $progressPercentage;
 
- if (array_key_exists('quiz_score', $validated)) {
- $progress->quiz_score = $validated['quiz_score'];
- }
-
- if (array_key_exists('learning_hours', $validated)) {
- $progress->learning_hours = $validated['learning_hours'];
- } elseif (! $progress->exists) {
+ if (! $progress->exists) {
  $progress->learning_hours = 0;
  }
 

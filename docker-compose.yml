@@ -43,8 +43,8 @@ services:
       FILESYSTEM_DISK: "${FILESYSTEM_DISK:-local}"
       RUN_MIGRATIONS_ON_START: "${RUN_MIGRATIONS_ON_START:-true}"
       RUN_SCHEMA_REPAIRS_ON_START: "${RUN_SCHEMA_REPAIRS_ON_START:-true}"
-      STARTUP_MAINTENANCE_FAIL_OPEN: "${STARTUP_MAINTENANCE_FAIL_OPEN:-true}"
-      RUN_DATABASE_SEEDERS: "${RUN_DATABASE_SEEDERS:-false}"
+      STARTUP_MAINTENANCE_FAIL_OPEN: "${STARTUP_MAINTENANCE_FAIL_OPEN:-false}"
+      RUN_DATABASE_SEEDERS: "${RUN_DATABASE_SEEDERS:-true}"
       REPAIR_FEEDBACK_ON_START: "${REPAIR_FEEDBACK_ON_START:-false}"
       REPAIR_FEEDBACK_LIMIT: "${REPAIR_FEEDBACK_LIMIT:-250}"
       ADMIN_NAME: "${ADMIN_NAME:-System Admin}"
@@ -216,7 +216,7 @@ services:
     volumes:
       - speakready_storage:/var/www/storage
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:80/up || exit 1"]
+      test: ["CMD-SHELL", "curl --fail --silent --show-error --max-time 4 http://127.0.0.1:80/up || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5

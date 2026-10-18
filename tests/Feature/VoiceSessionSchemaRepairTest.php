@@ -44,4 +44,24 @@ class VoiceSessionSchemaRepairTest extends TestCase
             );
         }
     }
+
+    public function test_voice_session_schema_command_creates_and_rechecks_the_table_idempotently(): void
+    {
+        Schema::dropIfExists('voice_sessions');
+
+        $arguments = [
+            '--force' => true,
+            '--create-missing' => true,
+        ];
+
+        $this->artisan('app:ensure-voice-schema', $arguments)
+            ->expectsOutput('Voice session schema is ready.')
+            ->assertSuccessful();
+
+        $this->assertTrue(VoiceSessionSchema::hasRequiredColumns());
+
+        $this->artisan('app:ensure-voice-schema', $arguments)
+            ->expectsOutput('Voice session schema is ready.')
+            ->assertSuccessful();
+    }
 }

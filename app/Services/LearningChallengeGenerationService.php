@@ -55,7 +55,11 @@ class LearningChallengeGenerationService
 
  public function ensureAiJourneyForPosition(?Category $requestedCategory, string $position): array
  {
+ // Keep web requests bounded without overriding the unlimited execution time
+ // used by CLI workers, maintenance commands, and the test runner.
+ if (! in_array(PHP_SAPI, ['cli', 'phpdbg'], true)) {
  @set_time_limit(300);
+ }
 
  $challengePositions = app(ChallengePositionService::class);
  $position = $challengePositions->clean($position);

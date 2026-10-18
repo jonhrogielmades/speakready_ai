@@ -145,6 +145,8 @@
                 </div>
             </div>
 
+            @include('shared.admin.dashboard-recent-user-updates')
+
             <!-- Feature 11: Users Needing Improvement -->
             <div class="premium-card dashboard-panel dashboard-panel-alert mb-4" style="border-left: 4px solid var(--danger-tx); background: var(--danger-bg);">
                 <h6 class="fw-bold mb-3" style="color: var(--danger-tx);"><i class="fa-solid fa-triangle-exclamation me-2"></i>Users Needing Support</h6>
@@ -156,7 +158,7 @@
                                 <td data-label="User">{{ $score->user_name }}</td>
                                 <td data-label="Status"><span class="stat-badge danger">Low Readiness ({{ $score->overall_readiness_score }}%)</span></td>
                                 <td data-label="Note">Needs more practice</td>
-                                <td data-label="Actions" class="text-end"><button class="btn btn-sm" style="border-radius:8px;border:1px solid #f87171;color:#f87171;background:rgba(248,113,113,0.1);">Message</button></td>
+                                <td data-label="Actions" class="text-end"><a href="{{ route('admin.notifications.index', ['compose' => 1, 'user_id' => $score->user_id]) }}" class="btn btn-sm" style="border-radius:8px;border:1px solid #f87171;color:#f87171;background:rgba(248,113,113,0.1);"><i class="fa-solid fa-paper-plane me-1"></i>Notify</a></td>
                             </tr>
                             @empty
                             <tr><td colspan="4" class="text-center text-muted">No users currently needing urgent support.</td></tr>
@@ -172,33 +174,7 @@
         <div class="col-lg-4 dashboard-side-column">
 
             <!-- Feature 7: AI Usage Monitoring -->
-            <div class="premium-card dashboard-panel dashboard-panel-featured mb-4" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
-                <h6 class="fw-bold mb-4"><i class="fa-solid fa-microchip me-2 text-primary"></i>AI Usage Monitoring</h6>
-                
-                <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;">
-                    <span style="color:var(--tx2);">Total API Requests</span>
-                    <span class="fw-bold">15,000</span>
-                </div>
-                <div class="d-flex justify-content-between mb-3" style="font-size:0.85rem;">
-                    <span style="color:var(--tx2);">Today's Requests</span>
-                    <span class="fw-bold text-primary">520</span>
-                </div>
-                
-                <div class="p-3 mb-3" style="background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
-                    <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Avg Response Time</div>
-                    <div class="fw-bold" style="font-size:1.5rem;color:#34d399;">1.5s</div>
-                </div>
-                
-                <h6 style="font-size:0.85rem;color:var(--tx2);margin-bottom:10px;">Provider Status</h6>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div style="font-size:0.85rem;"><i class="fa-solid fa-robot me-2"></i>OpenAI</div>
-                    <span class="stat-badge success">Active</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <div style="font-size:0.85rem;"><i class="fa-solid fa-sparkles me-2"></i>Gemini</div>
-                    <span class="stat-badge success">Active</span>
-                </div>
-            </div>
+            @include('shared.admin.dashboard-ai-usage')
 
             <!-- Feature 4: Interview Performance Analytics -->
             <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-performance mb-4">
@@ -235,7 +211,7 @@
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded" style="background:var(--bg3);">
                     <span style="font-size:0.85rem;">AI API</span>
-                    <span class="text-success fw-bold" style="font-size:0.85rem;">Operational</span>
+                    <span class="{{ ($aiApiOperational ?? false) ? 'text-success' : 'text-warning' }} fw-bold" style="font-size:0.85rem;">{{ ($aiApiOperational ?? false) ? 'Operational' : 'Not configured' }}</span>
                 </div>
                 <div class="mt-3">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Storage Usage</span><span class="text-warning fw-bold">65%</span></div>

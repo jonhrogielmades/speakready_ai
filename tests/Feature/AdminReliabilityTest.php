@@ -73,7 +73,7 @@ class AdminReliabilityTest extends TestCase
         $this->actingAs($admin)
             ->post(route('admin.ai.providers.primary', $provider))
             ->assertRedirect()
-            ->assertSessionHas('error', 'Only active providers with an API key can be set as primary.');
+            ->assertSessionHas('error', 'Only an active, fully configured provider with a trusted endpoint, model, and API key can be assigned a routing role.');
 
         $this->assertFalse($provider->refresh()->is_primary);
     }
@@ -233,7 +233,7 @@ class AdminReliabilityTest extends TestCase
         ]);
     }
 
-    public function test_module_edit_hides_resources_quizzes_and_linked_games_controls(): void
+    public function test_module_edit_exposes_resources_and_quizzes_but_hides_linked_games_controls(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
         $module = LearningModule::create([
@@ -249,10 +249,11 @@ class AdminReliabilityTest extends TestCase
             ->assertOk()
             ->assertSee('Interview Module Info')
             ->assertSee('Interview Lessons')
-            ->assertDontSee('Resources')
-            ->assertDontSee('Quizzes')
+            ->assertSee('Resources')
+            ->assertSee('Add Downloadable Resource')
+            ->assertSee('Quizzes')
+            ->assertSee('Add Module Quiz')
             ->assertDontSee('Linked Interview Games')
-            ->assertDontSee('Upload')
             ->assertDontSee('AI Generate Quiz');
     }
 
@@ -957,7 +958,7 @@ class AdminReliabilityTest extends TestCase
         for ($i = 1; $i <= 18; $i++) {
             ActivityLog::create([
                 'user_id' => $user->id,
-                'action' => 'activity_'.$i,
+                'action' => 'user_logged_in',
                 'description' => 'Activity history item '.$i,
             ]);
         }
@@ -981,7 +982,7 @@ class AdminReliabilityTest extends TestCase
         ]);
         ActivityLog::create([
             'user_id' => $user->id,
-            'action' => 'test',
+            'action' => 'password_changed',
             'description' => '<script>alert(1)</script>',
         ]);
 
@@ -1024,7 +1025,7 @@ class AdminReliabilityTest extends TestCase
 
         ActivityLog::create([
             'user_id' => $admin->id,
-            'action' => 'test',
+            'action' => 'password_changed',
             'description' => 'Philippines activity item',
         ]);
 

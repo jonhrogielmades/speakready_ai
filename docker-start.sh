@@ -149,7 +149,7 @@ record_startup_failure() {
     {
         echo "Container startup maintenance failed with status ${status}."
         echo "Time: $(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date)"
-        echo "Set STARTUP_MAINTENANCE_FAIL_OPEN=false to keep the public startup page on maintenance failure."
+        echo "Set STARTUP_MAINTENANCE_FAIL_OPEN=true only for an emergency fail-open deployment."
     } > "$startup_maintenance_failure" 2>/dev/null || true
 }
 
@@ -201,9 +201,7 @@ run_startup_maintenance() {
                 echo "Initial migration failed; running schema repair fallback before retrying migrations." >&2
                 run_schema_repairs
 
-                if ! run_migrations; then
-                    echo "Migration retry failed after schema repair. Continuing only after required runtime schemas are repaired." >&2
-                fi
+                run_required php artisan migrate --force
             else
                 echo "Migration failed and RUN_SCHEMA_REPAIRS_ON_START is disabled." >&2
                 exit 1
@@ -228,12 +226,10 @@ run_startup_maintenance() {
         echo "Skipping optional feedback coaching repair on startup." >&2
     fi
 
-    if env_bool RUN_DATABASE_SEEDERS false; then
-        if [ "${APP_ENV:-}" = "production" ] && [ -z "${ADMIN_PASSWORD:-}" ]; then
-            echo "Skipping database seeders: ADMIN_PASSWORD must be set before seeding in production." >&2
-        else
-            run_optional php artisan db:seed --force
-        fi
+    if env_bool RUN_DATABASE_SEEDERS true; then
+        # DatabaseSeeder is intentionally limited to the idempotent admin seeder.
+        # On a fresh production database it rejects a missing ADMIN_PASSWORD.
+        run_required php artisan db:seed --force
     else
         echo "Skipping database seeders. Set RUN_DATABASE_SEEDERS=true to run them." >&2
     fi
@@ -256,7 +252,7 @@ handle_startup_maintenance_exit() {
 
     record_startup_failure "$status"
 
-    if env_bool STARTUP_MAINTENANCE_FAIL_OPEN true; then
+    if env_bool STARTUP_MAINTENANCE_FAIL_OPEN false; then
         echo "Container startup maintenance failed with status ${status}; clearing startup gate so Laravel can serve the best available response." >&2
         clear_startup_gate
     else

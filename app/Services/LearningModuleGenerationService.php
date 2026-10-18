@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\LearningModule;
 use App\Support\LearningModuleSchema;
+use App\Support\ModuleChapterHtml;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -58,7 +59,11 @@ class LearningModuleGenerationService
 
  public function ensureAiModulesForPosition(string $position): array
  {
+ // Keep web requests bounded without overriding the unlimited execution time
+ // used by CLI workers, maintenance commands, and the test runner.
+ if (! in_array(PHP_SAPI, ['cli', 'phpdbg'], true)) {
  @set_time_limit(300);
+ }
 
  LearningModuleSchema::ensure();
 
@@ -762,14 +767,7 @@ This is one module in a 4-module generated set. The full set must never exceed 4
 
  private function cleanHtml($value): string
  {
- $html = (string) $value;
- $html = preg_replace('/<(script|style|iframe|object|embed|form|input|button)\b[^>]*>.*?<\/\1>/is', '', $html)?? '';
- $html = preg_replace('/\son[a-z]+\s*=\s*(["\']).*?\1/is', '', $html)?? '';
- $html = preg_replace('/\s(href|src)\s*=\s*(["\'])\s*javascript:.*?\2/is', '', $html)?? '';
- $html = strip_tags($html, '<h3><p><ul><ol><li><strong><em><br>');
- $html = trim($html);
-
- return Str::limit($html, 16000, '');
+ return ModuleChapterHtml::sanitize(Str::limit((string) $value, 16000, ''));
  }
 
  private function htmlText($value): string

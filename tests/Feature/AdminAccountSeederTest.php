@@ -52,4 +52,53 @@ class AdminAccountSeederTest extends TestCase
         $this->assertSame('active', $admin->status);
         $this->assertTrue(Hash::check('existing-password', $admin->password));
     }
+
+    public function test_configured_bootstrap_password_does_not_overwrite_an_existing_admin_password(): void
+    {
+        $previousEnvironment = $_ENV['ADMIN_PASSWORD'] ?? null;
+        $previousServer = $_SERVER['ADMIN_PASSWORD'] ?? null;
+        $previousProcess = getenv('ADMIN_PASSWORD');
+
+        $_ENV['ADMIN_PASSWORD'] = 'bootstrap-password';
+        $_SERVER['ADMIN_PASSWORD'] = 'bootstrap-password';
+        putenv('ADMIN_PASSWORD=bootstrap-password');
+
+        try {
+            $admin = User::factory()->create([
+                'email' => 'admin@speakreadyai.online',
+                'is_admin' => true,
+                'password' => 'rotated-in-account-settings',
+            ]);
+
+            $this->seed(AdminAccountSeeder::class);
+
+            $admin->refresh();
+
+            $this->assertTrue(Hash::check('rotated-in-account-settings', $admin->password));
+            $this->assertFalse(Hash::check('bootstrap-password', $admin->password));
+        } finally {
+            $this->restoreEnvironmentValue('ADMIN_PASSWORD', $previousEnvironment, $_ENV);
+            $this->restoreEnvironmentValue('ADMIN_PASSWORD', $previousServer, $_SERVER);
+
+            if ($previousProcess === false) {
+                putenv('ADMIN_PASSWORD');
+            } else {
+                putenv('ADMIN_PASSWORD='.$previousProcess);
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $environment
+     */
+    private function restoreEnvironmentValue(string $key, mixed $value, array &$environment): void
+    {
+        if ($value === null) {
+            unset($environment[$key]);
+
+            return;
+        }
+
+        $environment[$key] = $value;
+    }
 }

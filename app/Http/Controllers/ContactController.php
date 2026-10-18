@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactMessage;
+use App\Models\NewsletterSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\ContactMessage;
+use Illuminate\Support\Str;
 
 class ContactController extends Controller
 {
@@ -33,12 +35,35 @@ class ContactController extends Controller
 
     public function subscribe(Request $request)
     {
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
+        ]);
+
         $validated = $request->validateWithBag('newsletter', [
-            'email' => 'required|email|max:255',
+            'email' => 'required|email:rfc|max:255',
+        ]);
+
+        $now = now();
+        NewsletterSubscription::query()->upsert([
+            [
+                'email' => $validated['email'],
+                'status' => NewsletterSubscription::STATUS_SUBSCRIBED,
+                'source' => 'website_footer',
+                'subscribed_at' => $now,
+                'unsubscribed_at' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+        ], ['email'], [
+            'status',
+            'source',
+            'subscribed_at',
+            'unsubscribed_at',
+            'updated_at',
         ]);
 
         return redirect()
             ->back()
-            ->with('newsletter_success', 'Thanks for subscribing. We will send updates to ' . $validated['email'] . '.');
+            ->with('newsletter_success', 'Thanks for subscribing. We will send updates to '.$validated['email'].'.');
     }
 }

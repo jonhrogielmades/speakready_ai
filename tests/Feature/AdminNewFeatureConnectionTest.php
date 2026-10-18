@@ -332,9 +332,13 @@ class AdminNewFeatureConnectionTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('user.modules.progress', $module), [
-                'progress_percentage' => 100,
-                'quiz_score' => 92,
-                'learning_hours' => 1.5,
+                'milestone' => 'started',
+            ])
+            ->assertRedirect(route('user.modules.show', $module));
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module), [
+                'milestone' => 'completed',
             ])
             ->assertRedirect(route('user.modules.show', $module));
 
@@ -391,12 +395,10 @@ class AdminNewFeatureConnectionTest extends TestCase
         $activityResponse = $this->actingAs($admin)
             ->getJson(route('admin.api.latest-activities'))
             ->assertOk()
-            ->assertJsonPath('new_count', ActivityLog::count());
+            ->assertJsonPath('new_count', ActivityLog::importantForAdmin()->whereNull('read_at')->count());
 
-        $this->assertStringContainsString(
-            'Visible Candidate changed preferred language to Cebuano.',
-            $activityResponse->json('html')
-        );
+        $this->assertStringNotContainsString('Visible Candidate changed preferred language to Cebuano.', $activityResponse->json('html'));
+        $this->assertStringContainsString('Visible Candidate unlocked the Energy Efficiency skill perk.', $activityResponse->json('html'));
 
         $this->actingAs($admin)
             ->getJson(route('admin.users.show', $user))

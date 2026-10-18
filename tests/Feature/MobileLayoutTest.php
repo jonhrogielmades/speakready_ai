@@ -38,7 +38,7 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('data-layout-shell="mobile"', false)
                 ->assertSee('data-guest-layout="mobile"', false)
                 ->assertSee('css/mobile/style.css?v=36', false)
-                ->assertSee('css/mobile/guest.css?v=27', false)
+                ->assertSee('css/mobile/guest.css?v=29', false)
                 ->assertSee('mobile-hero-preview-row', false)
                 ->assertSee('mobile-hero-image-frame', false)
                 ->assertSee('Register for Free', false)
@@ -72,7 +72,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=36', false)
-            ->assertSee('css/mobile/guest.css?v=27', false)
+            ->assertSee('css/mobile/guest.css?v=29', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=9', false);
     }
@@ -87,7 +87,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=36', false)
-            ->assertSee('css/mobile/guest.css?v=27', false)
+            ->assertSee('css/mobile/guest.css?v=29', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=9', false);
     }
@@ -175,8 +175,8 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="user-mobile-shell mobile-shell"', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('id="mob-content"', false)
-            ->assertSee('css/mobile/dashboard.css?v=48', false)
-            ->assertSee('data-page-style="dashboard-v48"', false)
+            ->assertSee('css/mobile/dashboard.css?v=49', false)
+            ->assertSee('data-page-style="dashboard-v49"', false)
             ->assertSee('sr-readiness-card-grid', false)
             ->assertDontSee('class="sr-card sr-score-panel', false)
             ->assertSee('--mob-card-gap: 12px', false)
@@ -213,7 +213,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('class="user-mobile-shell mobile-shell"', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/dashboard.css?v=48', false)
+            ->assertSee('css/mobile/dashboard.css?v=49', false)
             ->assertSee('sr-readiness-card-grid', false)
             ->assertDontSee('user-desktop-shell desktop-shell', false)
             ->assertDontSee('class="db-sidebar"', false);
@@ -787,7 +787,7 @@ class MobileLayoutTest extends TestCase
             'status' => 'active',
         ]);
 
-        $answer = InterviewAnswer::create([
+        InterviewAnswer::create([
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
             'answer_text' => 'I simplified the workflow and measured completion time.',
@@ -815,14 +815,13 @@ class MobileLayoutTest extends TestCase
             ->assertSee('feedback-filter-form', false)
             ->assertSee('feedback-audit-list-card', false)
             ->assertSee('id="mainFeedbackTable"', false)
-            ->assertSee('data-label="Audit ID"', false)
+            ->assertSee('data-label="User"', false)
             ->assertSee('data-label="Question"', false)
             ->assertSee('data-label="Score"', false)
-            ->assertSee('data-label="Generated"', false)
+            ->assertSee('data-label="Generated Date"', false)
             ->assertSee('data-label="Status"', false)
             ->assertSee('data-label="Action"', false)
             ->assertSee('feedback-action-cell', false)
-            ->assertSee('#'.$answer->id, false)
             ->assertSee('Describe a time you improved a mobile workflow.', false)
             ->assertDontSee('class="db-sidebar"', false);
 
@@ -848,7 +847,7 @@ class MobileLayoutTest extends TestCase
 
         ActivityLog::create([
             'user_id' => $user->id,
-            'action' => 'mobile_layout_reviewed',
+            'action' => 'user_logged_in',
             'description' => 'Reviewed notification cards on a narrow mobile viewport.',
             'ip_address' => '127.0.0.1',
         ]);
@@ -1495,7 +1494,7 @@ class MobileLayoutTest extends TestCase
                     ->assertSee("(BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null))", false)
                     ->assertSee("if (BrowserSpeechRecognition) return 'browser';", false)
                     ->assertSee("if (canUseServerTranscription()) return 'server';", false)
-                    ->assertSee('function renderSpeechTranscript()', false)
+                    ->assertSee('function renderSpeechTranscript(options = {})', false)
                     ->assertSee('function commitSpeechSegment(segment)', false)
                     ->assertSee('function currentRecordingTimerSeconds()', false)
                     ->assertSee('function scheduleRecordingTimerSideEffects(previousSeconds)', false)

@@ -44,7 +44,10 @@ class AdminAccountSeeder extends Seeder
             'deleted_at' => null,
         ]);
 
-        if ($isNewAdmin || $hasConfiguredPassword || blank($admin->password)) {
+        // ADMIN_PASSWORD bootstraps a new account; it must not silently undo a
+        // password changed later through the admin account screen whenever a
+        // container restarts and reruns this idempotent seeder.
+        if ($isNewAdmin || blank($admin->password)) {
             $admin->password = $seedPassword;
         }
 

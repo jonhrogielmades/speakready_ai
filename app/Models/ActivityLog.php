@@ -36,6 +36,40 @@ class ActivityLog extends Model
         'admin_settings_updated',
         'admin_settings_backup_downloaded',
         'admin_settings_backup_restored',
+        'admin_user_created',
+        'admin_user_updated',
+        'admin_user_reactivation_approved',
+        'admin_user_deleted',
+        'admin_user_restored',
+    ];
+
+    /**
+     * User changes worth surfacing on the dashboard without turning every
+     * routine interaction into an important admin notification.
+     */
+    public const ADMIN_DASHBOARD_USER_ACTIONS = [
+        'user_registered',
+        'reactivation_requested',
+        'profile_updated',
+        'password_changed',
+        'language_updated',
+        'account_deleted',
+        'interview_started',
+        'interview_completed',
+        'interview_session_deleted',
+        'interview_sessions_cleared',
+        'learning_game_started',
+        'learning_game_completed',
+        'learning_game_certificate_issued',
+        'learning_game_certificate_downloaded',
+        'learning_module_progress_updated',
+        'perk_unlocked',
+        'job_application_created',
+        'job_application_updated',
+        'job_application_deleted',
+        'ai_coach_conversation_started',
+        'ai_coach_conversation_deleted',
+        'ai_coach_conversations_cleared',
     ];
 
     /**
@@ -88,5 +122,12 @@ class ActivityLog extends Model
     public function scopeImportantForAdmin(Builder $query): Builder
     {
         return $query->whereIn('action', self::ADMIN_IMPORTANT_ACTIONS);
+    }
+
+    public function scopeDashboardUserUpdates(Builder $query): Builder
+    {
+        return $query
+            ->whereIn('action', self::ADMIN_DASHBOARD_USER_ACTIONS)
+            ->whereHas('user', fn (Builder $userQuery): Builder => $userQuery->where('is_admin', false));
     }
 }

@@ -11983,3 +11983,23 @@ body.dm #sec-progress-tracking #learning-progress .learning-pager-btn:hover:not(
         text-align: center !important;
     }
 }
+
+/* Desktop panel-heading icon alignment. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#skill-tracker, #job-interview-performance) .progress-panel-heading {
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#skill-tracker, #job-interview-performance) .progress-panel-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 10px !important;
+        font-size: 0.82rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#skill-tracker, #job-interview-performance) .progress-panel-icon i {
+        font-size: 0.82rem !important;
+    }
+}

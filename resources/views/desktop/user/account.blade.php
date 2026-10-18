@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/account.css?v=2') }}" data-page-style="user-account">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/account-2.css?v=9') }}" data-page-style="user-account-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/account-2.css?v=11') }}" data-page-style="user-account-2">
 @endpush
 
 @section('content')
@@ -57,17 +57,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-
-    @if(session('info'))
-        <div class="alert alert-info alert-dismissible fade show" role="alert" style="border-radius:12px">
-            {{ session('info') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <div id="accountProfileNoChangesAlert" class="alert alert-info" role="alert" hidden style="border-radius:12px">
-        <i class="fa-solid fa-circle-info me-2" aria-hidden="true"></i>No changes to save.
-    </div>
 
     <div class="row g-4 account-grid">
         <div class="col-lg-7 animate-fade-up" style="animation-delay: 0.1s;">
@@ -182,6 +171,7 @@
 </div>
 
 @include('shared.user.dashboard-setup-tools-modal')
+@include('shared.user.account-no-changes-modal')
 
 <div class="profile-crop-modal" id="profileCropModal" aria-hidden="true" hidden>
     <div class="profile-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="profileCropTitle">
@@ -333,7 +323,7 @@
     }
 
     const accountProfileForm = document.getElementById('accountProfileForm');
-    const accountProfileNoChangesAlert = document.getElementById('accountProfileNoChangesAlert');
+    const accountNoChangesModal = document.getElementById('accountNoChangesModal');
 
     function accountProfileSnapshot() {
         if (!accountProfileForm) return '';
@@ -356,21 +346,17 @@
 
     const initialAccountProfileSnapshot = accountProfileSnapshot();
 
-    function hideAccountProfileNoChangesAlert() {
-        if (accountProfileNoChangesAlert) accountProfileNoChangesAlert.hidden = true;
+    function showAccountNoChangesModal() {
+        if (!accountNoChangesModal || !window.bootstrap?.Modal) return;
+        window.bootstrap.Modal.getOrCreateInstance(accountNoChangesModal).show();
     }
 
     if (accountProfileForm) {
-        accountProfileForm.addEventListener('input', hideAccountProfileNoChangesAlert);
-        accountProfileForm.addEventListener('change', hideAccountProfileNoChangesAlert);
         accountProfileForm.addEventListener('submit', event => {
             if (accountProfileSnapshot() !== initialAccountProfileSnapshot) return;
 
             event.preventDefault();
-            if (accountProfileNoChangesAlert) {
-                accountProfileNoChangesAlert.hidden = false;
-                accountProfileNoChangesAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            showAccountNoChangesModal();
         });
     }
 

@@ -252,8 +252,9 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  && $historySessions->pluck('id')->all() === $createdSessions->reverse()->pluck('id')->all();
  });
 
- $this->assertSame(7, substr_count($content, '<article class="history-card" data-history-record'));
- preg_match_all('/<article class="history-card" data-history-record[^>]*\shidden\b/', $content, $hiddenHistoryCards);
+ preg_match_all('/<article class="history-card[^"]*" data-history-record/', $content, $historyCards);
+ $this->assertSame(7, count($historyCards[0]));
+ preg_match_all('/<article class="history-card[^"]*" data-history-record[^>]*\shidden\b/', $content, $hiddenHistoryCards);
  $this->assertSame(3, count($hiddenHistoryCards[0]));
  }
 
@@ -280,7 +281,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $desktopContent = $desktopResponse->getContent();
 
  $desktopResponse->assertOk()
- ->assertSee('css/desktop/user/progress.css?v=64', false)
+ ->assertSee('css/desktop/user/progress.css?v=66', false)
  ->assertSee('data-learning-page-size="3"', false)
  ->assertSee('id="learningProgressPager"', false)
  ->assertSee('id="learningProgressPrev"', false)
@@ -289,7 +290,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('Previous')
  ->assertSee('Next');
 
- $this->assertSame(5, substr_count($desktopContent, 'data-learning-record'));
+ preg_match_all('/<a class="learning-module[^"]*"[^>]*\sdata-learning-record\b/', $desktopContent, $desktopLearningRecords);
+ $this->assertSame(5, count($desktopLearningRecords[0]));
  preg_match_all('/class="learning-module[^\"]*"[^>]*\shidden\b/', $desktopContent, $desktopHiddenRecords);
  $this->assertSame(2, count($desktopHiddenRecords[0]));
 
@@ -304,7 +306,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('id="learningProgressPager"', false)
  ->assertSee('Page 1 of 2');
 
- $this->assertSame(5, substr_count($mobileContent, 'data-learning-record'));
+ preg_match_all('/<a class="learning-module[^"]*"[^>]*\sdata-learning-record\b/', $mobileContent, $mobileLearningRecords);
+ $this->assertSame(5, count($mobileLearningRecords[0]));
  preg_match_all('/class="learning-module[^\"]*"[^>]*\shidden\b/', $mobileContent, $mobileHiddenRecords);
  $this->assertSame(2, count($mobileHiddenRecords[0]));
  }
@@ -1224,7 +1227,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->get(route('user.reports'));
 
  $mobile->assertOk()
- ->assertSee('css/mobile/user/reports-2.css?v=17', false)
+ ->assertSee('css/mobile/user/reports-2.css?v=22', false)
  ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('Page 1 of 2')
  ->assertDontSee('recent_sessions_page=2', false);
@@ -1379,7 +1382,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/desktop/user/reports.css?v=2', false)
- ->assertSee('css/desktop/user/reports-2.css?v=22', false)
+ ->assertSee('css/desktop/user/reports-2.css?v=24', false)
  ->assertSee('data-page-style="user-reports"', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')
@@ -1413,7 +1416,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->get(route('user.reports'))
  ->assertOk()
  ->assertSee('css/mobile/user/reports.css?v=2', false)
- ->assertSee('css/mobile/user/reports-2.css?v=17', false)
+ ->assertSee('css/mobile/user/reports-2.css?v=22', false)
  ->assertSee('serverDetectedMobile: true', false)
  ->assertSee('reports-hero-art', false)
  ->assertDontSee('Feedback Summary Report')

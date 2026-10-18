@@ -187,4 +187,53 @@ class FeedbackReportPresenterTest extends TestCase
         $this->assertSame([$providerWeakness, $providerSuggestion], $report['weakness_items']);
         $this->assertStringNotContainsString('This overall review is based on', $report['overview']['summary']);
     }
+
+    public function test_pacing_is_only_present_when_delivery_was_actually_measured(): void
+    {
+        $session = new InterviewSession();
+
+        $score = new Score();
+        $score->setRawAttributes([
+            'clarity_score' => 80,
+            'relevance_score' => 81,
+            'grammar_score' => 82,
+            'professionalism_score' => 83,
+            'delivery_stability_score' => 64,
+            'overall_readiness_score' => 79,
+        ], true);
+
+        $feedback = new Feedback();
+        $feedback->setRawAttributes([
+            'coaching_summary' => json_encode([
+                'coverage' => ['answers' => 1, 'delivery_measured' => 0],
+            ]),
+        ], true);
+
+        $answer = new InterviewAnswer();
+        $answer->setRawAttributes([
+            'answer_text' => 'I explained my action and the final result.',
+            'is_skipped' => false,
+        ], true);
+
+        $session->setRelation('score', $score);
+        $session->setRelation('feedback', $feedback);
+        $session->setRelation('answers', collect([$answer]));
+
+        $this->assertNotContains('Pacing', array_column(
+            FeedbackReportPresenter::categoryBreakdown($session),
+            'name'
+        ));
+
+        $feedback->setRawAttributes([
+            'coaching_summary' => json_encode([
+                'coverage' => ['answers' => 1, 'delivery_measured' => 1],
+            ]),
+        ], true);
+
+        $breakdown = FeedbackReportPresenter::categoryBreakdown($session);
+        $pacing = collect($breakdown)->firstWhere('name', 'Pacing');
+
+        $this->assertNotNull($pacing);
+        $this->assertSame(64, $pacing['score']);
+    }
 }

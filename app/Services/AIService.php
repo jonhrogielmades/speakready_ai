@@ -7920,16 +7920,10 @@ PROMPT;
 
  private static function geminiJsonResponseConfig(array $config, string $model,?array $schema = null): array
  {
- if (str_starts_with(strtolower(trim($model)), 'gemini-4-')) {
- $textFormat = ['mimeType' => 'application/json'];
- if ($schema!== null) {
- $textFormat['schema'] = $schema;
- }
- $config['responseFormat'] = ['text' => $textFormat];
-
- return $config;
- }
-
+ // The public generateContent API accepts these stable generationConfig
+ // fields for every Gemini generation, including Gemini 4. The newer
+ // responseFormat.text envelope is not accepted by all public endpoints
+ // and caused configured fallback requests to fail with HTTP 400.
  $config['responseMimeType'] = 'application/json';
  if ($schema!== null) {
  $config['responseJsonSchema'] = $schema;

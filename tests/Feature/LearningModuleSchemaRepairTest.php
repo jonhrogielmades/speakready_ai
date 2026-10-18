@@ -67,7 +67,13 @@ class LearningModuleSchemaRepairTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('user.modules.progress', $module->id), [
-                'progress_percentage' => 100,
+                'milestone' => 'started',
+            ])
+            ->assertRedirect(route('user.modules.show', $module->id));
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module->id), [
+                'milestone' => 'completed',
             ])
             ->assertRedirect(route('user.modules.show', $module->id));
 

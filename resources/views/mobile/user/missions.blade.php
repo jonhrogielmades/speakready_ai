@@ -50,7 +50,7 @@
                 <input type="text" id="missionGoalInput" maxlength="240" placeholder="Example: BPO final interview, HR panel, IT debugging question...">
                 <button type="button" class="mission-btn mission-btn-primary" id="generateMissionBtn" data-generate-url="{{ route('user.missions.generate') }}" style="min-height:42px;"><i class="fa-solid fa-wand-magic-sparkles"></i>Generate Task</button>
             </div>
-            <div class="mission-generator-status" id="missionGeneratorStatus">Tasks can be personalized to your target role, panel, or workplace situation.</div>
+            <div class="mission-generator-status" id="missionGeneratorStatus">{{ data_get($missions->first(), 'attempt_id') ? ($missionSource === 'ai_provider' ? 'Showing your latest AI-generated mission set saved to your account.' : 'Showing your latest mission set saved to your account.') : 'Showing the built-in practice set. A configured AI provider will personalize new requests.' }}</div>
             <div class="mission-grid" id="missionGrid">
             </div>
         </section>
@@ -107,7 +107,9 @@
 
 <script>
 let missionData = @json($missions->values());
+let missionSource = @json($missionSource);
 const missionGenerateUrl = document.getElementById('generateMissionBtn')?.dataset.generateUrl || @json(route('user.missions.generate'));
+const missionSubmitUrl = @json(route('user.missions.submit'));
 let activeMission = missionData[0] || null;
 let missionTimer = null;
 let remainingSeconds = activeMission ? Number(activeMission.duration) || 60 : 60;
@@ -146,7 +148,7 @@ function renderMissionBoard() {
     if (!grid) return;
 
     if (missionData.length === 0) {
-        grid.innerHTML = '<div class="mission-empty-state">Tell AI what you want to practice to generate your mission tasks.</div>';
+        grid.innerHTML = '<div class="mission-empty-state">Enter what you want to practice to generate a mission set.</div>';
         return;
     }
 
@@ -192,7 +194,7 @@ async function generateMissionTasks() {
     const originalHtml = button.innerHTML;
     button.disabled = true;
     button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>Generating';
-    setMissionGeneratorStatus('Generating missions for your goal...');
+    setMissionGeneratorStatus('Requesting personalized missions. A built-in set will be used if the provider is unavailable...');
 
     try {
         const response = await fetch(missionGenerateUrl, {
@@ -211,13 +213,19 @@ async function generateMissionTasks() {
         }
 
         missionData = data.missions;
+        missionSource = data.source || 'built_in_fallback';
         activeMission = missionData[0] || null;
         renderMissionBoard();
         selectMission(activeMission?.id);
-        setMissionGeneratorStatus('Generated fresh missions based on your request.', '#16a34a');
+        setMissionGeneratorStatus(
+            data.message || (missionSource === 'ai_provider'
+                ? 'AI-generated missions are ready for this practice goal.'
+                : 'Using a built-in mission set personalized to your goal.'),
+            missionSource === 'ai_provider' ? '#16a34a' : '#f59e0b'
+        );
     } catch (error) {
         console.error('Mission generation failed:', error);
-        setMissionGeneratorStatus('Could not generate with AI right now. Try a simpler goal or use the current missions.', '#ef4444');
+        setMissionGeneratorStatus('Could not refresh the mission set. Your current missions are still available.', '#ef4444');
     } finally {
         button.disabled = false;
         button.innerHTML = originalHtml;
@@ -280,7 +288,12 @@ function selectMission(id) {
         .join('');
 
     resetMissionTimer();
-    scoreMission(false);
+    document.getElementById('missionAnswer').value = mission.saved_answer || '';
+    if (mission.server_result?.authoritative) {
+        renderMissionResult(mission.server_result, true);
+    } else {
+        scoreMissionLocally(false);
+    }
 }
 
 function missionToneSignal(mission, normalizedText) {
@@ -300,7 +313,27 @@ function missionToneSignal(mission, normalizedText) {
     return normalizedText.length > 0;
 }
 
-function scoreMission(showEmptyAlert = true) {
+function renderMissionResult(result, answered = true) {
+    const score = Math.max(0, Math.min(100, Number(result?.score) || 0));
+    const feedback = Array.isArray(result?.feedback) ? result.feedback : [];
+    const scoreColor = score >= 80 ? '#22c55e' : (score >= 60 ? '#f59e0b' : '#ef4444');
+
+    document.getElementById('missionScoreRing').style.setProperty('--score', answered ? `${score}%` : '0%');
+    document.getElementById('missionScoreRing').style.setProperty('--score-color', scoreColor);
+    document.getElementById('missionScoreValue').textContent = answered ? score : '--';
+    document.getElementById('missionResultStatus').textContent = answered ? (result?.status || 'Needs Practice') : 'Waiting';
+    document.getElementById('missionResultStatus').style.setProperty('--pill-color', answered ? scoreColor : '#64748b');
+    document.getElementById('missionResultSummary').textContent = answered
+        ? (result?.summary || 'Your answer was checked against the mission criteria.')
+        : 'Score an answer to see mission-specific feedback.';
+    document.getElementById('missionFeedbackList').innerHTML = (answered && feedback.length > 0
+        ? feedback
+        : ['Your result will check interview structure, evidence, role fit, tone, and next action.'])
+        .map(item => `<li><i class="fa-solid fa-arrow-right"></i><span>${escapeMissionHtml(item)}</span></li>`)
+        .join('');
+}
+
+function scoreMissionLocally(showEmptyAlert = true) {
     if (!activeMission) return;
 
     const answer = document.getElementById('missionAnswer').value.trim();
@@ -309,7 +342,12 @@ function scoreMission(showEmptyAlert = true) {
 
     if (!answer && showEmptyAlert) {
         alert('Add an answer before scoring this mission.');
-        return;
+        return null;
+    }
+
+    if (!answer) {
+        renderMissionResult({}, false);
+        return null;
     }
 
     let score = 0;
@@ -352,28 +390,81 @@ function scoreMission(showEmptyAlert = true) {
     }
 
     score = Math.max(0, Math.min(100, score));
-    const scoreColor = score >= 80 ? '#22c55e' : (score >= 60 ? '#f59e0b' : '#ef4444');
     const status = score >= 80 ? 'Mission Ready' : (score >= 60 ? 'Almost There' : 'Needs Practice');
 
-    document.getElementById('missionScoreRing').style.setProperty('--score', `${score}%`);
-    document.getElementById('missionScoreRing').style.setProperty('--score-color', scoreColor);
-    document.getElementById('missionScoreValue').textContent = answer ? score : '--';
-    document.getElementById('missionResultStatus').textContent = answer ? status : 'Waiting';
-    document.getElementById('missionResultStatus').style.setProperty('--pill-color', answer ? scoreColor : '#64748b');
-    document.getElementById('missionResultSummary').textContent = answer
-        ? `${activeMission.title} checked ${words} words against interview-ready structure, evidence, result, tone, and next action.`
-        : 'Score an answer to see mission-specific feedback.';
-    document.getElementById('missionFeedbackList').innerHTML = (answer ? feedback : ['Your result will check interview structure, evidence, role fit, tone, and next action.'])
-        .map(item => `<li><i class="fa-solid fa-arrow-right"></i><span>${escapeMissionHtml(item)}</span></li>`)
-        .join('');
+    const result = {
+        score,
+        status,
+        summary: `${activeMission.title} checked ${words} words locally while the server prepares the saved result.`,
+        feedback
+    };
+    renderMissionResult(result, true);
+
+    return result;
+}
+
+async function submitMissionAnswer() {
+    if (!activeMission) return;
+
+    const answer = document.getElementById('missionAnswer').value.trim();
+    const localResult = scoreMissionLocally(true);
+    if (!localResult) return;
+
+    const button = document.getElementById('scoreMissionBtn');
+    const originalHtml = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>Saving';
+    document.getElementById('missionResultStatus').textContent = 'Checking';
+    document.getElementById('missionResultSummary').textContent = 'Local preview shown while the server checks and saves the authoritative result.';
+
+    try {
+        const response = await fetch(missionSubmitUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                attempt_id: activeMission.attempt_id || null,
+                mission_id: activeMission.id,
+                answer
+            })
+        });
+        const data = await response.json();
+        const validationMessage = data?.errors ? Object.values(data.errors).flat()[0] : null;
+        if (!response.ok || !data.success || !data.result?.authoritative || !data.result?.persisted) {
+            throw new Error(validationMessage || data.message || 'The server could not save this result.');
+        }
+
+        const attemptIds = data.attempt_ids || {};
+        missionData.forEach(mission => {
+            if (attemptIds[mission.id]) mission.attempt_id = attemptIds[mission.id];
+        });
+        activeMission.attempt_id = data.attempt_id;
+        activeMission.saved_answer = answer;
+        activeMission.server_result = data.result;
+        renderMissionResult(data.result, true);
+    } catch (error) {
+        console.error('Mission scoring failed:', error);
+        renderMissionResult({
+            ...localResult,
+            status: 'Preview Only',
+            summary: `This local preview was not saved: ${error.message}`,
+            feedback: ['Submit again when the connection is available.', ...localResult.feedback]
+        }, true);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalHtml;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     renderMissionBoard();
-    document.getElementById('scoreMissionBtn').addEventListener('click', () => scoreMission(true));
+    document.getElementById('scoreMissionBtn').addEventListener('click', submitMissionAnswer);
     document.getElementById('clearMissionBtn').addEventListener('click', () => {
         document.getElementById('missionAnswer').value = '';
-        scoreMission(false);
+        scoreMissionLocally(false);
     });
     document.getElementById('missionTimerBtn').addEventListener('click', toggleMissionTimer);
     document.getElementById('generateMissionBtn').addEventListener('click', generateMissionTasks);

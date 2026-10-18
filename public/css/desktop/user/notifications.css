@@ -2090,6 +2090,93 @@
     }
 }
 
+/* Large desktop: show three balanced notification cards in one row. */
+@media (min-width: 1181px) {
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 16px !important;
+        align-items: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column {
+        grid-template-columns: 56px minmax(0, 1fr) !important;
+        grid-template-rows: minmax(126px, 1fr) auto !important;
+        grid-template-areas:
+            "icon content"
+            "actions actions" !important;
+        align-items: start !important;
+        gap: 16px !important;
+        min-height: 228px !important;
+        padding: 18px !important;
+        border-radius: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-icon-box {
+        grid-area: icon !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-content {
+        grid-area: content !important;
+        align-self: start !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-actions {
+        grid-area: actions !important;
+        align-self: end !important;
+        justify-content: stretch !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-action-btn {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        padding-inline: 10px !important;
+    }
+}
+
+/* Medium desktop fallback: preserve the card shape without crowding. */
+@media (min-width: 992px) and (max-width: 1180px) {
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 14px !important;
+        align-items: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column {
+        grid-template-columns: 52px minmax(0, 1fr) !important;
+        grid-template-rows: minmax(118px, 1fr) auto !important;
+        grid-template-areas:
+            "icon content"
+            "actions actions" !important;
+        min-height: 218px !important;
+        padding: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-icon-box {
+        grid-area: icon !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-content {
+        grid-area: content !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-actions {
+        grid-area: actions !important;
+        justify-content: stretch !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notificationsPageList .notification-row--three-column .notification-action-btn {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        padding-inline: 8px !important;
+    }
+}
+
 /* Medium desktop sizing for the User Notifications page. */
 @media (min-width: 992px) {
     html body.user-desktop-shell:not(.admin-shell) #notifications-page {

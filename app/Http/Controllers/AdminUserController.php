@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ActivityLogger;
 use Illuminate\Http\Request;
 use App\Models\ActivityLog;
 use App\Models\ChatbotConversation;
@@ -31,6 +32,8 @@ class AdminUserController extends Controller
         $query = $this->filteredUsers($request);
 
         $users = $query->latest()->paginate(4)->withQueryString();
+        $showTrashed = $request->boolean('trashed');
+        $trashedUsersCount = $this->withoutDefaultAdminAccount(User::onlyTrashed())->count();
         $lastActiveByUserId = $this->lastActiveByUserId();
         $onlineUserIds = $this->onlineUserIds($lastActiveByUserId);
 
@@ -74,7 +77,15 @@ class AdminUserController extends Controller
             }
         }
 
-        return $this->mobileView('admin.users', compact('users', 'topUsers', 'needingImprovement', 'onlineUserIds', 'lastActiveByUserId'));
+        return $this->mobileView('admin.users', compact(
+            'users',
+            'topUsers',
+            'needingImprovement',
+            'onlineUserIds',
+            'lastActiveByUserId',
+            'showTrashed',
+            'trashedUsersCount'
+        ));
     }
 
     public function export(Request $request)
@@ -115,7 +126,7 @@ class AdminUserController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => $this->newPasswordRules(),
@@ -123,14 +134,20 @@ class AdminUserController extends Controller
             'status' => 'required|in:active,inactive,suspended',
         ]);
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'is_admin' => $request->role === 'admin',
-            'status' => $request->status,
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'is_admin' => $validated['role'] === 'admin',
+            'status' => $validated['status'],
             'email_verified_at' => now(),
         ]);
+
+        $this->logAdminUserActivity(
+            $request,
+            'admin_user_created',
+            "Created {$validated['role']} account {$user->name} (#{$user->id})."
+        );
 
         return redirect()->back()->with('success', 'User created successfully');
     }
@@ -141,7 +158,7 @@ class AdminUserController extends Controller
             return redirect()->back()->with('error', 'The default administrator account is hidden from user management.');
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => $this->newPasswordRules(false),
@@ -149,27 +166,51 @@ class AdminUserController extends Controller
             'status' => 'required|in:active,inactive,suspended',
         ]);
 
-        $data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'is_admin' => $request->role === 'admin',
-            'status' => $request->status,
-        ];
+        $removesAdminAccess = (bool) $user->is_admin
+            && ($validated['role'] !== 'admin' || $validated['status'] !== 'active');
 
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
+        if ($request->user()?->is($user) && $removesAdminAccess) {
+            return redirect()->back()->with('error', 'You cannot demote or deactivate your own administrator account while signed in.');
         }
 
-        if ($request->status === 'active') {
+        if (
+            $removesAdminAccess
+            && ! User::query()
+                ->whereKeyNot($user->id)
+                ->where('is_admin', true)
+                ->where('status', 'active')
+                ->exists()
+        ) {
+            return redirect()->back()->with('error', 'You cannot remove access from the last active administrator account.');
+        }
+
+        $data = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'is_admin' => $validated['role'] === 'admin',
+            'status' => $validated['status'],
+        ];
+
+        if (! empty($validated['password'])) {
+            $data['password'] = Hash::make($validated['password']);
+        }
+
+        if ($validated['status'] === 'active') {
             $data['reactivation_requested_at'] = null;
         }
 
         $user->update($data);
 
+        $this->logAdminUserActivity(
+            $request,
+            'admin_user_updated',
+            "Updated {$validated['role']} account {$user->name} (#{$user->id}) with status {$validated['status']}."
+        );
+
         return redirect()->back()->with('success', 'User updated successfully');
     }
 
-    public function approveReactivation(User $user)
+    public function approveReactivation(Request $request, User $user)
     {
         if ($this->isDefaultAdminAccount($user)) {
             return redirect()->back()->with('error', 'The default administrator account is hidden from user management.');
@@ -179,6 +220,12 @@ class AdminUserController extends Controller
             'status' => 'active',
             'reactivation_requested_at' => null
         ]);
+
+        $this->logAdminUserActivity(
+            $request,
+            'admin_user_reactivation_approved',
+            "Approved account reactivation for {$user->name} (#{$user->id})."
+        );
 
         return redirect()->back()->with('success', 'User reactivation approved successfully');
     }
@@ -197,17 +244,55 @@ class AdminUserController extends Controller
             return redirect()->back()->with('error', 'You cannot delete your own administrator account while signed in.');
         }
 
-        if ($user->is_admin && User::where('is_admin', true)->count() <= 1) {
-            return redirect()->back()->with('error', 'You cannot delete the last administrator account.');
+        if (
+            $user->is_admin
+            && $user->status === 'active'
+            && ! User::query()
+                ->whereKeyNot($user->id)
+                ->where('is_admin', true)
+                ->where('status', 'active')
+                ->exists()
+        ) {
+            return redirect()->back()->with('error', 'You cannot delete the last active administrator account.');
         }
 
-        if ($request->delete_type === 'permanent') {
+        $deleteType = (string) $request->delete_type;
+        $targetSummary = "{$user->name} (#{$user->id})";
+
+        if ($deleteType === 'permanent') {
             $user->forceDelete();
         } else {
             $user->delete();
         }
 
+        $this->logAdminUserActivity(
+            $request,
+            'admin_user_deleted',
+            ucfirst($deleteType)." deleted account {$targetSummary}."
+        );
+
         return redirect()->back()->with('success', 'User deleted successfully');
+    }
+
+    public function restore(Request $request, int $user)
+    {
+        $trashedUser = User::onlyTrashed()->findOrFail($user);
+        abort_if($this->isDefaultAdminAccount($trashedUser), 404);
+
+        $targetSummary = "{$trashedUser->name} (#{$trashedUser->id})";
+        $restoredRole = $trashedUser->is_admin ? 'administrator' : 'user';
+
+        $trashedUser->restore();
+
+        $this->logAdminUserActivity(
+            $request,
+            'admin_user_restored',
+            "Restored {$restoredRole} account {$targetSummary}."
+        );
+
+        return redirect()
+            ->route('admin.users.index', ['trashed' => 1])
+            ->with('success', 'User restored successfully');
     }
 
     public function show(User $user)
@@ -411,7 +496,9 @@ class AdminUserController extends Controller
 
     private function filteredUsers(Request $request)
     {
-        $query = User::query();
+        $query = $request->boolean('trashed')
+            ? User::onlyTrashed()
+            : User::query();
         $this->withoutDefaultAdminAccount($query);
 
         if ($request->filled('search')) {
@@ -436,6 +523,22 @@ class AdminUserController extends Controller
         }
 
         return $query;
+    }
+
+    private function logAdminUserActivity(Request $request, string $action, string $description): void
+    {
+        $admin = $request->user();
+        if (! $admin) {
+            return;
+        }
+
+        ActivityLogger::log(
+            $admin,
+            $action,
+            $description,
+            $request->ip(),
+            false
+        );
     }
 
     private function withoutDefaultAdminAccount(Builder $query): Builder

@@ -7,6 +7,9 @@
 @section('content')
 
 @php
+    $showTrashed = $showTrashed ?? false;
+    $trashedUsersCount = $trashedUsersCount ?? 0;
+
     $formatLastActiveShort = function ($lastActiveAt) {
         if (!$lastActiveAt) {
             return null;
@@ -57,6 +60,17 @@
             <p class="admin-users-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">Manage users, track performance, and broadcast announcements.</p>
         </div>
         <div class="admin-users-header-actions d-flex flex-wrap gap-2">
+            <a
+                href="{{ $showTrashed ? route('admin.users.index') : route('admin.users.index', ['trashed' => 1]) }}"
+                class="btn btn-outline-secondary"
+                data-deleted-users-toggle
+            >
+                <i class="fa-solid {{ $showTrashed ? 'fa-users' : 'fa-trash-can-arrow-up' }} me-2"></i>
+                {{ $showTrashed ? 'Active Users' : 'Deleted Users' }}
+                @if(!$showTrashed && $trashedUsersCount > 0)
+                    <span class="badge text-bg-secondary ms-1">{{ $trashedUsersCount }}</span>
+                @endif
+            </a>
             <!-- Feature 14 & 15: Broadcast Announcements -->
             <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#broadcastModal"><i class="fa-solid fa-bullhorn me-2"></i>Broadcast</button>
             <!-- Feature 3: Add User -->
@@ -96,6 +110,13 @@
             @endforeach
         </ul>
         <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter:invert(1)"></button>
+    </div>
+    @endif
+
+    @if($showTrashed)
+    <div class="alert mb-4" role="status" data-deleted-users-notice style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);color:#60a5fa">
+        <i class="fa-solid fa-circle-info me-2"></i>
+        Viewing soft-deleted accounts. Restoring an account preserves its role, status, and related history.
     </div>
     @endif
 
@@ -204,6 +225,9 @@
     <div class="premium-card admin-users-table-card">
         <!-- Search and Filter -->
         <form method="GET" action="{{ route('admin.users.index') }}" class="row g-3 mb-3 admin-users-filter-form" id="filterForm">
+            @if($showTrashed)
+                <input type="hidden" name="trashed" value="1">
+            @endif
             <div class="col-md-4">
                 <div class="input-group">
                     <span class="input-group-text" style="background:var(--bg3);border-color:var(--bd);color:var(--tx2);"><i class="fa-solid fa-search"></i></span>
@@ -238,7 +262,7 @@
                         <th>Username/Email</th>
                         <th>Role</th>
                         <th>Status</th>
-                        <th>Date Registered</th>
+                        <th>{{ $showTrashed ? 'Date Deleted' : 'Date Registered' }}</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -317,9 +341,17 @@
                                 <div class="mt-1"><span class="stat-badge text-white" style="background:#f59e0b;font-size:0.65rem;">Req. Reactivation</span></div>
                             @endif
                         </td>
-                        <td data-label="Registered" style="color:var(--tx2);">{{ $user->created_at->format('M d, Y') }}</td>
+                        <td data-label="{{ $showTrashed ? 'Deleted' : 'Registered' }}" style="color:var(--tx2);">{{ ($showTrashed ? $user->deleted_at : $user->created_at)?->format('M d, Y') ?? '-' }}</td>
                         <td data-label="Actions" class="text-end">
                             <div class="user-action-cell">
+                            @if($showTrashed)
+                            <form action="{{ route('admin.users.restore', $user->id) }}" method="POST" onsubmit="return confirm('Restore this user account?');">
+                                @csrf
+                                <button type="submit" class="action-btn text-success border-success" title="Restore User" aria-label="Restore {{ $user->name }}">
+                                    <i class="fa-solid fa-trash-arrow-up"></i>
+                                </button>
+                            </form>
+                            @else
                             @if($user->reactivation_requested_at)
                             <form action="{{ route('admin.users.approve-reactivation', $user) }}" method="POST">
                                 @csrf
@@ -345,12 +377,13 @@
                                 data-delete-url="{{ route('admin.users.destroy', $user) }}"
                                 onclick="deleteUser(this)"
                             ><i class="fa-solid fa-trash"></i></button>
+                            @endif
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">No users found.</td>
+                        <td colspan="6" class="text-center py-4 text-muted">{{ $showTrashed ? 'No deleted users found.' : 'No users found.' }}</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -359,7 +392,7 @@
         
         <div class="admin-users-pagination d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3 pt-3" style="border-top:1px solid var(--bd);">
             <div class="admin-users-pagination-count" style="color:var(--tx2);font-size:0.9rem;">
-                Showing {{ $users->firstItem() ?? 0 }}-{{ $users->lastItem() ?? 0 }} of {{ $users->total() }} users
+                Showing {{ $users->firstItem() ?? 0 }}-{{ $users->lastItem() ?? 0 }} of {{ $users->total() }} {{ $showTrashed ? 'deleted users' : 'users' }}
             </div>
             <div class="admin-users-pagination-controls d-flex align-items-center gap-2">
                 @if($users->onFirstPage())

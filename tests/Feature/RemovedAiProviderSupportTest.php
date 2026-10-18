@@ -347,8 +347,10 @@ class RemovedAiProviderSupportTest extends TestCase
  $this->assertSame(0.85, $flash['topP']);
  $this->assertSame(
  'string',
- data_get($argonJson, 'responseFormat.text.schema.properties.provider.type')
+ data_get($argonJson, 'responseJsonSchema.properties.provider.type')
  );
+ $this->assertSame('application/json', $argonJson['responseMimeType']);
+ $this->assertArrayNotHasKey('responseFormat', $argonJson);
  }
 
  private function openAiCompatibleResponse(string $provider): array

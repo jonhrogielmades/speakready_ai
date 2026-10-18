@@ -208,7 +208,7 @@
 </div>
 
 <!-- Send Notification Modal -->
-<div class="modal fade" id="sendNotificationModal" tabindex="-1" aria-labelledby="sendNotificationModalLabel" aria-hidden="true">
+<div class="modal fade" id="sendNotificationModal" tabindex="-1" aria-labelledby="sendNotificationModalLabel" aria-hidden="true" data-auto-open="{{ $openComposer ? 'true' : 'false' }}">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.1)); border-radius: 16px;">
             <div class="modal-header border-0 pb-0">
@@ -242,8 +242,8 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label" style="color:var(--tx2);font-size:0.9rem;">Target Audience</label>
                             <select class="form-select" name="target" id="targetSelect" required onchange="toggleUserSelect()">
-                                <option value="all">All Users (Broadcast)</option>
-                                <option value="specific">Specific User</option>
+                                <option value="all" @selected(old('target', $composeUserId ? 'specific' : 'all') === 'all')>All Users (Broadcast)</option>
+                                <option value="specific" @selected(old('target', $composeUserId ? 'specific' : 'all') === 'specific')>Specific User</option>
                             </select>
                         </div>
                     </div>
@@ -253,7 +253,7 @@
                         <select class="form-select" name="user_id" id="userSelect">
                             <option value="">-- Choose User --</option>
                             @foreach($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                                <option value="{{ $user->id }}" @selected((int) old('user_id', $composeUserId) === $user->id)>{{ $user->name }} ({{ $user->email }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -283,6 +283,15 @@ function toggleUserSelect() {
         userSelect.value = '';
     }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    toggleUserSelect();
+
+    const composer = document.getElementById('sendNotificationModal');
+    if (composer?.dataset.autoOpen === 'true' && window.bootstrap?.Modal) {
+        window.bootstrap.Modal.getOrCreateInstance(composer).show();
+    }
+});
 
 function adminActivityPageUrl(path) {
     const baseUrl = document.getElementById('sec-admin-notifications')?.dataset.activitiesUrl || '/admin/api/activities';

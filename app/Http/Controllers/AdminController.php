@@ -3,22 +3,32 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\ActivityLog;
+use App\Models\AiProvider;
+use App\Models\AiProviderLog;
 use App\Models\Category;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Score;
 use App\Models\LearningModule;
+use App\Models\ModuleQuiz;
+use App\Models\ModuleQuizQuestion;
+use App\Models\ModuleResource;
 use App\Services\AIService;
 use App\Services\CsvExportService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\UserContentUpdateNotificationService;
+use App\Support\ModuleChapterHtml;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
@@ -35,13 +45,14 @@ class AdminController extends Controller
 
  return \App\Models\LearningProgress::where('status', 'completed')->count();
  }, 0);
- $userUpdatesCount = $this->dashboardValue('user_updates', fn () => Schema::hasTable('activity_logs') ? \App\Models\ActivityLog::count() : 0, 0);
+ $userUpdatesCount = $this->dashboardValue('user_updates', fn () => Schema::hasTable('activity_logs') ? ActivityLog::dashboardUserUpdates()->count() : 0, 0);
  $recentUserUpdates = $this->dashboardValue('recent_user_updates', function () {
- if (! Schema::hasTable('activity_logs')) {
+ if (! Schema::hasTable('activity_logs') || ! Schema::hasTable('users')) {
  return collect();
  }
 
- return \App\Models\ActivityLog::with(Schema::hasTable('users') ? 'user' : [])
+ return ActivityLog::dashboardUserUpdates()
+ ->with('user')
  ->latest('id')
  ->take(5)
  ->get();
@@ -153,6 +164,57 @@ class AdminController extends Controller
  $userGrowthData[] = (int) ($growthCounts[$date->format('Y-m')]?? 0);
  }
 
+ $aiUsageMetrics = $this->dashboardValue('ai_usage_metrics', function (): array {
+ if (! $this->hasTableColumns('ai_provider_logs', ['created_at', 'response_time_ms'])) {
+ return ['total_requests' => 0, 'today_requests' => 0, 'average_response_time_ms' => null];
+ }
+
+ $todayStats = AiProviderLog::query()
+ ->where('created_at', '>=', today()->startOfDay())
+ ->where('created_at', '<', today()->addDay()->startOfDay())
+ ->selectRaw('COUNT(*) as request_count, AVG(response_time_ms) as average_response_time_ms')
+ ->first();
+
+ return [
+ 'total_requests' => AiProviderLog::count(),
+ 'today_requests' => (int) ($todayStats->request_count?? 0),
+ 'average_response_time_ms' => $todayStats?->average_response_time_ms === null
+ ? null
+ : (int) round((float) $todayStats->average_response_time_ms),
+ ];
+ }, ['total_requests' => 0, 'today_requests' => 0, 'average_response_time_ms' => null]);
+
+ $aiProviderStatuses = $this->dashboardValue('ai_provider_statuses', function () {
+ $databaseProviders = Schema::hasTable('ai_providers')
+ ? AiProvider::query()->get(['name', 'api_key', 'status', 'is_primary', 'is_fallback'])
+ : collect();
+
+ return collect(AIService::supportedProviderOptions())
+ ->map(function (array $option) use ($databaseProviders): array {
+ $provider = $databaseProviders->first(
+ fn (AiProvider $candidate): bool => AIService::normalizeProviderKey($candidate->name) === $option['key']
+ );
+ $configured = (bool) ($option['enabled']?? false) || filled($provider?->api_key);
+ $status = ! $configured
+ ? 'unconfigured'
+ : (($provider && $provider->status !== 'active') ? 'inactive' : 'active');
+
+ return [
+ 'name' => $option['label'],
+ 'status' => $status,
+ 'status_label' => match ($status) {
+ 'active' => 'Active',
+ 'inactive' => 'Inactive',
+ default => 'Not configured',
+ },
+ 'is_primary' => (bool) ($provider?->is_primary?? false),
+ 'is_fallback' => (bool) ($provider?->is_fallback?? false),
+ ];
+ })
+ ->values();
+ }, collect());
+ $aiApiOperational = $aiProviderStatuses->contains(fn (array $provider): bool => $provider['status'] === 'active');
+
  return $this->mobileView('admin.dashboard', compact(
  'registeredUsersCount',
  'onlineTodayCount',
@@ -171,7 +233,10 @@ class AdminController extends Controller
  'chartData',
  'readinessData',
  'userGrowthLabels',
- 'userGrowthData'
+ 'userGrowthData',
+ 'aiUsageMetrics',
+ 'aiProviderStatuses',
+ 'aiApiOperational'
  ));
  }
 
@@ -248,7 +313,7 @@ class AdminController extends Controller
  'type' => 'required|in:core,game,learning',
  'description' => 'nullable|string',
  'icon' => 'nullable|string',
- 'status' => 'nullable|string',
+ 'status' => 'nullable|in:active,inactive',
  'is_featured' => 'nullable|boolean',
  ]);
 
@@ -274,7 +339,7 @@ class AdminController extends Controller
  'type' => 'required|in:core,game,learning',
  'description' => 'nullable|string',
  'icon' => 'nullable|string',
- 'status' => 'required|string',
+ 'status' => 'required|in:active,inactive',
  'is_featured' => 'nullable|boolean',
  ]);
 
@@ -368,9 +433,9 @@ class AdminController extends Controller
  $request->validate([
  'category_id' => 'required|exists:categories,id',
  'question_text' => 'required|string',
- 'difficulty' => 'required|string',
- 'type' => 'required|string',
- 'status' => 'nullable|string',
+ 'difficulty' => 'required|in:Easy,Medium,Hard',
+ 'type' => 'required|in:Behavioral,Situational,Technical,Personal',
+ 'status' => 'nullable|in:active,inactive',
  'expected_guide' => 'nullable|string',
  'mapped_skills' => 'nullable|string',
  'source_name' => 'nullable|string|max:255',
@@ -401,9 +466,9 @@ class AdminController extends Controller
  $request->validate([
  'category_id' => 'required|exists:categories,id',
  'question_text' => 'required|string',
- 'difficulty' => 'required|string',
- 'type' => 'required|string',
- 'status' => 'required|string',
+ 'difficulty' => 'required|in:Easy,Medium,Hard',
+ 'type' => 'required|in:Behavioral,Situational,Technical,Personal',
+ 'status' => 'required|in:active,inactive',
  'expected_guide' => 'nullable|string',
  'mapped_skills' => 'nullable|string',
  'source_name' => 'nullable|string|max:255',
@@ -755,9 +820,9 @@ class AdminController extends Controller
  $request->validate([
  'title' => 'required|string|max:255',
  'category' => 'nullable|string|max:255',
- 'difficulty' => 'nullable|string',
+ 'difficulty' => 'nullable|in:Beginner,Intermediate,Advanced',
  'description' => 'nullable|string',
- 'status' => 'nullable|string',
+ 'status' => 'nullable|in:draft,published,archived',
  'is_featured' => 'nullable|boolean',
  ]);
 
@@ -830,7 +895,7 @@ class AdminController extends Controller
  foreach ($data['chapters'] as $index => $chapterData) {
  $module->chapters()->create([
  'title' => $chapterData['title']?? 'Chapter '. ($index + 1),
- 'content' => $chapterData['content']?? '',
+ 'content' => ModuleChapterHtml::sanitize($chapterData['content']?? ''),
  'order' => $index + 1,
  ]);
  }
@@ -857,7 +922,7 @@ class AdminController extends Controller
  foreach ($data['chapters'] as $index => $chapterData) {
  $module->chapters()->create([
  'title' => $chapterData['title'],
- 'content' => $chapterData['content'],
+ 'content' => ModuleChapterHtml::sanitize($chapterData['content']),
  'order' => $index + 1,
  ]);
  }
@@ -911,7 +976,7 @@ class AdminController extends Controller
  foreach ($data['chapters'] as $index => $chapterData) {
  $module->chapters()->create([
  'title' => $chapterData['title'],
- 'content' => $chapterData['content'],
+ 'content' => ModuleChapterHtml::sanitize($chapterData['content']),
  'order' => $startOrder + $index + 1,
  ]);
  }
@@ -933,7 +998,7 @@ class AdminController extends Controller
  foreach ($data['chapters'] as $index => $chapterData) {
  $module->chapters()->create([
  'title' => $chapterData['title'],
- 'content' => $chapterData['content'],
+ 'content' => ModuleChapterHtml::sanitize($chapterData['content']),
  'order' => $startOrder + $index + 1,
  ]);
  }
@@ -957,7 +1022,7 @@ class AdminController extends Controller
 
  public function editModule(LearningModule $module)
  {
- $module->load(['chapters', 'activities']);
+ $module->load(['chapters', 'activities', 'resources', 'quizzes.questions']);
  $categories = $this->learningCategoryNames();
  return $this->mobileView('admin.module_edit', compact('module', 'categories'));
  }
@@ -967,9 +1032,9 @@ class AdminController extends Controller
  $request->validate([
  'title' => 'required|string|max:255',
  'category' => 'nullable|string|max:255',
- 'difficulty' => 'nullable|string',
+ 'difficulty' => 'nullable|in:Beginner,Intermediate,Advanced',
  'description' => 'nullable|string',
- 'status' => 'nullable|string',
+ 'status' => 'nullable|in:draft,published,archived',
  ]);
 
  $wasPublished = (string) $module->status === 'published';
@@ -1008,7 +1073,7 @@ class AdminController extends Controller
 
  $module->chapters()->create([
  'title' => $request->title,
- 'content' => $request->content,
+ 'content' => ModuleChapterHtml::sanitize($request->content),
  'video_url' => $request->video_url,
  'order' => $module->chapters()->count() + 1,
  ]);
@@ -1026,7 +1091,7 @@ class AdminController extends Controller
 
  $chapter->update([
  'title' => $request->title,
- 'content' => $request->content,
+ 'content' => ModuleChapterHtml::sanitize($request->content),
  'video_url' => $request->video_url,
  ]);
 
@@ -1063,7 +1128,7 @@ class AdminController extends Controller
 
  $module->chapters()->create([
  'title' => $data['title'],
- 'content' => $data['content']?? '',
+ 'content' => ModuleChapterHtml::sanitize($data['content']?? ''),
  'order' => ((int) $module->chapters()->max('order')) + 1,
  ]);
 
@@ -1074,6 +1139,122 @@ class AdminController extends Controller
  {
  $chapter->delete();
  return redirect()->back()->with('success', 'Chapter deleted successfully');
+ }
+
+ public function storeModuleResource(Request $request, LearningModule $module)
+ {
+ $validated = $request->validate([
+ 'title' => ['required', 'string', 'max:255'],
+ 'file' => ['required', 'file', 'mimes:pdf,doc,docx,ppt,pptx,txt', 'max:10240'],
+ ]);
+
+ $file = $validated['file'];
+ $module->resources()->create([
+ 'title' => $validated['title'],
+ 'file_path' => $file->store('module-resources', 'public'),
+ 'file_type' => strtolower($file->getClientOriginalExtension()),
+ ]);
+
+ return redirect()->back()->with('success', 'Module resource added successfully.');
+ }
+
+ public function updateModuleResource(Request $request, LearningModule $module, ModuleResource $resource)
+ {
+ $this->ensureModuleResourceOwnership($module, $resource);
+
+ $validated = $request->validate([
+ 'title' => ['required', 'string', 'max:255'],
+ 'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,ppt,pptx,txt', 'max:10240'],
+ ]);
+
+ $oldPath = $resource->file_path;
+ $updates = ['title' => $validated['title']];
+ if ($request->hasFile('file')) {
+ $file = $validated['file'];
+ $updates['file_path'] = $file->store('module-resources', 'public');
+ $updates['file_type'] = strtolower($file->getClientOriginalExtension());
+ }
+
+ $resource->update($updates);
+ if (isset($updates['file_path'])) {
+ $this->deleteManagedModuleResourceFile($oldPath);
+ }
+
+ return redirect()->back()->with('success', 'Module resource updated successfully.');
+ }
+
+ public function destroyModuleResource(LearningModule $module, ModuleResource $resource)
+ {
+ $this->ensureModuleResourceOwnership($module, $resource);
+ $path = $resource->file_path;
+ $resource->delete();
+ $this->deleteManagedModuleResourceFile($path);
+
+ return redirect()->back()->with('success', 'Module resource deleted successfully.');
+ }
+
+ public function storeModuleQuiz(Request $request, LearningModule $module)
+ {
+ $validated = $request->validate([
+ 'title' => ['required', 'string', 'max:255'],
+ 'passing_score' => ['required', 'integer', 'between:1,100'],
+ ]);
+
+ $module->quizzes()->create($validated);
+
+ return redirect()->back()->with('success', 'Module quiz added successfully.');
+ }
+
+ public function updateModuleQuiz(Request $request, LearningModule $module, ModuleQuiz $quiz)
+ {
+ $this->ensureModuleQuizOwnership($module, $quiz);
+ $validated = $request->validate([
+ 'title' => ['required', 'string', 'max:255'],
+ 'passing_score' => ['required', 'integer', 'between:1,100'],
+ ]);
+
+ $quiz->update($validated);
+
+ return redirect()->back()->with('success', 'Module quiz updated successfully.');
+ }
+
+ public function destroyModuleQuiz(LearningModule $module, ModuleQuiz $quiz)
+ {
+ $this->ensureModuleQuizOwnership($module, $quiz);
+ $quiz->delete();
+
+ return redirect()->back()->with('success', 'Module quiz deleted successfully.');
+ }
+
+ public function storeModuleQuizQuestion(Request $request, LearningModule $module, ModuleQuiz $quiz)
+ {
+ $this->ensureModuleQuizOwnership($module, $quiz);
+ $quiz->questions()->create($this->validatedModuleQuizQuestion($request));
+
+ return redirect()->back()->with('success', 'Quiz question added successfully.');
+ }
+
+ public function updateModuleQuizQuestion(
+ Request $request,
+ LearningModule $module,
+ ModuleQuiz $quiz,
+ ModuleQuizQuestion $question
+ ) {
+ $this->ensureModuleQuizQuestionOwnership($module, $quiz, $question);
+ $question->update($this->validatedModuleQuizQuestion($request));
+
+ return redirect()->back()->with('success', 'Quiz question updated successfully.');
+ }
+
+ public function destroyModuleQuizQuestion(
+ LearningModule $module,
+ ModuleQuiz $quiz,
+ ModuleQuizQuestion $question
+ ) {
+ $this->ensureModuleQuizQuestionOwnership($module, $quiz, $question);
+ $question->delete();
+
+ return redirect()->back()->with('success', 'Quiz question deleted successfully.');
  }
 
  public function fetchLatestActivities(Request $request)
@@ -1157,6 +1338,90 @@ class AdminController extends Controller
  $log->delete();
  }
  return response()->json(['success' => true]);
+ }
+
+ private function ensureModuleResourceOwnership(LearningModule $module, ModuleResource $resource): void
+ {
+ abort_unless((int) $resource->learning_module_id === (int) $module->id, 404);
+ }
+
+ private function ensureModuleQuizOwnership(LearningModule $module, ModuleQuiz $quiz): void
+ {
+ abort_unless((int) $quiz->learning_module_id === (int) $module->id, 404);
+ }
+
+ private function ensureModuleQuizQuestionOwnership(
+ LearningModule $module,
+ ModuleQuiz $quiz,
+ ModuleQuizQuestion $question
+ ): void {
+ $this->ensureModuleQuizOwnership($module, $quiz);
+ abort_unless((int) $question->module_quiz_id === (int) $quiz->id, 404);
+ }
+
+ private function deleteManagedModuleResourceFile(?string $path): void
+ {
+ $path = trim((string) $path);
+ if ($path !== '' && str_starts_with($path, 'module-resources/')) {
+ Storage::disk('public')->delete($path);
+ }
+ }
+
+ private function validatedModuleQuizQuestion(Request $request): array
+ {
+ $validated = $request->validate([
+ 'type' => ['required', Rule::in(['multiple_choice', 'true_false', 'short_answer'])],
+ 'question_text' => ['required', 'string', 'max:2000'],
+ 'options' => ['nullable', 'string', 'max:4000'],
+ 'correct_answer' => ['required', 'string', 'max:500'],
+ ]);
+
+ $type = $validated['type'];
+ $correctAnswer = trim($validated['correct_answer']);
+ $options = null;
+
+ if ($type === 'true_false') {
+ $options = ['True', 'False'];
+ $matchingAnswer = collect($options)->first(
+ fn (string $option): bool => strcasecmp($option, $correctAnswer) === 0
+ );
+ if ($matchingAnswer === null) {
+ throw ValidationException::withMessages([
+ 'correct_answer' => 'The correct answer must be True or False.',
+ ]);
+ }
+ $correctAnswer = $matchingAnswer;
+ } elseif ($type === 'multiple_choice') {
+ $options = collect(preg_split('/\R/', (string) ($validated['options'] ?? '')))
+ ->map(fn ($option) => trim((string) $option))
+ ->filter()
+ ->unique(fn (string $option): string => mb_strtolower($option))
+ ->values()
+ ->all();
+
+ if (count($options) < 2) {
+ throw ValidationException::withMessages([
+ 'options' => 'Multiple-choice questions require at least two distinct options, one per line.',
+ ]);
+ }
+
+ $matchingAnswer = collect($options)->first(
+ fn (string $option): bool => strcasecmp($option, $correctAnswer) === 0
+ );
+ if ($matchingAnswer === null) {
+ throw ValidationException::withMessages([
+ 'correct_answer' => 'The correct answer must match one of the provided options.',
+ ]);
+ }
+ $correctAnswer = $matchingAnswer;
+ }
+
+ return [
+ 'type' => $type,
+ 'question_text' => trim($validated['question_text']),
+ 'options' => $options,
+ 'correct_answer' => $correctAnswer,
+ ];
  }
 
  private function learningCategoryNames()

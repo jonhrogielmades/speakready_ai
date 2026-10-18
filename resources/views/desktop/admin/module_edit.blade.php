@@ -26,6 +26,16 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="filter: invert(1) grayscale(100%) brightness(200%);"></button>
         </div>
     @endif
+    @if($errors->any())
+        <div class="alert alert-danger mb-4" role="alert">
+            <strong>Please correct the following:</strong>
+            <ul class="mb-0 mt-2">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
             <a href="{{ route('admin.modules') }}" class="btn btn-sm btn-outline-secondary mb-2"><i class="fa-solid fa-arrow-left me-1"></i> Back to Interview Modules</a>
@@ -45,6 +55,7 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link oinp" id="chapters-tab" data-bs-toggle="pill" data-bs-target="#chapters" type="button" role="tab" style="width:auto;margin:0;">Interview Lessons</button>
         </li>
+        @include('shared.admin.module-content-tab-buttons')
     </ul>
 
     <div class="tab-content" id="moduleEditTabsContent">
@@ -162,6 +173,8 @@
                 </div>
             @endif
         </div>
+
+        @include('shared.admin.module-content-tab-panes')
 
     </div>
 </div>

@@ -117,7 +117,13 @@ class LearningModuleRecommendationTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('user.modules.progress', $module->id), [
-                'progress_percentage' => 100,
+                'milestone' => 'started',
+            ])
+            ->assertRedirect(route('user.modules.show', $module->id));
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module->id), [
+                'milestone' => 'completed',
             ])
             ->assertRedirect(route('user.modules.show', $module->id));
 
@@ -152,6 +158,75 @@ class LearningModuleRecommendationTest extends TestCase
             ->post(route('user.modules.progress', $module->id), [
                 'progress_percentage' => 25,
             ])
+            ->assertRedirect(route('user.modules.show', $module->id));
+
+        $this->assertDatabaseHas('learning_progress', [
+            'user_id' => $user->id,
+            'learning_module_id' => $module->id,
+            'status' => 'completed',
+            'progress_percentage' => 100,
+        ]);
+    }
+
+    public function test_module_progress_rejects_arbitrary_percentages_and_client_supplied_scores(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $module = $this->module('Protected Progress Module', 'Progress is derived from server milestones.', ['clarity']);
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module->id), [
+                'progress_percentage' => 91,
+                'quiz_score' => 100,
+                'learning_hours' => 999,
+            ])
+            ->assertSessionHasErrors(['progress_percentage', 'quiz_score', 'learning_hours']);
+
+        $this->assertDatabaseMissing('learning_progress', [
+            'user_id' => $user->id,
+            'learning_module_id' => $module->id,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module->id), [
+                'milestone' => 'completed',
+            ])
+            ->assertSessionHasErrors('milestone');
+
+        $this->assertDatabaseMissing('learning_progress', [
+            'user_id' => $user->id,
+            'learning_module_id' => $module->id,
+        ]);
+    }
+
+    public function test_module_with_quiz_requires_recorded_review_milestone_before_completion(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $module = $this->module('Quiz-Gated Module', 'Review the quiz before completion.', ['relevance']);
+        $module->quizzes()->create([
+            'title' => 'Readiness review',
+            'passing_score' => 70,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module->id), ['milestone' => 'started'])
+            ->assertRedirect(route('user.modules.show', $module->id));
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module->id), ['milestone' => 'completed'])
+            ->assertSessionHasErrors('milestone');
+
+        $this->assertDatabaseHas('learning_progress', [
+            'user_id' => $user->id,
+            'learning_module_id' => $module->id,
+            'progress_percentage' => 25,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module->id), ['milestone' => 'quiz_reviewed'])
+            ->assertRedirect(route('user.modules.show', $module->id));
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module->id), ['milestone' => 'completed'])
             ->assertRedirect(route('user.modules.show', $module->id));
 
         $this->assertDatabaseHas('learning_progress', [

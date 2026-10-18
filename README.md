@@ -260,7 +260,7 @@ Email: admin@speakreadyai.online
 Password: password
 ```
 
-For production, set these before seeding. `ADMIN_PASSWORD` is required before the production admin account can be created:
+For production, set these before seeding. `ADMIN_PASSWORD` is required before the production admin account can be created. It is a bootstrap value only; rerunning the seeder preserves a password changed later through account settings:
 
 ```env
 ADMIN_EMAIL=admin@speakreadyai.online
@@ -671,10 +671,12 @@ On startup, `docker-start.sh`:
 - Creates required storage and cache directories.
 - Validates required production environment values and infers `DB_CONNECTION` from `DATABASE_URL` when possible.
 - Clears stale Laravel caches.
-- Runs migrations, then repairs runtime schemas for AI providers, voice sessions, questions, interview answers, scores, feedback, and game tables.
-- Starts PHP-FPM and binds Nginx only after required startup maintenance passes.
-- Seeds the admin account.
+- Starts PHP-FPM and Nginx behind a maintenance gate, then runs migrations and repairs runtime schemas for AI providers, voice sessions, questions, interview answers, scores, feedback, and game tables.
+- Removes the maintenance gate only after all required startup work succeeds. `STARTUP_MAINTENANCE_FAIL_OPEN` defaults to `false`; set it to `true` only as an emergency override.
+- Runs the idempotent admin account seeder when `RUN_DATABASE_SEEDERS=true` (the container default). A fresh production database requires `ADMIN_PASSWORD`; set `RUN_DATABASE_SEEDERS=false` only when the administrator is provisioned separately.
 - Links storage and rebuilds optimized caches.
+
+The container health check calls Laravel's `GET /up` readiness endpoint. It returns `200` only when the supported PHP runtime, Laravel boot, startup-maintenance state, and a live database query are all healthy; otherwise it returns `503`.
 
 Optional production maintenance:
 
@@ -695,7 +697,7 @@ Repository: jonhrogielmades/speakready_ai
 Branch: main
 Compose Path: ./docker-compose.yml
 Compose Type: Docker Compose, not Stack
-Auto Deploy: enabled
+Auto Deploy: disabled when the gated GitHub Actions trigger below is used
 ```
 
 In Dokploy, paste the values from `dokploy.env.example` into the Docker Compose environment editor, then replace every `CHANGE_ME_*` value with production secrets. Keep `APP_KEY`, `DB_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `APP_URL`, `SESSION_DOMAIN`, and any AI/mail/OAuth keys stable between deploys.
@@ -706,7 +708,7 @@ The `app` service sets `pull_policy: build`, so each Dokploy deploy rebuilds the
 compose -p speakready-ai -f docker-compose.yml up -d --build --remove-orphans
 ```
 
-Dokploy's GitHub integration automatically deploys pushes to the selected branch. If you use a webhook or API trigger instead, the included `.github/workflows/dokploy-deploy.yml` can trigger Dokploy on every push to `main`. Configure either `DOKPLOY_WEBHOOK_URL`, or all three API secrets: `DOKPLOY_URL`, `DOKPLOY_API_KEY`, and `DOKPLOY_COMPOSE_ID`.
+For gated releases, disable Dokploy's direct auto deploy and use the included `.github/workflows/dokploy-deploy.yml`. It validates Composer metadata, PHP syntax, PHP and frontend dependency audits, every unit and feature test in isolated processes, and the production frontend build on pull requests and before it triggers Dokploy on pushes to `main`. Protect `main` with the workflow's `quality` job as a required check. Configure either `DOKPLOY_WEBHOOK_URL`, or all three API secrets: `DOKPLOY_URL`, `DOKPLOY_API_KEY`, and `DOKPLOY_COMPOSE_ID`. If direct Dokploy auto deploy remains enabled, GitHub Actions cannot prevent a broken commit from deploying.
 
 ## Useful Artisan Commands
 

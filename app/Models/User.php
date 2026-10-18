@@ -114,6 +114,11 @@ class User extends Authenticatable
         return $this->hasMany(PushSubscription::class);
     }
 
+    public function missionAttempts()
+    {
+        return $this->hasMany(MissionAttempt::class);
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         $brevoMailer = app(BrevoTransactionalMail::class);

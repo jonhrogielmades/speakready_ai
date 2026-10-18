@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\FeedbackAuditLog;
 use App\Models\InterviewAnswer;
 use App\Services\CsvExportService;
+use App\Services\InterviewSessionScoreRefreshService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminFeedbackController extends Controller
 {
@@ -76,7 +78,11 @@ class AdminFeedbackController extends Controller
         return $this->mobileView('admin.feedback.show', compact('answer'));
     }
 
-    public function verify(Request $request, InterviewAnswer $answer)
+    public function verify(
+        Request $request,
+        InterviewAnswer $answer,
+        InterviewSessionScoreRefreshService $scoreRefresh
+    )
     {
         $validated = $request->validate([
             'clarity_score' => 'required|integer|min:0|max:100',
@@ -100,23 +106,38 @@ class AdminFeedbackController extends Controller
 
         $oldStatus = $answer->audit_status;
 
-        $answer->update([
-            'clarity_score' => $validated['clarity_score'],
-            'relevance_score' => $validated['relevance_score'],
-            'delivery_stability_score' => $validated['delivery_stability_score'],
-            'grammar_score' => $validated['grammar_score'],
-            'star_analysis' => $starAnalysis,
-            'audit_status' => $validated['audit_status'],
-        ]);
+        DB::transaction(function () use ($answer, $validated, $starAnalysis, $oldStatus, $scoreRefresh): void {
+            $sessionProfessionalism = $answer->interviewSession()
+                ->with('score')
+                ->first()?->score?->professionalism_score;
+            $answerScore = (int) round((
+                $validated['clarity_score']
+                + $validated['relevance_score']
+                + $validated['grammar_score']
+                + max(0, min(100, (int) ($sessionProfessionalism ?? $answer->score ?? 0)))
+            ) / 4);
 
-        FeedbackAuditLog::create([
-            'interview_answer_id' => $answer->id,
-            'admin_id' => auth()->id(),
-            'action' => 'verified_scores',
-            'old_status' => $oldStatus,
-            'new_status' => $validated['audit_status'],
-            'notes' => $validated['notes'] ?? 'Scores verified.',
-        ]);
+            $answer->update([
+                'clarity_score' => $validated['clarity_score'],
+                'relevance_score' => $validated['relevance_score'],
+                'delivery_stability_score' => $validated['delivery_stability_score'],
+                'grammar_score' => $validated['grammar_score'],
+                'score' => $answerScore,
+                'star_analysis' => $starAnalysis,
+                'audit_status' => $validated['audit_status'],
+            ]);
+
+            $scoreRefresh->refreshForAnswer($answer->fresh());
+
+            FeedbackAuditLog::create([
+                'interview_answer_id' => $answer->id,
+                'admin_id' => auth()->id(),
+                'action' => 'verified_scores',
+                'old_status' => $oldStatus,
+                'new_status' => $validated['audit_status'],
+                'notes' => $validated['notes'] ?? 'Scores verified and session readiness refreshed.',
+            ]);
+        });
 
         return redirect()->route('admin.feedback.show', $answer)->with('success', 'Feedback verified successfully.');
     }

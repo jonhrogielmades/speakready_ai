@@ -833,8 +833,8 @@ class UserSideHardeningTest extends TestCase
  }
 
  $mobileResponse
- ->assertSee('css/mobile/interview/setup.css?v=19', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=8', false)
+ ->assertSee('css/mobile/interview/setup.css?v=24', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=11', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)
@@ -2324,7 +2324,7 @@ class UserSideHardeningTest extends TestCase
  ->post(route('user.game.answer'), [
  'game_session_id' => $session->id,
  'question_index' => 0,
- 'answer_text' => 'I explained the situation task action and result with enough detail for this learning game.',
+ 'answer_text' => 'During a delayed customer request, I owned the task of confirming the missing details. I checked the records, explained the next steps, and resolved the issue within the promised hour. As a result, the customer received the correct update and our team completed the request on time.',
  'response_mode' => 'hybrid',
  'voice_duration' => 18,
  'voice_recording_duration_seconds' => 18,
@@ -2969,7 +2969,7 @@ class UserSideHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
  ->assertSee('css/mobile/interview/session.css?v=67', false)
- ->assertSee('css/mobile/user/game-session.css?v=2026101304', false)
+ ->assertSee('css/mobile/user/game-session.css?v=2026101501', false)
  ->assertSee('data-page-style="user-game-session"', false)
  ->assertSee('id="sec-interview-session"', false)
  ->assertSee('data-game-session-root', false)

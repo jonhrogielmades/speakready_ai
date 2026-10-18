@@ -98,6 +98,14 @@ class FeedbackReportPresenter
  ];
  }
 
+ if (self::hasRecordedDelivery($session, $score->delivery_stability_score?? null)) {
+ $metrics[] = [
+ 'name' => 'Pacing',
+ 'score' => $score->delivery_stability_score,
+ 'color' => '#14b8a6',
+ ];
+ }
+
  return collect($metrics)
  ->filter(fn (array $metric): bool => is_numeric($metric['score']?? null))
  ->map(fn (array $metric): array => [
@@ -766,6 +774,27 @@ class FeedbackReportPresenter
  private static function hasRecordedConfidence(mixed $score): bool
  {
  return is_numeric($score) && self::score($score) > 0;
+ }
+
+ private static function hasRecordedDelivery(InterviewSession $session, mixed $score): bool
+ {
+ if (! is_numeric($score)) {
+ return false;
+ }
+
+ $summary = is_array($session->feedback?->coaching_summary?? null)
+ ? $session->feedback->coaching_summary
+ : [];
+ if ((int) data_get($summary, 'coverage.delivery_measured', 0) > 0) {
+ return true;
+ }
+
+ return self::answers($session)->contains(function ($answer): bool {
+ $coaching = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
+
+ return strtolower(trim((string) data_get($coaching, 'delivery.status', ''))) === 'measured'
+ && is_numeric($answer->delivery_stability_score?? null);
+ });
  }
 
  private static function wordCount(string $text): int

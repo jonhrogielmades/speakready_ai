@@ -4,14 +4,100 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
   group: dokploy-deploy-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Validate Composer metadata
+        run: composer validate --strict --no-check-publish
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Check PHP platform requirements
+        run: composer check-platform-reqs
+
+      - name: Audit PHP dependencies
+        run: composer audit --locked
+
+      - name: Check PHP syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          php_file_list="${RUNNER_TEMP}/speakready-php-files.list"
+          find app bootstrap config database routes tests -type f -name '*.php' -print0 > "${php_file_list}"
+          if [ ! -s "${php_file_list}" ]; then
+            echo "::error title=PHP discovery failed::No PHP files were found to lint."
+            exit 1
+          fi
+          while IFS= read -r -d '' file; do
+            php -l "${file}" >/dev/null
+          done < "${php_file_list}"
+
+      - name: Run unit tests
+        run: php artisan test tests/Unit
+
+      - name: Run feature tests in isolated processes
+        shell: bash
+        run: |
+          set -euo pipefail
+          feature_test_list="${RUNNER_TEMP}/speakready-feature-tests.list"
+          sorted_feature_test_list="${RUNNER_TEMP}/speakready-feature-tests.sorted.list"
+          find tests/Feature -type f -name '*Test.php' -print0 > "${feature_test_list}"
+          if [ ! -s "${feature_test_list}" ]; then
+            echo "::error title=Feature-test discovery failed::No feature test files were found."
+            exit 1
+          fi
+          sort -z "${feature_test_list}" > "${sorted_feature_test_list}"
+          while IFS= read -r -d '' test_file; do
+            echo "Running ${test_file}"
+            php artisan test "${test_file}"
+          done < "${sorted_feature_test_list}"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Audit frontend dependencies
+        run: npm audit --audit-level=high
+
+      - name: Build production assets
+        run: npm run build
+
   deploy:
+    needs: quality
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:

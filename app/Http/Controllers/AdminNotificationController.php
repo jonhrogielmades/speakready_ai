@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminNotificationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         AccountNotificationSchema::ensure();
 
@@ -35,6 +35,11 @@ class AdminNotificationController extends Controller
         $announcementCount = Announcement::count();
             
         $users = User::orderBy('name')->get(['id', 'name', 'email']);
+        $requestedComposeUserId = $request->integer('user_id');
+        $composeUserId = $users->contains('id', $requestedComposeUserId)
+            ? $requestedComposeUserId
+            : null;
+        $openComposer = $request->boolean('compose') && $composeUserId !== null;
         
         return $this->mobileView('admin.notifications', compact(
             'announcements',
@@ -44,7 +49,9 @@ class AdminNotificationController extends Controller
             'unreadActivityCount',
             'globalBroadcastCount',
             'directAlertCount',
-            'announcementCount'
+            'announcementCount',
+            'composeUserId',
+            'openComposer'
         ));
     }
 

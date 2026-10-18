@@ -33,6 +33,7 @@
                     ->contains(fn ($skill): bool => is_string($skill) && \Illuminate\Support\Str::startsWith($skill, 'ai_module_spec:'));
                 $chapterUnlockDelayMs = 5 * 60 * 1000;
                 $initialUnlockedChapters = $currentProgress >= 100 ? $module->chapters->count() : 1;
+                $completionProgressRequired = $module->quizzes->isNotEmpty() ? 75 : 25;
             @endphp
             <div class="module-progress-panel">
                 <div>
@@ -46,16 +47,16 @@
                     @if($currentProgress < 25)
                         <form action="{{ route('user.modules.progress', $module->id) }}" method="POST" data-module-progress-form>
                             @csrf
-                            <input type="hidden" name="progress_percentage" value="25">
+                            <input type="hidden" name="milestone" value="started">
                             <button type="submit" class="btn btn-sm module-progress-button module-progress-button-start">
                                 <i class="fa-solid fa-play me-1"></i> Mark Started
                             </button>
                         </form>
                     @endif
-                    @if($currentProgress < 100)
+                    @if($currentProgress >= $completionProgressRequired && $currentProgress < 100)
                         <form action="{{ route('user.modules.progress', $module->id) }}" method="POST" data-module-progress-form>
                             @csrf
-                            <input type="hidden" name="progress_percentage" value="100">
+                            <input type="hidden" name="milestone" value="completed">
                             <button type="submit" class="btn btn-sm module-progress-button module-progress-button-complete">
                                 <i class="fa-solid fa-circle-check me-1"></i> Mark Completed
                             </button>
@@ -143,7 +144,7 @@
                             </div>
                         @endif
                         <div class="chapter-content" data-chapter-content @if($isChapterInitiallyLocked) hidden @endif>
-                            {!! $chapter->content !!}
+                            {!! \App\Support\ModuleChapterHtml::sanitize($chapter->content) !!}
                         </div>
                     </div>
                 @endforeach
@@ -207,11 +208,15 @@
                             @empty
                                 <div class="quiz-question-box" style="color:var(--tx3);">No quiz questions have been added yet.</div>
                             @endforelse
-                            <form action="{{ route('user.modules.progress', $module->id) }}" method="POST" class="mt-3" data-module-progress-form>
-                                @csrf
-                                <input type="hidden" name="progress_percentage" value="{{ max($currentProgress, 75) }}">
-                                <button type="submit" class="btn w-100" style="background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.2); font-weight:600; border-radius:8px;">Save Quiz Review Progress</button>
-                            </form>
+                            @if($currentProgress >= 25)
+                                <form action="{{ route('user.modules.progress', $module->id) }}" method="POST" class="mt-3" data-module-progress-form>
+                                    @csrf
+                                    <input type="hidden" name="milestone" value="quiz_reviewed">
+                                    <button type="submit" class="btn w-100" style="background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.2); font-weight:600; border-radius:8px;">Save Quiz Review Progress</button>
+                                </form>
+                            @else
+                                <p class="mt-3 mb-0" style="color:var(--tx3);">Mark the module as started before saving quiz review progress.</p>
+                            @endif
                         </div>
                     </div>
                 @endforeach
