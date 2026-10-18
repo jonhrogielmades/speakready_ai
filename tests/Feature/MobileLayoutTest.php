@@ -1739,7 +1739,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=67', false)
+            ->assertSee('css/mobile/interview/session.css?v=68', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)
@@ -1806,6 +1806,9 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('position: sticky !important;', $mobileSessionCss);
         $this->assertStringContainsString('height: clamp(108px, calc(var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) - 290px), 180px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('html body.mobile-interview-fullscreen.user-mobile-shell #sec-interview-session .response-panel', $mobileSessionCss);
+        $this->assertStringContainsString('html body.user-mobile-shell #sec-interview-session .response-panel #answerForm', $mobileSessionCss);
+        $this->assertStringContainsString('scrollbar-gutter: stable;', $mobileSessionCss);
+        $this->assertStringContainsString('scroll-padding-bottom: 16px;', $mobileSessionCss);
         $this->assertStringNotContainsString('height: clamp(292px, 46dvh, 340px) !important;', $mobileSessionCss);
         $this->assertStringNotContainsString('height: clamp(270px, 44dvh, 318px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('padding: 10px 10px 30px !important;', $mobileSessionCss);

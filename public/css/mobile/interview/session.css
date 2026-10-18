@@ -5679,15 +5679,34 @@ html body #finishTransitionOverlay .finish-view-review-button.is-ready:not(:disa
     }
 }
 
-/* Keep Hybrid's Voice Session reachable inside the mobile Your Response panel. */
+/* Keep Voice Session reachable inside the mobile Your Response panel. */
 @media (max-width: 767.98px) {
-    html body.user-mobile-shell #sec-interview-session .hybrid-response-panel #answerForm,
-    html body #mob-content #sec-interview-session .hybrid-response-panel #answerForm {
+    html body.user-mobile-shell #sec-interview-session .response-panel #answerForm,
+    html body #mob-content #sec-interview-session .response-panel #answerForm,
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .response-panel #answerForm,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .response-panel #answerForm {
         max-height: clamp(240px, calc(var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) - 170px), 420px) !important;
         overflow-y: auto !important;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
         scroll-padding-bottom: 16px;
         scrollbar-width: thin;
+        scrollbar-gutter: stable;
+        padding-right: 2px;
+    }
+
+    html body.user-mobile-shell #sec-interview-session .response-panel #answerForm::-webkit-scrollbar,
+    html body #mob-content #sec-interview-session .response-panel #answerForm::-webkit-scrollbar,
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .response-panel #answerForm::-webkit-scrollbar,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .response-panel #answerForm::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    html body.user-mobile-shell #sec-interview-session .response-panel #answerForm::-webkit-scrollbar-thumb,
+    html body #mob-content #sec-interview-session .response-panel #answerForm::-webkit-scrollbar-thumb,
+    html body.mobile-answer-focused.user-mobile-shell #sec-interview-session .response-panel #answerForm::-webkit-scrollbar-thumb,
+    html body.mobile-answer-focused #mob-content #sec-interview-session .response-panel #answerForm::-webkit-scrollbar-thumb {
+        background: rgba(37, 99, 235, 0.38);
+        border-radius: 999px;
     }
 }
