@@ -1029,7 +1029,7 @@
 @media (max-width: 767px) {
     /* Keep the overflow menu comfortably inside the mobile card edge. */
     html body #ai-coach-page .coach-chat-header .coach-actions {
-        margin-right: clamp(18px, 5vw, 24px) !important;
+        margin-right: 0 !important;
     }
 
     html body #ai-coach-page {
@@ -1475,7 +1475,7 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
     html body #mob-content #ai-coach-page .coach-actions,
     html body #ai-coach-page .coach-actions {
         flex: 0 0 auto !important;
-        margin-right: clamp(14px, 4vw, 20px) !important;
+        margin-right: 0 !important;
     }
 
     body.user-mobile-shell #mob-content #ai-coach-page .coach-actions-heading,
@@ -2713,7 +2713,7 @@ body.dm #ai-coach-page .coach-voice-transcript-text::placeholder,
 @media (max-width: 767px) {
     html body #ai-coach-page .coach-chat-header > .d-flex:last-child {
         flex: 0 0 auto !important;
-        margin-inline: 6px !important;
+        margin-inline: 0 !important;
     }
 
     html body #ai-coach-page .coach-chat-header .coach-actions {
