@@ -8595,7 +8595,7 @@ body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-pr
 }
 
 body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-title-row {
-    gap: 0 !important;
+    gap: 8px !important;
     margin: 0 !important;
 }
 

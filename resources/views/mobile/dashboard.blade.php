@@ -306,6 +306,7 @@
                 <div class="sr-trend-header">
                     <div>
                         <div class="sr-trend-title-row">
+                            <div class="sr-trend-icon" aria-hidden="true"><i class="fa-solid fa-chart-line"></i></div>
                             <h5 class="sr-trend-title">Readiness Trend</h5>
                         </div>
                         <p class="sr-trend-subtitle">Track your interview readiness over time.</p>
@@ -345,7 +346,6 @@
                             <p class="sr-side-subtitle">Average capability by skill.</p>
                         </div>
                     </div>
-                    <a href="{{ route('user.progress') }}" class="sr-side-detail-btn"><i class="fa-solid fa-chart-line"></i> View Details</a>
                 </div>
                 @if($hasRadarScores)
                     <div class="chart-container-mobile sr-radar-box">
@@ -399,7 +399,6 @@
                         </div>
                         <div class="sr-goal-footer">
                             <div class="sr-goal-note"><i class="fa-solid fa-chart-line"></i> {{ $goalNote }}</div>
-                            <a href="{{ route('user.progress') }}" class="sr-side-detail-btn">View Goals <i class="fa-solid fa-chevron-right"></i></a>
                         </div>
                     </div>
                 @else
