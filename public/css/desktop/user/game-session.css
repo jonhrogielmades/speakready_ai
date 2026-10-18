@@ -419,3 +419,26 @@ body.game-match-auto-fullscreen {
         margin-bottom: 14px;
     }
 }
+
+/* The game match uses the same hybrid transcript overlay as interview mode.
+   Keep this scoped to the game root so the shared interview page is untouched. */
+#sec-interview-session[data-game-session-root] .answer-transcription-overlay {
+    z-index: 4;
+}
+
+#sec-interview-session[data-game-session-root] .answer-transcription-overlay .answer-transcription-wave span {
+    animation: gameMatchTranscriptWave 1.1s ease-in-out infinite alternate;
+}
+
+#sec-interview-session[data-game-session-root] .answer-transcription-overlay .answer-transcription-wave span:nth-child(2n) {
+    animation-delay: -0.35s;
+}
+
+#sec-interview-session[data-game-session-root] .answer-transcription-overlay .answer-transcription-wave span:nth-child(3n) {
+    animation-delay: -0.7s;
+}
+
+@keyframes gameMatchTranscriptWave {
+    from { opacity: 0.48; }
+    to { opacity: 1; }
+}

@@ -2,7 +2,7 @@
 @section('title', 'Interview Challenge')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-base.css?v=73') }}" data-page-style="user-game-session-base">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026101501') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026101801') }}" data-page-style="user-game-session">
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-2.css?v=2') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
@@ -131,7 +131,7 @@
  <div class="desktop-response-column">
 
  <!-- Answer Response System -->
- <div class="panel response-panel mb-4 animate-fade-up delay-200">
+ <div class="panel response-panel hybrid-response-panel mb-4 animate-fade-up delay-200">
  <div class="panel-title">
  <i class="fa-solid fa-pen-nib me-2"></i>
  <span class="panel-title-text">Your Response</span>
@@ -146,7 +146,7 @@
  </div>
  
  <form id="answerForm">
- <div id="voiceSessionPanel" class="voice-session-panel game-voice-session-panel" data-state="idle">
+ <div id="voiceSessionPanel" class="voice-session-panel game-voice-session-panel d-none d-md-block" data-state="idle">
  <div class="voice-session-summary">
  <div class="voice-session-title">
  <i class="fa-solid fa-wave-square"></i>
@@ -178,7 +178,13 @@
  <div class="game-transcription-display">
  <label for="answerTextarea" class="visually-hidden">Your answer</label>
  <div class="answer-transcript-stage">
- <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer, or record with voice. Voice transcript appears here after Stop..." aria-describedby="responseCountBar"></textarea>
+ <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer, or record with voice. Voice transcript appears here after Stop..." aria-describedby="answerTranscriptionOverlay responseCountBar"></textarea>
+ <div id="answerTranscriptionOverlay" class="answer-transcription-overlay" hidden role="status" aria-live="polite" aria-atomic="true">
+ <div class="answer-transcription-wave" aria-hidden="true">
+ <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+ </div>
+ <div class="answer-transcription-message">Listening... transcript appears after Stop.</div>
+ </div>
 
  <div class="response-count-bar" id="responseCountBar" aria-live="polite">
  <span id="wordCount">0 words</span> <span aria-hidden="true">-</span> <span id="charCount">0 characters</span>
@@ -341,6 +347,37 @@ let committedSpeechTranscript = '';
  );
  }
 
+ function updateGameAnswerTranscriptionOverlay() {
+ const stage = document.querySelector('#sec-interview-session[data-game-session-root] .answer-transcript-stage');
+ const overlay = document.getElementById('answerTranscriptionOverlay');
+ const textarea = document.getElementById('answerTextarea');
+ if (!stage || !overlay) return;
+
+ const capturePending = isVoiceTranscriptionMode() && Boolean(
+ isStartingRecording
+ || isRecording
+ || isRecordingPaused
+ || stopRequestedWhileStarting
+ || recordingStopPromise
+ || voiceRecordingStopPromise
+ || voiceTranscriptionPromise
+ );
+ const hasTranscript = Boolean(cleanTranscriptText(textarea?.value || ''));
+ const processingTranscript = Boolean(recordingStopPromise || voiceRecordingStopPromise || voiceTranscriptionPromise);
+
+ stage.classList.toggle('is-recording-empty-transcript', capturePending && !hasTranscript);
+ stage.classList.toggle('is-recording-with-transcript', capturePending && hasTranscript);
+ if (textarea) textarea.classList.toggle('has-transcription-overlay', capturePending);
+ overlay.hidden = !capturePending;
+
+ const message = overlay.querySelector('.answer-transcription-message');
+ if (message) {
+ message.textContent = processingTranscript
+ ? 'Transcribing your answer...'
+ : (isRecordingPaused ? 'Recording paused. Stop to add transcript.' : 'Listening... transcript appears after Stop.');
+ }
+ }
+
  function setGameAnswerTextareaRecordingLock(captureLocked = gameAnswerTextareaCaptureLocked()) {
  const textarea = document.getElementById('answerTextarea');
  if (!textarea) return;
@@ -371,6 +408,7 @@ let committedSpeechTranscript = '';
  delete textarea.dataset.answerEditTabindex;
  delete textarea.dataset.answerEditTabindexStored;
  }
+ updateGameAnswerTranscriptionOverlay();
  }
 
  const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -2356,6 +2394,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  recordingStopPromise = null;
  setGameAnswerTextareaRecordingLock();
  });
+ updateGameAnswerTranscriptionOverlay();
  return recordingStopPromise;
  }
 
