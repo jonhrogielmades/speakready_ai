@@ -52,7 +52,7 @@ class DetailedFeedbackReviewService
  $answersData,
  $provider,
  false,
- true,
+ false,
  $this->reviewRefreshRuntimeOptions()
  );
  } catch (AiFeedbackProviderFailureException $error) {
@@ -583,6 +583,10 @@ class DetailedFeedbackReviewService
  return false;
  }
 
+ if (TranscriptService::wordCount($this->answerContent($answer)) < 10) {
+ return false;
+ }
+
  if (trim((string) ($answer->better_sample_answer?? '')) === '') {
  return true;
  }
@@ -591,8 +595,17 @@ class DetailedFeedbackReviewService
  $source = trim((string) data_get($coachingFeedback, 'content_alignment.possible_answer_source', ''));
  $provider = AIService::normalizeProviderKey(data_get($coachingFeedback, 'content_alignment.possible_answer_provider', $answer->ai_provider));
 
+ $feedbackQuality = is_array($coachingFeedback['feedback_quality']?? null)
+ ? $coachingFeedback['feedback_quality']
+ : [];
+ $qualityVerified = ($feedbackQuality['status']?? null) === 'verified'
+ && (int) ($feedbackQuality['completeness_percent']?? 0) === 100
+ && is_numeric($feedbackQuality['reliability_percent']?? null)
+ && $this->scoreValue($feedbackQuality['reliability_percent']) >= $this->minimumReliabilityPercent();
+
  return $source !== 'ai_provider'
  || ! $this->isApiProviderKey($provider)
+ || ! $qualityVerified
  || ! AIService::visibleReviewPossibleAnswerIsProviderUsable(
  (string) ($answer->better_sample_answer?? ''),
  $this->answerData($answer)

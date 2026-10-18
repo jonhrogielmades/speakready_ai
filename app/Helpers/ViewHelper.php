@@ -744,11 +744,11 @@ if (! function_exists('review_better_answer_star_to_paragraph')) {
 }
 
 if (! function_exists('review_better_answer_text')) {
-    function review_better_answer_text(?string $text, mixed $answerSource = null, mixed $questionSource = null): string
+    function review_better_answer_text(?string $text, mixed $answerSource = null, mixed $questionSource = null, bool $allowFallback = true): string
     {
         $questionSource ??= $answerSource;
         if (! review_answer_is_usable_for_better_answer(review_answer_text($answerSource), $questionSource)) {
-            return review_better_answer_fallback($answerSource, $questionSource);
+            return $allowFallback ? review_better_answer_fallback($answerSource, $questionSource) : '';
         }
 
         $lineBreakMarker = "\u{E000}reviewline\u{E001}";
@@ -787,6 +787,6 @@ if (! function_exists('review_better_answer_text')) {
             return $clean;
         }
 
-        return review_better_answer_fallback($answerSource, $questionSource);
+        return $allowFallback ? review_better_answer_fallback($answerSource, $questionSource) : '';
     }
 }

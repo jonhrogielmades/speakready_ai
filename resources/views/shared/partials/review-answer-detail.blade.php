@@ -20,9 +20,18 @@
  $feedbackText = 'Feedback is not available for this answer yet.';
  }
 
- $possibleAnswer = review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $questionSource);
+ $possibleAnswerSource = trim((string) data_get($answer->coaching_feedback ?? [], 'content_alignment.possible_answer_source', ''));
+ $possibleAnswerProvider = \App\Services\AIService::normalizeProviderKey(
+ data_get($answer->coaching_feedback ?? [], 'content_alignment.possible_answer_provider', $answer->ai_provider)
+ );
+ $possibleAnswerIsApiBacked = $possibleAnswerSource === 'ai_provider'
+ && \App\Services\AIService::providerIsSupported($possibleAnswerProvider)
+ && ! in_array($possibleAnswerProvider, ['local', 'localmodel'], true);
+ $possibleAnswer = $possibleAnswerIsApiBacked
+ ? review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $questionSource, false)
+ : '';
  if (trim($possibleAnswer) === '') {
- $possibleAnswer = 'No possible answer was generated for this answer yet.';
+ $possibleAnswer = 'No verified AI possible answer is available for this response yet.';
  }
  $coachQuestion = review_question_text($questionSource);
  if ($coachQuestion === '') {
