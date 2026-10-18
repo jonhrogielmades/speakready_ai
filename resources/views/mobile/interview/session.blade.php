@@ -3516,6 +3516,24 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return document.getElementById('answerTextarea');
  }
 
+ function answerTextareaCaptureLocked() {
+ return isHybridTranscriptionMode() && recordingTransitionInProgress();
+ }
+
+ function setAnswerTextareaRecordingLock(captureLocked = false) {
+ const textarea = answerTextareaElement();
+ if (!textarea) return;
+
+ const voiceOnlyLocked = isVoiceOnlyMode();
+ const hybridLocked = isHybridTranscriptionMode() && Boolean(captureLocked);
+ const locked = voiceOnlyLocked || hybridLocked;
+
+ textarea.readOnly = locked;
+ textarea.setAttribute('aria-readonly', String(locked));
+ textarea.classList.toggle('voice-only-answer-lock', voiceOnlyLocked);
+ textarea.classList.toggle('hybrid-transcription-lock', hybridLocked);
+}
+
  let mobileAnswerFocusFrame = null;
  let mobileAnswerFocusScrollTimer = null;
  let mobileAnswerViewportListenersBound = false;
@@ -3596,8 +3614,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const stage = document.querySelector('.answer-transcript-stage');
  const overlay = document.getElementById('answerTranscriptionOverlay');
  const hasText = textarea? String(textarea.value || '').trim() !== '': String(answersData[currentQIdx]?.text || '').trim() !== '';
- const transcriptCaptureLocked = isHybridTranscriptionMode()
- && Boolean(recordingStartPromise || recordingPausePromise || recordingStopPromise || recordingTransitionState || voiceSessionTranscriptPromise || isRecording || isRecordingPaused);
+ const transcriptCaptureLocked = answerTextareaCaptureLocked();
  const shouldShow = isHybridTranscriptionMode()
  && !isRecordingPaused
  && Boolean(isRecording || recordingStartPromise);
@@ -3608,9 +3625,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  if (overlay) overlay.hidden =!shouldShow;
  if (textarea) {
- textarea.readOnly = isVoiceOnlyMode() || transcriptCaptureLocked;
- textarea.setAttribute('aria-readonly', String(textarea.readOnly));
- textarea.classList.toggle('hybrid-transcription-lock', transcriptCaptureLocked);
+ setAnswerTextareaRecordingLock(transcriptCaptureLocked);
  textarea.classList.toggle('has-transcription-overlay', shouldShow);
  textarea.placeholder = shouldShow? '': responseModePlaceholder();
  }
@@ -3671,9 +3686,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const locked = isVoiceOnlyMode();
 
  if (textarea) {
- textarea.readOnly = locked;
- textarea.classList.toggle('voice-only-answer-lock', locked);
- textarea.setAttribute('aria-readonly', String(locked));
+ setAnswerTextareaRecordingLock(answerTextareaCaptureLocked());
  }
 
  if (lockNotice) {
@@ -5484,6 +5497,7 @@ return fallbackText;
  if (recordingTransitionInProgress()) return false;
 
  setRecordingTransitionState('starting');
+ setAnswerTextareaRecordingLock(true);
  recordingStartPromise = startRecordingInternal(options).finally(() => {
  recordingStartPromise = null;
  if (recordingTransitionState === 'starting') {
@@ -5670,6 +5684,7 @@ return fallbackText;
  async function stopRecording(options = {}) {
  if (recordingStopPromise) return recordingStopPromise;
  setRecordingTransitionState('stopping');
+ setAnswerTextareaRecordingLock(true);
  recordingStopPromise = (async () => {
  if (recordingStartPromise) {
  await recordingStartPromise.catch(error => {
@@ -5685,6 +5700,7 @@ return fallbackText;
  })().finally(() => {
  recordingStopPromise = null;
  setRecordingTransitionState('');
+ setAnswerTextareaRecordingLock(false);
  });
  return recordingStopPromise;
  }

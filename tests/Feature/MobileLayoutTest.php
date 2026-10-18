@@ -1642,6 +1642,10 @@ class MobileLayoutTest extends TestCase
                     $this->assertStringContainsString('const voiceSessionTextTrackingByQuestion = new Map();', $content);
                     $this->assertStringContainsString('voiceSessionTextTrackingByQuestion.get(key)', $content);
                     $this->assertStringContainsString('voiceSessionTextTrackingByQuestion.set(key, tracking)', $content);
+                    $this->assertStringContainsString('function answerTextareaCaptureLocked()', $content);
+                    $this->assertStringContainsString('function setAnswerTextareaRecordingLock(captureLocked = false)', $content);
+                    $this->assertStringContainsString('setAnswerTextareaRecordingLock(true);', $content);
+                    $this->assertStringContainsString('setAnswerTextareaRecordingLock(false);', $content);
                 }
 
                 $abortStart = strpos($content, 'async function abortInterviewSession()');
