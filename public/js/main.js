@@ -518,7 +518,7 @@ if (ptog) {
     });
 }
 
-/*  AUTH FUNCTIONS  */
+/*  AUTH TAB UI  */
 function swTab(t) {
     const isL = t === 'login' || t === 'signin';
     const loginPanel = document.getElementById('fLogin');
@@ -558,122 +558,6 @@ function swTab(t) {
     signupTab?.setAttribute('aria-selected', isL ? 'false' : 'true');
     if (loginErr) loginErr.style.display = 'none';
     if (signupErr) signupErr.style.display = 'none';
-}
-
-function showErrLogin(msg) {
-    const el = document.getElementById('loginErr');
-    document.getElementById('loginErrMsg').textContent = msg;
-    el.style.display = 'block';
-}
-
-function showErrSignup(msg) {
-    const el = document.getElementById('signupErr');
-    document.getElementById('signupErrMsg').textContent = msg;
-    el.style.display = 'block';
-}
-
-function setLoading(btnId, loading) {
-    const btn = document.getElementById(btnId);
-    if (loading) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Please wait...';
-    } else {
-        btn.disabled = false;
-        if (btnId === 'loginBtn') btn.innerHTML = 'Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i>';
-        else btn.innerHTML = 'Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i>';
-    }
-}
-
-function doLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const pass = document.getElementById('loginPass').value;
-    document.getElementById('loginErr').style.display = 'none';
-    if (!email) return showErrLogin('Please enter your email address.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErrLogin('Please enter a valid email address.');
-    if (!pass) return showErrLogin('Please enter your password.');
-    if (pass.length < 6) return showErrLogin('Password must be at least 6 characters.');
-    setLoading('loginBtn', true);
-    setTimeout(() => {
-        setLoading('loginBtn', false);
-        const name = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        loginSuccess({
-            name,
-            email,
-            plan: 'Pro Plan'
-        });
-    }, 900);
-}
-
-function doSignup() {
-    const name = document.getElementById('signupName').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
-    const pass = document.getElementById('signupPass').value;
-    document.getElementById('signupErr').style.display = 'none';
-    if (!name) return showErrSignup('Please enter your full name.');
-    if (!email) return showErrSignup('Please enter your email address.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErrSignup('Please enter a valid email address.');
-    if (pass.length < 8) return showErrSignup('Password must be at least 8 characters.');
-    setLoading('signupBtn', true);
-    setTimeout(() => {
-        setLoading('signupBtn', false);
-        loginSuccess({
-            name,
-            email,
-            plan: 'Starter (Trial)'
-        });
-    }, 1000);
-}
-
-function quickLogin(provider) {
-    const names = {
-        google: 'Alex Johnson',
-        github: 'Dev User'
-    };
-    const emails = {
-        google: 'user@gmail.com',
-        github: 'user@github.com'
-    };
-    // close offcanvas
-    bootstrap.Offcanvas.getInstance(document.getElementById('lofc'))?.hide();
-    setTimeout(() => loginSuccess({
-        name: names[provider],
-        email: emails[provider],
-        plan: 'Pro Plan'
-    }), 300);
-}
-
-function loginSuccess(user) {
-    currentUser = user;
-    chatHistory = [];
-    const oc = bootstrap.Offcanvas.getInstance(document.getElementById('lofc'));
-    if (oc) oc.hide();
-    const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    // topbar
-    document.querySelectorAll('#userAvatar, .user-avatar').forEach(el => {
-        el.textContent = initials;
-    });
-    if (document.getElementById('userName')) document.getElementById('userName').textContent = user.name;
-    if (document.getElementById('userPlan')) document.getElementById('userPlan').textContent = user.plan;
-    // profile dropdown
-    document.getElementById('pdAvatar').textContent = initials;
-    document.getElementById('pdName').textContent = user.name;
-    document.getElementById('pdEmail').textContent = user.email;
-    document.getElementById('pdPlan').textContent = user.plan;
-    document.getElementById('pdPlanDetail').textContent = user.plan;
-    // greeting + settings
-    document.getElementById('greetName').textContent = user.name.split(' ')[0];
-    document.getElementById('settingsAvatar').textContent = initials;
-    document.getElementById('settingsName').textContent = user.name;
-    document.getElementById('settingsEmail').textContent = user.email;
-    document.getElementById('profileName').value = user.name;
-    document.getElementById('profileEmail').value = user.email;
-    // switch view
-    document.getElementById('landing').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    window.scrollTo(0, 0);
-    setTimeout(() => {
-        initOverviewChart();
-    }, 200);
 }
 
 function doLogout() {

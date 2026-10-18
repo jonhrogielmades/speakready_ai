@@ -356,7 +356,7 @@
          };
       </script>
       <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=24" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=26" defer></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>

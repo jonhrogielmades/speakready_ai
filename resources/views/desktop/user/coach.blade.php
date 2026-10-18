@@ -1121,7 +1121,7 @@
                             <i class="fa-regular fa-message"></i> 
                             <span class="history-item-title text-truncate">${escapeHtml(data.title || 'New Conversation')}</span>
                         </div>
-                        <button class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation(${data.conversation_id})">
+                        <button type="button" class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation(${data.conversation_id})">
                             <i class="fa-solid fa-trash-can" style="margin:0;"></i>
                         </button>
                     `;

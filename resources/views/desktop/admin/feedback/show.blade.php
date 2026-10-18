@@ -151,7 +151,7 @@
             <div class="card boc" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-header bg-transparent pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold mb-0" style="color: var(--tx);"><i class="fa-solid fa-timeline me-2" style="color: var(--tx3);"></i> Audit Trail</h5>
-                    <button class="btn btn-sm btn-outline-secondary" style="border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#addNoteModal">Add Note</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" style="border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#addNoteModal">Add Note</button>
                 </div>
                 <div class="card-body p-4">
                     <div class="timeline" style="border-left: 2px solid var(--bd); padding-left: 20px; position: relative;">

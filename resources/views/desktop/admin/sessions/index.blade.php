@@ -370,8 +370,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const dailyCanvas = document.getElementById('dailySessionChart');
     if (!dailyCanvas) return;
     const dailyCtx = dailyCanvas.getContext('2d');
-    const dailyLabels = {!! json_encode($dailySessionCount->pluck('date')->reverse()->values()) !!};
-    const dailyData = {!! json_encode($dailySessionCount->pluck('total')->reverse()->values()) !!};
+    const dailyLabels = @js($dailySessionCount->pluck('date')->reverse()->values());
+    const dailyData = @js($dailySessionCount->pluck('total')->reverse()->values());
     
     let gradientLine = dailyCtx.createLinearGradient(0, 0, 0, 300);
     gradientLine.addColorStop(0, 'rgba(59, 130, 246, 0.4)');

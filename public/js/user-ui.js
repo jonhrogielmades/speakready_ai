@@ -1444,8 +1444,13 @@
 
     function getPageStyleKey(style) {
         if (!style) return '';
-        if (style.dataset && style.dataset.pageStyle) return 'page-style:' + style.dataset.pageStyle;
-        if (style.href) return 'href:' + new URL(style.href, window.location.href).href;
+        var pageStyle = style.dataset && style.dataset.pageStyle ? style.dataset.pageStyle : '';
+        var href = style.href || (style.getAttribute && style.getAttribute('href'));
+        if (href) {
+            var hrefKey = 'href:' + new URL(href, window.location.href).href;
+            return pageStyle ? hrefKey + '|page-style:' + pageStyle : hrefKey;
+        }
+        if (pageStyle) return 'page-style:' + pageStyle;
         return 'inline:' + (style.textContent || '').trim();
     }
 

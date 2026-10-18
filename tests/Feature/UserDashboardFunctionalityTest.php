@@ -139,7 +139,7 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('data-sr-setup-tool="microphone"', false)
                 ->assertSee('data-sr-setup-tool="camera"', false)
                 ->assertSee('data-sr-setup-tool="notifications"', false)
-                ->assertSee('sw.js?v=23', false)
+                ->assertSee('sw.js?v=24', false)
                 ->assertSee('push-notifications.js?v=7', false)
                 ->assertDontSee('SPEAKREADY_PUSH_NOTIFICATION_RECEIVED', false)
                 ->assertDontSee('has-live-push', false)

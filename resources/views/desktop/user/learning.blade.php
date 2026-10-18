@@ -328,7 +328,7 @@
  @endif
  @elseif($status === 'completed')
  <div style="margin-top:15px;">
- <button class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-weight:600"><i class="fa-solid fa-check text-success me-1"></i> Completed</button>
+ <button type="button" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-weight:600"><i class="fa-solid fa-check text-success me-1"></i> Completed</button>
  </div>
 
  @endif

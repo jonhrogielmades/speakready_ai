@@ -10,7 +10,7 @@
             <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Manage Interview Categories</h4>
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage categories for local job interviews.</p>
         </div>
-        <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addCategoryModal"><i class="fa-solid fa-plus me-1"></i> Add Interview Category</button>
+        <button type="button" class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addCategoryModal"><i class="fa-solid fa-plus me-1"></i> Add Interview Category</button>
     </div>
     
     @if(session('success'))
@@ -61,10 +61,10 @@
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         <form action="{{ route('admin.categories.status', $c->id) }}" method="POST" style="display:inline-block">
                             @csrf @method('PATCH')
-                            <button class="btn btn-sm admin-category-action admin-category-action-status" title="Toggle Status"><i class="fa-solid fa-power-off me-1"></i>Status</button>
+                            <button type="submit" class="btn btn-sm admin-category-action admin-category-action-status" title="Toggle Status"><i class="fa-solid fa-power-off me-1"></i>Status</button>
                         </form>
-                        <button class="btn btn-sm btn-outline-primary admin-category-action" data-bs-toggle="modal" data-bs-target="#editCategoryModal{{ $c->id }}" title="Edit"><i class="fa-solid fa-pen me-1"></i>Edit</button>
-                        <button class="btn btn-sm admin-category-action admin-category-action-delete" data-bs-toggle="modal" data-bs-target="#deleteCategoryModal{{ $c->id }}" title="Delete"><i class="fa-solid fa-trash me-1"></i>Delete</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary admin-category-action" data-bs-toggle="modal" data-bs-target="#editCategoryModal{{ $c->id }}" title="Edit"><i class="fa-solid fa-pen me-1"></i>Edit</button>
+                        <button type="button" class="btn btn-sm admin-category-action admin-category-action-delete" data-bs-toggle="modal" data-bs-target="#deleteCategoryModal{{ $c->id }}" title="Delete"><i class="fa-solid fa-trash me-1"></i>Delete</button>
                     </td>
                 </tr>
 

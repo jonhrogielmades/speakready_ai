@@ -1519,7 +1519,7 @@ class UserSideHardeningTest extends TestCase
  $desktopResponse->assertSee($markup, false);
  }
  $desktopResponse->assertSee('class="db-nl db-nav-purple active" title="Interview Practice"', false);
- $desktopResponse->assertSee('js/user-ui.js?v=24', false);
+ $desktopResponse->assertSee('js/user-ui.js?v=26', false);
  foreach ($removedAssistanceMarkup as $markup) {
  $desktopResponse->assertDontSee($markup, false);
  }
@@ -1542,7 +1542,7 @@ class UserSideHardeningTest extends TestCase
  $mobileResponse->assertSee($markup, false);
  }
  $mobileResponse->assertSee('class="mob-nav-item mob-nav-primary active"', false);
- $mobileResponse->assertSee('js/user-ui.js?v=25', false);
+ $mobileResponse->assertSee('js/user-ui.js?v=26', false);
  foreach ($removedAssistanceMarkup as $markup) {
  $mobileResponse->assertDontSee($markup, false);
  }

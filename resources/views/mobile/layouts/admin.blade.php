@@ -2062,8 +2062,9 @@
             body.admin-mobile-shell #mob-content :is([style*="overflow-x:auto"], [style*="overflow-x: auto"], .table-responsive) {
                width: 100% !important;
                max-width: 100% !important;
-               overflow-x: visible !important;
-               -webkit-overflow-scrolling: auto !important;
+               overflow-x: auto !important;
+               overscroll-behavior-inline: contain;
+               -webkit-overflow-scrolling: touch !important;
             }
 
             body.admin-mobile-shell #mob-content .table-responsive > table,
@@ -2222,7 +2223,7 @@
             <button class="mob-icon-btn" id="mobFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" data-user-fullscreen-toggle>
                <i class="fa-solid fa-expand" id="mobFullscreenIcon"></i>
             </button>
-            <button class="mob-icon-btn" onclick="toggleTheme()" title="Toggle theme">
+            <button type="button" class="mob-icon-btn" onclick="toggleTheme()" title="Toggle theme">
                <i class="fa-solid fa-sun" id="mobSunI" style="display:none"></i>
                <i class="fa-solid fa-moon" id="mobMoonI"></i>
             </button>
@@ -2976,12 +2977,14 @@
 
             body.admin-mobile-shell .modal :is(.table-responsive, .table-responsive-sm, .table-responsive-md, .table-responsive-lg, .table-responsive-xl) {
                max-width: 100%;
-               overflow-x: visible !important;
+               overflow-x: auto !important;
+               overscroll-behavior-inline: contain;
+               -webkit-overflow-scrolling: touch;
             }
 
             body.admin-mobile-shell .modal table {
                width: 100% !important;
-               table-layout: fixed;
+               table-layout: auto;
             }
 
             body.admin-mobile-shell .modal table :is(td, th) {
@@ -3251,8 +3254,8 @@
             <h4 style="color:var(--tx); font-weight:700; margin-bottom:10px; font-size:1.25rem;">Exit App?</h4>
             <p style="color:var(--tx3); font-size:0.9rem; margin-bottom:24px;">Are you sure you want to exit SpeakReady AI?</p>
             <div class="d-flex gap-3">
-               <button class="btn w-100" style="border-radius:12px; font-weight:600; background:transparent; border:1px solid var(--bd2); color:var(--tx2);" onclick="confirmExitApp('no')">No</button>
-               <button class="btn btn-danger w-100" style="border-radius:12px; font-weight:600; background:#f87171; border:none; color:#fff;" onclick="confirmExitApp('yes')">Yes, Exit</button>
+               <button type="button" class="btn w-100" style="border-radius:12px; font-weight:600; background:transparent; border:1px solid var(--bd2); color:var(--tx2);" onclick="confirmExitApp('no')">No</button>
+               <button type="button" class="btn btn-danger w-100" style="border-radius:12px; font-weight:600; background:#f87171; border:none; color:#fff;" onclick="confirmExitApp('yes')">Yes, Exit</button>
             </div>
          </div>
       </div>
@@ -3263,8 +3266,8 @@
             <h5 id="pwaPromptTitle">Install SpeakReady AI</h5>
             <p id="pwaPromptCopy">Do you want to install this app for a better and faster experience?</p>
             <div class="pwa-btn-wrap">
-               <button id="pwa-btn-no" class="pwa-btn-no">No</button>
-               <button id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
+               <button type="button" id="pwa-btn-no" class="pwa-btn-no">No</button>
+               <button type="button" id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
             </div>
          </div>
       </div>
@@ -3277,7 +3280,7 @@
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <script src="{{ asset('js/main.js?v=7') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=21" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=26" defer></script>
 
       <script>
          function getMobileProfileDropdown(mode = 'pages') {

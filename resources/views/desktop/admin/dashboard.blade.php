@@ -240,8 +240,8 @@ document.addEventListener("DOMContentLoaded", function() {
     gradientLine.addColorStop(0, 'rgba(139, 92, 246, 0.4)');
     gradientLine.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
 
-    const userGrowthLabels = {!! json_encode($userGrowthLabels) !!};
-    const userGrowthDataValues = {!! json_encode($userGrowthData) !!};
+    const userGrowthLabels = @js($userGrowthLabels);
+    const userGrowthDataValues = @js($userGrowthData);
 
     new Chart(userCtx, {
         type: 'line',
@@ -275,8 +275,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const catCanvas = document.getElementById('categoryDonutChart');
     if (!catCanvas) return;
     const catCtx = catCanvas.getContext('2d');
-    const chartLabels = {!! json_encode($chartLabels) !!};
-    const chartDataValues = {!! json_encode($chartData) !!};
+    const chartLabels = @js($chartLabels);
+    const chartDataValues = @js($chartData);
 
     new Chart(catCtx, {
         type: 'doughnut',
@@ -303,7 +303,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const readCanvas = document.getElementById('readinessBarChart');
     if (!readCanvas) return;
     const readCtx = readCanvas.getContext('2d');
-    const readinessDataValues = {!! json_encode($readinessData) !!};
+    const readinessDataValues = @js($readinessData);
 
     new Chart(readCtx, {
         type: 'bar',

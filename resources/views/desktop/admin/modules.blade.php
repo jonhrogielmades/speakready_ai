@@ -24,10 +24,10 @@
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage action modules for what learners need to prepare, rehearse, revise, and check before interviews.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
-            <button class="btn px-3 py-2" style="font-size:.85rem; background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" data-bs-toggle="modal" data-bs-target="#aiGenerateModuleModal">
+            <button type="button" class="btn px-3 py-2" style="font-size:.85rem; background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" data-bs-toggle="modal" data-bs-target="#aiGenerateModuleModal">
                 <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Module
             </button>
-            <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addModuleModal">
+            <button type="button" class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addModuleModal">
                 <i class="fa-solid fa-plus me-1"></i> Add Interview Module
             </button>
         </div>

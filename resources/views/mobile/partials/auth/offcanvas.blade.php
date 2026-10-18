@@ -8,7 +8,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" style="filter:invert(1)"></button>
          </div>
          <div class="offcanvas-body p-4">
-            <div class="tab-switch"><button class="tab-sw-btn on" id="tabLogin" onclick="swTab('login')">Log In</button><button class="tab-sw-btn" id="tabSignup" onclick="swTab('signup')">Register</button></div>
+            <div class="tab-switch"><button type="button" class="tab-sw-btn on" id="tabLogin" onclick="swTab('login')">Log In</button><button type="button" class="tab-sw-btn" id="tabSignup" onclick="swTab('signup')">Register</button></div>
             <!-- Login -->
             <div id="fLogin">
                @if(session('success'))

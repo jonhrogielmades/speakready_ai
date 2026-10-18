@@ -11,11 +11,11 @@
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage practice questions for local job interviews.</p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-info py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#aiGenerateModal"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Question</button>
+            <button type="button" class="btn btn-outline-info py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#aiGenerateModal"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Question</button>
             <a href="{{ route('admin.questions.export') }}" class="btn btn-outline-secondary py-2" style="font-size:.85rem"><i class="fa-solid fa-download me-1"></i> Export</a>
-            <button class="btn btn-outline-secondary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#importQuestionsModal"><i class="fa-solid fa-upload me-1"></i> Import</button>
-            <button class="btn btn-outline-primary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#datasetsModal"><i class="fa-solid fa-globe me-1"></i> Interview Question Sources</button>
-            <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addQuestionModal" onclick="clearGeneratedQuestionSource()"><i class="fa-solid fa-plus me-1"></i> Add Interview Question</button>
+            <button type="button" class="btn btn-outline-secondary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#importQuestionsModal"><i class="fa-solid fa-upload me-1"></i> Import</button>
+            <button type="button" class="btn btn-outline-primary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#datasetsModal"><i class="fa-solid fa-globe me-1"></i> Interview Question Sources</button>
+            <button type="button" class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addQuestionModal" onclick="clearGeneratedQuestionSource()"><i class="fa-solid fa-plus me-1"></i> Add Interview Question</button>
         </div>
     </div>
 
@@ -99,11 +99,11 @@
                         <div class="question-actions">
                             <form action="{{ route('admin.questions.status', $q->id) }}" method="POST" style="display:inline-block">
                                 @csrf @method('PATCH')
-                                <button class="btn btn-sm btn-outline-warning" style="font-size:.7rem" title="Toggle Status"><i class="fa-solid fa-power-off"></i></button>
+                                <button type="submit" class="btn btn-sm btn-outline-warning" style="font-size:.7rem" title="Toggle Status"><i class="fa-solid fa-power-off"></i></button>
                             </form>
-                            <button class="btn btn-sm btn-outline-info" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#previewQuestionModal{{ $q->id }}" title="Preview"><i class="fa-solid fa-eye"></i></button>
-                            <button class="btn btn-sm btn-outline-success" style="font-size:.7rem" onclick="openAnalytics({{ $q->id }})" title="Analytics"><i class="fa-solid fa-chart-line"></i></button>
-                            <button class="btn btn-sm btn-outline-primary" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#editQuestionModal{{ $q->id }}" title="Edit"><i class="fa-solid fa-pen me-1"></i>Edit</button>
+                            <button type="button" class="btn btn-sm btn-outline-info" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#previewQuestionModal{{ $q->id }}" title="Preview"><i class="fa-solid fa-eye"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-success" style="font-size:.7rem" onclick="openAnalytics({{ $q->id }})" title="Analytics"><i class="fa-solid fa-chart-line"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#editQuestionModal{{ $q->id }}" title="Edit"><i class="fa-solid fa-pen me-1"></i>Edit</button>
                         </div>
                     </td>
                 </tr>

@@ -133,14 +133,14 @@
                      <a href="#developers" class="nav-link">Developers</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                     <button class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">
+                     <button type="button" class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
                      </button>
-                     <button class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">
+                     <button type="button" class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">
                      <i class="fa-regular fa-user fa-sm"></i> Login
                      </button>
-                     <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
+                     <button type="button" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
                      </button>
                      <button class="boc d-xl-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
@@ -174,8 +174,8 @@
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI helps you practice role-focused job interviews with scenario setup, Coaching On or Real Interview Mode, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Register for Free</button>
-                        <button class="boc btn px-4 py-3 fs-6 hero-install-btn" id="heroInstallBtn"><i class="fa-solid fa-download me-2"></i>Install App</button>
+                        <button type="button" class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Register for Free</button>
+                        <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn" id="heroInstallBtn"><i class="fa-solid fa-download me-2"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6 hero-learn-btn">Learn More</a>
                      </div>
                     </div>
@@ -775,8 +775,8 @@
             <h5 id="pwaPromptTitle">Install SpeakReady AI</h5>
             <p id="pwaPromptCopy">Do you want to install this app for a better and faster experience?</p>
             <div class="pwa-btn-wrap">
-               <button id="pwa-btn-no" class="pwa-btn-no">No</button>
-               <button id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
+               <button type="button" id="pwa-btn-no" class="pwa-btn-no">No</button>
+               <button type="button" id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
             </div>
          </div>
       </div>

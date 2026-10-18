@@ -129,7 +129,7 @@
                         <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Chapter
                     </button>
                 </form>
-                <button class="bgrd btn btn-sm" data-bs-toggle="modal" data-bs-target="#addChapterModal"><i class="fa-solid fa-plus me-1"></i> Add Interview Chapter</button>
+                <button type="button" class="bgrd btn btn-sm" data-bs-toggle="modal" data-bs-target="#addChapterModal"><i class="fa-solid fa-plus me-1"></i> Add Interview Chapter</button>
             </div>
             
             @if($module->chapters->isEmpty())
@@ -156,7 +156,11 @@
                                 <div class="mb-3">
                                     <span class="badge bg-secondary mb-2">Text Content</span>
                                     <div class="p-3 mt-2" style="background:#1a1a1a;border-radius:8px;max-height:200px;overflow-y:auto;">
-                                        {!! $chapter->content ?? '<em>No text content provided.</em>' !!}
+                                        @if(filled($chapter->content))
+                                            {!! \App\Support\ModuleChapterHtml::sanitize($chapter->content) !!}
+                                        @else
+                                            <em>No text content provided.</em>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-end gap-2 mt-3 flex-wrap admin-module-chapter-actions">
@@ -231,7 +235,7 @@
                     <label class="olbl">Interview Lesson Content</label>
                     <!-- Quill Editor Container -->
                     <div id="edit-editor-container-{{ $chapter->id }}" style="height: 250px; background: var(--bg); color: var(--tx); border-radius: 0 0 8px 8px; border: 1px solid var(--bd);"></div>
-                    <input type="hidden" name="content" id="editChapterContent-{{ $chapter->id }}" value="{{ $chapter->content }}">
+                    <input type="hidden" name="content" id="editChapterContent-{{ $chapter->id }}" value="{{ \App\Support\ModuleChapterHtml::sanitize($chapter->content) }}">
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>

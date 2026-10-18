@@ -41,7 +41,7 @@
         <!-- Sidebar History -->
         <div class="chat-sidebar d-none d-md-flex" id="coach-sidebar">
             <div style="padding:20px; border-bottom:1px solid var(--bd);">
-                <button class="btn btn-outline-primary w-100" style="border-radius:12px;font-weight:600" onclick="newConversation()">
+                <button type="button" class="btn btn-outline-primary w-100" style="border-radius:12px;font-weight:600" onclick="newConversation()">
                     <i class="fa-solid fa-plus me-2"></i> New Conversation
                 </button>
             </div>
@@ -53,7 +53,7 @@
                             <i class="fa-regular fa-message"></i> 
                             <span class="text-truncate" style="max-width: 150px;">{{ $conv->title ?: 'New Conversation' }}</span>
                         </div>
-                        <button class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation({{ $conv->id }})">
+                        <button type="button" class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation({{ $conv->id }})">
                             <i class="fa-solid fa-trash-can" style="margin:0;"></i>
                         </button>
                     </div>
@@ -68,7 +68,7 @@
                             <i class="fa-regular fa-message"></i> 
                             <span class="text-truncate" style="max-width: 150px;">{{ $conv->title ?: 'New Conversation' }}</span>
                         </div>
-                        <button class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation({{ $conv->id }})">
+                        <button type="button" class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation({{ $conv->id }})">
                             <i class="fa-solid fa-trash-can" style="margin:0;"></i>
                         </button>
                     </div>
@@ -1334,7 +1334,7 @@
                             <i class="fa-regular fa-message"></i> 
                             <span class="text-truncate" style="max-width: 150px;">${escapeHtml(data.title || 'New Conversation')}</span>
                         </div>
-                        <button class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation(${data.conversation_id})">
+                        <button type="button" class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation(${data.conversation_id})">
                             <i class="fa-solid fa-trash-can" style="margin:0;"></i>
                         </button>
                     `;

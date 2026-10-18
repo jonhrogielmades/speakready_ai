@@ -243,8 +243,8 @@ class MobileLayoutTest extends TestCase
             ->assertSee('css/mobile/admin/dashboard.css?v=6', false)
             ->assertSee('id="mobFullscreenBtn"', false)
             ->assertSee('data-user-fullscreen-toggle', false)
-            ->assertSee('js/user-ui.js?v=21', false)
-            ->assertSee('sw.js?v=23', false)
+            ->assertSee('js/user-ui.js?v=26', false)
+            ->assertSee('sw.js?v=24', false)
             ->assertDontSee('SpeakReadyPushConfig', false)
             ->assertDontSee('\\/admin\\/notifications\\/push\\/key', false)
             ->assertDontSee('push-notifications.js?v=7', false)
@@ -339,7 +339,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
             ->assertSee('css/desktop/admin/dashboard.css?v=4', false)
-            ->assertSee('sw.js?v=23', false)
+            ->assertSee('sw.js?v=24', false)
             ->assertDontSee('SpeakReadyPushConfig', false)
             ->assertDontSee('\\/admin\\/notifications\\/push\\/key', false)
             ->assertDontSee('push-notifications.js?v=7', false)
@@ -1328,7 +1328,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('height: var(--sr-visual-vh) !important', false)
             ->assertSee('css/mobile/style.css?v=33', false)
             ->assertSee('js/main.js?v=7', false)
-            ->assertSee('js/user-ui.js?v=25', false)
+            ->assertSee('js/user-ui.js?v=26', false)
             ->assertDontSee('body.user-mobile-shell #mob-header #mobFullscreenBtn', false);
 
         $fullscreenScript = file_get_contents(public_path('js/user-ui.js'));

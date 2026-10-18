@@ -282,7 +282,7 @@
  @endphp
 
  <script>
- const questions = {!! json_encode($questions)!!};
+ const questions = @js($questions);
  const gameSessionId = {{ (int) $sessionRecord->id }};
  const responseMode = "hybrid";
  const isVoiceOnlySession = false;

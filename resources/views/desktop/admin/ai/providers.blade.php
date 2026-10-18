@@ -32,7 +32,7 @@
             <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Manage trusted AI providers and verify the 95% reliability gate.</p>
         </div>
         <div class="ai-providers-actions">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProviderModal"><i class="fa-solid fa-plus me-2"></i>Add AI Provider</button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProviderModal"><i class="fa-solid fa-plus me-2"></i>Add AI Provider</button>
             <a href="{{ route('admin.ai.evaluation') }}" class="btn btn-outline-primary ai-evaluation-btn"><i class="fa-solid fa-chart-line me-2"></i>AI Evaluation</a>
         </div>
     </div>

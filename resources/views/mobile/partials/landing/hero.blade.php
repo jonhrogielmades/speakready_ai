@@ -13,8 +13,8 @@
                   <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                   <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI focuses on job interview preparation with realistic mock interviews, personalized feedback, and role-fit coaching for your target position.</p>
                   <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                     <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Start Practicing</button>
-                     <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
+                     <button type="button" class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Start Practicing</button>
+                     <button type="button" class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                      <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                   </div>
                   
@@ -48,10 +48,10 @@
                         <div class="dgrid">
                            <div class="dside">
                               <div style="font-size:.64rem;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);padding:0 10px 10px;font-weight:700">Interview Hub</div>
-                              <button class="dsi on"><i class="fa-solid fa-chart-pie"></i> Analytics</button>
-                              <button class="dsi"><i class="fa-solid fa-video"></i> Mock Sessions</button>
-                              <button class="dsi"><i class="fa-solid fa-comment-medical"></i> Feedback</button>
-                              <button class="dsi"><i class="fa-solid fa-briefcase"></i> Job Prep</button>
+                              <button type="button" class="dsi on"><i class="fa-solid fa-chart-pie"></i> Analytics</button>
+                              <button type="button" class="dsi"><i class="fa-solid fa-video"></i> Mock Sessions</button>
+                              <button type="button" class="dsi"><i class="fa-solid fa-comment-medical"></i> Feedback</button>
+                              <button type="button" class="dsi"><i class="fa-solid fa-briefcase"></i> Job Prep</button>
                            </div>
                            <div class="p-3">
                                  <div class="row g-2 mb-3">

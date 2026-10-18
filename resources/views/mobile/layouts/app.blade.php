@@ -134,7 +134,9 @@
          #mob-content .table-responsive {
              width: 100% !important;
              max-width: 100% !important;
-             overflow-x: visible !important;
+             overflow-x: auto !important;
+             overscroll-behavior-inline: contain;
+             -webkit-overflow-scrolling: touch;
              margin-left: 0 !important;
              margin-right: 0 !important;
          }
@@ -147,7 +149,7 @@
              width: 100% !important;
              min-width: 0 !important;
              max-width: 100% !important;
-             table-layout: fixed !important;
+             table-layout: auto !important;
          }
          #mob-content .table th,
          #mob-content .table td,
@@ -1558,7 +1560,9 @@
             }
 
             #mob-content :is(.table-responsive) {
-               overflow-x: visible !important;
+               overflow-x: auto !important;
+               overscroll-behavior-inline: contain;
+               -webkit-overflow-scrolling: touch;
             }
 
             #mob-content :is(#feedbackTable, #history-table table) thead {
@@ -4730,8 +4734,8 @@
             <h5 id="pwaPromptTitle">Install SpeakReady AI</h5>
             <p id="pwaPromptCopy">Do you want to install this app for a better and faster experience?</p>
             <div class="pwa-btn-wrap">
-               <button id="pwa-btn-no" class="pwa-btn-no">No</button>
-               <button id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
+               <button type="button" id="pwa-btn-no" class="pwa-btn-no">No</button>
+               <button type="button" id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
             </div>
          </div>
       </div>
@@ -4753,7 +4757,7 @@
       <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=25" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=26" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {

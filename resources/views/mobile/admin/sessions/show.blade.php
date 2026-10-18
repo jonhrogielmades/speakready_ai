@@ -18,7 +18,7 @@
             <a href="{{ route('admin.sessions.review', $session->id) }}" class="btn btn-primary" style="border-radius:12px;">
                 <i class="fa-solid fa-magnifying-glass-chart me-2"></i>Review Q&A
             </a>
-            <button class="btn btn-danger" style="border-radius:12px;" data-bs-toggle="modal" data-bs-target="#flagModal">
+            <button type="button" class="btn btn-danger" style="border-radius:12px;" data-bs-toggle="modal" data-bs-target="#flagModal">
                 <i class="fa-solid fa-flag me-2"></i>Flag Session
             </button>
             <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">

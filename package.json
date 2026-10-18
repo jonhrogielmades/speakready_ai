@@ -4,7 +4,8 @@
     "scripts": {
         "start": "vite",
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "check:frontend": "node scripts/check-frontend.mjs"
     },
     "engines": {
         "node": "^20.19.0 || >=22.12.0",

@@ -11,10 +11,10 @@
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage gamified interview drills, local practice prompts, and coaching modifiers.</p>
         </div>
         <div class="d-flex gap-2 admin-game-actions">
-            <button class="btn btn-outline-info px-3 py-2" style="font-size:.85rem;font-weight:600" data-bs-toggle="modal" data-bs-target="#generateGameModal">
+            <button type="button" class="btn btn-outline-info px-3 py-2" style="font-size:.85rem;font-weight:600" data-bs-toggle="modal" data-bs-target="#generateGameModal">
                 <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Games
             </button>
-            <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addGameModal">
+            <button type="button" class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addGameModal">
                 <i class="fa-solid fa-plus me-1"></i> Add Interview Game
             </button>
         </div>
@@ -154,7 +154,7 @@
                             </td>
                             <td style="padding:16px;vertical-align:middle;text-align:right;">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <button class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="modal" data-bs-target="#editGameModal{{ $level->id }}" title="Edit">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="modal" data-bs-target="#editGameModal{{ $level->id }}" title="Edit">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
                                     <form action="{{ route('admin.game.destroy', $level->id) }}" method="POST" style="margin:0;">
