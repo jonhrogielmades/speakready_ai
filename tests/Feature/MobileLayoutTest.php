@@ -1750,7 +1750,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=74', false)
+            ->assertSee('css/mobile/interview/session.css?v=75', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)
@@ -1809,6 +1809,7 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('padding: 12px 12px 36px !important;', $mobileSessionCss);
         $this->assertStringContainsString('pointer-events: none !important;', $mobileSessionCss);
         $this->assertStringContainsString('flex: 1 1 0% !important;', $mobileSessionCss);
+        $this->assertStringContainsString('height: var(--sr-visual-vh, 100dvh) !important;', $mobileSessionCss);
         $this->assertStringContainsString('height: clamp(148px, 32dvh, 190px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('height: clamp(174px, calc(var(--sr-visual-vh, 100dvh) - 422px), 238px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('height: clamp(162px, calc(var(--sr-visual-vh, 100dvh) - 404px), 224px) !important;', $mobileSessionCss);

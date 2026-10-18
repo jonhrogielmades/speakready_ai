@@ -5991,11 +5991,23 @@ html body #finishTransitionOverlay .finish-view-review-button.is-ready:not(:disa
    wrapper in the flex chain so the textarea can grow instead of leaving a
    large unused area below the Your Response panel. */
 @media (max-width: 767.98px) {
+    html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        box-sizing: border-box !important;
+        height: var(--sr-visual-vh, 100dvh) !important;
+        min-height: var(--sr-visual-vh, 100dvh) !important;
+        max-height: var(--sr-visual-vh, 100dvh) !important;
+        padding: 8px 8px max(8px, env(safe-area-inset-bottom, 0px)) !important;
+        overflow: hidden !important;
+    }
+
     html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceWrapper {
         display: flex !important;
         flex: 1 1 auto !important;
         flex-direction: column !important;
-        height: 100% !important;
+        height: auto !important;
         min-height: 0 !important;
     }
 
