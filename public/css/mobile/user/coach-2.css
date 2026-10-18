@@ -1469,7 +1469,8 @@ body.dm #ai-coach-page .chat-voice-btn.is-recording,
     body.user-mobile-shell #mob-content #ai-coach-page .coach-actions,
     html body #mob-content #ai-coach-page .coach-actions,
     html body #ai-coach-page .coach-actions {
-        margin-right: clamp(8px, 2.8vw, 14px) !important;
+        flex: 0 0 auto !important;
+        margin-right: clamp(14px, 4vw, 20px) !important;
     }
 
     body.user-mobile-shell #mob-content #ai-coach-page .coach-actions-heading,

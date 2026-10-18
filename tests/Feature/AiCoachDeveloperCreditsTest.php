@@ -109,7 +109,7 @@ class AiCoachDeveloperCreditsTest extends TestCase
             ->withHeader('User-Agent', $mobileUserAgent)
             ->get(route('user.coach'))
             ->assertOk()
-            ->assertSee('css/mobile/user/coach-2.css?v=26', false)
+            ->assertSee('css/mobile/user/coach-2.css?v=27', false)
             ->assertSee('data-transcribe-url=', false)
             ->assertSee('id="coachVoiceTranscriptPanel"', false)
             ->assertSee('function handleCoachTranscriptInput(textarea)', false)
@@ -144,7 +144,7 @@ class AiCoachDeveloperCreditsTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('css/mobile/user/coach-2.css?v=26', false)
+            ->assertSee('css/mobile/user/coach-2.css?v=27', false)
             ->assertSee('function newConversation(options = {})', false)
             ->assertSee('newConversation({ focusInput: false });', false)
             ->assertSee("document.body?.classList.remove('coach-input-focused', 'coach-keyboard-open');", false);
@@ -152,7 +152,8 @@ class AiCoachDeveloperCreditsTest extends TestCase
         $mobileCss = file_get_contents(public_path('css/mobile/user/coach-2.css'));
 
         $this->assertStringContainsString('body.user-mobile-shell.coach-mobile-page-active.coach-keyboard-open #mob-bottom-nav', $mobileCss);
-        $this->assertStringContainsString('margin-right: clamp(8px, 2.8vw, 14px) !important;', $mobileCss);
+        $this->assertStringContainsString('flex: 0 0 auto !important;', $mobileCss);
+        $this->assertStringContainsString('margin-right: clamp(14px, 4vw, 20px) !important;', $mobileCss);
     }
 
     public function test_ai_coach_voice_transcription_uses_provider_for_more_reliable_final_text(): void
