@@ -539,10 +539,11 @@ class AIService
  'interview_focus' => self::truncateText((string) ($context['interview_focus']?? ''), 180),
  'job_description' => self::truncateText((string) ($context['job_description']?? ''), 700),
  'resume_text' => self::truncateText((string) ($context['resume_text']?? ''), 700),
+ 'latest_answer' => self::truncateText((string) ($context['latest_answer']?? ''), 1200),
  ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR)."\n";
  $prompt.= "\nCANDIDATE QUESTIONS JSON:\n";
  $prompt.= json_encode($candidateRows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR)."\n";
- $prompt.= "Selection rules: prefer role-specific fit, requested question type, requested difficulty, source-backed specificity, and practical interview usefulness. Return {$limit} index".($limit === 1? '': 'es').".";
+ $prompt.= "Selection rules: prefer role-specific fit, requested question type, requested difficulty, source-backed specificity, practical interview usefulness, and a natural follow-up to the candidate's latest answer when one is provided. Return {$limit} index".($limit === 1? '': 'es').".";
 
  $providers = self::providerPriorityList($provider, config('services.question_recommender.ai_provider_priority', env('QUESTION_AI_PROVIDER_RERANK_PRIORITY', env('AI_DEFAULT_PROVIDER_PRIORITY', self::DEFAULT_PROVIDER_PRIORITY))));
  foreach ($providers as $currentProvider) {

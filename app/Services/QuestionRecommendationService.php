@@ -372,6 +372,7 @@ class QuestionRecommendationService
  'interview_focus' => $session->interview_focus,
  'resume_text' => $session->resume_text,
  'job_description' => $session->job_description,
+ 'latest_answer' => null,
  'exclude_question_texts' => [],
  ], $dataset, $selectedQuestionTypes, $limit);
  }
@@ -392,6 +393,7 @@ class QuestionRecommendationService
  'interview_focus' => $context['interview_focus']?? null,
  'resume_text' => $context['resume_text']?? null,
  'job_description' => $context['job_description']?? null,
+ 'latest_answer' => Str::limit((string) ($context['latest_answer']?? ''), 1200, ''),
  'exclude_question_texts' => array_values(array_filter((array) ($context['exclude_question_texts']?? []))),
  ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR);
 
@@ -421,6 +423,7 @@ class QuestionRecommendationService
  'interview_focus' => $context['interview_focus']?? null,
  'resume_text' => $context['resume_text']?? null,
  'job_description' => $context['job_description']?? null,
+ 'latest_answer' => Str::limit((string) ($context['latest_answer']?? ''), 1200, ''),
  'candidates' => array_values(array_filter($candidates, fn ($candidate): bool => is_array($candidate))),
  ];
 

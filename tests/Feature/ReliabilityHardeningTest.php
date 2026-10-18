@@ -528,6 +528,52 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  }
 
+ public function test_unrelated_provider_follow_up_is_replaced_with_answer_grounded_question(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category(['title' => 'Software Engineering']);
+ $session = $this->sessionFor($user, $category, ['num_questions' => 2]);
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Tell me about a release you owned.',
+ ]);
+
+ Http::fake([
+ 'api.openai.com/*' => Http::response([
+ 'choices' => [[
+ 'message' => [
+ 'content' => 'What is your favorite color?',
+ ],
+ ]],
+ ], 200),
+ ]);
+
+ $response = $this->actingAs($user)
+ ->withSession([
+ 'active_interview_id' => $session->id,
+ 'active_interview_provider' => 'openai',
+ ])
+ ->postJson(route('interview.chatReply'), [
+ 'question_id' => $question->id,
+ 'answer_text' => 'I coordinated a production release, fixed the deployment issue, and documented the rollback plan.',
+ 'response_mode' => 'text',
+ 'ai_provider' => 'openai',
+ ])
+ ->assertOk()
+ ->assertJsonPath('success', true);
+
+ $nextQuestion = (string) $response->json('next_question_text');
+ $this->assertStringNotContainsStringIgnoringCase('favorite color', $nextQuestion);
+ $this->assertStringContainsString('Developer', $nextQuestion);
+ $this->assertSame(1, substr_count($nextQuestion, '?'));
+ $this->assertMatchesRegularExpression('/\b(?:result|impact|tradeoff|example|release|deployment|decision|specific)\b/i', $nextQuestion);
+ $this->assertDatabaseHas('questions', [
+ 'interview_session_id' => $session->id,
+ 'question_text' => $nextQuestion,
+ 'source_type' => 'ai_adapted_source_backed',
+ ]);
+ }
+
  public function test_interview_advances_with_answer_based_local_followup_when_ai_followups_are_disabled(): void
  {
  Setting::setVal('int_follow_up', false, 'interview', 'boolean');
