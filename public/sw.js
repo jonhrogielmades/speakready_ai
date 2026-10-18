@@ -1,6 +1,7 @@
-const CACHE_NAME = 'speakready-pwa-v42';
+const CACHE_NAME = 'speakready-pwa-v43';
 const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';
-const CLIENT_REFRESH_VALUE = 'pwa-v42';
+const CLIENT_REFRESH_VALUE = 'pwa-v43';
+const OFFLINE_PAGE = '/offline.html';
 const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';
 const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';
 const DEFAULT_NOTIFICATION_ACTIONS = [
@@ -74,6 +75,12 @@ function refreshControlledClients() {
 }
 
 self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll([
+      OFFLINE_PAGE,
+      '/img/logo.png',
+    ])).catch(() => undefined)
+  );
   self.skipWaiting();
 });
 
@@ -96,7 +103,14 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   if (isHtmlNavigation(event.request)) {
-    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' }).catch(() => {
+        return caches.match(OFFLINE_PAGE).then(offlineResponse => offlineResponse || new Response(
+          '<!doctype html><title>SpeakReady AI is offline</title><p>Please reconnect and try again.</p>',
+          { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+        ));
+      })
+    );
     return;
   }
 

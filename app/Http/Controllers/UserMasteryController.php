@@ -16,7 +16,7 @@ class UserMasteryController extends Controller
         CareerPlanningSchema::ensure();
 
         $userId = (int) Auth::id();
-        $profile = Profile::firstOrCreate(['user_id' => $userId]);
+        $profile = Profile::forUser($userId);
         $scores = Score::whereHas('session', fn ($query) => $query->where('user_id', $userId))
             ->latest()
             ->take(12)

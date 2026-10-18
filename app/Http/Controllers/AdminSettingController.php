@@ -27,8 +27,8 @@ class AdminSettingController extends Controller
     public function update(Request $request)
     {
         $request->validate(array_merge(SystemSettings::validationRules(), [
-            'system_logo' => 'nullable|file|mimes:png,jpg,jpeg,webp,svg|max:2048',
-            'system_favicon' => 'nullable|file|mimes:ico,png,jpg,jpeg,webp,svg|max:1024',
+            'system_logo' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:2048',
+            'system_favicon' => 'nullable|file|mimes:ico,png,jpg,jpeg,webp|max:1024',
         ]));
 
         $saved = $this->persistRequestSettings($request);
@@ -36,7 +36,7 @@ class AdminSettingController extends Controller
         // Handle file uploads separately if any
         if ($request->hasFile('system_logo')) {
             $logo = $request->file('system_logo');
-            $logoName = 'logo.' . $logo->getClientOriginalExtension();
+            $logoName = 'logo.' . $logo->extension();
             $logo->move(public_path('img'), $logoName);
             Setting::setVal('system_logo', 'img/' . $logoName, 'appearance', 'string');
             $saved[] = 'system_logo';
@@ -44,7 +44,7 @@ class AdminSettingController extends Controller
 
         if ($request->hasFile('system_favicon')) {
             $favicon = $request->file('system_favicon');
-            $faviconName = 'favicon.' . $favicon->getClientOriginalExtension();
+            $faviconName = 'favicon.' . $favicon->extension();
             $favicon->move(public_path('img'), $faviconName);
             Setting::setVal('system_favicon', 'img/' . $faviconName, 'appearance', 'string');
             $saved[] = 'system_favicon';

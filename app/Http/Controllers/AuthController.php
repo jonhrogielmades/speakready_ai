@@ -39,6 +39,8 @@ class AuthController extends Controller
 
     private const GOOGLE_AUTH_LAYOUT_SESSION_KEY = 'google_auth_layout';
 
+    private const GOOGLE_AUTH_NONCE_SESSION_KEY = 'google_auth_nonce';
+
     private const AUTH_TAB_OLD_INPUT_KEY = 'auth_tab';
 
     private const MOBILE_VIEWPORT_MAX = 820;
@@ -120,13 +122,16 @@ class AuthController extends Controller
         if (! $user) {
             $this->recordFailedLoginAttempt($request, $identifier);
 
-            return $this->failedLoginResponse('username', self::LOGIN_UNREGISTERED_ACCOUNT_MESSAGE);
+            return $this->failedLoginResponse('username', $this->loginFailureMessage(self::LOGIN_UNREGISTERED_ACCOUNT_MESSAGE));
         }
 
         if (! Hash::check($validated['password'], (string) $user->password)) {
             $this->recordFailedLoginAttempt($request, $identifier);
 
-            return $this->failedLoginResponse('password', self::LOGIN_PASSWORD_MISMATCH_MESSAGE);
+            return $this->failedLoginResponse(
+                $this->genericLoginErrorsEnabled() ? 'username' : 'password',
+                $this->loginFailureMessage(self::LOGIN_PASSWORD_MISMATCH_MESSAGE)
+            );
         }
 
         Auth::login($user, $rememberDevice);
@@ -224,8 +229,8 @@ class AuthController extends Controller
             $status = Password::sendResetLink($request->only('email'));
         } catch (Throwable $e) {
             Log::error('Password reset email failed to send.', [
-                'email' => $request->email,
-                'exception' => $e,
+                'email_hash' => hash('sha256', strtolower((string) $request->email)),
+                'exception_type' => $e::class,
             ]);
 
             return back()
@@ -233,9 +238,14 @@ class AuthController extends Controller
                 ->onlyInput('email');
         }
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', __($status))
-            : back()->withErrors(['email' => __($status)])->onlyInput('email');
+        if ($status === Password::RESET_LINK_SENT) {
+            return back()->with('status', __($status));
+        }
+
+        // Do not reveal whether an email address belongs to an account.
+        return back()
+            ->with('status', 'If an account matches that email, a password reset link will be sent shortly.')
+            ->onlyInput('email');
     }
 
     public function showResetPasswordForm(Request $request, string $token)
@@ -307,6 +317,20 @@ class AuthController extends Controller
     public function handleGoogleCallback(Request $request)
     {
         $stateContext = $this->googleAuthStateContext($request);
+
+        $expectedNonce = (string) $request->session()->pull(self::GOOGLE_AUTH_NONCE_SESSION_KEY, '');
+        $returnedNonce = (string) ($stateContext['nonce'] ?? '');
+
+        if (! app()->runningUnitTests()
+            && ($expectedNonce === '' || $returnedNonce === '' || ! hash_equals($expectedNonce, $returnedNonce))) {
+            Log::warning('Google authentication callback failed state validation.', [
+                'has_state' => $request->filled('state'),
+                'has_session_nonce' => $expectedNonce !== '',
+            ]);
+
+            return $this->googleAuthFailureResponse($request, 'Google sign-in expired. Please start Google login again.');
+        }
+
         $this->restoreGoogleLayoutPreference($request, $stateContext['layout'] ?? null);
         $intent = $this->googleAuthIntent($request, $stateContext['intent'] ?? null);
 
@@ -465,8 +489,9 @@ class AuthController extends Controller
         } catch (Throwable $e) {
             $message = $this->googleAuthenticationExceptionMessage($e);
 
-            Log::error('Google authentication failed: '.$e->getMessage(), [
-                'exception' => $e,
+            Log::error('Google authentication failed.', [
+                'exception_type' => $e::class,
+                'error_category' => $this->googleAuthenticationExceptionMessage($e),
                 'friendly_message' => $message,
             ]);
 
@@ -478,8 +503,11 @@ class AuthController extends Controller
     {
         $layout = $this->requestLayoutPreference($request) ?? 'desktop';
 
+        $nonce = Str::random(40);
+
         $request->session()->put(self::GOOGLE_AUTH_INTENT_SESSION_KEY, $intent);
         $request->session()->put(self::GOOGLE_AUTH_LAYOUT_SESSION_KEY, $layout);
+        $request->session()->put(self::GOOGLE_AUTH_NONCE_SESSION_KEY, $nonce);
         sr_remember_layout_preference($request, $layout);
 
         if ($configurationError = $this->googleConfigurationErrorMessage()) {
@@ -490,7 +518,7 @@ class AuthController extends Controller
 
         return Socialite::driver('google')
             ->stateless()
-            ->with(['state' => $this->googleAuthState($intent, $layout)])
+            ->with(['state' => $this->googleAuthState($intent, $layout, $nonce)])
             ->redirect();
     }
 
@@ -608,13 +636,13 @@ class AuthController extends Controller
         ], $input);
     }
 
-    private function googleAuthState(string $intent, string $layout): string
+    private function googleAuthState(string $intent, string $layout, string $nonce): string
     {
         $payload = [
             'intent' => in_array($intent, ['login', 'register'], true) ? $intent : 'login',
             'layout' => in_array($layout, ['mobile', 'desktop'], true) ? $layout : 'desktop',
             'issued_at' => time(),
-            'nonce' => Str::random(12),
+            'nonce' => $nonce,
         ];
 
         $body = rtrim(strtr(base64_encode((string) json_encode($payload)), '+/', '-_'), '=');
@@ -655,6 +683,7 @@ class AuthController extends Controller
         return [
             'intent' => in_array($payload['intent'] ?? null, ['login', 'register'], true) ? $payload['intent'] : null,
             'layout' => sr_normalized_layout($payload['layout'] ?? null),
+            'nonce' => is_string($payload['nonce'] ?? null) ? $payload['nonce'] : null,
         ];
     }
 
@@ -888,6 +917,18 @@ class AuthController extends Controller
         ])->onlyInput('username');
     }
 
+    private function loginFailureMessage(string $specificMessage): string
+    {
+        return $this->genericLoginErrorsEnabled()
+            ? self::LOGIN_CREDENTIALS_MISMATCH_MESSAGE
+            : $specificMessage;
+    }
+
+    private function genericLoginErrorsEnabled(): bool
+    {
+        return filter_var(env('AUTH_GENERIC_LOGIN_ERRORS', false), FILTER_VALIDATE_BOOLEAN);
+    }
+
     private function newPasswordRules(array $extra = []): array
     {
         $rule = PasswordRule::min(8);
@@ -964,16 +1005,11 @@ class AuthController extends Controller
                 return;
             }
 
-            Profile::firstOrCreate([
-                'user_id' => $user->id,
-            ], [
-                'readiness_score' => 0,
-                'total_sessions' => 0,
-            ]);
+            Profile::forUser((int) $user->id);
         } catch (Throwable $e) {
             Log::warning('Unable to create authentication profile.', [
                 'user_id' => $user->id,
-                'exception' => $e,
+                'exception_type' => $e::class,
             ]);
         }
     }

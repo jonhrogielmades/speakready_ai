@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\ActivityLogger;
 use App\Support\AccountNotificationSchema;
 use App\Support\SystemSettings;
+use App\Services\ProfilePhotoStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -21,7 +22,7 @@ class AdminAccountController extends Controller
         ]);
     }
 
-    public function updateProfile(Request $request)
+    public function updateProfile(Request $request, ProfilePhotoStorage $photoStorage)
     {
         AccountNotificationSchema::ensure();
 
@@ -31,20 +32,35 @@ class AdminAccountController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($admin->id)],
             'target_position' => ['nullable', 'string', 'max:255'],
-            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048', 'dimensions:max_width=2000,max_height=2000'],
         ]);
 
         $admin->name = $validated['name'];
         $admin->email = $validated['email'];
         $admin->target_position = $validated['target_position'] ?? null;
 
+        $previousPhoto = $admin->profile_photo_path;
+        $newPhotoPath = null;
+
         if ($request->hasFile('profile_photo')) {
             $image = $request->file('profile_photo');
-            $imageData = base64_encode(file_get_contents($image->getRealPath()));
-            $admin->profile_photo_path = 'data:'.$image->getClientMimeType().';base64,'.$imageData;
+            $newPhotoPath = $photoStorage->store($image);
+            $admin->profile_photo_path = $newPhotoPath;
         }
 
-        $admin->save();
+        try {
+            $admin->save();
+        } catch (\Throwable $error) {
+            if ($newPhotoPath) {
+                $photoStorage->delete($newPhotoPath);
+            }
+
+            throw $error;
+        }
+
+        if ($newPhotoPath && $previousPhoto !== $newPhotoPath) {
+            $photoStorage->delete($previousPhoto);
+        }
 
         ActivityLogger::log(
             $admin,

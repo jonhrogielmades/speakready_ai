@@ -146,7 +146,7 @@ class InterviewController extends Controller
  );
  $pressureMode = false;
 
- $profilePreferences = Profile::firstOrCreate(['user_id' => Auth::id()])->inclusive_preferences?? [];
+ $profilePreferences = Profile::forUser((int) Auth::id())->inclusive_preferences?? [];
  $cameraDetectionEnabled = filter_var(
  $validated['camera_detection']?? $validated['camera_coaching']?? data_get($profilePreferences, 'camera_detection', data_get($profilePreferences, 'camera_coaching', false)),
  FILTER_VALIDATE_BOOLEAN
@@ -1235,7 +1235,7 @@ return response()->json([
  );
 
  // Game perks affect game progression, never the stored assessment score.
- $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
+ $profile = Profile::forUser((int) Auth::id());
  $gameResultScore = $overall;
  if ($gameLevel && $profile->hasPerk('first_impressions')) {
  $gameResultScore = min(100, $gameResultScore + 5);
@@ -5066,7 +5066,7 @@ return response()->json([
  GameLevel $gameLevel,?string $gameStatus,?int $gameResultScore,
  array $context = []
  ): array {
- $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
+ $profile = Profile::forUser((int) Auth::id());
  $progress = GameProgress::where('user_id', Auth::id())
  ->where('game_level_id', $gameLevel->id)
  ->first();

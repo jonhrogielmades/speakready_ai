@@ -78,7 +78,7 @@ class GameController extends Controller
 
  $level = GameLevel::with('category')->findOrFail($id);
  $user = Auth::user();
- $profile = Profile::firstOrCreate(['user_id' => $user->id]);
+ $profile = Profile::forUser((int) $user->id);
 
  if ($level->category && ($level->category->status!== 'active' || $level->category->type!== 'game')) {
  abort(404);
@@ -1572,7 +1572,7 @@ class GameController extends Controller
 
  private function gameResultPayload(GameSession $gameSession, GameLevel $gameLevel): array
  {
- $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
+ $profile = Profile::forUser((int) Auth::id());
  $progress = GameProgress::where('user_id', Auth::id())
  ->where('game_level_id', $gameLevel->id)
  ->first();

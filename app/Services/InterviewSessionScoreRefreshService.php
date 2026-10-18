@@ -101,7 +101,7 @@ class InterviewSessionScoreRefreshService
                 ->where('status', 'completed'))
             ->avg('overall_readiness_score');
 
-        Profile::firstOrCreate(['user_id' => $session->user_id])
+        Profile::forUser((int) $session->user_id)
             ->update(['readiness_score' => (int) round($averageReadiness ?? 0)]);
     }
 

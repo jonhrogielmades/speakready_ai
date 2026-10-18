@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class Profile extends Model
@@ -70,6 +71,21 @@ class Profile extends Model
     public static function challengeLivesAreUnlimited(): bool
     {
         return self::UNLIMITED_CHALLENGE_LIVES;
+    }
+
+    public static function forUser(int $userId): static
+    {
+        $profile = static::query()->where('user_id', $userId)->first();
+
+        if ($profile) {
+            return $profile;
+        }
+
+        return DB::transaction(function () use ($userId): static {
+            \App\Models\User::query()->whereKey($userId)->lockForUpdate()->firstOrFail();
+
+            return static::query()->firstOrCreate(['user_id' => $userId]);
+        }, 3);
     }
 
     public function setAttribute($key, $value)

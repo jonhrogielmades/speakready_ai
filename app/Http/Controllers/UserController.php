@@ -18,6 +18,7 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Services\AIService;
+use App\Services\ProfilePhotoStorage;
 use App\Services\ChallengePositionService;
 use App\Services\CoachLanguageService;
 use App\Services\CoachReliabilityService;
@@ -154,7 +155,7 @@ class UserController extends Controller
  {
  $user_id = Auth::id();
  AccountNotificationSchema::ensure();
- $profile = Profile::firstOrCreate(['user_id' => $user_id]);
+ $profile = Profile::forUser((int) $user_id);
 
  // Base query for completed sessions
  $completedSessions = InterviewSession::where('user_id', $user_id)
@@ -471,7 +472,7 @@ class UserController extends Controller
  $skillComparison = $this->skillComparisonFor($scoredSessions);
  $latestSkillSummary = $this->skillSummaryFor($latestScoredSession?->score, $latestScoredSession?->feedback);
 
- $profile = Profile::firstOrCreate(['user_id' => $userId]);
+ $profile = Profile::forUser((int) $userId);
 
  $activityCalendar = $this->practiceActivityCalendarFor($sessions);
  $starProgress = $this->starProgressFor($sessions);
@@ -2050,7 +2051,7 @@ class UserController extends Controller
 
  private function syncInterviewProfileStats(int $userId): void
  {
- $profile = Profile::firstOrCreate(['user_id' => $userId]);
+ $profile = Profile::forUser((int) $userId);
 
  $completedSessions = InterviewSession::where('user_id', $userId)
  ->where('status', 'completed');
@@ -4216,7 +4217,7 @@ class UserController extends Controller
  ->header('X-Content-Type-Options', 'nosniff');
  }
 
- public function updateProfile(Request $request)
+ public function updateProfile(Request $request, ProfilePhotoStorage $photoStorage)
  {
  AccountNotificationSchema::ensure();
 
@@ -4226,25 +4227,39 @@ class UserController extends Controller
  'name' => 'required|string|max:255',
  'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
  'target_position' => 'nullable|string|max:255',
- 'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+ 'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048|dimensions:max_width=2000,max_height=2000',
  ]);
 
  $user->name = $request->name;
  $user->email = $request->email;
  $user->target_position = $request->target_position;
 
+ $previousPhoto = $user->profile_photo_path;
+ $newPhotoPath = null;
+
  if ($request->hasFile('profile_photo')) {
  $image = $request->file('profile_photo');
- $imageData = base64_encode(file_get_contents($image->getRealPath()));
- $mimeType = $image->getClientMimeType();
- $user->profile_photo_path = 'data:'.$mimeType.';base64,'.$imageData;
+ $newPhotoPath = $photoStorage->store($image);
+ $user->profile_photo_path = $newPhotoPath;
  }
 
  if (! $user->isDirty()) {
  return redirect()->back()->with('info', 'No changes to save.');
  }
 
+ try {
  $user->save();
+ } catch (\Throwable $error) {
+ if ($newPhotoPath) {
+ $photoStorage->delete($newPhotoPath);
+ }
+
+ throw $error;
+ }
+
+ if ($newPhotoPath && $previousPhoto !== $newPhotoPath) {
+ $photoStorage->delete($previousPhoto);
+ }
 
  ActivityLogger::log(
  $user,
@@ -4305,7 +4320,7 @@ class UserController extends Controller
  return ['required', 'string', $rule];
  }
 
- public function deleteAccount(Request $request)
+ public function deleteAccount(Request $request, ProfilePhotoStorage $photoStorage)
  {
  AccountNotificationSchema::ensure();
 
@@ -4323,6 +4338,9 @@ class UserController extends Controller
  );
 
  Auth::logout();
+ $photoStorage->delete($user->profile_photo_path);
+ $user->forceFill(['profile_photo_path' => null])->save();
+ \App\Models\PushSubscription::where('user_id', $user->id)->delete();
  $user->delete(); // Soft delete as configured in User model
  $request->session()->invalidate();
  $request->session()->regenerateToken();
@@ -4333,7 +4351,7 @@ class UserController extends Controller
  public function skills()
  {
  $user = Auth::user();
- $profile = Profile::firstOrCreate(['user_id' => $user->id]);
+ $profile = Profile::forUser((int) $user->id);
 
  $perks = self::SKILL_PERKS;
 

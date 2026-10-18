@@ -22,6 +22,9 @@ class PushSubscription extends Model
     ];
 
     protected $casts = [
+        'endpoint' => 'encrypted',
+        'public_key' => 'encrypted',
+        'auth_token' => 'encrypted',
         'last_used_at' => 'datetime',
         'failed_at' => 'datetime',
     ];

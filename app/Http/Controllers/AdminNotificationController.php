@@ -67,7 +67,7 @@ class AdminNotificationController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'message' => 'required|string',
+            'message' => 'required|string|max:10000',
             'type' => 'required|in:info,success,warning,danger',
             'target' => 'required|in:all,specific',
             'user_id' => 'required_if:target,specific|nullable|exists:users,id'
@@ -92,10 +92,11 @@ class AdminNotificationController extends Controller
         );
 
         if ($request->target === 'all') {
-            $users = User::all();
-            foreach ($users as $user) {
-                $user->notify($notification);
-            }
+            User::query()->orderBy('id')->chunkById(250, function ($users) use ($notification): void {
+                foreach ($users as $user) {
+                    $user->notify($notification);
+                }
+            });
         } else {
             $user = User::find($request->user_id);
             if ($user) {

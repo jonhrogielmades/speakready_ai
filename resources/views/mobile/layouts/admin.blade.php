@@ -3522,7 +3522,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=23')
+               navigator.serviceWorker.register('/sw.js?v=24')
                   .then(r => console.log('SW:', r.scope))
                   .catch(e => console.log('SW fail:', e));
             });

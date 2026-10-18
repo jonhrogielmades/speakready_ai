@@ -52,15 +52,15 @@ Route::get('/', function (LandingStatsService $landingStatsService) {
 });
 
 // Auth Routes
-Route::post('/register', [AuthController::class, 'register'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth')->name('register');
 Route::get('/login', function () {
     return redirect('/');
 });
-Route::post('/login', [AuthController::class, 'login'])->name('login');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::post('/request-reactivation', [AuthController::class, 'requestReactivation'])->name('request.reactivation');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth')->name('login');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:auth')->name('logout');
+Route::post('/request-reactivation', [AuthController::class, 'requestReactivation'])->middleware('throttle:auth')->name('request.reactivation');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->middleware('guest')->name('password.request');
-Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('guest')->name('password.email');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware(['guest', 'throttle:auth'])->name('password.email');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->middleware('guest')->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('guest')->name('password.update');
 
@@ -70,7 +70,7 @@ Route::get('/auth/google/register', [AuthController::class, 'redirectToGoogleReg
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 // Contact Form Route
-Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
+Route::post('/contact/send', [ContactController::class, 'send'])->middleware('throttle:contact')->name('contact.send');
 Route::post('/newsletter/subscribe', [ContactController::class, 'subscribe'])
     ->middleware('throttle:6,1')
     ->name('newsletter.subscribe');
@@ -160,27 +160,27 @@ Route::middleware(['auth', 'user'])->group(function () {
         return mobile_view('interview.session');
     })->name('interview.session');
 
-    Route::post('/interview/start', [InterviewController::class, 'start'])->name('interview.start');
-    Route::post('/interview/answer', [InterviewController::class, 'answer'])->name('interview.answer');
-    Route::post('/interview/chat-reply', [InterviewController::class, 'chatReply'])->name('interview.chatReply');
-    Route::post('/interview/coach-answer', [InterviewController::class, 'coachAnswer'])->name('interview.coachAnswer');
-    Route::post('/interview/closing', [InterviewController::class, 'closing'])->name('interview.closing');
-    Route::post('/interview/speech', [InterviewController::class, 'speech'])->name('interview.speech');
+    Route::post('/interview/start', [InterviewController::class, 'start'])->middleware('throttle:ai-expensive')->name('interview.start');
+    Route::post('/interview/answer', [InterviewController::class, 'answer'])->middleware('throttle:ai')->name('interview.answer');
+    Route::post('/interview/chat-reply', [InterviewController::class, 'chatReply'])->middleware('throttle:ai')->name('interview.chatReply');
+    Route::post('/interview/coach-answer', [InterviewController::class, 'coachAnswer'])->middleware('throttle:ai')->name('interview.coachAnswer');
+    Route::post('/interview/closing', [InterviewController::class, 'closing'])->middleware('throttle:ai')->name('interview.closing');
+    Route::post('/interview/speech', [InterviewController::class, 'speech'])->middleware('throttle:ai-transcribe')->name('interview.speech');
     Route::post('/interview/transcribe', [InterviewController::class, 'transcribe'])
-        ->middleware('throttle:60,1')
+        ->middleware('throttle:ai-transcribe')
         ->name('interview.transcribe');
     Route::post('/interview/save-state', [InterviewController::class, 'saveSessionState'])->name('interview.saveState');
-    Route::post('/interview/finish', [InterviewController::class, 'finish'])->name('interview.finish');
+    Route::post('/interview/finish', [InterviewController::class, 'finish'])->middleware('throttle:ai-expensive')->name('interview.finish');
     Route::post('/interview/abort', [InterviewController::class, 'abortSession'])->name('interview.abort');
     Route::get('/interview/{id}/review', [InterviewController::class, 'review'])->name('interview.review');
     Route::get('/interview/answers/{answer}/voice-recording', [InterviewController::class, 'voiceRecording'])->name('interview.answer.voiceRecording');
-    Route::post('/interview/answers/{answer}/retry', [InterviewController::class, 'retryAnswer'])->name('interview.answer.retry');
+    Route::post('/interview/answers/{answer}/retry', [InterviewController::class, 'retryAnswer'])->middleware('throttle:ai-expensive')->name('interview.answer.retry');
 
     // User Side Features
     Route::get('/account', [UserController::class, 'account'])->name('user.account');
     Route::post('/language', [UserController::class, 'updateLanguage'])->name('user.language.update');
     Route::post('/language/translate', [UserController::class, 'translateLanguage'])->name('user.language.translate');
-    Route::post('/onboarding/speech', [UserController::class, 'onboardingSpeech'])->name('user.onboarding.speech');
+    Route::post('/onboarding/speech', [UserController::class, 'onboardingSpeech'])->middleware('throttle:ai-transcribe')->name('user.onboarding.speech');
     Route::post('/account/profile', [UserController::class, 'updateProfile'])->name('user.account.profile');
     Route::post('/account/password', [UserController::class, 'updatePassword'])->name('user.account.password');
     Route::post('/account/delete', [UserController::class, 'deleteAccount'])->name('user.account.delete');
@@ -188,8 +188,8 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/notifications', [UserController::class, 'notifications'])->name('user.notifications');
     Route::get('/notifications/fetch', [UserController::class, 'fetchNotifications'])->name('user.notifications.fetch');
     Route::get('/notifications/push/key', [PushSubscriptionController::class, 'publicKey'])->name('user.notifications.push.key');
-    Route::post('/notifications/push/subscribe', [PushSubscriptionController::class, 'store'])->name('user.notifications.push.subscribe');
-    Route::post('/notifications/push/test', [PushSubscriptionController::class, 'test'])->name('user.notifications.push.test');
+    Route::post('/notifications/push/subscribe', [PushSubscriptionController::class, 'store'])->middleware('throttle:push')->name('user.notifications.push.subscribe');
+    Route::post('/notifications/push/test', [PushSubscriptionController::class, 'test'])->middleware('throttle:push')->name('user.notifications.push.test');
     Route::delete('/notifications/push/unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('user.notifications.push.unsubscribe');
     Route::post('/notifications/read-all', [UserController::class, 'markAllNotificationsAsRead'])->name('user.notifications.readAll');
     Route::delete('/notifications/clear-all', [UserController::class, 'clearAllNotifications'])->name('user.notifications.clearAll');
@@ -197,8 +197,8 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::delete('/notifications/{id}', [UserController::class, 'deleteNotification'])->name('user.notifications.delete');
     Route::get('/feedback', [UserController::class, 'feedback'])->name('user.feedback');
     Route::get('/coach', [UserController::class, 'coach'])->name('user.coach');
-    Route::post('/coach/chat', [UserController::class, 'coachChat'])->name('user.coach.chat');
-    Route::post('/coach/transcribe', [UserController::class, 'coachTranscribe'])->name('user.coach.transcribe');
+    Route::post('/coach/chat', [UserController::class, 'coachChat'])->middleware('throttle:ai')->name('user.coach.chat');
+    Route::post('/coach/transcribe', [UserController::class, 'coachTranscribe'])->middleware('throttle:ai-transcribe')->name('user.coach.transcribe');
     Route::get('/coach/conversation/{id}', [UserController::class, 'loadCoachConversation'])->name('user.coach.load');
     Route::delete('/coach/conversation/{id}', [UserController::class, 'deleteCoachConversation'])->name('user.coach.delete');
     Route::delete('/coach/conversations', [UserController::class, 'clearCoachConversations'])->name('user.coach.clear');
@@ -210,8 +210,8 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');
 
     Route::get('/missions', [UserMissionController::class, 'index'])->name('user.missions');
-    Route::post('/missions/generate', [UserMissionController::class, 'generate'])->name('user.missions.generate');
-    Route::post('/missions/submit', [UserMissionController::class, 'submit'])->name('user.missions.submit');
+    Route::post('/missions/generate', [UserMissionController::class, 'generate'])->middleware('throttle:ai-expensive')->name('user.missions.generate');
+    Route::post('/missions/submit', [UserMissionController::class, 'submit'])->middleware('throttle:ai')->name('user.missions.submit');
 
     Route::get('/personal-mastery', [UserMasteryController::class, 'index'])->name('user.mastery');
     Route::post('/personal-mastery/stories', [UserMasteryController::class, 'storeStory'])->name('user.mastery.stories.store');
@@ -235,16 +235,16 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/modules/{id}', [UserController::class, 'moduleShow'])->name('user.modules.show');
 
     // Arena Gamification Routes
-    Route::post('/game/level/{id}/start', [\App\Http\Controllers\GameController::class, 'startLevel'])->name('user.game.start');
+    Route::post('/game/level/{id}/start', [\App\Http\Controllers\GameController::class, 'startLevel'])->middleware('throttle:ai-expensive')->name('user.game.start');
     Route::get('/game/match', [\App\Http\Controllers\GameController::class, 'arenaSession'])->name('user.game.match');
-    Route::post('/game/answer', [\App\Http\Controllers\GameController::class, 'answer'])->name('user.game.answer');
-    Route::post('/game/speech', [\App\Http\Controllers\GameController::class, 'speech'])->name('user.game.speech');
+    Route::post('/game/answer', [\App\Http\Controllers\GameController::class, 'answer'])->middleware('throttle:ai')->name('user.game.answer');
+    Route::post('/game/speech', [\App\Http\Controllers\GameController::class, 'speech'])->middleware('throttle:ai-transcribe')->name('user.game.speech');
     Route::post('/game/transcribe', [\App\Http\Controllers\GameController::class, 'transcribe'])
-        ->middleware('throttle:60,1')
+        ->middleware('throttle:ai-transcribe')
         ->name('user.game.transcribe');
-    Route::post('/game/interviewer-reply', [\App\Http\Controllers\GameController::class, 'interviewerReply'])->name('user.game.interviewerReply');
+    Route::post('/game/interviewer-reply', [\App\Http\Controllers\GameController::class, 'interviewerReply'])->middleware('throttle:ai')->name('user.game.interviewerReply');
     Route::post('/game/save-state', [\App\Http\Controllers\GameController::class, 'saveState'])->name('user.game.saveState');
-    Route::post('/game/finish', [\App\Http\Controllers\GameController::class, 'finish'])->name('user.game.finish');
+    Route::post('/game/finish', [\App\Http\Controllers\GameController::class, 'finish'])->middleware('throttle:ai-expensive')->name('user.game.finish');
     Route::get('/game/answers/{answer}/voice-recording', [\App\Http\Controllers\GameController::class, 'voiceRecording'])->name('user.game.answer.voiceRecording');
     Route::get('/game/certificates/{category}/download', [\App\Http\Controllers\GameController::class, 'downloadCertificate'])->name('user.game.certificate.download');
 
@@ -371,8 +371,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::prefix('admin/ai')->name('admin.ai.')->group(function () {
         Route::get('/evaluation', [\App\Http\Controllers\AdminAiController::class, 'evaluation'])->name('evaluation');
         Route::get('/evaluation/realtime', [\App\Http\Controllers\AdminAiController::class, 'evaluationRealtime'])->name('evaluation.realtime');
-        Route::post('/evaluation/run', [\App\Http\Controllers\AdminAiController::class, 'runEvaluation'])->name('evaluation.run');
-        Route::post('/evaluation/smoke-test', [\App\Http\Controllers\AdminAiController::class, 'smokeEvaluation'])->name('evaluation.smoke');
+        Route::post('/evaluation/run', [\App\Http\Controllers\AdminAiController::class, 'runEvaluation'])->middleware('throttle:admin-ai')->name('evaluation.run');
+        Route::post('/evaluation/smoke-test', [\App\Http\Controllers\AdminAiController::class, 'smokeEvaluation'])->middleware('throttle:admin-ai')->name('evaluation.smoke');
         Route::get('/evaluation/export', [\App\Http\Controllers\AdminAiController::class, 'exportEvaluation'])->name('evaluation.export');
         Route::post('/evaluation/clear', [\App\Http\Controllers\AdminAiController::class, 'clearEvaluation'])->name('evaluation.clear');
         Route::get('/evaluation/report', [\App\Http\Controllers\AdminAiController::class, 'evaluationReport'])->name('evaluation.report');
@@ -380,7 +380,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/providers', [\App\Http\Controllers\AdminAiController::class, 'storeProvider'])->name('providers.store');
         Route::put('/providers/{provider}', [\App\Http\Controllers\AdminAiController::class, 'updateProvider'])->name('providers.update');
         Route::delete('/providers/{provider}', [\App\Http\Controllers\AdminAiController::class, 'destroyProvider'])->name('providers.destroy');
-        Route::post('/providers/{provider}/test', [\App\Http\Controllers\AdminAiController::class, 'testProvider'])->name('providers.test');
+        Route::post('/providers/{provider}/test', [\App\Http\Controllers\AdminAiController::class, 'testProvider'])->middleware('throttle:admin-ai')->name('providers.test');
         Route::post('/providers/{provider}/primary', [\App\Http\Controllers\AdminAiController::class, 'setPrimaryProvider'])->name('providers.primary');
         Route::post('/providers/{provider}/fallback', [\App\Http\Controllers\AdminAiController::class, 'setFallbackProvider'])->name('providers.fallback');
     });

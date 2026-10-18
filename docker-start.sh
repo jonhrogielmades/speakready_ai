@@ -239,6 +239,18 @@ run_startup_maintenance() {
     run_optional php artisan route:cache
     run_optional php artisan view:cache
 
+    if [ "${QUEUE_CONNECTION:-database}" != "sync" ] && [ "${QUEUE_CONNECTION:-database}" != "null" ]; then
+        echo "Starting queue worker for ${QUEUE_CONNECTION:-database}." >&2
+        php artisan queue:work "${QUEUE_CONNECTION:-database}" --sleep=3 --tries=3 --timeout=180 --backoff=5 --max-time=3600 >> /proc/1/fd/2 2>&1 &
+    fi
+
+    if env_bool RUN_SCHEDULER_ON_START true; then
+        echo "Starting Laravel scheduler worker." >&2
+        php artisan schedule:work >> /proc/1/fd/2 2>&1 &
+    else
+        echo "Skipping Laravel scheduler worker because RUN_SCHEDULER_ON_START is disabled." >&2
+    fi
+
     clear_startup_gate
     echo "Container startup maintenance complete." >&2
 }

@@ -7,6 +7,7 @@ use App\Models\NewsletterSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Throwable;
 
 class ContactController extends Controller
 {
@@ -16,7 +17,7 @@ class ContactController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'subject' => 'required|string|max:255',
-            'message' => 'required|string',
+            'message' => 'required|string|max:10000',
         ]);
 
         // Save to Database
@@ -24,9 +25,11 @@ class ContactController extends Controller
 
         try {
             $destinationEmail = \App\Models\User::where('is_admin', 1)->value('email') ?? env('MAIL_FROM_ADDRESS', 'admin@speakready.ai');
-            Mail::to($destinationEmail)->send(new ContactMessage($validated));
-        } catch (\Exception $e) {
-            \Log::error('Contact form email failed (but saved to DB): ' . $e->getMessage());
+            Mail::to($destinationEmail)->queue(new ContactMessage($validated));
+        } catch (Throwable $e) {
+            \Log::error('Contact form email could not be queued after saving.', [
+                'exception_type' => $e::class,
+            ]);
             // We do not throw or show error because the DB save succeeded
         }
 

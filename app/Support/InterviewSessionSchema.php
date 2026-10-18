@@ -14,6 +14,11 @@ class InterviewSessionSchema
 
     public static function ensure(bool $force = false, bool $createIfMissing = true): void
     {
+        if (! $force && ! app()->runningUnitTests() && ! app()->runningInConsole()
+            && ! filter_var(env('RUN_SCHEMA_REPAIRS_ON_REQUEST', false), FILTER_VALIDATE_BOOLEAN)) {
+            return;
+        }
+
         if (! $force && self::$checked && self::$ready && ! app()->runningUnitTests()) {
             return;
         }

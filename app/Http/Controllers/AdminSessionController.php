@@ -293,7 +293,7 @@ class AdminSessionController extends Controller
 
     private function syncInterviewProfileStats(int $userId): void
     {
-        $profile = Profile::firstOrCreate(['user_id' => $userId]);
+        $profile = Profile::forUser($userId);
 
         $completedSessions = InterviewSession::where('user_id', $userId)
             ->where('status', 'completed');

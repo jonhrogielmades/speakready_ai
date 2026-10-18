@@ -12,6 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        $schedule->command('privacy:prune --force')
+            ->dailyAt((string) env('PRIVACY_PRUNE_TIME', '03:15'))
+            ->withoutOverlapping(120)
+            ->onOneServer();
+
         if (filter_var(config('services.local_feedback_model.auto_train_enabled', false), FILTER_VALIDATE_BOOLEAN)) {
             $schedule->command('ai:auto-train-feedback-model')
                 ->dailyAt((string) config('services.local_feedback_model.auto_train_time', '02:30'))

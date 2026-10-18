@@ -41,8 +41,8 @@ RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip
 
 # Allow long-running admin generation requests without PHP-FPM ending the worker first.
 RUN { \
-        echo "max_execution_time=3600"; \
-        echo "max_input_time=3600"; \
+        echo "max_execution_time=240"; \
+        echo "max_input_time=240"; \
         echo "memory_limit=512M"; \
     } > /usr/local/etc/php/conf.d/99-app-timeouts.ini \
     && { \
@@ -60,7 +60,7 @@ RUN { \
         echo "clear_env = no"; \
         echo "catch_workers_output = yes"; \
         echo "decorate_workers_output = no"; \
-        echo "request_terminate_timeout = 3600s"; \
+        echo "request_terminate_timeout = 300s"; \
     } > /usr/local/etc/php-fpm.d/zz-app-timeouts.conf
 
 # Get latest Composer
