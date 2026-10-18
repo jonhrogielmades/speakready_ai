@@ -678,16 +678,16 @@
  <div class="modal-footer border-0 p-4 pt-0">
  <div class="game-result-actions">
  @if($resultPassed && $nextLevel)
- <form action="{{ route('user.game.start', $nextLevel['id']) }}" method="POST">
+ <form action="{{ route('user.game.start', $nextLevel['id']) }}" method="POST" class="start-challenge-form" data-sr-related-loader-form="challenge-start" data-sr-loader-label="Start Next Level">
  @csrf
- <button type="submit" class="btn btn-success" {{ empty($nextLevel['can_start'])? 'disabled': '' }}>
+ <button type="submit" class="btn btn-success start-challenge-btn" {{ empty($nextLevel['can_start'])? 'disabled': '' }}>
  <i class="fa-solid fa-forward me-1"></i> Start Next Level
  </button>
  </form>
  @elseif(! $resultPassed)
- <form action="{{ route('user.game.start', $gameResult['level_id']) }}" method="POST">
+ <form action="{{ route('user.game.start', $gameResult['level_id']) }}" method="POST" class="start-challenge-form" data-sr-related-loader-form="challenge-start" data-sr-loader-label="Retry Level">
  @csrf
- <button type="submit" class="btn btn-warning text-dark" {{ empty($gameResult['can_retry'])? 'disabled': '' }}>
+ <button type="submit" class="btn btn-warning text-dark start-challenge-btn" {{ empty($gameResult['can_retry'])? 'disabled': '' }}>
  <i class="fa-solid fa-rotate-right me-1"></i> Retry Level
  </button>
  </form>

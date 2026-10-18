@@ -3867,6 +3867,16 @@ class UserController extends Controller
  ->withInput();
  }
 
+ $allowedPositions = collect($challengePositions->positionOptions())
+ ->map(fn (string $option): string => Str::lower($challengePositions->clean($option)))
+ ->filter()
+ ->all();
+ if (! in_array(Str::lower($position), $allowedPositions, true)) {
+ return back()
+ ->withErrors(['target_position' => 'Please choose a supported interview position from the list.'])
+ ->withInput();
+ }
+
  $request->session()->put('learning_challenge_position', $position);
 
  $user = Auth::user();

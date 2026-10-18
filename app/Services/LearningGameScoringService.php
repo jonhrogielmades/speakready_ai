@@ -322,6 +322,12 @@ class LearningGameScoringService
         $answered = collect($perQuestion)->filter(fn (array $item): bool => (int) ($item['score'] ?? 0) > 0)->count();
         $avgWords = (int) floor((float) (collect($perQuestion)->avg('evidence_flags.word_count') ?? 0) + PHP_FLOAT_EPSILON);
         $shortAnswers = collect($perQuestion)->filter(fn (array $item): bool => (int) data_get($item, 'evidence_flags.word_count', 0) > 0 && (int) data_get($item, 'evidence_flags.word_count', 0) < 15)->count();
+        $substantiveAnswers = collect($perQuestion)->filter(fn (array $item): bool => (int) data_get($item, 'evidence_flags.word_count', 0) >= 20)->count();
+        $specificEvidenceAnswers = collect($perQuestion)->filter(fn (array $item): bool =>
+            (bool) data_get($item, 'evidence_flags.has_ownership', false)
+            && (bool) data_get($item, 'evidence_flags.has_action', false)
+            && (bool) data_get($item, 'evidence_flags.has_result', false)
+        )->count();
         $evidenceCoverage = collect($perQuestion)->avg(function (array $item): int {
             return collect([
                 data_get($item, 'evidence_flags.has_ownership', false),
@@ -336,6 +342,13 @@ class LearningGameScoringService
             + (int) floor((($evidenceCoverage / 3) * 15) + PHP_FLOAT_EPSILON)
             + ($total >= 2 ? 5 : 0)
             - ($shortAnswers * 8);
+
+        // A high lexical score is not sufficient evidence by itself.  The 95% gate
+        // requires every answered prompt to contain a substantive, owned action and
+        // an outcome; short or keyword-stuffed answers remain provisional.
+        if ($answered === 0 || $substantiveAnswers < $answered || $specificEvidenceAnswers < $answered) {
+            return min(85, $this->clamp($score));
+        }
 
         return min(95, $this->clamp($score));
     }

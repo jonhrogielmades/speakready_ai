@@ -27,7 +27,9 @@ class LearningGameCertificateService
 
  foreach ($levels as $level) {
  $progress = $progressByLevel->get($level->id);
- if (! $progress || (int) $progress->best_score < (int) $level->required_score) {
+ if (! $progress
+ || $progress->status !== 'completed'
+ || (int) $progress->best_score < (int) $level->required_score) {
  return null;
  }
  }

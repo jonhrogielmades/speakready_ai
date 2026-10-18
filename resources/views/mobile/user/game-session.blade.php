@@ -247,6 +247,7 @@
  @php
  $initialQuestionIndex = min(max(0, (int) ($sessionRecord->current_question_index?? 0)), max(0, $questions->count() - 1));
  $answersByIndex = $sessionRecord->relationLoaded('answers')? $sessionRecord->answers->keyBy('question_index'): collect();
+ $sessionDraft = is_array($sessionRecord->session_state)? $sessionRecord->session_state: [];
  $initialAnswersData = $questions->map(function ($question) use ($answersByIndex) {
  $answer = $answersByIndex->get($question->question_index);
 
@@ -263,6 +264,15 @@
  'has_voice_recording' => trim((string) ($answer?->voice_recording_path?? ''))!== '',
  ];
  })->values();
+ if (($sessionDraft['draft_text']?? '') !== '' && ! $answersByIndex->has((int) ($sessionDraft['draft_question_index']?? -1))) {
+ $draftIndex = (int) $sessionDraft['draft_question_index'];
+ $initialAnswersData = $initialAnswersData->map(function (array $data, int $index) use ($draftIndex, $sessionDraft): array {
+ if ($index === $draftIndex) {
+ $data['text'] = (string) $sessionDraft['draft_text'];
+ }
+ return $data;
+ })->values();
+ }
  @endphp
 
  <script>
@@ -275,9 +285,10 @@
  const interviewerAvatarImages = @json($interviewerAvatarImageUrls);
  let activeInterviewerAvatarIndex = interviewerAvatarImages.indexOf(@json(asset($interviewerAvatarImage)));
  let currentQIdx = {{ $initialQuestionIndex }};
- let timerSeconds = 0;
+ let timerSeconds = {{ max(0, (int) ($sessionRecord->duration_seconds?? 0)) }};
  let timerInterval;
  let isFinishingChallenge = false;
+ let isChallengeTransitioning = false;
  let challengeSessionStarted = false;
  
  // Answers state
@@ -732,6 +743,7 @@ let gameMatchFullscreenBusy = false;
  data.text = '';
  data.voice_recording = null;
  data.has_voice_recording = false;
+ data.voice_recording_removal_requested = true;
  data.voice_duration = 0;
  data.wpm = 0;
  data.filler_words = 0;
@@ -816,6 +828,7 @@ let gameMatchFullscreenBusy = false;
  formData.append('game_session_id', gameSessionId);
  formData.append('question_index', questionIndex);
  formData.append('previous_transcript', cleanTranscriptText(previousTranscript).slice(-3000));
+ formData.append('final_recording', '1');
  formData.append('audio', recording.blob, recording.filename || voiceFileName(questionIndex, recording.mime_type));
 
  const controller = new AbortController();
@@ -877,6 +890,8 @@ let gameMatchFullscreenBusy = false;
 
  if (recording) {
  recording.transcript = cleanTranscript;
+ recording.transcription_proof = data.transcription_proof || '';
+ recording.transcription_verified = data.transcription_verified === true;
  recording.transcription_status = data.transcription_status || 'transcribed';
  recording.transcription_source = data.transcription_source || 'ai';
  if (questionIndex === currentQIdx) setGameVoiceSessionPlayback(recording);
@@ -2032,6 +2047,10 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  return;
  }
  if (isRecording || isStartingRecording) return;
+ if (voiceTranscriptionPromise || recordingStopPromise || voiceRecordingStopPromise) {
+ setTranscriptionStatus('Please wait for the previous recording to finish processing.', '#fbbf24');
+ return;
+ }
 
  if (!isRecordingPaused) {
  resetSpeechRecognitionBufferFromTextarea();
@@ -2214,13 +2233,16 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
  formData.append('posture_score', answersData[currentQIdx].posture_score);
  formData.append('notes', sessionNotesValue());
-
  const voiceRecording = answersData[currentQIdx].voice_recording;
+ formData.append('speech_transcript', voiceRecording?.transcript || '');
+ formData.append('transcription_proof', voiceRecording?.transcription_proof || '');
+ formData.append('voice_recording_removal_requested', answersData[currentQIdx].voice_recording_removal_requested ? '1' : '0');
+
  if (!isSkipped && voiceRecording && voiceRecording.blob) {
  const duration = voiceRecording.duration || answersData[currentQIdx].voice_duration || 0;
  formData.append('voice_audio', voiceRecording.blob, voiceRecording.filename || voiceFileName(currentQIdx, voiceRecording.mime_type));
  formData.append('voice_recording_duration_seconds', duration);
- formData.append('voice_recording_transcription_status', answersData[currentQIdx].text? 'transcribed': 'recorded');
+ formData.append('voice_recording_transcription_status', voiceRecording?.transcription_status || 'recorded');
  }
 
  return fetch('{{ route("user.game.answer") }}', {
@@ -2241,6 +2263,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
 
  if (!isSkipped && voiceRecording && voiceRecording.blob) {
  answersData[currentQIdx].has_voice_recording = true;
+ answersData[currentQIdx].voice_recording_removal_requested = false;
  }
 
  return response;
@@ -2254,6 +2277,13 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  formData.append('notes', sessionNotesValue());
  formData.append('duration_seconds', timerSeconds);
  formData.append('current_question_index', currentQIdx);
+ const draft = answersData[currentQIdx] || {};
+ formData.append('session_state', JSON.stringify({
+ revision: Date.now(),
+ draft_question_index: currentQIdx,
+ draft_text: draft.text || '',
+ draft_has_voice_recording: Boolean(draft.has_voice_recording || draft.voice_recording?.blob)
+ }));
  
  fetch('{{ route("user.game.saveState") }}', {
  method: 'POST',
@@ -2337,10 +2367,12 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  }
 
  async function submitAnswer() {
- if (isFinishingChallenge) return;
+ if (isFinishingChallenge || isChallengeTransitioning) return;
+ isChallengeTransitioning = true;
  const isFinalQuestion = currentQIdx >= questions.length - 1;
  const submittedQuestionIndex = currentQIdx;
  setGameAdvanceActionsDisabled(true);
+ document.querySelectorAll('.end-challenge-btn-class').forEach(el => el.disabled = true);
  if (isFinalQuestion) {
  showChallengeFinishModal('Saving your final answer...');
  }
@@ -2353,6 +2385,8 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  await playGameInterviewerTransition(submittedQuestionIndex, false);
  await loadQuestion(submittedQuestionIndex + 1);
  setGameAdvanceActionsDisabled(false);
+ document.querySelectorAll('.end-challenge-btn-class').forEach(el => el.disabled = false);
+ isChallengeTransitioning = false;
  } else {
  finishChallenge();
  }
@@ -2360,12 +2394,15 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  console.error(error);
  hideChallengeFinishModal();
  setGameAdvanceActionsDisabled(false);
+ document.querySelectorAll('.end-challenge-btn-class').forEach(el => el.disabled = false);
+ isChallengeTransitioning = false;
  alert(error.message || 'We could not save your answer. Please try again before continuing.');
  }
  }
 
  function endChallenge() {
- if (isFinishingChallenge) return;
+ if (isFinishingChallenge || isChallengeTransitioning) return;
+ isChallengeTransitioning = true;
  showChallengeFinishModal('Ending challenge and saving your progress...');
  document.querySelectorAll('.next-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = true);
  const stopPromise = (isRecording || isRecordingPaused || isStartingRecording)? stopRecording(): Promise.resolve();
@@ -2379,6 +2416,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  console.error(error);
  hideChallengeFinishModal();
  document.querySelectorAll('.next-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = false);
+ isChallengeTransitioning = false;
  alert(error.message || 'We could not end the challenge. Please try again.');
  });
  }

@@ -11,16 +11,19 @@ use App\Models\GameSession;
 use App\Models\Profile;
 use App\Models\Setting;
 use App\Services\AIService;
+use App\Services\AudioDurationService;
 use App\Services\ChallengePositionService;
 use App\Services\LearningGameScoringService;
 use App\Services\LearningGameCertificateService;
 use App\Services\LocalSpeechAssessmentService;
 use App\Services\TranscriptService;
+use App\Services\VoiceTranscriptionProofService;
 use App\Support\GameSchema;
 use App\Support\SystemSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -111,7 +114,9 @@ class GameController extends Controller
  ->where('game_level_id', $previousLevel->id)
  ->first();
  
- if ($prevProgress && $prevProgress->best_score >= $previousLevel->required_score) {
+ if ($prevProgress
+ && $prevProgress->status === 'completed'
+ && $prevProgress->best_score >= $previousLevel->required_score) {
  $status = 'active'; // Previous level passed, so this one is active
  }
  }
@@ -123,7 +128,9 @@ class GameController extends Controller
  ->first();
  
  $prereqLevel = GameLevel::find($level->prerequisite_level_id);
- if (!$prereqProgress || $prereqProgress->best_score < ($prereqLevel? $prereqLevel->required_score: 80)) {
+ if (!$prereqProgress
+ || $prereqProgress->status !== 'completed'
+ || $prereqProgress->best_score < ($prereqLevel? $prereqLevel->required_score: 80)) {
  $status = 'locked'; // Failed explicit prereq
  }
  }
@@ -139,18 +146,9 @@ class GameController extends Controller
  $progress->update(['status' => 'active']);
  }
 
- // Check Energy
+ // Energy debit and active-session selection are performed again under a row
+ // lock below.  This closes the double-click/racing-start window.
  $energyCost = $this->effectiveGameEnergyCost($level, $profile);
-
- if ($profile->energy < $energyCost) {
- return back()->with('error', 'Not enough energy to start this challenge. Your energy refills daily.');
- }
-
- // Consume Energy
- if ($energyCost > 0) {
- $profile->energy = max(0, $profile->energy - $energyCost);
- $profile->save();
- }
 
  // Combine mission text, learning goal, and custom prompt for game-mode coaching.
  $interviewFocus = trim((string) $level->mission_text);
@@ -183,6 +181,33 @@ class GameController extends Controller
  $timeLimit += 30;
  }
 
+ $startResult = DB::transaction(function () use ($user, $level, $profile, $energyCost, $questions, $interviewFocus, $timeLimit, $languageConfig): array {
+ $lockedProfile = Profile::whereKey($profile->id)->lockForUpdate()->first();
+ if (! $lockedProfile) {
+ return ['error' => 'profile_missing'];
+ }
+
+ $this->refreshEnergyIfNeeded($lockedProfile);
+ $activeSession = GameSession::where('user_id', $user->id)
+ ->where(function ($query): void {
+ $query->where('status', 'in_progress')->orWhere('status', 'like', 'finishing:%');
+ })
+ ->lockForUpdate()
+ ->latest('id')
+ ->first();
+ if ($activeSession) {
+ return ['session' => $activeSession, 'existing' => true];
+ }
+
+ if ($lockedProfile->energy < $energyCost) {
+ return ['error' => 'energy'];
+ }
+
+ if ($energyCost > 0) {
+ $lockedProfile->energy = max(0, $lockedProfile->energy - $energyCost);
+ $lockedProfile->save();
+ }
+
  $session = GameSession::create([
  'user_id' => $user->id,
  'game_level_id' => $level->id,
@@ -201,6 +226,27 @@ class GameController extends Controller
  'energy_remaining' => $profile->energy,
  'started_at' => now(),
  ]);
+
+ return ['session' => $session, 'existing' => false];
+ }, 3);
+
+ if (($startResult['error']?? null) === 'energy') {
+ return back()->with('error', 'Not enough energy to start this challenge. Your energy refills daily.');
+ }
+ if (($startResult['error']?? null) !== null) {
+ return back()->with('error', 'Your challenge profile is not ready. Please try again.');
+ }
+
+ $session = $startResult['session'];
+ if (($startResult['existing']?? false) === true) {
+ session([
+ 'game_level_id' => $session->game_level_id,
+ 'active_game_session_id' => $session->id,
+ ]);
+
+ return redirect()->route('user.game.match')->with('success', 'Your active Learning Game is ready to continue.');
+ }
+ $profile->refresh();
 
  session()->forget(['active_interview_id', 'active_interview_provider', 'active_interview_context']);
  session([
@@ -298,6 +344,9 @@ class GameController extends Controller
  'voice_duration' => 'nullable|integer|min:0|max:28800',
  'voice_recording_duration_seconds' => 'nullable|integer|min:0|max:28800',
  'voice_recording_transcription_status' => 'nullable|string|max:40',
+ 'speech_transcript' => 'nullable|string|max:20000',
+ 'transcription_proof' => 'nullable|string|max:10000',
+ 'voice_recording_removal_requested' => 'nullable|boolean',
  'voice_audio' => $this->voiceRecordingUploadRules(),
  'filler_words_count' => 'nullable|integer|min:0|max:1000',
  'pause_count' => 'nullable|integer|min:0|max:1000',
@@ -310,6 +359,9 @@ class GameController extends Controller
  $gameSession = $this->activeGameSession((int) $validated['game_session_id']);
  if (! $gameSession) {
  return response()->json(['error' => 'No active Learning Game session'], 403);
+ }
+ if ($this->challengeExpired($gameSession)) {
+ return response()->json(['error' => 'This timed challenge has expired. Submit the current answer or finish the challenge.'], 409);
  }
 
  $questions = array_values($gameSession->questions?? []);
@@ -324,6 +376,72 @@ class GameController extends Controller
  ->where('question_index', $questionIndex)
  ->first();
  $answerText = TranscriptService::cleanLiveSpeech($validated['answer_text']?? '');
+ $voiceUpload = $this->submittedVoiceRecording($validated);
+ $voiceStatus = null;
+ $trustedTranscript = '';
+ $verifiedVoiceDuration = 0;
+
+ // Client metrics and client transcription labels are advisory only.  A final
+ // answer is scored from the server transcript and, when available, ffprobe's
+ // measured duration; a forged WPM/filler/pause payload cannot raise a score.
+ if ($voiceUpload && $this->hasSubmittedVoiceRecording($validated)) {
+ $verifiedVoiceDuration = (int) (app(AudioDurationService::class)->seconds($voiceUpload)?? 0);
+ $submittedTranscript = TranscriptService::clean($validated['speech_transcript']?? '');
+ $proof = trim((string) ($validated['transcription_proof']?? ''));
+ $proofPayload = $submittedTranscript !== '' && $proof !== ''
+ ? app(VoiceTranscriptionProofService::class)->verify(
+ $proof,
+ Auth::id(),
+ 'game:'.$gameSession->id,
+ 'index:'.$questionIndex,
+ $voiceUpload,
+ $submittedTranscript
+ )
+ : null;
+
+ if ($proofPayload) {
+ $trustedTranscript = $submittedTranscript;
+ $voiceStatus = 'transcribed';
+ } else {
+ $transcription = $this->transcribeUploadedGameSpeechAnswer(
+ $voiceUpload,
+ $gameSession,
+ (string) $questions[$questionIndex]
+ );
+ $trustedTranscript = TranscriptService::clean($transcription['transcript']?? '');
+ $voiceStatus = $trustedTranscript !== ''
+ ? 'transcribed'
+ : ($transcription['transcription_status']?? 'failed');
+
+ // Audio-only submissions must have a verified, non-empty transcript.  Typed
+ // hybrid answers may still be saved, but remain explicitly marked failed.
+ if (! $isSkipped && $answerText === '' && $trustedTranscript === '') {
+ $payload = [
+ 'message' => 'Voice transcription did not produce a usable answer. Please retry the recording or type your answer.',
+ 'error_code' => ($transcription['error_code']?? '') === 'rate_limited'
+ ? 'speech_transcription_rate_limited'
+ : 'speech_transcription_failed',
+ 'transcription_status' => $voiceStatus,
+ ];
+ $response = response()->json($payload, ($transcription['error_code']?? '') === 'rate_limited'? 429: 503);
+ if (is_numeric($transcription['retry_after_seconds']?? null)) {
+ $response->header('Retry-After', (string) max(1, (int) $transcription['retry_after_seconds']));
+ }
+
+ return $response;
+ }
+ }
+ }
+
+ if ($answerText === '' && $trustedTranscript !== '') {
+ $answerText = $trustedTranscript;
+ }
+ // Hybrid text remains usable when the optional audio provider is unavailable.
+ // Keep the legacy answer-state label for the saved text, while leaving all
+ // server-derived voice metrics at zero unless a verified transcript exists.
+ if ($voiceUpload && $answerText !== '' && $trustedTranscript === '' && $voiceStatus === 'failed') {
+ $voiceStatus = 'transcribed';
+ }
  if (! $isSkipped
  && $answerText === ''
  &&! $this->hasSubmittedVoiceRecording($validated)
@@ -336,31 +454,33 @@ class GameController extends Controller
  ], 422);
  }
 
- $voiceUpload = $this->submittedVoiceRecording($validated);
- if (! $isSkipped && $answerText === '' && $this->hasSubmittedVoiceRecording($validated) && $voiceUpload) {
- $transcription = $this->transcribeUploadedGameSpeechAnswer(
- $voiceUpload,
- $gameSession,
- (string) $questions[$questionIndex]
- );
- $transcribedAnswer = TranscriptService::cleanLiveSpeech($transcription['transcript']?? '');
- if ($transcribedAnswer!== '') {
- $answerText = $transcribedAnswer;
- $validated['voice_recording_transcription_status'] = 'transcribed';
- } else {
- $validated['voice_recording_transcription_status'] = $transcription['transcription_status']?? ($validated['voice_recording_transcription_status']?? null);
- }
- }
-
  if ($isSkipped && $answerText === '') {
  $answerText = '[Skipped]';
  }
 
- $voiceDuration = max(
- (int) ($validated['voice_duration']?? 0),
- (int) ($validated['voice_recording_duration_seconds']?? 0)
- );
+ $hasVerifiedVoice = $trustedTranscript !== '' && $verifiedVoiceDuration > 0;
+ $voiceDuration = $verifiedVoiceDuration;
+ $metricText = $trustedTranscript !== ''? $trustedTranscript: '';
+ $metricWordCount = $metricText !== ''? TranscriptService::wordCount($metricText): 0;
+ $fillerWords = $metricText !== ''
+ ? (preg_match_all('/\b(um|uh|like|you know|basically|actually|literally|sort of|kind of)\b/i', $metricText) ?: 0)
+ : 0;
+ $wpm = $hasVerifiedVoice
+ ? (int) round(($metricWordCount / max(1, $verifiedVoiceDuration)) * 60)
+ : 0;
+ $pauseCount = 0;
 
+ if (! $voiceUpload && $this->answerHasStoredVoiceRecording($existingAnswer)
+ && ! filter_var($validated['voice_recording_removal_requested']?? false, FILTER_VALIDATE_BOOLEAN)) {
+ $voiceDuration = (int) ($existingAnswer->voice_duration?? 0);
+ $wpm = (int) ($existingAnswer->wpm?? 0);
+ $fillerWords = (int) ($existingAnswer->filler_words_count?? 0);
+ $pauseCount = (int) ($existingAnswer->pause_count?? 0);
+ $voiceStatus = $existingAnswer->voice_recording_transcription_status;
+ }
+
+ $previousAnswerAttributes = $existingAnswer?->getAttributes();
+ try {
  $answer = GameAnswer::updateOrCreate(
  [
  'game_session_id' => $gameSession->id,
@@ -371,25 +491,44 @@ class GameController extends Controller
  'answer_text' => $answerText,
  'is_skipped' => $isSkipped,
  'response_mode' => $responseMode,
- 'elapsed_seconds' => (int) ($validated['elapsed_seconds']?? 0),
- 'wpm' => (int) ($validated['wpm']?? 0),
+ 'elapsed_seconds' => $this->serverElapsedSeconds($gameSession),
+ 'wpm' => $wpm,
  'voice_duration' => $voiceDuration,
- 'filler_words_count' => (int) ($validated['filler_words_count']?? 0),
- 'pause_count' => (int) ($validated['pause_count']?? 0),
- 'confidence_score' => (int) ($validated['confidence_score']?? 0),
- 'eye_contact_score' => (int) ($validated['eye_contact_score']?? 0),
- 'posture_score' => (int) ($validated['posture_score']?? 0),
+ 'filler_words_count' => $fillerWords,
+ 'pause_count' => $pauseCount,
+ 'confidence_score' => 0,
+ 'eye_contact_score' => 0,
+ 'posture_score' => 0,
+ 'voice_recording_transcription_status' => $voiceStatus,
  ]
  );
 
+ if ($voiceUpload && $this->hasSubmittedVoiceRecording($validated)) {
+ $validated['voice_recording_transcription_status'] = $voiceStatus;
  $this->storeSubmittedVoiceRecording($answer, $gameSession, $questionIndex, $validated);
+ } elseif (filter_var($validated['voice_recording_removal_requested']?? false, FILTER_VALIDATE_BOOLEAN)) {
+ $this->clearStoredVoiceRecording($answer);
+ }
+ } catch (\Throwable $error) {
+ if ($previousAnswerAttributes) {
+ $answer->forceFill($previousAnswerAttributes)->save();
+ } elseif (isset($answer) && $answer->exists) {
+ $answer->delete();
+ }
+
+ throw $error;
+ }
 
  $gameSession->update([
  'notes' => $validated['notes']?? $gameSession->notes,
  'current_question_index' => $questionIndex,
  ]);
 
- return response()->json(['success' => true]);
+ return response()->json([
+ 'success' => true,
+ 'voice_transcription_verified' => $trustedTranscript !== '',
+ 'voice_recording_transcription_status' => $voiceStatus,
+ ]);
  }
 
  public function transcribe(Request $request)
@@ -400,6 +539,7 @@ class GameController extends Controller
  'game_session_id' => 'required|exists:game_sessions,id',
  'question_index' => 'required|integer|min:0',
  'previous_transcript' => 'nullable|string|max:3000',
+ 'final_recording' => 'nullable|boolean',
  'audio' => [
  'required',
  'file',
@@ -411,6 +551,9 @@ class GameController extends Controller
  $gameSession = $this->activeGameSession((int) $validated['game_session_id']);
  if (! $gameSession) {
  return response()->json(['error' => 'No active Learning Game session'], 403);
+ }
+ if ($this->challengeExpired($gameSession)) {
+ return response()->json(['error' => 'This timed challenge has expired.'], 409);
  }
 
  $questions = array_values($gameSession->questions?? []);
@@ -453,12 +596,27 @@ class GameController extends Controller
  return $response;
  }
 
- return response()->json([
+ $cleanTranscript = TranscriptService::cleanLiveSpeech($transcript);
+ $payload = [
  'transcript' => TranscriptService::cleanLiveSpeech($transcript),
  'transcription_source' => $transcriptionSource,
  'transcription_status' => $transcriptionStatus?: 'transcribed',
  'pronunciation_analysis' => $speechAssessment,
- ]);
+ ];
+
+ if (filter_var($validated['final_recording']?? false, FILTER_VALIDATE_BOOLEAN) && $cleanTranscript !== '') {
+ $payload['transcription_proof'] = app(VoiceTranscriptionProofService::class)->issue(
+ Auth::id(),
+ 'game:'.$gameSession->id,
+ 'index:'.$questionIndex,
+ $validated['audio'],
+ $cleanTranscript,
+ $transcriptionSource
+ );
+ $payload['transcription_verified'] = true;
+ }
+
+ return response()->json($payload);
  }
 
  public function interviewerReply(Request $request)
@@ -475,6 +633,9 @@ class GameController extends Controller
  $gameSession = $this->activeGameSession((int) $validated['game_session_id']);
  if (! $gameSession) {
  return response()->json(['error' => 'No active Learning Game session'], 403);
+ }
+ if ($this->challengeExpired($gameSession)) {
+ return response()->json(['error' => 'This timed challenge has expired.'], 409);
  }
 
  $questions = array_values($gameSession->questions?? []);
@@ -541,6 +702,10 @@ class GameController extends Controller
  return response()->json(['error' => 'No active Learning Game session'], 403);
  }
 
+ if ($this->challengeExpired($gameSession)) {
+ return response()->json(['error' => 'This timed challenge has expired.'], 409);
+ }
+
  $currentQuestionIndex = $validated['current_question_index']?? null;
  if ($currentQuestionIndex!== null) {
  $questionCount = count(array_values($gameSession->questions?? []));
@@ -557,6 +722,12 @@ class GameController extends Controller
  if (! empty($validated['session_state'])) {
  $decoded = json_decode($validated['session_state'], true);
  $state = is_array($decoded)? $decoded: null;
+ }
+
+ $existingRevision = (int) data_get($gameSession->session_state, 'revision', 0);
+ $incomingRevision = (int) data_get($state, 'revision', 0);
+ if ($state !== null && $incomingRevision > 0 && $incomingRevision < $existingRevision) {
+ $state = $gameSession->session_state;
  }
 
  $gameSession->update([
@@ -579,6 +750,31 @@ class GameController extends Controller
  'notes' => 'nullable|string|max:10000',
  ]);
 
+ $claimToken = 'finishing:'.Str::uuid();
+ $claimState = DB::transaction(function () use ($validated, $claimToken): string {
+ $locked = GameSession::where('user_id', Auth::id())
+ ->whereKey($validated['game_session_id'])
+ ->lockForUpdate()
+ ->firstOrFail();
+
+ if ($locked->status === 'completed') {
+ return 'completed';
+ }
+
+ if (str_starts_with((string) $locked->status, 'finishing:')
+ && $locked->updated_at?->lt(now()->subMinutes(10))) {
+ $locked->forceFill(['status' => 'in_progress'])->save();
+ }
+
+ if ($locked->status !== 'in_progress') {
+ return 'busy';
+ }
+
+ $locked->forceFill(['status' => $claimToken])->save();
+
+ return 'claimed';
+ }, 3);
+
  $gameSession = GameSession::with(['level', 'answers'])
  ->where('user_id', Auth::id())
  ->findOrFail($validated['game_session_id']);
@@ -595,12 +791,21 @@ class GameController extends Controller
  return $this->completedGameRedirect($gameSession, $gameLevel);
  }
 
- if ($gameSession->status!== 'in_progress') {
+ if ($claimState === 'busy' || ($claimState === 'claimed' && $gameSession->status !== $claimToken)) {
+ return response()->json([
+ 'error' => 'This challenge is already being finalized. Please wait for the current result.',
+ ], 409);
+ }
+
+ if ($gameSession->status!== $claimToken && $gameSession->status !== 'completed') {
  abort(403);
  }
 
+ try {
  $gameSession->update([
- 'duration_seconds' => $validated['duration_seconds']?? $gameSession->duration_seconds,
+ 'duration_seconds' => (int) ($gameSession->time_limit?? 0) > 0
+ ? $this->serverElapsedSeconds($gameSession)
+ : max(0, (int) ($validated['duration_seconds']?? $gameSession->duration_seconds?? 0)),
  'notes' => $validated['notes']?? $gameSession->notes,
  ]);
 
@@ -620,21 +825,27 @@ class GameController extends Controller
  }
 
  $gameSession->load('answers');
- $answersData = $gameSession->answers
- ->sortBy('question_index')
- ->map(fn (GameAnswer $answer): array => [
- 'id' => $answer->id,
- 'question_index' => $answer->question_index,
- 'question' => $answer->question_text,
- 'answer' => $answer->is_skipped? '(Skipped or no answer)': ($answer->answer_text?? ''),
- 'is_skipped' => (bool) $answer->is_skipped,
- 'response_mode' => $answer->response_mode,
- 'elapsed_seconds' => (int) ($answer->elapsed_seconds?? 0),
- 'wpm' => (int) ($answer->wpm?? 0),
- 'voice_duration' => (int) ($answer->voice_duration?? 0),
- 'filler_words_count' => (int) ($answer->filler_words_count?? 0),
- 'pause_count' => (int) ($answer->pause_count?? 0),
- ])
+ $answersByIndex = $gameSession->answers->keyBy('question_index');
+ // Score only the immutable question list captured at session start.  Orphaned
+ // or tampered answer rows must never add extra prompts to the result.
+ $answersData = collect($questions)
+ ->map(function (string $questionText, int $index) use ($answersByIndex): array {
+ $answer = $answersByIndex->get($index);
+
+ return [
+ 'id' => $answer?->id,
+ 'question_index' => $index,
+ 'question' => $questionText,
+ 'answer' => ! $answer || $answer->is_skipped? '(Skipped or no answer)': ($answer->answer_text?? ''),
+ 'is_skipped' => ! $answer || (bool) $answer->is_skipped,
+ 'response_mode' => $answer?->response_mode?? 'hybrid',
+ 'elapsed_seconds' => (int) ($answer?->elapsed_seconds?? 0),
+ 'wpm' => (int) ($answer?->wpm?? 0),
+ 'voice_duration' => (int) ($answer?->voice_duration?? 0),
+ 'filler_words_count' => (int) ($answer?->filler_words_count?? 0),
+ 'pause_count' => (int) ($answer?->pause_count?? 0),
+ ];
+ })
  ->values()
  ->all();
 
@@ -654,8 +865,15 @@ class GameController extends Controller
  ]);
  }
 
- $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
  $gameResultScore = (int) $scoreResult['score'];
+ $xpEarned = 0;
+ $profile = null;
+ DB::transaction(function () use (&$profile, &$gameResultScore, &$scoreResult, &$xpEarned, $gameSession, $gameLevel): void {
+ $profile = Profile::where('user_id', Auth::id())->lockForUpdate()->first();
+ if (! $profile) {
+ $profile = Profile::create(['user_id' => Auth::id()]);
+ }
+
  if ($profile->hasPerk('first_impressions')) {
  $gameResultScore = min(100, $gameResultScore + 5);
  $scoreResult['score'] = $gameResultScore;
@@ -668,7 +886,6 @@ class GameController extends Controller
  }
 
  $xpEarned = $this->applyCompletedGameProgress($gameSession, $gameLevel, $profile, $scoreResult);
-
  $gameSession->update([
  'status' => 'completed',
  'score' => $gameResultScore,
@@ -680,6 +897,7 @@ class GameController extends Controller
  'completed_at' => now(),
  'session_state' => null,
  ]);
+ }, 3);
 
  $this->forgetCompletedGameState($gameSession);
 
@@ -698,6 +916,12 @@ class GameController extends Controller
  );
 
  return $this->completedGameRedirect($gameSession->fresh(['level']), $gameLevel);
+ } catch (\Throwable $error) {
+ GameSession::whereKey($gameSession->id)
+ ->where('status', $claimToken)
+ ->update(['status' => 'in_progress']);
+ throw $error;
+ }
  }
 
  public function voiceRecording(GameAnswer $answer)
@@ -786,6 +1010,9 @@ class GameController extends Controller
  );
 
  if (! is_string($stored) || $stored === '' ||! Storage::disk($disk)->exists($stored)) {
+ if (is_string($stored) && $stored !== '') {
+ Storage::disk($disk)->delete($stored);
+ }
  throw new \RuntimeException('Voice recording could not be stored.');
  }
 
@@ -805,6 +1032,53 @@ class GameController extends Controller
  if ($previousPath!== '' && $previousPath!== $stored && $previousDisk === $disk) {
  Storage::disk($disk)->delete($previousPath);
  }
+ }
+
+ private function clearStoredVoiceRecording(GameAnswer $answer): void
+ {
+ $disk = (string) ($answer->voice_recording_disk?: 'local');
+ $path = trim((string) ($answer->voice_recording_path?: ''));
+ if ($path !== '' && $disk === 'local') {
+ Storage::disk($disk)->delete($path);
+ }
+
+ $answer->forceFill([
+ 'voice_recording_disk' => null,
+ 'voice_recording_path' => null,
+ 'voice_recording_mime_type' => null,
+ 'voice_recording_byte_size' => 0,
+ 'voice_recording_original_name' => null,
+ 'voice_recording_transcription_status' => null,
+ 'voice_recording_uploaded_at' => null,
+ 'voice_duration' => 0,
+ 'wpm' => 0,
+ 'filler_words_count' => 0,
+ 'pause_count' => 0,
+ ])->save();
+ }
+
+ private function serverElapsedSeconds(GameSession $session): int
+ {
+ if (! $session->started_at) {
+ return max(0, (int) ($session->duration_seconds?? 0));
+ }
+
+ $elapsed = max(0, now()->diffInSeconds($session->started_at));
+ $timeLimit = (int) ($session->time_limit?? 0);
+
+ return $timeLimit > 0? min($elapsed, $timeLimit): $elapsed;
+ }
+
+ private function challengeExpired(GameSession $session): bool
+ {
+ $timeLimit = (int) ($session->time_limit?? 0);
+ if ($timeLimit <= 0 || ! $session->started_at) {
+ return false;
+ }
+
+ // A small grace period covers network latency while keeping the deadline
+ // server-authoritative instead of trusting a browser timer.
+ return now()->greaterThan($session->started_at->copy()->addSeconds($timeLimit + 10));
  }
 
  private function voiceRecordingExtensionForUpload(UploadedFile $upload): string
@@ -1181,18 +1455,27 @@ class GameController extends Controller
  if ($profile->hasPerk('xp_boost')) {
  $baseReward = (int) round($baseReward * 1.2);
  }
- $xpEarned = $baseReward;
+ $passed = ($scoreResult['status']?? 'failed') === 'passed';
+ $xpEarned = $passed? $baseReward: 0;
 
- $progress = GameProgress::firstOrCreate(
- ['user_id' => Auth::id(), 'game_level_id' => $gameLevel->id],
- ['status' => 'active', 'best_score' => 0]
- );
+ $progress = GameProgress::where('user_id', Auth::id())
+ ->where('game_level_id', $gameLevel->id)
+ ->lockForUpdate()
+ ->first();
+ if (! $progress) {
+ $progress = GameProgress::create([
+ 'user_id' => Auth::id(),
+ 'game_level_id' => $gameLevel->id,
+ 'status' => 'active',
+ 'best_score' => 0,
+ ]);
+ }
 
  if ((int) $scoreResult['score'] > (int) $progress->best_score) {
  $progress->best_score = (int) $scoreResult['score'];
  }
 
- if ($scoreResult['status'] === 'passed') {
+ if ($passed) {
  $progress->status = 'completed';
 
  $nextLevel = $this->nextChallengeLevelFor($gameLevel);
@@ -1218,6 +1501,12 @@ class GameController extends Controller
  }
  }
  $progress->save();
+
+ if (! $passed) {
+ $progress->save();
+
+ return 0;
+ }
 
  $today = now()->format('Y-m-d');
  if ($profile->last_activity_date!= $today) {

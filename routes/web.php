@@ -203,7 +203,9 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::delete('/coach/conversation/{id}', [UserController::class, 'deleteCoachConversation'])->name('user.coach.delete');
     Route::delete('/coach/conversations', [UserController::class, 'clearCoachConversations'])->name('user.coach.clear');
     Route::get('/learning', [UserController::class, 'learning'])->name('user.learning');
-    Route::post('/learning/position', [UserController::class, 'updateLearningChallengePosition'])->name('user.learning.position');
+    Route::post('/learning/position', [UserController::class, 'updateLearningChallengePosition'])
+        ->middleware('throttle:10,1')
+        ->name('user.learning.position');
     Route::get('/skills', [UserController::class, 'skills'])->name('user.skills');
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');
 
@@ -232,7 +234,9 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/game/level/{id}/start', [\App\Http\Controllers\GameController::class, 'startLevel'])->name('user.game.start');
     Route::get('/game/match', [\App\Http\Controllers\GameController::class, 'arenaSession'])->name('user.game.match');
     Route::post('/game/answer', [\App\Http\Controllers\GameController::class, 'answer'])->name('user.game.answer');
-    Route::post('/game/transcribe', [\App\Http\Controllers\GameController::class, 'transcribe'])->name('user.game.transcribe');
+    Route::post('/game/transcribe', [\App\Http\Controllers\GameController::class, 'transcribe'])
+        ->middleware('throttle:60,1')
+        ->name('user.game.transcribe');
     Route::post('/game/interviewer-reply', [\App\Http\Controllers\GameController::class, 'interviewerReply'])->name('user.game.interviewerReply');
     Route::post('/game/save-state', [\App\Http\Controllers\GameController::class, 'saveState'])->name('user.game.saveState');
     Route::post('/game/finish', [\App\Http\Controllers\GameController::class, 'finish'])->name('user.game.finish');
