@@ -1537,7 +1537,7 @@ class UserSideHardeningTest extends TestCase
  ->assertOk();
 
  foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=65']), [
- 'css/mobile/interview/session.css?v=70',
+ 'css/mobile/interview/session.css?v=71',
  ]) as $markup) {
  $mobileResponse->assertSee($markup, false);
  }
@@ -3861,7 +3861,8 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('Finish Challenge')
  ->assertSee('let currentQIdx = 1;', false)
  ->assertSee('Saved answer about a customer escalation result.')
- ->assertSee('css/desktop/interview/session.css?v=65', false)
+ ->assertSee('css/desktop/user/game-session-base.css?v=65', false)
+ ->assertDontSee('css/desktop/interview/session.css?v=65', false)
  ->assertSee('id="sec-interview-session"', false)
  ->assertSee('data-game-session-root', false)
  ->assertSee('learning-game-interview-layout', false)
@@ -3965,7 +3966,8 @@ class UserSideHardeningTest extends TestCase
  ->get(route('user.game.match'))
  ->assertOk()
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
- ->assertSee('css/mobile/interview/session.css?v=70', false)
+ ->assertSee('css/mobile/user/game-session-base.css?v=71', false)
+ ->assertDontSee('css/mobile/interview/session.css?v=71', false)
  ->assertSee('css/mobile/user/game-session.css?v=2026101501', false)
  ->assertSee('data-page-style="user-game-session"', false)
  ->assertSee('id="sec-interview-session"', false)

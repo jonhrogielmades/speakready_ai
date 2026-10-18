@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Challenge')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=70') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-base.css?v=71') }}" data-page-style="user-game-session-base">
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026101501') }}" data-page-style="user-game-session">
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-2.css?v=2') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">

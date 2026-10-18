@@ -1750,7 +1750,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=70', false)
+            ->assertSee('css/mobile/interview/session.css?v=71', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)
@@ -1853,6 +1853,10 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('@keyframes avatarSideWavePulse', $mobileSessionCss);
         $this->assertStringContainsString('transform: translateY(var(--interview-avatar-lift)) !important;', $mobileSessionCss);
         $this->assertStringContainsString('inset: auto 16px 22px 16px !important;', $mobileSessionCss);
+        $this->assertStringContainsString('--mobile-interview-stage-height: clamp(390px, calc(var(--sr-visual-vh, 100dvh) * 0.55), 520px);', $mobileSessionCss);
+        $this->assertStringContainsString('html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] > .response-panel', $mobileSessionCss);
+        $this->assertStringContainsString('flex: 1 1 auto !important;', $mobileSessionCss);
+        $this->assertStringContainsString('html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) .response-panel .answer-transcript-stage #answerTextarea', $mobileSessionCss);
 
         $session->update([
             'accommodation_profile' => ['camera_detection' => true],
