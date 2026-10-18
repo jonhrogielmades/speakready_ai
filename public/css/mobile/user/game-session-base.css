@@ -5893,7 +5893,7 @@ html body #finishTransitionOverlay .finish-view-review-button.is-ready:not(:disa
    the response card the remaining viewport space. */
 @media (max-width: 767.98px) {
     html body #sec-interview-session:not([data-game-session-root]) {
-        --mobile-interview-stage-height: clamp(390px, calc(var(--sr-visual-vh, 100dvh) * 0.55), 520px);
+        --mobile-interview-stage-height: clamp(390px, 55svh, 520px);
     }
 
     html body #sec-interview-session:not([data-game-session-root]) .ai-avatar-panel {

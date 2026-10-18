@@ -1750,7 +1750,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=71', false)
+            ->assertSee('css/mobile/interview/session.css?v=72', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)
@@ -1768,8 +1768,8 @@ class MobileLayoutTest extends TestCase
             ->assertSee("classList.remove('is-speaking')", false)
             ->assertSee('enterMobileFullscreen({ requestBrowser: false });', false)
             ->assertSee('enterMobileFullscreen();', false)
-            ->assertSee('function syncMobileAnswerFocusState(options = {})', false)
-            ->assertSee("document.body.classList.toggle('mobile-answer-focused', answerFocused);", false)
+            ->assertSee('function syncMobileAnswerFocusState()', false)
+            ->assertSee("document.body.classList.remove('mobile-answer-focused', 'mobile-answer-keyboard-open');", false)
             ->assertSee('bindMobileAnswerViewportListeners(answerTextarea);', false)
             ->assertSee('function handleInterviewEscapeKey(event)', false)
             ->assertSee('exitMobileFullscreen();', false)
@@ -1841,6 +1841,8 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('white-space: normal !important;', $mobileSessionCss);
         $this->assertStringContainsString('--interview-avatar-lift: clamp(-34px, -4vh, -22px);', $mobileSessionCss);
         $this->assertStringContainsString('height: clamp(390px, calc(var(--sr-visual-vh, 100dvh) * 0.55), 520px) !important;', $mobileSessionCss);
+        $this->assertStringContainsString('--mobile-interview-stage-height: clamp(390px, 55svh, 520px);', $mobileSessionCss);
+        $this->assertStringNotContainsString('panel?.scrollIntoView({', $response->getContent());
         $this->assertStringContainsString('width: clamp(152px, 42vw, 180px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('--spectrum-radius: clamp(88px, 23vw, 96px);', $mobileSessionCss);
         $this->assertStringContainsString('width: clamp(86px, 23vw, 112px) !important;', $mobileSessionCss);
@@ -1853,7 +1855,7 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('@keyframes avatarSideWavePulse', $mobileSessionCss);
         $this->assertStringContainsString('transform: translateY(var(--interview-avatar-lift)) !important;', $mobileSessionCss);
         $this->assertStringContainsString('inset: auto 16px 22px 16px !important;', $mobileSessionCss);
-        $this->assertStringContainsString('--mobile-interview-stage-height: clamp(390px, calc(var(--sr-visual-vh, 100dvh) * 0.55), 520px);', $mobileSessionCss);
+        $this->assertStringContainsString('--mobile-interview-stage-height: clamp(390px, 55svh, 520px);', $mobileSessionCss);
         $this->assertStringContainsString('html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] > .response-panel', $mobileSessionCss);
         $this->assertStringContainsString('flex: 1 1 auto !important;', $mobileSessionCss);
         $this->assertStringContainsString('html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) .response-panel .answer-transcript-stage #answerTextarea', $mobileSessionCss);

@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=71') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=72') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -3535,12 +3535,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 }
 
  let mobileAnswerFocusFrame = null;
- let mobileAnswerFocusScrollTimer = null;
  let mobileAnswerViewportListenersBound = false;
-
- function isMobileAnswerViewport() {
- return document.body.classList.contains('user-mobile-shell') || window.matchMedia('(max-width: 767.98px)').matches;
- }
 
  function currentVisualViewportHeight() {
  const visualViewport = window.visualViewport;
@@ -3550,49 +3545,37 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return Math.max(0, height);
  }
 
- function syncMobileAnswerFocusState(options = {}) {
- const textarea = answerTextareaElement();
- const answerFocused = Boolean(textarea && document.activeElement === textarea && isMobileAnswerViewport());
+ function syncMobileAnswerFocusState() {
  const visualHeight = currentVisualViewportHeight();
 
  if (visualHeight > 0) {
  document.documentElement.style.setProperty('--sr-answer-viewport-h', `${visualHeight.toFixed(2)}px`);
  }
 
- document.body.classList.toggle('mobile-answer-focused', answerFocused);
- document.body.classList.toggle('mobile-answer-keyboard-open', answerFocused);
-
- if (answerFocused && options.scroll!== false) {
- clearTimeout(mobileAnswerFocusScrollTimer);
- mobileAnswerFocusScrollTimer = setTimeout(() => {
- const panel = document.querySelector('#sec-interview-session .response-panel');
- panel?.scrollIntoView({
- block: 'start',
- inline: 'nearest',
- behavior: options.instant? 'auto': 'smooth'
- });
- }, Math.max(0, Number(options.delayMs?? 90)));
- }
+ // Textarea focus must not switch the interview into a different layout.
+ // The browser handles keyboard visibility and native caret scrolling; forcing
+ // a response-panel scroll here changes the stage/card composition on mobile.
+ document.body.classList.remove('mobile-answer-focused', 'mobile-answer-keyboard-open');
  }
 
- function queueMobileAnswerFocusSync(options = {}) {
+ function queueMobileAnswerFocusSync() {
  if (mobileAnswerFocusFrame!== null) {
  window.cancelAnimationFrame(mobileAnswerFocusFrame);
  }
 
  mobileAnswerFocusFrame = window.requestAnimationFrame(() => {
  mobileAnswerFocusFrame = null;
- syncMobileAnswerFocusState(options);
+ syncMobileAnswerFocusState();
  });
  }
 
  function handleMobileAnswerFocus() {
- queueMobileAnswerFocusSync({ delayMs: 80 });
- setTimeout(() => queueMobileAnswerFocusSync({ delayMs: 0 }), 260);
+ queueMobileAnswerFocusSync();
+ setTimeout(() => queueMobileAnswerFocusSync(), 260);
  }
 
  function handleMobileAnswerBlur() {
- setTimeout(() => queueMobileAnswerFocusSync({ scroll: false }), 180);
+ setTimeout(() => queueMobileAnswerFocusSync(), 180);
  }
 
  function bindMobileAnswerViewportListeners(answerTextarea) {
@@ -3601,11 +3584,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  answerTextarea.addEventListener('focus', handleMobileAnswerFocus);
  answerTextarea.addEventListener('blur', handleMobileAnswerBlur);
- window.addEventListener('resize', () => queueMobileAnswerFocusSync({ delayMs: 60 }), { passive: true });
- window.addEventListener('orientationchange', () => queueMobileAnswerFocusSync({ delayMs: 180 }), { passive: true });
+ window.addEventListener('resize', () => queueMobileAnswerFocusSync(), { passive: true });
+ window.addEventListener('orientationchange', () => queueMobileAnswerFocusSync(), { passive: true });
  if (window.visualViewport) {
- window.visualViewport.addEventListener('resize', () => queueMobileAnswerFocusSync({ delayMs: 60 }), { passive: true });
- window.visualViewport.addEventListener('scroll', () => queueMobileAnswerFocusSync({ delayMs: 60 }), { passive: true });
+ window.visualViewport.addEventListener('resize', () => queueMobileAnswerFocusSync(), { passive: true });
+ window.visualViewport.addEventListener('scroll', () => queueMobileAnswerFocusSync(), { passive: true });
  }
  }
 
@@ -3657,7 +3640,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function focusAnswerTextarea() {
  answerTextareaElement()?.focus();
- queueMobileAnswerFocusSync({ delayMs: 80 });
+ queueMobileAnswerFocusSync();
  }
 
  function hybridModeHasTranscriptText() {
@@ -4888,7 +4871,7 @@ return fallbackText;
 
  document.body.classList.add('mobile-interview-fullscreen');
  window.SpeakReadyViewport?.refresh?.();
- queueMobileAnswerFocusSync({ scroll: false });
+ queueMobileAnswerFocusSync();
  updateMobileFullscreenToggle();
 
  if (options.requestBrowser === false) return;
