@@ -11794,3 +11794,192 @@ body.dm #sec-progress-tracking #learning-progress .learning-pager-btn:hover:not(
     background: rgba(139, 92, 246, 0.24) !important;
     border-color: rgba(196, 181, 253, 0.42) !important;
 }
+
+/* Desktop empty-data layout: keep every panel balanced when no records exist. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking {
+        --progress-empty-border: rgba(148, 163, 184, 0.28);
+        --progress-empty-surface: #f8fafc;
+        --progress-empty-text: #334155;
+    }
+
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking {
+        --progress-empty-border: rgba(148, 163, 184, 0.22);
+        --progress-empty-surface: rgba(30, 41, 59, 0.46);
+        --progress-empty-text: #cbd5e1;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid {
+        align-items: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #skill-tracker),
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row.g-4.progress-overview-grid > :is(#readiness-trend, #job-interview-performance) {
+        display: flex !important;
+        align-self: stretch !important;
+        min-width: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .learning-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker .progress-chart-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #job-interview-performance .job-performance-card {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .skill-empty-state,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker .skill-empty-state {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        max-width: none !important;
+        min-height: 0 !important;
+        height: auto !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 22px 18px !important;
+        border: 1px solid var(--progress-empty-border) !important;
+        border-radius: 10px !important;
+        background: var(--progress-empty-surface) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#learning-progress, #skill-tracker) .skill-empty-state > div {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#learning-progress, #skill-tracker) .skill-empty-icon {
+        display: grid !important;
+        place-items: center !important;
+        width: 52px !important;
+        height: 52px !important;
+        min-width: 52px !important;
+        margin: 0 !important;
+        color: #64748b !important;
+        font-size: 2.35rem !important;
+        opacity: 0.92 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(#learning-progress, #skill-tracker) .skill-empty-text {
+        max-width: 330px !important;
+        margin: 0 !important;
+        color: var(--progress-empty-text) !important;
+        font-size: 0.74rem !important;
+        line-height: 1.35 !important;
+        font-weight: 700 !important;
+        text-align: center !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-frame {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-empty {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+        min-height: 250px !important;
+        box-sizing: border-box !important;
+        padding: 24px !important;
+        border: 1px dashed rgba(37, 99, 235, 0.28) !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-empty i {
+        margin: 0 0 4px !important;
+        font-size: 1.65rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-empty h6,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-empty p {
+        margin: 0 !important;
+        text-align: center !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #job-interview-performance .progress-category-empty {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 24px !important;
+        border: 1px solid var(--progress-empty-border) !important;
+        border-radius: 10px !important;
+        background: var(--progress-empty-surface) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #job-interview-performance .progress-category-empty > div {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #job-interview-performance .progress-category-empty .skill-empty-icon {
+        width: 64px !important;
+        height: 64px !important;
+        margin: 0 !important;
+        font-size: 3rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #job-interview-performance .progress-category-empty .skill-empty-text {
+        max-width: 310px !important;
+        margin: 0 !important;
+        font-size: 0.74rem !important;
+        line-height: 1.35 !important;
+        text-align: center !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-list {
+        display: block !important;
+        width: 100% !important;
+        min-height: 148px !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-list > .skill-empty-state {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        max-width: none !important;
+        min-height: 148px !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 22px !important;
+        border: 1px solid var(--progress-empty-border) !important;
+        border-radius: 10px !important;
+        background: var(--progress-empty-surface) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-list > .skill-empty-state .skill-empty-text {
+        max-width: 360px !important;
+        margin: 0 !important;
+        font-size: 0.74rem !important;
+        line-height: 1.35 !important;
+        text-align: center !important;
+    }
+}
