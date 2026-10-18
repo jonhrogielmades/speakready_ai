@@ -188,6 +188,9 @@
         <!-- Quizzes Tab -->
         @if($module->quizzes->count() > 0)
         <div class="tab-pane fade" id="quizzes" role="tabpanel" aria-labelledby="quizzes-tab">
+            <form action="{{ route('user.modules.progress', $module->id) }}" method="POST" data-module-progress-form>
+                @csrf
+                <input type="hidden" name="milestone" value="quiz_reviewed">
             <div class="row">
                 @foreach($module->quizzes as $quiz)
                     <div class="col-12 col-md-6 mb-3">
@@ -198,29 +201,32 @@
                                 <div class="quiz-question-box">
                                     <div style="color:var(--tx);font-weight:800;font-size:0.92rem;">{{ $loop->iteration }}. {{ $question->question_text }}</div>
                                     @if(is_array($question->options) && count($question->options) > 0)
-                                        <div class="quiz-options">
+                                        <div class="quiz-options" role="radiogroup" aria-label="Question {{ $question->id }} options">
                                             @foreach($question->options as $option)
-                                                <div class="quiz-option">{{ $option }}</div>
+                                                <label class="quiz-option">
+                                                    <input type="radio" name="quiz_answers[{{ $question->id }}]" value="{{ (string) $option }}" required>
+                                                    <span>{{ $option }}</span>
+                                                </label>
                                             @endforeach
                                         </div>
+                                    @else
+                                        <input type="text" name="quiz_answers[{{ $question->id }}]" class="form-control mt-2" maxlength="1000" required aria-label="Answer for question {{ $question->id }}" placeholder="Type your answer">
                                     @endif
                                 </div>
                             @empty
                                 <div class="quiz-question-box" style="color:var(--tx3);">No quiz questions have been added yet.</div>
                             @endforelse
-                            @if($currentProgress >= 25)
-                                <form action="{{ route('user.modules.progress', $module->id) }}" method="POST" class="mt-3" data-module-progress-form>
-                                    @csrf
-                                    <input type="hidden" name="milestone" value="quiz_reviewed">
-                                    <button type="submit" class="btn w-100" style="background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.2); font-weight:600; border-radius:8px;">Save Quiz Review Progress</button>
-                                </form>
-                            @else
-                                <p class="mt-3 mb-0" style="color:var(--tx3);">Mark the module as started before saving quiz review progress.</p>
-                            @endif
                         </div>
                     </div>
                 @endforeach
             </div>
+            @if($currentProgress >= 25)
+                <button type="submit" class="btn w-100 mt-3" style="background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.2); font-weight:600; border-radius:8px;">Submit Quiz Review</button>
+                <p class="mt-2 mb-0" style="color:var(--tx3);">Your answers are scored on the server and cannot be changed by the browser.</p>
+            @else
+                <p class="mt-3 mb-0" style="color:var(--tx3);">Mark the module as started before saving quiz review progress.</p>
+            @endif
+            </form>
         </div>
         @endif
 

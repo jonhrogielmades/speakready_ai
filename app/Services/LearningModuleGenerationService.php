@@ -8,6 +8,7 @@ use App\Support\LearningModuleSchema;
 use App\Support\ModuleChapterHtml;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -59,14 +60,6 @@ class LearningModuleGenerationService
 
  public function ensureAiModulesForPosition(string $position): array
  {
- // Keep web requests bounded without overriding the unlimited execution time
- // used by CLI workers, maintenance commands, and the test runner.
- if (! in_array(PHP_SAPI, ['cli', 'phpdbg'], true)) {
- @set_time_limit(300);
- }
-
- LearningModuleSchema::ensure();
-
  $position = app(ChallengePositionService::class)->clean($position);
  if ($position === '') {
  return [
@@ -75,6 +68,36 @@ class LearningModuleGenerationService
  'used_ai' => false,
  ];
  }
+
+ // Generation writes several related records and can be triggered by more
+ // than one tab/device. Serialize per normalized position so concurrent
+ // requests cannot create duplicate module sets or race retirement.
+ $lock = Cache::lock('learning-modules:generate:'.sha1(Str::lower($position)), 300);
+
+ try {
+ if (! $lock->get()) {
+ return [
+ 'modules' => $this->publishedPositionModules($position),
+ 'created_count' => 0,
+ 'used_ai' => false,
+ ];
+ }
+
+ return $this->ensureAiModulesForPositionLocked($position);
+ } finally {
+ $lock->release();
+ }
+ }
+
+ private function ensureAiModulesForPositionLocked(string $position): array
+ {
+ // Keep web requests bounded without overriding the unlimited execution time
+ // used by CLI workers, maintenance commands, and the test runner.
+ if (! in_array(PHP_SAPI, ['cli', 'phpdbg'], true)) {
+ @set_time_limit(300);
+ }
+
+ LearningModuleSchema::ensure();
 
  $this->retireExtraGeneratedModules($position);
  $existingGeneratedModules = $this->publishedGeneratedPositionModules($position);

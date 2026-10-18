@@ -226,8 +226,12 @@ Route::middleware(['auth', 'user'])->group(function () {
 
     // User Learning Modules
     Route::get('/modules', [UserController::class, 'modules'])->name('user.modules.index');
-    Route::post('/modules/position', [UserController::class, 'updateLearningModulePosition'])->name('user.modules.position');
-    Route::post('/modules/{id}/progress', [UserController::class, 'updateModuleProgress'])->name('user.modules.progress');
+    Route::post('/modules/position', [UserController::class, 'updateLearningModulePosition'])
+        ->middleware('throttle:10,1')
+        ->name('user.modules.position');
+    Route::post('/modules/{id}/progress', [UserController::class, 'updateModuleProgress'])
+        ->middleware('throttle:30,1')
+        ->name('user.modules.progress');
     Route::get('/modules/{id}', [UserController::class, 'moduleShow'])->name('user.modules.show');
 
     // Arena Gamification Routes

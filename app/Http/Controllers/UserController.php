@@ -4535,6 +4535,23 @@ class UserController extends Controller
  ->withInput();
  }
 
+ // Module generation is an expensive, persistent operation. Only generate
+ // for a known interview position (or a position that already has saved
+ // admin content); this prevents arbitrary input from creating unbounded
+ // role/module records while preserving existing custom admin modules.
+ $knownPositions = collect($this->modulePositionOptions())
+ ->map(fn (string $option): string => Str::lower(Str::squish($option)))
+ ->filter()
+ ->all();
+ $positionKey = Str::lower(Str::squish($position));
+ if ($knownPositions === []
+  || (! in_array($positionKey, $knownPositions, true)
+  && ! $this->hasPublishedModulesForPosition($position))) {
+ return back()
+ ->withErrors(['target_position' => 'Please choose a supported interview position.'])
+ ->withInput();
+ }
+
  $request->session()->put('learning_module_position', $position);
  $request->session()->put('learning_challenge_position', $position);
 
@@ -4588,6 +4605,13 @@ class UserController extends Controller
 
  private function ensureFastRoleModuleTopUp(string $position, int $targetCount = 6): int
  {
+ $lock = Cache::lock('learning-modules:topup:'.sha1(Str::lower($position)), 300);
+
+ if (! $lock->get()) {
+ return 0;
+ }
+
+ try {
  $normalizedPosition = Str::of($position)->lower()->toString();
  $publishedCount = LearningModule::where('status', 'published')
  ->whereRaw('LOWER(career_path) =?', [$normalizedPosition])
@@ -4641,6 +4665,9 @@ class UserController extends Controller
  });
 
  return 1;
+ } finally {
+ $lock->release();
+ }
  }
 
  public function moduleShow($id)
@@ -4681,7 +4708,9 @@ class UserController extends Controller
 
  LearningModuleSchema::ensure();
 
- $module = LearningModule::where('status', 'published')->findOrFail($id);
+ $module = LearningModule::with(['quizzes.questions'])
+ ->where('status', 'published')
+ ->findOrFail($id);
 
  $validated = $request->validate([
  'milestone' => [
@@ -4699,6 +4728,8 @@ class UserController extends Controller
  ],
  'quiz_score' => ['prohibited'],
  'learning_hours' => ['prohibited'],
+ 'quiz_answers' => ['nullable', 'array', 'max:200'],
+ 'quiz_answers.*' => ['nullable', 'string', 'max:1000'],
  ]);
 
  $milestone = $validated['milestone']?? array_search(
@@ -4707,12 +4738,11 @@ class UserController extends Controller
  true
  );
 
- $progress = LearningProgress::firstOrNew([
- 'user_id' => Auth::id(),
- 'learning_module_id' => $module->id,
- ]);
- $previousPercentage = max(0, min(100, (int) ($progress->progress_percentage?? 0)));
- $hasQuizzes = $module->quizzes()->exists();
+ $quizzes = $module->quizzes;
+ $quizQuestions = $quizzes->flatMap(fn ($quiz) => $quiz->questions)->values();
+ $hasQuizzes = $quizzes->isNotEmpty();
+ $quizScore = null;
+ $quizAnswers = $validated['quiz_answers']?? [];
 
  if ($milestone === 'quiz_reviewed' && ! $hasQuizzes) {
  return back()->withErrors([
@@ -4720,28 +4750,99 @@ class UserController extends Controller
  ]);
  }
 
- if ($milestone === 'quiz_reviewed' && $previousPercentage < self::MODULE_PROGRESS_MILESTONES['started']) {
+ // A quiz review is only trusted when every published question is answered.
+ // The score is calculated from the stored answer key; the browser never
+ // supplies a score that can be written directly to learning_progress.
+ if ($milestone === 'quiz_reviewed' && $quizQuestions->isNotEmpty()) {
+ $expectedQuestionIds = $quizQuestions
+ ->map(fn ($question): string => (string) $question->id)
+ ->all();
+ $suppliedQuestionIds = array_map('strval', array_keys($quizAnswers));
+ $missingQuestionIds = array_diff($expectedQuestionIds, $suppliedQuestionIds);
+ $unknownQuestionIds = array_diff($suppliedQuestionIds, $expectedQuestionIds);
+ $hasBlankAnswer = collect($quizAnswers)->contains(
+ fn ($answer): bool => trim((string) $answer) === ''
+ );
+
+ if ($missingQuestionIds !== [] || $unknownQuestionIds !== [] || $hasBlankAnswer) {
  return back()->withErrors([
- 'milestone' => 'Mark the module as started before saving quiz review progress.',
+ 'quiz_answers' => 'Answer every quiz question before saving quiz review progress.',
  ]);
+ }
+
+ $quizScore = $this->scoreModuleQuizAnswers($quizQuestions, $quizAnswers);
+ }
+
+ $failureMessage = null;
+ $progress = DB::transaction(function () use (
+ $module,
+ $milestone,
+ $hasQuizzes,
+ $quizQuestions,
+ $quizScore,
+ &$failureMessage
+ ): ?LearningProgress {
+ $progress = LearningProgress::where('user_id', Auth::id())
+ ->where('learning_module_id', $module->id)
+ ->lockForUpdate()
+ ->first();
+ $previousPercentage = max(0, min(100, (int) ($progress->progress_percentage?? 0)));
+
+ if ($milestone === 'quiz_reviewed' && $previousPercentage < self::MODULE_PROGRESS_MILESTONES['started']) {
+ $failureMessage = 'Mark the module as started before saving quiz review progress.';
+
+ return null;
  }
 
  $completionRequirement = $hasQuizzes
  ? self::MODULE_PROGRESS_MILESTONES['quiz_reviewed']
  : self::MODULE_PROGRESS_MILESTONES['started'];
  if ($milestone === 'completed' && $previousPercentage < $completionRequirement) {
- return back()->withErrors([
- 'milestone' => $hasQuizzes
+ $failureMessage = $hasQuizzes
  ? 'Review the module quiz before marking the module as completed.'
- : 'Mark the module as started before marking it as completed.',
+ : 'Mark the module as started before marking the module as completed.';
+
+ return null;
+ }
+
+ if ($milestone === 'completed' && $quizQuestions->isNotEmpty()) {
+ $passingScore = $this->moduleQuizPassingScore($module);
+ $storedQuizScore = $progress?->quiz_score;
+
+ if ($storedQuizScore === null || (int) $storedQuizScore < $passingScore) {
+ $failureMessage = "Pass the module quiz with at least {$passingScore}% before marking the module as completed.";
+
+ return null;
+ }
+ }
+
+ if (! $progress) {
+ $progress = LearningProgress::firstOrCreate([
+ 'user_id' => Auth::id(),
+ 'learning_module_id' => $module->id,
+ ], [
+ 'status' => 'enrolled',
+ 'progress_percentage' => 0,
+ 'learning_hours' => 0,
  ]);
+
+ // Lock the row after firstOrCreate so concurrent retries cannot regress or
+ // duplicate a learner's module trail once the unique key is in place.
+ $progress = LearningProgress::whereKey($progress->getKey())
+ ->lockForUpdate()
+ ->firstOrFail();
+ $previousPercentage = max(0, min(100, (int) ($progress->progress_percentage?? 0)));
  }
 
  $progressPercentage = max($previousPercentage, self::MODULE_PROGRESS_MILESTONES[$milestone]);
- $status = $progressPercentage >= 100? 'completed': ($progressPercentage > 0? 'in_progress': 'enrolled');
-
- $progress->status = $status;
+ $progress->status = $progressPercentage >= 100
+ ? 'completed'
+ : ($progressPercentage > 0 ? 'in_progress' : 'enrolled');
  $progress->progress_percentage = $progressPercentage;
+
+ if ($quizScore !== null) {
+ $progress->quiz_score = max(0, min(100, $quizScore));
+ }
 
  if (! $progress->exists) {
  $progress->learning_hours = 0;
@@ -4749,18 +4850,61 @@ class UserController extends Controller
 
  $progress->save();
 
+ return $progress;
+ });
+
+ if ($failureMessage !== null || ! $progress) {
+ return back()->withErrors(['milestone' => $failureMessage ?? 'Unable to update module progress.']);
+ }
+
  $user = Auth::user();
  ActivityLogger::log(
  $user,
  'learning_module_progress_updated',
- "{$user->name} updated learning progress for {$module->title} to {$progressPercentage}%.",
+ "{$user->name} updated learning progress for {$module->title} to {$progress->progress_percentage}%.",
  $request->ip(),
  false
  );
 
- $message = $status === 'completed'? 'Module marked as completed. Nice work keeping your learning trail honest.': 'Module progress updated.';
+ $message = $progress->status === 'completed'
+ ? 'Module marked as completed. Nice work keeping your learning trail honest.'
+ : 'Module progress updated.';
 
  return redirect()->route('user.modules.show', $module->id)->with('success', $message);
+ }
+
+ private function scoreModuleQuizAnswers($questions, array $answers): int
+ {
+ $correct = 0;
+ $total = $questions->count();
+
+ foreach ($questions as $question) {
+ $questionId = (string) $question->id;
+ $submittedAnswer = $this->normalizeModuleQuizAnswer($answers[$questionId]?? $answers[(int) $question->id]?? '');
+ $correctAnswer = $this->normalizeModuleQuizAnswer($question->correct_answer?? '');
+
+ if ($submittedAnswer !== '' && $submittedAnswer === $correctAnswer) {
+ $correct++;
+ }
+ }
+
+ return $total > 0 ? (int) round(($correct / $total) * 100) : 0;
+ }
+
+ private function moduleQuizPassingScore(LearningModule $module): int
+ {
+ return max(0, min(100, (int) ($module->quizzes
+ ->map(fn ($quiz): int => (int) ($quiz->passing_score?? 70))
+ ->max()?? 70)));
+ }
+
+ private function normalizeModuleQuizAnswer(mixed $answer): string
+ {
+ return trim((string) Str::of((string) $answer)
+ ->ascii()
+ ->lower()
+ ->squish()
+ ->trim(" \\t\\n\\r\\0\\x0B.,!?;:"));
  }
 
  private function escapedModuleSearchPattern(string $search): string
