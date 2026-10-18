@@ -816,7 +816,8 @@ return response()->json([
 
  return response($speech['audio'], 200)
  ->header('Content-Type', $speech['mime_type'])
- ->header('Cache-Control', 'private, no-store, max-age=0');
+ ->header('Cache-Control', 'private, no-store, max-age=0')
+ ->header('X-Content-Type-Options', 'nosniff');
  }
 
  public function transcribe(Request $request)

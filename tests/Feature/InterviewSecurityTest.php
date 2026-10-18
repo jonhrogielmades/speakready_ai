@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\AiProvider;
 use App\Models\Category;
+use App\Models\GameLevel;
+use App\Models\GameSession;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Setting;
@@ -531,6 +533,70 @@ class InterviewSecurityTest extends TestCase
 
         Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'
             && $request['input'] === 'Welcome to your dashboard tutorial.'
+            && $request['voice'] === 'nova');
+    }
+
+    public function test_user_can_request_speech_for_their_active_learning_game(): void
+    {
+        config([
+            'services.ai_tts.enabled' => true,
+            'services.ai_tts.provider' => 'openai',
+            'services.openai.tts_enabled' => true,
+        ]);
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/speech' => Http::response('game-audio', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $category->update(['type' => 'game']);
+        $level = GameLevel::create([
+            'category_id' => $category->id,
+            'level_number' => 1,
+            'title' => 'Speech Challenge',
+            'description' => 'Practice a spoken response.',
+            'mission_text' => 'Tell me about yourself.',
+            'target_position' => 'Developer',
+            'difficulty' => 'beginner',
+            'required_score' => 80,
+            'xp_reward' => 100,
+            'energy_cost' => 1,
+            'is_hidden' => false,
+        ]);
+        $session = GameSession::create([
+            'user_id' => $user->id,
+            'game_level_id' => $level->id,
+            'status' => 'in_progress',
+            'difficulty' => 'beginner',
+            'target_position' => 'Developer',
+            'num_questions' => 1,
+            'response_mode' => 'hybrid',
+            'questions' => [['question_text' => 'Tell me about yourself.']],
+            'started_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.game.speech'), [
+                'game_session_id' => $session->id,
+                'speech_text' => 'Tell me about yourself.',
+            ])
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertSee('game-audio');
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'
+            && $request['input'] === 'Tell me about yourself.'
             && $request['voice'] === 'nova');
     }
 

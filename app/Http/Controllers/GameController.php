@@ -329,6 +329,36 @@ class GameController extends Controller
  return $this->mobileView('user.game-session', compact('gameLevel', 'gameSession', 'isMobile'));
  }
 
+ public function speech(Request $request)
+ {
+ GameSchema::ensure();
+
+ $validated = $request->validate([
+ 'game_session_id' => 'required|exists:game_sessions,id',
+ 'speech_text' => 'required|string|max:1200',
+ ]);
+
+ $gameSession = $this->activeGameSession((int) $validated['game_session_id']);
+ if (! $gameSession) {
+ return response()->json(['error' => 'No active Learning Game session.'], 403);
+ }
+
+ $speechText = trim(preg_replace('/\s+/', ' ', (string) $validated['speech_text'])?? '');
+ if ($speechText === '') {
+ return response()->json(['error' => 'Game speech text is required.'], 422);
+ }
+
+ $speech = AIService::synthesizeSpeech($speechText, $this->currentLanguageConfig());
+ if (! $speech) {
+ return response()->json(['error' => 'AI speech is not available.'], 503);
+ }
+
+ return response($speech['audio'], 200)
+ ->header('Content-Type', $speech['mime_type'])
+ ->header('Cache-Control', 'private, no-store, max-age=0')
+ ->header('X-Content-Type-Options', 'nosniff');
+ }
+
  public function answer(Request $request)
  {
  GameSchema::ensure();

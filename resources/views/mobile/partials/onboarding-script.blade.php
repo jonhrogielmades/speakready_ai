@@ -224,6 +224,7 @@
         const tourProviderVoiceoverPlaybackRate = 1.0;
         let activeTourVoiceoverAudio = null;
         let activeTourVoiceoverUrl = null;
+        let activeTourVoiceoverRequestController = null;
 
         function supportsBrowserTourVoiceover() {
             return 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
@@ -342,6 +343,11 @@
         function stopTourVoiceover() {
             tourVoiceoverToken += 1;
 
+            if (activeTourVoiceoverRequestController) {
+                activeTourVoiceoverRequestController.abort();
+                activeTourVoiceoverRequestController = null;
+            }
+
             if (activeTourVoiceoverAudio) {
                 activeTourVoiceoverAudio.pause();
                 activeTourVoiceoverAudio.removeAttribute('src');
@@ -366,6 +372,9 @@
             formData.append('_token', tourCsrfToken());
             formData.append('speech_text', text);
             formData.append('language', String(getTourSpeechLocale(config) || '').split('-')[0] || 'en');
+            const controller = new AbortController();
+            const timeout = window.setTimeout(() => controller.abort(), 30000);
+            activeTourVoiceoverRequestController = controller;
 
             try {
                 const response = await fetch(tourVoiceoverEndpoint, {
@@ -377,6 +386,7 @@
                         'X-CSRF-TOKEN': tourCsrfToken(),
                     },
                     credentials: 'same-origin',
+                    signal: controller.signal,
                 });
 
                 if (!response.ok || token !== tourVoiceoverToken) return false;
@@ -399,7 +409,8 @@
 
                 audio.addEventListener('error', () => {
                     if (token === tourVoiceoverToken) {
-                        tourVoiceoverToken += 1;
+                        activeTourVoiceoverAudio = null;
+                        speakTourStepWithBrowser(text, token, config);
                     }
                 }, { once: true });
 
@@ -407,8 +418,11 @@
 
                 return true;
             } catch (error) {
-                console.warn('Tutorial provider voiceover failed:', error);
+                if (error?.name !== 'AbortError') console.warn('Tutorial provider voiceover failed:', error);
                 return false;
+            } finally {
+                window.clearTimeout(timeout);
+                if (activeTourVoiceoverRequestController === controller) activeTourVoiceoverRequestController = null;
             }
         }
 

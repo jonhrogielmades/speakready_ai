@@ -238,6 +238,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/game/level/{id}/start', [\App\Http\Controllers\GameController::class, 'startLevel'])->name('user.game.start');
     Route::get('/game/match', [\App\Http\Controllers\GameController::class, 'arenaSession'])->name('user.game.match');
     Route::post('/game/answer', [\App\Http\Controllers\GameController::class, 'answer'])->name('user.game.answer');
+    Route::post('/game/speech', [\App\Http\Controllers\GameController::class, 'speech'])->name('user.game.speech');
     Route::post('/game/transcribe', [\App\Http\Controllers\GameController::class, 'transcribe'])
         ->middleware('throttle:60,1')
         ->name('user.game.transcribe');

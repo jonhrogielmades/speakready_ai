@@ -314,6 +314,11 @@ let voiceRecordingStopPromise = null;
 let voiceTranscriptionPromise = null;
 let recordingStopPromise = null;
 let gameVoicePlaybackObjectUrl = '';
+const serverAiVoiceEnabled = @json(\App\Services\AIService::speechSynthesisAvailable());
+let serverVoiceUnavailable = !serverAiVoiceEnabled;
+let activeQuestionAudio = null;
+let activeSpeechRequestController = null;
+const serverSpeechUrlCache = new Map();
 window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
 let gameCameraMovementBaseline = null;
 let preRecordingText = '';
@@ -480,6 +485,8 @@ let gameMatchFullscreenBusy = false;
  window.addEventListener('pagehide', () => {
  removeGameMatchFullscreenRetry();
  clearGameVoiceSessionPlayback();
+ cancelGameSpeechOutput();
+ clearGameSpeechAudioCache();
  });
  window.enterGameMatchFullscreen = enterGameMatchFullscreen;
  window.exitGameMatchFullscreen = exitGameMatchFullscreen;
@@ -1303,11 +1310,44 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  }
 
  // Initialize preferred voice
- function loadVoices() {
- let voices = window.speechSynthesis.getVoices();
- if (voices.length > 0) {
- preferredVoice = voices.find(v => v.lang === speechLocale && (v.name.includes('Google') || v.name.includes('Premium') || v.name.includes('Natural') || v.name.includes('Siri'))) || voices.find(v => v.lang === speechLocale) || voices.find(v => v.lang.startsWith(speechLanguage)) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+ function gameSpeechLocalePriority() {
+ if (speechLanguage === 'fil' || speechLanguage === 'tl') return ['fil-PH', 'tl-PH', 'fil', 'tl', 'en-PH', 'en-US', 'en'];
+ if (speechLanguage === 'ceb') return ['ceb-PH', 'ceb', 'fil-PH', 'tl-PH', 'fil', 'tl', 'en-PH', 'en-US', 'en'];
+ return [speechLocale, speechLanguage, 'en-PH', 'en-US', 'en'];
  }
+
+ function gameVoiceMatchesLanguage(voice, language) {
+ const voiceLang = String(voice.lang || '').toLowerCase();
+ const target = String(language || '').toLowerCase();
+ return voiceLang === target || voiceLang.startsWith(target + '-') || target.startsWith(voiceLang + '-');
+ }
+
+ function gameVoiceLooksNatural(voice) {
+ return /google|premium|natural|siri|microsoft|enhanced/i.test(voice.name || '');
+ }
+
+ function gameVoiceLooksFemale(voice) {
+ return /female|woman|girl|aria|jenny|natasha|samantha|karen|joanna|salli|kimberly|ivy|emma|amy|nicole|olivia|serena|veena|maria|paulina|monica|marisol|lucia|paloma/i.test(String(voice.name || '').toLowerCase());
+ }
+
+ function gameVoiceLooksMale(voice) {
+ return /male|man|boy|david|mark|george|daniel|alex|fred|tom|bruce|arthur|jorge|diego|carlos|miguel|juan|paul|ryan|liam|brian|guy|aaron|eric|nathan|christopher|jacob|justin|matthew|onyx|echo/i.test(String(voice.name || '').toLowerCase());
+ }
+
+ function loadVoices() {
+ if (!('speechSynthesis' in window)) return;
+ const voices = window.speechSynthesis.getVoices();
+ if (!voices.length) return;
+ preferredVoice = gameSpeechLocalePriority().map(language =>
+ voices.find(v => gameVoiceMatchesLanguage(v, language) && gameVoiceLooksFemale(v) && gameVoiceLooksNatural(v))
+ || voices.find(v => gameVoiceMatchesLanguage(v, language) && gameVoiceLooksFemale(v))
+ || voices.find(v => gameVoiceMatchesLanguage(v, language) && gameVoiceLooksNatural(v) && !gameVoiceLooksMale(v))
+ || voices.find(v => gameVoiceMatchesLanguage(v, language) && !gameVoiceLooksMale(v))
+ ).find(Boolean)
+ || voices.find(v => gameVoiceLooksFemale(v) && gameVoiceLooksNatural(v))
+ || voices.find(v => gameVoiceLooksFemale(v))
+ || voices.find(v => !gameVoiceLooksMale(v))
+ || voices[0];
  }
  if ('speechSynthesis' in window) {
  window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -1566,12 +1606,157 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
 
  function cancelGameSpeechOutput() {
  resolveAnyGameSpeechCompletion();
+ if (activeSpeechRequestController) {
+ activeSpeechRequestController.abort();
+ activeSpeechRequestController = null;
+ }
+ if (activeQuestionAudio) {
+ activeQuestionAudio.pause();
+ activeQuestionAudio.removeAttribute('src');
+ activeQuestionAudio.load();
+ activeQuestionAudio = null;
+ }
  if ('speechSynthesis' in window) {
  window.speechSynthesis.cancel();
  }
  clearGameCaptionInterval();
  clearGameQuestionCaption();
  stopGameSpeakingWave();
+ }
+
+ function clearGameSpeechAudioCache() {
+ serverSpeechUrlCache.forEach(url => URL.revokeObjectURL(url));
+ serverSpeechUrlCache.clear();
+ }
+
+ async function serverGameSpeechUrl(text) {
+ const cleanText = cleanTranscriptText(text);
+ if (!cleanText || serverVoiceUnavailable) return null;
+
+ const cacheKey = cleanText.toLocaleLowerCase(speechLocale);
+ if (serverSpeechUrlCache.has(cacheKey)) return serverSpeechUrlCache.get(cacheKey);
+
+ const formData = new FormData();
+ formData.append('_token', '{{ csrf_token() }}');
+ formData.append('game_session_id', gameSessionId);
+ formData.append('speech_text', cleanText);
+ const controller = new AbortController();
+ const timeout = setTimeout(() => controller.abort(), 30000);
+ activeSpeechRequestController = controller;
+
+ try {
+ const response = await fetch('{{ route("user.game.speech") }}', {
+ method: 'POST',
+ body: formData,
+ credentials: 'same-origin',
+ headers: {
+ 'Accept': 'audio/mpeg',
+ 'X-Requested-With': 'XMLHttpRequest',
+ },
+ signal: controller.signal,
+ });
+
+ if (!response.ok) {
+ if ([400, 403, 422, 503].includes(response.status)) serverVoiceUnavailable = true;
+ return null;
+ }
+
+ const blob = await response.blob();
+ if (!blob || blob.size < 128) return null;
+
+ const url = URL.createObjectURL(blob);
+ serverSpeechUrlCache.set(cacheKey, url);
+ return url;
+ } catch (error) {
+ if (error?.name !== 'AbortError') console.warn('Game server voice unavailable, using device voice.', error);
+ return null;
+ } finally {
+ clearTimeout(timeout);
+ if (activeSpeechRequestController === controller) activeSpeechRequestController = null;
+ }
+ }
+
+ function speakWithDeviceVoice(text, token) {
+ if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance !== 'function') {
+ renderStaticGameQuestionCaption(text);
+ scheduleAutoTranscriptionStart(token);
+ resolveGameSpeechCompletion(token);
+ return;
+ }
+
+ window.speechSynthesis.cancel();
+ const utterance = new SpeechSynthesisUtterance(text);
+ utterance.lang = speechLocale;
+ if (preferredVoice) utterance.voice = preferredVoice;
+ utterance.rate = 0.95;
+ utterance.pitch = 1.0;
+ let speechUi = null;
+
+ utterance.onboundary = function(e) {
+ if(e.name === 'word' || (typeof e.charIndex === 'number' && e.charIndex >= 0)) {
+ if (speechUi) speechUi.markBoundary(e.charIndex);
+ pulseGameSpeechSpectrum(1);
+ }
+ };
+
+ utterance.onstart = function() {
+ if (token!== questionSpeechToken) return;
+ speechUi = startGameSpeakingUi(text, true);
+ };
+
+ utterance.onend = function() {
+ if (token!== questionSpeechToken) return;
+ finishGameSpeakingUi(text, token);
+ };
+
+ utterance.onerror = function() {
+ if (token!== questionSpeechToken) return;
+ finishGameSpeakingUi(text, token);
+ };
+
+ try {
+ window.speechSynthesis.speak(utterance);
+ } catch (error) {
+ console.warn('Device speech failed, showing text caption.', error);
+ renderStaticGameQuestionCaption(text);
+ scheduleAutoTranscriptionStart(token);
+ resolveGameSpeechCompletion(token);
+ }
+ }
+
+ async function speakWithServerVoice(text, token) {
+ if (!window.Audio || !serverAiVoiceEnabled || serverVoiceUnavailable || token!== questionSpeechToken) return false;
+
+ try {
+ const url = await serverGameSpeechUrl(text);
+ if (!url || token!== questionSpeechToken) return false;
+
+ const audio = new Audio(url);
+ audio.preload = 'auto';
+ activeQuestionAudio = audio;
+
+ audio.addEventListener('play', () => {
+ if (token!== questionSpeechToken) return;
+ startGameSpeakingUi(text, false);
+ }, { once: true });
+
+ audio.addEventListener('ended', () => {
+ activeQuestionAudio = null;
+ if (token === questionSpeechToken) finishGameSpeakingUi(text, token);
+ }, { once: true });
+
+ audio.addEventListener('error', () => {
+ activeQuestionAudio = null;
+ if (token === questionSpeechToken) speakWithDeviceVoice(text, token);
+ }, { once: true });
+
+ await audio.play();
+ return true;
+ } catch (error) {
+ console.warn('Game server voice playback failed, using device voice.', error);
+ activeQuestionAudio = null;
+ return false;
+ }
  }
 
  function speakQuestion(text) {
@@ -1590,42 +1775,9 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  stopRecording();
  }
 
- if ('speechSynthesis' in window) {
- let utterance = new SpeechSynthesisUtterance(text);
- utterance.lang = speechLocale;
- if (preferredVoice) utterance.voice = preferredVoice;
- utterance.rate = 0.95;
- utterance.pitch = 1.0;
- let speechUi = null;
-
- utterance.onboundary = function(e) {
- if(e.name === 'word' || (typeof e.charIndex === 'number' && e.charIndex >= 0)) {
- if (speechUi) speechUi.markBoundary(e.charIndex);
- pulseGameSpeechSpectrum(1);
- }
- };
-
- utterance.onstart = function() {
- if (token!== questionSpeechToken) return;
- speechUi = startGameSpeakingUi(text, true);
- };
- 
- utterance.onend = function() {
- if (token!== questionSpeechToken) return;
- finishGameSpeakingUi(text, token);
- };
-
- utterance.onerror = function() {
- if (token!== questionSpeechToken) return;
- finishGameSpeakingUi(text, token);
- };
-
- window.speechSynthesis.speak(utterance);
- } else {
- renderStaticGameQuestionCaption(text);
- scheduleAutoTranscriptionStart(token);
- resolveGameSpeechCompletion(token);
- }
+ speakWithServerVoice(text, token).then(usedServerVoice => {
+ if (!usedServerVoice && token === questionSpeechToken) speakWithDeviceVoice(text, token);
+ });
 
  return completion;
  }

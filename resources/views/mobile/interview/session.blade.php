@@ -4386,6 +4386,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  'Accept': 'audio/mpeg',
  'X-Requested-With': 'XMLHttpRequest',
  },
+ timeoutMs: 30000,
  });
 
  if (!response.ok) {
@@ -4396,7 +4397,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  const blob = await response.blob();
- if (!blob || blob.size === 0) return null;
+ if (!blob || blob.size < 128) return null;
 
  const url = URL.createObjectURL(blob);
  serverSpeechUrlCache.set(cacheKey, url);
@@ -4430,7 +4431,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  audio.addEventListener('error', () => {
  activeQuestionAudio = null;
- finishSpeakingUi(text, token, startTimerAfterSpeech);
+ if (token!== questionSpeechToken || interviewTerminated) return;
+ speakWithDeviceVoice(text, token, startTimerAfterSpeech);
  }, { once: true });
 
  await audio.play();
@@ -4450,7 +4452,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return;
  }
 
- if ('speechSynthesis' in window) {
+ if ('speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function') {
  window.speechSynthesis.cancel();
  let utterance = new SpeechSynthesisUtterance(text);
  utterance.lang = speechLocale;
