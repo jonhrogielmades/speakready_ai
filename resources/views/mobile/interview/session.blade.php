@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=68') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=69') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -208,7 +208,7 @@
  <span id="autoSaveIndicator" class="text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
  </div>
 
- @if($isVoiceResponseMode)
+ @if($isVoiceResponseMode && !$isHybridResponseMode)
  <div id="voiceSessionPanel" class="voice-session-panel" hidden data-state="idle">
  <div class="voice-session-summary">
  <div class="voice-session-title">
@@ -1367,7 +1367,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const panel = document.getElementById('voiceSessionPanel');
  if (!panel) return;
 
- const shouldShow = isVoiceTranscriptionMode();
+ // Hybrid mode records/transcribes into the editable answer field, so it does
+ // not need a second Voice Session card competing for mobile vertical space.
+ const shouldShow = isVoiceTranscriptionMode() && !isHybridTranscriptionMode();
  panel.hidden =!shouldShow;
  if (!shouldShow) {
  updateVoiceSessionActionState(null);

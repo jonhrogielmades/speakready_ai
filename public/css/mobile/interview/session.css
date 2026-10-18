@@ -5710,3 +5710,25 @@ html body #finishTransitionOverlay .finish-view-review-button.is-ready:not(:disa
         border-radius: 999px;
     }
 }
+
+/* Final compact mobile interview layout. Keep the interviewer card bounded and
+   let Hybrid Mode use the editable transcript without a duplicate voice card. */
+@media (max-width: 767.98px) {
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .ai-avatar-panel,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .ai-avatar-panel {
+        height: 280px !important;
+        min-height: 280px !important;
+        max-height: 280px !important;
+    }
+
+    html body #mob-content #sec-interview-session .response-panel.hybrid-response-panel #voiceSessionPanel,
+    html body #sec-interview-session .response-panel.hybrid-response-panel #voiceSessionPanel {
+        display: none !important;
+    }
+
+    html body #mob-content #sec-interview-session .response-panel,
+    html body #sec-interview-session .response-panel {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+}

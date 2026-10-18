@@ -1688,6 +1688,13 @@ class MobileLayoutTest extends TestCase
                         ->assertDontSee('id="responseCountBar"', false)
                         ->assertSee('id="voiceSessionPanel"', false)
                         ->assertSee('<span>Download</span>', false);
+                } elseif ($responseMode === 'hybrid' && $userAgent === $iphoneUserAgent) {
+                    $response->assertSee('id="answerTextarea"', false)
+                        ->assertSee('class="answer-transcript-stage"', false)
+                        ->assertSee('id="responseCountBar"', false)
+                        ->assertSee('Speak your answer, then edit the transcript here if needed...', false)
+                        ->assertDontSee('id="voiceSessionPanel"', false)
+                        ->assertDontSee('<span>Download</span>', false);
                 } else {
                     $response->assertSee('id="answerTextarea"', false)
                         ->assertSee('class="answer-transcript-stage"', false)
@@ -1739,7 +1746,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=68', false)
+            ->assertSee('css/mobile/interview/session.css?v=69', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)
