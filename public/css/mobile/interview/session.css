@@ -5732,3 +5732,158 @@ html body #finishTransitionOverlay .finish-view-review-button.is-ready:not(:disa
         min-height: 0 !important;
     }
 }
+
+/* Keep the normal mobile response flow on the page instead of creating a
+   second scroll container inside the answer panel. Fullscreen and focused
+   answering intentionally keep their viewport-scoped rules above. */
+@media (max-width: 767.98px) {
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .response-panel,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .response-panel {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel #answerForm,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel #answerForm,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .response-panel #answerForm,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .response-panel #answerForm {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        overscroll-behavior: auto !important;
+        padding-right: 0 !important;
+        scrollbar-width: none !important;
+        scrollbar-gutter: auto !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel #answerForm::-webkit-scrollbar,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel #answerForm::-webkit-scrollbar,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .response-panel #answerForm::-webkit-scrollbar,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .response-panel #answerForm::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .answer-transcript-stage,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .answer-transcript-stage,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .answer-transcript-stage,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .answer-transcript-stage {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .answer-transcript-stage #answerTextarea,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .answer-transcript-stage #answerTextarea,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .answer-transcript-stage #answerTextarea,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .answer-transcript-stage #answerTextarea {
+        height: clamp(132px, 24dvh, 168px) !important;
+        min-height: 132px !important;
+        max-height: 168px !important;
+        margin-bottom: 0 !important;
+        padding: 10px 10px 30px !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .answer-transcription-overlay,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .answer-transcription-overlay,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .answer-transcription-overlay,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .answer-transcription-overlay {
+        inset: 8px 8px 34px 8px !important;
+        min-height: 0 !important;
+        padding: 10px !important;
+        gap: 8px !important;
+    }
+
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .response-autosave-row,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session .response-autosave-row,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .response-autosave-row,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session .response-autosave-row {
+        position: relative !important;
+        z-index: 4 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        min-height: 18px !important;
+        margin: 2px 0 0 !important;
+        padding: 0 2px 1px 0 !important;
+        overflow: visible !important;
+        white-space: nowrap !important;
+        line-height: 1.2 !important;
+    }
+}
+
+/* Hybrid mode has no secondary Voice Session card. In the default mobile
+   fullscreen state its transcript can flow naturally without an inner bar. */
+@media (max-width: 767.98px) {
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel.hybrid-response-panel,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session .response-panel.hybrid-response-panel {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel.hybrid-response-panel #answerForm,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session .response-panel.hybrid-response-panel #answerForm {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        overscroll-behavior: auto !important;
+        padding-right: 0 !important;
+        scrollbar-width: none !important;
+        scrollbar-gutter: auto !important;
+    }
+
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel.hybrid-response-panel #answerForm::-webkit-scrollbar,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session .response-panel.hybrid-response-panel #answerForm::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel.hybrid-response-panel .answer-transcript-stage,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session .response-panel.hybrid-response-panel .answer-transcript-stage {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel.hybrid-response-panel .answer-transcript-stage #answerTextarea,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session .response-panel.hybrid-response-panel .answer-transcript-stage #answerTextarea {
+        height: clamp(132px, 24dvh, 168px) !important;
+        min-height: 132px !important;
+        max-height: 168px !important;
+        margin-bottom: 0 !important;
+        padding: 10px 10px 30px !important;
+    }
+
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel.hybrid-response-panel .answer-transcription-overlay,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session .response-panel.hybrid-response-panel .answer-transcription-overlay {
+        inset: 8px 8px 34px 8px !important;
+        min-height: 0 !important;
+        padding: 10px !important;
+        gap: 8px !important;
+    }
+
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session .response-panel.hybrid-response-panel .response-autosave-row,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session .response-panel.hybrid-response-panel .response-autosave-row {
+        position: relative !important;
+        z-index: 4 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        min-height: 18px !important;
+        margin: 2px 0 0 !important;
+        padding: 0 2px 1px 0 !important;
+        overflow: visible !important;
+        white-space: nowrap !important;
+        line-height: 1.2 !important;
+    }
+}

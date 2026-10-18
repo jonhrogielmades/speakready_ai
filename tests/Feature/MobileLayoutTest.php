@@ -1750,7 +1750,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=69', false)
+            ->assertSee('css/mobile/interview/session.css?v=70', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)
@@ -1820,6 +1820,13 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('html body.user-mobile-shell #sec-interview-session .response-panel #answerForm', $mobileSessionCss);
         $this->assertStringContainsString('scrollbar-gutter: stable;', $mobileSessionCss);
         $this->assertStringContainsString('scroll-padding-bottom: 16px;', $mobileSessionCss);
+        $this->assertStringContainsString('max-height: none !important;', $mobileSessionCss);
+        $this->assertStringContainsString('overflow: visible !important;', $mobileSessionCss);
+        $this->assertStringContainsString('height: clamp(132px, 24dvh, 168px) !important;', $mobileSessionCss);
+        $this->assertStringContainsString('scrollbar-width: none !important;', $mobileSessionCss);
+        $this->assertStringContainsString('inset: 8px 8px 34px 8px !important;', $mobileSessionCss);
+        $this->assertStringContainsString('html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session .response-panel.hybrid-response-panel #answerForm', $mobileSessionCss);
+        $this->assertStringContainsString('html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session .response-panel.hybrid-response-panel .response-autosave-row', $mobileSessionCss);
         $this->assertStringNotContainsString('height: clamp(292px, 46dvh, 340px) !important;', $mobileSessionCss);
         $this->assertStringNotContainsString('height: clamp(270px, 44dvh, 318px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('padding: 10px 10px 30px !important;', $mobileSessionCss);

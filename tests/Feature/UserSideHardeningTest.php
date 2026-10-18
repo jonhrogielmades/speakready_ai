@@ -1537,7 +1537,7 @@ class UserSideHardeningTest extends TestCase
  ->assertOk();
 
  foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=65']), [
- 'css/mobile/interview/session.css?v=69',
+ 'css/mobile/interview/session.css?v=70',
  ]) as $markup) {
  $mobileResponse->assertSee($markup, false);
  }
@@ -3965,7 +3965,7 @@ class UserSideHardeningTest extends TestCase
  ->get(route('user.game.match'))
  ->assertOk()
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
- ->assertSee('css/mobile/interview/session.css?v=69', false)
+ ->assertSee('css/mobile/interview/session.css?v=70', false)
  ->assertSee('css/mobile/user/game-session.css?v=2026101501', false)
  ->assertSee('data-page-style="user-game-session"', false)
  ->assertSee('id="sec-interview-session"', false)
