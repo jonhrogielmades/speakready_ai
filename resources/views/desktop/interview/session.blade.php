@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=65') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=66') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -3465,13 +3465,57 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return document.getElementById('answerTextarea');
  }
 
+ function answerTextareaCaptureLocked() {
+ return isHybridTranscriptionMode() && Boolean(
+ recordingTransitionBusy()
+ || recordingPausePromise
+ || recordingStopPromise
+ || isRecording
+ || isRecordingPaused
+ || voiceSessionRecorder
+ || voiceSessionStopPromise
+ );
+ }
+
+ function setAnswerTextareaRecordingLock(captureLocked = false) {
+ const textarea = answerTextareaElement();
+ if (!textarea) return;
+
+ const voiceOnlyLocked = isVoiceOnlyMode();
+ const hybridLocked = isHybridTranscriptionMode() && Boolean(captureLocked);
+ const locked = voiceOnlyLocked || hybridLocked;
+
+ if (locked && textarea.dataset.answerEditTabindexStored !== 'true') {
+ textarea.dataset.answerEditTabindex = textarea.getAttribute('tabindex') ?? '';
+ textarea.dataset.answerEditTabindexStored = 'true';
+ }
+
+ textarea.readOnly = locked;
+ textarea.setAttribute('aria-readonly', String(locked));
+ textarea.classList.toggle('voice-only-answer-lock', voiceOnlyLocked);
+ textarea.classList.toggle('hybrid-transcription-lock', hybridLocked);
+ textarea.classList.toggle('answer-capture-locked', locked);
+
+ if (locked) {
+ textarea.tabIndex = -1;
+ } else if (textarea.dataset.answerEditTabindexStored === 'true') {
+ const previousTabindex = textarea.dataset.answerEditTabindex;
+ if (previousTabindex === '') {
+ textarea.removeAttribute('tabindex');
+ } else {
+ textarea.setAttribute('tabindex', previousTabindex);
+ }
+ delete textarea.dataset.answerEditTabindex;
+ delete textarea.dataset.answerEditTabindexStored;
+ }
+ }
+
  function updateAnswerTranscriptionOverlay() {
  const textarea = answerTextareaElement();
  const stage = document.querySelector('.answer-transcript-stage');
  const overlay = document.getElementById('answerTranscriptionOverlay');
  const hasText = textarea? String(textarea.value || '').trim() !== '': String(answersData[currentQIdx]?.text || '').trim() !== '';
- const transcriptCaptureLocked = isHybridTranscriptionMode()
- && Boolean(recordingStartPromise || recordingPausePromise || isRecording || isRecordingPaused);
+ const transcriptCaptureLocked = answerTextareaCaptureLocked();
  const shouldShow = isHybridTranscriptionMode()
  && !isRecordingPaused
  && Boolean(isRecording || recordingStartPromise);
@@ -3482,9 +3526,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  if (overlay) overlay.hidden =!shouldShow;
  if (textarea) {
- textarea.readOnly = isVoiceOnlyMode() || transcriptCaptureLocked;
- textarea.setAttribute('aria-readonly', String(textarea.readOnly));
- textarea.classList.toggle('hybrid-transcription-lock', transcriptCaptureLocked);
+ setAnswerTextareaRecordingLock(transcriptCaptureLocked);
  textarea.classList.toggle('has-transcription-overlay', shouldShow);
  textarea.placeholder = shouldShow? '': responseModePlaceholder();
  }
@@ -5576,6 +5618,7 @@ return fallbackText;
  refreshRecordingControlButtons();
  updateAnswerTranscriptionOverlay();
  });
+ setAnswerTextareaRecordingLock(true);
  refreshRecordingControlButtons();
  updateAnswerTranscriptionOverlay();
  return recordingStartPromise;

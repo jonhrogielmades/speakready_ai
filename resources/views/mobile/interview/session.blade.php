@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=72') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=74') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -3517,7 +3517,13 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function answerTextareaCaptureLocked() {
- return isHybridTranscriptionMode() && recordingTransitionInProgress();
+ return isHybridTranscriptionMode() && Boolean(
+ recordingTransitionInProgress()
+ || isRecording
+ || isRecordingPaused
+ || voiceSessionRecorder
+ || voiceSessionStopPromise
+ );
  }
 
  function setAnswerTextareaRecordingLock(captureLocked = false) {
@@ -3528,10 +3534,29 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const hybridLocked = isHybridTranscriptionMode() && Boolean(captureLocked);
  const locked = voiceOnlyLocked || hybridLocked;
 
+ if (locked && textarea.dataset.answerEditTabindexStored !== 'true') {
+ textarea.dataset.answerEditTabindex = textarea.getAttribute('tabindex') ?? '';
+ textarea.dataset.answerEditTabindexStored = 'true';
+ }
+
  textarea.readOnly = locked;
  textarea.setAttribute('aria-readonly', String(locked));
  textarea.classList.toggle('voice-only-answer-lock', voiceOnlyLocked);
  textarea.classList.toggle('hybrid-transcription-lock', hybridLocked);
+ textarea.classList.toggle('answer-capture-locked', locked);
+
+ if (locked) {
+ textarea.tabIndex = -1;
+ } else if (textarea.dataset.answerEditTabindexStored === 'true') {
+ const previousTabindex = textarea.dataset.answerEditTabindex;
+ if (previousTabindex === '') {
+ textarea.removeAttribute('tabindex');
+ } else {
+ textarea.setAttribute('tabindex', previousTabindex);
+ }
+ delete textarea.dataset.answerEditTabindex;
+ delete textarea.dataset.answerEditTabindexStored;
+ }
 }
 
  let mobileAnswerFocusFrame = null;

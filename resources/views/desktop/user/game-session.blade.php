@@ -2,7 +2,7 @@
 @section('title', 'Interview Challenge')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-base.css?v=65') }}" data-page-style="user-game-session-base">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-base.css?v=66') }}" data-page-style="user-game-session-base">
 <link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=2026101303') }}" data-page-style="user-game-session">
 <link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=2026101208') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
@@ -330,6 +330,50 @@ let committedSpeechTranscript = '';
  let lastCommittedAt = 0;
  const gameAnswerTextareaPlaceholder = 'Type your answer, or record with voice. Voice transcript appears here after Stop...';
  const gameRecordingTextareaPlaceholder = 'Recording... transcript will appear here after Stop.';
+
+ function gameAnswerTextareaCaptureLocked() {
+ return isVoiceTranscriptionMode() && Boolean(
+ isStartingRecording
+ || isRecording
+ || isRecordingPaused
+ || stopRequestedWhileStarting
+ || recordingStopPromise
+ || voiceRecordingStopPromise
+ || voiceTranscriptionPromise
+ );
+ }
+
+ function setGameAnswerTextareaRecordingLock(captureLocked = gameAnswerTextareaCaptureLocked()) {
+ const textarea = document.getElementById('answerTextarea');
+ if (!textarea) return;
+
+ const voiceOnlyLocked = Boolean(isVoiceOnlySession || responseMode === 'voice');
+ const locked = voiceOnlyLocked || Boolean(captureLocked);
+
+ if (locked && textarea.dataset.answerEditTabindexStored !== 'true') {
+ textarea.dataset.answerEditTabindex = textarea.getAttribute('tabindex') ?? '';
+ textarea.dataset.answerEditTabindexStored = 'true';
+ }
+
+ textarea.readOnly = locked;
+ textarea.setAttribute('aria-readonly', String(locked));
+ textarea.classList.toggle('voice-only-answer-lock', voiceOnlyLocked);
+ textarea.classList.toggle('game-transcription-lock', !voiceOnlyLocked && Boolean(captureLocked));
+ textarea.classList.toggle('answer-capture-locked', locked);
+
+ if (locked) {
+ textarea.tabIndex = -1;
+ } else if (textarea.dataset.answerEditTabindexStored === 'true') {
+ const previousTabindex = textarea.dataset.answerEditTabindex;
+ if (previousTabindex === '') {
+ textarea.removeAttribute('tabindex');
+ } else {
+ textarea.setAttribute('tabindex', previousTabindex);
+ }
+ delete textarea.dataset.answerEditTabindex;
+ delete textarea.dataset.answerEditTabindexStored;
+ }
+ }
 
  const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
  const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
@@ -710,6 +754,7 @@ let gameMatchFullscreenBusy = false;
  }
 
  function updateGameVoiceSessionActionState() {
+ setGameAnswerTextareaRecordingLock();
  const data = answersData[currentQIdx] || {};
  const textarea = document.getElementById('answerTextarea');
  const hasRecording = Boolean(data.has_voice_recording || data.voice_recording?.blob);
@@ -2215,6 +2260,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  }
  isStartingRecording = true;
  stopRequestedWhileStarting = false;
+ setGameAnswerTextareaRecordingLock(true);
  const voiceRecorderStarted = await startVoiceAudioRecording(silent);
  isStartingRecording = false;
  if (!voiceRecorderStarted) {
@@ -2310,6 +2356,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  if (recordingStopPromise) return recordingStopPromise;
  recordingStopPromise = stopRecordingInternal().finally(() => {
  recordingStopPromise = null;
+ setGameAnswerTextareaRecordingLock();
  });
  return recordingStopPromise;
  }

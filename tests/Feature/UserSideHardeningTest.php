@@ -1480,7 +1480,7 @@ class UserSideHardeningTest extends TestCase
  ]);
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
  $expectedMarkup = [
- 'css/desktop/interview/session.css?v=65',
+ 'css/desktop/interview/session.css?v=66',
  'Coaching On',
  "classList.toggle('real-interview-mode', liveFeedbackMode === 'real_interview')",
  'const liveFeedbackMode = "coaching";',
@@ -1536,8 +1536,8 @@ class UserSideHardeningTest extends TestCase
  ->get(route('interview.session'))
  ->assertOk();
 
- foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=65']), [
- 'css/mobile/interview/session.css?v=72',
+ foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=66']), [
+ 'css/mobile/interview/session.css?v=74',
  ]) as $markup) {
  $mobileResponse->assertSee($markup, false);
  }
@@ -3861,8 +3861,8 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('Finish Challenge')
  ->assertSee('let currentQIdx = 1;', false)
  ->assertSee('Saved answer about a customer escalation result.')
- ->assertSee('css/desktop/user/game-session-base.css?v=65', false)
- ->assertDontSee('css/desktop/interview/session.css?v=65', false)
+ ->assertSee('css/desktop/user/game-session-base.css?v=66', false)
+ ->assertDontSee('css/desktop/interview/session.css?v=66', false)
  ->assertSee('id="sec-interview-session"', false)
  ->assertSee('data-game-session-root', false)
  ->assertSee('learning-game-interview-layout', false)
@@ -3914,7 +3914,9 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('const isVoiceOnlySession = false;', false)
  ->assertSee('Type your answer, or record with voice. Voice transcript appears here after Stop...', false)
  ->assertDontSee('readonly aria-readonly="true"', false)
- ->assertDontSee('voice-only-answer-lock', false)
+ ->assertDontSee('class="voice-only-answer-lock"', false)
+ ->assertSee('function gameAnswerTextareaCaptureLocked', false)
+ ->assertSee('textarea.tabIndex = -1;', false)
  ->assertDontSee('Your transcription will appear here after you click Stop...', false)
  ->assertDontSee('prev-btn-class', false)
  ->assertDontSee('Previous question', false)
@@ -3966,8 +3968,8 @@ class UserSideHardeningTest extends TestCase
  ->get(route('user.game.match'))
  ->assertOk()
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
- ->assertSee('css/mobile/user/game-session-base.css?v=72', false)
- ->assertDontSee('css/mobile/interview/session.css?v=72', false)
+ ->assertSee('css/mobile/user/game-session-base.css?v=73', false)
+ ->assertDontSee('css/mobile/interview/session.css?v=74', false)
  ->assertSee('css/mobile/user/game-session.css?v=2026101501', false)
  ->assertSee('data-page-style="user-game-session"', false)
  ->assertSee('id="sec-interview-session"', false)
@@ -4019,7 +4021,9 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('const isVoiceOnlySession = false;', false)
  ->assertSee('Type your answer, or record with voice. Voice transcript appears here after Stop...', false)
  ->assertDontSee('readonly aria-readonly="true"', false)
- ->assertDontSee('voice-only-answer-lock', false)
+ ->assertDontSee('class="voice-only-answer-lock"', false)
+ ->assertSee('function gameAnswerTextareaCaptureLocked', false)
+ ->assertSee('textarea.tabIndex = -1;', false)
  ->assertDontSee('Your transcription will appear here after you click Stop...', false)
  ->assertDontSee('prev-btn-class', false)
  ->assertDontSee('Previous question', false)

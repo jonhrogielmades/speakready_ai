@@ -254,8 +254,10 @@
     }
     .response-panel #answerTextarea.voice-only-answer-lock,
     .response-panel #answerTextarea.hybrid-transcription-lock,
+    .response-panel #answerTextarea.answer-capture-locked,
     html body #sec-interview-session #answerTextarea.voice-only-answer-lock,
-    html body #sec-interview-session #answerTextarea.hybrid-transcription-lock {
+    html body #sec-interview-session #answerTextarea.hybrid-transcription-lock,
+    html body #sec-interview-session #answerTextarea.answer-capture-locked {
         border-style: dashed !important;
         border-color: rgba(148, 163, 184, 0.72) !important;
         background: rgba(148, 163, 184, 0.1) !important;
@@ -263,6 +265,9 @@
         -webkit-text-fill-color: var(--tx3) !important;
         caret-color: transparent !important;
         cursor: not-allowed;
+        pointer-events: none !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
         resize: none !important;
     }
     .response-panel #answerTextarea.voice-only-answer-lock::placeholder,
@@ -5979,5 +5984,60 @@ html body #finishTransitionOverlay .finish-view-review-button.is-ready:not(:disa
     html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) .response-panel .response-autosave-row,
     html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) .response-panel.hybrid-response-panel .response-autosave-row {
         flex: 0 0 auto !important;
+    }
+}
+
+/* Fullscreen owns the remaining viewport with the response card. Keep the
+   wrapper in the flex chain so the textarea can grow instead of leaving a
+   large unused area below the Your Response panel. */
+@media (max-width: 767.98px) {
+    html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceWrapper {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        min-height: 0 !important;
+    }
+
+    html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] > .response-panel {
+        flex: 1 1 0% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin-bottom: 0 !important;
+        padding-bottom: 10px !important;
+    }
+
+    html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] > .response-panel #answerForm {
+        flex: 1 1 0% !important;
+        min-height: 0 !important;
+    }
+
+    html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] > .response-panel .answer-transcript-stage {
+        flex: 1 1 0% !important;
+        min-height: 0 !important;
+    }
+
+    html body.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] > .response-panel .answer-transcript-stage #answerTextarea {
+        flex: 1 1 0% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
     }
 }

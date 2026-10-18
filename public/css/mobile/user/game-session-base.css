@@ -254,8 +254,12 @@
     }
     .response-panel #answerTextarea.voice-only-answer-lock,
     .response-panel #answerTextarea.hybrid-transcription-lock,
+    .response-panel #answerTextarea.game-transcription-lock,
+    .response-panel #answerTextarea.answer-capture-locked,
     html body #sec-interview-session #answerTextarea.voice-only-answer-lock,
-    html body #sec-interview-session #answerTextarea.hybrid-transcription-lock {
+    html body #sec-interview-session #answerTextarea.hybrid-transcription-lock,
+    html body #sec-interview-session #answerTextarea.game-transcription-lock,
+    html body #sec-interview-session #answerTextarea.answer-capture-locked {
         border-style: dashed !important;
         border-color: rgba(148, 163, 184, 0.72) !important;
         background: rgba(148, 163, 184, 0.1) !important;
@@ -263,6 +267,9 @@
         -webkit-text-fill-color: var(--tx3) !important;
         caret-color: transparent !important;
         cursor: not-allowed;
+        pointer-events: none !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
         resize: none !important;
     }
     .response-panel #answerTextarea.voice-only-answer-lock::placeholder,
