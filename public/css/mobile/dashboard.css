@@ -10297,6 +10297,12 @@ body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-pr
     height: clamp(190px, 46vh, 240px) !important;
 }
 
+/* Keep feature-card icons on one shared left alignment guide. */
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-progress-chart .sr-trend-header {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+}
+
 @media (max-width: 380px) {
     body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid,
     body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-readiness-card-grid {
