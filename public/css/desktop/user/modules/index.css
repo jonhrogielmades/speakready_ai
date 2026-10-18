@@ -4435,3 +4435,33 @@ html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-f
 html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-smart-panel .module-rec-grid {
     grid-template-columns: minmax(0, 1fr) !important;
 }
+
+/* Desktop Modules full-width composition. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #interview-modules-page {
+        width: 100% !important;
+        max-width: none !important;
+        margin-inline: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #interview-modules-page > :is(.modules-page-hero, .module-position-strip, .module-position-note, .module-filter-bar, #moduleResults),
+    html body.user-desktop-shell:not(.admin-shell) #interview-modules-page #moduleResults > .modules-card-grid,
+    html body.user-desktop-shell:not(.admin-shell) #interview-modules-page #moduleResults > .module-entry-pager {
+        width: 100% !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-filter-bar {
+        grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr) auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-search-shell,
+    html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-topic-select-shell,
+    html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-search-input,
+    html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-topic-select {
+        width: 100% !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+    }
+}

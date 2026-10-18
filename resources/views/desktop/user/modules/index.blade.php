@@ -2,7 +2,7 @@
 @section('title', 'Interview Modules')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=15') }}" data-page-style="user-modules-index">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=16') }}" data-page-style="user-modules-index">
 <link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=3') }}" data-page-style="interview-prep-loader">
 @endpush
 
@@ -210,6 +210,7 @@
 @push('scripts')
 <script>
  document.addEventListener('DOMContentLoaded', function () {
+ const modulesPage = document.getElementById('interview-modules-page');
  const filtersForm = document.getElementById('moduleFiltersForm');
  const searchInput = document.getElementById('moduleSearchInput');
  const topicSelect = document.getElementById('moduleTopicSelect');
@@ -226,6 +227,7 @@
 
  const searchModules = async (url, updateFields = false) => {
  if (!filtersForm) return;
+ const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
  if (activeSearchRequest) activeSearchRequest.abort();
  const controller = new AbortController();
  activeSearchRequest = controller;
@@ -257,6 +259,7 @@
  currentResults.replaceWith(nextResults);
  window.SpeakReadyInterviewPrepLoader?.refresh?.();
  history.replaceState({}, '', url);
+ window.scrollTo({ top: scrollTop, left: window.pageXOffset || 0, behavior: 'auto' });
  const count = nextResults.querySelectorAll('.module-card').length;
  const status = document.getElementById('moduleSearchStatus');
  if (status) status.textContent = `Showing ${count} matching module${count === 1 ? '' : 's'}.`;
@@ -302,12 +305,13 @@
  topicSelect.value = '';
  searchModules(clearLink.href);
  });
- document.addEventListener('click', event => {
+ modulesPage?.addEventListener('click', event => {
  const pageLink = event.target.closest('#moduleResults .module-entry-pager a, #moduleResults .pagination a');
  if (!pageLink || pageLink.getAttribute('aria-disabled') === 'true') return;
  event.preventDefault();
+ event.stopPropagation();
  searchModules(pageLink.href);
- });
+ }, true);
  window.addEventListener('popstate', () => {
  searchModules(window.location.href, true);
  });
