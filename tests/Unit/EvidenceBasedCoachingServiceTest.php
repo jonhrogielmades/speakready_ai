@@ -35,7 +35,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         ], false);
 
         $this->assertSame('measured', $observations['delivery']['status']);
-        $this->assertSame('transcript_detected', $observations['delivery']['source']);
+        $this->assertSame('server_audio_and_transcript', $observations['delivery']['source']);
         $this->assertSame(5, $observations['delivery']['filler_total']);
         $this->assertSame(2, $observations['delivery']['filler_breakdown']['um']);
         $this->assertSame(1, $observations['delivery']['filler_breakdown']['i mean']);
@@ -847,6 +847,101 @@ class EvidenceBasedCoachingServiceTest extends TestCase
 
         $this->assertSame('insufficient_data', $observations['camera']['status']);
         $this->assertSame(3, $observations['camera']['low_quality_sample_count']);
+    }
+
+    public function test_strict_camera_protocol_only_releases_high_confidence_feedback(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+        $samples = [];
+
+        for ($second = 0; $second <= 10; $second += 2) {
+            $samples[] = [
+                'sample_index' => count($samples) + 1,
+                'at_seconds' => $second,
+                'sample_quality' => 100,
+                'face_detected' => true,
+                'face_confidence' => 90,
+                'face_size_percent' => 10,
+                'face_size_status' => 'good',
+                'camera_facing' => true,
+                'camera_facing_score' => 92,
+                'centered' => true,
+                'framing_quality' => true,
+                'pose_detected' => true,
+                'shoulders_visible' => true,
+                'shoulders_level' => true,
+                'upright_posture' => true,
+            ];
+        }
+
+        $observations = $service->normalizeObservationData([
+            'camera_detection_protocol' => 2,
+            'camera_samples' => $samples,
+        ], 'I explained my approach and verified the result with the team.', [
+            'response_mode' => 'voice',
+            'voice_duration' => 20,
+        ], true);
+
+        $this->assertSame('measured', $observations['camera']['status']);
+        $this->assertTrue($observations['camera']['high_confidence']);
+        $this->assertGreaterThanOrEqual(95, $observations['camera']['reliability_percent']);
+        $this->assertSame('High', $observations['camera']['reliability_band']);
+
+        $coaching = $service->forAnswer(
+            'I explained my approach and verified the result with the team.',
+            ['type' => 'Personal', 'question_text' => 'Tell me about yourself.'],
+            ['response_mode' => 'voice', 'voice_duration' => 20],
+            $observations
+        );
+
+        $this->assertSame('measured', data_get($coaching, 'camera_feedback.status'));
+        $this->assertTrue(data_get($coaching, 'camera_feedback.evidence.high_confidence'));
+        $this->assertStringContainsString('high-confidence reliability gate', strtolower(data_get($coaching, 'camera_feedback.observation')));
+    }
+
+    public function test_strict_camera_protocol_withholds_feedback_when_signal_quality_is_weak(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+        $samples = [];
+
+        for ($second = 0; $second <= 10; $second += 2) {
+            $samples[] = [
+                'sample_index' => count($samples) + 1,
+                'at_seconds' => $second,
+                'sample_quality' => 60,
+                'face_detected' => true,
+                'face_confidence' => 62,
+                'face_size_percent' => 10,
+                'face_size_status' => 'good',
+                'camera_facing' => true,
+                'camera_facing_score' => 65,
+                'centered' => true,
+                'framing_quality' => true,
+                'pose_detected' => true,
+            ];
+        }
+
+        $observations = $service->normalizeObservationData([
+            'camera_detection_protocol' => 2,
+            'camera_samples' => $samples,
+        ], 'I explained my approach and verified the result with the team.', [
+            'response_mode' => 'voice',
+            'voice_duration' => 20,
+        ], true);
+
+        $this->assertSame('insufficient_data', $observations['camera']['status']);
+        $this->assertFalse($observations['camera']['high_confidence']);
+        $this->assertLessThan(95, $observations['camera']['reliability_percent']);
+
+        $coaching = $service->forAnswer(
+            'I explained my approach and verified the result with the team.',
+            ['type' => 'Personal', 'question_text' => 'Tell me about yourself.'],
+            ['response_mode' => 'voice', 'voice_duration' => 20],
+            $observations
+        );
+
+        $this->assertSame('insufficient_data', data_get($coaching, 'camera_feedback.status'));
+        $this->assertStringContainsString('no camera behavior conclusion', strtolower(data_get($coaching, 'camera_feedback.observation')));
     }
 
     public function test_forged_legacy_eye_and_posture_scores_are_ignored(): void

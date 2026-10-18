@@ -672,6 +672,56 @@ class InterviewSecurityTest extends TestCase
         });
     }
 
+    public function test_cebuano_transcription_uses_auto_detection_instead_of_incorrect_language_hints(): void
+    {
+        config(['services.openai.transcription_model' => 'gpt-transcribe']);
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/transcriptions' => Http::response([
+                'text' => 'Nakatabang ko sa customer ug nasulbad ang problema.',
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'ceb',
+        ]);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.transcribe'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'audio' => UploadedFile::fake()->create('speech.webm', 32, 'audio/webm'),
+            ])
+            ->assertOk()
+            ->assertJsonPath('transcript', 'Nakatabang ko sa customer ug nasulbad ang problema.');
+
+        Http::assertSent(function ($request): bool {
+            if ($request->url() !== 'https://api.openai.com/v1/audio/transcriptions') {
+                return false;
+            }
+
+            $parts = collect($request->data());
+            $prompt = (string) data_get($parts->firstWhere('name', 'prompt'), 'contents', '');
+
+            return $parts->where('name', 'languages[]')->isEmpty()
+                && str_contains($prompt, 'Cebuano')
+                && str_contains($prompt, 'Bisaya');
+        });
+    }
+
     public function test_full_recording_transcription_prefers_ai_transcript_over_local_asr(): void
     {
         config(['services.openai.transcription_model' => 'gpt-transcribe']);
@@ -741,6 +791,74 @@ class InterviewSecurityTest extends TestCase
             ]);
 
         $this->assertSame('local partial duplicate transcript', $response->json('pronunciation_analysis.asr.transcript'));
+    }
+
+    public function test_high_confidence_local_asr_recovers_an_empty_cloud_transcript(): void
+    {
+        config([
+            'services.openai.transcription_model' => 'gpt-transcribe',
+            'services.local_speech.min_transcript_confidence' => 95,
+        ]);
+
+        $this->app->instance(LocalSpeechAssessmentService::class, new class extends LocalSpeechAssessmentService {
+            public function assessUploadedAudio(UploadedFile $audioFile, ?string $referenceText = null, array|string|null $targetLanguage = null): array
+            {
+                return [
+                    'version' => self::VERSION,
+                    'status' => 'measured',
+                    'asr' => [
+                        'name' => 'asr',
+                        'status' => 'measured',
+                        'transcript' => 'High confidence local recovery transcript.',
+                        'confidence' => 99,
+                    ],
+                    'pronunciation' => ['name' => 'pronunciation', 'status' => 'not_measured'],
+                    'forced_alignment' => ['name' => 'forced_alignment', 'status' => 'not_measured'],
+                    'phoneme_alignment' => ['name' => 'phoneme_alignment', 'status' => 'not_measured'],
+                    'gop' => ['name' => 'gop', 'status' => 'not_measured'],
+                    'reliability' => [
+                        'score' => 99,
+                        'band' => 'High',
+                        'measured_components' => ['asr'],
+                    ],
+                    'limitations' => [],
+                    'recommendations' => [],
+                ];
+            }
+        });
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/transcriptions' => Http::response(['text' => ''], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['response_mode' => 'voice']);
+        $question = $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.transcribe'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'final_recording' => true,
+                'audio' => UploadedFile::fake()->create('speech.webm', 32, 'audio/webm'),
+            ])
+            ->assertOk()
+            ->assertJson([
+                'transcript' => 'High confidence local recovery transcript.',
+                'transcription_source' => 'local_speech',
+                'transcription_status' => 'transcribed',
+                'transcription_verified' => true,
+            ])
+            ->assertJsonStructure(['transcription_proof']);
     }
 
     public function test_transcription_response_auto_corrects_common_word_errors(): void

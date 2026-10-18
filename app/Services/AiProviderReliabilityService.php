@@ -112,7 +112,7 @@ final class AiProviderReliabilityService
         }
 
         $consecutiveFailures = $logs
-            ->takeUntil(fn (AiProviderLog $log): bool => $log->status === 'success')
+            ->takeWhile(fn (AiProviderLog $log): bool => in_array($log->status, ['failed', 'timeout'], true))
             ->count();
 
         if ($consecutiveFailures < $threshold || $logs->isEmpty()) {

@@ -839,6 +839,49 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Final draft answer saved before ending.');
  }
 
+ public function test_finish_cannot_reclaim_an_abort_owned_session_status(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category);
+ $abortClaim = 'aborting:'.\Illuminate\Support\Str::uuid();
+ $session->timestamps = false;
+ $session->forceFill([
+ 'status' => $abortClaim,
+ 'updated_at' => now()->subMinutes(20),
+ ])->save();
+ $session->timestamps = true;
+
+ $this->actingAs($user)
+ ->withSession(['active_interview_id' => $session->id])
+ ->postJson(route('interview.finish'), ['session_id' => $session->id])
+ ->assertForbidden();
+
+ $this->assertSame($abortClaim, $session->fresh()->status);
+ }
+
+ public function test_abort_can_safely_reclaim_its_own_stale_owned_status(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category);
+ $session->timestamps = false;
+ $session->forceFill([
+ 'status' => 'aborting:stale-owner-token',
+ 'updated_at' => now()->subMinutes(11),
+ ])->save();
+ $session->timestamps = true;
+
+ $this->actingAs($user)
+ ->withSession(['active_interview_id' => $session->id])
+ ->postJson(route('interview.abort'), ['session_id' => $session->id])
+ ->assertOk()
+ ->assertJsonPath('success', true)
+ ->assertJsonPath('redirect_url', route('user.review', $session->id));
+
+ $this->assertSame('ended', $session->fresh()->status);
+ }
+
  public function test_interview_session_renders_single_saved_intro_and_closing_conversation_flow(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -2303,6 +2346,54 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Your Answer')
  ->assertSee('Possible Answer')
  ->assertDontSee('appendRetryAttempt', false);
+ }
+
+ public function test_typed_retry_ignores_forged_voice_mode_and_voice_evidence(): void
+ {
+ $this->fakeOpenAiFeedback();
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, [
+ 'status' => 'completed',
+ 'response_mode' => 'voice',
+ ]);
+ $question = $this->question($category, ['interview_session_id' => $session->id]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => '',
+ 'delivery_transcript' => 'The original answer came from verified audio.',
+ 'response_mode' => 'voice',
+ 'voice_duration' => 20,
+ 'voice_recording_transcription_status' => 'transcribed_verified',
+ ]);
+ $typedRetry = 'I diagnosed the release issue, coordinated the rollback, and verified the recovery within ten minutes.';
+
+ $this->actingAs($user)
+ ->withSession(['active_interview_provider' => 'openai'])
+ ->postJson(route('interview.answer.retry', $answer), [
+ 'answer_text' => $typedRetry,
+ 'speech_transcript' => 'A forged speech transcript must not become retry evidence.',
+ 'response_mode' => 'voice',
+ '_voice_transcript_verified' => true,
+ 'voice_duration' => 120,
+ 'wpm' => 400,
+ 'filler_words_count' => 99,
+ 'pause_count' => 99,
+ ])
+ ->assertOk();
+
+ $retry = InterviewAnswer::where('retry_of_answer_id', $answer->id)->firstOrFail();
+ $this->assertSame($typedRetry, $retry->answer_text);
+ $this->assertSame('text', $retry->response_mode);
+ $this->assertNull($retry->delivery_transcript);
+ $this->assertNull($retry->voice_recording_path);
+ $this->assertNull($retry->voice_recording_transcription_status);
+ $this->assertSame(0, $retry->voice_duration);
+ $this->assertSame(0, $retry->wpm);
+ $this->assertSame(0, $retry->filler_words_count);
+ $this->assertSame(0, $retry->pause_count);
+ $this->assertNull($retry->delivery_stability_score);
  }
 
  public function test_user_review_does_not_refresh_stale_rubric_score_metadata_on_open(): void

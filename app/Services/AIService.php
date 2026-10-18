@@ -3037,6 +3037,7 @@ PROMPT;
  {
  $attemptedProviders = [];
  $skippedProviders = [];
+ $emptyProvider = null;
  $lastError = null;
  $providers = self::speechTranscriptionProviders();
 
@@ -3050,7 +3051,7 @@ PROMPT;
 
  try {
  $attemptedProviders[] = $provider;
- $transcript = self::recordProviderAttempt($provider, 'speech_transcription', function () use ($provider, $audioFile, $targetLanguage, $context):?string {
+ $transcript = self::recordSpeechTranscriptionAttempt($provider, function () use ($provider, $audioFile, $targetLanguage, $context):?string {
  return match ($provider) {
  'openai' => self::transcribeSpeechWithOpenAI($audioFile, $targetLanguage, $context),
  'gemini' => self::transcribeSpeechWithGemini($audioFile, $targetLanguage, $context),
@@ -3061,10 +3062,16 @@ PROMPT;
  if (is_string($transcript)) {
  $transcript = trim($transcript);
 
+ if ($transcript === '') {
+ $emptyProvider??= $provider;
+
+ continue;
+ }
+
  return [
  'transcript' => $transcript,
  'provider' => $provider,
- 'status' => $transcript!== ''? 'transcribed': 'empty',
+ 'status' => 'transcribed',
  'attempted_providers' => $attemptedProviders,
  'skipped_providers' => $skippedProviders,
  ];
@@ -3079,6 +3086,16 @@ PROMPT;
  $lastError = $e;
  Log::warning(ucfirst($provider).' Transcription Error: '.self::safeProviderErrorMessage($e));
  }
+ }
+
+ if ($emptyProvider!== null) {
+ return [
+ 'transcript' => '',
+ 'provider' => $emptyProvider,
+ 'status' => 'empty',
+ 'attempted_providers' => $attemptedProviders,
+ 'skipped_providers' => $skippedProviders,
+ ];
  }
 
  if ($attemptedProviders!== [] || $skippedProviders!== []) {
@@ -3396,16 +3413,11 @@ PROMPT;
 
  $text = preg_replace('/^```(?:json)?\s*|\s*```$/i', '', $text)?? $text;
  $decoded = json_decode($text, true);
- if (is_array($decoded)) {
- $candidate = trim((string) ($decoded['transcript']?? data_get($decoded, 'result.transcript', '')));
-
- return $candidate;
+ if (! is_array($decoded) ||! array_key_exists('transcript', $decoded) ||! is_string($decoded['transcript'])) {
+ return null;
  }
 
- $text = preg_replace('/^\s*(?:transcript|candidate speech)\s*:\s*/i', '', $text)?? $text;
- $text = trim($text, " \t\n\r\0\x0B\"'");
-
- return $text;
+ return trim($decoded['transcript']);
  }
 
  public static function speechSynthesisAvailable(): bool
@@ -3886,8 +3898,10 @@ PROMPT;
  $languages = match ($language) {
  'tl' => ['tl', 'en'],
  'en' => ['en', 'tl'],
- 'ceb' => ['en', 'tl'],
- default => preg_match('/^[a-z]{2}$/', $language)? [$language, 'en', 'tl']: ['en', 'tl'],
+ // gpt-transcribe language hints use two-letter codes. Cebuano is `ceb`,
+ // so forcing English/Tagalog would bias a Cebuano or Bisaya recording.
+ 'ceb' => [],
+ default => preg_match('/^[a-z]{2}$/', $language)? [$language, 'en']: [],
  };
 
  return array_values(array_unique(array_filter($languages, fn ($code) => preg_match('/^[a-z]{2}$/', $code))));
@@ -4625,6 +4639,31 @@ PROMPT;
  try {
  $result = $callback();
  self::writeProviderLog($dbProvider?->id, $module, $provider, $startedAt, 'success');
+
+ return $result;
+ } catch (\Throwable $e) {
+ self::writeProviderLog($dbProvider?->id, $module, $provider, $startedAt, 'failed', self::safeProviderErrorMessage($e));
+ throw $e;
+ }
+ }
+
+ private static function recordSpeechTranscriptionAttempt(string $provider, callable $callback):?string
+ {
+ $module = 'speech_transcription';
+ $startedAt = microtime(true);
+ $dbProvider = self::dbProviderFor($provider);
+
+ if (self::providerCircuitIsOpen($provider, $module)) {
+ throw new \RuntimeException("AI provider {$provider} is temporarily paused after repeated {$module} failures.");
+ }
+
+ try {
+ $result = $callback();
+ if (! is_string($result)) {
+ throw new \RuntimeException("AI provider {$provider} returned an invalid speech transcription response.");
+ }
+ $status = trim($result) === ''? 'empty': 'success';
+ self::writeProviderLog($dbProvider?->id, $module, $provider, $startedAt, $status);
 
  return $result;
  } catch (\Throwable $e) {

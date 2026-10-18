@@ -16,6 +16,7 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Services\AIService;
 use App\Services\AiProviderEvaluationService;
+use App\Services\AudioDurationService;
 use App\Services\ChallengePositionService;
 use App\Services\EvidenceBasedCoachingService;
 use App\Services\LearningGameCertificateService;
@@ -25,6 +26,7 @@ use App\Services\QuestionIntentService;
 use App\Services\QuestionRecommendationService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
+use App\Services\VoiceTranscriptionProofService;
 use App\Support\FeedbackCoachingRepair;
 use App\Support\FeedbackSchema;
 use App\Support\GameSchema;
@@ -272,6 +274,7 @@ class InterviewController extends Controller
  'voice_audio' => $this->voiceRecordingUploadRules(),
  'voice_recording_duration_seconds' => 'nullable|integer|min:0|max:7200',
  'voice_recording_transcription_status' => 'nullable|string|max:40',
+ 'voice_transcription_proof' => 'nullable|string|max:4096',
  'filler_words_count' => 'nullable|integer|min:0|max:500',
  'pause_count' => 'nullable|integer|min:0|max:500',
  'confidence_score' => 'nullable|integer|min:0|max:100',
@@ -290,6 +293,8 @@ class InterviewController extends Controller
  if (! $question) {
  return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
  }
+
+ $validated['response_mode'] = $this->normalizeResponseMode($session->response_mode?? 'text');
 
  $answerText = $this->cleanTranscribedAnswer($validated['answer_text']?? '');
  if (! $this->answerSubmissionHasContent($validated, $answerText)) {
@@ -317,7 +322,10 @@ class InterviewController extends Controller
  }
 
  if (array_key_exists('notes', $validated)) {
- $session->update(['notes' => $validated['notes']]);
+ InterviewSession::whereKey($session->id)
+ ->where('user_id', Auth::id())
+ ->where('status', 'in_progress')
+ ->update(['notes' => $validated['notes']]);
  }
 
  return response()->json(['success' => true]);
@@ -339,12 +347,30 @@ class InterviewController extends Controller
  'session_state' => 'nullable|string|max:100000',
  ]);
 
- $session->update([
- 'notes' => $validated['notes']?? $session->notes,
- 'duration_seconds' => $validated['duration_seconds']?? $session->duration_seconds,
- 'current_question_index' => $validated['current_question_index']?? $session->current_question_index,
- 'session_state' => $validated['session_state']?? $session->session_state,
- ]);
+ $saved = DB::transaction(function () use ($session, $validated): bool {
+ $lockedSession = InterviewSession::whereKey($session->id)
+ ->where('user_id', Auth::id())
+ ->where('status', 'in_progress')
+ ->lockForUpdate()
+ ->first();
+
+ if (! $lockedSession) {
+ return false;
+ }
+
+ $lockedSession->forceFill([
+ 'notes' => $validated['notes']?? $lockedSession->notes,
+ 'duration_seconds' => $validated['duration_seconds']?? $lockedSession->duration_seconds,
+ 'current_question_index' => $validated['current_question_index']?? $lockedSession->current_question_index,
+ 'session_state' => $validated['session_state']?? $lockedSession->session_state,
+ ])->save();
+
+ return true;
+ }, 3);
+
+ if (! $saved) {
+ return response()->json(['error' => 'Interview session is no longer active.'], 409);
+ }
 
  return response()->json(['success' => true]);
  }
@@ -433,6 +459,7 @@ class InterviewController extends Controller
  'voice_audio' => $this->voiceRecordingUploadRules(),
  'voice_recording_duration_seconds' => 'nullable|integer|min:0|max:7200',
  'voice_recording_transcription_status' => 'nullable|string|max:40',
+ 'voice_transcription_proof' => 'nullable|string|max:4096',
  'filler_words_count' => 'nullable|integer|min:0|max:500',
  'pause_count' => 'nullable|integer|min:0|max:500',
  'confidence_score' => 'nullable|integer|min:0|max:100',
@@ -452,6 +479,7 @@ class InterviewController extends Controller
  if (! $question) {
  return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
  }
+ $validated['response_mode'] = $this->normalizeResponseMode($session->response_mode?? 'text');
  $candidateTurnText = trim((string) ($validated['answer_text']?? ''));
  $answerText = $this->cleanTranscribedAnswer($validated['answer_text']?? '');
  if (! $this->answerSubmissionHasContent($validated, $answerText)) {
@@ -484,6 +512,9 @@ class InterviewController extends Controller
  }
 
  $savedAnswerInput = $this->answerContentForAssessment($answer);
+ if ($this->normalizeResponseMode($validated['response_mode']?? $session->response_mode?? 'text') === 'voice') {
+ $interviewerInputText = $savedAnswerInput;
+ }
  if ($interviewerInputText === '' && $savedAnswerInput!== '') {
  $interviewerInputText = $savedAnswerInput;
  }
@@ -500,9 +531,24 @@ class InterviewController extends Controller
  }
 
  if ($currentQuestionIndex >= $targetQuestionCount - 1) {
- $session->update([
- 'current_question_index' => $currentQuestionIndex,
- ]);
+ $updated = DB::transaction(function () use ($session, $currentQuestionIndex) {
+ $lockedSession = InterviewSession::whereKey($session->id)
+ ->where('user_id', Auth::id())
+ ->where('status', 'in_progress')
+ ->lockForUpdate()
+ ->first();
+ if (! $lockedSession) {
+ return false;
+ }
+
+ $lockedSession->forceFill(['current_question_index' => $currentQuestionIndex])->save();
+
+ return true;
+ }, 3);
+
+ if (! $updated) {
+ return response()->json(['error' => 'Interview session is no longer active.'], 409);
+ }
 
  return response()->json([
  'success' => true,
@@ -750,6 +796,7 @@ return response()->json([
  'session_id' => 'nullable|exists:interview_sessions,id',
  'question_id' => 'required|exists:questions,id',
  'previous_transcript' => 'nullable|string|max:3000',
+ 'final_recording' => 'nullable|boolean',
  'audio' => [
  'required',
  'file',
@@ -768,11 +815,12 @@ return response()->json([
  return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
  }
 
+ $isFinalRecording = filter_var($validated['final_recording']?? false, FILTER_VALIDATE_BOOLEAN);
  $transcription = $this->transcribeUploadedSpeechAnswer(
  $validated['audio'],
  $session,
  $question,
- (string) ($validated['previous_transcript']?? '')
+ $isFinalRecording? '': (string) ($validated['previous_transcript']?? '')
  );
  $transcript = $transcription['transcript'];
  $transcriptionSource = $transcription['transcription_source'];
@@ -802,12 +850,35 @@ return response()->json([
  return $response;
  }
 
- return response()->json([
- 'transcript' => TranscriptService::clean($transcript),
+ $cleanTranscript = TranscriptService::clean($transcript);
+ $transcriptionProof = null;
+ if ($isFinalRecording && $cleanTranscript!== '') {
+ try {
+ $transcriptionProof = app(VoiceTranscriptionProofService::class)->issue(
+ Auth::id(),
+ $session->id,
+ $question->id,
+ $validated['audio'],
+ $cleanTranscript,
+ $transcriptionSource
+ );
+ } catch (\Throwable $error) {
+ Log::warning('Final voice transcription proof could not be issued.', [
+ 'session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'error_type' => $error::class,
+ ]);
+ }
+ }
+
+ return response()->json(array_filter([
+ 'transcript' => $cleanTranscript,
  'transcription_source' => $transcriptionSource,
  'transcription_status' => $transcriptionStatus?: 'transcribed',
  'pronunciation_analysis' => $speechAssessment,
- ]);
+ 'transcription_proof' => $transcriptionProof,
+ 'transcription_verified' => $transcriptionProof!== null,
+ ], static fn ($value) => $value!== null));
  }
 
  private function transcriptionContext(InterviewSession $session, Question $question, string $previousTranscript = ''): array
@@ -856,7 +927,7 @@ return response()->json([
  $localTranscript!== null
  && (
  $transcript === null
- || ($transcriptionStatus === 'failed' && trim((string) $transcript) === '')
+ || trim((string) $transcript) === ''
  )
  ) {
  $transcript = $localTranscript;
@@ -1395,6 +1466,10 @@ return response()->json([
  'elapsed_seconds' => 'nullable|integer|min:0|max:7200',
  'wpm' => 'nullable|integer|min:0|max:400',
  'voice_duration' => 'nullable|integer|min:0|max:7200',
+ 'voice_audio' => $this->voiceRecordingUploadRules(),
+ 'voice_recording_duration_seconds' => 'nullable|integer|min:0|max:7200',
+ 'voice_recording_transcription_status' => 'nullable|string|max:40',
+ 'voice_transcription_proof' => 'nullable|string|max:4096',
  'filler_words_count' => 'nullable|integer|min:0|max:500',
  'pause_count' => 'nullable|integer|min:0|max:500',
  'confidence_score' => 'nullable|integer|min:0|max:100',
@@ -1411,31 +1486,67 @@ return response()->json([
  abort(403);
  }
 
- if ($sessionRecord && in_array($sessionRecord->status, ['in_progress', 'processing'], true)) {
- $draftAnswer = $this->cleanTranscribedAnswer($validated['answer_text']?? '');
- if ($draftAnswer!== '' &&! empty($validated['question_id'])) {
+ $question = null;
+ if ($sessionRecord &&! empty($validated['question_id'])) {
  $question = $this->questionForSession($validated['question_id'], $sessionRecord);
  if (! $question) {
  abort(403);
  }
-
- $this->persistInterviewAnswer($sessionRecord, $question, $validated, $draftAnswer);
  }
 
- DB::transaction(function () use ($sessionRecord, $validated) {
+ $abortClaim = 'aborting:'.Str::uuid();
+ $abortState = $sessionRecord
+ ? DB::transaction(function () use ($sessionRecord, $abortClaim) {
+ $lockedSession = InterviewSession::whereKey($sessionRecord->id)
+ ->where('user_id', Auth::id())
+ ->lockForUpdate()
+ ->firstOrFail();
+
+ $status = (string) $lockedSession->status;
+ $staleAbortClaim = str_starts_with($status, 'aborting:')
+ && $lockedSession->updated_at?->lte(now()->subMinutes(10));
+ if ($status === 'in_progress' || $staleAbortClaim) {
+ $lockedSession->forceFill(['status' => $abortClaim])->save();
+
+ return 'claimed';
+ }
+
+ return str_starts_with($status, 'aborting:')? 'aborting': $status;
+ }, 3)
+ : null;
+
+ if ($sessionRecord && $abortState === 'claimed') {
+ $sessionRecord->refresh();
+ $validated['response_mode'] = $this->normalizeResponseMode($sessionRecord->response_mode?? 'text');
+ $draftAnswer = $this->cleanTranscribedAnswer($validated['answer_text']?? '');
+
+ try {
+ if ($question && $this->answerSubmissionHasContent($validated, $draftAnswer)) {
+ $this->persistInterviewAnswer($sessionRecord, $question, $validated, $draftAnswer, [$abortClaim]);
+ }
+
+ DB::transaction(function () use ($sessionRecord, $validated, $abortClaim) {
+ $lockedSession = InterviewSession::whereKey($sessionRecord->id)
+ ->where('user_id', Auth::id())
+ ->lockForUpdate()
+ ->firstOrFail();
+ if (! hash_equals($abortClaim, (string) $lockedSession->status)) {
+ throw new \RuntimeException('Interview session changed while ending early.');
+ }
+
  if (Schema::hasTable('feedback')) {
- Feedback::where('interview_session_id', $sessionRecord->id)->delete();
+ Feedback::where('interview_session_id', $lockedSession->id)->delete();
  }
 
  if (Schema::hasTable('scores')) {
- Score::where('interview_session_id', $sessionRecord->id)->delete();
+ Score::where('interview_session_id', $lockedSession->id)->delete();
  }
 
- $sessionRecord->forceFill([
+ $lockedSession->forceFill([
  'status' => 'ended',
  'score_eligible' => false,
- 'duration_seconds' => $validated['duration_seconds']?? $sessionRecord->duration_seconds,
- 'current_question_index' => $validated['current_question_index']?? $sessionRecord->current_question_index,
+ 'duration_seconds' => $validated['duration_seconds']?? $lockedSession->duration_seconds,
+ 'current_question_index' => $validated['current_question_index']?? $lockedSession->current_question_index,
  'notes' => 'Ended early by the user before final feedback generation.',
  'session_state' => null,
  'action_plan' => [
@@ -1443,11 +1554,38 @@ return response()->json([
  'headline' => 'Session ended early. No feedback was generated.',
  ],
  ])->save();
- });
+ }, 3);
+ } catch (\Throwable $error) {
+ InterviewSession::whereKey($sessionRecord->id)
+ ->where('user_id', Auth::id())
+ ->where('status', $abortClaim)
+ ->update(['status' => 'in_progress']);
+
+ Log::error('Interview early termination failed.', [
+ 'session_id' => $sessionRecord->id,
+ 'error_type' => $error::class,
+ 'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
+ ]);
+
+ return response()->json([
+ 'success' => false,
+ 'error' => 'We could not end the interview safely. Your current recording is still available; please try again.',
+ ], 500);
+ }
 
  $redirectUrl = route('user.review', $sessionRecord->id);
- } elseif ($sessionRecord && $sessionRecord->status === 'ended') {
+ } elseif ($sessionRecord && $abortState === 'ended') {
  $redirectUrl = route('user.review', $sessionRecord->id);
+ } elseif ($sessionRecord && $abortState === 'processing') {
+ return response()->json([
+ 'success' => false,
+ 'error' => 'This interview is already being finalized. Please wait a moment and try again.',
+ ], 409);
+ } elseif ($sessionRecord && $abortState === 'aborting') {
+ return response()->json([
+ 'success' => false,
+ 'error' => 'This interview is already ending safely. Please wait a moment and try again.',
+ ], 409);
  }
 
  if (! $sessionRecord || (int) session('active_interview_id') === (int) ($sessionRecord->id?? 0)) {
@@ -1494,6 +1632,17 @@ return response()->json([
  'posture_score' => 'nullable|integer|min:0|max:100',
  'elapsed_seconds' => 'nullable|integer|min:0|max:7200',
  ]);
+
+ // Retry submissions are typed-only. The retry endpoint does not accept an
+ // audio file or a server-issued transcription proof, so client-supplied
+ // voice fields can never be trusted as delivery evidence here.
+ $validated['response_mode'] = 'text';
+ $validated['speech_transcript'] = '';
+ $validated['voice_duration'] = 0;
+ $validated['wpm'] = 0;
+ $validated['filler_words_count'] = 0;
+ $validated['pause_count'] = 0;
+ $validated['pronunciation_analysis'] = null;
 
  $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
  $answerPayload = $this->answerPersistencePayload($session, $answer->question, $validated, $answerText);
@@ -1740,24 +1889,84 @@ return response()->json([
  $this->repairCompletedSessionFeedbackFromSavedData($session);
  }
 
- private function persistInterviewAnswer(InterviewSession $session, Question $question, array $validated,?string $answerText = null): InterviewAnswer
+ private function persistInterviewAnswer(
+ InterviewSession $session,
+ Question $question,
+ array $validated,
+?string $answerText = null,
+ array $allowedSessionStatuses = ['in_progress']
+ ): InterviewAnswer
  {
  InterviewAnswerSchema::ensure();
+ $validated['response_mode'] = $this->normalizeResponseMode($session->response_mode?? 'text');
  $answerText??= $this->cleanTranscribedAnswer($validated['answer_text']?? '');
  $validated = $this->withSubmittedVoiceFeedbackTranscript($session, $question, $validated, $answerText);
+ if ($this->normalizeResponseMode($validated['response_mode']?? $session->response_mode?? 'text') === 'voice') {
+ $answerText = '';
+ }
 
- $answer = InterviewAnswer::updateOrCreate(
- [
+ $answerPayload = $this->answerPersistencePayload($session, $question, $validated, $answerText);
+ $stagedRecording = $this->stageSubmittedVoiceRecording($session, $question, $validated);
+
+ try {
+ $saved = DB::transaction(function () use (
+ $session,
+ $question,
+ $answerPayload,
+ $stagedRecording,
+ $allowedSessionStatuses
+ ) {
+ $lockedSession = InterviewSession::whereKey($session->id)
+ ->where('user_id', $session->user_id)
+ ->lockForUpdate()
+ ->first();
+
+ if (! $lockedSession ||! in_array((string) $lockedSession->status, $allowedSessionStatuses, true)) {
+ throw new \RuntimeException('Interview session is no longer accepting answers.');
+ }
+
+ $answer = InterviewAnswer::where('interview_session_id', $session->id)
+ ->where('question_id', $question->id)
+ ->whereNull('retry_of_answer_id')
+ ->lockForUpdate()
+ ->first();
+
+ $previousRecording = $this->voiceRecordingReference($answer);
+ if (! $answer) {
+ $answer = new InterviewAnswer;
+ $answer->forceFill([
  'interview_session_id' => $session->id,
  'question_id' => $question->id,
  'retry_of_answer_id' => null,
- ],
- $this->answerPersistencePayload($session, $question, $validated, $answerText)
- );
+ ]);
+ }
 
- $this->storeSubmittedVoiceRecording($answer, $session, $question, $validated);
+ $recordingAttributes = $stagedRecording
+ ? $this->voiceRecordingAttributesFromStage($stagedRecording)
+ : $this->clearedVoiceRecordingAttributes();
 
- return $answer->refresh();
+ $answer->forceFill(array_merge($answerPayload, $recordingAttributes))->save();
+
+ return [
+ 'answer' => $answer,
+ 'previous_recording' => $previousRecording,
+ ];
+ }, 3);
+ } catch (\Throwable $error) {
+ $this->deleteVoiceRecordingReference($stagedRecording, 'staged_recording_rollback');
+
+ throw $error;
+ }
+
+ $previousRecording = is_array($saved['previous_recording']?? null)
+ ? $saved['previous_recording']
+ : null;
+ $newPath = trim((string) ($stagedRecording['path']?? ''));
+ if ($previousRecording && trim((string) ($previousRecording['path']?? ''))!== $newPath) {
+ $this->deleteVoiceRecordingReference($previousRecording, 'superseded_recording_cleanup');
+ }
+
+ return $saved['answer']->refresh();
  }
 
  private function voiceRecordingUploadRules(): array
@@ -1780,7 +1989,12 @@ return response()->json([
  return true;
  }
 
- return trim($answerText)!== '' || $this->hasSubmittedVoiceRecording($validated);
+ $responseMode = $this->normalizeResponseMode($validated['response_mode']?? 'text');
+ if ($responseMode === 'voice') {
+ return $this->hasSubmittedVoiceRecording($validated);
+ }
+
+ return trim($answerText)!== '' || ($responseMode === 'hybrid' && $this->hasSubmittedVoiceRecording($validated));
  }
 
  private function hasSubmittedVoiceRecording(array $validated): bool
@@ -1812,22 +2026,63 @@ return response()->json([
  array $validated,
  string $answerText
  ): array {
- if (trim($answerText)!== '' ||! $this->hasSubmittedVoiceRecording($validated)) {
- return $validated;
+ $validated['_voice_transcript_verified'] = false;
+ $validated['_voice_duration_verified'] = false;
+ $validated['pronunciation_analysis'] = null;
+ $validated['voice_duration'] = 0;
+ $validated['wpm'] = 0;
+ $validated['filler_words_count'] = 0;
+ $validated['pause_count'] = 0;
+ if (! $this->hasSubmittedVoiceRecording($validated)) {
+ $submittedTranscript = $this->cleanTranscribedAnswer($validated['speech_transcript']?? '');
+ $proof = trim((string) ($validated['voice_transcription_proof']?? ''));
+ $validated['speech_transcript'] = '';
+ unset($validated['voice_transcription_proof']);
+ if ($submittedTranscript!== '' || $proof!== ''
+ || $this->safeVoiceRecordingTranscriptionStatus($validated['voice_recording_transcription_status']?? null) === 'transcribed_verified') {
+ $validated['voice_recording_transcription_status'] = 'unverified';
  }
 
- if ($this->cleanTranscribedAnswer($validated['speech_transcript']?? '')!== '') {
- $validated['voice_recording_transcription_status'] = 'transcribed';
-
- return $validated;
- }
-
- if (! AIService::speechTranscriptionAvailable()) {
  return $validated;
  }
 
  $upload = $this->submittedVoiceRecording($validated);
  if (! $upload) {
+ return $validated;
+ }
+
+ $serverDuration = app(AudioDurationService::class)->seconds($upload);
+ if ($serverDuration!== null) {
+ $validated['voice_duration'] = $serverDuration;
+ $validated['_voice_duration_verified'] = true;
+ }
+
+ $submittedTranscript = $this->cleanTranscribedAnswer($validated['speech_transcript']?? '');
+ $proof = trim((string) ($validated['voice_transcription_proof']?? ''));
+ if ($submittedTranscript!== '' && $proof!== '') {
+ $proofData = app(VoiceTranscriptionProofService::class)->verify(
+ $proof,
+ Auth::id(),
+ $session->id,
+ $question->id,
+ $upload,
+ $submittedTranscript
+ );
+ if (is_array($proofData)) {
+ $validated['speech_transcript'] = $submittedTranscript;
+ $validated['voice_recording_transcription_status'] = 'transcribed_verified';
+ $validated['_voice_transcript_verified'] = true;
+
+ return $validated;
+ }
+ }
+
+ // Client text is only a preview. If its proof is missing or invalid, never
+ // use it as measured delivery evidence for the attached recording.
+ $validated['speech_transcript'] = '';
+ $validated['voice_recording_transcription_status'] = 'unverified';
+
+ if (! AIService::speechTranscriptionAvailable()) {
  return $validated;
  }
 
@@ -1847,12 +2102,13 @@ return response()->json([
  $transcript = $this->cleanTranscribedAnswer($transcription['transcript']?? null);
  if ($transcript!== '') {
  $validated['speech_transcript'] = $transcript;
- $validated['voice_recording_transcription_status'] = 'transcribed';
+ $validated['voice_recording_transcription_status'] = 'transcribed_verified';
+ $validated['_voice_transcript_verified'] = true;
  } else {
  $validated['voice_recording_transcription_status'] = $this->feedbackTranscriptionStatusFrom($transcription)?: ($validated['voice_recording_transcription_status']?? null);
  }
 
- if (! filled($validated['pronunciation_analysis']?? null) && is_array($transcription['pronunciation_analysis']?? null)) {
+ if (is_array($transcription['pronunciation_analysis']?? null)) {
  $validated['pronunciation_analysis'] = json_encode(
  $transcription['pronunciation_analysis'],
  JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR
@@ -1905,11 +2161,12 @@ return response()->json([
  }
 
  $responseMode = $this->isVoiceResponseMode($answer->response_mode?? $session->response_mode?? 'voice')? $this->normalizeResponseMode($answer->response_mode?? $session->response_mode?? 'voice'): 'voice';
- $duration = $this->clampInt($answer->voice_duration?? 0, 0, 7200);
+ $duration = app(AudioDurationService::class)->seconds($upload);
  $deliveryMetrics = $this->deliveryMetricsFrom([
  'response_mode' => $responseMode,
- 'voice_duration' => $duration,
- 'pause_count' => $answer->pause_count?? 0,
+ 'voice_duration' => $duration?? 0,
+ '_voice_duration_verified' => $duration!== null,
+ 'pause_count' => 0,
  ], $transcript);
  $pronunciationAnalysis = app(LocalSpeechAssessmentService::class)
  ->normalizeAssessment($transcription['pronunciation_analysis']?? null);
@@ -1938,7 +2195,7 @@ return response()->json([
 
  $answer->forceFill([
  'delivery_transcript' => $transcript,
- 'voice_recording_transcription_status' => 'transcribed',
+ 'voice_recording_transcription_status' => 'transcribed_verified',
  'pronunciation_analysis' => $pronunciationAnalysis,
  'pronunciation_score' => $pronunciationScore,
  'wpm' => $deliveryMetrics['wpm'],
@@ -1989,51 +2246,175 @@ return response()->json([
  );
  }
 
- private function storeSubmittedVoiceRecording(
- InterviewAnswer $answer,
+ private function stageSubmittedVoiceRecording(
  InterviewSession $session,
  Question $question,
  array $validated
- ): void {
+ ):?array {
  if (! $this->hasSubmittedVoiceRecording($validated)) {
- return;
+ return null;
  }
 
  $upload = $this->submittedVoiceRecording($validated);
  if (! $upload) {
- return;
+ return null;
  }
 
  $disk = 'local';
  $extension = $this->voiceRecordingExtensionForUpload($upload);
  $directory = 'interview_voice_answers/user_'.$session->user_id.'/session_'.$session->id;
- $path = $directory.'/question_'.$question->id.'_answer_'.$answer->id.'_'.Str::uuid().'.'.$extension;
+ $path = $directory.'/question_'.$question->id.'_'.Str::uuid().'.'.$extension;
+ $storage = Storage::disk($disk);
+ $mimeType = $this->safeVoiceRecordingMimeType($upload);
+ $byteSize = (int) ($upload->getSize()?: 0);
+ $originalName = Str::limit((string) $upload->getClientOriginalName(), 255, '');
+ $transcriptionStatus = $this->safeVoiceRecordingTranscriptionStatus($validated['voice_recording_transcription_status']?? null);
+ $stored = null;
 
- $stored = Storage::disk($disk)->putFileAs(
+ try {
+ $stored = $storage->putFileAs(
  $directory,
  $upload,
  basename($path)
  );
+ $storedSuccessfully = is_string($stored)
+ && $stored!== ''
+ && $this->storedVoiceRecordingMatchesUpload($storage, $stored, $upload, $byteSize);
+ } catch (\Throwable $error) {
+ $this->cleanupFailedStagedVoiceRecording($storage, $path, $stored);
 
- if (! is_string($stored) || $stored === '' ||! Storage::disk($disk)->exists($stored)) {
- throw new \RuntimeException('Voice recording could not be stored.');
+ throw new \RuntimeException('Voice recording could not be stored.', 0, $error);
  }
 
- $previousDisk = (string) ($answer->voice_recording_disk?: $disk);
- $previousPath = (string) ($answer->voice_recording_path?: '');
+ if (! $storedSuccessfully) {
+ $this->cleanupFailedStagedVoiceRecording($storage, $path, $stored);
 
- $answer->forceFill([
- 'voice_recording_disk' => $disk,
- 'voice_recording_path' => $stored,
- 'voice_recording_mime_type' => $this->safeVoiceRecordingMimeType($upload),
- 'voice_recording_byte_size' => (int) ($upload->getSize()?: 0),
- 'voice_recording_original_name' => Str::limit((string) $upload->getClientOriginalName(), 255, ''),
- 'voice_recording_transcription_status' => $this->safeVoiceRecordingTranscriptionStatus($validated['voice_recording_transcription_status']?? null),
- 'voice_recording_uploaded_at' => now(),
- ])->save();
+ throw new \RuntimeException('Voice recording could not be stored and verified.');
+ }
 
- if ($previousPath!== '' && $previousPath!== $stored && $previousDisk === $disk) {
- Storage::disk($disk)->delete($previousPath);
+ return [
+ 'disk' => $disk,
+ 'path' => $stored,
+ 'mime_type' => $mimeType,
+ 'byte_size' => $byteSize,
+ 'original_name' => $originalName,
+ 'transcription_status' => $transcriptionStatus,
+ 'uploaded_at' => now(),
+ ];
+ }
+
+ private function storedVoiceRecordingMatchesUpload(
+ mixed $storage,
+ string $stored,
+ UploadedFile $upload,
+ int $expectedByteSize
+ ): bool {
+ try {
+ if (! $storage->exists($stored) || (int) $storage->size($stored)!== $expectedByteSize) {
+ return false;
+ }
+
+ $sourcePath = $upload->getRealPath();
+ $storedPath = $storage->path($stored);
+ if (! is_string($sourcePath) ||! is_string($storedPath)
+ ||! is_readable($sourcePath) ||! is_readable($storedPath)) {
+ return false;
+ }
+
+ $sourceHash = @hash_file('sha256', $sourcePath);
+ $storedHash = @hash_file('sha256', $storedPath);
+
+ return is_string($sourceHash)
+ && is_string($storedHash)
+ && hash_equals($sourceHash, $storedHash);
+ } catch (\Throwable) {
+ return false;
+ }
+ }
+
+ private function cleanupFailedStagedVoiceRecording(mixed $storage, string $intendedPath, mixed $returnedPath): void
+ {
+ $paths = [$intendedPath];
+ if (is_string($returnedPath) && trim($returnedPath)!== '') {
+ $paths[] = trim($returnedPath);
+ }
+
+ foreach (array_unique($paths) as $path) {
+ try {
+ $storage->delete($path);
+ } catch (\Throwable) {
+ // The failed or unverifiable write is the actionable error.
+ }
+ }
+ }
+
+ private function voiceRecordingAttributesFromStage(array $stagedRecording): array
+ {
+ return [
+ 'voice_recording_disk' => $stagedRecording['disk'],
+ 'voice_recording_path' => $stagedRecording['path'],
+ 'voice_recording_mime_type' => $stagedRecording['mime_type'],
+ 'voice_recording_byte_size' => $stagedRecording['byte_size'],
+ 'voice_recording_original_name' => $stagedRecording['original_name'],
+ 'voice_recording_transcription_status' => $stagedRecording['transcription_status'],
+ 'voice_recording_uploaded_at' => $stagedRecording['uploaded_at'],
+ ];
+ }
+
+ private function clearedVoiceRecordingAttributes(): array
+ {
+ return [
+ 'voice_recording_disk' => null,
+ 'voice_recording_path' => null,
+ 'voice_recording_mime_type' => null,
+ 'voice_recording_byte_size' => 0,
+ 'voice_recording_original_name' => null,
+ 'voice_recording_transcription_status' => null,
+ 'voice_recording_uploaded_at' => null,
+ ];
+ }
+
+ private function voiceRecordingReference(?InterviewAnswer $answer):?array
+ {
+ if (! $answer) {
+ return null;
+ }
+
+ $path = trim((string) ($answer->voice_recording_path?: ''));
+ if ($path === '') {
+ return null;
+ }
+
+ return [
+ 'disk' => (string) ($answer->voice_recording_disk?: 'local'),
+ 'path' => $path,
+ ];
+ }
+
+ private function deleteVoiceRecordingReference(?array $recording, string $reason): void
+ {
+ $disk = trim((string) ($recording['disk']?? ''));
+ $path = trim((string) ($recording['path']?? ''));
+ if ($disk === '' || $path === '') {
+ return;
+ }
+
+ try {
+ if (! Storage::disk($disk)->delete($path)) {
+ Log::warning('Voice recording cleanup did not delete the stored file.', [
+ 'disk' => $disk,
+ 'path' => $path,
+ 'reason' => $reason,
+ ]);
+ }
+ } catch (\Throwable $error) {
+ Log::warning('Voice recording cleanup failed.', [
+ 'disk' => $disk,
+ 'path' => $path,
+ 'reason' => $reason,
+ 'error_type' => $error::class,
+ 'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
+ ]);
  }
  }
 
@@ -2091,13 +2472,6 @@ return response()->json([
  {
  $responseMode = $this->normalizeResponseMode($validated['response_mode']?? $session->response_mode?? 'text');
  $validated['response_mode'] = $responseMode;
- if ($this->isVoiceResponseMode($responseMode)) {
- $recordingDuration = $this->clampInt($validated['voice_recording_duration_seconds']?? 0, 0, 7200);
- $submittedDuration = $this->clampInt($validated['voice_duration']?? 0, 0, 7200);
- if ($recordingDuration > $submittedDuration) {
- $validated['voice_duration'] = $recordingDuration;
- }
- }
  $answerText??= $this->cleanTranscribedAnswer($validated['answer_text']?? '');
  $deliveryTranscript = $this->deliveryTranscriptFrom($validated, $answerText);
  $assessmentAnswerText = $answerText!== ''? $answerText: $deliveryTranscript;
@@ -2177,11 +2551,19 @@ return response()->json([
  array $metrics
  ): array {
  try {
+ $cameraEnabled = (bool) data_get($session->accommodation_profile, 'camera_detection', data_get($session->accommodation_profile, 'camera_coaching', false));
+ $clientData = is_array($clientData)? $clientData: [];
+ if ($cameraEnabled) {
+ // The server selects the strict camera protocol whenever the session has
+ // camera detection enabled; clients cannot opt out by omitting the marker.
+ $clientData['camera_detection_protocol'] = max(2, (int) ($clientData['camera_detection_protocol']?? 0));
+ }
+
  return app(EvidenceBasedCoachingService::class)->normalizeObservationData(
  $clientData,
  $deliveryTranscript,
  $metrics,
- (bool) data_get($session->accommodation_profile, 'camera_detection', data_get($session->accommodation_profile, 'camera_coaching', false))
+ $cameraEnabled
  );
  } catch (\Throwable $error) {
  $this->logAnswerAnalysisFallback('observation_data', $error, $session, $question);
@@ -2400,12 +2782,13 @@ return response()->json([
  private function fallbackDeliveryMetrics(array $input): array
  {
  $isVoiceMode = $this->isVoiceResponseMode($input['response_mode']?? 'text');
+ $durationVerified = filter_var($input['_voice_duration_verified']?? false, FILTER_VALIDATE_BOOLEAN);
 
  return [
- 'wpm' => $isVoiceMode? $this->clampInt($input['wpm']?? 0, 0, 400): 0,
- 'voice_duration' => $isVoiceMode? $this->clampInt($input['voice_duration']?? 0, 0, 7200): 0,
- 'filler_words_count' => $isVoiceMode? $this->clampInt($input['filler_words_count']?? 0, 0, 500): 0,
- 'pause_count' => $isVoiceMode? $this->clampInt($input['pause_count']?? 0, 0, 500): 0,
+ 'wpm' => 0,
+ 'voice_duration' => $isVoiceMode && $durationVerified? $this->clampInt($input['voice_duration']?? 0, 0, 7200): 0,
+ 'filler_words_count' => 0,
+ 'pause_count' => 0,
  'confidence_score' => 0,
  'delivery_stability_score' => null,
  'eye_contact_score' => 0,
@@ -2502,6 +2885,12 @@ return response()->json([
  'samples' => [],
  'source' => null,
  'unavailable_reason' => $cameraEnabled? 'analysis_unavailable': null,
+ 'camera_detection_protocol' => $cameraEnabled? 2: 0,
+ 'quality_data_present' => false,
+ 'high_confidence' => false,
+ 'reliability_percent' => null,
+ 'reliability_band' => null,
+ 'reliability_checks' => [],
  'caveat' => 'Optional camera detection was not measured. It is never used to guess confidence, honesty, personality, job fit, or intent.',
  ];
  }
@@ -2899,16 +3288,23 @@ return response()->json([
  private function deliveryMetricsFrom(array $input, string $deliveryTranscript): array
  {
  $isVoiceMode = $this->isVoiceResponseMode($input['response_mode']?? 'text');
- $voiceDuration = $isVoiceMode? $this->clampInt($input['voice_duration']?? 0, 0, 7200): 0;
- $hasVoiceEvidence = $isVoiceMode
- && $voiceDuration > 0
- && TranscriptService::wordCount($deliveryTranscript) > 0;
- $wpm = $hasVoiceEvidence? $this->clampInt(round((TranscriptService::wordCount($deliveryTranscript) / $voiceDuration) * 60), 0, 400): 0;
- $fillerWords = $hasVoiceEvidence? $this->clampInt(TranscriptService::countFillerWords($deliveryTranscript), 0, 500): 0;
- $pauseCount = $hasVoiceEvidence? min($this->clampInt($input['pause_count']?? 0, 0, 500), intdiv($voiceDuration, 2)): 0;
+ $durationVerified = filter_var($input['_voice_duration_verified']?? false, FILTER_VALIDATE_BOOLEAN);
+ $voiceDuration = $isVoiceMode && $durationVerified
+ ? $this->clampInt($input['voice_duration']?? 0, 0, 7200)
+ : 0;
+ $wordCount = TranscriptService::wordCount($deliveryTranscript);
+ $hasVoiceTranscript = $isVoiceMode && $wordCount > 0;
+ $hasMeasuredDuration = $hasVoiceTranscript && $voiceDuration > 0;
+ $wpm = $hasMeasuredDuration? $this->clampInt(round(($wordCount / $voiceDuration) * 60), 0, 400): 0;
+ $fillerWords = $hasVoiceTranscript? $this->clampInt(TranscriptService::countFillerWords($deliveryTranscript), 0, 500): 0;
+ // Pauses require an audio-side detector. Browser counts are useful live hints,
+ // but are not persisted as verified delivery evidence.
+ $pauseCount = 0;
 
- $deliveryStability = app(TrustworthyAssessmentService::class)
- ->deliveryStability($deliveryTranscript, $wpm, $fillerWords, 0, $voiceDuration);
+ $deliveryStability = $hasMeasuredDuration
+ ? app(TrustworthyAssessmentService::class)
+ ->deliveryStability($deliveryTranscript, $wpm, $fillerWords, 0, $voiceDuration)
+ : null;
 
  return [
  'wpm' => $wpm,
@@ -2969,22 +3365,14 @@ return response()->json([
  return '';
  }
 
- // New clients send a speech-only transcript. Falling back to the full
- // answer keeps older clients compatible, and the coaching caveat makes
- // the browser provenance explicit.
- $speechTranscript = array_key_exists('speech_transcript', $input)? (string) ($input['speech_transcript']?? ''): $answerText;
+ // Delivery evidence is server-owned. The flag is set only after an audio-bound
+ // proof succeeds or the server independently transcribes the attached audio.
+ if (! filter_var($input['_voice_transcript_verified']?? false, FILTER_VALIDATE_BOOLEAN)) {
+ return '';
+ }
+
+ $speechTranscript = (string) ($input['speech_transcript']?? '');
  $speechTranscript = $this->cleanTranscribedAnswer($speechTranscript);
- if ($speechTranscript === '') {
- return '';
- }
-
- if (trim($answerText) === '') {
- return $speechTranscript;
- }
-
- if (! $this->deliveryTranscriptMatchesAnswer($speechTranscript, $answerText)) {
- return '';
- }
 
  return $speechTranscript;
  }
@@ -5182,12 +5570,17 @@ return response()->json([
 
  private function answerContentForAssessment(InterviewAnswer $answer): string
  {
+ $deliveryTranscript = trim((string) ($answer->delivery_transcript?? ''));
+ if ($this->normalizeResponseMode($answer->response_mode?? 'text') === 'voice') {
+ return $deliveryTranscript;
+ }
+
  $answerText = trim((string) ($answer->answer_text?? ''));
  if ($answerText!== '') {
  return $answerText;
  }
 
- return trim((string) ($answer->delivery_transcript?? ''));
+ return $deliveryTranscript;
  }
 
  private function answerHasStoredVoiceRecording(InterviewAnswer $answer): bool

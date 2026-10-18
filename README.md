@@ -589,17 +589,23 @@ php artisan ai:train-feedback-model --force
 
 Browser live captions are used first for real-time interview transcription where supported. OpenAI/Gemini transcription can be configured as a cloud fallback when browser speech recognition is unavailable or fails. Cloud fallback availability still depends on provider API quotas.
 
+For Interview Voice and Hybrid modes, live captions are previews only. Stop/Submit sends the complete recording through the configured transcription chain, and the returned transcript is bound to the exact user, session, question, audio bytes, and transcript with a short-lived encrypted proof. Hybrid edits remain the written answer while the audio-bound server transcript remains separate delivery evidence. If the proof is missing, expired, or changed, the server retranscribes the uploaded recording instead of trusting browser text. Empty provider results continue to the next provider, and malformed structured fallback output is rejected.
+
+No speech provider can guarantee 100% accuracy for every accent, language mix, microphone, or noise condition. Validate the deployment with consented, representative English, Filipino/Tagalog, Cebuano/Bisaya, and code-switched recordings and track word error rate, critical names/numbers, empty results, and p95 latency before claiming a percentage.
+
 ```env
 OPENAI_API_KEY=
 AI_TRANSCRIPTION_PROVIDER_PRIORITY=openai,gemini
 OPENAI_TRANSCRIPTION_MODEL=gpt-transcribe
 AI_TRANSCRIPTION_TIMEOUT=45
-AI_TRANSCRIPTION_CHUNK_MS=1200
-AI_TRANSCRIPTION_MOBILE_CHUNK_MS=1500
+AI_TRANSCRIPTION_CHUNK_MS=2500
+AI_TRANSCRIPTION_MOBILE_CHUNK_MS=3500
 AI_TRANSCRIPTION_DRAIN_TIMEOUT_MS=20000
 AI_TRANSCRIPTION_REQUEST_TIMEOUT_MS=30000
 AI_TRANSCRIPTION_MAX_IN_FLIGHT=2
 AI_TRANSCRIPTION_RATE_LIMIT_COOLDOWN_SECONDS=90
+AI_TRANSCRIPTION_PROOF_TTL_SECONDS=1800
+FFPROBE_COMMAND=ffprobe
 AI_VOICE_ANALYSIS_TIMEOUT=12
 AI_VOICE_ANALYSIS_MAX_PROVIDERS=2
 AI_VOICE_ANALYSIS_HTTP_ATTEMPTS=1

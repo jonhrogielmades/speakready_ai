@@ -67,6 +67,8 @@ return [
  'request_timeout_ms' => env('AI_TRANSCRIPTION_REQUEST_TIMEOUT_MS', 30000),
  'max_in_flight' => env('AI_TRANSCRIPTION_MAX_IN_FLIGHT', 2),
  'rate_limit_cooldown_seconds' => env('AI_TRANSCRIPTION_RATE_LIMIT_COOLDOWN_SECONDS', 90),
+ 'proof_ttl_seconds' => env('AI_TRANSCRIPTION_PROOF_TTL_SECONDS', 1800),
+ 'ffprobe_command' => env('FFPROBE_COMMAND', 'ffprobe'),
  ],
 
  'openai' => [

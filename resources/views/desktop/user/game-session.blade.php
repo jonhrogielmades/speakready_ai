@@ -215,6 +215,7 @@
 <div class="stat-row"><span>Shoulders / posture</span><span id="stPose">Waiting</span></div>
 <div class="stat-row"><span>Movement steadiness</span><span id="stMovement">Waiting</span></div>
 <div class="stat-row"><span>Head alignment</span><span id="stPosture">Optional - not scored</span></div>
+<div class="small mt-2" style="color:var(--tx3)">Live camera cues are shown only after a strong face-and-pose signal is available. Unreliable frames are withheld; camera cues never affect challenge scoring.</div>
  </div>
  </div>
  @endif
@@ -1188,9 +1189,12 @@ const video = document.getElementById('userCamera');
 
  try {
  let detection = null;
+ let faceConfidence = null;
  if (canUseFaceModel) {
  try {
- detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+ detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.60 })).withFaceLandmarks();
+ faceConfidence = detection?.detection?.score !== undefined? Number(detection.detection.score) * 100: (detection? 100: null);
+ if (faceConfidence !== null && faceConfidence < 60) detection = null;
  } catch (faceError) {
  console.error("Face framing tracking error", faceError);
  }
@@ -1247,10 +1251,11 @@ movementScore = Math.min(100, Math.round((distances.reduce((total, distance) => 
 }
 gameCameraMovementBaseline = movementPoints;
 
-setGameCameraStat('stEyeContact', faceVisible? '<i class="fa-solid fa-check me-1"></i>Visible': '<i class="fa-solid fa-circle-info me-1"></i>Move into frame', faceVisible? 'text-success': 'text-warning', true);
-setGameCameraStat('stPosture', faceVisible? (poseCameraFacing === false? 'Head turned estimate': 'Camera-facing estimate'): 'Optional - not scored', faceVisible? (poseCameraFacing === false? 'text-warning': 'text-success'): 'text-secondary');
-setGameCameraStat('stPose', shouldersVisible? (shouldersLevel && uprightPosture!== false? 'Balanced upper body': 'Posture cue available'): (poseDetected? 'Partial pose estimate': 'Pose not detected'), shouldersVisible? (shouldersLevel && uprightPosture!== false? 'text-success': 'text-warning'): 'text-secondary');
-setGameCameraStat('stMovement', movementScore === null? 'Calibrating': (movementScore >= 45? 'Higher movement': 'Steady'), movementScore === null? 'text-secondary': (movementScore >= 45? 'text-warning': 'text-success'));
+const highConfidenceFrame = Boolean(detection && faceConfidence !== null && faceConfidence >= 60 && poseDetected && shouldersVisible && poseCameraFacing !== null);
+setGameCameraStat('stEyeContact', highConfidenceFrame? '<i class="fa-solid fa-check me-1"></i>Reliable frame': (faceVisible? '<i class="fa-solid fa-circle-info me-1"></i>Signal checking': '<i class="fa-solid fa-circle-info me-1"></i>Move into frame'), highConfidenceFrame? 'text-success': 'text-warning', true);
+setGameCameraStat('stPosture', highConfidenceFrame? (poseCameraFacing === false? 'Head turned estimate': 'Camera-facing estimate'): 'Awaiting reliable signal', highConfidenceFrame? (poseCameraFacing === false? 'text-warning': 'text-success'): 'text-secondary');
+setGameCameraStat('stPose', highConfidenceFrame? (shouldersLevel && uprightPosture!== false? 'Balanced upper body': 'Posture cue available'): 'Awaiting reliable signal', highConfidenceFrame? (shouldersLevel && uprightPosture!== false? 'text-success': 'text-warning'): 'text-secondary');
+setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal': (movementScore === null? 'Calibrating': (movementScore >= 45? 'Higher movement': 'Steady')), !highConfidenceFrame || movementScore === null? 'text-secondary': (movementScore >= 45? 'text-warning': 'text-success'));
 } catch(e) {
  console.error("Tracking error", e);
  }
@@ -2475,9 +2480,9 @@ modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker
 },
  runningMode: 'VIDEO',
  numPoses: 1,
- minPoseDetectionConfidence: 0.5,
-minPosePresenceConfidence: 0.5,
-minTrackingConfidence: 0.5,
+ minPoseDetectionConfidence: 0.60,
+minPosePresenceConfidence: 0.60,
+minTrackingConfidence: 0.60,
 outputSegmentationMasks: false
 });
 

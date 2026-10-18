@@ -147,4 +147,50 @@ class AiProviderReliabilityTest extends TestCase
 
         $this->assertFalse($policy->circuitState('openai', 'feedback_generation')['open']);
     }
+
+    public function test_circuit_breaker_does_not_treat_empty_results_as_failures(): void
+    {
+        config()->set('services.ai_providers.circuit_breaker_enabled', true);
+        config()->set('services.ai_providers.circuit_failure_threshold', 3);
+        config()->set('services.ai_providers.circuit_cooldown_seconds', 120);
+
+        foreach (range(1, 3) as $index) {
+            AiProviderLog::create([
+                'module' => 'speech_transcription',
+                'endpoint' => 'openai',
+                'response_time_ms' => 200 + $index,
+                'status' => 'empty',
+                'created_at' => now(),
+            ]);
+        }
+
+        $state = app(AiProviderReliabilityService::class)
+            ->circuitState('openai', 'speech_transcription');
+
+        $this->assertFalse($state['open']);
+        $this->assertSame(0, $state['failure_count']);
+    }
+
+    public function test_circuit_breaker_counts_only_newest_consecutive_explicit_failures(): void
+    {
+        config()->set('services.ai_providers.circuit_breaker_enabled', true);
+        config()->set('services.ai_providers.circuit_failure_threshold', 3);
+        config()->set('services.ai_providers.circuit_cooldown_seconds', 120);
+
+        foreach (['failed', 'empty', 'failed', 'failed'] as $index => $status) {
+            AiProviderLog::create([
+                'module' => 'speech_transcription',
+                'endpoint' => 'openai',
+                'response_time_ms' => 300 + $index,
+                'status' => $status,
+                'created_at' => now(),
+            ]);
+        }
+
+        $state = app(AiProviderReliabilityService::class)
+            ->circuitState('openai', 'speech_transcription');
+
+        $this->assertFalse($state['open']);
+        $this->assertSame(2, $state['failure_count']);
+    }
 }

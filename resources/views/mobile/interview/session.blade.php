@@ -183,7 +183,7 @@
  <label for="answerTextarea" class="visually-hidden">Your interview answer</label>
  <div id="responseModeLockNotice" class="response-mode-lock-notice" hidden>
  <i class="fa-solid fa-lock" aria-hidden="true"></i>
- <span>Voice Mode is voice-only. Text transcription and typing are disabled; use Hybrid Mode for voice-to-text.</span>
+ <span>Voice Mode keeps typing hidden. The complete recording is securely transcribed for feedback; use Hybrid Mode to view and edit text.</span>
  </div>
  <div class="answer-transcript-stage">
  <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer using your own local school, work, internship, or project evidence..." aria-describedby="sessionNotice responseModeLockNotice answerTranscriptionOverlay responseCountBar"></textarea>
@@ -285,7 +285,7 @@
  <div class="stat-row"><span>Head alignment estimate</span><span id="stPosture" class="text-secondary">Not scored</span></div>
  <div class="stat-row"><span>Shoulders / posture pose</span><span id="stPose" class="text-secondary">Waiting</span></div>
  <div class="stat-row mb-0"><span>Movement steadiness</span><span id="stMovement" class="text-secondary">Waiting</span></div>
- <div class="small mt-2" style="color:var(--tx3)">This estimates visible framing, head alignment, shoulders, posture pose, and movement steadiness only. Video is analyzed in your browser; no images, video, or raw landmarks are stored. It does not infer confidence, honesty, personality, or employability, and it is excluded from readiness.</div>
+ <div class="small mt-2" style="color:var(--tx3)">Camera feedback uses a high-confidence gate: enough time-spread frames, strong face confidence, usable framing, and pose cross-checks. If those checks do not pass, the report withholds the camera conclusion. Video is analyzed in your browser; no images, video, or raw landmarks are stored. It does not infer confidence, honesty, personality, or employability, and it is excluded from readiness.</div>
  </div>
 
  </div>
@@ -565,6 +565,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  filler_events: [],
  camera_samples: [],
  camera_detection_enabled: cameraDetectionEnabled,
+ camera_detection_protocol: 2,
  camera_unavailable_reason: cameraDetectionEnabled? cameraUnavailableReason: null
  },
  pronunciation_analysis: null,
@@ -599,6 +600,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  filler_events: Array.isArray(observations.filler_events)? observations.filler_events: [],
  camera_samples: cameraDetectionEnabled && Array.isArray(observations.camera_samples)? observations.camera_samples: [],
  camera_detection_enabled: cameraDetectionEnabled,
+ camera_detection_protocol: 2,
  camera_unavailable_reason: cameraDetectionEnabled? (observations.camera_unavailable_reason || cameraUnavailableReason): null
  };
 
@@ -612,6 +614,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  filler_events: Array.isArray(observations.filler_events)? observations.filler_events.slice(-fillerLimit): [],
  camera_samples: cameraDetectionEnabled && Array.isArray(observations.camera_samples)? observations.camera_samples.slice(-cameraLimit): [],
  camera_detection_enabled: cameraDetectionEnabled,
+ camera_detection_protocol: 2,
  camera_unavailable_reason: cameraDetectionEnabled? (observations.camera_unavailable_reason || cameraUnavailableReason): null
  };
  }
@@ -639,10 +642,12 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let recTimerStartedAt = 0;
  let recTimerBaseSeconds = 0;
  let recordingStartPromise = null;
+ let recordingPausePromise = null;
  let recordingStopPromise = null;
+ let recordingTransitionState = '';
+ let voiceControlsEnabledState = false;
+ let voiceControlsDisabledReason = '';
  let preRecordingText = '';
- let recordingStartText = '';
- let recordingManuallyEdited = false;
  let committedSpeechTranscript = '';
  let liveSpeechInterim = '';
  let lastCommittedSpeech = '';
@@ -674,7 +679,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
  const cameraMovementBaselines = {};
  let cameraSampleSequence = 0;
- const cameraQualityThreshold = 0.35;
  const cameraFaceSizeRange = { min: 3, max: 42 };
 
  const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -717,6 +721,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const voiceSessionTranscriptionMaxBytes = 25600 * 1024;
  const voiceSessionFullTranscriptionTimeoutMs = Math.max(serverTranscriptionRequestTimeoutMs, 120000);
  const serverTranscriptionMaxInFlight = {{ max(1, min(3, (int) config('services.ai_transcription.max_in_flight', 2))) }};
+ const serverTranscriptionMaxQueuedChunks = Math.max(4, serverTranscriptionMaxInFlight * 3);
  const serverTranscriptionFailureLimit = 3;
  const serverTranscriptionSupported = serverTranscriptionEnabled
  && Boolean(window.MediaRecorder)
@@ -726,6 +731,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let activeTranscriptionEngine = isHybridTranscriptionMode() && displayRealtimeTranscriptInTextarea? (BrowserSpeechRecognition? 'browser': (serverTranscriptionSupported? 'server': null)): null;
  const transcriptOverlapMaxWords = 240;
  const voiceSessionRecordings = new Map();
+ const voiceSessionTextTrackingByQuestion = new Map();
  let voiceSessionRecorder = null;
  let voiceSessionStream = null;
  let voiceSessionChunks = [];
@@ -985,8 +991,13 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function handleAnswerInput() {
- if (isHybridTranscriptionMode() && (isRecording || isRecordingPaused || recordingStopPromise || voiceSessionTranscriptPromise || voiceSessionRecordings.has(voiceSessionKeyFor()))) {
- recordingManuallyEdited = true;
+ const key = voiceSessionKeyFor();
+ if (isHybridTranscriptionMode() && (isRecording || isRecordingPaused || recordingStopPromise || voiceSessionTranscriptPromise || voiceSessionRecordings.has(key))) {
+ const tracking = voiceSessionTextTrackingFor(key);
+ tracking.manuallyEdited = true;
+ voiceSessionTextTrackingByQuestion.set(key, tracking);
+ const recording = voiceSessionRecordings.get(key);
+ if (recording) recording.manualEdited = true;
  }
  syncSpeechRecognitionBufferFromManualEdit();
  triggerAnalysis();
@@ -1041,7 +1052,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  const textareaText = currentAnswerTextareaText();
  answerState.text = textareaText;
+ const fullRecordingTranscript = cleanTranscriptText(voiceSessionRecordings.get(voiceSessionKeyFor())?.transcript || '');
+ if (!fullRecordingTranscript) {
  answerState.speech_transcript = cleanTranscriptText(textareaText);
+ }
  answersData[currentQIdx] = answerState;
  }
 
@@ -1066,7 +1080,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  const answerState = answersData[currentQIdx] || defaultAnswerState();
  answerState.text = textarea? String(textarea.value || ''): renderedTranscript;
+ const fullRecordingTranscript = cleanTranscriptText(voiceSessionRecordings.get(voiceSessionKeyFor())?.transcript || '');
+ if (!fullRecordingTranscript) {
  answerState.speech_transcript = cleanTranscriptText(answerState.text);
+ }
  answersData[currentQIdx] = answerState;
  updateAnswerTranscriptionOverlay();
  return true;
@@ -1078,7 +1095,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const recognizedTranscript = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
  const renderedTranscript = mergeTranscriptParts(preRecordingText, recognizedTranscript);
  const revealTranscript = options.reveal === true;
- const transcriptCaptureLocked = Boolean(recordingStartPromise || isRecording || isRecordingPaused);
+ const transcriptCaptureLocked = Boolean(recordingStartPromise || recordingPausePromise || recordingStopPromise || recordingTransitionState || voiceSessionTranscriptPromise || isRecording || isRecordingPaused);
  if (transcriptCaptureLocked &&!revealTranscript) {
  const answerState = answersData[currentQIdx] || defaultAnswerState();
  answerState.speech_transcript = cleanTranscriptText(renderedTranscript);
@@ -1113,6 +1130,27 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  function voiceSessionKeyFor(index = currentQIdx) {
  const question = questions[index];
  return question?.id? `question:${question.id}`: `index:${index}`;
+ }
+
+ function voiceSessionTextTrackingFor(keyOrIndex = currentQIdx) {
+ const key = typeof keyOrIndex === 'string'? keyOrIndex: voiceSessionKeyFor(keyOrIndex);
+ const recording = voiceSessionRecordings.get(key);
+ const tracking = voiceSessionTextTrackingByQuestion.get(key) || {};
+
+ return {
+ startText: String(tracking.startText?? recording?.typedPrefix?? ''),
+ manuallyEdited: Boolean(tracking.manuallyEdited?? recording?.manualEdited?? false)
+ };
+ }
+
+ function setVoiceSessionTextTracking(keyOrIndex, startText = '', manuallyEdited = false) {
+ const key = typeof keyOrIndex === 'string'? keyOrIndex: voiceSessionKeyFor(keyOrIndex);
+ const tracking = {
+ startText: String(startText || ''),
+ manuallyEdited: Boolean(manuallyEdited)
+ };
+ voiceSessionTextTrackingByQuestion.set(key, tracking);
+ return tracking;
  }
 
  function voiceSessionExtension(mimeType = '') {
@@ -1175,8 +1213,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const handleEnded = () => {
  if (voiceSessionQuestionKey!== key) return;
  setVoiceSessionUiState('error', 'Microphone stopped unexpectedly', key);
- Promise.resolve(stopVoiceSessionRecorder()).catch(error => {
- console.warn('Voice session stop after track ended failed:', error);
+ Promise.resolve(stopRecording({ reason: 'microphone-ended' })).catch(error => {
+ console.warn('Full recording stop after microphone ended failed:', error);
  });
  };
 
@@ -1201,9 +1239,78 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const recording = voiceSessionRecordings.get(key);
  if (recording) revokeVoiceSessionRecording(recording);
  voiceSessionRecordings.delete(key);
+ voiceSessionTextTrackingByQuestion.delete(key);
  if (key === voiceSessionKeyFor(currentQIdx)) {
  updateAnswerVoiceRecordingMetadata(currentQIdx, null);
  }
+ }
+
+ function resetVoiceDerivedAnswerMetrics(index = currentQIdx) {
+ const answerState = answersData[index];
+ if (!answerState) return;
+
+ answerState.voice_duration = 0;
+ answerState.wpm = 0;
+ answerState.filler_words = 0;
+ answerState.pause_count = 0;
+ answerState.pronunciation_analysis = null;
+ const observations = answerState.observation_data && typeof answerState.observation_data === 'object'
+ ? answerState.observation_data
+ : {};
+ answerState.observation_data = {
+ ...observations,
+ filler_events: [],
+ camera_samples: Array.isArray(observations.camera_samples)? observations.camera_samples: []
+ };
+
+ if (index === currentQIdx) {
+ const metricValues = {
+ vaDuration: '0s',
+ vaWpm: '0',
+ vaFillers: '0'
+ };
+ Object.entries(metricValues).forEach(([id, value]) => {
+ const target = document.getElementById(id);
+ if (target) target.innerText = value;
+ });
+ lastSpeechEnd = 0;
+ }
+ }
+
+ function commitStartedVoiceSessionReplacement(key, questionIndex, previousRecording = null) {
+ const answerState = answersData[questionIndex] || defaultAnswerState();
+ const textarea = questionIndex === currentQIdx? document.getElementById('answerTextarea'): null;
+ const currentText = textarea? String(textarea.value || ''): String(answerState.text || '');
+ const previousTracking = voiceSessionTextTrackingFor(key);
+ const typedPrefix = String(previousRecording?.typedPrefix?? previousTracking.startText?? '').trim();
+ const generatedAnswer = String(previousRecording?.generatedAnswer || [typedPrefix, cleanTranscriptText(previousRecording?.transcript || '')].filter(Boolean).join(' '));
+ const previousWasManuallyEdited = Boolean(previousRecording?.manualEdited || previousTracking.manuallyEdited);
+ const answerStillMatchesPreviousRecording = Boolean(previousRecording && generatedAnswer)
+ &&!previousWasManuallyEdited
+ && normalizeTranscriptForMatch(currentText) === normalizeTranscriptForMatch(generatedAnswer);
+ let nextStartText = currentText;
+
+ if (isVoiceOnlyMode()) {
+ nextStartText = '';
+ if (textarea) textarea.value = '';
+ answerState.text = '';
+ } else if (isHybridTranscriptionMode() && answerStillMatchesPreviousRecording) {
+ nextStartText = typedPrefix;
+ if (textarea) textarea.value = typedPrefix;
+ answerState.text = typedPrefix;
+ } else {
+ answerState.text = currentText;
+ }
+
+ if (previousRecording) revokeVoiceSessionRecording(previousRecording);
+ voiceSessionRecordings.delete(key);
+ answerState.speech_transcript = '';
+ answersData[questionIndex] = answerState;
+ updateAnswerVoiceRecordingMetadata(questionIndex, null);
+ resetVoiceDerivedAnswerMetrics(questionIndex);
+ setVoiceSessionTextTracking(key, nextStartText, false);
+ resetSpeechRecognitionBufferFromTextarea();
+ triggerAnalysis();
  }
 
  function updateAnswerVoiceRecordingMetadata(index = currentQIdx, recording = null) {
@@ -1243,6 +1350,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  formData.append('voice_audio', blob, currentRecording.filename || voiceSessionFilename(index, mimeType));
  formData.append('voice_recording_duration_seconds', durationSeconds);
  formData.append('voice_recording_transcription_status', transcriptionStatus);
+ if (currentRecording.transcriptionProof) {
+ formData.append('voice_transcription_proof', currentRecording.transcriptionProof);
+ }
  return true;
  }
 
@@ -1343,7 +1453,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function updateVoiceSessionActionState(recording = null, details = {}) {
  const hasRecording = Boolean(recording?.blob || recording?.url);
- const isBusy = Boolean(details.transcribingForQuestion);
+ const isBusy = Boolean(details.transcribingForQuestion || recordingTransitionInProgress());
  const menuButton = document.getElementById('voiceSessionMenuButton');
  const downloadButton = document.getElementById('voiceSessionDownloadButton');
  const clearButton = document.getElementById('voiceSessionClearButton');
@@ -1435,32 +1545,36 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const answerState = answersData[currentQIdx] || defaultAnswerState();
  const textarea = document.getElementById('answerTextarea');
  const currentText = textarea? String(textarea.value || ''): String(answerState.text || '');
- const typedPrefix = String(recordingStartText || '').trim();
- const generatedAnswer = [typedPrefix, cleanTranscriptText(recording.transcript || '')].filter(Boolean).join(' ');
+ const tracking = voiceSessionTextTrackingFor(key);
+ const typedPrefix = String(recording.typedPrefix?? tracking.startText?? '').trim();
+ const generatedAnswer = String(recording.generatedAnswer || [typedPrefix, cleanTranscriptText(recording.transcript || '')].filter(Boolean).join(' '));
+ const recordingWasManuallyEdited = Boolean(recording.manualEdited || tracking.manuallyEdited);
+ const clearVoiceGeneratedText = isVoiceOnlyMode();
  const canClearGeneratedText = isHybridTranscriptionMode()
- && Boolean(recording.transcript)
- &&!recordingManuallyEdited
+ && Boolean(generatedAnswer)
+ &&!recordingWasManuallyEdited
  && normalizeTranscriptForMatch(currentText) === normalizeTranscriptForMatch(generatedAnswer);
 
  clearVoiceSessionRecordingFor(key);
- answerState.voice_duration = 0;
- answerState.wpm = 0;
- answerState.pronunciation_analysis = null;
+ resetVoiceDerivedAnswerMetrics(currentQIdx);
 
- if (canClearGeneratedText) {
+ if (clearVoiceGeneratedText) {
+ if (textarea) textarea.value = '';
+ answerState.text = '';
+ } else if (canClearGeneratedText) {
  if (textarea) textarea.value = typedPrefix;
  answerState.text = typedPrefix;
  } else {
  answerState.text = currentText;
  }
- answerState.speech_transcript = isHybridTranscriptionMode()? cleanTranscriptText(answerState.text): '';
+ answerState.speech_transcript = '';
 
  answersData[currentQIdx] = answerState;
  resetSpeechRecognitionBufferFromTextarea();
  setTranscriptionStatus('');
  setVoiceSessionUiState('idle', 'Voice session cleared', key);
 
- if (canClearGeneratedText) {
+ if (clearVoiceGeneratedText || canClearGeneratedText) {
  triggerAnalysis();
  } else {
  updateSendAnswerButtonState();
@@ -1521,15 +1635,22 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const answerState = answersData[index] || defaultAnswerState();
  const textarea = index === currentQIdx? document.getElementById('answerTextarea'): null;
  const existingText = textarea? String(textarea.value || ''): String(answerState.text || '');
- const preservedManualEdits = options.reconcileFullRecording === true && index === currentQIdx && recordingManuallyEdited;
- const recordingPrefix = String(options.recordingStartText || '').trim();
- const mergedAnswerText = options.reconcileFullRecording === true
- ? (preservedManualEdits? existingText: [recordingPrefix, cleanTranscript].filter(Boolean).join(' '))
- : (options.replaceAnswerText === true
- ? cleanTranscript
- : (options.appendTranscript === true
- ? mergeTranscriptParts(existingText, cleanTranscript)
- : mergeFullVoiceTranscriptWithAnswer(existingText, answerState.speech_transcript || '', cleanTranscript)));
+ const key = voiceSessionKeyFor(index);
+ const tracking = voiceSessionTextTrackingFor(key);
+ const preservedManualEdits = options.reconcileFullRecording === true && tracking.manuallyEdited;
+ const recordingPrefix = String(Object.prototype.hasOwnProperty.call(options, 'recordingStartText')? options.recordingStartText: tracking.startText).trim();
+ let mergedAnswerText;
+ if (isVoiceOnlyMode()) {
+ mergedAnswerText = cleanTranscript;
+ } else if (options.reconcileFullRecording === true) {
+ mergedAnswerText = preservedManualEdits? existingText: [recordingPrefix, cleanTranscript].filter(Boolean).join(' ');
+ } else if (options.replaceAnswerText === true) {
+ mergedAnswerText = cleanTranscript;
+ } else if (options.appendTranscript === true) {
+ mergedAnswerText = mergeTranscriptParts(existingText, cleanTranscript);
+ } else {
+ mergedAnswerText = mergeFullVoiceTranscriptWithAnswer(existingText, answerState.speech_transcript || '', cleanTranscript);
+ }
  const voiceDuration = Math.max(
  Number(answerState.voice_duration || 0),
  Number(recording?.durationSeconds || 0),
@@ -1537,7 +1658,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  );
  const wordCount = wordsForTranscript(cleanTranscript).length;
 
- answerState.speech_transcript = cleanTranscriptText(mergedAnswerText);
+ answerState.speech_transcript = cleanTranscript;
  answerState.text = mergedAnswerText;
  answerState.voice_duration = Math.max(0, Math.round(voiceDuration));
  answerState.wpm = answerState.voice_duration > 0? Math.round((wordCount / Math.max(1, answerState.voice_duration)) * 60): answerState.wpm;
@@ -1547,8 +1668,13 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  if (recording) {
  recording.transcript = cleanTranscript;
+ recording.typedPrefix = recordingPrefix;
+ recording.manualEdited = preservedManualEdits;
+ recording.generatedAnswer = [recordingPrefix, cleanTranscript].filter(Boolean).join(' ');
  recording.transcriptionStatus = data.transcription_status || 'transcribed';
  recording.transcriptionSource = data.transcription_source || 'ai';
+ recording.transcriptionProof = String(data.transcription_proof || '');
+ recording.transcriptionVerified = Boolean(data.transcription_verified && recording.transcriptionProof);
  recording.transcribedAt = new Date().toISOString();
  updateAnswerVoiceRecordingMetadata(index, recording);
  }
@@ -1585,6 +1711,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  formData.append('session_id', interviewSessionId);
  formData.append('question_id', question.id);
  formData.append('previous_transcript', cleanTranscriptText(previousTranscript).slice(-3000));
+ formData.append('final_recording', '1');
  formData.append('audio', recording.blob, recording.filename || serverTranscriptionFilename(recording.blob));
 
  const response = await managedFetch('{{ route("interview.transcribe") }}', {
@@ -1620,21 +1747,22 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  async function transcribeVoiceSessionRecording(index = currentQIdx, options = {}) {
  if (voiceSessionTranscriptPromise) return voiceSessionTranscriptPromise;
- if (!isHybridTranscriptionMode()) {
- setTranscriptionStatus('Voice Mode is voice-only. Use Hybrid Mode for voice-to-text.', '#fbbf24');
+ if (!isVoiceTranscriptionMode()) {
  return '';
  }
 
  const silent = options.silent === true;
  const skipStopRecording = options.skipStopRecording === true;
  const key = voiceSessionKeyFor(index);
+ if (!skipStopRecording && index === currentQIdx && (recordingStartPromise || recordingPausePromise || recordingStopPromise || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise)) {
+ await stopRecording();
+ return cleanTranscriptText(voiceSessionRecordings.get(key)?.transcript || '');
+ }
+ const managesRecordingTransition = index === currentQIdx &&!recordingStopPromise;
+ if (managesRecordingTransition) setRecordingTransitionState('transcribing');
  voiceSessionTranscriptQuestionKey = key;
 
  voiceSessionTranscriptPromise = (async () => {
- if (!skipStopRecording && index === currentQIdx && (recordingStartPromise || recordingStopPromise || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise)) {
- await stopRecording();
- }
-
  if (voiceSessionStopPromise) {
  await voiceSessionStopPromise.catch(error => {
  console.warn('Voice session stop wait before transcript failed:', error);
@@ -1656,19 +1784,21 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  setVoiceSessionUiState('transcribing', 'Transcribing full voice recording', key);
  setTranscriptionStatus('Transcribing full voice recording', '#fbbf24');
 
- const previousTranscript = Object.prototype.hasOwnProperty.call(options, 'previousTranscript')? options.previousTranscript: (index === currentQIdx? recordingStartText: '');
+ const trackingAtRequest = voiceSessionTextTrackingFor(key);
+ const previousTranscript = Object.prototype.hasOwnProperty.call(options, 'previousTranscript')? options.previousTranscript: trackingAtRequest.startText;
  const data = await requestFullVoiceSessionTranscript(recording, question, previousTranscript);
  const transcript = cleanTranscriptText(data.transcript || '');
  if (!transcript) {
  throw new Error('No speech was detected in the voice recording.');
  }
 
- const preservedManualEdits = options.reconcileFullRecording === true && index === currentQIdx && recordingManuallyEdited;
+ const latestTracking = voiceSessionTextTrackingFor(key);
+ const preservedManualEdits = options.reconcileFullRecording === true && latestTracking.manuallyEdited;
  const appliedTranscript = applyVoiceSessionTranscript(index, transcript, data, recording, {
  appendTranscript: options.appendTranscript === true,
  replaceAnswerText: options.replaceAnswerText === true,
  reconcileFullRecording: options.reconcileFullRecording === true,
- recordingStartText: options.recordingStartText || ''
+ recordingStartText: Object.prototype.hasOwnProperty.call(options, 'recordingStartText')? options.recordingStartText: trackingAtRequest.startText
  });
  setVoiceSessionUiState('transcribed', preservedManualEdits? 'Full transcript ready; your edits were kept': 'Transcript added to answer', key);
  setTranscriptionStatus(preservedManualEdits? 'Full transcript ready; your edits were kept. Review before sending.': 'Full voice transcript added', preservedManualEdits? '#fbbf24': '#16a34a');
@@ -1691,6 +1821,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }).finally(() => {
  voiceSessionTranscriptPromise = null;
  voiceSessionTranscriptQuestionKey = null;
+ if (managesRecordingTransition && recordingTransitionState === 'transcribing') {
+ setRecordingTransitionState('');
+ }
  renderVoiceSessionPanel(index);
  });
 
@@ -1698,14 +1831,16 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function warnFullRecordingTranscriptReview(message) {
- const warning = `${message} Review and correct the live transcript before sending.`;
+ const warning = isVoiceOnlyMode()
+ ? `${message} The server will retry transcription when you send the recording.`
+ : `${message} Review and correct the live transcript before sending.`;
  setTranscriptionStatus(warning, '#fbbf24');
  showSessionNotice(warning, 'warning');
  return { verified: false, warning };
  }
 
  async function reconcileHybridTranscriptFromRecording(index = currentQIdx) {
- if (!isHybridTranscriptionMode()) return { verified: false, warning: '' };
+ if (!isVoiceTranscriptionMode()) return { verified: false, warning: '' };
 
  // A late live chunk must never replace the final full-recording result.
  invalidateServerTranscriptionJobs();
@@ -1722,7 +1857,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return warnFullRecordingTranscriptReview('Full recording transcription is unavailable.');
  }
 
- const prefix = String(recordingStartText || '');
+ const tracking = voiceSessionTextTrackingFor(voiceSessionKeyFor(index));
+ const prefix = String(tracking.startText || '');
  const transcript = await transcribeVoiceSessionRecording(index, {
  silent: true,
  skipStopRecording: true,
@@ -1730,8 +1866,13 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  recordingStartText: prefix,
  previousTranscript: cleanTranscriptText(prefix)
  });
- if (!cleanTranscriptText(transcript)) {
- return warnFullRecordingTranscriptReview(currentTranscriptionStatusMessage() || 'Full recording transcription failed.');
+ const hasVerifiedTranscript = cleanTranscriptText(transcript).trim() !== ''
+ && Boolean(recording.transcriptionVerified && recording.transcriptionProof);
+ if (!hasVerifiedTranscript) {
+ const warning = cleanTranscriptText(transcript).trim() !== ''
+ ? 'Full recording transcript could not be verified.'
+ : (currentTranscriptionStatusMessage() || 'Full recording transcription failed.');
+ return warnFullRecordingTranscriptReview(warning);
  }
 
  return { verified: true, warning: '' };
@@ -1778,9 +1919,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  await stopVoiceSessionRecorder({ discard: true, skipStartWait: true });
  }
 
- if (!isRecordingPaused) {
- clearVoiceSessionRecordingFor(key);
- }
+ const questionIndex = currentQIdx;
+ const previousRecording = voiceSessionRecordings.get(key) || null;
 
  try {
  releaseVoiceSessionStream();
@@ -1791,12 +1931,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  voiceSessionStream = sourceStream;
  voiceSessionRecorder = recorder;
  voiceSessionQuestionKey = key;
- voiceSessionQuestionIndex = currentQIdx;
+ voiceSessionQuestionIndex = questionIndex;
  voiceSessionChunks = [];
  voiceSessionStopPromise = null;
  voiceSessionRecordingStartedAt = 0;
  attachVoiceSessionTrackGuards(sourceStream, key);
- updateAnswerVoiceRecordingMetadata(currentQIdx, null);
 
  recorder.ondataavailable = event => {
  if (event.data && event.data.size > 0) {
@@ -1810,6 +1949,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  recorder.onpause = () => setVoiceSessionUiState('paused', 'Paused', key);
  recorder.onresume = () => setVoiceSessionUiState('recording', 'Recording', key);
  recorder.start(voiceSessionTimesliceMs);
+ commitStartedVoiceSessionReplacement(key, questionIndex, previousRecording);
  voiceSessionRecordingStartedAt = recordingTimerNow();
  setVoiceSessionUiState('recording', 'Recording', key);
  startAnswerTranscriptionVisualizer(sourceStream);
@@ -1864,6 +2004,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (revokeSaved) {
  voiceSessionRecordings.forEach(revokeVoiceSessionRecording);
  voiceSessionRecordings.clear();
+ voiceSessionTextTrackingByQuestion.clear();
  }
 
  setVoiceSessionUiState('idle', '', voiceSessionKeyFor());
@@ -1906,6 +2047,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const mimeType = recorder.mimeType || voiceSessionMimeType || chunks.find(chunk => chunk?.type)?.type || 'audio/webm';
  const blob = new Blob(chunks, { type: mimeType });
  if (blob.size > 0) {
+ const tracking = voiceSessionTextTrackingFor(key);
+ const currentAnswerText = questionIndex === currentQIdx? currentAnswerTextareaText(): String(answersData[questionIndex]?.text || '');
  recording = {
  blob,
  url: URL.createObjectURL(blob),
@@ -1913,6 +2056,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  size: blob.size,
  durationSeconds: Math.max(answersData[questionIndex]?.voice_duration || 0, recTimerSeconds || 0),
  filename: voiceSessionFilename(questionIndex, mimeType),
+ typedPrefix: tracking.startText,
+ manualEdited: tracking.manuallyEdited,
+ generatedAnswer: tracking.manuallyEdited? '': currentAnswerText,
  createdAt: new Date().toISOString()
  };
  const previous = voiceSessionRecordings.get(key);
@@ -2516,6 +2662,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function queueServerTranscriptionChunk(blob) {
  if (serverTranscriptionUnavailable ||!blob || blob.size < 128 ||!questions[currentQIdx]) return;
+ if (serverTranscriptionQueue.length >= serverTranscriptionMaxQueuedChunks) {
+ setTranscriptionStatus('Live captions are catching up. The complete recording will be transcribed when stopped.', '#fbbf24');
+ return;
+ }
 
  serverTranscriptionQueue.push({
  blob,
@@ -3108,10 +3258,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let faceConfidence = null;
  if (canUseFaceModel) {
  try {
- const detectorOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.45 });
+ const detectorOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.60 });
  detection = await faceapi.detectSingleFace(video, detectorOptions).withFaceLandmarks();
  faceConfidence = detection?.detection?.score!== undefined? cameraPercent(Number(detection.detection.score) * 100): (detection? 100: null);
- if (faceConfidence!== null && faceConfidence < 45) detection = null;
+ if (faceConfidence!== null && faceConfidence < 60) detection = null;
  } catch (faceError) {
  console.error("Face framing tracking error", faceError);
  }
@@ -3275,11 +3425,21 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  const detectionStatus = document.getElementById('cameraDetectionStatus');
  if (detectionStatus) {
- const lowQuality = sampleQuality!== null && sampleQuality < (cameraQualityThreshold * 100);
+ const highConfidenceFrame = Boolean(
+ sampleQuality !== null
+ && sampleQuality >= 70
+ && faceDetected
+ && faceConfidence !== null
+ && faceConfidence >= 60
+ && poseDetected
+ && centered
+ && faceSizeStatus === 'good'
+ );
+ const lowQuality = sampleQuality!== null && sampleQuality < 70;
  detectionStatus.innerHTML = lowQuality
- ? '<i class="fa-solid fa-circle-exclamation me-1"></i>Low-quality frame'
- : (canUseBodyModels? '<i class="fa-solid fa-person-rays me-1"></i>Pose estimate': '<i class="fa-solid fa-laptop me-1"></i>Framing estimate');
- detectionStatus.style.color = lowQuality? '#fbbf24': (canUseBodyModels? '#34d399': '#cbd5e1');
+ ? '<i class="fa-solid fa-circle-exclamation me-1"></i>Below high-confidence gate'
+ : (highConfidenceFrame? '<i class="fa-solid fa-shield-check me-1"></i>High-confidence frame': '<i class="fa-solid fa-person-rays me-1"></i>Signal checking');
+ detectionStatus.style.color = lowQuality? '#fbbf24': (highConfidenceFrame? '#34d399': '#cbd5e1');
  }
 
  state.observation_data.camera_samples.push({
@@ -3435,7 +3595,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const overlay = document.getElementById('answerTranscriptionOverlay');
  const hasText = textarea? String(textarea.value || '').trim() !== '': String(answersData[currentQIdx]?.text || '').trim() !== '';
  const transcriptCaptureLocked = isHybridTranscriptionMode()
- && Boolean(recordingStartPromise || isRecording || isRecordingPaused);
+ && Boolean(recordingStartPromise || recordingPausePromise || recordingStopPromise || recordingTransitionState || voiceSessionTranscriptPromise || isRecording || isRecordingPaused);
  const shouldShow = isHybridTranscriptionMode()
  && !isRecordingPaused
  && Boolean(isRecording || recordingStartPromise);
@@ -3470,7 +3630,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (textarea) textarea.value = text;
  if (answersData[currentQIdx]) {
  answersData[currentQIdx].text = text;
- if (isHybridTranscriptionMode()) {
+ if (isHybridTranscriptionMode() &&!cleanTranscriptText(voiceSessionRecordings.get(voiceSessionKeyFor())?.transcript || '')) {
  answersData[currentQIdx].speech_transcript = cleanTranscriptText(text);
  }
  }
@@ -3488,10 +3648,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function updateSendAnswerButtonState() {
- const hybridNeedsTranscript = isHybridTranscriptionMode() &&!hybridModeHasTranscriptText();
+ const hasSubmittableVoiceRecording = Boolean(submittableVoiceSessionRecording(currentQIdx));
+ const hybridNeedsTranscript = isHybridTranscriptionMode() &&!hybridModeHasTranscriptText() &&!hasSubmittableVoiceRecording;
  const disabled =!answerInputEnabled || hybridNeedsTranscript || isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted;
  const title = hybridNeedsTranscript && answerInputEnabled
- ? 'Add transcript text before sending in Hybrid Mode'
+ ? 'Add transcript text or record an answer before sending in Hybrid Mode'
  : (answerInputEnabled? 'Send answer': 'Start the interview to answer');
 
  document.querySelectorAll('.send-answer-btn').forEach(button => {
@@ -3553,7 +3714,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  setRecordingControlButtons(isRecording? 'recording': (isRecordingPaused? 'paused': 'idle'));
  if (isVoiceOnlyMode()) {
  activeTranscriptionEngine = null;
- setTranscriptionStatus('Voice-only mode. Text transcription is off.');
+ setTranscriptionStatus('Voice Mode uses secure full-recording server transcription.');
  }
  renderVoiceSessionPanel();
  updateAnswerTranscriptionOverlay();
@@ -4438,6 +4599,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function handleQuestionTimeout() {
  clearInterval(questionTimerInterval);
+ questionTimerInterval = null;
  if (!answerInputEnabled || isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted) return;
  submitAnswer({ timedOut: true });
  }
@@ -4777,6 +4939,19 @@ return fallbackText;
  }
  }
 
+ function startInterviewTimer() {
+ clearInterval(timerInterval);
+ timerInterval = setInterval(() => {
+ timerSeconds++;
+ const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+ const s = (timerSeconds % 60).toString().padStart(2, '0');
+ const interviewTimer = document.getElementById('interviewTimer');
+ if (interviewTimer) interviewTimer.innerText = m + ':' + s;
+
+ if(timerSeconds % 30 === 0) autoSaveState(); // auto save every 30s
+ }, 1000);
+ }
+
  function startInterviewSession() {
  if (interviewStarted || interviewTerminated) return;
  
@@ -4803,7 +4978,7 @@ return fallbackText;
  setTranscriptionStatus('Recording ready - live transcript will appear in the answer box');
  } else if (isVoiceOnlyMode()) {
  setVoiceControlsEnabled(true);
- setTranscriptionStatus('Voice-only mode. Text transcription is off.');
+ setTranscriptionStatus('Voice Mode uses secure full-recording server transcription.');
  } else {
  setVoiceControlsEnabled(true);
  if (isHybridTranscriptionMode()) {
@@ -4816,15 +4991,7 @@ return fallbackText;
 
  window.dispatchEvent(new CustomEvent('speakready:interview-session-started'));
 
- timerInterval = setInterval(() => {
- timerSeconds++;
- const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
- const s = (timerSeconds % 60).toString().padStart(2, '0');
- const interviewTimer = document.getElementById('interviewTimer');
- if (interviewTimer) interviewTimer.innerText = m + ':' + s;
- 
- if(timerSeconds % 30 === 0) autoSaveState(); // auto save every 30s
- }, 1000);
+ startInterviewTimer();
 
  const restoredChat = restoreChatHistory();
  (async () => {
@@ -4847,7 +5014,7 @@ return fallbackText;
  if (document.visibilityState === 'hidden') autoSaveState();
  });
  window.addEventListener('beforeunload', event => {
- if (recordingStartPromise || recordingStopPromise || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise || voiceSessionTranscriptPromise) {
+ if (recordingStartPromise || recordingPausePromise || recordingStopPromise || recordingTransitionState || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise || voiceSessionTranscriptPromise) {
  event.preventDefault();
  event.returnValue = '';
  }
@@ -5146,12 +5313,31 @@ return fallbackText;
  }
  }
 
+ function currentRecordingControlState() {
+ return isRecording? 'recording': (isRecordingPaused? 'paused': 'idle');
+ }
+
+ function recordingTransitionInProgress() {
+ return Boolean(recordingTransitionState || recordingStartPromise || recordingPausePromise || recordingStopPromise || voiceSessionTranscriptPromise);
+ }
+
+ function setRecordingTransitionState(state = '') {
+ recordingTransitionState = String(state || '');
+ setRecordingControlButtons(currentRecordingControlState());
+ updateAnswerTranscriptionOverlay();
+ renderVoiceSessionPanel();
+ }
+
  function setRecordingControlButtons(state) {
  const pauseBtn = document.getElementById('micPauseBtn');
  const stopBtn = document.getElementById('micStopBtn');
  const timer = document.getElementById('recordingTimer');
  const isIdle = state === 'idle';
  const isPaused = state === 'paused';
+ const isTransitioning = recordingTransitionInProgress();
+ const transitionLabel = recordingTransitionState === 'transcribing'? 'Transcribing recording': 'Recording controls are updating';
+ const controlsDisabled =!voiceControlsEnabledState || isTransitioning;
+ const disabledLabel =!voiceControlsEnabledState? (voiceControlsDisabledReason || 'Voice recording is unavailable'): transitionLabel;
 
  if (pauseBtn) {
  pauseBtn.style.display = 'inline-flex';
@@ -5159,22 +5345,26 @@ return fallbackText;
  const pauseText = isIdle? 'Start': (isPaused? 'Resume': 'Pause');
  pauseBtn.innerHTML = `<i class="fa-solid ${pauseIcon}"></i><span class="voice-action-label">${pauseText}</span>`;
  const pauseLabel = isIdle? 'Start recording': (isPaused? 'Resume recording': 'Pause recording');
- pauseBtn.setAttribute('aria-label', pauseLabel);
- pauseBtn.setAttribute('title', pauseLabel);
+ pauseBtn.disabled = controlsDisabled;
+ pauseBtn.classList.toggle('voice-control-disabled', controlsDisabled);
+ pauseBtn.setAttribute('aria-label', controlsDisabled? disabledLabel: pauseLabel);
+ pauseBtn.setAttribute('title', controlsDisabled? disabledLabel: pauseLabel);
  }
 
  if (stopBtn) {
  stopBtn.style.display = 'inline-flex';
- stopBtn.disabled = isIdle;
- stopBtn.classList.toggle('voice-control-disabled', isIdle);
- stopBtn.setAttribute('aria-label', 'Stop recording');
- stopBtn.setAttribute('title', 'Stop recording');
+ stopBtn.disabled = isIdle || controlsDisabled;
+ stopBtn.classList.toggle('voice-control-disabled', isIdle || controlsDisabled);
+ stopBtn.setAttribute('aria-label', controlsDisabled? disabledLabel: 'Stop recording');
+ stopBtn.setAttribute('title', controlsDisabled? disabledLabel: 'Stop recording');
  stopBtn.innerHTML = '<i class="fa-solid fa-stop"></i><span class="voice-action-label">Stop</span>';
  }
  if (timer) timer.style.display = 'block';
  }
 
  function setVoiceControlsEnabled(enabled, reason = '') {
+ voiceControlsEnabledState = Boolean(enabled);
+ voiceControlsDisabledReason = enabled? '': String(reason || 'Voice recording is unavailable');
  ['micPauseBtn', 'micStopBtn'].forEach(id => {
  const button = document.getElementById(id);
  if (!button) return;
@@ -5289,17 +5479,18 @@ return fallbackText;
 
  async function startRecording(options = {}) {
  if (recordingStartPromise) return recordingStartPromise;
- if (recordingStopPromise) {
- await recordingStopPromise.catch(error => {
- console.warn('Recording stop wait before start failed:', error);
- });
- }
+ if (recordingTransitionInProgress()) return false;
 
+ setRecordingTransitionState('starting');
  recordingStartPromise = startRecordingInternal(options).finally(() => {
  recordingStartPromise = null;
+ if (recordingTransitionState === 'starting') {
+ setRecordingTransitionState('');
+ } else {
+ setRecordingControlButtons(currentRecordingControlState());
  updateAnswerTranscriptionOverlay();
+ }
  });
- updateAnswerTranscriptionOverlay();
  return recordingStartPromise;
  }
 
@@ -5353,11 +5544,6 @@ return fallbackText;
  return false;
  }
 
- if (!isRecordingPaused) {
- recordingStartText = currentAnswerTextareaText();
- recordingManuallyEdited = false;
- }
-
  lastSpeechEnd = 0;
  shouldAutoRestartRecognition =!voiceOnly;
  isRecording = true;
@@ -5375,18 +5561,13 @@ return fallbackText;
 
  if (!started) {
  shouldAutoRestartRecognition = false;
- isRecording = false;
- isRecordingPaused = false;
- await stopVoiceSessionRecorder({ discard: true, skipStartWait: true });
- const message = currentTranscriptionStatusMessage() || transcriptionUnavailableMessage();
- setVoiceControlsEnabled(false, message);
- updateAnswerTranscriptionOverlay();
- if(!silent) showSessionNotice(`${message} You can type your answer instead.`);
- return false;
+ activeTranscriptionEngine = null;
+ setTranscriptionStatus('Live captions are unavailable. The complete recording will be transcribed when stopped.', '#fbbf24');
+ if(!silent) showSessionNotice('Live captions are unavailable. Keep speaking; the complete recording will be transcribed when stopped.', 'warning');
  }
 
  if (voiceOnly) {
- setTranscriptionStatus('Voice-only recording. Text transcription is off.');
+ setTranscriptionStatus('Recording the complete answer for secure server transcription.');
  }
 
  clearSessionNotice();
@@ -5406,6 +5587,8 @@ return fallbackText;
  return;
  }
 
+ if (recordingTransitionInProgress()) return;
+
  if (isRecording) {
  pauseRecording();
  return;
@@ -5415,12 +5598,18 @@ return fallbackText;
  }
 
  async function pauseRecording() {
- if (recordingStartPromise) {
- await recordingStartPromise.catch(error => {
- console.warn('Recording start wait before pause failed:', error);
+ if (recordingPausePromise) return recordingPausePromise;
+ if (recordingStartPromise || recordingStopPromise || voiceSessionTranscriptPromise || recordingTransitionState) return false;
+
+ setRecordingTransitionState('pausing');
+ recordingPausePromise = pauseRecordingInternal().finally(() => {
+ recordingPausePromise = null;
+ if (recordingTransitionState === 'pausing') setRecordingTransitionState('');
  });
+ return recordingPausePromise;
  }
 
+ async function pauseRecordingInternal() {
  if (!isRecording &&!voiceSessionRecorder) {
  if (!isRecordingPaused) setRecordingControlButtons('idle');
  updateAnswerTranscriptionOverlay();
@@ -5473,39 +5662,48 @@ return fallbackText;
  if (!interviewEnding &&!interviewTerminated) {
  setTranscriptionStatus('Paused');
  }
+ return true;
  }
 
- async function stopRecording() {
+ async function stopRecording(options = {}) {
+ if (recordingStopPromise) return recordingStopPromise;
+ setRecordingTransitionState('stopping');
+ recordingStopPromise = (async () => {
  if (recordingStartPromise) {
  await recordingStartPromise.catch(error => {
  console.warn('Recording start wait before stop failed:', error);
  });
  }
-
- if (recordingStopPromise) return recordingStopPromise;
- recordingStopPromise = stopRecordingInternal().finally(() => {
+ if (recordingPausePromise) {
+ await recordingPausePromise.catch(error => {
+ console.warn('Recording pause wait before stop failed:', error);
+ });
+ }
+ return stopRecordingInternal(options);
+ })().finally(() => {
  recordingStopPromise = null;
+ setRecordingTransitionState('');
  });
  return recordingStopPromise;
  }
 
- async function stopRecordingInternal() {
- await pauseRecording();
+ async function stopRecordingInternal(options = {}) {
+ await pauseRecordingInternal();
  await stopVoiceSessionRecorder();
  let fullTranscriptResult = { verified: false, warning: '' };
- if (isHybridTranscriptionMode()) {
+ if (isVoiceTranscriptionMode()) {
+ setRecordingTransitionState('transcribing');
  fullTranscriptResult = await reconcileHybridTranscriptFromRecording().catch(error => {
- console.warn('Full hybrid recording transcription failed:', error);
+ console.warn('Full voice recording transcription failed:', error);
  return warnFullRecordingTranscriptReview('Full recording transcription failed.');
  });
  }
- if (isHybridTranscriptionMode()) {
+ if (isHybridTranscriptionMode() &&!fullTranscriptResult.verified) {
  renderSpeechTranscript({ reveal: true });
  }
   if (isHybridTranscriptionMode() && answersData[currentQIdx]) {
  const textareaText = currentAnswerTextareaText();
  answersData[currentQIdx].text = textareaText;
- answersData[currentQIdx].speech_transcript = cleanTranscriptText(textareaText);
  }
  clearTimeout(autoStartAfterQuestionTimer);
  isRecordingPaused = false;
@@ -5515,18 +5713,28 @@ return fallbackText;
  updateAnswerTranscriptionOverlay();
  if (isHybridTranscriptionMode()) {
  const hasTranscriptText = currentAnswerTextareaText().trim() !== '';
+ const tracking = voiceSessionTextTrackingFor(voiceSessionKeyFor());
  if (!fullTranscriptResult.warning) {
- const message = recordingManuallyEdited
+ const message = tracking.manuallyEdited
  ? 'Recording stopped - full transcript checked; your edits were kept. Review before sending.'
  : 'Recording stopped - full transcript is ready to edit';
- setTranscriptionStatus(hasTranscriptText && fullTranscriptResult.verified? message: '', recordingManuallyEdited? '#fbbf24': '#16a34a');
+ setTranscriptionStatus(hasTranscriptText && fullTranscriptResult.verified? message: '', tracking.manuallyEdited? '#fbbf24': '#16a34a');
  }
  } else if (isVoiceOnlyMode()) {
- setTranscriptionStatus('Recording stopped');
+ const recording = voiceSessionRecordings.get(voiceSessionKeyFor());
+ if (!fullTranscriptResult.warning && recording?.transcriptionVerified) {
+ setTranscriptionStatus('Recording stopped - server transcript secured', '#16a34a');
+ } else if (!fullTranscriptResult.warning) {
+ setTranscriptionStatus('Recording stopped - transcript verification will finish when sent', '#fbbf24');
+ }
  } else {
  setTranscriptionStatus('');
  }
+ if (options.reason === 'microphone-ended') {
+ showSessionNotice('The microphone stopped unexpectedly. Your captured audio was secured; review it before sending.', 'warning');
+ }
  resetSpeechRecognitionBufferFromTextarea();
+ updateSendAnswerButtonState();
  renderVoiceSessionPanel();
  return true;
  }
@@ -5534,7 +5742,12 @@ return fallbackText;
  async function finalizeCurrentTranscriptionForSubmit() {
  finalizeInterimTranscript();
 
- if (recordingStartPromise || recordingStopPromise || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise) {
+ if (voiceSessionTranscriptPromise &&!recordingStopPromise) {
+ await voiceSessionTranscriptPromise;
+ return;
+ }
+
+ if (recordingStartPromise || recordingPausePromise || recordingStopPromise || recordingTransitionState || isRecording || isRecordingPaused || voiceSessionRecorder || voiceSessionStopPromise) {
  await stopRecording();
  return;
  }
@@ -5552,16 +5765,21 @@ return fallbackText;
  }
  }
 
- function saveCurrentAnswer(isSkipped = false, timedOut = false) {
+ function saveCurrentAnswer(isSkipped = false, timedOut = false, submittedAnswerText = null) {
  if (interviewTerminated) return Promise.reject(new Error('Interview session has been terminated.'));
+ if (submittedAnswerText === null) {
  syncHybridAnswerStateFromTextarea();
+ } else {
+ answersData[currentQIdx].text = String(submittedAnswerText);
+ }
+ const capturedAnswerText = submittedAnswerText === null? answersData[currentQIdx].text: String(submittedAnswerText);
  stopQuestionTimer();
  captureTranscriptTimeline(timedOut? 'timed_out_submit': 'submitted', true);
  const formData = new FormData();
  formData.append('_token', '{{ csrf_token() }}');
  formData.append('session_id', interviewSessionId);
  formData.append('question_id', questions[currentQIdx].id);
- formData.append('answer_text', answersData[currentQIdx].text);
+ formData.append('answer_text', capturedAnswerText);
  formData.append('speech_transcript', answersData[currentQIdx].speech_transcript || '');
  formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
  formData.append('observation_data', JSON.stringify(observationDataForSubmit(answersData[currentQIdx])));
@@ -5707,13 +5925,14 @@ return fallbackText;
  const hasLocalVoiceRecording = isVoiceTranscriptionMode()
  && Boolean(localVoiceRecording || answersData[currentQIdx]?.voice_recording?.available);
 
- if (isHybridTranscriptionMode() &&!answerText && hasLocalVoiceRecording &&!timedOut && options.skipped!== true
- &&!recordingManuallyEdited) {
+ if (isVoiceTranscriptionMode() && localVoiceRecording?.blob &&!localVoiceRecording.transcriptionVerified
+ && localVoiceRecording.blob.size <= voiceSessionTranscriptionMaxBytes &&!timedOut && options.skipped!== true) {
+ const tracking = voiceSessionTextTrackingFor(voiceSessionKeyFor());
  await transcribeVoiceSessionRecording(currentQIdx, {
  silent: true,
  reconcileFullRecording: true,
- recordingStartText,
- previousTranscript: cleanTranscriptText(recordingStartText)
+ recordingStartText: tracking.startText,
+ previousTranscript: cleanTranscriptText(tracking.startText)
  });
  answerText = currentAnswerTextareaText().trim();
  }
@@ -5758,7 +5977,7 @@ return fallbackText;
  if (isLastQuestion) {
  finalAnswerSubmitted = true;
  try {
- await saveCurrentAnswer(wasSkipped, timedOut);
+ await saveCurrentAnswer(wasSkipped, timedOut, answerText);
  isSubmittingAnswer = false;
  updateSendAnswerButtonState();
  await concludeAndFinishInterview();
@@ -5959,7 +6178,8 @@ return fallbackText;
  if (!question ||!answerState) return;
 
  const answerText = String(currentAnswerTextareaText() || answerState.text || '').trim();
- if (!answerText) return;
+ const voiceRecording = submittableVoiceSessionRecording(currentQIdx);
+ if (!answerText &&!voiceRecording) return;
 
  answerState.text = answerText;
  answerState.elapsed_seconds = getQuestionElapsedSeconds();
@@ -5985,10 +6205,11 @@ return fallbackText;
  formData.append('self_reported_confidence', 0);
  formData.append('eye_contact_score', answerState.eye_contact_score || 0);
  formData.append('posture_score', answerState.posture_score || 0);
+ appendVoiceSessionRecordingUpload(formData, currentQIdx, voiceRecording);
  }
 
  async function abortInterviewSession() {
- if (interviewTerminated) return;
+ if (interviewTerminated || interviewEnding) return;
  interviewEnding = true;
  finalAnswerSubmitted = true;
  setAnswerInputEnabled(false);
@@ -5999,15 +6220,17 @@ return fallbackText;
  console.warn('Final transcription flush before ending failed:', error);
  }
 
- interviewTerminated = true;
- cleanupInterviewProcesses({ abortFetches: true });
-
  const formData = new FormData();
  formData.append('_token', '{{ csrf_token() }}');
  formData.append('session_id', interviewSessionId);
  formData.append('duration_seconds', timerSeconds);
  formData.append('current_question_index', currentQIdx);
+ if (answersData[currentQIdx]) {
+ answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
+ }
  appendCurrentAnswerForEndedSession(formData);
+
+ setVoiceControlsEnabled(false, 'Ending interview');
 
  try {
  const response = await fetch('{{ route("interview.abort") }}', {
@@ -6015,14 +6238,35 @@ return fallbackText;
  body: formData,
  headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
  });
- const data = response.ok? await response.json(): {};
- if (response.ok) {
- window.SpeakReadyInterviewSetupDraft?.clear();
+ const payload = await parseResponsePayload(response);
+ if (!response.ok) {
+ throw new Error(responseErrorMessage(response, payload, 'We could not end the interview. Please try again.'));
  }
+
+ const data = payload.data || {};
+ interviewTerminated = true;
+ cleanupInterviewProcesses({ abortFetches: true });
+ window.SpeakReadyInterviewSetupDraft?.clear();
  window.location.href = data.redirect_url || '{{ route("interview.setup") }}';
  } catch (error) {
  console.error('Interview abort failed:', error);
- window.location.href = '{{ route("interview.setup") }}';
+ interviewTerminated = false;
+ interviewEnding = false;
+ finalAnswerSubmitted = false;
+ setAnswerInputEnabled(true);
+ if (!questionTimerInterval) {
+ if (answersData[currentQIdx]) answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
+ startQuestionTimer();
+ }
+ if (isVoiceTranscriptionMode()) {
+ const unavailableMessage = voiceRecordingUnavailableMessage();
+ const engine = isVoiceOnlyMode() || unavailableMessage? null: preferredTranscriptionEngine();
+ const canRecord =!unavailableMessage && (isVoiceOnlyMode() || Boolean(engine));
+ setVoiceControlsEnabled(canRecord, unavailableMessage || transcriptionUnavailableMessage());
+ }
+ renderVoiceSessionPanel();
+ const message = error?.message || 'We could not end the interview. Your recording is still available.';
+ showSessionAlertModal(`${message} Your recording was kept. Try End Session again.`, 'End Session Failed', 'warning');
  }
  }
 
@@ -6571,9 +6815,9 @@ setFinishViewReviewReady(false);
  },
  runningMode: 'VIDEO',
  numPoses: 1,
- minPoseDetectionConfidence: 0.5,
- minPosePresenceConfidence: 0.5,
- minTrackingConfidence: 0.5,
+ minPoseDetectionConfidence: 0.60,
+ minPosePresenceConfidence: 0.60,
+ minTrackingConfidence: 0.60,
  outputSegmentationMasks: false
  });
 

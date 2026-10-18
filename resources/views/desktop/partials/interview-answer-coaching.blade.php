@@ -189,6 +189,14 @@
 
  $cameraMetricItems = [];
  $cameraSampleCount = is_numeric($cameraEvidence['sample_count']?? null)? max(0, (int) round($cameraEvidence['sample_count'])): 0;
+ $cameraReliabilityPercent = is_numeric($cameraEvidence['reliability_percent']?? null)? max(0, min(100, (int) round($cameraEvidence['reliability_percent']))): null;
+ $cameraReliabilityBand = trim((string) ($cameraEvidence['reliability_band']?? ''));
+ if ($cameraSampleCount > 0 && $cameraReliabilityPercent !== null) {
+ $cameraMetricItems[] = [
+ 'label' => 'Signal reliability',
+ 'value' => $cameraReliabilityPercent.'%'.($cameraReliabilityBand !== ''? ' · '.$cameraReliabilityBand: ''),
+ ];
+ }
  if (! $isUnavailableStatus($cameraStatus) && $cameraSampleCount > 0) {
  $cameraMetricItems[] = ['label' => 'Camera checks', 'value' => $cameraSampleCount];
  if (array_key_exists('face_detected_count', $cameraEvidence) && is_numeric($cameraEvidence['face_detected_count'])) {

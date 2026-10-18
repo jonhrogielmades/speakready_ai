@@ -1483,6 +1483,7 @@ class MobileLayoutTest extends TestCase
                     ->withSession(['active_interview_id' => $session->id])
                     ->withHeader('User-Agent', $userAgent)
                     ->get(route('interview.session'));
+                $content = $response->getContent();
 
                 $response->assertOk()
                     ->assertSee('id="answerTranscriptControls"', false)
@@ -1508,10 +1509,43 @@ class MobileLayoutTest extends TestCase
                     ->assertSee('Recording ready - live transcript will appear in the answer box', false)
                     ->assertSee('reconcileHybridTranscriptFromRecording', false)
                     ->assertSee('Full voice transcript added', false)
+                    ->assertSee("formData.append('final_recording', '1')", false)
+                    ->assertSee("formData.append('voice_transcription_proof', currentRecording.transcriptionProof)", false)
+                    ->assertSee("recording.transcriptionProof = String(data.transcription_proof || '')", false)
+                    ->assertSee('answerState.speech_transcript = cleanTranscript;', false)
+                    ->assertSee('const clearVoiceGeneratedText = isVoiceOnlyMode();', false)
+                    ->assertSee('if (clearVoiceGeneratedText || canClearGeneratedText) {', false)
+                    ->assertSee("answerState.text = '';", false)
+                    ->assertSee('mergedAnswerText = cleanTranscript;', false)
+                    ->assertSee('const hasVerifiedTranscript = cleanTranscriptText(transcript).trim() !==', false)
+                    ->assertSee('Boolean(recording.transcriptionVerified && recording.transcriptionProof);', false)
+                    ->assertSee('localVoiceRecording?.blob &&!localVoiceRecording.transcriptionVerified', false)
+                    ->assertSee('function saveCurrentAnswer(isSkipped = false, timedOut = false, submittedAnswerText = null)', false)
+                    ->assertSee("formData.append('answer_text', capturedAnswerText)", false)
+                    ->assertSee('await saveCurrentAnswer(wasSkipped, timedOut, answerText);', false)
+                    ->assertSee('const voiceRecording = submittableVoiceSessionRecording(currentQIdx);', false)
+                    ->assertSee('if (!answerText &&!voiceRecording) return;', false)
+                    ->assertSee('appendVoiceSessionRecordingUpload(formData, currentQIdx, voiceRecording);', false)
+                    ->assertSee('Voice Mode uses secure full-recording server transcription.', false)
+                    ->assertSee('Recording the complete answer for secure server transcription.', false)
+                    ->assertSee('Recording stopped - server transcript secured', false)
+                    ->assertSee('serverTranscriptionQueue.length >= serverTranscriptionMaxQueuedChunks', false)
                     ->assertSee('await stopVoiceSessionRecorder();', false)
                     ->assertSee('async function transcribeVoiceSessionRecording', false)
                     ->assertSee('requestFullVoiceSessionTranscript(recording, question, previousTranscript)', false)
                     ->assertSee('replaceAnswerText: options.replaceAnswerText === true', false)
+                    ->assertSee('let recordingPausePromise = null;', false)
+                    ->assertSee('recordingPausePromise = pauseRecordingInternal().finally(() => {', false)
+                    ->assertSee("Promise.resolve(stopRecording({ reason: 'microphone-ended' }))", false)
+                    ->assertSee('answerState.voice_duration = 0;', false)
+                    ->assertSee('answerState.wpm = 0;', false)
+                    ->assertSee('answerState.filler_words = 0;', false)
+                    ->assertSee('answerState.pause_count = 0;', false)
+                    ->assertSee('answerState.pronunciation_analysis = null;', false)
+                    ->assertSee('recording.manualEdited = true;', false)
+                    ->assertSee('pauseBtn.disabled =', false)
+                    ->assertSee('stopBtn.disabled =', false)
+                    ->assertSee('if (interviewTerminated || interviewEnding) return;', false)
                     ->assertDontSee('async function flushCurrentRealtimeTranscriptForStop', false)
                     ->assertDontSee("const finalizedTranscript = await flushCurrentRealtimeTranscriptForStop('stop');", false)
                     ->assertDontSee("setTranscriptionStatus(finalizedTranscript? 'Transcript ready': '')", false)
@@ -1519,6 +1553,7 @@ class MobileLayoutTest extends TestCase
                     ->assertDontSee('<span>Transcript</span>', false)
                     ->assertDontSee('updates every few seconds', false)
                     ->assertDontSee('Finalizing transcription', false)
+                    ->assertDontSee('Text transcription is off.', false)
                     ->assertSee('function autoCorrectTranscriptText', false)
                     ->assertSee('function appendVoiceSessionRecordingUpload', false)
                     ->assertSee("formData.append('voice_audio'", false)
@@ -1528,6 +1563,124 @@ class MobileLayoutTest extends TestCase
                     ->assertDontSee('mobile-response-end-session-action', false)
                     ->assertDontSee('mobile-response-end-session-btn', false)
                     ->assertDontSee('id="voiceSessionDownload"', false);
+
+                $this->assertMatchesRegularExpression('/function recordingTransition(?:Busy|InProgress)\(\)/', $content);
+                $this->assertMatchesRegularExpression('/function resetVoiceDerivedAnswer(?:State|Metrics)\(/', $content);
+                $this->assertMatchesRegularExpression('/generatedAnswer(?:Text)?:\s*/', $content);
+                $this->assertMatchesRegularExpression('/normalizeTranscriptForMatch\(current(?:Text)?\)\s*===\s*normalizeTranscriptForMatch\(generatedAnswer\)/', $content);
+                $this->assertMatchesRegularExpression('/&&\s*!(?:recording\.manualEdited|recordingWasManuallyEdited)/', $content);
+
+                $transitionStart = strpos($content, 'function recordingTransitionBusy()');
+                $transitionEndNeedle = 'function refreshRecordingControlButtons()';
+                if ($transitionStart === false) {
+                    $transitionStart = strpos($content, 'function recordingTransitionInProgress()');
+                    $transitionEndNeedle = 'function setRecordingTransitionState(';
+                }
+                $transitionEnd = $transitionStart === false? false: strpos($content, $transitionEndNeedle, $transitionStart);
+                $transitionSource = $transitionStart === false || $transitionEnd === false? '': substr($content, $transitionStart, $transitionEnd - $transitionStart);
+                $this->assertStringContainsString('recordingStartPromise', $transitionSource);
+                $this->assertStringContainsString('recordingPausePromise', $transitionSource);
+                $this->assertStringContainsString('recordingStopPromise', $transitionSource);
+                $this->assertStringContainsString('voiceSessionTranscriptPromise', $transitionSource);
+
+                $startRecordingStart = strpos($content, 'async function startRecording(options = {})');
+                $startRecordingEnd = $startRecordingStart === false? false: strpos($content, 'async function startRecordingInternal(options = {})', $startRecordingStart);
+                $startRecordingSource = $startRecordingStart === false || $startRecordingEnd === false? '': substr($content, $startRecordingStart, $startRecordingEnd - $startRecordingStart);
+                $this->assertStringNotContainsString('await recordingStopPromise', $startRecordingSource);
+                $this->assertStringNotContainsString('return startRecording(options)', $startRecordingSource);
+
+                $voiceStart = strpos($content, 'async function startVoiceSessionRecorderInternal()');
+                $voiceStartEnd = $voiceStart === false? false: strpos($content, 'function pauseVoiceSessionRecorder()', $voiceStart);
+                $voiceStartSource = $voiceStart === false || $voiceStartEnd === false? '': substr($content, $voiceStart, $voiceStartEnd - $voiceStart);
+                $recorderStartPosition = strpos($voiceStartSource, 'recorder.start(voiceSessionTimesliceMs);');
+                $replacementCommitPosition = strpos($voiceStartSource, 'commitStartedVoiceSessionReplacement(');
+                if ($replacementCommitPosition === false) {
+                    $replacementCommitPosition = strpos($voiceStartSource, 'clearVoiceSessionRecordingFor(key);');
+                }
+                $this->assertNotFalse($recorderStartPosition);
+                $this->assertNotFalse($replacementCommitPosition);
+                $this->assertTrue($recorderStartPosition < $replacementCommitPosition);
+                $this->assertStringNotContainsString('clearVoiceSessionRecordingFor(key);', substr($voiceStartSource, 0, $recorderStartPosition));
+
+                $finalizeStart = strpos($content, 'async function finalizeCurrentTranscriptionForSubmit()');
+                $finalizeEnd = $finalizeStart === false? false: strpos($content, 'function saveCurrentAnswer(', $finalizeStart);
+                $finalizeSource = $finalizeStart === false || $finalizeEnd === false? '': substr($content, $finalizeStart, $finalizeEnd - $finalizeStart);
+                $this->assertStringContainsString('voiceSessionTranscriptPromise', $finalizeSource);
+
+                $sendStateStart = strpos($content, 'function updateSendAnswerButtonState()');
+                $sendStateEnd = $sendStateStart === false? false: strpos($content, 'function applyVoiceOnlyAnswerLock()', $sendStateStart);
+                $sendStateSource = $sendStateStart === false || $sendStateEnd === false? '': substr($content, $sendStateStart, $sendStateEnd - $sendStateStart);
+                $this->assertStringContainsString('const hasSubmittableVoiceRecording = Boolean(submittableVoiceSessionRecording(currentQIdx));', $sendStateSource);
+                $this->assertStringContainsString('&&!hasSubmittableVoiceRecording', $sendStateSource);
+
+                $stopInternalStart = strpos($content, 'async function stopRecordingInternal(options = {})');
+                $stopInternalEnd = $stopInternalStart === false? false: strpos($content, 'async function finalizeCurrentTranscriptionForSubmit()', $stopInternalStart);
+                $stopInternalSource = $stopInternalStart === false || $stopInternalEnd === false? '': substr($content, $stopInternalStart, $stopInternalEnd - $stopInternalStart);
+                $stopRecorderPosition = strpos($stopInternalSource, 'await stopVoiceSessionRecorder();');
+                $sendRefreshPosition = strpos($stopInternalSource, 'updateSendAnswerButtonState();', $stopRecorderPosition === false? 0: $stopRecorderPosition);
+                $renderRecordingPosition = strpos($stopInternalSource, 'renderVoiceSessionPanel();', $sendRefreshPosition === false? 0: $sendRefreshPosition);
+                $this->assertNotFalse($stopRecorderPosition);
+                $this->assertNotFalse($sendRefreshPosition);
+                $this->assertNotFalse($renderRecordingPosition);
+                $this->assertTrue($stopRecorderPosition < $sendRefreshPosition);
+                $this->assertTrue($sendRefreshPosition < $renderRecordingPosition);
+
+                $startInternalStart = strpos($content, 'async function startRecordingInternal(options = {})');
+                $startInternalEnd = $startInternalStart === false? false: strpos($content, 'function toggleRecordingPause()', $startInternalStart);
+                $startInternalSource = $startInternalStart === false || $startInternalEnd === false? '': substr($content, $startInternalStart, $startInternalEnd - $startInternalStart);
+                $captionFallbackStart = strrpos($startInternalSource, 'if (!started) {');
+                $captionFallbackEnd = $captionFallbackStart === false? false: strpos($startInternalSource, 'if (voiceOnly)', $captionFallbackStart);
+                $captionFallbackSource = $captionFallbackStart === false || $captionFallbackEnd === false? '': substr($startInternalSource, $captionFallbackStart, $captionFallbackEnd - $captionFallbackStart);
+                $this->assertStringContainsString('activeTranscriptionEngine = null;', $captionFallbackSource);
+                $this->assertStringContainsString('The complete recording will be transcribed when stopped.', $captionFallbackSource);
+                $this->assertStringNotContainsString('discard: true', $captionFallbackSource);
+                $this->assertStringNotContainsString('isRecording = false', $captionFallbackSource);
+                $this->assertStringNotContainsString('setVoiceControlsEnabled(false', $captionFallbackSource);
+                $this->assertStringNotContainsString('return false', $captionFallbackSource);
+
+                if ($userAgent === $iphoneUserAgent) {
+                    $this->assertStringContainsString('const voiceSessionTextTrackingByQuestion = new Map();', $content);
+                    $this->assertStringContainsString('voiceSessionTextTrackingByQuestion.get(key)', $content);
+                    $this->assertStringContainsString('voiceSessionTextTrackingByQuestion.set(key, tracking)', $content);
+                }
+
+                $abortStart = strpos($content, 'async function abortInterviewSession()');
+                $abortEnd = $abortStart === false? false: strpos($content, 'function activeInterviewModal()', $abortStart);
+                $abortSource = $abortStart === false || $abortEnd === false? '': substr($content, $abortStart, $abortEnd - $abortStart);
+                $abortFormPosition = strpos($abortSource, 'const formData = new FormData();');
+                $abortDraftPosition = strpos($abortSource, 'appendCurrentAnswerForEndedSession(formData);');
+                $abortControlsPosition = strpos($abortSource, "setVoiceControlsEnabled(false, 'Ending interview');");
+                $abortFetchPosition = strpos($abortSource, 'const response = await fetch');
+                $abortNonOkPosition = strpos($abortSource, 'if (!response.ok)');
+                $abortTerminatedPosition = strpos($abortSource, 'interviewTerminated = true;');
+                $abortCleanupPosition = strpos($abortSource, 'cleanupInterviewProcesses({ abortFetches: true });');
+                $abortRedirectPosition = strpos($abortSource, 'window.location.href =');
+                $abortCatchPosition = $abortFetchPosition === false? false: strpos($abortSource, '} catch (error) {', $abortFetchPosition);
+                $abortCatchSource = $abortCatchPosition === false? '': substr($abortSource, $abortCatchPosition);
+
+                $this->assertNotFalse($abortFormPosition);
+                $this->assertNotFalse($abortDraftPosition);
+                $this->assertNotFalse($abortControlsPosition);
+                $this->assertNotFalse($abortFetchPosition);
+                $this->assertNotFalse($abortNonOkPosition);
+                $this->assertNotFalse($abortTerminatedPosition);
+                $this->assertNotFalse($abortCleanupPosition);
+                $this->assertNotFalse($abortRedirectPosition);
+                $this->assertNotFalse($abortCatchPosition);
+                $this->assertTrue($abortFormPosition < $abortDraftPosition);
+                $this->assertTrue($abortDraftPosition < $abortControlsPosition);
+                $this->assertTrue($abortControlsPosition < $abortFetchPosition);
+                $this->assertTrue($abortFetchPosition < $abortNonOkPosition);
+                $this->assertTrue($abortNonOkPosition < $abortTerminatedPosition);
+                $this->assertTrue($abortTerminatedPosition < $abortCleanupPosition);
+                $this->assertTrue($abortCleanupPosition < $abortRedirectPosition);
+                $this->assertTrue($abortRedirectPosition < $abortCatchPosition);
+                $this->assertStringContainsString('interviewTerminated = false;', $abortCatchSource);
+                $this->assertStringContainsString('interviewEnding = false;', $abortCatchSource);
+                $this->assertStringContainsString('finalAnswerSubmitted = false;', $abortCatchSource);
+                $this->assertStringContainsString('Your recording was kept', $abortCatchSource);
+                $this->assertStringNotContainsString('cleanupInterviewProcesses(', $abortCatchSource);
+                $this->assertStringNotContainsString('window.location.href =', $abortCatchSource);
 
                 if ($responseMode === 'voice') {
                     $response->assertDontSee('id="answerTextarea"', false)
