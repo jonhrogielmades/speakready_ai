@@ -1027,6 +1027,11 @@
     }
 /* Final mobile UI bug fixes for Readiness Coach. */
 @media (max-width: 767px) {
+    /* Keep the overflow menu comfortably inside the mobile card edge. */
+    html body #ai-coach-page .coach-chat-header .coach-actions {
+        margin-right: clamp(18px, 5vw, 24px) !important;
+    }
+
     html body #ai-coach-page {
         height: auto !important;
         min-height: 0 !important;
