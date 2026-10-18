@@ -2,7 +2,7 @@
 @section('title', 'Interview Challenge')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-base.css?v=73') }}" data-page-style="user-game-session-base">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026101901') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026101902') }}" data-page-style="user-game-session">
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-2.css?v=2') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
@@ -62,12 +62,10 @@
  <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">Ready</span>
  </div>
  <span class="badge interviewer-panel-badge"><i class="fa-solid fa-bolt me-1"></i> interviewer</span>
- <div class="question-timer-anchor game-session-timer-stack" aria-label="Challenge progress">
- @if($gameLevel->time_limit_seconds)
- <span class="session-chip danger"><i class="fa-solid fa-stopwatch"></i><span id="game-timer">{{ $gameLevel->time_limit_seconds }}s</span></span>
- @endif
- <span class="session-chip"><i class="fa-solid fa-bullseye"></i>{{ $gameLevel->required_score }}%+</span>
- <span class="session-chip"><i class="fa-regular fa-clock"></i><span id="challengeTimer">00:00</span></span>
+ <div class="question-timer-anchor" aria-label="Challenge progress">
+ <span class="session-chip"><i class="fa-regular fa-clock"></i><span id="game-timer">{{ $gameLevel->time_limit_seconds ? $gameLevel->time_limit_seconds . 's' : 'Self-paced' }}</span></span>
+ <span id="challengeTimer" class="visually-hidden">00:00</span>
+ <span id="gameRequiredScore" class="visually-hidden">{{ $gameLevel->required_score }}%+</span>
  </div>
  @if($cameraCoachingEnabled)
  <div class="mobile-camera-pip d-lg-none" aria-label="Camera preview">
@@ -112,8 +110,8 @@
 
  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150 interview-panel-actions" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
  <div class="d-flex gap-2 w-100 flex-fill">
- <button type="button" class="btn btn-outline-info flex-fill session-action-btn session-repeat-btn" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question"><i class="fa-solid fa-volume-high"></i><span>Repeat</span></button>
- <button type="button" class="btn btn-outline-danger flex-fill session-action-btn end-challenge-btn-class session-end-btn" onclick="endChallenge()" style="border-radius:12px;" aria-label="End challenge" title="End challenge"><i class="fa-solid fa-flag-checkered"></i><span>End Challenge</span></button>
+ <button type="button" class="btn btn-outline-info flex-fill session-action-btn session-repeat-btn" onclick="repeatQuestion()" style="border-radius:12px;" aria-label="Repeat question" title="Repeat question">Repeat</button>
+ <button type="button" class="btn btn-outline-danger flex-fill session-action-btn end-challenge-btn-class session-end-btn" onclick="endChallenge()" style="border-radius:12px;" aria-label="End challenge" title="End challenge">End Challenge</button>
  </div>
  </div>
  <div id="answerTranscriptControls" class="answer-transcript-controls interview-panel-voice-actions" aria-label="Voice recording controls" hidden>
@@ -136,11 +134,11 @@
  <i class="fa-solid fa-pen-nib me-2"></i>
  <span class="panel-title-text">Your Response</span>
  <div class="response-title-actions game-response-actions" id="gameSessionControls">
- <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleGameMatchFullscreen()" aria-label="Exit fullscreen" title="Exit fullscreen">
- <i class="fa-solid fa-compress"></i>
+ <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle d-md-none" onclick="toggleGameMatchFullscreen()" aria-label="Enter fullscreen" title="Enter fullscreen">
+ <i class="fa-solid fa-expand"></i>
  </button>
  <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()" aria-label="Submit answer" title="Submit answer">
- <span class="next-label-full">Submit Answer</span><span class="next-label-short">Submit</span><i class="fa-solid fa-paper-plane"></i>
+ Send Answer <i class="fa-solid fa-paper-plane"></i>
  </button>
  </div>
  </div>
@@ -178,7 +176,7 @@
  <div class="game-transcription-display">
  <label for="answerTextarea" class="visually-hidden">Your answer</label>
  <div class="answer-transcript-stage">
- <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer, or record with voice. Voice transcript appears here after Stop..." aria-describedby="answerTranscriptionOverlay responseCountBar"></textarea>
+ <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Speak your answer, then edit the transcript here if needed..." aria-describedby="answerTranscriptionOverlay responseCountBar"></textarea>
  <div id="answerTranscriptionOverlay" class="answer-transcription-overlay" hidden role="status" aria-live="polite" aria-atomic="true">
  <div class="answer-transcription-wave" aria-hidden="true">
  <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
@@ -337,7 +335,7 @@ let committedSpeechTranscript = '';
  let liveSpeechInterim = '';
  let lastCommittedSpeech = '';
  let lastCommittedAt = 0;
- const gameAnswerTextareaPlaceholder = 'Type your answer, or record with voice. Voice transcript appears here after Stop...';
+ const gameAnswerTextareaPlaceholder = 'Speak your answer, then edit the transcript here if needed...';
  const gameRecordingTextareaPlaceholder = 'Recording... transcript will appear here after Stop.';
 
  function gameAnswerTextareaCaptureLocked() {
@@ -488,6 +486,10 @@ let gameMatchFullscreenBusy = false;
  gameMatchFullscreenRequested = true;
  setGameMatchFullscreenShell(true);
 
+ if (options.requestBrowser === false) {
+ return Promise.resolve(false);
+ }
+
  const root = document.documentElement;
  if (document.fullscreenElement || typeof root.requestFullscreen!== 'function') {
  return Promise.resolve(false);
@@ -546,7 +548,7 @@ let gameMatchFullscreenBusy = false;
  const toggle = document.getElementById('responseFullscreenToggle');
  if (!toggle) return;
 
- const fullscreenOn = document.body.classList.contains('game-match-auto-fullscreen') || Boolean(document.fullscreenElement);
+ const fullscreenOn = Boolean(document.fullscreenElement);
  toggle.setAttribute('aria-label', fullscreenOn? 'Exit fullscreen': 'Enter fullscreen');
  toggle.setAttribute('title', fullscreenOn? 'Exit fullscreen': 'Enter fullscreen');
  toggle.innerHTML = fullscreenOn? '<i class="fa-solid fa-compress"></i>': '<i class="fa-solid fa-expand"></i>';
@@ -1883,7 +1885,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  interviewControls.style.opacity = '1';
  interviewControls.style.pointerEvents = 'auto';
  }
- enterGameMatchFullscreen({ auto: true });
+ enterGameMatchFullscreen({ auto: true, requestBrowser: false });
  if (cameraCoachingEnabled) initCamera();
  
  if(isVoiceTranscriptionMode()) {
@@ -1951,7 +1953,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  });
  } else {
  document.querySelectorAll('.next-btn-class').forEach(el => {
- el.innerHTML = '<span class="next-label-full">Submit Answer</span><span class="next-label-short">Submit</span><i class="fa-solid fa-paper-plane ms-2"></i>';
+ el.innerHTML = 'Send Answer <i class="fa-solid fa-paper-plane ms-2"></i>';
  el.setAttribute('aria-label', 'Submit answer');
  el.setAttribute('title', 'Submit answer');
  el.classList.add('bgrd');
@@ -2915,7 +2917,7 @@ const stepsDesktop = [
  };
 
  setCountdownState('3');
- enterGameMatchFullscreen({ auto: true, entry: true });
+ enterGameMatchFullscreen({ auto: true, entry: true, requestBrowser: false });
 
  const finishCountdown = () => {
  overlay.classList.add('is-exiting');

@@ -28,37 +28,7 @@
     will-change: height, opacity, transform;
 }
 
-#sec-interview-session[data-game-session-root] .game-session-timer-stack {
-    display: flex !important;
-    align-items: center;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: 6px;
-    max-width: min(520px, calc(100% - 150px));
-}
-
-#sec-interview-session[data-game-session-root] .game-session-timer-stack .session-chip {
-    min-height: 30px;
-    padding: 6px 9px;
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(15, 23, 42, 0.72);
-    color: #ffffff;
-    -webkit-text-fill-color: #ffffff;
-    font-size: 0.68rem;
-    font-weight: 900;
-    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.22);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
-#sec-interview-session[data-game-session-root] .game-session-timer-stack .session-chip.danger {
-    border-color: rgba(248, 113, 113, 0.48);
-    background: rgba(127, 29, 29, 0.64);
-    color: #fecaca;
-    -webkit-text-fill-color: #fecaca;
-}
-
-#sec-interview-session[data-game-session-root] .game-session-timer-stack .session-chip.is-expired {
+#sec-interview-session[data-game-session-root] .question-timer-anchor .session-chip.is-expired {
     border-color: rgba(248, 113, 113, 0.9);
     background: rgba(127, 29, 29, 0.9);
     color: #fee2e2;
@@ -191,22 +161,6 @@ body.game-match-auto-fullscreen {
     overscroll-behavior: none;
 }
 
-@media (max-width: 991.98px) {
-    #sec-interview-session[data-game-session-root] .game-session-timer-stack {
-        top: 52px !important;
-        right: auto !important;
-        left: 15px !important;
-        justify-content: flex-start;
-        max-width: min(72%, 360px);
-    }
-
-    #sec-interview-session[data-game-session-root] .game-session-timer-stack .session-chip {
-        min-height: 26px;
-        padding: 5px 8px;
-        font-size: 0.62rem;
-    }
-}
-
 @media (max-width: 575.98px) {
     #sec-interview-session[data-game-session-root] .game-response-actions {
         gap: 6px !important;
@@ -299,6 +253,20 @@ body.game-match-auto-fullscreen {
 
     html body #sec-interview-session[data-game-session-root] .game-voice-session-panel .voice-session-playback {
         height: 34px;
+    }
+
+    html body.user-mobile-shell #sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea,
+    html body #mob-content #sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea {
+        flex: 0 0 auto !important;
+        height: clamp(220px, 32dvh, 390px) !important;
+        min-height: 220px !important;
+        max-height: 390px !important;
+        resize: none !important;
+    }
+
+    html body.user-mobile-shell #sec-interview-session[data-game-session-root] .response-send-answer-btn,
+    html body #mob-content #sec-interview-session[data-game-session-root] .response-send-answer-btn {
+        min-width: 118px !important;
     }
 
     html body #sec-interview-session[data-game-session-root] #workspaceRow > .col-lg-4 {
