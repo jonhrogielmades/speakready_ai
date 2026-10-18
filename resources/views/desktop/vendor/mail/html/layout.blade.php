@@ -8,12 +8,12 @@
 <meta name="supported-color-schemes" content="light">
 <style>
 body {
-background-color: #eef4fa !important;
+background-color: #f1f6fb !important;
 }
 
 .wrapper {
-background-color: #eef4fa !important;
-padding: 18px 0 28px 0;
+background-color: #f1f6fb !important;
+padding: 24px 0 36px 0;
 }
 
 .content {
@@ -21,21 +21,48 @@ max-width: 680px;
 }
 
 .inner-body {
+background-color: #ffffff !important;
+border: 1px solid #e1ebf4 !important;
+border-radius: 22px !important;
+box-shadow: 0 18px 42px rgba(35, 77, 119, .12);
+overflow: hidden;
 max-width: 620px !important;
 width: 620px !important;
 }
 
+.body {
+background-color: #f1f6fb !important;
+border-color: #f1f6fb !important;
+}
+
 .content-cell {
-padding: 42px 48px !important;
+padding: 48px 54px !important;
+text-align: center !important;
 }
 
 .header {
-padding: 26px 0 22px 0 !important;
+padding: 20px 0 24px 0 !important;
+text-align: center !important;
+}
+
+.header a {
+display: inline-block !important;
+text-align: center !important;
+}
+
+.email-brand-mark {
+background-color: #ffffff;
+border: 1px solid #d7e6f5;
+border-radius: 50%;
+box-shadow: 0 10px 22px rgba(38, 91, 145, .16);
+height: 72px;
+padding: 7px;
+width: 72px;
 }
 
 .email-brand-name {
 color: #123a63;
-font-size: 17px;
+font-size: 18px;
 font-weight: 800;
 letter-spacing: .15px;
 line-height: 1.2;
@@ -52,11 +79,13 @@ text-transform: uppercase;
 
 .content-cell h1 {
 color: #173b63 !important;
-font-size: 26px !important;
+font-size: 30px !important;
 font-weight: 800 !important;
 letter-spacing: -.25px;
-line-height: 1.2;
-margin-bottom: 18px;
+line-height: 1.18;
+margin: 0 auto 16px !important;
+max-width: 540px;
+text-align: center !important;
 }
 
 .content-cell p,
@@ -64,25 +93,37 @@ margin-bottom: 18px;
 color: #526b86 !important;
 font-size: 16px !important;
 line-height: 1.7 !important;
+text-align: center !important;
 }
 
 .content-cell p {
-margin-bottom: 18px;
+margin: 0 auto 18px;
+max-width: 540px;
+text-align: center !important;
+}
+
+.content-cell ul,
+.content-cell ol {
+display: inline-block;
+margin: 0 auto 18px;
+text-align: left !important;
 }
 
 .content-cell .action {
-margin: 28px 0 10px 0 !important;
-text-align: left !important;
+margin: 30px 0 14px 0 !important;
+text-align: center !important;
 }
 
 .content-cell .button {
 background-color: #1769e0 !important;
 border: 0 !important;
-border-radius: 9px !important;
-box-shadow: 0 6px 14px rgba(23, 105, 224, .2);
+border-radius: 12px !important;
+box-shadow: 0 9px 18px rgba(23, 105, 224, .24);
+display: inline-block !important;
 font-size: 14px !important;
+font-weight: 700 !important;
 line-height: 1 !important;
-padding: 14px 20px !important;
+padding: 15px 24px !important;
 }
 
 .content-cell .subcopy {
@@ -95,6 +136,20 @@ padding-top: 20px !important;
 color: #8ca0b6 !important;
 font-size: 12px !important;
 line-height: 1.5 !important;
+max-width: 520px;
+text-align: center !important;
+}
+
+.footer .content-cell {
+padding: 22px 24px 4px !important;
+text-align: center !important;
+}
+
+.footer .content-cell p {
+color: #8ca0b6 !important;
+font-size: 12px !important;
+line-height: 1.5 !important;
+text-align: center !important;
 }
 
 @media only screen and (max-width: 600px) {
@@ -116,16 +171,22 @@ width: 100% !important;
 }
 
 .content-cell {
-padding: 30px 24px !important;
+padding: 34px 24px !important;
 }
 
 .content-cell h1 {
-font-size: 23px !important;
+font-size: 24px !important;
 }
 
 .content-cell p,
 .content-cell li {
 font-size: 15px !important;
+}
+
+.email-brand-mark {
+height: 64px;
+padding: 6px;
+width: 64px;
 }
 }
 
