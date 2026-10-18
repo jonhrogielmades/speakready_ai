@@ -2708,3 +2708,27 @@ body.dm #ai-coach-page .coach-voice-transcript-text::placeholder,
         transform: translate3d(0, calc(100% + var(--mob-safe-bottom, 0px) + 18px), 0) !important;
     }
 }
+
+/* Final mobile Coach header polish: short caution copy and a clear action inset. */
+@media (max-width: 767px) {
+    html body #ai-coach-page .coach-chat-header > .d-flex:last-child {
+        flex: 0 0 auto !important;
+        margin-inline: 6px !important;
+    }
+
+    html body #ai-coach-page .coach-chat-header .coach-actions {
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+    }
+
+    html body #ai-coach-page .coach-chat-header .coach-actions-toggle {
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+    }
+
+    html body #ai-coach-page .coach-chat-header .coach-disclaimer {
+        max-width: min(250px, calc(100% - 8px)) !important;
+        padding-inline: 2px !important;
+        overflow-wrap: normal !important;
+    }
+}

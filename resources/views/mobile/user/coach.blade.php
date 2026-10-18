@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/coach.css?v=2') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=28') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/coach-2.css?v=29') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -86,7 +86,7 @@
                     <div>
                         <div class="coach-disclaimer">
                             <i class="fa-regular fa-circle-info" aria-hidden="true"></i>
-                            Responses pass automated evidence safeguards, but AI can still be wrong. Verify advice and keep every personal claim truthful.
+                            AI can be wrong. Check advice and share only true facts.
                         </div>
                     </div>
                 </div>
@@ -1744,7 +1744,7 @@
             { element: '#chatMsg', popover: { title: 'Ask A Question', description: 'Type a draft answer, prep concern, target role, or coaching request here.', side: 'top', align: 'center' }},
             { element: '#coachVoiceBtn', popover: { title: 'Voice Prompt', description: 'Use the microphone to speak a message when rehearsing out loud is easier than typing.', side: 'top', align: 'center' }},
             { element: '#chatSendBtn', popover: { title: 'Send To Coach', description: 'Send your prompt or attached context and wait for personalized coaching in the message stream.', side: 'top', align: 'center' }},
-            { element: '.coach-disclaimer', popover: { title: 'Verify Advice', description: 'Treat suggestions as coaching support and keep every personal claim accurate before using it in an interview.', side: 'bottom', align: 'center' }}
+            { element: '.coach-disclaimer', popover: { title: 'Check Advice', description: 'AI can be wrong. Check advice and share only true facts.', side: 'bottom', align: 'center' }}
         ];
 
         const stepsDesktop = [
@@ -1757,7 +1757,7 @@
             { element: '#chatMsg', popover: { title: 'Ask A Question', description: 'Type a draft answer, prep concern, target role, or coaching request here.', side: 'top', align: 'center' }},
             { element: '#coachVoiceBtn', popover: { title: 'Voice Prompt', description: 'Use the microphone to speak a message when rehearsing out loud is easier than typing.', side: 'top', align: 'center' }},
             { element: '#chatSendBtn', popover: { title: 'Send To Coach', description: 'Send your prompt or attached context and wait for personalized coaching in the message stream.', side: 'top', align: 'center' }},
-            { element: '.coach-disclaimer', popover: { title: 'Verify Advice', description: 'Treat suggestions as coaching support and keep every personal claim accurate before using it in an interview.', side: 'bottom', align: 'center' }}
+            { element: '.coach-disclaimer', popover: { title: 'Check Advice', description: 'AI can be wrong. Check advice and share only true facts.', side: 'bottom', align: 'center' }}
         ];
 
         window.createSpeakReadyTour({
