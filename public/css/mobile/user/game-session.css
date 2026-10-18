@@ -58,6 +58,13 @@
     -webkit-text-fill-color: #fecaca;
 }
 
+#sec-interview-session[data-game-session-root] .game-session-timer-stack .session-chip.is-expired {
+    border-color: rgba(248, 113, 113, 0.9);
+    background: rgba(127, 29, 29, 0.9);
+    color: #fee2e2;
+    -webkit-text-fill-color: #fee2e2;
+}
+
 #sec-interview-session[data-game-session-root] .game-response-actions {
     min-width: 0;
 }
@@ -272,11 +279,26 @@ body.game-match-auto-fullscreen {
     }
 }
 
-/* Game match hybrid response: keep the textarea as the single mobile answer
-   surface and let fullscreen give it the viewport space left by the stage. */
+/* Keep the mobile answer surface compact, while still exposing playback after
+   a voice recording exists so users can verify what will be submitted. */
 @media (max-width: 767.98px) {
-    html body #sec-interview-session[data-game-session-root] .game-voice-session-panel {
+    html body #sec-interview-session[data-game-session-root] .game-voice-session-panel[data-state="idle"] {
         display: none !important;
+    }
+
+    html body #sec-interview-session[data-game-session-root] .game-voice-session-panel {
+        display: block !important;
+        margin-top: 0;
+        margin-bottom: 8px;
+        padding: 8px 10px;
+    }
+
+    html body #sec-interview-session[data-game-session-root] .game-voice-session-panel .voice-session-summary {
+        margin-bottom: 6px;
+    }
+
+    html body #sec-interview-session[data-game-session-root] .game-voice-session-panel .voice-session-playback {
+        height: 34px;
     }
 
     html body #sec-interview-session[data-game-session-root] #workspaceRow > .col-lg-4 {

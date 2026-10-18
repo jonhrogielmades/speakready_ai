@@ -213,6 +213,37 @@ class AdminGameController extends Controller
  $uniqueRule->ignore($id);
  }
 
+ $prerequisiteRule = Rule::exists('game_levels', 'id');
+ if ($categoryId) {
+ $prerequisiteRule->where('category_id', $categoryId);
+ }
+ $prerequisiteRules = ['nullable', $prerequisiteRule];
+ if ($id) {
+ $prerequisiteRules[] = Rule::notIn([$id]);
+ }
+ $prerequisiteRules[] = function ($attribute, $value, $fail) use ($categoryId, $id): void {
+ $currentId = (int) $value;
+ $visited = [];
+
+ while ($currentId > 0) {
+ if (isset($visited[$currentId]) || ($id && $currentId === (int) $id)) {
+ $fail('The prerequisite chain cannot contain a cycle.');
+
+ return;
+ }
+
+ $visited[$currentId] = true;
+ $nextId = GameLevel::whereKey($currentId)
+ ->when($categoryId, fn ($query) => $query->where('category_id', $categoryId))
+ ->value('prerequisite_level_id');
+ if (! $nextId) {
+ return;
+ }
+
+ $currentId = (int) $nextId;
+ }
+ };
+
  return [
  'level_number' => ['required', 'integer', 'min:1', 'max:'.self::MAX_LEVEL_NUMBER, $uniqueRule],
  'category_id' => ['required', $this->activeGameCategoryRule()],
@@ -236,7 +267,7 @@ class AdminGameController extends Controller
  'custom_badge_name' => 'nullable|string|max:255',
  'skill_xp_type' => 'nullable|string|max:255',
  'skill_xp_amount' => 'nullable|integer|min:0',
- 'prerequisite_level_id' => 'nullable|exists:game_levels,id',
+ 'prerequisite_level_id' => $prerequisiteRules,
  ];
  }
 

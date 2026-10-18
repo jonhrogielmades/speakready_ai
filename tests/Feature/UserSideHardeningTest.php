@@ -17,6 +17,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
 use App\Services\AudioDurationService;
+use App\Services\LocalSpeechAssessmentService;
 use App\Services\QuestionDatasetProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -298,6 +299,37 @@ class UserSideHardeningTest extends TestCase
  'user_id' => $user->id,
  'game_level_id' => $nextDataLevel->id,
  'status' => 'in_progress',
+ ]);
+ }
+
+ public function test_game_start_rejects_a_prerequisite_from_another_category(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $sourceCategory = $this->category(['type' => 'game', 'title' => 'Source Path']);
+ $targetCategory = $this->category(['type' => 'game', 'title' => 'Target Path']);
+ $sourceLevel = $this->gameLevel($sourceCategory, ['title' => 'Source Level']);
+ $targetLevel = $this->gameLevel($targetCategory, [
+ 'title' => 'Target Level',
+ 'prerequisite_level_id' => $sourceLevel->id,
+ ]);
+ GameProgress::create([
+ 'user_id' => $user->id,
+ 'game_level_id' => $sourceLevel->id,
+ 'status' => 'completed',
+ 'best_score' => 100,
+ ]);
+ $this->assertSame($sourceLevel->id, (int) $targetLevel->refresh()->prerequisite_level_id);
+
+ $this->actingAs($user)
+ ->from(route('user.learning', ['category_id' => $targetCategory->id]))
+ ->post(route('user.game.start', $targetLevel))
+ ->assertRedirect(route('user.learning', ['category_id' => $targetCategory->id]))
+ ->assertSessionHas('error', 'This level is locked! Complete the prerequisite level with the required score to unlock it.');
+
+ $this->assertDatabaseMissing('game_sessions', [
+ 'user_id' => $user->id,
+ 'game_level_id' => $targetLevel->id,
  ]);
  }
 
@@ -3409,6 +3441,43 @@ class UserSideHardeningTest extends TestCase
  ));
  }
 
+ public function test_replaying_a_completed_game_level_does_not_award_progression_xp_again(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category, ['required_score' => 0, 'xp_reward' => 125]);
+ $answerText = 'During a delayed customer request, I owned the task of confirming the missing details. I checked the records, explained the next steps, and resolved the issue within the promised hour. As a result, the customer received the correct update and our team completed the request on time.';
+
+ foreach ([1, 2] as $attempt) {
+ $this->actingAs($user)
+ ->post(route('user.game.start', $level))
+ ->assertRedirect(route('user.game.match'));
+ $session = GameSession::where('user_id', $user->id)->latest('id')->firstOrFail();
+
+ $this->actingAs($user)
+ ->postJson(route('user.game.answer'), [
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'answer_text' => $answerText,
+ 'response_mode' => 'hybrid',
+ ])
+ ->assertOk();
+
+ $finish = $this->actingAs($user)
+ ->post(route('user.game.finish'), ['game_session_id' => $session->id]);
+ $finish->assertRedirect(route('user.learning', ['category_id' => $category->id]));
+
+ if ($attempt === 1) {
+ $this->assertSame(125, (int) $finish->getSession()->get('game_result.xp_earned'));
+ } else {
+ $this->assertSame(0, (int) $finish->getSession()->get('game_result.xp_earned'));
+ }
+ }
+
+ $this->assertSame(125, (int) Profile::where('user_id', $user->id)->value('experience_points'));
+ }
+
  public function test_game_certificate_download_requires_completed_path(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -3542,7 +3611,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame('hybrid', $answer->response_mode);
  $this->assertSame('local', $answer->voice_recording_disk);
  $this->assertSame('audio/webm', $answer->voice_recording_mime_type);
- $this->assertSame('transcribed', $answer->voice_recording_transcription_status);
+ $this->assertSame('failed', $answer->voice_recording_transcription_status);
  Storage::disk('local')->assertExists($answer->voice_recording_path);
 
  $this->actingAs($user)
@@ -3604,6 +3673,75 @@ class UserSideHardeningTest extends TestCase
  ->assertOk()
  ->assertJsonPath('transcript', 'AI provider challenge transcript.')
  ->assertJsonPath('transcription_source', 'openai')
+ ->assertJsonPath('transcription_status', 'transcribed');
+ }
+
+ public function test_game_voice_transcription_falls_back_to_high_confidence_local_asr(): void
+ {
+ Storage::fake('local');
+ config([
+ 'services.ai_transcription.provider_priority' => 'openai',
+ 'services.openai.transcription_model' => 'gpt-transcribe',
+ 'services.local_speech.min_transcript_confidence' => 95,
+ ]);
+
+ $this->app->instance(LocalSpeechAssessmentService::class, new class extends LocalSpeechAssessmentService {
+ public function assessUploadedAudio(UploadedFile $audioFile, ?string $referenceText = null, array|string|null $targetLanguage = null): array
+ {
+ return [
+ 'version' => self::VERSION,
+ 'status' => 'measured',
+ 'asr' => [
+ 'name' => 'asr',
+ 'status' => 'measured',
+ 'transcript' => 'Local game recovery transcript.',
+ 'confidence' => 99,
+ ],
+ 'pronunciation' => ['name' => 'pronunciation', 'status' => 'not_measured'],
+ 'forced_alignment' => ['name' => 'forced_alignment', 'status' => 'not_measured'],
+ 'phoneme_alignment' => ['name' => 'phoneme_alignment', 'status' => 'not_measured'],
+ 'gop' => ['name' => 'gop', 'status' => 'not_measured'],
+ 'reliability' => ['score' => 99, 'band' => 'High', 'measured_components' => ['asr']],
+ 'limitations' => [],
+ 'recommendations' => [],
+ ];
+ }
+ });
+
+ Http::fake([
+ 'https://api.openai.com/v1/audio/transcriptions' => Http::response(['text' => ''], 200),
+ ]);
+ AiProvider::create([
+ 'name' => 'OpenAI',
+ 'api_endpoint' => 'https://api.openai.com/v1',
+ 'api_key' => Crypt::encryptString('test-key'),
+ 'status' => 'active',
+ ]);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category);
+ $session = GameSession::create([
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'status' => 'in_progress',
+ 'num_questions' => 1,
+ 'questions' => ['Describe a customer challenge.'],
+ 'response_mode' => 'hybrid',
+ ]);
+
+ $this->actingAs($user)
+ ->postJson(route('user.game.transcribe'), [
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'audio' => UploadedFile::fake()
+ ->createWithContent('challenge-answer.webm', str_repeat('A', 4096))
+ ->mimeType('audio/webm'),
+ ])
+ ->assertOk()
+ ->assertJsonPath('transcript', 'Local game recovery transcript.')
+ ->assertJsonPath('transcription_source', 'local_speech')
  ->assertJsonPath('transcription_status', 'transcribed');
  }
 
@@ -3915,6 +4053,10 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('Voice Session')
  ->assertSee('const responseMode = "hybrid";', false)
  ->assertSee('const isVoiceOnlySession = false;', false)
+ ->assertSee('function updateGameTimerDisplay()', false)
+ ->assertSee('function saveGameStateOnPageHide()', false)
+ ->assertSee('navigator.sendBeacon', false)
+ ->assertSee("panel.classList.toggle('d-none', normalizedState === 'idle');", false)
  ->assertSee('Type your answer, or record with voice. Voice transcript appears here after Stop...', false)
  ->assertDontSee('readonly aria-readonly="true"', false)
  ->assertDontSee('class="voice-only-answer-lock"', false)
@@ -3973,7 +4115,7 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
  ->assertSee('css/mobile/user/game-session-base.css?v=73', false)
  ->assertDontSee('css/mobile/interview/session.css?v=75', false)
- ->assertSee('css/mobile/user/game-session.css?v=2026101801', false)
+ ->assertSee('css/mobile/user/game-session.css?v=2026101901', false)
  ->assertSee('data-page-style="user-game-session"', false)
  ->assertSee('id="sec-interview-session"', false)
  ->assertSee('data-game-session-root', false)

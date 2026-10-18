@@ -3188,7 +3188,9 @@ PROMPT;
 
  throw $e;
  } finally {
+ if (is_resource($fileHandle)) {
  fclose($fileHandle);
+ }
  }
 
  if (! $response->successful()) {

@@ -3,7 +3,7 @@
 @section('body-class', 'interview-session-shell')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-base.css?v=66') }}" data-page-style="user-game-session-base">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=2026101801') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=2026101901') }}" data-page-style="user-game-session">
 <link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=2026101208') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
@@ -286,6 +286,7 @@
  <script>
  const questions = @js($questions);
  const gameSessionId = {{ (int) $sessionRecord->id }};
+const gameStateSaveUrl = @json(route('user.game.saveState'));
  const responseMode = "hybrid";
  const isVoiceOnlySession = false;
  const enableGameRealtimeTranscription = false;
@@ -298,6 +299,10 @@
  let isFinishingChallenge = false;
  let isChallengeTransitioning = false;
  let challengeSessionStarted = false;
+let gameStateAutosaveTimer = null;
+let gameStateSaveInFlight = false;
+let gameStateSavePending = false;
+const gameTimeLimitSeconds = {{ max(0, (int) ($gameLevel->time_limit_seconds ?? 0)) }};
  
  // Answers state
  let answersData = @json($initialAnswersData);
@@ -564,7 +569,11 @@ let gameMatchFullscreenBusy = false;
  }
 
  document.addEventListener('fullscreenchange', handleGameMatchFullscreenChange);
+ document.addEventListener('visibilitychange', () => {
+ if (document.visibilityState === 'hidden') saveGameStateOnPageHide();
+ });
  window.addEventListener('pagehide', () => {
+saveGameStateOnPageHide();
  removeGameMatchFullscreenRetry();
  clearGameVoiceSessionPlayback();
  cancelGameSpeechOutput();
@@ -755,6 +764,7 @@ let gameMatchFullscreenBusy = false;
 
  panel.hidden = false;
  panel.dataset.state = normalizedState;
+ panel.classList.toggle('d-none', normalizedState === 'idle');
  if (badge) badge.textContent = labels[normalizedState] || 'Ready';
  if (status) status.textContent = message || labels[normalizedState] || 'Ready';
  if (meta && (normalizedState === 'recording' || normalizedState === 'paused')) {
@@ -1887,12 +1897,14 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  if (voiceAnalyticsPanel) voiceAnalyticsPanel.style.display = 'block';
  }
 
+ updateGameTimerDisplay();
  timerInterval = setInterval(() => {
  timerSeconds++;
  const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
  const s = (timerSeconds % 60).toString().padStart(2, '0');
  const challengeTimer = document.getElementById('challengeTimer');
  if (challengeTimer) challengeTimer.innerText = m + ':' + s;
+ updateGameTimerDisplay();
  
  if(timerSeconds % 30 === 0) autoSaveState(); // auto save every 30s
  }, 1000);
@@ -1904,7 +1916,10 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  const answerTextarea = document.getElementById('answerTextarea');
  const sessionNotes = document.getElementById('sessionNotes');
  if (answerTextarea) answerTextarea.addEventListener('input', handleGameAnswerInput);
- if (sessionNotes) sessionNotes.addEventListener('change', autoSaveState);
+ if (sessionNotes) {
+ sessionNotes.addEventListener('input', scheduleAutoSaveState);
+ sessionNotes.addEventListener('change', scheduleAutoSaveState);
+ }
  return true;
  }
 
@@ -1959,6 +1974,18 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  const el = document.getElementById(id);
  if (el) el.innerText = value;
  }
+
+function updateGameTimerDisplay() {
+ const timer = document.getElementById('game-timer');
+ if (!timer || gameTimeLimitSeconds <= 0) return;
+
+ const remaining = Math.max(0, gameTimeLimitSeconds - timerSeconds);
+ const minutes = Math.floor(remaining / 60).toString().padStart(2, '0');
+ const seconds = (remaining % 60).toString().padStart(2, '0');
+ timer.textContent = `${minutes}:${seconds}`;
+ const chip = timer.closest('.session-chip');
+ if (chip) chip.classList.toggle('is-expired', remaining === 0);
+}
 
  function setElementHtml(id, value) {
  const el = document.getElementById(id);
@@ -2019,6 +2046,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  recordingManualEditedSinceStart = true;
  }
  triggerAnalysis();
+ scheduleAutoSaveState();
  }
 
  function updateStarIcon(id, status) {
@@ -2249,12 +2277,9 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  function setRecordingControlButtons(state) {
  const pauseBtn = document.getElementById('micPauseBtn');
  const stopBtn = document.getElementById('micStopBtn');
- const startBtn = document.getElementById('micStartBtn');
  const recordingTimer = document.getElementById('recordingTimer');
  const isIdle = state === 'idle';
  const isPaused = state === 'paused';
-
- if (startBtn) startBtn.style.display = 'none';
 
  if (pauseBtn) {
  pauseBtn.style.display = 'inline-flex';
@@ -2510,7 +2535,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  });
  }
 
- function autoSaveState() {
+function buildGameStateFormData() {
  const formData = new FormData();
  formData.append('_token', '{{ csrf_token() }}');
  formData.append('game_session_id', gameSessionId);
@@ -2524,8 +2549,31 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  draft_text: draft.text || '',
  draft_has_voice_recording: Boolean(draft.has_voice_recording || draft.voice_recording?.blob)
  }));
+ return formData;
+}
+
+function scheduleAutoSaveState() {
+ clearTimeout(gameStateAutosaveTimer);
+ gameStateAutosaveTimer = setTimeout(() => autoSaveState(), 800);
+}
+
+function showGameAutoSaveIndicator() {
+ const indicator = document.getElementById('autoSaveIndicator');
+ if (!indicator) return;
+ indicator.style.display = 'inline';
+ setTimeout(() => indicator.style.display = 'none', 2000);
+}
+
+function autoSaveState() {
+ if (!challengeSessionStarted || isFinishingChallenge) return;
+ if (gameStateSaveInFlight) {
+ gameStateSavePending = true;
+ return;
+ }
+ const formData = buildGameStateFormData();
+ gameStateSaveInFlight = true;
  
- fetch('{{ route("user.game.saveState") }}', {
+ fetch(gameStateSaveUrl, {
  method: 'POST',
  body: formData,
  headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -2534,13 +2582,34 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  throw new Error('Auto-save failed with status ' + response.status);
  }
 
- const ind = document.getElementById('autoSaveIndicator');
- ind.style.display = 'inline';
- setTimeout(() => ind.style.display = 'none', 2000);
+ showGameAutoSaveIndicator();
  }).catch(error => {
  console.error(error);
+ }).finally(() => {
+ gameStateSaveInFlight = false;
+ if (gameStateSavePending && !isFinishingChallenge) {
+ gameStateSavePending = false;
+ scheduleAutoSaveState();
+ }
  });
  }
+
+function saveGameStateOnPageHide() {
+ if (!challengeSessionStarted || isFinishingChallenge) return;
+ const formData = buildGameStateFormData();
+ try {
+ if (navigator.sendBeacon && navigator.sendBeacon(gameStateSaveUrl, formData)) return;
+ } catch (error) {
+ console.warn('Beacon auto-save unavailable:', error);
+ }
+
+ fetch(gameStateSaveUrl, {
+ method: 'POST',
+ body: formData,
+ headers: { 'X-Requested-With': 'XMLHttpRequest' },
+ keepalive: true
+ }).catch(error => console.warn('Page-exit auto-save failed:', error));
+}
 
  function setGameAdvanceActionsDisabled(disabled) {
  document.querySelectorAll('.next-btn-class').forEach(el => {
