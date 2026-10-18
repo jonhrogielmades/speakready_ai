@@ -5678,3 +5678,16 @@ html body #finishTransitionOverlay .finish-view-review-button.is-ready:not(:disa
         object-fit: cover !important;
     }
 }
+
+/* Keep Hybrid's Voice Session reachable inside the mobile Your Response panel. */
+@media (max-width: 767.98px) {
+    html body.user-mobile-shell #sec-interview-session .hybrid-response-panel #answerForm,
+    html body #mob-content #sec-interview-session .hybrid-response-panel #answerForm {
+        max-height: clamp(240px, calc(var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) - 170px), 420px) !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        scroll-padding-bottom: 16px;
+        scrollbar-width: thin;
+    }
+}

@@ -55,6 +55,7 @@
   $responseModeKey = strtolower((string) ($sessionRecord->response_mode?? 'text'));
   $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
   $isVoiceResponseMode = in_array($responseModeKey, ['voice', 'hybrid', 'voice_and_text'], true);
+   $isHybridResponseMode = in_array($responseModeKey, ['hybrid', 'voice_and_text'], true);
   $interviewerAvatarImages = [
   'img/interviewers/Filipina_Interviewer_06.png',
   ];
@@ -151,7 +152,7 @@
  <div id="sessionNotice" class="session-inline-alert" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
 
  <!-- Answer Response System -->
- <div class="panel response-panel mb-4 animate-fade-up delay-200">
+ <div class="panel response-panel{{ $isHybridResponseMode ? ' hybrid-response-panel' : '' }} mb-4 animate-fade-up delay-200">
  <div class="panel-title">
  <i class="fa-solid fa-pen-nib me-2"></i>
  <span class="panel-title-text">Your Response</span>
