@@ -43,7 +43,7 @@
             color: var(--ink);
             background:
                 radial-gradient(circle at 8% 12%, rgba(37, 99, 235, .14), transparent 27rem),
-                radial-gradient(circle at 92% 88%, rgba(52, 211, 153, .13), transparent 25rem),
+                radial-gradient(circle at 92% 88%, rgba(34, 211, 238, .15), transparent 25rem),
                 #f1f6fb;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
@@ -274,8 +274,7 @@
 
         .tone-amber { --accent: #d97706; --accent-dark: #a35405; --accent-soft: #fff0d7; }
         .tone-coral { --accent: #e05252; --accent-dark: #b83232; --accent-soft: #ffe3e3; }
-        .tone-violet { --accent: #7c3aed; --accent-dark: #5b21b6; --accent-soft: #ede5ff; }
-        .tone-teal { --accent: #0f9f8b; --accent-dark: #087567; --accent-soft: #d9f7f0; }
+        .tone-cyan { --accent: #0891b2; --accent-dark: #0e7490; --accent-soft: #cffafe; }
 
         @media (max-width: 560px) {
             .error-shell { padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }

@@ -4,7 +4,7 @@
     'title' => 'We are making the practice space better.',
     'message' => 'The service is temporarily unavailable while we complete maintenance or a safe recovery step.',
     'icon' => 'refresh',
-    'tone' => 'violet',
+    'tone' => 'cyan',
     'primaryLabel' => 'Check again',
     'secondaryMode' => 'reload',
     'secondaryLabel' => 'Refresh page',
