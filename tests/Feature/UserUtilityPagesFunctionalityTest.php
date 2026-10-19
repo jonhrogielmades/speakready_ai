@@ -61,6 +61,41 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
  }
 
+ public function test_adding_a_recovery_email_auto_verifies_local_user_and_allows_login(): void
+ {
+ $user = User::factory()->create([
+ 'username' => 'auto-verify-user',
+ 'email' => null,
+ 'email_verified_at' => null,
+ 'google_id' => null,
+ 'status' => 'active',
+ 'password' => Hash::make('local-password'),
+ ]);
+
+ $this->actingAs($user)
+ ->post(route('user.account.profile'), [
+ 'name' => $user->name,
+ 'email' => 'recovery-login@example.com',
+ 'target_position' => $user->target_position,
+ ])
+ ->assertRedirect()
+ ->assertSessionHas('success', 'Profile updated successfully.');
+
+ $updatedUser = $user->fresh();
+
+ $this->assertSame('recovery-login@example.com', $updatedUser->email);
+ $this->assertNotNull($updatedUser->email_verified_at);
+
+ $this->post(route('logout'))->assertRedirect();
+
+ $this->post(route('login'), [
+ 'username' => $updatedUser->username,
+ 'password' => 'local-password',
+ ])->assertRedirect(route('dashboard'));
+
+ $this->assertAuthenticatedAs($updatedUser);
+ }
+
  public function test_account_profile_does_not_save_when_no_values_changed(): void
  {
  $user = User::factory()->create([

@@ -4232,7 +4232,14 @@ class UserController extends Controller
  ]);
 
  $user->name = $request->name;
- $user->email = filled($request->email) ? Str::lower(trim((string) $request->email)) : null;
+ $normalizedRecoveryEmail = filled($request->email) ? Str::lower(trim((string) $request->email)) : null;
+ $emailChanged = $normalizedRecoveryEmail !== Str::lower(trim((string) ($user->email ?? '')));
+ $user->email = $normalizedRecoveryEmail;
+ if ($normalizedRecoveryEmail === null) {
+  $user->email_verified_at = null;
+ } elseif ($emailChanged || ! $user->email_verified_at) {
+  $user->email_verified_at = now();
+ }
  $user->target_position = $request->target_position;
 
  $previousPhoto = $user->profile_photo_path;
