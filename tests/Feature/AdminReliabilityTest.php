@@ -442,7 +442,7 @@ class AdminReliabilityTest extends TestCase
             ->assertSee('Custom public description for interviews.')
             ->assertSee('Custom Ready footer text.')
             ->assertSee('--pur: #123456', false)
-            ->assertSee('mailto:coach@example.com', false)
+            ->assertSee('mailto:'.config('mail.contact_to'), false)
             ->assertSee('tel:+639171234567', false);
 
         $this->actingAs($user)

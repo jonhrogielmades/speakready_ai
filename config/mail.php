@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database Mail Settings
+    |--------------------------------------------------------------------------
+    |
+    | Production mail credentials should normally come from deployment secrets.
+    | Set this explicitly only when an administrator intentionally wants the
+    | legacy database-backed SMTP fields to override the environment values.
+    |
+    */
+
+    'use_system_settings' => env('MAIL_USE_SYSTEM_SETTINGS', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Mailer Configurations
     |--------------------------------------------------------------------------
     |

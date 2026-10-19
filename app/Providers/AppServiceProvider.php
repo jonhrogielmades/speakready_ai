@@ -128,6 +128,13 @@ class AppServiceProvider extends ServiceProvider
             $sessionLifetime = max(5, min(1440, (int) SystemSettings::value('acc_session_timeout', config('session.lifetime', 120))));
             config(['session.lifetime' => $sessionLifetime]);
 
+            // Deployment secrets are authoritative by default. This prevents
+            // stale values stored in the admin settings table from silently
+            // replacing a production SMTP host, username, or App Password.
+            if (! filter_var(config('mail.use_system_settings', false), FILTER_VALIDATE_BOOLEAN)) {
+                return;
+            }
+
             $mailHost = (string) SystemSettings::value('mail_host', '');
             if ($mailHost !== '') {
                 config(['mail.mailers.smtp.host' => $mailHost]);
