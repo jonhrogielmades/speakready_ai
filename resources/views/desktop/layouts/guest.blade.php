@@ -1036,7 +1036,7 @@
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-envelope" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Email Address</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">capstonespeakreadyai@gmail.com</p>
+                                  <a href="mailto:{{ config('mail.contact_to') }}" class="mb-0 d-inline-block" style="color:var(--tx2);font-size:0.9rem;">{{ config('mail.contact_to') }}</a>
                              </div>
                          </div>
                          <div class="d-flex align-items-center gap-3">
@@ -1163,7 +1163,7 @@
                          <button type="submit" class="btn footer-newsletter-btn fw-semibold px-3" aria-label="Subscribe to updates"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
                      </form>
                      <div class="footer-socials" aria-label="Contact links">
-                         <a href="mailto:{{ $systemContactEmail ?? 'support@speakready.ai' }}" class="footer-social-link" title="Email {{ $systemName ?? 'SpeakReady AI' }}" aria-label="Email {{ $systemName ?? 'SpeakReady AI' }}"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
+                         <a href="mailto:{{ config('mail.contact_to') }}" class="footer-social-link" title="Email {{ $systemName ?? 'SpeakReady AI' }}" aria-label="Email {{ $systemName ?? 'SpeakReady AI' }}"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
                          <a href="tel:{{ preg_replace('/[^0-9+]/', '', $systemContactNumber ?? '') ?: '09066544727' }}" class="footer-social-link" title="Call {{ $systemName ?? 'SpeakReady AI' }}" aria-label="Call {{ $systemName ?? 'SpeakReady AI' }}"><i class="fa-solid fa-phone" aria-hidden="true"></i></a>
                          <a href="https://www.google.com/maps/search/?api=1&query=San%20Ramon%2C%20Bontoc%2C%20Southern%20Leyte%20SLSU%20Bontoc%20Campus" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="View location" aria-label="View location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></a>
                      </div>

@@ -114,6 +114,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Contact Form Recipient
+    |--------------------------------------------------------------------------
+    |
+    | Contact messages are delivered to this mailbox immediately after they
+    | are saved. Keep this separate from the sender address used by SMTP.
+    |
+    */
+
+    'contact_to' => env('CONTACT_RECEIVER_EMAIL', 'capstonespeakreadyai@gmail.com'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Markdown Mail Settings
     |--------------------------------------------------------------------------
     |
