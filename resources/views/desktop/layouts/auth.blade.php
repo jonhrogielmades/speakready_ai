@@ -14,7 +14,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=7') }}">
-      <link rel="stylesheet" href="{{ asset('css/desktop/auth/auth.css?v=5') }}" data-page-style="auth-desktop">
+      <link rel="stylesheet" href="{{ asset('css/desktop/auth/auth.css?v=6') }}" data-page-style="auth-desktop">
    </head>
    <body class="auth-desktop-shell desktop-shell @yield('body_class')" data-layout-shell="desktop" data-auth-layout="desktop">
       @include('desktop.partials.viewport-mobile-cookie')
