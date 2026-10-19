@@ -1,7 +1,3 @@
-@php
-    $isGuestQuickNavigation = (bool) ($guestQuickNavigation ?? false);
-@endphp
-
 @once
     <div
         id="userCommandPalette"
@@ -132,25 +128,6 @@
                 @endif
             </nav>
 
-            @if ($isGuestQuickNavigation)
-            <footer class="ucp-footer ucp-guest-footer">
-                <div class="ucp-guest-actions">
-                    <button type="button" class="ucp-guest-action ucp-guest-login" data-ucp-action data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">
-                        <i class="fa-regular fa-user fa-sm" aria-hidden="true"></i>
-                        Login
-                    </button>
-                    <button type="button" class="ucp-guest-action ucp-guest-register" data-ucp-action data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
-                        Start Practicing
-                        <i class="fa-solid fa-arrow-right fa-sm" aria-hidden="true"></i>
-                    </button>
-                </div>
-            </footer>
-            @else
-            <footer class="ucp-footer">
-                <span class="ucp-status">10 destinations</span>
-                <span class="ucp-help"><kbd>&uarr;</kbd><kbd>&darr;</kbd> move <kbd>Enter</kbd> open</span>
-            </footer>
-            @endif
         </section>
     </div>
 
@@ -220,8 +197,7 @@
         }
         .ucp-close:hover { color: var(--tx, #fff); border-color: #64748b; transform: translateY(-1px); }
         .ucp-close:focus-visible,
-        .ucp-result:focus-visible,
-        .ucp-guest-action:focus-visible { outline: 3px solid rgba(96, 165, 250, .48); outline-offset: 2px; }
+        .ucp-result:focus-visible { outline: 3px solid rgba(96, 165, 250, .48); outline-offset: 2px; }
         .ucp-results {
             min-height: 120px;
             overflow: auto;
@@ -293,69 +269,6 @@
         .ucp-result-arrow { color: var(--tx3, #64748b); font-size: .68rem; opacity: 0; transform: translateX(-4px); transition: opacity .12s ease, transform .12s ease; }
         .ucp-result:hover .ucp-result-arrow,
         .ucp-result.is-active .ucp-result-arrow { opacity: 1; transform: translateX(0); }
-        .ucp-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            min-height: 46px;
-            padding: 10px 22px;
-            color: var(--tx3, #94a3b8);
-            background: color-mix(in srgb, var(--bg3, #1e293b) 54%, transparent);
-            border-top: 1px solid var(--bd, #334155);
-            font-size: .68rem;
-        }
-        .ucp-status { font-weight: 600; }
-        .ucp-help { display: flex; align-items: center; gap: 5px; }
-        .ucp-footer.ucp-guest-footer {
-            min-height: auto;
-            padding: 12px 16px 16px;
-        }
-        .ucp-guest-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            width: 100%;
-        }
-        .ucp-guest-action {
-            min-height: 40px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            padding: 9px 12px;
-            color: var(--tx, #f8fafc);
-            font-family: inherit;
-            font-size: .76rem;
-            font-weight: 700;
-            line-height: 1;
-            border: 1px solid var(--bd, #334155);
-            border-radius: 11px;
-            cursor: pointer;
-            transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
-        }
-        .ucp-guest-action:hover { transform: translateY(-1px); }
-        .ucp-guest-login { background: var(--bg2, #111827); }
-        .ucp-guest-register {
-            color: #fff;
-            background: linear-gradient(135deg, #2563eb, #0ea5e9);
-            border-color: transparent;
-            box-shadow: 0 8px 18px rgba(37, 99, 235, .22);
-        }
-        .ucp-help kbd {
-            min-width: 22px;
-            padding: 2px 5px;
-            color: var(--tx2, #cbd5e1);
-            font-family: inherit;
-            font-size: .64rem;
-            font-weight: 600;
-            line-height: 1.35;
-            text-align: center;
-            background: var(--bg2, #111827);
-            border: 1px solid var(--bd, #334155);
-            border-radius: 5px;
-            box-shadow: none;
-        }
         @keyframes ucp-fade-in { from { opacity: 0; } }
         @keyframes ucp-dialog-in { from { opacity: 0; transform: translateY(-10px) scale(.985); } }
 
@@ -385,8 +298,6 @@
             .ucp-result-copy strong { font-size: .82rem; }
             .ucp-result-copy small { font-size: .69rem; }
             .ucp-result-arrow { opacity: .55; transform: none; }
-            .ucp-footer { min-height: 42px; padding: 9px 16px; }
-            .ucp-help { display: none; }
         }
         @keyframes ucp-dialog-mobile-in { from { opacity: 0; transform: translateY(24px); } }
         @media (prefers-reduced-motion: reduce) {
@@ -394,8 +305,7 @@
             .ucp-dialog { animation: none; }
             .ucp-result,
             .ucp-close,
-            .ucp-result-arrow,
-            .ucp-guest-action { transition: none; }
+            .ucp-result-arrow { transition: none; }
         }
     </style>
 

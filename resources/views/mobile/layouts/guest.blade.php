@@ -150,7 +150,7 @@
                </div>
             </div>
          </nav>
-         @include('mobile.partials.user-command-palette', ['guestQuickNavigation' => true])
+         @include('mobile.partials.user-command-palette')
 
          <!-- HERO -->
          <section id="hero">
