@@ -23,7 +23,7 @@
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=36') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=29') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=30') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
@@ -133,12 +133,12 @@
                      <a href="#developers" class="nav-link">Developers</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                     <button type="button" class="boc mobile-topbar-login d-flex align-items-center justify-content-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')" aria-label="Log in">
+                     <i class="fa-regular fa-user fa-sm" aria-hidden="true"></i><span>Login</span>
+                     </button>
                      <button type="button" class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
-                     </button>
-                     <button type="button" class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">
-                     <i class="fa-regular fa-user fa-sm"></i> Login
                      </button>
                      <button type="button" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
