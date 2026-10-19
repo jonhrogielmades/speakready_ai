@@ -529,28 +529,15 @@ function swTab(t) {
     const signupErr = document.getElementById('signupErr');
 
     const activePanel = isL ? loginPanel : signupPanel;
-    const inactivePanel = isL ? signupPanel : loginPanel;
 
     [loginPanel, signupPanel].forEach(panel => {
-        panel?.classList.remove('is-switching-out', 'is-entering');
+        if (!panel) return;
+        const isActive = panel === activePanel;
+        panel.classList.remove('is-switching-out', 'is-entering');
+        panel.hidden = !isActive;
+        panel.style.display = isActive ? 'block' : 'none';
+        panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
     });
-
-    if (inactivePanel) {
-        inactivePanel.style.display = 'none';
-        inactivePanel.hidden = true;
-        inactivePanel.setAttribute('aria-hidden', 'true');
-    }
-
-    if (activePanel) {
-        activePanel.hidden = false;
-        activePanel.style.display = 'block';
-        activePanel.setAttribute('aria-hidden', 'false');
-        void activePanel.offsetWidth;
-        activePanel.classList.add('is-entering');
-        activePanel.addEventListener('animationend', () => {
-            activePanel.classList.remove('is-entering');
-        }, { once: true });
-    }
 
     loginTab?.classList.toggle('on', isL);
     signupTab?.classList.toggle('on', !isL);

@@ -10630,7 +10630,7 @@ body.user-desktop-shell:not(.admin-shell) #dashboard #userPlan {
   font-size: 1rem;
   font-weight: 800;
   line-height: 1;
-  transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition: none;
 }
 
 #lofc.auth-modal .tab-sw-btn i {
@@ -10656,7 +10656,7 @@ body.user-desktop-shell:not(.admin-shell) #dashboard #userPlan {
 }
 
 #lofc.auth-modal .auth-panel.is-entering {
-  animation: authPanelIn 0.14s ease-out both;
+  animation: none !important;
 }
 
 #lofc.auth-modal .auth-panel.is-switching-out {
