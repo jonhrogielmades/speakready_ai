@@ -9651,6 +9651,18 @@ body .modal-title {
     grid-column: 1 / -1;
   }
 
+  #lofc.auth-modal #fSignup .auth-register-email {
+    grid-column: 1 / -1;
+  }
+
+  #lofc.auth-modal #fSignup .auth-register-password {
+    grid-column: 1;
+  }
+
+  #lofc.auth-modal #fSignup .auth-register-confirm-password {
+    grid-column: 2;
+  }
+
   #lofc.auth-modal #fSignup .auth-form > .err-msg {
     margin-bottom: 2px;
   }

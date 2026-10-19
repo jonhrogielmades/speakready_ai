@@ -108,21 +108,21 @@
                         @if($errors->any() && $showSignupAuthTab)
                            <div class="err-msg is-visible" role="alert"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first() }}</span></div>
                         @endif
-                        <div class="auth-field">
+                        <div class="auth-field auth-register-name">
                            <label class="olbl" for="signupName"><i class="fa-solid fa-user" aria-hidden="true"></i>Full name</label>
                            <div class="auth-input-wrap">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
                               <input class="oinp" type="text" name="name" id="signupName" placeholder="John Doe" required autocomplete="name" value="{{ old('name') }}">
                            </div>
                         </div>
-                        <div class="auth-field">
+                        <div class="auth-field auth-register-username">
                            <label class="olbl" for="signupUsername"><i class="fa-solid fa-user-tag" aria-hidden="true"></i>Username</label>
                            <div class="auth-input-wrap">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-user-tag"></i></span>
                               <input class="oinp" type="text" name="username" id="signupUsername" placeholder="your_username" required autocomplete="username" value="{{ old('username') }}">
                            </div>
                         </div>
-                        <div class="auth-field">
+                        <div class="auth-field auth-register-email">
                            <label class="olbl" for="signupEmail"><i class="fa-solid fa-envelope" aria-hidden="true"></i>Recovery email</label>
                            <div class="auth-input-wrap">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
@@ -130,7 +130,7 @@
                            </div>
                            <small class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">Used only for password recovery codes.</small>
                         </div>
-                        <div class="auth-field">
+                        <div class="auth-field auth-register-password">
                            <label class="olbl" for="signupPass"><i class="fa-solid fa-lock" aria-hidden="true"></i>Password</label>
                            <div class="auth-input-wrap password-field">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
@@ -140,7 +140,7 @@
                               </button>
                            </div>
                         </div>
-                        <div class="auth-field">
+                        <div class="auth-field auth-register-confirm-password">
                            <label class="olbl" for="signupPassConfirm"><i class="fa-solid fa-lock" aria-hidden="true"></i>Confirm password</label>
                            <div class="auth-input-wrap password-field">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
