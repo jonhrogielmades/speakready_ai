@@ -119,6 +119,20 @@ class PasswordResetTest extends TestCase
         $this->assertTrue(PasswordRecovery::check($sentMail->recoveryCode, $user->password_recovery_code_hash));
     }
 
+    public function test_recovery_code_email_renders_without_laravel_markdown_components(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Recovery Candidate',
+            'email' => 'candidate@example.com',
+        ]);
+
+        $renderedMail = (new PasswordRecoveryCodeMail($user, 'ABCD-EFGH-IJKL-MNOP', 15))->render();
+
+        $this->assertStringContainsString('Password recovery code', $renderedMail);
+        $this->assertStringContainsString('ABCD-EFGH-IJKL-MNOP', $renderedMail);
+        $this->assertStringContainsString('Recovery Candidate', $renderedMail);
+    }
+
     public function test_failed_recovery_code_delivery_does_not_leave_an_usable_code(): void
     {
         config(['services.brevo.api_key' => null]);
