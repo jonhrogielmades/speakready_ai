@@ -17,12 +17,17 @@ body.auth-mobile-shell {
    margin: auto;
 }
 
-/* End auth styles. */
+.auth-page-login .auth-shell,
+.auth-page-register .auth-shell {
+   display: flex;
+   justify-content: center;
+}
 .auth-page-register .auth-shell {
    width: min(100%, 492px);
 }
 
 .auth-card {
+   width: 100%;
    padding: clamp(22px, 4vw, 32px);
    color: var(--tx);
    background: color-mix(in srgb, var(--sf) 96%, transparent);
@@ -46,6 +51,88 @@ body.auth-mobile-shell {
    object-fit: contain;
    background: #fff;
    border-radius: 10px;
+}
+
+.auth-brand-name {
+   line-height: 1.1;
+}
+
+.auth-brand-tagline {
+   display: none;
+   color: var(--tx2);
+   font-size: 0.86rem;
+   font-weight: 500;
+}
+
+.auth-page-login .auth-card,
+.auth-page-register .auth-card {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   text-align: center;
+}
+
+.auth-page-login .auth-brand,
+.auth-page-register .auth-brand {
+   display: flex;
+   width: 100%;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   gap: 8px;
+}
+
+.auth-page-login .auth-brand img,
+.auth-page-register .auth-brand img {
+   width: 96px;
+   height: 96px;
+   padding: 9px;
+   border: 1px solid rgba(96, 165, 250, 0.28);
+   border-radius: 50%;
+   box-shadow: 0 12px 28px rgba(59, 130, 246, 0.18), inset 0 0 0 6px rgba(219, 234, 254, 0.58);
+}
+
+.auth-page-login .auth-brand-name,
+.auth-page-register .auth-brand-name {
+   font-size: 1.35rem;
+   letter-spacing: -0.025em;
+}
+
+.auth-page-login .auth-brand-tagline,
+.auth-page-register .auth-brand-tagline {
+   display: block;
+   margin-top: -2px;
+}
+
+.auth-page-login .auth-title,
+.auth-page-register .auth-title {
+   margin-top: 25px;
+   font-size: clamp(1.65rem, 4vw, 2rem);
+   letter-spacing: -0.035em;
+}
+
+.auth-page-login .auth-copy,
+.auth-page-register .auth-copy {
+   margin-bottom: 27px;
+   font-size: 0.98rem;
+}
+
+.auth-page-login .auth-form,
+.auth-page-register .auth-form,
+.auth-page-login .auth-divider,
+.auth-page-register .auth-divider,
+.auth-page-login .auth-social-button,
+.auth-page-register .auth-social-button,
+.auth-page-login .auth-switch,
+.auth-page-register .auth-switch,
+.auth-page-login .auth-terms,
+.auth-page-register .auth-terms {
+   width: 100%;
+}
+
+.auth-page-login .auth-form,
+.auth-page-register .auth-form {
+   text-align: left;
 }
 
 .auth-kicker {

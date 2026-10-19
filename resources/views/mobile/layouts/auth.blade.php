@@ -13,7 +13,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}">
-      <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=3') }}" data-page-style="auth-mobile">
+      <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=4') }}" data-page-style="auth-mobile">
       <style data-mobile-side-gutter="10px">
          body.auth-mobile-shell {
             padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
@@ -27,7 +27,8 @@
          <section class="auth-card">
             <a class="auth-brand" href="{{ url('/') }}">
                <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
-               <span>SpeakReady AI</span>
+               <span class="auth-brand-name">SpeakReady AI</span>
+               <small class="auth-brand-tagline">AI Interview Practice</small>
             </a>
 
             @yield('content')
