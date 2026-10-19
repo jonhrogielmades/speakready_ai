@@ -242,6 +242,33 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('Registration successful. Welcome to SpeakReady AI!');
     }
 
+    public function test_registration_requires_a_valid_recovery_email_address(): void
+    {
+        foreach (['not-an-email', 'candidate@localhost', 'candidate@example'] as $index => $email) {
+            $this->from('/')
+                ->post(route('register'), [
+                    'name' => 'Recovery Email Candidate',
+                    'username' => 'invalid-email-user-'.$index,
+                    'email' => $email,
+                    'password' => 'password123',
+                    'password_confirmation' => 'password123',
+                ])
+                ->assertSessionHasErrors('email');
+        }
+
+        $this->post(route('register'), [
+            'name' => 'Valid Recovery Candidate',
+            'username' => 'valid-recovery-email-user',
+            'email' => 'valid.recovery@gmail.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect(route('terms.acceptance.show'));
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'valid.recovery@gmail.com',
+        ]);
+    }
+
     public function test_guest_auth_modal_uses_loading_overlay_for_registration(): void
     {
         $response = $this->get('/');

@@ -4226,7 +4226,14 @@ class UserController extends Controller
 
  $request->validate([
  'name' => 'required|string|max:255',
- 'email' => 'nullable|string|email|max:255|unique:users,email,'.$user->id,
+ 'email' => [
+ 'nullable',
+ 'string',
+ 'max:255',
+ 'email:rfc,filter',
+ 'regex:/^[^@\s]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i',
+ 'unique:users,email,'.$user->id,
+ ],
  'target_position' => 'nullable|string|max:255',
  'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048|dimensions:max_width=2000,max_height=2000',
  ]);
