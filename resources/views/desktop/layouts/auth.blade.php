@@ -14,20 +14,54 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=7') }}">
-      <link rel="stylesheet" href="{{ asset('css/desktop/auth/auth.css?v=6') }}" data-page-style="auth-desktop">
+      <link rel="stylesheet" href="{{ asset('css/desktop/auth/auth.css?v=7') }}" data-page-style="auth-desktop">
    </head>
    <body class="auth-desktop-shell desktop-shell @yield('body_class')" data-layout-shell="desktop" data-auth-layout="desktop">
       @include('desktop.partials.viewport-mobile-cookie')
       <main class="auth-shell">
-         <section class="auth-card">
-            <a class="auth-brand" href="{{ url('/') }}">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
-               <span class="auth-brand-name">SpeakReady AI</span>
-               <small class="auth-brand-tagline">AI Interview Practice</small>
-            </a>
+         <div class="auth-desktop-frame">
+            <aside class="auth-visual" aria-label="SpeakReady AI interview practice benefits">
+               <a class="auth-visual-brand" href="{{ url('/') }}">
+                  <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+                  <span>
+                     <strong>SpeakReady AI</strong>
+                     <small>AI Interview Practice</small>
+                  </span>
+               </a>
 
-            @yield('content')
-         </section>
+               <div class="auth-visual-copy">
+                  <h1>Build confidence.<br>Practice smarter.<br>Be interview-ready.</h1>
+                  <p>Prepare for your next opportunity with guided interview practice and useful AI feedback.</p>
+               </div>
+
+               <div class="auth-visual-art" aria-hidden="true">
+                  <div class="auth-speech auth-speech-one"><i class="fa-solid fa-message"></i><span></span><span></span></div>
+                  <div class="auth-speech auth-speech-two"><span></span><span></span></div>
+                  <div class="auth-mic"><i class="fa-solid fa-microphone"></i></div>
+                  <div class="auth-wave auth-wave-one"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                  <div class="auth-wave auth-wave-two"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+               </div>
+
+               <ul class="auth-visual-points">
+                  <li><i class="fa-solid fa-check"></i><span>Practice interview questions</span></li>
+                  <li><i class="fa-solid fa-check"></i><span>Get AI-powered feedback</span></li>
+                  <li><i class="fa-solid fa-check"></i><span>Improve at your own pace</span></li>
+               </ul>
+            </aside>
+
+            <div class="auth-desktop-right">
+               <a class="auth-back-home" href="{{ url('/') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to home</a>
+               <section class="auth-card">
+                  <a class="auth-brand" href="{{ url('/') }}">
+                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+                     <span class="auth-brand-name">SpeakReady AI</span>
+                     <small class="auth-brand-tagline">AI Interview Practice</small>
+                  </a>
+
+                  @yield('content')
+               </section>
+            </div>
+         </div>
       </main>
       <script>
          document.querySelectorAll('[data-password-toggle]').forEach(function (toggle) {
