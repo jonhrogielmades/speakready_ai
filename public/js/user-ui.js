@@ -6,13 +6,14 @@
         window.SpeakReadyUserApp = userApp;
     }
     var NAVIGATION_CACHE_TTL_MS = 120000;
-    var NAVIGATION_STATUS_DELAY_MS = 220;
-    var NAVIGATION_PREFETCH_DELAY_MS = 40;
+    // User navigation should feel immediate. Network and stylesheet timeouts
+    // below are still safety nets, but they must not add a deliberate pause.
+    var NAVIGATION_STATUS_DELAY_MS = 0;
+    var NAVIGATION_PREFETCH_DELAY_MS = 0;
     var NAVIGATION_PREFETCH_LIMIT = 8;
     var NAVIGATION_PREFETCH_TIMEOUT_MS = 1800;
     var NAVIGATION_STYLESHEET_TIMEOUT_MS = 900;
     var NAVIGATION_SCRIPT_TIMEOUT_MS = 2400;
-    var NAVIGATION_STYLE_PAINT_WAIT_MS = 160;
     var TRANSIENT_USER_PAGE_BODY_CLASSES = [
         'interview-setup-page',
         'interview-session-shell',
@@ -1156,14 +1157,18 @@
             var contentScripts = Array.from(nextContent.querySelectorAll('script'));
             var nextPageStyles = collectPageStyles(doc, html);
             var stylePromise = appendRuntimePageStyles(nextPageStyles, token);
-            await waitForNavigationStylePaint(stylePromise);
-            if (token !== userApp.navigationToken) {
-                discardRuntimePageStylesForToken(token);
-                return;
-            }
+            // Attach page CSS before swapping content, but do not make the
+            // user wait for a stylesheet network round trip. Remove old page
+            // styles when the new set settles in the background.
+            stylePromise.then(function () {
+                if (token === userApp.navigationToken) {
+                    pruneRuntimePageStyles(nextPageStyles.map(getPageStyleKey));
+                } else {
+                    discardRuntimePageStylesForToken(token);
+                }
+            });
 
             cleanupUserPageRuntime({ preserveStyles: true });
-            pruneRuntimePageStyles(nextPageStyles.map(getPageStyleKey));
             replaceUserContent(content, nextContent);
             refreshUserSharedLayout(content);
             updateDocumentMetadata(doc, nextContent, destinationUrl.href, options);
@@ -1522,20 +1527,9 @@
             return Promise.resolve();
         }
 
-        return new Promise(function (resolve) {
-            var settled = false;
-            var paintTimer = 0;
-
-            function finish() {
-                if (settled) return;
-                settled = true;
-                if (paintTimer) window.clearTimeout(paintTimer);
-                resolve();
-            }
-
-            stylePromise.then(finish, finish);
-            paintTimer = window.setTimeout(finish, NAVIGATION_STYLE_PAINT_WAIT_MS);
-        });
+        // The stylesheet loader already resolves on load/error (or its safety
+        // timeout). Do not add another paint-delay after it has settled.
+        return stylePromise.then(function () {}, function () {});
     }
 
     function discardRuntimePageStylesForToken(navigationToken) {
@@ -2200,9 +2194,15 @@
             return;
         }
 
+        var delayMs = Math.max(0, Number(options && options.delayMs) || 0);
+        if (delayMs === 0) {
+            status.style.display = 'block';
+            return;
+        }
+
         userApp.navigationStatusTimer = window.setTimeout(function () {
             status.style.display = 'block';
-        }, Math.max(0, Number(options && options.delayMs) || 0));
+        }, delayMs);
     }
 
     function hideSafeNavigationStatus() {

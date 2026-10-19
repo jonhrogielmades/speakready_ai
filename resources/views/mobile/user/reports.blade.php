@@ -64,7 +64,7 @@
  <!-- Print Header visible only when printing or mimicking paper -->
  <div class="report-print-identity d-flex align-items-center mb-4 gap-3">
  @if($reportShowLogo)
- <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}" style="width:60px;height:60px;border-radius:50%;object-fit:contain;background:#fff;padding:6px;border:1px solid var(--bd);">
+ <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}" width="60" height="60" loading="lazy" decoding="async" style="width:60px;height:60px;border-radius:50%;object-fit:contain;background:#fff;padding:6px;border:1px solid var(--bd);">
  @else
  <div style="width:60px;height:60px;background:var(--pur);border-radius:50%;display:flex;justify-content:center;align-items:center;">
  <i class="fa-solid fa-user-graduate text-white fs-3"></i>

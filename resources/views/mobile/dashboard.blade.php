@@ -170,7 +170,10 @@
                         aria-label="Open AI Coach"
                         title="AI Coach"
                     >
-                        <img src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async" draggable="false">
+                        <picture>
+                            <source srcset="{{ asset('img/dashboard-hero-robot-reference.webp') }}?v=20261020" type="image/webp">
+                            <img src="{{ asset('img/dashboard-hero-robot-reference.png') }}" alt="" aria-hidden="true" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async" draggable="false">
+                        </picture>
                     </a>
                 </div>
             </section>

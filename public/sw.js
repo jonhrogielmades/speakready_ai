@@ -9,7 +9,6 @@ const DEFAULT_NOTIFICATION_ACTIONS = [
   { action: 'view-notifications', title: 'View all' },
 ];
 const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
-const NETWORK_FIRST_ASSET_PATTERN = /\.(?:css|js)$/i;
 
 function isSameOrigin(requestUrl) {
   return new URL(requestUrl).origin === self.location.origin;
@@ -23,12 +22,6 @@ function isCacheableStaticAsset(request) {
   if (!isSameOrigin(request.url)) return false;
 
   return STATIC_ASSET_PATTERN.test(new URL(request.url).pathname);
-}
-
-function isNetworkFirstStaticAsset(request) {
-  if (!isSameOrigin(request.url)) return false;
-
-  return NETWORK_FIRST_ASSET_PATTERN.test(new URL(request.url).pathname);
 }
 
 function refreshedClientUrl(clientUrl) {
@@ -126,12 +119,10 @@ self.addEventListener('fetch', event => {
         return response;
       });
 
-      if (isNetworkFirstStaticAsset(event.request)) {
-        return freshResponse.catch(() => caches.match(event.request));
-      }
-
       return cache.match(event.request).then(cachedResponse => {
         if (cachedResponse) {
+          // Versioned asset URLs invalidate deploys. Serve a cached asset
+          // immediately on repeat visits and refresh it in the background.
           event.waitUntil(freshResponse.catch(() => undefined));
           return cachedResponse;
         }

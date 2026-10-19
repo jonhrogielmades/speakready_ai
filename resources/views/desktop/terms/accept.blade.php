@@ -11,9 +11,12 @@
       <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+      <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
-      <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
+      <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+      <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=35') }}">
       <style>
          body.terms-accept-shell {
@@ -510,7 +513,7 @@
       <header class="terms-topbar py-3">
          <div class="container d-flex align-items-center justify-content-between gap-3">
             <a class="terms-brand" href="{{ url('/') }}">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" width="64" height="64" decoding="async">
                <span>SpeakReady AI</span>
             </a>
             <form action="{{ route('logout') }}" method="POST" class="m-0">

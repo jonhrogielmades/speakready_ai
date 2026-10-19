@@ -167,8 +167,11 @@
         var activeClass = 'sr-page-transition-active';
         var showTimer = null;
         var longLoadTimer = null;
-        var defaultDelayMs = 220;
-        var formDelayMs = 140;
+        // Do not make the user wait before feedback appears. User-shell
+        // navigation is handled by user-ui.js; this remains for full reloads
+        // and form submissions outside that flow.
+        var defaultDelayMs = 0;
+        var formDelayMs = 0;
         var longLoadMs = 8000;
 
         function getOverlay() {
@@ -185,7 +188,7 @@
         function showPageTransition(options) {
             window.clearTimeout(showTimer);
             window.clearTimeout(longLoadTimer);
-            showTimer = window.setTimeout(function() {
+            var activate = function() {
                 if (options && options.event && options.event.defaultPrevented) return;
 
                 var overlay = getOverlay();
@@ -206,7 +209,13 @@
                     var delayedReloadButton = document.getElementById('pageTransitionReload');
                     if (delayedReloadButton) delayedReloadButton.hidden = false;
                 }, Math.max(1000, Number(options.longLoadMs) || longLoadMs));
-            }, Math.max(0, Number(options && options.delayMs) || defaultDelayMs));
+            };
+            var delayMs = Math.max(0, Number(options && options.delayMs) || defaultDelayMs);
+            if (delayMs === 0) {
+                activate();
+            } else {
+                showTimer = window.setTimeout(activate, delayMs);
+            }
         }
 
         function hidePageTransition() {

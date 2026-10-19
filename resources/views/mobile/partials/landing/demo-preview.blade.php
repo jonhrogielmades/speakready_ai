@@ -4,18 +4,22 @@
             <div class="container position-relative" style="z-index:1">
                @php
                   $mobileHeroImage = asset('img/mobile-preview/01-home-dashboard-hd.png').'?v=20261012';
+                  $mobileHeroWebp = asset('img/mobile-preview/01-home-dashboard-hd.webp').'?v=20261020';
                @endphp
                <div class="mobile-hero-preview-row rv">
                   <figure class="mobile-hero-image-frame mb-0" aria-label="SpeakReady AI mobile dashboard hero image">
-                     <img
-                        class="mobile-hero-image"
-                        src="{{ $mobileHeroImage }}"
-                        alt="SpeakReady AI mobile dashboard overview"
-                        width="1260"
-                        height="2520"
-                        loading="lazy"
-                        decoding="async"
-                     >
+                     <picture>
+                        <source srcset="{{ $mobileHeroWebp }}" type="image/webp">
+                        <img
+                           class="mobile-hero-image"
+                           src="{{ $mobileHeroImage }}"
+                           alt="SpeakReady AI mobile dashboard overview"
+                           width="1260"
+                           height="2520"
+                           loading="lazy"
+                           decoding="async"
+                        >
+                     </picture>
                      <div class="mobile-hero-context-card mobile-hero-context-card--top-left">
                         <span class="mobile-hero-context-kicker"><i class="fa-solid fa-briefcase mobile-hero-context-kicker-icon" aria-hidden="true"></i> Practice</span>
                         <strong>Role-ready drills</strong>
