@@ -242,13 +242,11 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:255'],
         ]);
 
-        $genericMessage = 'If the username and recovery email match a local account, a recovery code has been sent.';
         $rateLimitKey = 'password-recovery-request:'.sha1($validated['username'].'|'.$request->ip());
 
         if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
             return redirect()->route('password.request')
-                ->with('status', $genericMessage)
-                ->with('recovery_code_sent', true)
+                ->withErrors(['email' => 'Too many recovery requests. Please try again in 15 minutes.'])
                 ->withInput($request->only('username', 'email'));
         }
 
@@ -262,8 +260,7 @@ class AuthController extends Controller
 
         if (! $user || blank($user->email)) {
             return redirect()->route('password.request')
-                ->with('status', $genericMessage)
-                ->with('recovery_code_sent', true)
+                ->withErrors(['email' => 'The username and recovery email do not match a local account.'])
                 ->withInput($request->only('username', 'email'));
         }
 
@@ -290,10 +287,14 @@ class AuthController extends Controller
                 'email_hash' => hash('sha256', $validated['email']),
                 'exception_type' => $e::class,
             ]);
+
+            return redirect()->route('password.request')
+                ->withErrors(['email' => 'We could not deliver the recovery code. Please verify the mail settings or contact the administrator.'])
+                ->withInput($request->only('username', 'email'));
         }
 
         return redirect()->route('password.request')
-            ->with('status', $genericMessage)
+            ->with('status', 'Recovery code sent to '.$this->maskRecoveryEmail($user->email).'. Check your inbox and spam folder.')
             ->with('recovery_code_sent', true)
             ->withInput($request->only('username', 'email'));
     }
@@ -1011,6 +1012,22 @@ class AuthController extends Controller
     private function normalizeEmail(mixed $email): string
     {
         return Str::lower(trim((string) $email));
+    }
+
+    private function maskRecoveryEmail(?string $email): string
+    {
+        $email = $this->normalizeEmail($email);
+        [$localPart, $domain] = array_pad(explode('@', $email, 2), 2, '');
+
+        if ($localPart === '' || $domain === '') {
+            return 'your recovery email';
+        }
+
+        $visibleLength = min(2, strlen($localPart));
+
+        return substr($localPart, 0, $visibleLength)
+            .str_repeat('*', max(3, strlen($localPart) - $visibleLength))
+            .'@'.$domain;
     }
 
     private function normalizeUsername(mixed $username): string

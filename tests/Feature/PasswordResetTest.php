@@ -99,7 +99,7 @@ class PasswordResetTest extends TestCase
 
         $response
             ->assertRedirect(route('password.request'))
-            ->assertSessionHas('status', 'If the username and recovery email match a local account, a recovery code has been sent.')
+            ->assertSessionHas('status', 'Recovery code sent to re******@example.com. Check your inbox and spam folder.')
             ->assertSessionHas('recovery_code_sent', true);
 
         Mail::assertSent(PasswordRecoveryCodeMail::class, function (PasswordRecoveryCodeMail $mail) use ($user): bool {
@@ -165,7 +165,7 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.recovery.send'), [
             'username' => $user->username,
             'email' => $user->email,
-        ])->assertSessionHas('status', 'If the username and recovery email match a local account, a recovery code has been sent.');
+        ])->assertSessionHasErrors('email');
 
         Mail::assertNothingSent();
     }
