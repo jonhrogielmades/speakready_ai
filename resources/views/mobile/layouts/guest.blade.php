@@ -23,7 +23,7 @@
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=36') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=30') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=31') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {

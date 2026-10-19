@@ -923,12 +923,16 @@ html, body {
                box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
             }
 
-            .mobile-topbar-login {
+            #nbar .mobile-topbar-login {
                order: -1;
                min-width: 0;
-               height: 36px;
-               padding: 0 9px !important;
+               height: 38px !important;
+               padding: 0 10px !important;
                border-radius: 10px !important;
+               border: 1px solid rgba(37, 99, 235, 0.22) !important;
+               background: linear-gradient(135deg, #2563eb, #0ea5e9) !important;
+               box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24);
+               color: #ffffff !important;
                font-size: 0.72rem;
                font-weight: 700;
                white-space: nowrap;
@@ -936,6 +940,23 @@ html, body {
 
             .mobile-topbar-login i {
                font-size: 0.72rem;
+            }
+
+            #nbar .mobile-topbar-login:hover,
+            #nbar .mobile-topbar-login:focus-visible {
+               background: linear-gradient(135deg, #1d4ed8, #0284c7) !important;
+               border-color: rgba(14, 165, 233, 0.48) !important;
+               color: #ffffff !important;
+            }
+
+            #nbar #thbtn,
+            #nbar #mbtog {
+               width: 38px !important;
+               height: 38px !important;
+               min-width: 38px;
+               min-height: 38px;
+               padding: 0 !important;
+               border-radius: 10px !important;
             }
 
             html:not(.lm) #thbtn,
