@@ -2419,7 +2419,9 @@ function updateGameTimerDisplay() {
  if (recordingStopPromise) return recordingStopPromise;
  recordingStopPromise = stopRecordingInternal().finally(() => {
  recordingStopPromise = null;
+ voiceRecordingStopPromise = null;
  setGameAnswerTextareaRecordingLock();
+ updateGameAnswerTranscriptionOverlay();
  });
  updateGameAnswerTranscriptionOverlay();
  return recordingStopPromise;
