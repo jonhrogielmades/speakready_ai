@@ -14,7 +14,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=7') }}">
-      <link rel="stylesheet" href="{{ asset('css/desktop/auth/auth.css?v=4') }}" data-page-style="auth-desktop">
+      <link rel="stylesheet" href="{{ asset('css/desktop/auth/auth.css?v=3') }}" data-page-style="auth-desktop">
    </head>
    <body class="auth-desktop-shell desktop-shell @yield('body_class')" data-layout-shell="desktop" data-auth-layout="desktop">
       @include('desktop.partials.viewport-mobile-cookie')
@@ -22,8 +22,7 @@
          <section class="auth-card">
             <a class="auth-brand" href="{{ url('/') }}">
                <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
-               <span class="auth-brand-name">SpeakReady AI</span>
-               <small class="auth-brand-tagline">AI Interview Practice</small>
+               <span>SpeakReady AI</span>
             </a>
 
             @yield('content')
