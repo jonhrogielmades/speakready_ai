@@ -60,6 +60,7 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:au
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:auth')->name('logout');
 Route::post('/request-reactivation', [AuthController::class, 'requestReactivation'])->middleware('throttle:auth')->name('request.reactivation');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->middleware('guest')->name('password.request');
+Route::post('/forgot-password/send-code', [AuthController::class, 'sendRecoveryCode'])->middleware(['guest', 'throttle:auth'])->name('password.recovery.send');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware(['guest', 'throttle:auth'])->name('password.email');
 Route::post('/forgot-password/reset', [AuthController::class, 'resetWithRecoveryCode'])->middleware(['guest', 'throttle:auth'])->name('password.recovery.reset');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->middleware('guest')->name('password.reset');

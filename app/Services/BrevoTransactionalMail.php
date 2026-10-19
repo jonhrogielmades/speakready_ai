@@ -46,6 +46,34 @@ class BrevoTransactionalMail
             ->throw();
     }
 
+    public function sendPasswordRecoveryCode(User $user, string $recoveryCode, int $expiresInMinutes): void
+    {
+        $appName = config('app.name', 'SpeakReady AI');
+        $payload = [
+            'sender' => [
+                'name' => config('mail.from.name', $appName),
+                'email' => config('mail.from.address'),
+            ],
+            'to' => [
+                array_filter([
+                    'email' => $user->email,
+                    'name' => $user->name,
+                ]),
+            ],
+            'subject' => "Your {$appName} recovery code",
+            'htmlContent' => $this->passwordRecoveryCodeHtml($user, $recoveryCode, $expiresInMinutes, $appName),
+            'textContent' => $this->passwordRecoveryCodeText($recoveryCode, $expiresInMinutes, $appName),
+        ];
+
+        Http::timeout((int) config('services.brevo.timeout', 15))
+            ->acceptJson()
+            ->withHeaders([
+                'api-key' => config('services.brevo.api_key'),
+            ])
+            ->post(config('services.brevo.endpoint'), $payload)
+            ->throw();
+    }
+
     private function passwordResetHtml(User $user, string $resetUrl, int $expireMinutes, string $appName): string
     {
         $name = e($user->name ?: 'there');
@@ -73,5 +101,31 @@ class BrevoTransactionalMail
             ."Open this link to create a new password:\n{$resetUrl}\n\n"
             ."This link expires in {$expireMinutes} minutes.\n\n"
             .'If you did not request this, you can safely ignore this email.';
+    }
+
+    private function passwordRecoveryCodeHtml(User $user, string $recoveryCode, int $expiresInMinutes, string $appName): string
+    {
+        $name = e($user->name ?: 'there');
+        $safeAppName = e($appName);
+        $safeCode = e($recoveryCode);
+
+        return <<<HTML
+            <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a">
+                <h2 style="margin:0 0 16px">Your {$safeAppName} recovery code</h2>
+                <p>Hello {$name},</p>
+                <p>Someone requested a password recovery code for your local account.</p>
+                <p style="margin:24px 0;padding:18px;background:#eff6ff;border-radius:10px;text-align:center;font-size:28px;font-weight:700;letter-spacing:4px">{$safeCode}</p>
+                <p>Use this code with your username on the password reset page. It expires in {$expiresInMinutes} minutes and works only once.</p>
+                <p>If you did not request this code, you can safely ignore this email. Your password will not change unless the code is used.</p>
+            </div>
+        HTML;
+    }
+
+    private function passwordRecoveryCodeText(string $recoveryCode, int $expiresInMinutes, string $appName): string
+    {
+        return "Your {$appName} recovery code\n\n"
+            ."Your one-time recovery code is: {$recoveryCode}\n\n"
+            ."Use it with your username on the password reset page. It expires in {$expiresInMinutes} minutes and works only once.\n\n"
+            .'If you did not request this code, you can safely ignore this email.';
     }
 }

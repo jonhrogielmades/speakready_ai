@@ -349,7 +349,7 @@ DB_SSLMODE=require
 
 Use the full database URL from your hosting provider. If you prefer separate environment variables, set `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_SSLMODE` explicitly.
 
-### Mail And Password Reset
+### Mail And Password Recovery
 
 Local mailpit-style development from `.env.example`:
 
@@ -379,9 +379,11 @@ MAIL_FROM_NAME="${APP_NAME}"
 
 Gmail requires a Google App Password. Some hosts block common SMTP ports, so use an HTTPS/API mail provider if SMTP is unavailable in your production environment.
 
+Local username/password registration requires a recovery email. The Forgot Password page verifies the username and recovery email, then sends a one-time recovery code. The code expires after 15 minutes, is stored only as a hash, and is invalidated after a successful password reset. Google Login accounts continue using Google Login and are not eligible for the local recovery-code email flow.
+
 The public contact form saves each request to the database and sends it immediately to `capstonespeakreadyai@gmail.com`. The destination is intentionally not taken from the admin-user table, so an old admin address cannot cause a delivery bounce. Configure Gmail SMTP with a Google App Password, set `MAIL_USERNAME` and `MAIL_FROM_ADDRESS` to the sending Gmail account, then redeploy so the container rebuilds Laravel's cached configuration.
 
-Brevo API example for password reset emails:
+Brevo API example for password reset and recovery-code emails:
 
 ```env
 BREVO_API_KEY=your_brevo_api_key

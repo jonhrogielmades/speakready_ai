@@ -59,6 +59,9 @@
                   <input class="oinp" type="text" name="name" id="signupName" placeholder="John Doe" required value="{{ old('name') }}">
                   <label class="olbl"><i class="fa-solid fa-user-tag me-1"></i>Username</label>
                   <input class="oinp" type="text" name="username" id="signupUsername" placeholder="your_username" required autocomplete="username" value="{{ old('username') }}">
+                  <label class="olbl"><i class="fa-solid fa-envelope me-1"></i>Recovery email</label>
+                  <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@gmail.com" required autocomplete="email" value="{{ old('email') }}">
+                  <small class="d-block mb-3" style="color:var(--tx3);font-size:.76rem">Used only for password recovery codes.</small>
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
                   <div class="password-field mb-3">
                      <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required>

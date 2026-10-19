@@ -36,4 +36,9 @@ final class PasswordRecovery
             && self::normalize($code) !== ''
             && Hash::check(self::normalize($code), $hash);
     }
+
+    public static function isExpired(?\DateTimeInterface $expiresAt): bool
+    {
+        return $expiresAt !== null && $expiresAt <= now();
+    }
 }

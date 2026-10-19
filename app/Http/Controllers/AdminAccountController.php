@@ -123,6 +123,7 @@ class AdminAccountController extends Controller
         $admin->forceFill([
             'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
             'password_recovery_code_generated_at' => now(),
+            'password_recovery_code_expires_at' => null,
         ])->save();
 
         ActivityLogger::log(

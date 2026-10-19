@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
+use App\Mail\PasswordRecoveryCodeMail;
 use App\Models\Profile;
 use App\Models\Setting;
+use App\Services\BrevoTransactionalMail;
 use App\Models\User;
 use App\Support\AccountNotificationSchema;
 use App\Support\PasswordRecovery;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
@@ -58,11 +61,13 @@ class AuthController extends Controller
 
         $request->merge([
             'username' => $this->normalizeUsername($request->input('username')),
+            'email' => $this->normalizeEmail($request->input('email')),
         ]);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'username' => ['required', 'string', 'min:3', 'max:64', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => $this->newPasswordRules(['confirmed']),
         ]);
 
@@ -71,10 +76,11 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'username' => $validated['username'],
-            'email' => null,
+            'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
             'password_recovery_code_generated_at' => now(),
+            'password_recovery_code_expires_at' => null,
             'email_verified_at' => now(),
         ]);
 
@@ -224,6 +230,74 @@ class AuthController extends Controller
         return $this->mobileView('auth.forgot-password');
     }
 
+    public function sendRecoveryCode(Request $request)
+    {
+        $request->merge([
+            'username' => $this->normalizeUsername($request->input('username')),
+            'email' => $this->normalizeEmail($request->input('email')),
+        ]);
+
+        $validated = $request->validate([
+            'username' => ['required', 'string', 'max:64'],
+            'email' => ['required', 'email', 'max:255'],
+        ]);
+
+        $genericMessage = 'If the username and recovery email match a local account, a recovery code has been sent.';
+        $rateLimitKey = 'password-recovery-request:'.sha1($validated['username'].'|'.$request->ip());
+
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
+            return redirect()->route('password.request')
+                ->with('status', $genericMessage)
+                ->with('recovery_code_sent', true)
+                ->withInput($request->only('username', 'email'));
+        }
+
+        RateLimiter::hit($rateLimitKey, 900);
+
+        $user = User::query()
+            ->whereNull('google_id')
+            ->whereRaw('LOWER(username) = ?', [$validated['username']])
+            ->whereRaw('LOWER(email) = ?', [$validated['email']])
+            ->first();
+
+        if (! $user || blank($user->email)) {
+            return redirect()->route('password.request')
+                ->with('status', $genericMessage)
+                ->with('recovery_code_sent', true)
+                ->withInput($request->only('username', 'email'));
+        }
+
+        $recoveryCode = PasswordRecovery::generate();
+        $expiresInMinutes = max(5, (int) config('auth.passwords.users.recovery_code_expire', 15));
+
+        try {
+            $brevoMailer = app(BrevoTransactionalMail::class);
+
+            if ($brevoMailer->isConfigured()) {
+                $brevoMailer->sendPasswordRecoveryCode($user, $recoveryCode, $expiresInMinutes);
+            } else {
+                Mail::to($user->email)->send(new PasswordRecoveryCodeMail($user, $recoveryCode, $expiresInMinutes));
+            }
+
+            $user->forceFill([
+                'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
+                'password_recovery_code_generated_at' => now(),
+                'password_recovery_code_expires_at' => now()->addMinutes($expiresInMinutes),
+            ])->save();
+        } catch (Throwable $e) {
+            Log::error('Password recovery code email failed to send.', [
+                'username_hash' => hash('sha256', $validated['username']),
+                'email_hash' => hash('sha256', $validated['email']),
+                'exception_type' => $e::class,
+            ]);
+        }
+
+        return redirect()->route('password.request')
+            ->with('status', $genericMessage)
+            ->with('recovery_code_sent', true)
+            ->withInput($request->only('username', 'email'));
+    }
+
     public function sendResetLink(Request $request)
     {
         $request->merge([
@@ -274,6 +348,7 @@ class AuthController extends Controller
 
         if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
             return back()
+                ->with('recovery_code_sent', true)
                 ->withErrors(['recovery_code' => 'Too many recovery attempts. Please try again later.'])
                 ->withInput(['username' => $validated['username']]);
         }
@@ -287,7 +362,11 @@ class AuthController extends Controller
                     ->lockForUpdate()
                     ->first();
 
-                if (! $user || ! PasswordRecovery::check($validated['recovery_code'], $user->password_recovery_code_hash)) {
+                if (
+                    ! $user
+                    || PasswordRecovery::isExpired($user->password_recovery_code_expires_at)
+                    || ! PasswordRecovery::check($validated['recovery_code'], $user->password_recovery_code_hash)
+                ) {
                     return null;
                 }
 
@@ -296,6 +375,7 @@ class AuthController extends Controller
                     'remember_token' => Str::random(60),
                     'password_recovery_code_hash' => null,
                     'password_recovery_code_generated_at' => null,
+                    'password_recovery_code_expires_at' => null,
                 ])->save();
 
                 return $user;
@@ -307,12 +387,14 @@ class AuthController extends Controller
             ]);
 
             return back()
+                ->with('recovery_code_sent', true)
                 ->withErrors(['recovery_code' => 'We could not reset your password right now. Please try again later.'])
                 ->withInput(['username' => $validated['username']]);
         }
 
         if (! $user) {
             return back()
+                ->with('recovery_code_sent', true)
                 ->withErrors(['recovery_code' => 'The username or recovery code is incorrect.'])
                 ->withInput(['username' => $validated['username']]);
         }

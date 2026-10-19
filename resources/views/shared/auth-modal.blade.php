@@ -123,6 +123,14 @@
                            </div>
                         </div>
                         <div class="auth-field">
+                           <label class="olbl" for="signupEmail"><i class="fa-solid fa-envelope" aria-hidden="true"></i>Recovery email</label>
+                           <div class="auth-input-wrap">
+                              <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
+                              <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@gmail.com" required autocomplete="email" value="{{ old('email') }}">
+                           </div>
+                           <small class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">Used only for password recovery codes.</small>
+                        </div>
+                        <div class="auth-field">
                            <label class="olbl" for="signupPass"><i class="fa-solid fa-lock" aria-hidden="true"></i>Password</label>
                            <div class="auth-input-wrap password-field">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>

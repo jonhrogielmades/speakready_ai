@@ -30,6 +30,7 @@ class User extends Authenticatable
         'password',
         'password_recovery_code_hash',
         'password_recovery_code_generated_at',
+        'password_recovery_code_expires_at',
         'is_admin',
         'google_id',
         'status',
@@ -63,6 +64,7 @@ class User extends Authenticatable
         'terms_accepted_at' => 'datetime',
         'password' => 'hashed',
         'password_recovery_code_generated_at' => 'datetime',
+        'password_recovery_code_expires_at' => 'datetime',
     ];
 
     public function getProfilePhotoUrlAttribute(): ?string

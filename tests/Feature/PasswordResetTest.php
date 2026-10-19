@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\PasswordRecoveryCodeMail;
 use App\Models\User;
 use App\Support\PasswordRecovery;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use RuntimeException;
@@ -32,15 +34,14 @@ class PasswordResetTest extends TestCase
             ->assertSee('person@example.com');
     }
 
-    public function test_forgot_password_page_uses_username_recovery_instead_of_email(): void
+    public function test_forgot_password_page_uses_username_and_recovery_email(): void
     {
         $this->get(route('password.request'))
             ->assertOk()
             ->assertSee('name="username"', false)
-            ->assertSee('name="recovery_code"', false)
-            ->assertSee('name="password"', false)
-            ->assertDontSee('name="email"', false)
-            ->assertSee('No email is required.');
+            ->assertSee('name="email"', false)
+            ->assertSee(route('password.recovery.send'), false)
+            ->assertSee('Send Recovery Code');
     }
 
     public function test_username_recovery_resets_a_local_account_without_email_and_invalidates_the_code(): void
@@ -75,6 +76,119 @@ class PasswordResetTest extends TestCase
             'password_confirmation' => 'another-password-123',
         ])->assertRedirect(route('password.request'))
             ->assertSessionHasErrors('recovery_code');
+    }
+
+    public function test_local_user_can_request_a_new_recovery_code_with_username_and_matching_email(): void
+    {
+        config(['services.brevo.api_key' => null]);
+        Mail::fake();
+
+        $user = User::factory()->create([
+            'username' => 'email-recovery-user',
+            'email' => 'recovery@example.com',
+            'google_id' => null,
+            'password_recovery_code_hash' => PasswordRecovery::hash('OLD-CODE-ONLY-1234'),
+            'password_recovery_code_generated_at' => now()->subDay(),
+            'password_recovery_code_expires_at' => null,
+        ]);
+
+        $response = $this->post(route('password.recovery.send'), [
+            'username' => ' EMAIL-RECOVERY-USER ',
+            'email' => ' RECOVERY@EXAMPLE.COM ',
+        ]);
+
+        $response
+            ->assertRedirect(route('password.request'))
+            ->assertSessionHas('status', 'If the username and recovery email match a local account, a recovery code has been sent.')
+            ->assertSessionHas('recovery_code_sent', true);
+
+        Mail::assertSent(PasswordRecoveryCodeMail::class, function (PasswordRecoveryCodeMail $mail) use ($user): bool {
+            return $mail->hasTo($user->email)
+                && preg_match('/^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$/', $mail->recoveryCode) === 1;
+        });
+
+        $user->refresh();
+        $sentMail = null;
+        Mail::assertSent(PasswordRecoveryCodeMail::class, function (PasswordRecoveryCodeMail $mail) use (&$sentMail): bool {
+            $sentMail = $mail;
+
+            return true;
+        });
+
+        $this->assertNotNull($user->password_recovery_code_expires_at);
+        $this->assertTrue(PasswordRecovery::check($sentMail->recoveryCode, $user->password_recovery_code_hash));
+    }
+
+    public function test_local_recovery_code_can_be_sent_through_brevo(): void
+    {
+        config([
+            'services.brevo.api_key' => 'test-brevo-key',
+            'services.brevo.endpoint' => 'https://api.brevo.test/v3/smtp/email',
+            'mail.from.address' => 'capstonespeakreadyai@gmail.com',
+            'mail.from.name' => 'SpeakReady AI',
+        ]);
+
+        Http::fake([
+            'api.brevo.test/*' => Http::response(['messageId' => 'recovery-message'], 201),
+        ]);
+
+        $user = User::factory()->create([
+            'username' => 'brevo-recovery-user',
+            'email' => 'brevo-recovery@example.com',
+            'google_id' => null,
+        ]);
+
+        $this->post(route('password.recovery.send'), [
+            'username' => $user->username,
+            'email' => $user->email,
+        ])->assertSessionHas('recovery_code_sent', true);
+
+        Http::assertSent(function ($request) use ($user): bool {
+            return $request->url() === 'https://api.brevo.test/v3/smtp/email'
+                && $request->hasHeader('api-key', 'test-brevo-key')
+                && data_get($request->data(), 'to.0.email') === $user->email
+                && str_contains((string) data_get($request->data(), 'textContent'), 'recovery code');
+        });
+    }
+
+    public function test_google_account_does_not_receive_a_local_recovery_code(): void
+    {
+        config(['services.brevo.api_key' => null]);
+        Mail::fake();
+
+        $user = User::factory()->create([
+            'username' => 'google-only-recovery',
+            'email' => 'google@example.com',
+            'google_id' => 'google-id-123',
+        ]);
+
+        $this->post(route('password.recovery.send'), [
+            'username' => $user->username,
+            'email' => $user->email,
+        ])->assertSessionHas('status', 'If the username and recovery email match a local account, a recovery code has been sent.');
+
+        Mail::assertNothingSent();
+    }
+
+    public function test_email_requested_recovery_code_expires(): void
+    {
+        $user = User::factory()->create([
+            'username' => 'expired-recovery-user',
+            'password' => Hash::make('old-password'),
+            'password_recovery_code_hash' => PasswordRecovery::hash('ABCD-EFGH-IJKL-MNOP'),
+            'password_recovery_code_generated_at' => now()->subMinutes(16),
+            'password_recovery_code_expires_at' => now()->subMinute(),
+        ]);
+
+        $this->from(route('password.request'))->post(route('password.recovery.reset'), [
+            'username' => $user->username,
+            'recovery_code' => 'ABCD-EFGH-IJKL-MNOP',
+            'password' => 'new-password-123',
+            'password_confirmation' => 'new-password-123',
+        ])->assertRedirect(route('password.request'))
+            ->assertSessionHasErrors('recovery_code');
+
+        $this->assertTrue(Hash::check('old-password', $user->fresh()->password));
     }
 
     public function test_authenticated_user_can_rotate_their_recovery_code(): void

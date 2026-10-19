@@ -121,10 +121,9 @@ class AppServiceProvider extends ServiceProvider
                 config(['mail.from.name' => $appName]);
             }
 
-            $contactEmail = (string) SystemSettings::value('sys_contact_email', config('mail.from.address'));
-            if ($contactEmail !== '') {
-                config(['mail.from.address' => $contactEmail]);
-            }
+            // Keep the authenticated mail sender from MAIL_FROM_ADDRESS. The
+            // system contact address is a recipient/display setting and may be
+            // different from the Gmail/SMTP account that is allowed to send.
 
             $sessionLifetime = max(5, min(1440, (int) SystemSettings::value('acc_session_timeout', config('session.lifetime', 120))));
             config(['session.lifetime' => $sessionLifetime]);

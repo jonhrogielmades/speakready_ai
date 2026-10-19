@@ -16,7 +16,7 @@
             @if($registrationRecoveryCode !== '')
                 <div style="margin-top:16px;padding:14px;border:1px solid rgba(59,130,246,.25);border-radius:14px;background:rgba(59,130,246,.08);text-align:left;">
                     <strong style="display:block;color:var(--tx,#111827);font-size:.88rem;">Save your recovery code</strong>
-                    <span style="display:block;color:var(--tx2,#475569);font-size:.78rem;line-height:1.45;margin-top:4px;">You need this code to reset your password without email. It is shown only during account setup.</span>
+                    <span style="display:block;color:var(--tx2,#475569);font-size:.78rem;line-height:1.45;margin-top:4px;">Save this backup code. You can also request a new one-time code through your recovery email.</span>
                     <code style="display:block;margin-top:10px;padding:10px;border-radius:10px;background:rgba(15,23,42,.08);color:var(--tx,#111827);font-size:1rem;letter-spacing:.08em;text-align:center;user-select:all;">{{ $registrationRecoveryCode }}</code>
                     <button type="button" class="terms-success-button" style="min-height:40px;margin-top:10px;background:#2563eb;" data-copy-recovery-code="{{ $registrationRecoveryCode }}">
                         <i class="fa-regular fa-copy" aria-hidden="true"></i> Copy Recovery Code
