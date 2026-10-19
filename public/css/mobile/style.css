@@ -10438,3 +10438,12 @@ html[data-theme="dark"] #lofc.auth-modal .auth-wave span,
 body.dm #lofc.auth-modal .auth-wave span {
   background: rgba(30, 64, 175, 0.34);
 }
+
+/* Keep login and register fields clean on mobile as well. */
+#lofc.auth-modal .auth-input-icon {
+  display: none;
+}
+
+#lofc.auth-modal .auth-input-wrap .oinp {
+  padding-left: 12px !important;
+}
