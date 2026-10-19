@@ -285,7 +285,7 @@
 const gameStateSaveUrl = @json(route('user.game.saveState'));
  const responseMode = "hybrid";
  const isVoiceOnlySession = false;
- const enableGameRealtimeTranscription = false;
+ const enableGameRealtimeTranscription = true;
  const cameraCoachingEnabled = @json($cameraCoachingEnabled);
  const interviewerAvatarImages = @json($interviewerAvatarImageUrls);
  let activeInterviewerAvatarIndex = interviewerAvatarImages.indexOf(@json(asset($interviewerAvatarImage)));
@@ -326,6 +326,12 @@ let serverVoiceUnavailable = !serverAiVoiceEnabled;
 let activeQuestionAudio = null;
 let activeSpeechRequestController = null;
 const serverSpeechUrlCache = new Map();
+ let gameAnswerWaveAudioContext = null;
+ let gameAnswerWaveAnalyser = null;
+ let gameAnswerWaveSource = null;
+ let gameAnswerWaveFrame = null;
+ let gameAnswerWaveTimeData = null;
+ let gameAnswerWaveFrequencyData = null;
 window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
 let gameCameraMovementBaseline = null;
 let preRecordingText = '';
@@ -356,22 +362,22 @@ let committedSpeechTranscript = '';
  const textarea = document.getElementById('answerTextarea');
  if (!stage || !overlay) return;
 
- const capturePending = isVoiceTranscriptionMode() && Boolean(
- isStartingRecording
- || isRecording
- || isRecordingPaused
- || stopRequestedWhileStarting
- || recordingStopPromise
- || voiceRecordingStopPromise
- || voiceTranscriptionPromise
- );
+ const shouldShow = isVoiceTranscriptionMode()
+ && !isRecordingPaused
+ && Boolean(isStartingRecording || isRecording);
  const hasTranscript = Boolean(cleanTranscriptText(textarea?.value || ''));
  const processingTranscript = Boolean(recordingStopPromise || voiceRecordingStopPromise || voiceTranscriptionPromise);
 
- stage.classList.toggle('is-recording-empty-transcript', capturePending && !hasTranscript);
- stage.classList.toggle('is-recording-with-transcript', capturePending && hasTranscript);
- if (textarea) textarea.classList.toggle('has-transcription-overlay', capturePending);
- overlay.hidden = !capturePending;
+ stage.classList.toggle('is-recording-empty-transcript', shouldShow && !hasTranscript);
+ stage.classList.toggle('is-recording-with-transcript', shouldShow && hasTranscript);
+ if (textarea) textarea.classList.toggle('has-transcription-overlay', shouldShow);
+ overlay.hidden = !shouldShow;
+
+ if (shouldShow) {
+ startGameAnswerTranscriptionVisualizer(mediaRecorderStream);
+ } else {
+ stopGameAnswerTranscriptionVisualizer();
+ }
 
  const message = overlay.querySelector('.answer-transcription-message');
  if (message) {
@@ -1032,16 +1038,29 @@ saveGameStateOnPageHide();
  const previousTranscript = recordingStartText || '';
  const data = await requestGameVoiceTranscript(recording, questionIndex, previousTranscript);
  const transcriptText = cleanTranscriptText(data.transcript || '');
+ const browserTranscript = cleanTranscriptText(bufferedGameSpeechTranscript());
  const transcript = applyGameVoiceTranscript(questionIndex, transcriptText, data, recording, { recordingStartText });
- if (!transcript && recordingStartText!== null && questionIndex === currentQIdx) restoreGameAnswerTextAfterRecording(recordingStartText);
- setTranscriptionStatus(transcript? 'Transcript added to answer.': 'No speech was detected.', transcript? '#22c55e': '#fbbf24');
- updateGameVoiceSessionPanel(transcript? 'transcribed': 'recorded', transcript? 'Transcript ready': 'Recording ready');
- return transcript;
+ const displayedTranscript = transcript || browserTranscript;
+ if (!transcript && questionIndex === currentQIdx) {
+ restoreGameAnswerTextAfterRecording(gameAnswerFallbackText(recordingStartText), questionIndex);
+ resetSpeechRecognitionBufferFromTextarea();
+ }
+ setTranscriptionStatus(transcript
+ ? 'Transcript added to answer.'
+ : (browserTranscript? 'Live transcript added to answer. Review it before sending.': 'No speech was detected.'), transcript? '#22c55e': '#fbbf24');
+ updateGameVoiceSessionPanel(transcript? 'transcribed': 'recorded', transcript? 'Transcript ready': (browserTranscript? 'Review transcript': 'Recording ready'));
+ return displayedTranscript;
  } catch (error) {
  console.warn('Challenge voice transcription failed:', error);
- if (recordingStartText!== null && questionIndex === currentQIdx) restoreGameAnswerTextAfterRecording(recordingStartText);
- setTranscriptionStatus(gameTranscriptionErrorMessage(error), '#fbbf24');
- return '';
+ const browserTranscript = cleanTranscriptText(bufferedGameSpeechTranscript());
+ if (questionIndex === currentQIdx) {
+ restoreGameAnswerTextAfterRecording(gameAnswerFallbackText(recordingStartText), questionIndex);
+ resetSpeechRecognitionBufferFromTextarea();
+ }
+ setTranscriptionStatus(browserTranscript
+ ? 'Live transcript added to answer. Review it before sending.'
+ : gameTranscriptionErrorMessage(error), '#fbbf24');
+ return browserTranscript;
  } finally {
  voiceTranscriptionPromise = null;
  updateGameVoiceSessionActionState();
@@ -1084,8 +1103,18 @@ saveGameStateOnPageHide();
  if (text!== null && answersData[questionIndex]) {
  const restoredText = cleanTranscriptText(text);
  answersData[questionIndex].text = restoredText;
- if (ta) ta.value = restoredText;
+ if (ta) {
+ ta.value = restoredText;
+ ta.scrollTop = ta.scrollHeight;
  }
+ }
+ updateGameAnswerTranscriptionOverlay();
+ }
+
+ function gameAnswerFallbackText(recordingStartText = '') {
+ const liveTranscript = cleanTranscriptText(bufferedGameSpeechTranscript());
+ if (!liveTranscript) return cleanTranscriptText(recordingStartText);
+ return mergeFullVoiceTranscriptWithAnswer(cleanTranscriptText(recordingStartText), '', liveTranscript);
  }
 
  function currentRecordingBaseText(questionIndex = currentQIdx) {
@@ -2129,7 +2158,130 @@ function updateGameTimerDisplay() {
  return 'challenge-question-' + (questionIndex + 1) + '.' + voiceFileExtension(mimeType);
  }
 
+ function gameMediaStreamHasLiveAudio(stream) {
+ return Boolean(
+ stream
+ && stream.active
+ && typeof stream.getAudioTracks === 'function'
+ && stream.getAudioTracks().some(track => track.readyState === 'live')
+ );
+ }
+
+ function gameAnswerTranscriptionWaveBars() {
+ return Array.from(document.querySelectorAll('#sec-interview-session[data-game-session-root] #answerTranscriptionOverlay .answer-transcription-wave span'));
+ }
+
+ function resetGameAnswerTranscriptionWave() {
+ const restingLevels = [0.38, 0.58, 0.44, 0.72, 0.48, 0.62, 0.4];
+ gameAnswerTranscriptionWaveBars().forEach((bar, index) => {
+ bar.style.setProperty('--wave-level', String(restingLevels[index % restingLevels.length]));
+ bar.style.setProperty('--wave-opacity', '0.55');
+ });
+ }
+
+ function stopGameAnswerTranscriptionVisualizer(options = {}) {
+ if (gameAnswerWaveFrame) {
+ cancelAnimationFrame(gameAnswerWaveFrame);
+ gameAnswerWaveFrame = null;
+ }
+
+ try {
+ gameAnswerWaveSource?.disconnect?.();
+ } catch (error) {
+ console.warn('Game answer wave source cleanup failed:', error);
+ }
+
+ if (gameAnswerWaveAudioContext) {
+ try {
+ gameAnswerWaveAudioContext.close();
+ } catch (error) {
+ console.warn('Game answer wave audio context cleanup failed:', error);
+ }
+ }
+
+ gameAnswerWaveAudioContext = null;
+ gameAnswerWaveAnalyser = null;
+ gameAnswerWaveSource = null;
+ gameAnswerWaveTimeData = null;
+ gameAnswerWaveFrequencyData = null;
+
+ if (options.reset!== false) resetGameAnswerTranscriptionWave();
+ }
+
+ function startGameAnswerTranscriptionVisualizer(stream = mediaRecorderStream) {
+ if (!gameMediaStreamHasLiveAudio(stream)) return false;
+ if (gameAnswerWaveAnalyser && gameAnswerWaveAudioContext && gameAnswerWaveAudioContext.state!== 'closed') return true;
+
+ const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+ if (!AudioContextClass) {
+ resetGameAnswerTranscriptionWave();
+ return false;
+ }
+
+ try {
+ stopGameAnswerTranscriptionVisualizer({ reset: false });
+ gameAnswerWaveAudioContext = new AudioContextClass();
+ gameAnswerWaveAnalyser = gameAnswerWaveAudioContext.createAnalyser();
+ gameAnswerWaveAnalyser.fftSize = 512;
+ gameAnswerWaveAnalyser.smoothingTimeConstant = 0.58;
+ gameAnswerWaveSource = gameAnswerWaveAudioContext.createMediaStreamSource(stream);
+ gameAnswerWaveSource.connect(gameAnswerWaveAnalyser);
+ gameAnswerWaveTimeData = new Uint8Array(gameAnswerWaveAnalyser.fftSize);
+ gameAnswerWaveFrequencyData = new Uint8Array(gameAnswerWaveAnalyser.frequencyBinCount);
+
+ if (gameAnswerWaveAudioContext.state === 'suspended') {
+ gameAnswerWaveAudioContext.resume().catch(error => {
+ console.warn('Game answer wave audio context resume failed:', error);
+ });
+ }
+
+ const renderFrame = () => {
+ if (!gameAnswerWaveAnalyser || !gameAnswerWaveTimeData || !gameAnswerWaveFrequencyData) return;
+ const bars = gameAnswerTranscriptionWaveBars();
+ if (!bars.length) {
+ gameAnswerWaveFrame = requestAnimationFrame(renderFrame);
+ return;
+ }
+
+ gameAnswerWaveAnalyser.getByteTimeDomainData(gameAnswerWaveTimeData);
+ gameAnswerWaveAnalyser.getByteFrequencyData(gameAnswerWaveFrequencyData);
+
+ let sum = 0;
+ for (let index = 0; index < gameAnswerWaveTimeData.length; index++) {
+ const centered = (gameAnswerWaveTimeData[index] - 128) / 128;
+ sum += centered * centered;
+ }
+ const voiceLevel = Math.max(0, Math.min(1, (Math.sqrt(sum / Math.max(1, gameAnswerWaveTimeData.length)) - 0.012) * 9.5));
+ const usableBins = Math.max(1, Math.floor(gameAnswerWaveFrequencyData.length * 0.42));
+ const mid = (bars.length - 1) / 2;
+
+ bars.forEach((bar, index) => {
+ const start = Math.floor((index / bars.length) * usableBins);
+ const end = Math.max(start + 1, Math.floor(((index + 1) / bars.length) * usableBins));
+ let bandTotal = 0;
+ for (let bin = start; bin < end; bin++) bandTotal += gameAnswerWaveFrequencyData[bin] || 0;
+ const bandLevel = Math.max(0, Math.min(1, ((bandTotal / Math.max(1, end - start)) / 255 - 0.025) * 3.8));
+ const centerWeight = 1 - Math.abs(index - mid) / Math.max(1, mid) * 0.32;
+ const level = Math.max(0.18, Math.min(1.55, 0.2 + Math.max(voiceLevel, bandLevel) * centerWeight * 1.35));
+ const opacity = Math.max(0.48, Math.min(1, 0.5 + Math.max(voiceLevel, bandLevel) * 0.62));
+ bar.style.setProperty('--wave-level', level.toFixed(2));
+ bar.style.setProperty('--wave-opacity', opacity.toFixed(2));
+ });
+
+ gameAnswerWaveFrame = requestAnimationFrame(renderFrame);
+ };
+
+ renderFrame();
+ return true;
+ } catch (error) {
+ console.warn('Game answer wave visualizer unavailable:', error);
+ stopGameAnswerTranscriptionVisualizer();
+ return false;
+ }
+ }
+
  function stopVoiceRecordingTracks() {
+ stopGameAnswerTranscriptionVisualizer();
  if (mediaRecorderStream) {
  mediaRecorderStream.getTracks().forEach(track => track.stop());
  }
