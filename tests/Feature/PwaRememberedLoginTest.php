@@ -136,14 +136,14 @@ class PwaRememberedLoginTest extends TestCase
         $response->assertCookieMissing(Auth::guard()->getRecallerName());
     }
 
-    public function test_password_login_auto_verifies_a_legacy_google_linked_account(): void
+    public function test_password_login_auto_verifies_an_existing_local_account(): void
     {
         Setting::setVal('acc_verify_email', true, 'account', 'boolean');
 
         $user = User::factory()->unverified()->create([
-            'username' => 'legacy-google-user',
-            'email' => 'legacy-google@example.com',
-            'google_id' => 'legacy-google-id',
+            'username' => 'legacy-local-user',
+            'email' => 'legacy-local@example.com',
+            'google_id' => null,
             'password' => Hash::make('password'),
             'is_admin' => false,
             'status' => 'active',

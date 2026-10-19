@@ -149,10 +149,11 @@ class AuthController extends Controller
             );
         }
 
-        // A Google identity is proof that the matching email address was
-        // selected through Google OAuth. Repair legacy Google accounts that
-        // predate automatic email verification before enforcing the setting.
-        if (filled($user->google_id) && filled($user->email) && ! $user->email_verified_at) {
+        // Local accounts use a successful username/password sign-in as their
+        // verification step. This repairs existing accounts created before
+        // automatic recovery-email verification was introduced, so they are
+        // never locked out by the legacy email-verification flag.
+        if (filled($user->email) && ! $user->email_verified_at) {
             $user->forceFill([
                 'email_verified_at' => now(),
             ])->save();
