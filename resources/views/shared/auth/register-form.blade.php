@@ -10,23 +10,23 @@
 
 <form action="{{ route('register.submit') }}" method="POST" class="auth-form" autocomplete="on">
    @csrf
-   <div class="mb-3 auth-register-field auth-register-name">
+   <div class="mb-3">
       <label class="auth-label" for="registerName"><i class="fa-solid fa-user me-1" aria-hidden="true"></i>Full name</label>
       <input class="form-control auth-input" id="registerName" type="text" name="name" value="{{ old('name') }}" placeholder="John Doe" autocomplete="name" required autofocus>
    </div>
 
-   <div class="mb-3 auth-register-field auth-register-username">
+   <div class="mb-3">
       <label class="auth-label" for="registerUsername"><i class="fa-solid fa-user-tag me-1" aria-hidden="true"></i>Username</label>
       <input class="form-control auth-input" id="registerUsername" type="text" name="username" value="{{ old('username') }}" placeholder="your_username" autocomplete="username" required>
    </div>
 
-   <div class="mb-3 auth-register-field auth-register-email">
+   <div class="mb-3">
       <label class="auth-label" for="registerEmail"><i class="fa-regular fa-envelope me-1" aria-hidden="true"></i>Recovery email</label>
       <input class="form-control auth-input" id="registerEmail" type="email" name="email" value="{{ old('email') }}" placeholder="you@example.com" autocomplete="email" inputmode="email" spellcheck="false" required>
       <small class="auth-help">Used only for password recovery codes.</small>
    </div>
 
-   <div class="mb-3 auth-register-field auth-register-password">
+   <div class="mb-3">
       <label class="auth-label" for="registerPassword"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i>Password</label>
       <div class="auth-password-wrap">
          <input class="form-control auth-input" id="registerPassword" type="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" minlength="8" required>
@@ -34,7 +34,7 @@
       </div>
    </div>
 
-   <div class="mb-4 auth-register-field auth-register-confirm-password">
+   <div class="mb-4">
       <label class="auth-label" for="registerPasswordConfirmation"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i>Confirm password</label>
       <div class="auth-password-wrap">
          <input class="form-control auth-input" id="registerPasswordConfirmation" type="password" name="password_confirmation" placeholder="Confirm your password" autocomplete="new-password" minlength="8" required>
@@ -42,7 +42,7 @@
       </div>
    </div>
 
-   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold auth-submit auth-register-submit">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm" aria-hidden="true"></i></button>
+   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold auth-submit">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm" aria-hidden="true"></i></button>
 </form>
 
 <div class="auth-divider" aria-hidden="true"><span>or sign up with</span></div>

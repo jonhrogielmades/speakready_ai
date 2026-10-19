@@ -13,7 +13,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}">
-      <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=6') }}" data-page-style="auth-mobile">
+      <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=5') }}" data-page-style="auth-mobile">
       <style data-mobile-side-gutter="10px">
          body.auth-mobile-shell {
             padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
