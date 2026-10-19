@@ -40,7 +40,7 @@ class MobileLayoutTest extends TestCase
                 ->assertDontSee('id="srLaunchScreen"', false)
                 ->assertDontSee('guest-splash-pending', false)
                 ->assertSee('css/mobile/style.css?v=36', false)
-                ->assertSee('css/mobile/guest.css?v=31', false)
+                ->assertSee('css/mobile/guest.css?v=32', false)
                 ->assertSee('mobile-hero-preview-row', false)
                 ->assertSee('mobile-hero-image-frame', false)
                 ->assertSee('Register for Free', false)
@@ -74,7 +74,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=36', false)
-            ->assertSee('css/mobile/guest.css?v=31', false)
+            ->assertSee('css/mobile/guest.css?v=32', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=9', false);
     }
@@ -89,7 +89,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=36', false)
-            ->assertSee('css/mobile/guest.css?v=31', false)
+            ->assertSee('css/mobile/guest.css?v=32', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=9', false);
     }

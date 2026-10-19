@@ -701,6 +701,25 @@ html, body {
             -webkit-backdrop-filter: blur(8px);
          }
 
+         /* Auth modal performance: open and switch without transition waits. */
+         #lofc.auth-modal,
+         #lofc.auth-modal .modal-dialog,
+         #lofc.auth-modal .modal-content {
+            animation: none !important;
+            transition: none !important;
+         }
+
+         #lofc.auth-modal.fade .modal-dialog {
+            transform: none !important;
+         }
+
+         body:has(#lofc.auth-modal.show) .modal-backdrop.fade,
+         body:has(#lofc.auth-modal.show) .modal-backdrop.show {
+            -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+            transition: none !important;
+         }
+
          @media (max-width: 575.98px) {
             .guest-header-clock { font-size: 0.53rem; }
          }
@@ -6303,5 +6322,5 @@ html, body {
       }
 
       body.guest-shell #loginTransitionOverlay {
-          transition-duration: 120ms !important;
+          transition: none !important;
       }
