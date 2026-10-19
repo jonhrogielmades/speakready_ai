@@ -32,62 +32,8 @@
          }
       </style>
    </head>
-   <body class="guest-shell guest-desktop-shell @if(!$errors->any()) guest-splash-pending @endif" data-layout-shell="desktop" data-guest-layout="desktop">
+   <body class="guest-shell guest-desktop-shell" data-layout-shell="desktop" data-guest-layout="desktop">
       @include('desktop.partials.viewport-mobile-cookie')
-      @if(!$errors->any())
-      <div id="srLaunchScreen" class="sr-launch-screen" role="status" aria-live="polite" aria-label="Opening {{ $systemName ?? 'SpeakReady AI' }}">
-         <div class="sr-launch-content">
-            <div class="sr-launch-mark">
-               <img src="{{ asset($systemLogo ?? 'img/logo.png') }}" alt="{{ $systemName ?? 'SpeakReady AI' }}">
-            </div>
-            <p class="sr-launch-kicker">AI Interview Coach</p>
-            <h1 class="sr-launch-title">{{ $systemName ?? 'SpeakReady AI' }}</h1>
-            <p class="sr-launch-copy">Practice. Improve. Speak with confidence.</p>
-            <div class="sr-launch-progress" aria-hidden="true"><span></span></div>
-            <div class="sr-launch-status">Preparing your practice space</div>
-         </div>
-      </div>
-      <script>
-         (function () {
-            const splash = document.getElementById('srLaunchScreen');
-            if (!splash) return;
-
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            const isMobile = window.matchMedia('(max-width: 820px)').matches;
-            const seenKey = 'speakready_guest_splash_seen';
-            const shouldShow = (isStandalone || isMobile) && !sessionStorage.getItem(seenKey);
-
-            function clearSplash() {
-               if (splash.dataset.cleared === 'true') return;
-               splash.dataset.cleared = 'true';
-               document.body.classList.remove('guest-splash-pending');
-               splash.classList.add('is-hiding');
-               splash.remove();
-            }
-
-            if (!shouldShow) {
-               clearSplash();
-               return;
-            }
-
-            sessionStorage.setItem(seenKey, '1');
-
-            function finishWhenReady() {
-               (window.requestAnimationFrame || function(callback) {
-                  return window.setTimeout(callback, 0);
-               })(clearSplash);
-            }
-
-            if (document.readyState === 'loading') {
-               document.addEventListener('DOMContentLoaded', finishWhenReady, { once: true });
-            } else {
-               finishWhenReady();
-            }
-
-            window.setTimeout(clearSplash, 250);
-         })();
-      </script>
-      @endif
 <!-- ======================== LANDING PAGE ======================== -->
       <div id="landing">
          <!-- NAVBAR -->
@@ -1296,7 +1242,6 @@
          const PWA_PROMPT_DISMISSED_KEY = 'pwa_prompt_dismissed';
          const PWA_PROMPT_AUTO_SHOWN_KEY = 'pwa_prompt_auto_shown';
          const PWA_PROMPT_LAST_SHOWN_KEY = 'pwa_prompt_last_shown_at';
-         const PWA_PROMPT_DELAY_MS = 700;
 
          function isPwaAlreadyInstalled() {
             return window.matchMedia('(display-mode: standalone)').matches ||
@@ -1400,20 +1345,9 @@
             if (!prompt || !shouldAutoShowPwaInstallPrompt()) return;
             rememberPwaInstallPromptShown();
 
-            window.setTimeout(() => {
-               if (document.body.classList.contains('guest-splash-pending')) {
-                  window.setTimeout(() => {
-                     if (!isPwaAlreadyInstalled()) {
-                        showPwaInstallMessage('Install SpeakReady AI', 'Do you want to install this app for a better and faster experience?', true);
-                     }
-                  }, PWA_PROMPT_DELAY_MS);
-                  return;
-               }
-
-               if (!isPwaAlreadyInstalled()) {
-                  showPwaInstallMessage('Install SpeakReady AI', 'Do you want to install this app for a better and faster experience?', true);
-               }
-            }, PWA_PROMPT_DELAY_MS);
+            if (!isPwaAlreadyInstalled()) {
+               showPwaInstallMessage('Install SpeakReady AI', 'Do you want to install this app for a better and faster experience?', true);
+            }
          }
 
          async function triggerInstall() {
@@ -1683,9 +1617,7 @@
                           destination = window.SpeakReadyGoogleMobileLayout.apply(link);
                       }
 
-                      window.setTimeout(function() {
-                          window.location.href = destination;
-                      }, 80);
+                      window.location.href = destination;
                   });
               });
 

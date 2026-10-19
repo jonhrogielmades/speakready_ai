@@ -37,8 +37,10 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('guest-shell guest-mobile-shell', false)
                 ->assertSee('data-layout-shell="mobile"', false)
                 ->assertSee('data-guest-layout="mobile"', false)
+                ->assertDontSee('id="srLaunchScreen"', false)
+                ->assertDontSee('guest-splash-pending', false)
                 ->assertSee('css/mobile/style.css?v=36', false)
-                ->assertSee('css/mobile/guest.css?v=29', false)
+                ->assertSee('css/mobile/guest.css?v=31', false)
                 ->assertSee('mobile-hero-preview-row', false)
                 ->assertSee('mobile-hero-image-frame', false)
                 ->assertSee('Register for Free', false)
@@ -72,7 +74,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=36', false)
-            ->assertSee('css/mobile/guest.css?v=29', false)
+            ->assertSee('css/mobile/guest.css?v=31', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=9', false);
     }
@@ -87,7 +89,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=36', false)
-            ->assertSee('css/mobile/guest.css?v=29', false)
+            ->assertSee('css/mobile/guest.css?v=31', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=9', false);
     }
@@ -146,9 +148,11 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
+            ->assertDontSee('id="srLaunchScreen"', false)
+            ->assertDontSee('guest-splash-pending', false)
             ->assertSee('sr_desktop_shell_mobile_repair_v3', false)
-            ->assertSee('sr_desktop_site_mobile_alert_v1', false)
-            ->assertSee('Desktop site is not available on mobile. Loading the mobile layout.', false)
+            ->assertDontSee('sr_desktop_site_mobile_alert_v1', false)
+            ->assertDontSee('Desktop site is not available on mobile. Loading the mobile layout.', false)
             ->assertSee("body.getAttribute('data-layout-shell')", false)
             ->assertSee("bodyClasses.contains('guest-desktop-shell')", false)
             ->assertSee('navigator.maxTouchPoints', false)

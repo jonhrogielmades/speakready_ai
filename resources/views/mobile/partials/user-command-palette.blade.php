@@ -1,3 +1,7 @@
+@php
+    $isGuestQuickNavigation = (bool) ($guestQuickNavigation ?? false);
+@endphp
+
 @once
     <div
         id="userCommandPalette"

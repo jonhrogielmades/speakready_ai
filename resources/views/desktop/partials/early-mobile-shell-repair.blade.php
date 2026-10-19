@@ -4,7 +4,6 @@
       var maxAge = 60 * 60 * 24 * 365;
       var sameSite = '; SameSite=Lax';
       var repairKey = 'sr_desktop_shell_mobile_repair_v3';
-      var alertKey = 'sr_desktop_site_mobile_alert_v1';
 
       function getViewportWidth() {
          return Math.round(
@@ -43,25 +42,11 @@
          );
       }
 
-      function showMobileOnlyAlertOnce() {
-         try {
-            if (sessionStorage.getItem(alertKey) === '1') return;
-            sessionStorage.setItem(alertKey, '1');
-         } catch (error) {}
-
-         if (typeof window.alert === 'function') {
-            window.alert('Desktop site is not available on mobile. Loading the mobile layout.');
-         }
-      }
-
       var width = getViewportWidth();
       var likelyMobileDevice = isLikelyMobileDevice();
       var shouldUseMobileShell = (width > 0 && width <= maxMobileWidth) || likelyMobileDevice;
       if (!shouldUseMobileShell) return;
 
-      if (likelyMobileDevice) {
-         showMobileOnlyAlertOnce();
-      }
       document.cookie = 'sr_is_mobile=1; path=/; max-age=' + maxAge + sameSite;
       if (width > 0) {
          document.cookie = 'sr_viewport_width=' + width + '; path=/; max-age=' + maxAge + sameSite;
