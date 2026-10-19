@@ -173,9 +173,7 @@
         }
 
         console[payload.icon === 'error' ? 'error' : 'log'](`${payload.title}: ${payload.text}`);
-        if (typeof window.alert === 'function') {
-            window.alert(`${payload.title}: ${payload.text}`);
-        }
+        window.SpeakReadyUiNotice?.(`${payload.title}: ${payload.text}`);
 
         return Promise.resolve();
     };

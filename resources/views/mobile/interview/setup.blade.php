@@ -716,7 +716,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  return;
  }
 
- alert(message);
+ window.SpeakReadyUiNotice?.(message);
  targetPositionAlertVisible = false;
  }
 

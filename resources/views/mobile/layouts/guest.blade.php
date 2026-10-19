@@ -741,6 +741,7 @@
 <!-- ======================== SCRIPTS ======================== -->
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+      <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       @include('mobile.partials.flash-modal', ['includeValidationErrors' => false])
       <!-- Swiper -->
       <script src="{{ asset('js/swiper-bundle.min.js') }}"></script>
@@ -885,7 +886,8 @@
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                navigator.serviceWorker.register('/sw.js?v=24').then(function(registration) {
-                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                  if (!registration) return;
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
                });

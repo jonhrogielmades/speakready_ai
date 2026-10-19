@@ -341,7 +341,7 @@ function scoreMissionLocally(showEmptyAlert = true) {
     const words = missionWordCount(answer);
 
     if (!answer && showEmptyAlert) {
-        alert('Add an answer before scoring this mission.');
+        window.SpeakReadyUiNotice?.('Add an answer before scoring this mission.');
         return null;
     }
 

@@ -23,12 +23,29 @@
          .legal-intro, .legal-section p, .legal-updated { color: var(--tx2); }
          .legal-section { border-top: 1px solid var(--bd); }
          .legal-section h2 { color: var(--tx); font-size: 1rem; font-weight: 800; }
+         .legal-shell .container { max-width: 1120px; }
+         @media (max-width: 767.98px) {
+            .legal-nav .container { padding-inline: 16px; }
+            .legal-brand { gap: 8px; font-size: 0.95rem; }
+            .legal-brand img { width: 34px; height: 34px; }
+            .legal-nav .boc { padding: 8px 12px !important; font-size: 0.82rem; }
+            .legal-shell main.container { padding: 24px 12px !important; }
+            .legal-card { border-radius: 16px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.10); }
+            .legal-title { font-size: clamp(1.55rem, 7vw, 2rem); line-height: 1.16; }
+            .legal-intro, .legal-section p { font-size: 0.95rem; line-height: 1.7; }
+         }
+         @media (max-width: 380px) {
+            .legal-nav .container { gap: 10px !important; }
+            .legal-brand { font-size: 0.88rem; }
+            .legal-nav .boc { padding-inline: 10px !important; font-size: 0.78rem; }
+            .legal-card { padding: 20px !important; }
+         }
          @supports not (background: color-mix(in srgb, #fff 50%, transparent)) {
             .legal-nav { background: var(--sf); }
          }
       </style>
    </head>
-   <body class="legal-shell desktop-shell" data-layout-shell="desktop">
+   <body class="legal-shell">
       <nav class="legal-nav py-3">
          <div class="container d-flex align-items-center justify-content-between gap-3">
             <a class="legal-brand" href="{{ url('/') }}">

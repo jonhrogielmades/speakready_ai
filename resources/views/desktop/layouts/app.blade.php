@@ -343,6 +343,7 @@
       <!-- ======================== SCRIPTS ======================== -->
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+      <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       @include('desktop.partials.flash-modal')
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=8') }}"></script>
@@ -550,8 +551,9 @@
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                navigator.serviceWorker.register('/sw.js?v=24').then(function(registration) {
+                  if (!registration) return;
                   window.SpeakReadyServiceWorkerRegistration = registration;
-                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
                });

@@ -227,7 +227,7 @@
                                         <span class="ui-mobile-wire-line" style="width:58px"></span>
                                         <span class="ui-mobile-wire-line" style="width:50px"></span>
                                      </div>
-                                    <img class="ui-mobile-wire-robot" data-src="{{ asset('img/dashboard-welcome-robot-transparent.webp') }}?v=20261020" alt="" aria-hidden="true" width="1536" height="1024" decoding="async">
+                                    <img class="ui-mobile-wire-robot" src="{{ asset('img/dashboard-welcome-robot-transparent.webp') }}?v=20261020" alt="" aria-hidden="true" width="1536" height="1024" loading="lazy" decoding="async">
                                   </section>
 
                                   <div class="ui-mobile-wire-progress" aria-hidden="true"><span></span></div>
@@ -428,7 +428,7 @@
                                                    <span class="ui-desktop-wire-line" style="width:86%"></span>
                                                    <span class="ui-desktop-wire-line" style="width:72%"></span>
                                                 </div>
-                                                <img class="ui-desktop-wire-robot" data-src="{{ asset('img/dashboard-welcome-robot-transparent.webp') }}?v=20261020" alt="" width="1536" height="1024" decoding="async">
+                                                <img class="ui-desktop-wire-robot" src="{{ asset('img/dashboard-welcome-robot-transparent.webp') }}?v=20261020" alt="" width="1536" height="1024" loading="lazy" decoding="async">
                                              </div>
                                           </section>
 
@@ -1158,6 +1158,7 @@
 <!-- ======================== SCRIPTS ======================== -->
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+      <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       @include('desktop.partials.flash-modal', ['includeValidationErrors' => false])
       <script src="{{ asset('js/main.js?v=9') }}"></script>
       @php
@@ -1235,7 +1236,8 @@
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                navigator.serviceWorker.register('/sw.js?v=24').then(function(registration) {
-                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                  if (!registration) return;
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
                });

@@ -3762,6 +3762,8 @@ html body #mob-content #interview-modules-page .module-smart-panel .module-rec-g
         -webkit-text-fill-color: #2563eb !important;
         font-size: 0.86rem !important;
         font-weight: 850 !important;
+        font-family: inherit !important;
+        cursor: pointer;
         line-height: 1.2 !important;
         text-decoration: none !important;
         white-space: nowrap !important;
@@ -3784,6 +3786,7 @@ html body #mob-content #interview-modules-page .module-smart-panel .module-rec-g
     body.user-mobile-shell #mob-content #interview-modules-page .module-entry-page-btn.is-disabled,
     html body #mob-content #interview-modules-page .module-entry-page-btn.is-disabled {
         pointer-events: none !important;
+        cursor: not-allowed !important;
         opacity: 0.5 !important;
         color: var(--tx3, #64748b) !important;
         -webkit-text-fill-color: var(--tx3, #64748b) !important;

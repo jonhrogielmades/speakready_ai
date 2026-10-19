@@ -4743,6 +4743,7 @@
 
       <!-- ======================== SCRIPTS ======================== -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+      <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       @include('mobile.partials.flash-modal')
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       <script>
@@ -4850,6 +4851,7 @@
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                navigator.serviceWorker.register('/sw.js?v=24').then(function(registration) {
+                  if (!registration) return;
                   window.SpeakReadyServiceWorkerRegistration = registration;
                   console.log('ServiceWorker registration successful');
                }, function(err) {

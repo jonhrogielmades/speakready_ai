@@ -4342,6 +4342,8 @@ body.dm #interview-modules-page .module-search-input::placeholder,
         color: #2563eb !important;
         font-size: 0.98rem !important;
         font-weight: 850 !important;
+        font-family: inherit !important;
+        cursor: pointer;
         text-decoration: none !important;
     }
 
@@ -4358,6 +4360,7 @@ body.dm #interview-modules-page .module-search-input::placeholder,
 
     html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-entry-page-btn.is-disabled {
         pointer-events: none !important;
+        cursor: not-allowed !important;
         opacity: 0.48 !important;
         color: var(--tx3, #64748b) !important;
         background: var(--bg3, #f1f5f9) !important;

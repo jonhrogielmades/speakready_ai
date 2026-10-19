@@ -129,15 +129,29 @@
 
  @if($modules->hasPages())
  <nav class="module-entry-pager" aria-label="Module entries pagination">
- <a class="module-entry-page-btn {{ $modules->onFirstPage()? 'is-disabled': '' }}" href="{{ $modules->previousPageUrl()?? '#' }}" aria-disabled="{{ $modules->onFirstPage()? 'true': 'false' }}">
+ @if($modules->onFirstPage())
+ <button type="button" class="module-entry-page-btn is-disabled" disabled aria-disabled="true">
+ <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+ <span>Previous</span>
+ </button>
+ @else
+ <a class="module-entry-page-btn" href="{{ $modules->previousPageUrl() }}" aria-disabled="false">
  <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
  <span>Previous</span>
  </a>
+ @endif
  <span class="module-entry-page-status">Page {{ $modules->currentPage() }} of {{ $modules->lastPage() }}</span>
- <a class="module-entry-page-btn {{ $modules->hasMorePages()? '': 'is-disabled' }}" href="{{ $modules->nextPageUrl()?? '#' }}" aria-disabled="{{ $modules->hasMorePages()? 'false': 'true' }}">
+ @if($modules->hasMorePages())
+ <a class="module-entry-page-btn" href="{{ $modules->nextPageUrl() }}" aria-disabled="false">
  <span>Next</span>
  <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
  </a>
+ @else
+ <button type="button" class="module-entry-page-btn is-disabled" disabled aria-disabled="true">
+ <span>Next</span>
+ <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+ </button>
+ @endif
  </nav>
  @endif
 </div>

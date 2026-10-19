@@ -2292,7 +2292,7 @@ function updateGameTimerDisplay() {
  if (!isVoiceTranscriptionMode()) return true;
 
  if (!voiceRecordingSupported()) {
- if (!silent) alert('Voice recording is not supported in this browser.');
+ if (!silent) window.SpeakReadyUiNotice?.('Voice recording is not supported in this browser.');
  return false;
  }
 
@@ -2363,7 +2363,7 @@ function updateGameTimerDisplay() {
  stopVoiceRecordingTracks();
  mediaRecorder = null;
  mediaRecorderChunks = [];
- if (!silent) alert('Microphone access is required for voice recording.');
+ if (!silent) window.SpeakReadyUiNotice?.('Microphone access is required for voice recording.');
  return false;
  }
  }
@@ -2480,7 +2480,7 @@ function updateGameTimerDisplay() {
  async function startRecording(options = {}) {
  const silent = options && options.silent === true;
  if(!recognition &&!voiceRecordingSupported()) {
- if(!silent) alert("Voice recording is not supported in this browser.");
+ if(!silent) window.SpeakReadyUiNotice?.('Voice recording is not supported in this browser.');
  return;
  }
  if (isRecording || isStartingRecording) return;
@@ -2882,7 +2882,7 @@ function saveGameStateOnPageHide() {
  setGameAdvanceActionsDisabled(false);
  document.querySelectorAll('.end-challenge-btn-class').forEach(el => el.disabled = false);
  isChallengeTransitioning = false;
- alert(error.message || 'We could not save your answer. Please try again before continuing.');
+ window.SpeakReadyUiNotice?.(error.message || 'We could not save your answer. Please try again before continuing.');
  }
  }
 
@@ -2903,7 +2903,7 @@ function saveGameStateOnPageHide() {
  hideChallengeFinishModal();
  document.querySelectorAll('.next-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = false);
  isChallengeTransitioning = false;
- alert(error.message || 'We could not end the challenge. Please try again.');
+ window.SpeakReadyUiNotice?.(error.message || 'We could not end the challenge. Please try again.');
  });
  }
 

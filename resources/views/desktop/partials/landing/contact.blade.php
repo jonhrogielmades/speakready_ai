@@ -38,7 +38,7 @@
                          @if(session('contact_success'))
                              <script>
                                  window.onload = function() {
-                                     alert("Success! " + "{{ session('contact_success') }}");
+                                     window.SpeakReadyUiNotice?.(@json('Success! ' . session('contact_success')), { tone: 'success' });
                                  };
                              </script>
                          @endif
