@@ -1390,16 +1390,32 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  return responseMode === 'voice' || responseMode === 'hybrid' || responseMode === 'voice_and_text';
  }
 
+ function isGameSpeechOutputActive(token) {
+ if (token!== questionSpeechToken) return false;
+ if (activeSpeechRequestController) return true;
+ if (activeQuestionAudio && !activeQuestionAudio.ended) return true;
+ if ('speechSynthesis' in window) {
+ return Boolean(window.speechSynthesis.speaking || window.speechSynthesis.pending);
+ }
+ return false;
+ }
+
  function scheduleAutoTranscriptionStart(token) {
  if (token!== questionSpeechToken) return;
  clearTimeout(autoStartAfterQuestionTimer);
  if (!isVoiceTranscriptionMode()) return;
  if (isVoiceOnlySession || isRecordingPaused) return;
 
- autoStartAfterQuestionTimer = setTimeout(() => {
- if (token!== questionSpeechToken || isRecording) return;
+ const startWhenSpeechHasEnded = () => {
+ if (token!== questionSpeechToken || isRecordingPaused) return;
+ if (isGameSpeechOutputActive(token) || isRecording || isStartingRecording || recordingStopPromise || voiceTranscriptionPromise) {
+ autoStartAfterQuestionTimer = setTimeout(startWhenSpeechHasEnded, 250);
+ return;
+ }
  startRecording({ silent: true });
- }, 450);
+ };
+
+ autoStartAfterQuestionTimer = setTimeout(startWhenSpeechHasEnded, 450);
  }
 
  // Initialize preferred voice
@@ -1689,6 +1705,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
 
  function finishGameSpeakingUi(text, token) {
  if (token!== questionSpeechToken) return;
+ if (isGameSpeechOutputActive(token)) return;
  stopGameSpeakingWave();
  clearGameCaptionInterval();
  renderStaticGameQuestionCaption(text);
@@ -1856,11 +1873,17 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  cancelGameSpeechOutput();
  const token = ++questionSpeechToken;
  const completion = new Promise(resolve => {
- const timeoutId = setTimeout(() => {
+ const finishWhenSpeechHasEnded = () => {
+ if (token!== questionSpeechToken) return;
+ if (isGameSpeechOutputActive(token)) {
+ activeSpeechCompletion.timeoutId = setTimeout(finishWhenSpeechHasEnded, 250);
+ return;
+ }
  if (token === questionSpeechToken) {
  finishGameSpeakingUi(text, token);
  }
- }, estimatedGameSpeechTimeoutMs(text));
+ };
+ const timeoutId = setTimeout(finishWhenSpeechHasEnded, estimatedGameSpeechTimeoutMs(text));
  activeSpeechCompletion = { token, resolve, timeoutId };
  });
 
