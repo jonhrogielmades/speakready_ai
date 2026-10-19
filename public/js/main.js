@@ -187,6 +187,7 @@ const barIcon = document.getElementById('barIcon');
 const xIcon = document.getElementById('xIcon');
 const mobileMenuToggles = [mobileToggle, guestQuickNavToggle].filter(Boolean);
 let lastMobileMenuTrigger = null;
+let restoreMobileMenuFocusAfterAuth = false;
 
 function setMobileMenuState(open, focusFirstLink = false) {
     if (!mobileMenu) return;
@@ -243,6 +244,8 @@ if (mobileMenu && mobileMenuToggles.length) {
 
     document.querySelectorAll('#mbmenu a, #mbmenu button').forEach(el =>
         el.addEventListener('click', () => {
+            const opensAuthPanel = el.matches('[data-bs-target="#lofc"]');
+            restoreMobileMenuFocusAfterAuth = opensAuthPanel;
             setMobileMenuState(false);
 
             if (el.matches('a[href^="#"]')) {
@@ -284,6 +287,114 @@ if (typeof desktopMenuBreakpoint.addEventListener === 'function') {
     desktopMenuBreakpoint.addEventListener('change', closeMobileMenuAtDesktop);
 } else if (typeof desktopMenuBreakpoint.addListener === 'function') {
     desktopMenuBreakpoint.addListener(closeMobileMenuAtDesktop);
+}
+
+const guestAuthPanel = document.getElementById('lofc');
+guestAuthPanel?.addEventListener('hidden.bs.modal', () => {
+    if (!restoreMobileMenuFocusAfterAuth) return;
+
+    restoreMobileMenuFocusAfterAuth = false;
+    window.requestAnimationFrame(() => {
+        lastMobileMenuTrigger?.focus({ preventScroll: true });
+    });
+});
+
+const authModalMobileViewport = window.matchMedia('(max-width: 767.98px)');
+const authModalInputSelector = 'input, textarea, select';
+let authModalFocusTimer = 0;
+let authModalFocusRaf = 0;
+
+function isMobileAuthModalViewport() {
+    return authModalMobileViewport.matches ||
+        document.body.classList.contains('guest-mobile-shell') ||
+        document.body.classList.contains('auth-mobile-shell');
+}
+
+function syncAuthModalViewportHeight() {
+    const height = Math.round(
+        (window.visualViewport && window.visualViewport.height) ||
+        window.innerHeight ||
+        document.documentElement.clientHeight ||
+        0
+    );
+
+    if (height > 0) {
+        document.documentElement.style.setProperty('--sr-js-vh', `${height}px`);
+        document.documentElement.style.setProperty('--sr-visual-vh', `${height}px`);
+    }
+}
+
+function queueFocusedAuthFieldScroll(delay = 0) {
+    window.clearTimeout(authModalFocusTimer);
+    authModalFocusTimer = window.setTimeout(() => {
+        if (authModalFocusRaf) window.cancelAnimationFrame(authModalFocusRaf);
+
+        authModalFocusRaf = window.requestAnimationFrame(() => {
+            authModalFocusRaf = 0;
+            if (!guestAuthPanel || !document.body.classList.contains('auth-modal-field-focused')) return;
+
+            const activeField = document.activeElement;
+            if (!activeField || !guestAuthPanel.contains(activeField) || !activeField.matches(authModalInputSelector)) return;
+
+            const scrollTarget = activeField.closest('.auth-field, .auth-check') || activeField;
+            scrollTarget.scrollIntoView({
+                block: 'center',
+                inline: 'nearest',
+                behavior: 'auto'
+            });
+        });
+    }, delay);
+}
+
+function setAuthModalFieldFocused(active) {
+    if (!active) {
+        document.body.classList.remove('auth-modal-field-focused');
+        return;
+    }
+
+    if (!isMobileAuthModalViewport()) return;
+
+    syncAuthModalViewportHeight();
+    document.body.classList.add('auth-modal-field-focused');
+    queueFocusedAuthFieldScroll();
+}
+
+if (guestAuthPanel) {
+    guestAuthPanel.addEventListener('focusin', event => {
+        if (!event.target.matches(authModalInputSelector)) return;
+
+        setAuthModalFieldFocused(true);
+    });
+
+    guestAuthPanel.addEventListener('focusout', () => {
+        window.setTimeout(() => {
+            const activeField = document.activeElement;
+            const stillFocused = activeField &&
+                guestAuthPanel.contains(activeField) &&
+                activeField.matches(authModalInputSelector);
+
+            if (!stillFocused) {
+                setAuthModalFieldFocused(false);
+            }
+        }, 0);
+    });
+
+    guestAuthPanel.addEventListener('shown.bs.modal', syncAuthModalViewportHeight);
+    guestAuthPanel.addEventListener('hidden.bs.modal', () => setAuthModalFieldFocused(false));
+}
+
+function syncFocusedAuthModalViewport() {
+    if (!document.body.classList.contains('auth-modal-field-focused')) return;
+
+    syncAuthModalViewportHeight();
+    queueFocusedAuthFieldScroll();
+}
+
+window.addEventListener('resize', syncFocusedAuthModalViewport, { passive: true });
+window.addEventListener('orientationchange', syncFocusedAuthModalViewport, { passive: true });
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncFocusedAuthModalViewport, { passive: true });
+    window.visualViewport.addEventListener('scroll', syncFocusedAuthModalViewport, { passive: true });
 }
 
 const guestSectionIds = ['hero', 'features', 'how', 'benefits', 'developers', 'faq', 'contact'];
@@ -405,6 +516,48 @@ if (ptog) {
             if (i < 2) el.textContent = y ? 'per month, billed yearly' : 'per month, billed monthly';
         });
     });
+}
+
+/*  AUTH TAB UI  */
+function swTab(t) {
+    const isL = t === 'login' || t === 'signin';
+    const loginPanel = document.getElementById('fLogin');
+    const signupPanel = document.getElementById('fSignup');
+    const loginTab = document.getElementById('tabLogin');
+    const signupTab = document.getElementById('tabSignup');
+    const loginErr = document.getElementById('loginErr');
+    const signupErr = document.getElementById('signupErr');
+
+    const activePanel = isL ? loginPanel : signupPanel;
+    const inactivePanel = isL ? signupPanel : loginPanel;
+
+    [loginPanel, signupPanel].forEach(panel => {
+        panel?.classList.remove('is-switching-out', 'is-entering');
+    });
+
+    if (inactivePanel) {
+        inactivePanel.style.display = 'none';
+        inactivePanel.hidden = true;
+        inactivePanel.setAttribute('aria-hidden', 'true');
+    }
+
+    if (activePanel) {
+        activePanel.hidden = false;
+        activePanel.style.display = 'block';
+        activePanel.setAttribute('aria-hidden', 'false');
+        void activePanel.offsetWidth;
+        activePanel.classList.add('is-entering');
+        activePanel.addEventListener('animationend', () => {
+            activePanel.classList.remove('is-entering');
+        }, { once: true });
+    }
+
+    loginTab?.classList.toggle('on', isL);
+    signupTab?.classList.toggle('on', !isL);
+    loginTab?.setAttribute('aria-selected', isL ? 'true' : 'false');
+    signupTab?.setAttribute('aria-selected', isL ? 'false' : 'true');
+    if (loginErr) loginErr.style.display = 'none';
+    if (signupErr) signupErr.style.display = 'none';
 }
 
 function doLogout() {

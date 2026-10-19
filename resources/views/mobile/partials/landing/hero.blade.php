@@ -13,7 +13,7 @@
                   <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                   <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI focuses on job interview preparation with realistic mock interviews, personalized feedback, and role-fit coaching for your target position.</p>
                   <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                     <a href="{{ route('register') }}" class="bgrd btn px-4 py-3 fs-6 text-decoration-none">Start Practicing</a>
+                     <button type="button" class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Start Practicing</button>
                      <button type="button" class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                      <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                   </div>

@@ -119,12 +119,12 @@
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
                      </button>
-                     <a href="{{ route('login') }}" class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1 text-decoration-none">
+                     <button type="button" class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">
                      <i class="fa-regular fa-user fa-sm"></i> Login
-                     </a>
-                     <a href="{{ route('register') }}" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1 text-decoration-none">
+                     </button>
+                     <button type="button" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
-                     </a>
+                     </button>
                      <button class="boc d-xl-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
                      <i class="fa-solid fa-bars" aria-hidden="true"></i>
                      </button>
@@ -156,7 +156,7 @@
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="hero-home-copy-text afu" style="font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI helps you practice role-focused job interviews with scenario setup, Coaching On or Real Interview Mode, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <a href="{{ route('register') }}" class="bgrd btn px-4 py-3 fs-6 text-decoration-none">Get Started Free</a>
+                        <button type="button" class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Get Started Free</button>
                         <button type="button" class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                      </div>
@@ -1132,8 +1132,8 @@
                      <div>
                         <h5 class="footer-heading">Platform</h5>
                         <ul class="list-unstyled footer-links">
-                           <li><a href="{{ route('login') }}">Log In</a></li>
-                           <li><a href="{{ route('register') }}">Register</a></li>
+                           <li><a href="#lofc" role="button" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">Log In</a></li>
+                           <li><a href="#lofc" role="button" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Register</a></li>
                            <li><a href="#faq">FAQ</a></li>
                            <li><a href="#contact">Contact</a></li>
                            <li><a href="{{ route('legal.privacy') }}">Privacy Policy</a></li>
@@ -1184,6 +1184,8 @@
 
 
 
+      @include('shared.auth-modal')
+
       <!-- ===== PWA INSTALL PROMPT ===== -->
       <div id="pwa-install-prompt" role="dialog" aria-labelledby="pwaPromptTitle" aria-describedby="pwaPromptCopy">
          <div class="pwa-install-dialog">
@@ -1206,6 +1208,28 @@
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       @include('desktop.partials.flash-modal', ['includeValidationErrors' => false])
       <script src="{{ asset('js/main.js?v=9') }}"></script>
+      @php
+         $authModalRequest = request('auth_modal');
+         $shouldShowAuthModal = $errors->any()
+            || in_array($authModalRequest, ['login', 'signup', 'register'], true)
+            || request('auth_alert') === 'google_login_unregistered';
+         $shouldShowSignupAuthTab = in_array(old('auth_tab', $authModalRequest), ['signup', 'register'], true) || filled(old('name'));
+      @endphp
+      @if($shouldShowAuthModal)
+      <script>
+         document.addEventListener('DOMContentLoaded', function() {
+            var authModal = document.getElementById('lofc');
+            var bsModal = new bootstrap.Modal(authModal);
+            bsModal.show();
+            @if($shouldShowSignupAuthTab)
+               swTab('signup');
+            @else
+               swTab('login');
+            @endif
+         });
+      </script>
+      @endif
+
       <script>
          // Initialize CounterUp when document is ready
          document.addEventListener('DOMContentLoaded', function() {

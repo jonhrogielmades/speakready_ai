@@ -1,10 +1,8 @@
 @extends('desktop.layouts.auth')
 
 @section('title', 'Forgot Password - SpeakReady AI')
-@section('body_class', 'auth-page-recovery')
 
 @section('content')
-   <div class="auth-kicker"><i class="fa-solid fa-key" aria-hidden="true"></i> Account recovery</div>
    <h1 class="auth-title">Reset your password</h1>
    <p class="auth-copy">Use your username and the recovery email saved on your local account. We will send a one-time recovery code to that email.</p>
 
@@ -49,18 +47,12 @@
 
          <div class="mb-3">
             <label class="auth-label" for="password"><i class="fa-solid fa-lock me-1"></i>New password</label>
-            <div class="auth-password-wrap">
-               <input class="form-control auth-input" id="password" type="password" name="password" placeholder="Min. 8 characters" autocomplete="new-password" required>
-               <button type="button" class="auth-password-toggle" data-password-toggle="password" aria-label="Show password"><i class="fa-solid fa-eye-slash" aria-hidden="true"></i></button>
-            </div>
+            <input class="form-control auth-input" id="password" type="password" name="password" placeholder="Min. 8 characters" autocomplete="new-password" required>
          </div>
 
          <div class="mb-4">
             <label class="auth-label" for="password_confirmation"><i class="fa-solid fa-lock me-1"></i>Confirm new password</label>
-            <div class="auth-password-wrap">
-               <input class="form-control auth-input" id="password_confirmation" type="password" name="password_confirmation" placeholder="Confirm your password" autocomplete="new-password" required>
-               <button type="button" class="auth-password-toggle" data-password-toggle="password_confirmation" aria-label="Show password"><i class="fa-solid fa-eye-slash" aria-hidden="true"></i></button>
-            </div>
+            <input class="form-control auth-input" id="password_confirmation" type="password" name="password_confirmation" placeholder="Confirm your password" autocomplete="new-password" required>
          </div>
 
          <input type="hidden" name="username" value="{{ old('username') }}">
@@ -73,6 +65,6 @@
    <p class="auth-copy mt-3" style="font-size:.82rem">Google Login accounts should continue using Google Login. If you cannot access your recovery email, contact the administrator.</p>
 
    <div class="text-center mt-4">
-      <a class="auth-muted-link" href="{{ route('login') }}">Back to login</a>
+      <a class="auth-muted-link" href="{{ url('/') }}">Back to login</a>
    </div>
 @endsection

@@ -51,16 +51,6 @@ class AuthController extends Controller
 
     private const MOBILE_VIEWPORT_MAX = 820;
 
-    public function showLoginForm()
-    {
-        return $this->mobileView('auth.login');
-    }
-
-    public function showRegisterForm()
-    {
-        return $this->mobileView('auth.register');
-    }
-
     public function register(Request $request)
     {
         if (! Setting::enabled('acc_registration')) {

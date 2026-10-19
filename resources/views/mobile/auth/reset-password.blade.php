@@ -1,10 +1,8 @@
 @extends('mobile.layouts.auth')
 
 @section('title', 'Reset Password - SpeakReady AI')
-@section('body_class', 'auth-page-reset')
 
 @section('content')
-   <div class="auth-kicker"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Secure reset</div>
    <h1 class="auth-title">Create a new password</h1>
    <p class="auth-copy">Choose a new password for your SpeakReady AI account.</p>
 
@@ -25,18 +23,12 @@
 
       <div class="mb-3">
          <label class="auth-label" for="password"><i class="fa-solid fa-lock me-1"></i>New password</label>
-         <div class="auth-password-wrap">
-            <input class="form-control auth-input" id="password" type="password" name="password" placeholder="Min. 8 characters" autocomplete="new-password" required>
-            <button type="button" class="auth-password-toggle" data-password-toggle="password" aria-label="Show password"><i class="fa-solid fa-eye-slash" aria-hidden="true"></i></button>
-         </div>
+         <input class="form-control auth-input" id="password" type="password" name="password" placeholder="Min. 8 characters" required>
       </div>
 
       <div class="mb-4">
          <label class="auth-label" for="password_confirmation"><i class="fa-solid fa-lock me-1"></i>Confirm password</label>
-         <div class="auth-password-wrap">
-            <input class="form-control auth-input" id="password_confirmation" type="password" name="password_confirmation" placeholder="Confirm your password" autocomplete="new-password" required>
-            <button type="button" class="auth-password-toggle" data-password-toggle="password_confirmation" aria-label="Show password"><i class="fa-solid fa-eye-slash" aria-hidden="true"></i></button>
-         </div>
+         <input class="form-control auth-input" id="password_confirmation" type="password" name="password_confirmation" placeholder="Confirm your password" required>
       </div>
 
       <button type="submit" class="bgrd btn w-100 py-3 fw-semibold">
