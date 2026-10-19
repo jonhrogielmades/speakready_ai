@@ -119,6 +119,36 @@ class PasswordResetTest extends TestCase
         $this->assertTrue(PasswordRecovery::check($sentMail->recoveryCode, $user->password_recovery_code_hash));
     }
 
+    public function test_failed_recovery_code_delivery_does_not_leave_an_usable_code(): void
+    {
+        config(['services.brevo.api_key' => null]);
+
+        $user = User::factory()->create([
+            'username' => 'failed-delivery-user',
+            'email' => 'failed-delivery@example.com',
+            'google_id' => null,
+            'password_recovery_code_hash' => null,
+            'password_recovery_code_generated_at' => null,
+            'password_recovery_code_expires_at' => null,
+        ]);
+
+        Mail::shouldReceive('to')
+            ->once()
+            ->andThrow(new RuntimeException('SMTP authentication failed'));
+
+        $this->post(route('password.recovery.send'), [
+            'username' => $user->username,
+            'email' => $user->email,
+        ])
+            ->assertRedirect(route('password.request'))
+            ->assertSessionHasErrors('email');
+
+        $user->refresh();
+        $this->assertNull($user->password_recovery_code_hash);
+        $this->assertNull($user->password_recovery_code_generated_at);
+        $this->assertNull($user->password_recovery_code_expires_at);
+    }
+
     public function test_local_recovery_code_can_be_sent_through_brevo(): void
     {
         config([

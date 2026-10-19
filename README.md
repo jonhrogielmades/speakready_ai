@@ -383,6 +383,8 @@ Local username/password registration requires a recovery email. The Forgot Passw
 
 The public contact form saves each request to the database and sends it immediately to `capstonespeakreadyai@gmail.com`. The destination is intentionally not taken from the admin-user table, so an old admin address cannot cause a delivery bounce. Configure Gmail SMTP with a Google App Password, set `MAIL_USERNAME` and `MAIL_FROM_ADDRESS` to the sending Gmail account, then redeploy so the container rebuilds Laravel's cached configuration.
 
+For production username/password recovery, the same mail configuration is used. Set `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_ENCRYPTION=tls`, `MAIL_USERNAME` to the sending Gmail address, `MAIL_PASSWORD` to that account's Google App Password (not the normal Gmail password), and `MAIL_FROM_ADDRESS` to the same authorized sender. If `BREVO_API_KEY` is set, recovery mail uses Brevo instead and `MAIL_FROM_ADDRESS` must be a verified Brevo sender. Keep `RUN_MIGRATIONS_ON_START=true`, redeploy, and confirm the startup log contains a successful `php artisan migrate --force` run.
+
 Brevo API example for password reset and recovery-code emails:
 
 ```env
@@ -761,6 +763,8 @@ The current feature tests cover authentication, password reset, route integrity,
 - Uploaded files or audio are not loading: run `php artisan storage:link`.
 - Login or session problems in production: verify `APP_URL`, HTTPS, `SESSION_SECURE_COOKIE`, and cache state.
 - Google login fails: verify Google OAuth credentials and callback URL.
+- Password recovery shows a database-readiness error: run `php artisan migrate --force` against the production database, keep `RUN_MIGRATIONS_ON_START=true`, and redeploy. The recovery-code columns must exist on `users`.
+- Password recovery shows a delivery error: verify `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, and `MAIL_FROM_ADDRESS`; Gmail requires a Google App Password. If SMTP is blocked, configure Brevo with a verified sender instead.
 - Password reset emails do not send: check mail credentials; if your host blocks SMTP, use an HTTPS/API mail provider instead.
 - AI features return fallback messages: configure at least one provider API key and check provider priority values.
 - Speech analysis is incomplete: configure OpenAI transcription or enable and install the local speech pipeline tools.

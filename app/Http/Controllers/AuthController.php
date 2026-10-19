@@ -266,6 +266,38 @@ class AuthController extends Controller
 
         $recoveryCode = PasswordRecovery::generate();
         $expiresInMinutes = max(5, (int) config('auth.passwords.users.recovery_code_expire', 15));
+        $recoveryCodeHash = PasswordRecovery::hash($recoveryCode);
+        $recoveryCodeGeneratedAt = now();
+        $recoveryCodeExpiresAt = $recoveryCodeGeneratedAt->copy()->addMinutes($expiresInMinutes);
+
+        try {
+            $this->assertPasswordRecoverySchemaReady();
+
+            DB::transaction(function () use ($user, $recoveryCodeHash, $recoveryCodeGeneratedAt, $recoveryCodeExpiresAt): void {
+                $lockedUser = User::query()
+                    ->whereKey($user->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $lockedUser->forceFill([
+                    'password_recovery_code_hash' => $recoveryCodeHash,
+                    'password_recovery_code_generated_at' => $recoveryCodeGeneratedAt,
+                    'password_recovery_code_expires_at' => $recoveryCodeExpiresAt,
+                ])->saveOrFail();
+            });
+        } catch (Throwable $e) {
+            Log::error('Password recovery code could not be stored.', [
+                'failure' => 'storage',
+                'username_hash' => hash('sha256', $validated['username']),
+                'email_hash' => hash('sha256', $validated['email']),
+                'exception_type' => $e::class,
+                'exception_message' => Str::limit($e->getMessage(), 500),
+            ]);
+
+            return redirect()->route('password.request')
+                ->withErrors(['email' => 'Password recovery is temporarily unavailable because the recovery database is not ready. Please contact the administrator.'])
+                ->withInput($request->only('username', 'email'));
+        }
 
         try {
             $brevoMailer = app(BrevoTransactionalMail::class);
@@ -273,23 +305,25 @@ class AuthController extends Controller
             if ($brevoMailer->isConfigured()) {
                 $brevoMailer->sendPasswordRecoveryCode($user, $recoveryCode, $expiresInMinutes);
             } else {
+                $this->assertPasswordRecoveryMailConfiguration();
                 Mail::to($user->email)->send(new PasswordRecoveryCodeMail($user, $recoveryCode, $expiresInMinutes));
             }
-
-            $user->forceFill([
-                'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
-                'password_recovery_code_generated_at' => now(),
-                'password_recovery_code_expires_at' => now()->addMinutes($expiresInMinutes),
-            ])->save();
         } catch (Throwable $e) {
+            $this->clearRecoveryCodeIfCurrent($user, $recoveryCodeHash);
+
             Log::error('Password recovery code email failed to send.', [
+                'failure' => 'delivery',
                 'username_hash' => hash('sha256', $validated['username']),
                 'email_hash' => hash('sha256', $validated['email']),
+                'mail_driver' => (string) config('mail.default'),
+                'brevo_configured' => app(BrevoTransactionalMail::class)->isConfigured(),
+                'smtp_host' => (string) config('mail.mailers.smtp.host'),
                 'exception_type' => $e::class,
+                'exception_message' => Str::limit($e->getMessage(), 500),
             ]);
 
             return redirect()->route('password.request')
-                ->withErrors(['email' => 'We could not deliver the recovery code. Please verify the mail settings or contact the administrator.'])
+                ->withErrors(['email' => 'The recovery code could not be delivered. Please verify the production email settings or contact the administrator.'])
                 ->withInput($request->only('username', 'email'));
         }
 
@@ -1012,6 +1046,63 @@ class AuthController extends Controller
     private function normalizeEmail(mixed $email): string
     {
         return Str::lower(trim((string) $email));
+    }
+
+    private function assertPasswordRecoverySchemaReady(): void
+    {
+        foreach ([
+            'password_recovery_code_hash',
+            'password_recovery_code_generated_at',
+            'password_recovery_code_expires_at',
+        ] as $column) {
+            if (! Schema::hasColumn('users', $column)) {
+                throw new \RuntimeException("The users.{$column} recovery column is missing.");
+            }
+        }
+    }
+
+    private function assertPasswordRecoveryMailConfiguration(): void
+    {
+        $mailer = (string) config('mail.default');
+
+        if (app()->environment('production') && in_array($mailer, ['array', 'log'], true)) {
+            throw new \RuntimeException("The {$mailer} mailer does not deliver email.");
+        }
+
+        if ($mailer === 'smtp' && blank(config('mail.mailers.smtp.host'))) {
+            throw new \RuntimeException('SMTP host is not configured.');
+        }
+
+        if ($mailer === 'smtp' && Str::contains(Str::lower((string) config('mail.mailers.smtp.host')), 'gmail')) {
+            if (blank(config('mail.mailers.smtp.username')) || blank(config('mail.mailers.smtp.password'))) {
+                throw new \RuntimeException('Gmail SMTP username or App Password is not configured.');
+            }
+        }
+
+        if (blank(config('mail.from.address'))) {
+            throw new \RuntimeException('Mail from address is not configured.');
+        }
+    }
+
+    private function clearRecoveryCodeIfCurrent(User $user, string $recoveryCodeHash): void
+    {
+        try {
+            User::query()
+                ->whereKey($user->getKey())
+                ->where('password_recovery_code_hash', $recoveryCodeHash)
+                ->update([
+                    'password_recovery_code_hash' => null,
+                    'password_recovery_code_generated_at' => null,
+                    'password_recovery_code_expires_at' => null,
+                ]);
+        } catch (Throwable $e) {
+            Log::critical('Password recovery cleanup failed after email delivery failure.', [
+                'failure' => 'delivery_cleanup',
+                'user_id' => $user->getKey(),
+                'exception_type' => $e::class,
+                'exception_message' => Str::limit($e->getMessage(), 500),
+            ]);
+        }
     }
 
     private function maskRecoveryEmail(?string $email): string
