@@ -9663,6 +9663,14 @@ body .modal-title {
     grid-column: 2;
   }
 
+  #lofc.auth-modal #fSignup .auth-input-icon {
+    display: none;
+  }
+
+  #lofc.auth-modal #fSignup .auth-input-wrap .oinp {
+    padding-left: 12px !important;
+  }
+
   #lofc.auth-modal #fSignup .auth-form > .err-msg {
     margin-bottom: 2px;
   }
