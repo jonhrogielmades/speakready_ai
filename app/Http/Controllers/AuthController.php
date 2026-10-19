@@ -149,6 +149,15 @@ class AuthController extends Controller
             );
         }
 
+        // A Google identity is proof that the matching email address was
+        // selected through Google OAuth. Repair legacy Google accounts that
+        // predate automatic email verification before enforcing the setting.
+        if (filled($user->google_id) && filled($user->email) && ! $user->email_verified_at) {
+            $user->forceFill([
+                'email_verified_at' => now(),
+            ])->save();
+        }
+
         Auth::login($user, $rememberDevice);
 
         if (Auth::check()) {
@@ -716,7 +725,10 @@ class AuthController extends Controller
 
         return Socialite::driver('google')
             ->stateless()
-            ->with(['state' => $this->googleAuthState($intent, $layout, $nonce)])
+            ->with([
+                'state' => $this->googleAuthState($intent, $layout, $nonce),
+                'prompt' => 'select_account',
+            ])
             ->redirect();
     }
 

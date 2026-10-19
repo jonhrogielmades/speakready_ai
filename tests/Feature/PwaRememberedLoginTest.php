@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -133,6 +134,28 @@ class PwaRememberedLoginTest extends TestCase
 
         $response->assertRedirect(route('dashboard'));
         $response->assertCookieMissing(Auth::guard()->getRecallerName());
+    }
+
+    public function test_password_login_auto_verifies_a_legacy_google_linked_account(): void
+    {
+        Setting::setVal('acc_verify_email', true, 'account', 'boolean');
+
+        $user = User::factory()->unverified()->create([
+            'username' => 'legacy-google-user',
+            'email' => 'legacy-google@example.com',
+            'google_id' => 'legacy-google-id',
+            'password' => Hash::make('password'),
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $this->post(route('login'), [
+            'username' => $user->username,
+            'password' => 'password',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
+        $this->assertAuthenticatedAs($user->fresh());
     }
 
     public function test_password_login_reports_unregistered_accounts_and_password_mismatches(): void
@@ -453,6 +476,31 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('Email Status')
             ->assertSee('Verified')
             ->assertDontSee('Email verification not completed');
+    }
+
+    public function test_google_account_selection_links_and_verifies_a_matching_local_account(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'username' => 'matching-local-google-user',
+            'email' => 'matching-local-google@example.com',
+            'google_id' => null,
+            'status' => 'active',
+        ]);
+
+        $this->mockGoogleCallback([
+            'id' => 'selected-google-account-id',
+            'name' => 'Matching Google Account',
+            'email' => 'matching-local-google@example.com',
+            'avatar' => null,
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect(route('dashboard'));
+
+        $updatedUser = $user->fresh();
+        $this->assertSame('selected-google-account-id', $updatedUser->google_id);
+        $this->assertNotNull($updatedUser->email_verified_at);
     }
 
     public function test_google_registration_creates_verified_email_account(): void
