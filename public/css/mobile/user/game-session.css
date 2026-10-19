@@ -258,9 +258,9 @@ body.game-match-auto-fullscreen {
     html body.user-mobile-shell #sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea,
     html body #mob-content #sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea {
         flex: 0 0 auto !important;
-        height: clamp(220px, 32dvh, 390px) !important;
-        min-height: 220px !important;
-        max-height: 390px !important;
+        height: clamp(148px, 32dvh, 190px) !important;
+        min-height: 148px !important;
+        max-height: 190px !important;
         resize: none !important;
     }
 
@@ -295,18 +295,21 @@ body.game-match-auto-fullscreen {
     }
 
     html body:not(.mobile-interview-fullscreen) #sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea {
-        height: clamp(132px, 24dvh, 168px) !important;
-        min-height: 132px !important;
-        max-height: 168px !important;
+        height: clamp(148px, 32dvh, 190px) !important;
+        min-height: 148px !important;
+        max-height: 190px !important;
         margin-bottom: 0 !important;
     }
 
     html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] {
         display: flex !important;
         flex-direction: column !important;
-        height: 100dvh !important;
-        min-height: 0 !important;
-        max-height: 100dvh !important;
+        align-items: stretch !important;
+        box-sizing: border-box !important;
+        height: var(--sr-visual-vh, 100dvh) !important;
+        min-height: var(--sr-visual-vh, 100dvh) !important;
+        max-height: var(--sr-visual-vh, 100dvh) !important;
+        padding: 8px 8px max(8px, env(safe-area-inset-bottom, 0px)) !important;
         overflow: hidden !important;
     }
 
@@ -322,6 +325,7 @@ body.game-match-auto-fullscreen {
         display: flex !important;
         flex: 1 1 auto !important;
         height: auto !important;
+        min-height: 0 !important;
     }
 
     html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] #workspaceRow {
@@ -331,6 +335,7 @@ body.game-match-auto-fullscreen {
         align-items: stretch !important;
         gap: 12px !important;
         height: auto !important;
+        min-height: 0 !important;
     }
 
     html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] #workspaceRow > [class*="col-"] {
@@ -376,7 +381,7 @@ body.game-match-auto-fullscreen {
 
     html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel.hybrid-response-panel {
         display: flex !important;
-        flex: 1 1 auto !important;
+        flex: 1 1 0% !important;
         flex-direction: column !important;
         min-height: 0 !important;
         height: auto !important;
@@ -386,21 +391,25 @@ body.game-match-auto-fullscreen {
     }
 
     html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel.hybrid-response-panel #answerForm {
-        flex: 1 1 auto !important;
-        overflow: hidden !important;
+        display: flex !important;
+        flex: 1 1 0% !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow-y: auto !important;
     }
 
     html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .game-transcription-display,
     html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .game-transcription-display .answer-transcript-stage {
         display: flex !important;
-        flex: 1 1 auto !important;
+        flex: 1 1 0% !important;
         flex-direction: column !important;
         min-height: 0 !important;
         height: auto !important;
     }
 
     html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea {
-        flex: 1 1 auto !important;
+        flex: 1 1 0% !important;
         height: auto !important;
         min-height: 0 !important;
         max-height: none !important;

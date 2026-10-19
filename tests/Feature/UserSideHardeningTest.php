@@ -4123,7 +4123,7 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
  ->assertSee('css/mobile/user/game-session-base.css?v=73', false)
  ->assertDontSee('css/mobile/interview/session.css?v=75', false)
- ->assertSee('css/mobile/user/game-session.css?v=2026101902', false)
+ ->assertSee('css/mobile/user/game-session.css?v=2026101903', false)
  ->assertSee('data-page-style="user-game-session"', false)
  ->assertSee('id="sec-interview-session"', false)
  ->assertSee('data-game-session-root', false)
@@ -4215,6 +4215,13 @@ class UserSideHardeningTest extends TestCase
  ->assertDontSee('STAR Analyzer')
  ->assertDontSee('Voice Analytics')
  ->assertDontSee('Challenge Notes');
+
+  $gameMobileCss = file_get_contents(public_path('css/mobile/user/game-session.css'));
+  $this->assertStringContainsString('height: clamp(148px, 32dvh, 190px) !important;', $gameMobileCss);
+  $this->assertStringContainsString('height: var(--sr-visual-vh, 100dvh) !important;', $gameMobileCss);
+  $this->assertStringContainsString('html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel.hybrid-response-panel', $gameMobileCss);
+  $this->assertStringContainsString('html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel.hybrid-response-panel #answerForm', $gameMobileCss);
+  $this->assertStringContainsString('html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea', $gameMobileCss);
  }
 
  public function test_inactive_user_session_is_logged_out_by_user_middleware(): void
