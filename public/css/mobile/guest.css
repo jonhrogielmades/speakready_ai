@@ -6357,6 +6357,39 @@ html, body {
             line-height: 1;
          }
 
+         /* Theme-specific selectors keep the Login palette visible over #nbar .boc. */
+         html.lm #nbar .mobile-topbar-login,
+         html[data-theme="light"] #nbar .mobile-topbar-login {
+            background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%) !important;
+            border-color: rgba(14, 165, 233, 0.42) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         html.dm #nbar .mobile-topbar-login,
+         html[data-theme="dark"] #nbar .mobile-topbar-login {
+            background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%) !important;
+            border-color: rgba(96, 165, 250, 0.52) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         html.lm #nbar .mobile-topbar-login:hover,
+         html.lm #nbar .mobile-topbar-login:focus-visible,
+         html[data-theme="light"] #nbar .mobile-topbar-login:hover,
+         html[data-theme="light"] #nbar .mobile-topbar-login:focus-visible {
+            background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%) !important;
+            border-color: rgba(14, 165, 233, 0.62) !important;
+         }
+
+         html.dm #nbar .mobile-topbar-login:hover,
+         html.dm #nbar .mobile-topbar-login:focus-visible,
+         html[data-theme="dark"] #nbar .mobile-topbar-login:hover,
+         html[data-theme="dark"] #nbar .mobile-topbar-login:focus-visible {
+            background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%) !important;
+            border-color: rgba(125, 211, 252, 0.7) !important;
+         }
+
          #nbar #thbtn,
          #nbar #mbtog {
             width: 38px !important;
