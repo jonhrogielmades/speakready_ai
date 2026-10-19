@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Support\PasswordRecovery;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -29,6 +30,92 @@ class PasswordResetTest extends TestCase
             ->assertOk()
             ->assertSee('Create a new password')
             ->assertSee('person@example.com');
+    }
+
+    public function test_forgot_password_page_uses_username_recovery_instead_of_email(): void
+    {
+        $this->get(route('password.request'))
+            ->assertOk()
+            ->assertSee('name="username"', false)
+            ->assertSee('name="recovery_code"', false)
+            ->assertSee('name="password"', false)
+            ->assertDontSee('name="email"', false)
+            ->assertSee('No email is required.');
+    }
+
+    public function test_username_recovery_resets_a_local_account_without_email_and_invalidates_the_code(): void
+    {
+        $recoveryCode = 'ABCD-EFGH-IJKL-MNOP';
+        $user = User::factory()->create([
+            'username' => 'local-recovery-user',
+            'email' => null,
+            'password' => Hash::make('old-password'),
+            'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
+            'password_recovery_code_generated_at' => now(),
+        ]);
+
+        $response = $this->post(route('password.recovery.reset'), [
+            'username' => ' LOCAL-RECOVERY-USER ',
+            'recovery_code' => 'abcdefghijklmnop',
+            'password' => 'new-password-123',
+            'password_confirmation' => 'new-password-123',
+        ]);
+
+        $response
+            ->assertRedirect('/')
+            ->assertSessionHas('success', 'Your password has been reset. You can now sign in with your username.');
+
+        $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
+        $this->assertNull($user->fresh()->password_recovery_code_hash);
+
+        $this->from(route('password.request'))->post(route('password.recovery.reset'), [
+            'username' => 'local-recovery-user',
+            'recovery_code' => $recoveryCode,
+            'password' => 'another-password-123',
+            'password_confirmation' => 'another-password-123',
+        ])->assertRedirect(route('password.request'))
+            ->assertSessionHasErrors('recovery_code');
+    }
+
+    public function test_authenticated_user_can_rotate_their_recovery_code(): void
+    {
+        $user = User::factory()->create([
+            'username' => 'rotate-recovery-user',
+            'password' => Hash::make('current-password'),
+            'password_recovery_code_hash' => null,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('user.account.recovery-code'), [
+            'current_password' => 'current-password',
+        ]);
+
+        $response
+            ->assertRedirect()
+            ->assertSessionHas('recovery_code', fn ($code): bool => preg_match('/^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$/', (string) $code) === 1);
+
+        $newCode = (string) $response->getSession()->get('recovery_code');
+        $this->assertTrue(PasswordRecovery::check($newCode, $user->fresh()->password_recovery_code_hash));
+    }
+
+    public function test_authenticated_google_user_can_generate_a_recovery_code_without_a_local_password(): void
+    {
+        $user = User::factory()->create([
+            'username' => 'google-recovery-user',
+            'google_id' => 'google-user-123',
+            'password' => Hash::make('unavailable-google-password'),
+            'password_recovery_code_hash' => null,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('user.account.recovery-code'));
+
+        $response
+            ->assertRedirect()
+            ->assertSessionHas('recovery_code', fn ($code): bool => preg_match('/^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$/', (string) $code) === 1);
+
+        $this->assertTrue(PasswordRecovery::check(
+            (string) $response->getSession()->get('recovery_code'),
+            $user->fresh()->password_recovery_code_hash
+        ));
     }
 
     public function test_forgot_password_page_can_send_a_reset_link(): void

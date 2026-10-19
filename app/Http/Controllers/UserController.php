@@ -36,6 +36,7 @@ use App\Support\FeedbackCoachingRepair;
 use App\Support\FeedbackEvidencePresenter;
 use App\Support\GameSchema;
 use App\Support\LearningModuleSchema;
+use App\Support\PasswordRecovery;
 use App\Support\ScoreSchema;
 use App\Support\SystemSettings;
 use Carbon\Carbon;
@@ -4225,13 +4226,13 @@ class UserController extends Controller
 
  $request->validate([
  'name' => 'required|string|max:255',
- 'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+ 'email' => 'nullable|string|email|max:255|unique:users,email,'.$user->id,
  'target_position' => 'nullable|string|max:255',
  'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048|dimensions:max_width=2000,max_height=2000',
  ]);
 
  $user->name = $request->name;
- $user->email = $request->email;
+ $user->email = filled($request->email) ? Str::lower(trim((string) $request->email)) : null;
  $user->target_position = $request->target_position;
 
  $previousPhoto = $user->profile_photo_path;
@@ -4307,6 +4308,36 @@ class UserController extends Controller
  );
 
  return redirect()->back()->with('success', 'Password updated successfully.');
+ }
+
+ public function rotateRecoveryCode(Request $request)
+ {
+ $user = Auth::user();
+
+ if (blank($user->google_id)) {
+  $request->validate([
+   'current_password' => 'required|current_password',
+  ]);
+ }
+
+ $recoveryCode = PasswordRecovery::generate();
+
+ $user->forceFill([
+  'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
+  'password_recovery_code_generated_at' => now(),
+ ])->save();
+
+ ActivityLogger::log(
+  $user,
+  'password_recovery_code_rotated',
+  "{$user->name} generated a new password recovery code.",
+  $request->ip(),
+  false
+ );
+
+ return redirect()->back()
+  ->with('success', 'A new recovery code was generated. Save it somewhere safe; the old code no longer works.')
+  ->with('recovery_code', $recoveryCode);
  }
 
  private function newPasswordRules(): array

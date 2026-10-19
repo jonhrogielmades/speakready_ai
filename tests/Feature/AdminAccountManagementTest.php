@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Support\PasswordRecovery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -84,5 +85,29 @@ class AdminAccountManagementTest extends TestCase
             'user_id' => $admin->id,
             'action' => 'admin_password_changed',
         ]);
+    }
+
+    public function test_admin_can_rotate_their_password_recovery_code(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => Hash::make('current-password'),
+            'is_admin' => true,
+            'status' => 'active',
+            'password_recovery_code_hash' => null,
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.account.recovery-code'), [
+            'current_password' => 'current-password',
+        ]);
+
+        $response
+            ->assertRedirect(route('admin.account'))
+            ->assertSessionHas('recovery_code', fn ($code): bool => preg_match('/^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$/', (string) $code) === 1);
+
+        $this->assertTrue(PasswordRecovery::check(
+            (string) $response->getSession()->get('recovery_code'),
+            $admin->fresh()->password_recovery_code_hash
+        ));
     }
 }

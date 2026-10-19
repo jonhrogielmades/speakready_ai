@@ -88,14 +88,15 @@ class TermsAcceptanceGateTest extends TestCase
 
     public function test_registration_redirects_new_user_to_terms_gate(): void
     {
-        $this->post(route('register'), [
+        $response = $this->post(route('register'), [
             'name' => 'New Terms User',
             'username' => 'new-terms-user',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])->assertRedirect(route('terms.acceptance.show'))
             ->assertSessionHas('registration_success', true)
-            ->assertSessionHas('success', 'Registration successful. Welcome to SpeakReady AI!');
+            ->assertSessionHas('success', 'Registration successful. Welcome to SpeakReady AI!')
+            ->assertSessionHas('recovery_code', fn ($code): bool => preg_match('/^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$/', (string) $code) === 1);
 
         $this->assertAuthenticated();
 
@@ -103,6 +104,10 @@ class TermsAcceptanceGateTest extends TestCase
 
         $this->assertNull($user->terms_accepted_at);
         $this->assertNull($user->terms_version);
+
+        $this->get(route('terms.acceptance.show'))
+            ->assertSee('Save your recovery code')
+            ->assertSee((string) $response->getSession()->get('recovery_code'), false);
     }
 
     private function unacceptedUser(): User

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
 use App\Support\AccountNotificationSchema;
+use App\Support\PasswordRecovery;
 use App\Support\SystemSettings;
 use App\Services\ProfilePhotoStorage;
 use Illuminate\Http\Request;
@@ -108,6 +109,33 @@ class AdminAccountController extends Controller
         );
 
         return redirect()->route('admin.account')->with('success', 'Admin password updated successfully.');
+    }
+
+    public function rotateRecoveryCode(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+        ]);
+
+        $admin = $request->user();
+        $recoveryCode = PasswordRecovery::generate();
+
+        $admin->forceFill([
+            'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
+            'password_recovery_code_generated_at' => now(),
+        ])->save();
+
+        ActivityLogger::log(
+            $admin,
+            'admin_password_recovery_code_rotated',
+            "{$admin->name} generated a new password recovery code.",
+            $request->ip(),
+            false
+        );
+
+        return redirect()->route('admin.account')
+            ->with('success', 'A new recovery code was generated. Save it somewhere safe; the old code no longer works.')
+            ->with('recovery_code', $recoveryCode);
     }
 
     private function newPasswordRules(): array

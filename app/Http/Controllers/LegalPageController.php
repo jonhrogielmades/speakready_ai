@@ -43,7 +43,7 @@ class LegalPageController extends Controller
             'Security',
             'How SpeakReady AI protects accounts and interview data.',
             [
-                ['heading' => 'Account Protection', 'body' => 'Passwords are handled through the application authentication system, and password reset flows use secure reset links.'],
+                ['heading' => 'Account Protection', 'body' => 'Passwords are handled through the application authentication system. Local accounts use one-time recovery codes for password recovery, while Google accounts can continue using Google Login.'],
                 ['heading' => 'Private Records', 'body' => 'Interview records require account access, and the application checks session ownership before showing user reviews.'],
                 ['heading' => 'Operational Safeguards', 'body' => 'The platform validates user input, separates admin and user areas, and records important activity for support and audit needs.'],
                 ['heading' => 'Report an Issue', 'body' => 'Send security concerns to admin@speakready.ai with enough detail for the team to investigate.'],

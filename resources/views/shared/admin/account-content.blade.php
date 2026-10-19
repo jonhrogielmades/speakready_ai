@@ -131,6 +131,20 @@
                     </div>
                     <button type="submit" class="btn account-submit-btn btn-shine"><i class="fa-solid fa-shield-halved"></i>Update Password</button>
                 </form>
+
+                <div class="account-recovery-code" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--bd,#e2e8f0)">
+                    <h6 class="account-card-title" style="font-size:1rem"><span class="account-title-icon"><i class="fa-solid fa-key"></i></span>Password Recovery Code</h6>
+                    <p class="text-muted" style="font-size:.84rem;line-height:1.55">Use this code with your username if you ever need to reset the administrator password without email.</p>
+                    @if(session('recovery_code'))
+                        <code style="display:block;padding:11px;border-radius:10px;background:rgba(37,99,235,.08);color:var(--tx,#111827);font-size:1rem;letter-spacing:.08em;text-align:center;user-select:all;margin-bottom:14px">{{ session('recovery_code') }}</code>
+                    @endif
+                    <form action="{{ route('admin.account.recovery-code') }}" method="POST">
+                        @csrf
+                        <label class="account-field-label" for="adminRecoveryCurrentPassword">Current Password</label>
+                        <input type="password" class="oinp" name="current_password" id="adminRecoveryCurrentPassword" placeholder="Enter your current password" autocomplete="current-password" required>
+                        <button type="submit" class="btn account-submit-btn btn-shine" style="margin-top:12px"><i class="fa-solid fa-rotate"></i>Generate New Recovery Code</button>
+                    </form>
+                </div>
             </div>
 
             <div class="premium-panel account-card admin-account-status-card" style="padding:32px">

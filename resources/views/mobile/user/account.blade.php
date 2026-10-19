@@ -91,8 +91,8 @@
                             <input type="text" class="oinp" name="name" id="accountName" value="{{ old('name', Auth::user()->name) }}" autocomplete="name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="account-field-label" for="accountEmail"><span class="account-label-icon"><i class="fa-regular fa-envelope"></i></span>Email Address</label>
-                            <input type="email" class="oinp" name="email" id="accountEmail" value="{{ old('email', Auth::user()->email) }}" autocomplete="email" required>
+                            <label class="account-field-label" for="accountEmail"><span class="account-label-icon"><i class="fa-regular fa-envelope"></i></span>Email Address <small>(optional, for Google Login)</small></label>
+                            <input type="email" class="oinp" name="email" id="accountEmail" value="{{ old('email', Auth::user()->email) }}" autocomplete="email">
                         </div>
                     </div>
                     <div class="account-field">
@@ -151,6 +151,24 @@
                     </div>
                     <button type="submit" class="btn account-submit-btn btn-shine"><i class="fa-solid fa-shield-halved"></i>Update Password</button>
                 </form>
+
+                <div class="account-recovery-code" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--bd,#e2e8f0)">
+                    <h6 class="account-card-title" style="font-size:1rem"><span class="account-title-icon"><i class="fa-solid fa-key"></i></span>Password Recovery Code</h6>
+                    <p class="text-muted" style="font-size:.84rem;line-height:1.55">Use a recovery code with your username if you forget your password. Generating a new code invalidates the old one.</p>
+                    @if(session('recovery_code'))
+                        <code style="display:block;padding:11px;border-radius:10px;background:rgba(37,99,235,.08);color:var(--tx,#111827);font-size:1rem;letter-spacing:.08em;text-align:center;user-select:all;margin-bottom:14px">{{ session('recovery_code') }}</code>
+                    @endif
+                    <form action="{{ route('user.account.recovery-code') }}" method="POST">
+                        @csrf
+                        @if(filled(Auth::user()->google_id))
+                            <p class="text-muted" style="font-size:.82rem">You are signed in with Google, so no local password is required to generate a code.</p>
+                        @else
+                            <label class="account-field-label" for="recoveryCurrentPassword">Current Password</label>
+                            <input type="password" class="oinp" name="current_password" id="recoveryCurrentPassword" placeholder="Enter your current password" autocomplete="current-password" required>
+                        @endif
+                        <button type="submit" class="btn account-submit-btn btn-shine" style="margin-top:12px"><i class="fa-solid fa-rotate"></i>Generate New Recovery Code</button>
+                    </form>
+                </div>
 
                 <div class="account-danger-section">
                     <h6 class="danger-title"><span class="danger-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>Danger Zone</h6>

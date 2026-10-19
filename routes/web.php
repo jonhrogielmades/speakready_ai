@@ -61,6 +61,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:
 Route::post('/request-reactivation', [AuthController::class, 'requestReactivation'])->middleware('throttle:auth')->name('request.reactivation');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->middleware('guest')->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware(['guest', 'throttle:auth'])->name('password.email');
+Route::post('/forgot-password/reset', [AuthController::class, 'resetWithRecoveryCode'])->middleware(['guest', 'throttle:auth'])->name('password.recovery.reset');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->middleware('guest')->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('guest')->name('password.update');
 
@@ -183,6 +184,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/onboarding/speech', [UserController::class, 'onboardingSpeech'])->middleware('throttle:ai-transcribe')->name('user.onboarding.speech');
     Route::post('/account/profile', [UserController::class, 'updateProfile'])->name('user.account.profile');
     Route::post('/account/password', [UserController::class, 'updatePassword'])->name('user.account.password');
+    Route::post('/account/recovery-code', [UserController::class, 'rotateRecoveryCode'])->name('user.account.recovery-code');
     Route::post('/account/delete', [UserController::class, 'deleteAccount'])->name('user.account.delete');
 
     Route::get('/notifications', [UserController::class, 'notifications'])->name('user.notifications');
@@ -265,6 +267,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/account', [AdminAccountController::class, 'edit'])->name('admin.account');
     Route::post('/admin/account/profile', [AdminAccountController::class, 'updateProfile'])->name('admin.account.profile');
     Route::post('/admin/account/password', [AdminAccountController::class, 'updatePassword'])->name('admin.account.password');
+    Route::post('/admin/account/recovery-code', [AdminAccountController::class, 'rotateRecoveryCode'])->name('admin.account.recovery-code');
 
     // System Settings
     Route::get('/admin/settings', [AdminSettingController::class, 'index'])->name('admin.settings.index');

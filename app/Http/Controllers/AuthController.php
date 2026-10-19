@@ -7,6 +7,7 @@ use App\Models\Profile;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\AccountNotificationSchema;
+use App\Support\PasswordRecovery;
 use App\Support\SystemSettings;
 use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Auth\Events\PasswordReset;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
@@ -63,11 +66,15 @@ class AuthController extends Controller
             'password' => $this->newPasswordRules(['confirmed']),
         ]);
 
+        $recoveryCode = PasswordRecovery::generate();
+
         $user = User::create([
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => null,
             'password' => Hash::make($validated['password']),
+            'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
+            'password_recovery_code_generated_at' => now(),
             'email_verified_at' => now(),
         ]);
 
@@ -88,12 +95,14 @@ class AuthController extends Controller
         if ($user->is_admin) {
             return redirect()->route('admin.dashboard', sr_layout_query($request))
                 ->with('success', $registrationMessage)
-                ->with('registration_success', true);
+                ->with('registration_success', true)
+                ->with('recovery_code', $recoveryCode);
         }
 
         return redirect()->route('terms.acceptance.show', sr_layout_query($request))
             ->with('success', $registrationMessage)
-            ->with('registration_success', true);
+            ->with('registration_success', true)
+            ->with('recovery_code', $recoveryCode);
     }
 
     public function login(Request $request)
@@ -246,6 +255,72 @@ class AuthController extends Controller
         return back()
             ->with('status', 'If an account matches that email, a password reset link will be sent shortly.')
             ->onlyInput('email');
+    }
+
+    public function resetWithRecoveryCode(Request $request)
+    {
+        $request->merge([
+            'username' => $this->normalizeUsername($request->input('username')),
+            'recovery_code' => PasswordRecovery::normalize($request->input('recovery_code')),
+        ]);
+
+        $validated = $request->validate([
+            'username' => ['required', 'string', 'max:64'],
+            'recovery_code' => ['required', 'string', 'size:16'],
+            'password' => $this->newPasswordRules(['confirmed']),
+        ]);
+
+        $rateLimitKey = 'password-recovery:'.sha1($validated['username'].'|'.$request->ip());
+
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
+            return back()
+                ->withErrors(['recovery_code' => 'Too many recovery attempts. Please try again later.'])
+                ->withInput(['username' => $validated['username']]);
+        }
+
+        RateLimiter::hit($rateLimitKey, 900);
+
+        try {
+            $user = DB::transaction(function () use ($validated): ?User {
+                $user = User::query()
+                    ->whereRaw('LOWER(username) = ?', [$validated['username']])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $user || ! PasswordRecovery::check($validated['recovery_code'], $user->password_recovery_code_hash)) {
+                    return null;
+                }
+
+                $user->forceFill([
+                    'password' => Hash::make($validated['password']),
+                    'remember_token' => Str::random(60),
+                    'password_recovery_code_hash' => null,
+                    'password_recovery_code_generated_at' => null,
+                ])->save();
+
+                return $user;
+            });
+        } catch (Throwable $e) {
+            Log::error('Username password recovery failed.', [
+                'username_hash' => hash('sha256', $validated['username']),
+                'exception_type' => $e::class,
+            ]);
+
+            return back()
+                ->withErrors(['recovery_code' => 'We could not reset your password right now. Please try again later.'])
+                ->withInput(['username' => $validated['username']]);
+        }
+
+        if (! $user) {
+            return back()
+                ->withErrors(['recovery_code' => 'The username or recovery code is incorrect.'])
+                ->withInput(['username' => $validated['username']]);
+        }
+
+        RateLimiter::clear($rateLimitKey);
+        event(new PasswordReset($user));
+
+        return redirect('/')->with('success', 'Your password has been reset. You can now sign in with your username.');
     }
 
     public function showResetPasswordForm(Request $request, string $token)
@@ -405,6 +480,7 @@ class AuthController extends Controller
             }
 
             $registeredWithGoogle = false;
+            $registrationRecoveryCode = null;
 
             if (! $user) {
                 if (! Setting::enabled('acc_registration')) {
@@ -421,6 +497,10 @@ class AuthController extends Controller
                     'password' => Hash::make(Str::random(64)),
                     'profile_photo_path' => $googleAvatarUrl,
                 ];
+
+                $registrationRecoveryCode = PasswordRecovery::generate();
+                $userAttributes['password_recovery_code_hash'] = PasswordRecovery::hash($registrationRecoveryCode);
+                $userAttributes['password_recovery_code_generated_at'] = now();
 
                 if ($this->hasUsernameColumn()) {
                     $userAttributes['username'] = $this->uniqueUsernameFromSeed($googleEmail ?: $googleUser->name ?: 'google-user');
@@ -477,7 +557,8 @@ class AuthController extends Controller
             if ($registeredWithGoogle) {
                 return $this->redirectToRouteWithGoogleLayout($request, 'terms.acceptance.show')
                     ->with('success', 'Registration successful. Welcome to SpeakReady AI!')
-                    ->with('registration_success', true);
+                    ->with('registration_success', true)
+                    ->with('recovery_code', $registrationRecoveryCode);
             }
 
             if (! $user->hasAcceptedCurrentTerms()) {

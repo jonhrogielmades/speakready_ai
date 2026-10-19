@@ -28,6 +28,8 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
+        'password_recovery_code_hash',
+        'password_recovery_code_generated_at',
         'is_admin',
         'google_id',
         'status',
@@ -48,6 +50,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'password_recovery_code_hash',
     ];
 
     /**
@@ -59,6 +62,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'terms_accepted_at' => 'datetime',
         'password' => 'hashed',
+        'password_recovery_code_generated_at' => 'datetime',
     ];
 
     public function getProfilePhotoUrlAttribute(): ?string

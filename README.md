@@ -16,7 +16,7 @@ The current system includes separate desktop and mobile Blade experiences, a red
 
 - Responsive guest landing pages with separate desktop and mobile CSS in `public/css/desktop/guest.css` and `public/css/mobile/guest.css`.
 - Desktop preview images for the landing/product walkthrough in `public/img/desktop-preview`.
-- Email/password authentication, password reset, Google OAuth login/register, logout, and account reactivation requests.
+- Username/password authentication with one-time recovery codes, Google OAuth login/register, logout, and account reactivation requests.
 - User dashboard with interview history, progress summaries, recommendations, readiness metrics, notifications, and quick access to practice tools.
 - Mock interview setup and live interview session flow with text answers, speech transcription, state saving, abort, finish, and detailed review.
 - AI coaching, feedback generation, interview chat replies, and attachment/text extraction support.
@@ -52,7 +52,7 @@ The current system includes separate desktop and mobile Blade experiences, a red
 
 ### Authentication
 
-- Register, login, logout, and password reset routes are handled by `AuthController`.
+- Register, login, logout, and username recovery-code password reset routes are handled by `AuthController`.
 - Google login/register uses Socialite and the `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` environment variables.
 - Deleted or inactive users can request reactivation, and admins can approve those requests.
 
