@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Mail\ContactMessage;
 use App\Models\Contact;
 use App\Models\NewsletterSubscription;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -14,6 +13,8 @@ use Throwable;
 
 class ContactController extends Controller
 {
+    private const CONTACT_RECEIVER_EMAIL = 'capstonespeakreadyai@gmail.com';
+
     public function send(Request $request)
     {
         $validated = $request->validateWithBag('contact', [
@@ -26,23 +27,17 @@ class ContactController extends Controller
         // Save first so a mail configuration problem never loses the support request.
         Contact::create($validated);
 
-        $destinationEmail = trim((string) config('mail.contact_to'));
+        // Never derive the public contact destination from an admin user record.
+        // A legacy admin address can remain in an existing database and must not
+        // cause contact messages to bounce to that retired mailbox.
+        $configuredRecipient = trim((string) config('mail.contact_to'));
+        $destinationEmail = self::CONTACT_RECEIVER_EMAIL;
 
-        // Keep a safe fallback for deployments that have not added the new
-        // CONTACT_RECEIVER_EMAIL variable yet.
-        if (! filter_var($destinationEmail, FILTER_VALIDATE_EMAIL)) {
-            $destinationEmail = (string) User::query()
-                ->where('is_admin', true)
-                ->whereNotNull('email')
-                ->value('email');
-        }
-
-        if (! filter_var($destinationEmail, FILTER_VALIDATE_EMAIL)) {
-            Log::error('Contact form email has no valid recipient after saving.', [
-                'configured_recipient' => $destinationEmail,
+        if (strtolower($configuredRecipient) !== self::CONTACT_RECEIVER_EMAIL) {
+            Log::warning('Ignoring a non-canonical contact-mail recipient.', [
+                'configured_recipient' => $configuredRecipient,
+                'canonical_recipient' => self::CONTACT_RECEIVER_EMAIL,
             ]);
-
-            return redirect()->back()->with('contact_error', 'Your message was saved, but the support mailbox is not configured yet.');
         }
 
         try {

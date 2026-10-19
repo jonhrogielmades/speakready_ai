@@ -108,8 +108,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'capstonespeakreadyai@gmail.com'),
+        'name' => env('MAIL_FROM_NAME', 'SpeakReady AI'),
     ],
 
     /*
@@ -117,12 +117,14 @@ return [
     | Contact Form Recipient
     |--------------------------------------------------------------------------
     |
-    | Contact messages are delivered to this mailbox immediately after they
-    | are saved. Keep this separate from the sender address used by SMTP.
+    | Contact messages are delivered to this canonical support mailbox
+    | immediately after they are saved. It is intentionally independent of
+    | the admin user table so legacy admin addresses cannot receive contact
+    | mail by accident.
     |
     */
 
-    'contact_to' => env('CONTACT_RECEIVER_EMAIL', 'capstonespeakreadyai@gmail.com'),
+    'contact_to' => 'capstonespeakreadyai@gmail.com',
 
     /*
     |--------------------------------------------------------------------------

@@ -45,4 +45,33 @@ class ContactFormTest extends TestCase
         });
         Mail::assertNotQueued(ContactMessage::class);
     }
+
+    public function test_contact_form_never_falls_back_to_a_legacy_admin_address(): void
+    {
+        User::factory()->create([
+            'is_admin' => true,
+            'email' => 'admin@speakreadyai.online',
+        ]);
+
+        // Simulate a stale cached deployment value. The contact flow must still
+        // use the current support inbox and never select the admin user email.
+        config(['mail.contact_to' => 'admin@speakreadyai.online']);
+        Mail::fake();
+
+        $response = $this->from('/#contact')->post(route('contact.send'), [
+            'name' => 'Legacy Recipient Check',
+            'email' => 'visitor@example.com',
+            'subject' => 'Recipient routing check',
+            'message' => 'This message must not be delivered to the retired admin mailbox.',
+        ]);
+
+        $response
+            ->assertRedirect('/#contact')
+            ->assertSessionHas('contact_success');
+
+        Mail::assertSent(ContactMessage::class, function (ContactMessage $mail): bool {
+            return $mail->hasTo('capstonespeakreadyai@gmail.com')
+                && ! $mail->hasTo('admin@speakreadyai.online');
+        });
+    }
 }

@@ -46,7 +46,7 @@ The current system includes separate desktop and mobile Blade experiences, a red
 - `/` renders the guest landing page when signed out.
 - Signed-in admins are redirected to `/admin/dashboard`.
 - Signed-in regular users are redirected to `/dashboard`.
-- `/contact/send` stores contact messages and sends them immediately to `CONTACT_RECEIVER_EMAIL`.
+- `/contact/send` stores contact messages and sends them immediately to the canonical support inbox `capstonespeakreadyai@gmail.com`.
 - `/newsletter/subscribe` returns a subscription confirmation.
 - `/privacy-policy`, `/terms-of-service`, `/security`, and `/cookie-preferences` render the new legal pages through `LegalPageController`.
 
@@ -375,12 +375,11 @@ MAIL_PASSWORD="your-google-app-password"
 MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=yourgmail@gmail.com
 MAIL_FROM_NAME="${APP_NAME}"
-CONTACT_RECEIVER_EMAIL=capstonespeakreadyai@gmail.com
 ```
 
 Gmail requires a Google App Password. Some hosts block common SMTP ports, so use an HTTPS/API mail provider if SMTP is unavailable in your production environment.
 
-The public contact form saves each request to the database and sends it immediately to `CONTACT_RECEIVER_EMAIL`. Configure the SMTP sender credentials and set this recipient to the admin Gmail inbox that should receive support messages.
+The public contact form saves each request to the database and sends it immediately to `capstonespeakreadyai@gmail.com`. The destination is intentionally not taken from the admin-user table, so an old admin address cannot cause a delivery bounce. Configure Gmail SMTP with a Google App Password, set `MAIL_USERNAME` and `MAIL_FROM_ADDRESS` to the sending Gmail account, then redeploy so the container rebuilds Laravel's cached configuration.
 
 Brevo API example for password reset emails:
 
