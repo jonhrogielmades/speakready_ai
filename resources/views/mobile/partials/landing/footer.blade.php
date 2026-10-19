@@ -15,8 +15,8 @@
                   </div>
                   <div class="col-6 col-md-2 fcol">
                      <h5>User Links</h5>
-                     <a href="#" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">Login</a>
-                     <a href="#" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Register</a>
+                     <a href="{{ route('login') }}">Login</a>
+                     <a href="{{ route('register') }}">Register</a>
                   </div>
                   <div class="col-6 col-md-3 fcol">
                      <h5>Legal Links</h5>

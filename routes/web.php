@@ -52,11 +52,10 @@ Route::get('/', function (LandingStatsService $landingStatsService) {
 });
 
 // Auth Routes
-Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth')->name('register');
-Route::get('/login', function () {
-    return redirect('/');
-});
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth')->name('login');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->middleware('guest')->name('login');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth')->name('login.submit');
+Route::get('/register', [AuthController::class, 'showRegisterForm'])->middleware('guest')->name('register');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth')->name('register.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:auth')->name('logout');
 Route::post('/request-reactivation', [AuthController::class, 'requestReactivation'])->middleware('throttle:auth')->name('request.reactivation');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->middleware('guest')->name('password.request');

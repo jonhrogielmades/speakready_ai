@@ -20,12 +20,12 @@
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
                      </button>
-                     <button type="button" class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">
+                     <a href="{{ route('login') }}" class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1 text-decoration-none">
                      <i class="fa-regular fa-user fa-sm"></i> Login
-                     </button>
-                     <button type="button" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">
+                     </a>
+                     <a href="{{ route('register') }}" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1 text-decoration-none">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
-                     </button>
+                     </a>
                      <button type="button" class="boc d-xl-none px-2 py-2" id="mbtog" style="border-radius:10px">
                      <i class="fa-solid fa-bars" id="barIcon"></i>
                      <i class="fa-solid fa-xmark" id="xIcon" style="display:none"></i>
@@ -43,7 +43,7 @@
             <a href="#faq" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">FAQ</a>
             <a href="#contact" class="nav-link d-block py-3">Contact Us</a>
             <div class="d-flex gap-2 mt-3">
-               <button type="button" class="boc flex-fill py-2 btn" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">Login</button>
-               <button type="button" class="bgrd flex-fill py-2 btn" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Register</button>
+               <a href="{{ route('login') }}" class="boc flex-fill py-2 btn text-decoration-none">Login</a>
+               <a href="{{ route('register') }}" class="bgrd flex-fill py-2 btn text-decoration-none">Register</a>
             </div>
          </div>

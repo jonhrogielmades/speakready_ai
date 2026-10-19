@@ -135,14 +135,14 @@
             @if ($isGuestQuickNavigation)
             <footer class="ucp-footer ucp-guest-footer">
                 <div class="ucp-guest-actions">
-                    <button type="button" class="ucp-guest-action ucp-guest-login" data-ucp-action data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">
+                    <a href="{{ route('login') }}" class="ucp-guest-action ucp-guest-login text-decoration-none" data-ucp-action>
                         <i class="fa-regular fa-user fa-sm" aria-hidden="true"></i>
                         Login
-                    </button>
-                    <button type="button" class="ucp-guest-action ucp-guest-register" data-ucp-action data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
+                    </a>
+                    <a href="{{ route('register') }}" class="ucp-guest-action ucp-guest-register text-decoration-none" data-ucp-action>
                         Start Practicing
                         <i class="fa-solid fa-arrow-right fa-sm" aria-hidden="true"></i>
-                    </button>
+                    </a>
                 </div>
             </footer>
             @else
