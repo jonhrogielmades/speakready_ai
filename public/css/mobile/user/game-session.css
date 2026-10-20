@@ -233,8 +233,9 @@ body.game-match-auto-fullscreen {
     }
 }
 
-/* Keep the mobile answer surface compact, while still exposing playback after
-   a voice recording exists so users can verify what will be submitted. */
+/* Let the response surface use the lower part of the mobile match screen.
+   The answer area remains scrollable for long transcripts and keeps the
+   playback/status controls visible above it. */
 @media (max-width: 767.98px) {
     html body #sec-interview-session[data-game-session-root] .game-voice-session-panel[data-state="idle"] {
         display: none !important;
@@ -258,9 +259,9 @@ body.game-match-auto-fullscreen {
     html body.user-mobile-shell #sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea,
     html body #mob-content #sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea {
         flex: 0 0 auto !important;
-        height: clamp(148px, 32dvh, 190px) !important;
-        min-height: 148px !important;
-        max-height: 190px !important;
+        height: clamp(280px, 45dvh, 520px) !important;
+        min-height: 280px !important;
+        max-height: 520px !important;
         resize: none !important;
     }
 
@@ -295,9 +296,9 @@ body.game-match-auto-fullscreen {
     }
 
     html body:not(.mobile-interview-fullscreen) #sec-interview-session[data-game-session-root] .game-transcription-display #answerTextarea {
-        height: clamp(148px, 32dvh, 190px) !important;
-        min-height: 148px !important;
-        max-height: 190px !important;
+        height: clamp(280px, 45dvh, 520px) !important;
+        min-height: 280px !important;
+        max-height: 520px !important;
         margin-bottom: 0 !important;
     }
 
@@ -432,6 +433,62 @@ body.game-match-auto-fullscreen {
 
 #sec-interview-session[data-game-session-root] .answer-transcription-overlay .answer-transcription-wave span:nth-child(3n) {
     animation-delay: -0.7s;
+}
+
+/* These game-scoped selectors intentionally match the shared mobile-shell
+   rules so the match response area keeps its expanded height in the cascade. */
+@media (max-width: 767.98px) {
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session[data-game-session-root] .answer-transcript-stage #answerTextarea,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #mob-content #sec-interview-session[data-game-session-root] .answer-transcript-stage #answerTextarea,
+    html body.user-mobile-shell:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session[data-game-session-root] .answer-transcript-stage #answerTextarea,
+    html body:not(.mobile-interview-fullscreen):not(.mobile-answer-focused) #sec-interview-session[data-game-session-root] .answer-transcript-stage #answerTextarea {
+        flex: 0 0 auto !important;
+        height: clamp(280px, 45dvh, 520px) !important;
+        min-height: 280px !important;
+        max-height: 520px !important;
+        overflow-y: auto !important;
+    }
+
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session[data-game-session-root] .response-panel.hybrid-response-panel .answer-transcript-stage #answerTextarea,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session[data-game-session-root] .response-panel.hybrid-response-panel .answer-transcript-stage #answerTextarea {
+        flex: 1 1 0% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+    }
+
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session[data-game-session-root] .response-panel.hybrid-response-panel,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session[data-game-session-root] .response-panel.hybrid-response-panel {
+        display: flex !important;
+        flex: 1 1 0% !important;
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: hidden !important;
+    }
+
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session[data-game-session-root] .response-panel.hybrid-response-panel #answerForm,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session[data-game-session-root] .response-panel.hybrid-response-panel #answerForm {
+        display: flex !important;
+        flex: 1 1 0% !important;
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+    }
+
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #mob-content #sec-interview-session[data-game-session-root] .response-panel.hybrid-response-panel .answer-transcript-stage,
+    html body.mobile-interview-fullscreen:not(.mobile-answer-focused) #sec-interview-session[data-game-session-root] .response-panel.hybrid-response-panel .answer-transcript-stage {
+        display: flex !important;
+        flex: 1 1 0% !important;
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
 }
 
 @keyframes gameMatchTranscriptWave {

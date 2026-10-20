@@ -2,7 +2,7 @@
 @section('title', 'Interview Challenge')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-base.css?v=73') }}" data-page-style="user-game-session-base">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026101903') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026102001') }}" data-page-style="user-game-session">
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-2.css?v=2') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
@@ -1037,11 +1037,13 @@ saveGameStateOnPageHide();
  try {
  const previousTranscript = recordingStartText || '';
  const data = await requestGameVoiceTranscript(recording, questionIndex, previousTranscript);
- const transcriptText = cleanTranscriptText(data.transcript || '');
+ const transcriptText = cleanTranscriptText(data.transcript || data.transcription || data.text || '');
  const browserTranscript = cleanTranscriptText(bufferedGameSpeechTranscript());
  const transcript = applyGameVoiceTranscript(questionIndex, transcriptText, data, recording, { recordingStartText });
- const displayedTranscript = transcript || browserTranscript;
- if (!transcript && questionIndex === currentQIdx) {
+ let displayedTranscript = transcript;
+ if (!transcript && browserTranscript) {
+ displayedTranscript = applyGameBrowserTranscriptFallback(questionIndex, recordingStartText) || browserTranscript;
+ } else if (!transcript && questionIndex === currentQIdx) {
  restoreGameAnswerTextAfterRecording(gameAnswerFallbackText(recordingStartText), questionIndex);
  resetSpeechRecognitionBufferFromTextarea();
  }
@@ -1054,8 +1056,12 @@ saveGameStateOnPageHide();
  console.warn('Challenge voice transcription failed:', error);
  const browserTranscript = cleanTranscriptText(bufferedGameSpeechTranscript());
  if (questionIndex === currentQIdx) {
+ if (browserTranscript) {
+ applyGameBrowserTranscriptFallback(questionIndex, recordingStartText);
+ } else {
  restoreGameAnswerTextAfterRecording(gameAnswerFallbackText(recordingStartText), questionIndex);
  resetSpeechRecognitionBufferFromTextarea();
+ }
  }
  setTranscriptionStatus(browserTranscript
  ? 'Live transcript added to answer. Review it before sending.'
@@ -1115,6 +1121,27 @@ saveGameStateOnPageHide();
  const liveTranscript = cleanTranscriptText(bufferedGameSpeechTranscript());
  if (!liveTranscript) return cleanTranscriptText(recordingStartText);
  return mergeFullVoiceTranscriptWithAnswer(cleanTranscriptText(recordingStartText), '', liveTranscript);
+ }
+
+ function applyGameBrowserTranscriptFallback(questionIndex = currentQIdx, recordingStartText = '') {
+ const browserTranscript = cleanTranscriptText(bufferedGameSpeechTranscript());
+ if (!browserTranscript || !answersData[questionIndex]) return '';
+
+ const fallbackText = mergeFullVoiceTranscriptWithAnswer(
+ cleanTranscriptText(recordingStartText),
+ '',
+ browserTranscript
+ );
+
+ if (questionIndex === currentQIdx) {
+ restoreGameAnswerTextAfterRecording(fallbackText, questionIndex);
+ resetSpeechRecognitionBufferFromTextarea();
+ triggerAnalysis();
+ } else {
+ answersData[questionIndex].text = fallbackText;
+ }
+
+ return browserTranscript;
  }
 
  function currentRecordingBaseText(questionIndex = currentQIdx) {
@@ -2631,10 +2658,25 @@ function updateGameTimerDisplay() {
  recTimerSeconds = 0;
  await speechStopPromise;
  finalizeInterimTranscript();
- const recording = await stopPromise;
  const recordingBaseText = currentRecordingBaseText(stoppedQuestionIndex);
+ const browserTranscript = cleanTranscriptText(bufferedGameSpeechTranscript());
+ if (browserTranscript && stoppedQuestionIndex === currentQIdx) {
+ const liveFallbackText = mergeFullVoiceTranscriptWithAnswer(recordingBaseText, '', browserTranscript);
+ restoreGameAnswerTextAfterRecording(liveFallbackText, stoppedQuestionIndex);
+ triggerAnalysis();
+ setTranscriptionStatus('Transcript captured. Finishing transcription...', '#fbbf24');
+ }
+ const recording = await stopPromise;
  if (recording?.blob) {
  await transcribeStoppedVoiceRecording(recording, stoppedQuestionIndex, { recordingStartText: recordingBaseText });
+ } else if (browserTranscript && stoppedQuestionIndex === currentQIdx) {
+ restoreGameAnswerTextAfterRecording(
+ mergeFullVoiceTranscriptWithAnswer(recordingBaseText, '', browserTranscript),
+ stoppedQuestionIndex
+ );
+ triggerAnalysis();
+ setTranscriptionStatus('Live transcript added to answer. Review it before sending.', '#22c55e');
+ updateGameVoiceSessionPanel('transcribed', 'Transcript ready');
  } else {
  restoreGameAnswerTextAfterRecording(recordingBaseText, stoppedQuestionIndex);
  setTranscriptionStatus('No complete recording was saved for AI transcription.', '#fbbf24');

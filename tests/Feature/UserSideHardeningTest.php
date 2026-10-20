@@ -4026,7 +4026,8 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('const enableGameRealtimeTranscription = true;', false)
  ->assertSee('function startGameAnswerTranscriptionVisualizer', false)
  ->assertSee('createMediaStreamSource(stream)', false)
- ->assertSee('const displayedTranscript = transcript || browserTranscript;', false)
+ ->assertSee('let displayedTranscript = transcript;', false)
+ ->assertSee('function applyGameBrowserTranscriptFallback', false)
  ->assertSee('function clearCurrentGameVoiceSession', false)
  ->assertSee('function bufferedGameSpeechTranscript', false)
  ->assertSee('function hideGameAnswerTextDuringRecording', false)
@@ -4053,7 +4054,7 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('async function loadQuestion', false)
  ->assertSee('async function submitAnswer', false)
  ->assertSee('shouldAutoRestartRecognition = Boolean(recognition);', false)
- ->assertSee("const transcriptText = cleanTranscriptText(data.transcript || '');", false)
+ ->assertSee("const transcriptText = cleanTranscriptText(data.transcript || data.transcription || data.text || '');", false)
  ->assertDontSee("transcription_source: 'browser'", false)
  ->assertDontSee("const transcriptText = cleanTranscriptText(data.transcript || '') || fallbackTranscript;", false)
  ->assertSee('Your Response')
@@ -4123,7 +4124,7 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
  ->assertSee('css/mobile/user/game-session-base.css?v=73', false)
  ->assertDontSee('css/mobile/interview/session.css?v=75', false)
- ->assertSee('css/mobile/user/game-session.css?v=2026101903', false)
+ ->assertSee('css/mobile/user/game-session.css?v=2026102001', false)
  ->assertSee('data-page-style="user-game-session"', false)
  ->assertSee('id="sec-interview-session"', false)
  ->assertSee('data-game-session-root', false)
@@ -4146,7 +4147,8 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('const enableGameRealtimeTranscription = true;', false)
  ->assertSee('function startGameAnswerTranscriptionVisualizer', false)
  ->assertSee('createMediaStreamSource(stream)', false)
- ->assertSee('const displayedTranscript = transcript || browserTranscript;', false)
+ ->assertSee('let displayedTranscript = transcript;', false)
+ ->assertSee('function applyGameBrowserTranscriptFallback', false)
  ->assertSee('function clearCurrentGameVoiceSession', false)
  ->assertSee('function bufferedGameSpeechTranscript', false)
  ->assertSee('function hideGameAnswerTextDuringRecording', false)
@@ -4172,7 +4174,7 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('async function playGameInterviewerTransition', false)
  ->assertSee('async function loadQuestion', false)
  ->assertSee('async function submitAnswer', false)
- ->assertSee("const transcriptText = cleanTranscriptText(data.transcript || '');", false)
+ ->assertSee("const transcriptText = cleanTranscriptText(data.transcript || data.transcription || data.text || '');", false)
  ->assertDontSee("transcription_source: 'browser'", false)
  ->assertDontSee("const transcriptText = cleanTranscriptText(data.transcript || '') || fallbackTranscript;", false)
  ->assertSee('Your Response')
@@ -4217,7 +4219,7 @@ class UserSideHardeningTest extends TestCase
  ->assertDontSee('Challenge Notes');
 
   $gameMobileCss = file_get_contents(public_path('css/mobile/user/game-session.css'));
-  $this->assertStringContainsString('height: clamp(148px, 32dvh, 190px) !important;', $gameMobileCss);
+  $this->assertStringContainsString('height: clamp(280px, 45dvh, 520px) !important;', $gameMobileCss);
   $this->assertStringContainsString('height: var(--sr-visual-vh, 100dvh) !important;', $gameMobileCss);
   $this->assertStringContainsString('html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel.hybrid-response-panel', $gameMobileCss);
   $this->assertStringContainsString('html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .desktop-response-column .response-panel.hybrid-response-panel #answerForm', $gameMobileCss);
