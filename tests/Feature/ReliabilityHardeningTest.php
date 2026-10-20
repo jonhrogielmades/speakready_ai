@@ -694,6 +694,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertTrue(Schema::hasColumn('interview_answers', 'retry_of_answer_id'));
  $this->assertTrue(Schema::hasColumn('interview_answers', 'voice_recording_path'));
  $this->assertTrue(Schema::hasColumn('interview_answers', 'voice_recording_mime_type'));
+ $this->assertTrue(Schema::hasColumn('interview_answers', 'voice_recording_transcription_source'));
  $this->assertDatabaseHas('interview_answers', [
  'interview_session_id' => $session->id,
  'question_id' => $question->id,
@@ -1131,7 +1132,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Possible Answer');
  }
 
- public function test_interview_finish_retries_ai_provider_for_all_twenty_selected_answers_when_batch_misses_later_items(): void
+ public function test_interview_finish_retries_full_ai_batch_for_all_twenty_answers_before_per_answer_recovery(): void
  {
  $requestCount = 0;
  Http::fake([
@@ -1160,7 +1161,7 @@ class ReliabilityHardeningTest extends TestCase
  'overall_summary' => $firstQuote? 'Across the saved answers, the AI review used details such as "'.$firstQuote.'" to identify what worked. The next focus is to add clearer results or missing details from the same saved answers.': 'Across the saved answers, answer detail was limited.',
  'strengths' => $firstQuote? 'The AI review used saved answer details such as "'.$firstQuote.'" to identify what worked.': 'The AI review found limited answer detail.',
  'weaknesses' => 'Some responses need a clearer result or missing detail from the same saved answer.',
- 'improvement_suggestions' => 'Keep each answer direct and add the final result only when it is true.',
+ 'improvement_suggestions' => $firstQuote? 'Keep the saved detail "'.$firstQuote.'" and add the final result only when it is true.': 'Keep each answer direct and add the final result only when it is true.',
  ],
  ]),
  ],
@@ -1230,7 +1231,8 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertJsonPath('redirect_url', route('user.review', $session));
 
- $this->assertGreaterThanOrEqual(count($answerTexts), $requestCount);
+ // A clean second batch is preferred over nineteen extra per-answer calls.
+ $this->assertSame(2, $requestCount);
  $savedAnswers = InterviewAnswer::where('interview_session_id', $session->id)
  ->whereNull('retry_of_answer_id')
  ->orderBy('id')
@@ -2099,7 +2101,8 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame('ai_provider_validated', data_get($savedFeedback->coaching_summary, 'overall_summary_source'));
  $this->assertStringContainsString('AI review used details', (string) data_get($savedFeedback->coaching_summary, 'overall_summary'));
  $this->assertStringContainsString('AI review used saved answer details', $savedFeedback->strengths);
- $this->assertStringContainsString('Some responses need', $savedFeedback->weaknesses);
+ $this->assertStringContainsString('saved detail', $savedFeedback->weaknesses);
+ $this->assertStringContainsString('clearer final result', $savedFeedback->weaknesses);
  Http::assertSentCount(1);
  }
 
@@ -2855,8 +2858,8 @@ class ReliabilityHardeningTest extends TestCase
  'session_feedback' => [
  'overall_summary' => $firstQuote? 'Across the saved answers, the AI review used details such as "'.$firstQuote.'" to identify what worked. The next focus is to add clearer results or missing details from the same saved answers.': 'Across the saved answers, there was too little answer detail to name a clear strength. The next focus is to answer each question directly with one true detail.',
  'strengths' => $firstQuote? 'The AI review used saved answer details such as "'.$firstQuote.'" to identify what worked.': 'The AI review found too little answer detail to name a clear strength.',
- 'weaknesses' => 'Some responses need a clearer result or missing detail from the same saved answer.',
- 'improvement_suggestions' => 'Keep each answer direct, remove repeated wording, and add the final result only when it is true.',
+ 'weaknesses' => $firstQuote? 'The saved detail "'.$firstQuote.'" could add a clearer final result.': 'Some responses need a clearer result or missing detail from the same saved answer.',
+ 'improvement_suggestions' => $firstQuote? 'Keep the saved detail "'.$firstQuote.'" and add the final result only when it is true.': 'Keep each answer direct, remove repeated wording, and add the final result only when it is true.',
  ],
  ]),
  ],
@@ -2966,6 +2969,8 @@ class ReliabilityHardeningTest extends TestCase
  {
  preg_match_all('/[a-z][a-z0-9]+/i', $answerText.' '.$questionText, $matches);
  $stopWords = [
+ 'achieved', 'completed', 'delivered', 'fixed', 'improved', 'increased',
+ 'reduced', 'renewed', 'resolved', 'saved',
  'about', 'after', 'answer', 'before', 'could', 'detail', 'during', 'every',
  'final', 'from', 'question', 'result', 'same', 'that', 'their', 'this',
  'what', 'when', 'where', 'which', 'with', 'would', 'your',

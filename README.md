@@ -426,12 +426,22 @@ Provider URLs and model names are already listed in `.env.example`. Configure at
 Recommended hosted AI runtime limits:
 
 ```env
-AI_FEEDBACK_TIMEOUT=6
-AI_FEEDBACK_DEADLINE_SECONDS=10
-AI_FEEDBACK_MAX_PROVIDERS=2
-AI_FEEDBACK_ATTEMPTS=1
-AI_FEEDBACK_HTTP_ATTEMPTS=1
-AI_FEEDBACK_RETRY_DELAY_MS=100
+AI_FEEDBACK_TIMEOUT=45
+AI_FEEDBACK_DEADLINE_SECONDS=150
+AI_FEEDBACK_MAX_PROVIDERS=4
+AI_FEEDBACK_ATTEMPTS=2
+AI_FEEDBACK_HTTP_ATTEMPTS=2
+AI_FEEDBACK_RETRY_DELAY_MS=250
+AI_FEEDBACK_MAX_OUTPUT_TOKENS=32768
+AI_FEEDBACK_REVIEW_RETRY_COOLDOWN_MINUTES=10
+AI_FEEDBACK_REVIEW_MIN_RELIABILITY_PERCENT=95
+OPENAI_JSON_MODE_FALLBACK=false
+AI_PROVIDER_JSON_MODE_FALLBACK=false
+AI_GAME_FEEDBACK_TIMEOUT=30
+AI_GAME_FEEDBACK_DEADLINE_SECONDS=90
+AI_GAME_FEEDBACK_ATTEMPTS=2
+AI_GAME_FEEDBACK_HTTP_ATTEMPTS=2
+AI_GAME_FEEDBACK_RETRY_DELAY_MS=250
 AI_VOICE_ANALYSIS_TIMEOUT=12
 AI_VOICE_ANALYSIS_MAX_PROVIDERS=2
 AI_VOICE_ANALYSIS_HTTP_ATTEMPTS=1
@@ -449,6 +459,14 @@ AI_COACH_MIN_RELIABILITY_PERCENT=95
 ```
 
 AI Coach chat uses a low temperature for more consistent guidance, bounded provider failover, and a deterministic evidence gate before responses are saved. `AI_COACH_MIN_RELIABILITY_PERCENT` is the required safeguard pass rate (clamped to 95-100), not a statistical accuracy claim; every critical check must also pass. Unsupported personal facts, scores, guarantees, external sources, high-risk numbers, file claims, topic drift, and prompt-boundary leaks fail closed to a local response. The final gate decision is stored with each coach reply for auditing. Users must still verify personal claims, scores, employers, credentials, dates, and results before using them in an interview.
+
+### Feedback Reliability And Fallbacks
+
+Interview feedback tries the selected or evaluated provider first, then follows `AI_FEEDBACK_PROVIDER_PRIORITY` for fallbacks. Each provider receives one protected share of the total deadline; retries may use only that provider's remaining share, so a slow primary cannot consume the time reserved for later providers. It accepts a hosted response only after strict structured-output, answer-coverage, score-plausibility, and exact-evidence checks pass. A semantically invalid response fails over to the next configured provider. Only a complete, strictly validated API response that did not need provider-recovery repair may replace a saved Detailed Review. Accepted responses are still normalized through deterministic evidence and score guards before persistence. If every provider fails, interview completion uses the validation-gated local model and then deterministic evidence-based feedback, while a later review refresh keeps the already-saved result.
+
+Learning Game provider feedback is narrative enrichment only. The deterministic game rubric remains authoritative for scores, pass/fail, XP, and progression; provider score fields are ignored, and any provider, validation, or persistence failure preserves the deterministic scorecard and coaching fallback.
+
+The 95-100 reliability settings are validation targets for required safeguards, not a guarantee of 95-100% empirical accuracy. Measure any accuracy claim on a consented, representative, human-reviewed evaluation set, including supported roles, question types, languages, accents, and response modes, and continue monitoring evidence errors, score calibration, fallback rate, and provider drift.
 
 The `AI_VOICE_ANALYSIS_*` values are reserved for hosted voice-analysis tuning. Current voice recording, transcription, and delivery coaching behavior is controlled by the transcription, TTS, and feedback settings below.
 
@@ -545,7 +563,7 @@ LOCAL_FEEDBACK_MODEL_ENABLED=true
 LOCAL_FEEDBACK_MODEL_REQUIRE_VALIDATION=true
 LOCAL_FEEDBACK_MODEL_VALIDATION_FRACTION=0.20
 LOCAL_FEEDBACK_MODEL_MIN_VALIDATION_EXAMPLES=100
-LOCAL_FEEDBACK_MODEL_MAX_VALIDATION_MAE=10
+LOCAL_FEEDBACK_MODEL_MAX_VALIDATION_MAE=5
 LOCAL_FEEDBACK_MODEL_MIN_WITHIN_10_RATE=0.95
 LOCAL_FEEDBACK_MODEL_MIN_VALIDATION_SKILL=0.10
 LOCAL_FEEDBACK_MODEL_MIN_HUMAN_REVIEWED_RATIO=1.0
@@ -554,7 +572,7 @@ AI_FEEDBACK_PROVIDER_PRIORITY=openai,gemini,groq,cohere
 
 These thresholds mean that every score field needs at least 100 held-out
 examples, at least 95% of held-out predictions must be within 10 points of the reviewed label,
-the worst field MAE must be at most 10, and all labels must come from approved
+the worst field MAE must be at most 5, and all labels must come from approved
 or archived real interview answers. Every score model must also
 beat a mean-label baseline by at least 10%. Synthetic bootstrap data can
 exercise the pipeline, but cannot make a model production-ready.
@@ -595,19 +613,31 @@ php artisan ai:train-feedback-model --force
 
 Browser live captions are used first for real-time interview transcription where supported. OpenAI/Gemini transcription can be configured as a cloud fallback when browser speech recognition is unavailable or fails. Cloud fallback availability still depends on provider API quotas.
 
-For Interview Voice and Hybrid modes, live captions are previews only. Stop/Submit sends the complete recording through the configured transcription chain, and the returned transcript is bound to the exact user, session, question, audio bytes, and transcript with a short-lived encrypted proof. Hybrid edits remain the written answer while the audio-bound server transcript remains separate delivery evidence. If the proof is missing, expired, or changed, the server retranscribes the uploaded recording instead of trusting browser text. Empty provider results continue to the next provider, and malformed structured fallback output is rejected.
+For Interview Voice and Hybrid modes, and for Learning Game recorded Hybrid answers, live captions are previews only. Stop/Submit sends the complete recording once through the configured transcription chain, and the returned transcript is bound to the exact user, session, question, audio bytes, and transcript with a short-lived encrypted proof. Hybrid edits remain the written answer while the audio-bound server transcript remains separate delivery evidence. If the proof is missing, expired, or changed, the server retranscribes the uploaded recording instead of trusting browser text. Empty provider results continue to the next provider, malformed structured fallback output is rejected, and server-owned retries share one bounded total time budget. Every cloud provider receives a protected slice of that budget; a retry is allowed only from time still left in the same slice. Cloud transcription retains priority; when local speech is enabled, `AI_TRANSCRIPTION_LOCAL_FALLBACK_RESERVE_SECONDS` protects a bounded tail of that same budget for high-confidence local ASR. Live chunks and finish-time batch recovery defer the costly local pronunciation/alignment pipeline, and all recordings recovered during one finish request share the bounded `AI_TRANSCRIPTION_FINISH_RECOVERY_TIMEOUT` window. The server clamps its deadline below the matching browser request timeout, leaving five seconds for response transport and handling. `transcription_verified` means that this encrypted binding was verified; it does not mean that every transcribed word was independently proven correct.
 
 No speech provider can guarantee 100% accuracy for every accent, language mix, microphone, or noise condition. Validate the deployment with consented, representative English, Filipino/Tagalog, Cebuano/Bisaya, and code-switched recordings and track word error rate, critical names/numbers, empty results, and p95 latency before claiming a percentage.
 
 ```env
 OPENAI_API_KEY=
 AI_TRANSCRIPTION_PROVIDER_PRIORITY=openai,gemini
+AI_TRANSCRIBE_RATE_LIMIT_PER_MINUTE=20
 OPENAI_TRANSCRIPTION_MODEL=gpt-transcribe
-AI_TRANSCRIPTION_TIMEOUT=45
-AI_TRANSCRIPTION_CHUNK_MS=2500
-AI_TRANSCRIPTION_MOBILE_CHUNK_MS=3500
+GEMINI_TRANSCRIPTION_MODEL=gemini-4-argon
+AI_TRANSCRIPTION_TIMEOUT=90
+AI_TRANSCRIPTION_CONNECT_TIMEOUT=10
+AI_TRANSCRIPTION_HTTP_ATTEMPTS=3
+AI_TRANSCRIPTION_RETRY_DELAY_MS=500
+AI_TRANSCRIPTION_TOTAL_TIMEOUT=105
+AI_TRANSCRIPTION_FINISH_RECOVERY_TIMEOUT=20
+AI_TRANSCRIPTION_LOCAL_FALLBACK_RESERVE_SECONDS=20
+AI_TRANSCRIPTION_CHUNKING_STRATEGY=auto
+AI_TRANSCRIPTION_GEMINI_MAX_OUTPUT_TOKENS=8192
+AI_TRANSCRIPTION_RECORDING_BITRATE=128000
+AI_TRANSCRIPTION_CHUNK_MS=8000
+AI_TRANSCRIPTION_MOBILE_CHUNK_MS=10000
 AI_TRANSCRIPTION_DRAIN_TIMEOUT_MS=20000
 AI_TRANSCRIPTION_REQUEST_TIMEOUT_MS=30000
+AI_TRANSCRIPTION_FULL_REQUEST_TIMEOUT_MS=120000
 AI_TRANSCRIPTION_MAX_IN_FLIGHT=2
 AI_TRANSCRIPTION_RATE_LIMIT_COOLDOWN_SECONDS=90
 AI_TRANSCRIPTION_PROOF_TTL_SECONDS=1800

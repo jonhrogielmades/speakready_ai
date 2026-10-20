@@ -179,6 +179,9 @@ class TrustworthyAssessmentService
  $result = $resultSentence !== ''
  ? $this->sentenceText($resultSentence)
  : $this->starResultSentence($questionText, (bool) ($evidence['result_required']?? true));
+ if ($result !== '' && mb_strtolower($action, 'UTF-8') === mb_strtolower($result, 'UTF-8')) {
+ $result = '';
+ }
 
  return trim($context.' '.$task.' '.$action.' '.$result);
  }

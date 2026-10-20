@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Services\AIService;
 use App\Services\AudioDurationService;
 use App\Services\LocalSpeechAssessmentService;
+use App\Services\LearningGameFeedbackEnrichmentService;
 use App\Services\QuestionDatasetProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -2012,6 +2013,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame('', $answer->answer_text);
  $this->assertSame('I listened to the customer, fixed the billing issue, and followed up the next day.', $answer->delivery_transcript);
  $this->assertSame('transcribed_verified', $answer->voice_recording_transcription_status);
+ $this->assertSame('openai', $answer->voice_recording_transcription_source);
  $this->assertGreaterThan(0, $answer->wpm);
 
  $answer->forceFill([
@@ -2110,6 +2112,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame($editedAnswer, $answer->answer_text);
  $this->assertSame($spokenTranscript, $answer->delivery_transcript);
  $this->assertSame('transcribed_verified', $answer->voice_recording_transcription_status);
+ $this->assertSame('openai', $answer->voice_recording_transcription_source);
  $this->assertSame(0, $answer->voice_duration);
  $this->assertSame(0, $answer->pause_count);
  $this->assertNull($answer->pronunciation_analysis);
@@ -2262,6 +2265,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame('My edited written answer remains separate.', $answer->answer_text);
  $this->assertSame($serverRetranscript, $answer->delivery_transcript);
  $this->assertSame('transcribed_verified', $answer->voice_recording_transcription_status);
+ $this->assertSame('openai', $answer->voice_recording_transcription_source);
  $this->assertCount(2, Http::recorded(fn ($request) => str_contains($request->url(), '/audio/transcriptions')));
  }
 
@@ -2292,6 +2296,7 @@ class UserSideHardeningTest extends TestCase
  'voice_duration' => 15,
  'voice_recording_duration_seconds' => 15,
  'voice_recording_transcription_status' => 'transcribed',
+ 'voice_recording_transcription_source' => 'forged-client-provider',
  'voice_audio' => UploadedFile::fake()
  ->createWithContent('answer.webm', str_repeat('unverified-audio-', 256))
  ->mimeType('audio/webm'),
@@ -2305,6 +2310,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame('This typed answer remains valid for semantic feedback.', $answer->answer_text);
  $this->assertNull($answer->delivery_transcript);
  $this->assertSame('unverified', $answer->voice_recording_transcription_status);
+ $this->assertNull($answer->voice_recording_transcription_source);
  }
 
  public function test_voice_storage_failure_after_valid_proof_does_not_commit_answer_evidence(): void
@@ -2608,6 +2614,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertNull($replacedAnswer->delivery_transcript);
  $this->assertNull($replacedAnswer->voice_recording_path);
  $this->assertNull($replacedAnswer->voice_recording_transcription_status);
+ $this->assertNull($replacedAnswer->voice_recording_transcription_source);
  $this->assertSame(0, $replacedAnswer->voice_recording_byte_size);
  $this->assertSame(0, $replacedAnswer->voice_duration);
  Storage::disk('local')->assertMissing($oldPath);
@@ -2896,6 +2903,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame($mode === 'voice'? '': $typedAnswer, $answer->answer_text);
  $this->assertSame($spokenTranscript, $answer->delivery_transcript);
  $this->assertSame('transcribed_verified', $answer->voice_recording_transcription_status);
+ $this->assertSame('openai', $answer->voice_recording_transcription_source);
  $this->assertNotEmpty($answer->voice_recording_path);
  Storage::disk('local')->assertExists($answer->voice_recording_path);
  $this->assertSame('ended', $session->fresh()->status);
@@ -2929,7 +2937,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame('ended', $session->fresh()->status);
  }
 
- public function test_interview_finish_recovers_stored_voice_answer_for_ai_feedback(): void
+ public function test_interview_finish_recovers_hybrid_delivery_transcript_without_replacing_typed_answer(): void
  {
  Storage::fake('local');
  $this->mock(AudioDurationService::class, function ($mock): void {
@@ -2942,6 +2950,7 @@ class UserSideHardeningTest extends TestCase
  ]);
 
  $voiceTranscript = 'I listened to the customer, fixed the billing issue, and followed up the next day.';
+ $typedAnswer = $voiceTranscript.' I also documented the resolution for the support team.';
  $feedbackPrompt = '';
  $answerId = null;
 
@@ -3013,7 +3022,7 @@ class UserSideHardeningTest extends TestCase
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
  $session = $this->sessionFor($user, $category, [
- 'response_mode' => 'voice',
+ 'response_mode' => 'hybrid',
  'num_questions' => 1,
  ]);
  $question = $this->question($category, [
@@ -3026,9 +3035,9 @@ class UserSideHardeningTest extends TestCase
  $answer = InterviewAnswer::create([
  'interview_session_id' => $session->id,
  'question_id' => $question->id,
- 'answer_text' => '',
+ 'answer_text' => $typedAnswer,
  'delivery_transcript' => null,
- 'response_mode' => 'voice',
+ 'response_mode' => 'hybrid',
  'voice_duration' => 18,
  'voice_recording_disk' => 'local',
  'voice_recording_path' => $voicePath,
@@ -3049,17 +3058,100 @@ class UserSideHardeningTest extends TestCase
  ->assertJsonPath('redirect_url', route('user.review', $session));
 
  $savedAnswer = $answer->fresh();
- $this->assertSame('', $savedAnswer->answer_text);
+ $this->assertSame($typedAnswer, $savedAnswer->answer_text);
  $this->assertSame($voiceTranscript, $savedAnswer->delivery_transcript);
  $this->assertSame('transcribed_verified', $savedAnswer->voice_recording_transcription_status);
+ $this->assertSame('openai', $savedAnswer->voice_recording_transcription_source);
  $this->assertSame(18, $savedAnswer->voice_duration);
  $this->assertGreaterThan(0, $savedAnswer->wpm);
  $this->assertSame(0, $savedAnswer->pause_count);
- $this->assertStringContainsString($voiceTranscript, $feedbackPrompt);
+ $this->assertStringContainsString($typedAnswer, $feedbackPrompt);
  $this->assertStringContainsString($voiceTranscript, (string) $savedAnswer->ai_feedback);
  $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
  $this->assertDatabaseHas('scores', ['interview_session_id' => $session->id]);
  $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
+ }
+
+ public function test_interview_finish_voice_recovery_uses_one_deadline_for_all_missing_recordings(): void
+ {
+ Storage::fake('local');
+ config([
+ 'services.ai_transcription.provider_priority' => 'openai',
+ 'services.ai_transcription.finish_recovery_timeout_seconds' => 2,
+ 'services.local_speech.enabled' => false,
+ 'services.openai.transcription_model' => 'gpt-transcribe',
+ ]);
+ $this->mock(AudioDurationService::class, function ($mock): void {
+ $mock->shouldReceive('seconds')->once()->andReturn(10);
+ });
+ Http::fake(function ($request) {
+ if (str_contains((string) $request->url(), '/audio/transcriptions')) {
+ usleep(1200000);
+
+ return Http::response(['text' => 'Recovered within the shared session window.'], 200);
+ }
+
+ return Http::response([], 500);
+ });
+ AiProvider::create([
+ 'name' => 'OpenAI',
+ 'api_endpoint' => 'https://api.openai.com/v1',
+ 'api_key' => Crypt::encryptString('test-key'),
+ 'status' => 'active',
+ ]);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, [
+ 'response_mode' => 'hybrid',
+ 'num_questions' => 2,
+ ]);
+ foreach ([0, 1] as $index) {
+ $question = $this->question($category, [
+ 'interview_session_id' => $session->id,
+ 'question_text' => 'Recovery deadline question '.($index + 1).'.',
+ 'type' => 'General',
+ ]);
+ $voicePath = 'interview_voice_answers/user_'.$user->id.'/session_'.$session->id.'/answer-'.$index.'.webm';
+ Storage::disk('local')->put($voicePath, str_repeat((string) ($index + 1), 4096));
+ InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'Typed hybrid answer '.($index + 1).'.',
+ 'delivery_transcript' => null,
+ 'response_mode' => 'hybrid',
+ 'voice_recording_disk' => 'local',
+ 'voice_recording_path' => $voicePath,
+ 'voice_recording_mime_type' => 'audio/webm',
+ 'voice_recording_byte_size' => 4096,
+ 'voice_recording_transcription_status' => 'failed',
+ ]);
+ }
+
+ $this->actingAs($user);
+ $answers = InterviewAnswer::with('question')
+ ->where('interview_session_id', $session->id)
+ ->orderBy('id')
+ ->get();
+ $method = new \ReflectionMethod(
+ \App\Http\Controllers\InterviewController::class,
+ 'ensureVoiceAnswersHaveFeedbackEvidence'
+ );
+ $startedAt = microtime(true);
+ $recovered = $method->invoke(
+ app(\App\Http\Controllers\InterviewController::class),
+ $session,
+ $answers
+ );
+
+ $this->assertLessThan(2.5, microtime(true) - $startedAt);
+ $this->assertSame('Recovered within the shared session window.', $recovered[0]->delivery_transcript);
+ $this->assertNull($recovered[1]->delivery_transcript);
+ $this->assertSame('Typed hybrid answer 1.', $recovered[0]->answer_text);
+ $this->assertSame('Typed hybrid answer 2.', $recovered[1]->answer_text);
+ $this->assertCount(1, Http::recorded(
+ fn ($request): bool => str_contains((string) $request->url(), '/audio/transcriptions')
+ ));
  }
 
  public function test_interview_answer_rejects_out_of_range_delivery_metrics(): void
@@ -3475,6 +3567,70 @@ class UserSideHardeningTest extends TestCase
  }
  }
 
+ $this->assertSame(125, (int) Profile::where('user_id', $user->id)->value('experience_points'));
+ }
+
+ public function test_game_finish_persists_provider_narrative_without_changing_authoritative_progression(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category, ['required_score' => 0, 'xp_reward' => 125]);
+
+ $this->app->instance(LearningGameFeedbackEnrichmentService::class, new class extends LearningGameFeedbackEnrichmentService
+ {
+ public function enrich(GameLevel $level, array $answersData, array $deterministicScorecard): array
+ {
+ $deterministicScorecard['summary'] = 'The provider narrative cites the saved customer handoff answer.';
+ $deterministicScorecard['narrative_provenance'] = [
+ 'schema' => 'learning_game_narrative_v1',
+ 'source' => 'ai_provider',
+ 'provider' => 'gemini',
+ 'strict_validation_passed' => true,
+ 'repair_applied' => false,
+ 'scores_authoritative_source' => 'deterministic_learning_game_rubric',
+ 'provider_scores_used' => false,
+ ];
+
+ return $deterministicScorecard;
+ }
+ });
+
+ $this->actingAs($user)
+ ->post(route('user.game.start', $level))
+ ->assertRedirect(route('user.game.match'));
+ $session = GameSession::where('user_id', $user->id)->latest('id')->firstOrFail();
+
+ $this->actingAs($user)
+ ->postJson(route('user.game.answer'), [
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'answer_text' => 'During a delayed customer request, I owned the task of confirming the missing details. I checked the records, mapped the handoff, updated the checklist, and explained the next steps. As a result, the customer received the correct update and our support team completed the handoff on time.',
+ 'response_mode' => 'hybrid',
+ ])
+ ->assertOk();
+
+ $this->actingAs($user)
+ ->post(route('user.game.finish'), ['game_session_id' => $session->id])
+ ->assertRedirect(route('user.learning', ['category_id' => $category->id]));
+
+ $session->refresh();
+ $scorecard = data_get($session->goal_breakdown, 'ai_feedback_scorecard', []);
+ $progress = GameProgress::where('user_id', $user->id)
+ ->where('game_level_id', $level->id)
+ ->firstOrFail();
+
+ $this->assertSame('completed', $session->status);
+ $this->assertSame('passed', $session->result_status);
+ $this->assertSame(125, $session->xp_earned);
+ $this->assertSame($session->score, (int) data_get($session->goal_breakdown, 'score'));
+ $this->assertSame($session->result_status, data_get($session->goal_breakdown, 'status'));
+ $this->assertSame($session->score, (int) data_get($scorecard, 'overall_score'));
+ $this->assertSame('The provider narrative cites the saved customer handoff answer.', data_get($scorecard, 'summary'));
+ $this->assertSame('ai_provider', data_get($scorecard, 'narrative_provenance.source'));
+ $this->assertFalse((bool) data_get($scorecard, 'narrative_provenance.provider_scores_used', true));
+ $this->assertSame('completed', $progress->status);
+ $this->assertSame($session->score, $progress->best_score);
  $this->assertSame(125, (int) Profile::where('user_id', $user->id)->value('experience_points'));
  }
 

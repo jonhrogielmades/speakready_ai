@@ -61,33 +61,64 @@ return [
 
  'ai_transcription' => [
  'provider_priority' => env('AI_TRANSCRIPTION_PROVIDER_PRIORITY', 'openai,gemini'),
- 'chunk_ms' => env('AI_TRANSCRIPTION_CHUNK_MS', 2500),
- 'mobile_chunk_ms' => env('AI_TRANSCRIPTION_MOBILE_CHUNK_MS', 3500),
+ 'http_attempts' => env('AI_TRANSCRIPTION_HTTP_ATTEMPTS', 3),
+ 'retry_delay_ms' => env('AI_TRANSCRIPTION_RETRY_DELAY_MS', 500),
+ 'connect_timeout_seconds' => env('AI_TRANSCRIPTION_CONNECT_TIMEOUT', 10),
+ 'total_timeout_seconds' => env('AI_TRANSCRIPTION_TOTAL_TIMEOUT', 105),
+ 'finish_recovery_timeout_seconds' => env('AI_TRANSCRIPTION_FINISH_RECOVERY_TIMEOUT', 20),
+ 'local_fallback_reserve_seconds' => env('AI_TRANSCRIPTION_LOCAL_FALLBACK_RESERVE_SECONDS', 20),
+ 'chunking_strategy' => env('AI_TRANSCRIPTION_CHUNKING_STRATEGY', 'auto'),
+ 'gemini_max_output_tokens' => env('AI_TRANSCRIPTION_GEMINI_MAX_OUTPUT_TOKENS', 8192),
+ 'recording_audio_bitrate' => env('AI_TRANSCRIPTION_RECORDING_BITRATE', 128000),
+ 'chunk_ms' => env('AI_TRANSCRIPTION_CHUNK_MS', 8000),
+ 'mobile_chunk_ms' => env('AI_TRANSCRIPTION_MOBILE_CHUNK_MS', 10000),
  'drain_timeout_ms' => env('AI_TRANSCRIPTION_DRAIN_TIMEOUT_MS', 20000),
  'request_timeout_ms' => env('AI_TRANSCRIPTION_REQUEST_TIMEOUT_MS', 30000),
+ 'full_request_timeout_ms' => env('AI_TRANSCRIPTION_FULL_REQUEST_TIMEOUT_MS', 120000),
  'max_in_flight' => env('AI_TRANSCRIPTION_MAX_IN_FLIGHT', 2),
  'rate_limit_cooldown_seconds' => env('AI_TRANSCRIPTION_RATE_LIMIT_COOLDOWN_SECONDS', 90),
+ 'rate_limit_per_minute' => env('AI_TRANSCRIBE_RATE_LIMIT_PER_MINUTE', 20),
  'proof_ttl_seconds' => env('AI_TRANSCRIPTION_PROOF_TTL_SECONDS', 1800),
  'ffprobe_command' => env('FFPROBE_COMMAND', 'ffprobe'),
  ],
 
  'openai' => [
+ 'api_key' => env('OPENAI_API_KEY'),
+ 'api_endpoint' => env('OPENAI_API_URL', 'https://api.openai.com/v1'),
+ 'model' => env('OPENAI_MODEL', 'gpt-6-astra'),
+ 'feedback_model' => env('OPENAI_FEEDBACK_MODEL', env('OPENAI_MODEL', 'gpt-6-astra')),
+ 'json_mode_fallback' => env('OPENAI_JSON_MODE_FALLBACK', false),
  'tts_enabled' => env('AI_TTS_ENABLED', false),
  'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
  'tts_voice' => env('OPENAI_TTS_VOICE', 'nova'),
  'tts_speed' => env('OPENAI_TTS_SPEED', 0.90),
  'tts_timeout' => env('AI_TTS_TIMEOUT', 30),
  'transcription_model' => env('OPENAI_TRANSCRIPTION_MODEL', 'gpt-transcribe'),
- 'transcription_timeout' => env('AI_TRANSCRIPTION_TIMEOUT', 45),
+ 'transcription_timeout' => env('AI_TRANSCRIPTION_TIMEOUT', 90),
  'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'high'),
  ],
 
  'gemini' => [
+ 'api_key' => env('GEMINI_API_KEY'),
+ 'api_endpoint' => env('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta'),
+ 'model' => env('GEMINI_MODEL', 'gemini-4-argon'),
  'tts_model' => env('GEMINI_TTS_MODEL', 'gemini-3.1-flash-tts-preview'),
  'tts_voice' => env('GEMINI_TTS_VOICE', 'Leda'),
  'tts_style' => env('GEMINI_TTS_STYLE', 'Say in a warm, clear, professional female interviewer voice with natural English pronunciation and medium, measured pacing'),
  'transcription_model' => env('GEMINI_TRANSCRIPTION_MODEL', env('GEMINI_MODEL', 'gemini-4-argon')),
  'thinking_level' => env('GEMINI_THINKING_LEVEL', 'high'),
+ ],
+
+ 'groq' => [
+ 'api_key' => env('GROQ_API_KEY'),
+ 'api_endpoint' => env('GROQ_API_URL', 'https://api.groq.com/openai/v1'),
+ 'model' => env('GROQ_MODEL', 'openai/gpt-oss-120b'),
+ ],
+
+ 'cohere' => [
+ 'api_key' => env('COHERE_API_KEY'),
+ 'api_endpoint' => env('COHERE_API_URL', 'https://api.cohere.com/v2/chat'),
+ 'model' => env('COHERE_MODEL', 'command-a-plus-05-2026'),
  ],
 
  'elevenlabs' => [
@@ -159,6 +190,39 @@ return [
 
  'ai_feedback_review' => [
  'min_reliability_percent' => env('AI_FEEDBACK_REVIEW_MIN_RELIABILITY_PERCENT', 95),
+ 'retry_cooldown_minutes' => env('AI_FEEDBACK_REVIEW_RETRY_COOLDOWN_MINUTES', 10),
+ 'timeout_seconds' => env('AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', 30)),
+ 'deadline_seconds' => env('AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', 60)),
+ 'max_attempts' => env('AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', env('AI_FEEDBACK_ATTEMPTS', 2)),
+ 'http_attempts' => env('AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', env('AI_FEEDBACK_HTTP_ATTEMPTS', 2)),
+ 'retry_delay_ms' => env('AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', env('AI_FEEDBACK_RETRY_DELAY_MS', 250)),
+ ],
+
+ 'ai_feedback' => [
+ 'provider_priority' => env('AI_FEEDBACK_PROVIDER_PRIORITY', env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'openai,gemini,groq,cohere')),
+ 'max_providers' => env('AI_FEEDBACK_MAX_PROVIDERS', 4),
+ 'timeout_seconds' => env('AI_FEEDBACK_TIMEOUT', 45),
+ 'deadline_seconds' => env('AI_FEEDBACK_DEADLINE_SECONDS', 150),
+ 'max_attempts' => env('AI_FEEDBACK_ATTEMPTS', 2),
+ 'http_attempts' => env('AI_FEEDBACK_HTTP_ATTEMPTS', 2),
+ 'retry_delay_ms' => env('AI_FEEDBACK_RETRY_DELAY_MS', 250),
+ 'max_output_tokens' => env('AI_FEEDBACK_MAX_OUTPUT_TOKENS'),
+ ],
+
+ 'ai_feedback_finalization' => [
+ 'timeout_seconds' => env('AI_FEEDBACK_FINALIZATION_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', 30)),
+ 'deadline_seconds' => env('AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', 90)),
+ 'max_attempts' => env('AI_FEEDBACK_FINALIZATION_ATTEMPTS', 2),
+ 'http_attempts' => env('AI_FEEDBACK_FINALIZATION_HTTP_ATTEMPTS', env('AI_FEEDBACK_HTTP_ATTEMPTS', 2)),
+ 'retry_delay_ms' => env('AI_FEEDBACK_FINALIZATION_RETRY_DELAY_MS', env('AI_FEEDBACK_RETRY_DELAY_MS', 250)),
+ ],
+
+ 'ai_game_feedback' => [
+ 'timeout_seconds' => env('AI_GAME_FEEDBACK_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', 30)),
+ 'deadline_seconds' => env('AI_GAME_FEEDBACK_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', 90)),
+ 'max_attempts' => env('AI_GAME_FEEDBACK_ATTEMPTS', env('AI_FEEDBACK_ATTEMPTS', 2)),
+ 'http_attempts' => env('AI_GAME_FEEDBACK_HTTP_ATTEMPTS', env('AI_FEEDBACK_HTTP_ATTEMPTS', 2)),
+ 'retry_delay_ms' => env('AI_GAME_FEEDBACK_RETRY_DELAY_MS', env('AI_FEEDBACK_RETRY_DELAY_MS', 250)),
  ],
 
  'ai_coach' => [
@@ -174,6 +238,16 @@ return [
  ],
 
  'ai_providers' => [
+ 'default_provider' => env('AI_PROVIDER', 'openai'),
+ 'default_provider_priority' => env('AI_DEFAULT_PROVIDER_PRIORITY', 'openai,gemini,groq,cohere'),
+ 'interview_default_provider' => env('INTERVIEW_CHATBOT_DEFAULT_PROVIDER', env('AI_PROVIDER', 'openai')),
+ 'interview_provider_priority' => env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'openai,gemini,groq,cohere'),
+ 'timeout_seconds' => env('AI_PROVIDER_TIMEOUT', 45),
+ 'connect_timeout_seconds' => env('AI_PROVIDER_CONNECT_TIMEOUT', 5),
+ 'attempts' => env('AI_PROVIDER_RETRIES', 2),
+ 'retry_delay_ms' => env('AI_PROVIDER_RETRY_DELAY_MS', 250),
+ 'smoke_timeout_seconds' => env('AI_PROVIDER_SMOKE_TIMEOUT', 20),
+ 'smoke_deadline_seconds' => env('AI_PROVIDER_SMOKE_DEADLINE_SECONDS', 45),
  'min_quality_percent' => env('AI_PROVIDER_MIN_QUALITY_PERCENT', 95),
  'min_accuracy_percent' => env('AI_PROVIDER_MIN_ACCURACY_PERCENT', 95),
  'min_reliability_percent' => env('AI_PROVIDER_MIN_RELIABILITY_PERCENT', 95),

@@ -13,6 +13,7 @@ use App\Models\Setting;
 use App\Services\AIService;
 use App\Services\AudioDurationService;
 use App\Services\ChallengePositionService;
+use App\Services\LearningGameFeedbackEnrichmentService;
 use App\Services\LearningGameScoringService;
 use App\Services\LearningGameCertificateService;
 use App\Services\LocalSpeechAssessmentService;
@@ -410,9 +411,11 @@ class GameController extends Controller
  $existingAnswer = GameAnswer::where('game_session_id', $gameSession->id)
  ->where('question_index', $questionIndex)
  ->first();
- $answerText = TranscriptService::cleanLiveSpeech($validated['answer_text']?? '');
+ $submittedAnswerText = (string) ($validated['answer_text']?? '');
+ $answerText = TranscriptService::clean($submittedAnswerText);
  $voiceUpload = $this->submittedVoiceRecording($validated);
  $voiceStatus = null;
+ $transcriptionSource = null;
  $trustedTranscript = '';
  $verifiedVoiceDuration = 0;
 
@@ -437,6 +440,7 @@ class GameController extends Controller
  if ($proofPayload) {
  $trustedTranscript = $submittedTranscript;
  $voiceStatus = 'transcribed';
+ $transcriptionSource = trim((string) ($proofPayload['provider']?? ''))?: null;
  } else {
  $transcription = $this->transcribeUploadedGameSpeechAnswer(
  $voiceUpload,
@@ -447,6 +451,9 @@ class GameController extends Controller
  $voiceStatus = $trustedTranscript !== ''
  ? 'transcribed'
  : ($transcription['transcription_status']?? 'failed');
+ $transcriptionSource = $trustedTranscript !== ''
+ ? (trim((string) ($transcription['transcription_source']?? ''))?: null)
+ : null;
 
  // Audio-only submissions must have a verified, non-empty transcript.  Typed
  // hybrid answers may still be saved, but remain explicitly marked failed.
@@ -466,6 +473,14 @@ class GameController extends Controller
  return $response;
  }
  }
+ }
+
+ // If every server-side transcription path failed, the remaining text may be
+ // the browser's overlapping live-recognition chunks.  Limit aggressive
+ // duplicate cleanup to that unverified fallback; authoritative full-recording
+ // transcripts and reviewed Hybrid edits must preserve genuine repetitions.
+ if ($voiceUpload && $trustedTranscript === '') {
+ $answerText = TranscriptService::cleanLiveSpeech($submittedAnswerText);
  }
 
  if ($answerText === '' && $trustedTranscript !== '') {
@@ -490,6 +505,7 @@ class GameController extends Controller
  }
 
  $hasVerifiedVoice = $trustedTranscript !== '' && $verifiedVoiceDuration > 0;
+ $deliveryTranscript = $trustedTranscript !== ''? $trustedTranscript: null;
  $voiceDuration = $verifiedVoiceDuration;
  $metricText = $trustedTranscript !== ''? $trustedTranscript: '';
  $metricWordCount = $metricText !== ''? TranscriptService::wordCount($metricText): 0;
@@ -508,6 +524,8 @@ class GameController extends Controller
  $fillerWords = (int) ($existingAnswer->filler_words_count?? 0);
  $pauseCount = (int) ($existingAnswer->pause_count?? 0);
  $voiceStatus = $existingAnswer->voice_recording_transcription_status;
+ $deliveryTranscript = trim((string) ($existingAnswer->delivery_transcript?? ''))?: null;
+ $transcriptionSource = trim((string) ($existingAnswer->voice_recording_transcription_source?? ''))?: null;
  }
 
  $answer = null;
@@ -525,6 +543,8 @@ class GameController extends Controller
  &$fillerWords,
  &$pauseCount,
  &$voiceStatus,
+ &$deliveryTranscript,
+ &$transcriptionSource,
  $gameSession,
  $questionIndex,
  $questions,
@@ -563,6 +583,8 @@ class GameController extends Controller
  $fillerWords = (int) ($lockedExistingAnswer->filler_words_count?? 0);
  $pauseCount = (int) ($lockedExistingAnswer->pause_count?? 0);
  $voiceStatus = $lockedExistingAnswer->voice_recording_transcription_status;
+ $deliveryTranscript = trim((string) ($lockedExistingAnswer->delivery_transcript?? ''))?: null;
+ $transcriptionSource = trim((string) ($lockedExistingAnswer->voice_recording_transcription_source?? ''))?: null;
  }
 
  $answer = GameAnswer::updateOrCreate(
@@ -573,6 +595,7 @@ class GameController extends Controller
  [
  'question_text' => $questions[$questionIndex],
  'answer_text' => $answerText,
+ 'delivery_transcript' => $deliveryTranscript,
  'is_skipped' => $isSkipped,
  'response_mode' => $responseMode,
  'elapsed_seconds' => $this->serverElapsedSeconds($lockedSession),
@@ -584,6 +607,7 @@ class GameController extends Controller
  'eye_contact_score' => 0,
  'posture_score' => 0,
  'voice_recording_transcription_status' => $voiceStatus,
+ 'voice_recording_transcription_source' => $transcriptionSource,
  ]
  );
 
@@ -663,11 +687,13 @@ class GameController extends Controller
  return response()->json(['error' => 'Question does not belong to this Learning Game.'], 403);
  }
 
+ $isFinalRecording = filter_var($validated['final_recording']?? false, FILTER_VALIDATE_BOOLEAN);
  $transcription = $this->transcribeUploadedGameSpeechAnswer(
  $validated['audio'],
  $gameSession,
  (string) $questions[$questionIndex],
- (string) ($validated['previous_transcript']?? '')
+ $isFinalRecording? '': (string) ($validated['previous_transcript']?? ''),
+ $isFinalRecording
  );
  $transcript = $transcription['transcript'];
  $transcriptionSource = $transcription['transcription_source'];
@@ -697,15 +723,17 @@ class GameController extends Controller
  return $response;
  }
 
- $cleanTranscript = TranscriptService::cleanLiveSpeech($transcript);
+ $cleanTranscript = $isFinalRecording
+ ? TranscriptService::clean($transcript)
+ : TranscriptService::cleanLiveSpeech($transcript);
  $payload = [
- 'transcript' => TranscriptService::cleanLiveSpeech($transcript),
+ 'transcript' => $cleanTranscript,
  'transcription_source' => $transcriptionSource,
  'transcription_status' => $transcriptionStatus?: 'transcribed',
  'pronunciation_analysis' => $speechAssessment,
  ];
 
- if (filter_var($validated['final_recording']?? false, FILTER_VALIDATE_BOOLEAN) && $cleanTranscript !== '') {
+ if ($isFinalRecording && $cleanTranscript !== '') {
  $payload['transcription_proof'] = app(VoiceTranscriptionProofService::class)->issue(
  Auth::id(),
  'game:'.$gameSession->id,
@@ -746,13 +774,13 @@ class GameController extends Controller
  }
 
  $isSkipped = filter_var($validated['is_skipped']?? false, FILTER_VALIDATE_BOOLEAN);
- $answerText = TranscriptService::cleanLiveSpeech($validated['answer_text']?? '');
+ $answerText = TranscriptService::clean($validated['answer_text']?? '');
  $storedAnswer = GameAnswer::where('game_session_id', $gameSession->id)
  ->where('question_index', $questionIndex)
  ->first();
 
  if ($answerText === '' && $storedAnswer) {
- $answerText = TranscriptService::cleanLiveSpeech((string) ($storedAnswer->answer_text?? ''));
+ $answerText = TranscriptService::clean((string) ($storedAnswer->answer_text?? ''));
  }
 
  if ($isSkipped || preg_match('/^\[?skipped\]?$/i', trim($answerText))) {
@@ -866,7 +894,7 @@ class GameController extends Controller
  return response()->json(['success' => true]);
  }
 
- public function finish(Request $request, LearningGameScoringService $scorer)
+ public function finish(Request $request, LearningGameScoringService $scorer, LearningGameFeedbackEnrichmentService $feedbackEnricher)
  {
  GameSchema::ensure();
 
@@ -933,7 +961,8 @@ class GameController extends Controller
  $gameResultScore = 0;
  $xpEarned = 0;
  $profile = null;
- DB::transaction(function () use (&$profile, &$gameResultScore, &$scoreResult, &$xpEarned, $gameSession, $gameLevel, $questions, $validated, $scorer): void {
+ $feedbackAnswersData = [];
+ DB::transaction(function () use (&$profile, &$gameResultScore, &$scoreResult, &$xpEarned, &$feedbackAnswersData, $gameSession, $gameLevel, $questions, $validated, $scorer): void {
  $gameSession->update([
  'duration_seconds' => (int) ($gameSession->time_limit?? 0) > 0
  ? $this->serverElapsedSeconds($gameSession)
@@ -967,14 +996,27 @@ class GameController extends Controller
  $answersData = collect($questions)
  ->map(function (string $questionText, int $index) use ($answersByIndex): array {
  $answer = $answersByIndex->get($index);
+ $persistedAnswerText = trim((string) ($answer?->answer_text?? ''));
+ $verifiedDeliveryTranscript = $this->verifiedStoredDeliveryTranscript($answer);
+ $usesAsrTranscript = $answer !== null
+ &&! (bool) $answer->is_skipped
+ && $verifiedDeliveryTranscript !== ''
+ && ($persistedAnswerText === '' || $persistedAnswerText === $verifiedDeliveryTranscript);
+ $scoringAnswer = $persistedAnswerText !== ''
+ ? $persistedAnswerText
+ : $verifiedDeliveryTranscript;
+ $isSkipped = $answer === null
+ || (bool) $answer->is_skipped
+ || $scoringAnswer === '';
 
  return [
  'id' => $answer?->id,
  'question_index' => $index,
  'question' => $questionText,
- 'answer' => ! $answer || $answer->is_skipped? '(Skipped or no answer)': ($answer->answer_text?? ''),
- 'is_skipped' => ! $answer || (bool) $answer->is_skipped,
+ 'answer' => $isSkipped? '(Skipped or no answer)': $scoringAnswer,
+ 'is_skipped' => $isSkipped,
  'response_mode' => $answer?->response_mode?? 'hybrid',
+ 'uses_asr_transcript' => $usesAsrTranscript,
  'elapsed_seconds' => (int) ($answer?->elapsed_seconds?? 0),
  'wpm' => (int) ($answer?->wpm?? 0),
  'voice_duration' => (int) ($answer?->voice_duration?? 0),
@@ -984,6 +1026,7 @@ class GameController extends Controller
  })
  ->values()
  ->all();
+ $feedbackAnswersData = $answersData;
 
  $scoreResult = $scorer->scoreSession($gameLevel, $answersData);
  $gameResultScore = (int) $scoreResult['score'];
@@ -1049,6 +1092,31 @@ class GameController extends Controller
  'session_state' => null,
  ]);
  }, 3);
+
+ // Game completion, score, pass/fail, XP, and progress are already committed.
+ // Provider feedback can enrich only the narrative and must never undo them.
+ $deterministicScoreResult = $scoreResult;
+ try {
+ $deterministicScorecard = is_array($scoreResult['ai_feedback_scorecard']?? null)
+ ? $scoreResult['ai_feedback_scorecard']
+ : [];
+ $scoreResult['ai_feedback_scorecard'] = $feedbackEnricher->enrich(
+ $gameLevel,
+ $feedbackAnswersData,
+ $deterministicScorecard
+ );
+
+ GameSession::whereKey($gameSession->id)
+ ->where('status', 'completed')
+ ->update(['goal_breakdown' => $scoreResult]);
+ } catch (\Throwable $feedbackError) {
+ $scoreResult = $deterministicScoreResult;
+ \Illuminate\Support\Facades\Log::warning('Learning Game completed, but its AI narrative could not be persisted; keeping deterministic feedback.', [
+ 'game_session_id' => $gameSession->id,
+ 'level_id' => $gameLevel->id,
+ 'error_type' => $feedbackError::class,
+ ]);
+ }
 
  $this->forgetCompletedGameState($gameSession);
 
@@ -1134,6 +1202,44 @@ class GameController extends Controller
  return $answer instanceof GameAnswer && trim((string) ($answer->voice_recording_path?? ''))!== '';
  }
 
+ private function verifiedStoredDeliveryTranscript(?GameAnswer $answer): string
+ {
+ if (! $answer instanceof GameAnswer || (bool) $answer->is_skipped) {
+ return '';
+ }
+
+ $transcript = TranscriptService::clean((string) ($answer->delivery_transcript?? ''));
+ $status = trim((string) ($answer->voice_recording_transcription_status?? ''));
+ $source = trim((string) ($answer->voice_recording_transcription_source?? ''));
+ $disk = (string) ($answer->voice_recording_disk?: 'local');
+ $path = trim((string) ($answer->voice_recording_path?? ''));
+ $expectedByteSize = (int) ($answer->voice_recording_byte_size?? 0);
+
+ // delivery_transcript is trusted only when it is tied to a recording that
+ // passed the server transcription and storage-integrity paths. A standalone
+ // database value or failed/client-only transcript must never become scoring
+ // evidence merely because the written answer is blank.
+ if ($transcript === ''
+ ||! in_array($status, ['transcribed', 'transcribed_verified'], true)
+ || $source === ''
+ || $disk !== 'local'
+ || $path === ''
+ || $expectedByteSize < 128
+ || $answer->voice_recording_uploaded_at === null) {
+ return '';
+ }
+
+ try {
+ $storage = Storage::disk($disk);
+
+ return $storage->exists($path) && (int) $storage->size($path) === $expectedByteSize
+ ? $transcript
+ : '';
+ } catch (\Throwable) {
+ return '';
+ }
+ }
+
  private function storeSubmittedVoiceRecording(
  GameAnswer $answer,
  GameSession $session,
@@ -1153,18 +1259,29 @@ class GameController extends Controller
  $extension = $this->voiceRecordingExtensionForUpload($upload);
  $directory = 'game_voice_answers/user_'.$session->user_id.'/session_'.$session->id;
  $path = $directory.'/question_'.$questionIndex.'_answer_'.$answer->id.'_'.Str::uuid().'.'.$extension;
+ $storage = Storage::disk($disk);
+ $byteSize = (int) ($upload->getSize()?: 0);
+ $stored = null;
 
- $stored = Storage::disk($disk)->putFileAs(
+ try {
+ $stored = $storage->putFileAs(
  $directory,
  $upload,
  basename($path)
  );
+ $storedSuccessfully = is_string($stored)
+ && $stored !== ''
+ && $this->storedVoiceRecordingMatchesUpload($storage, $stored, $upload, $byteSize);
+ } catch (\Throwable $error) {
+ $this->cleanupFailedStoredVoiceRecording($storage, $path, $stored);
 
- if (! is_string($stored) || $stored === '' ||! Storage::disk($disk)->exists($stored)) {
- if (is_string($stored) && $stored !== '') {
- Storage::disk($disk)->delete($stored);
+ throw new \RuntimeException('Voice recording could not be stored.', 0, $error);
  }
- throw new \RuntimeException('Voice recording could not be stored.');
+
+ if (! $storedSuccessfully) {
+ $this->cleanupFailedStoredVoiceRecording($storage, $path, $stored);
+
+ throw new \RuntimeException('Voice recording could not be stored and verified.');
  }
 
  $previousDisk = (string) ($answer->voice_recording_disk?: $disk);
@@ -1175,7 +1292,7 @@ class GameController extends Controller
  'voice_recording_disk' => $disk,
  'voice_recording_path' => $stored,
  'voice_recording_mime_type' => $this->safeVoiceRecordingMimeType($upload),
- 'voice_recording_byte_size' => (int) ($upload->getSize()?: 0),
+ 'voice_recording_byte_size' => $byteSize,
  'voice_recording_original_name' => Str::limit((string) $upload->getClientOriginalName(), 255, ''),
  'voice_recording_transcription_status' => $this->safeVoiceRecordingTranscriptionStatus($validated['voice_recording_transcription_status']?? null),
  'voice_recording_uploaded_at' => now(),
@@ -1193,6 +1310,51 @@ class GameController extends Controller
  ];
  }
 
+ private function storedVoiceRecordingMatchesUpload(
+ mixed $storage,
+ string $stored,
+ UploadedFile $upload,
+ int $expectedByteSize
+ ): bool {
+ try {
+ if (! $storage->exists($stored) || (int) $storage->size($stored) !== $expectedByteSize) {
+ return false;
+ }
+
+ $sourcePath = $upload->getRealPath();
+ $storedPath = $storage->path($stored);
+ if (! is_string($sourcePath) ||! is_string($storedPath)
+ ||! is_readable($sourcePath) ||! is_readable($storedPath)) {
+ return false;
+ }
+
+ $sourceHash = @hash_file('sha256', $sourcePath);
+ $storedHash = @hash_file('sha256', $storedPath);
+
+ return is_string($sourceHash)
+ && is_string($storedHash)
+ && hash_equals($sourceHash, $storedHash);
+ } catch (\Throwable) {
+ return false;
+ }
+ }
+
+ private function cleanupFailedStoredVoiceRecording(mixed $storage, string $intendedPath, mixed $returnedPath): void
+ {
+ $paths = [$intendedPath];
+ if (is_string($returnedPath) && trim($returnedPath) !== '') {
+ $paths[] = trim($returnedPath);
+ }
+
+ foreach (array_unique($paths) as $path) {
+ try {
+ $storage->delete($path);
+ } catch (\Throwable) {
+ // The failed or unverifiable write is the actionable error.
+ }
+ }
+ }
+
  private function clearStoredVoiceRecording(GameAnswer $answer):?array
  {
  $disk = (string) ($answer->voice_recording_disk?: 'local');
@@ -1205,6 +1367,8 @@ class GameController extends Controller
  'voice_recording_byte_size' => 0,
  'voice_recording_original_name' => null,
  'voice_recording_transcription_status' => null,
+ 'voice_recording_transcription_source' => null,
+ 'delivery_transcript' => null,
  'voice_recording_uploaded_at' => null,
  'voice_duration' => 0,
  'wpm' => 0,
@@ -1571,20 +1735,31 @@ class GameController extends Controller
  UploadedFile $audioFile,
  GameSession $session,
  string $questionText,
- string $previousTranscript = ''
+ string $previousTranscript = '',
+ bool $isFinalRecording = true,
+?float $deadlineAt = null,
+ bool $includePronunciationAnalysis = true
  ): array {
+ $deadlineAt = AIService::speechTranscriptionDeadlineAt($isFinalRecording, $deadlineAt);
  $localSpeechService = app(LocalSpeechAssessmentService::class);
- $speechAssessment = $localSpeechService->assessUploadedAudio($audioFile, null, $this->currentLanguageConfig());
+ $speechAssessment = $localSpeechService->notMeasuredAssessment(
+ $isFinalRecording
+ ? 'local_pronunciation_deferred_for_transcript_recovery'
+ : 'local_pronunciation_deferred_for_live_transcription',
+ ['The local pronunciation pipeline was deferred to keep transcription within its shared request deadline.']
+ );
  $transcript = null;
  $transcriptionSource = 'ai';
  $transcriptionStatus = null;
  $transcriptionErrorCode = null;
  $transcriptionRetryAfterSeconds = null;
 
+ $context = $this->gameTranscriptionContext($session, $questionText, $previousTranscript, $isFinalRecording);
+ $context['_transcription_deadline'] = AIService::cloudSpeechTranscriptionDeadlineAt($deadlineAt);
  $aiTranscription = AIService::transcribeSpeechResult(
  $audioFile,
  $this->currentLanguageConfig(),
- $this->gameTranscriptionContext($session, $questionText, $previousTranscript)
+ $context
  );
  if (is_array($aiTranscription)) {
  $transcript = array_key_exists('transcript', $aiTranscription)? (string) $aiTranscription['transcript']: null;
@@ -1597,12 +1772,25 @@ class GameController extends Controller
  $transcriptionRetryAfterSeconds = $aiTranscription['retry_after_seconds']?? null;
  }
 
+ $needsLocalTranscript = $transcript === null || trim((string) $transcript) === '';
+ $shouldRunLocalAssessment = $needsLocalTranscript
+ || ($isFinalRecording && $includePronunciationAnalysis);
+ if ($shouldRunLocalAssessment && $deadlineAt - microtime(true) >= 1.0) {
+ $speechAssessment = $localSpeechService->assessUploadedAudioWithinDeadline(
+ $audioFile,
+ null,
+ $this->currentLanguageConfig(),
+ $deadlineAt,
+! $isFinalRecording ||! $includePronunciationAnalysis || $needsLocalTranscript
+ );
+ }
+
  // Local speech assessment can still produce a transcript when the remote
  // provider is unavailable or returns an empty result.  Use it as a
  // deterministic fallback so a valid recording is not rejected unnecessarily.
- $localTranscript = TranscriptService::cleanLiveSpeech(
-  (string) ($localSpeechService->transcriptFrom($speechAssessment)?? '')
- );
+ $localTranscript = $isFinalRecording
+ ? TranscriptService::clean((string) ($localSpeechService->transcriptFrom($speechAssessment)?? ''))
+ : TranscriptService::cleanLiveSpeech((string) ($localSpeechService->transcriptFrom($speechAssessment)?? ''));
  if ($localTranscript !== '' && ($transcript === null || trim((string) $transcript) === '')) {
  $transcript = $localTranscript;
  $transcriptionSource = 'local_speech';
@@ -1612,7 +1800,9 @@ class GameController extends Controller
  }
 
  return [
- 'transcript' => $transcript!== null? TranscriptService::cleanLiveSpeech($transcript): null,
+ 'transcript' => $transcript!== null
+ ? ($isFinalRecording? TranscriptService::clean($transcript): TranscriptService::cleanLiveSpeech($transcript))
+ : null,
  'transcription_source' => $transcriptionSource,
  'transcription_status' => $transcriptionStatus,
  'error_code' => $transcriptionErrorCode,
@@ -1621,10 +1811,11 @@ class GameController extends Controller
  ];
  }
 
- private function gameTranscriptionContext(GameSession $session, string $questionText, string $previousTranscript = ''): array
+ private function gameTranscriptionContext(GameSession $session, string $questionText, string $previousTranscript = '', bool $isFinalRecording = false): array
  {
  return [
  'previous_transcript' => $previousTranscript,
+ 'final_recording' => $isFinalRecording,
  'question_text' => $questionText,
  'target_position' => $session->target_position,
  'interview_focus' => $session->interview_focus,

@@ -727,11 +727,9 @@ class InterviewSecurityTest extends TestCase
                 && data_get($fields, 'response_format.0') === 'json'
                 && in_array('tl', (array) data_get($fields, 'languages[]', []), true)
                 && in_array('en', (array) data_get($fields, 'languages[]', []), true)
-                && in_array('STAR method', (array) data_get($fields, 'keywords[]', []), true)
-                && in_array('Cebuano', (array) data_get($fields, 'keywords[]', []), true)
-                && in_array('Bisaya', (array) data_get($fields, 'keywords[]', []), true)
-                && in_array('tabang', (array) data_get($fields, 'keywords[]', []), true)
-                && str_contains((string) data_get($fields, 'prompt.0'), 'job interview practice answer')
+                && in_array('Developer', (array) data_get($fields, 'keywords[]', []), true)
+                && ! in_array('tabang', (array) data_get($fields, 'keywords[]', []), true)
+                && str_contains((string) data_get($fields, 'prompt.0'), 'Job interview practice')
                 && str_contains((string) data_get($fields, 'prompt.0'), 'Cebuano')
                 && str_contains((string) data_get($fields, 'prompt.0'), 'Recent earlier transcript')
                 && ($filePart['filename'] ?? null) === 'speech.webm';
@@ -845,6 +843,7 @@ class InterviewSecurityTest extends TestCase
             ->post(route('interview.transcribe'), [
                 'session_id' => $session->id,
                 'question_id' => $question->id,
+                'final_recording' => true,
                 'audio' => UploadedFile::fake()->create('speech.webm', 32, 'audio/webm'),
             ]);
 
@@ -1067,6 +1066,7 @@ class InterviewSecurityTest extends TestCase
             '*' => Http::response([
                 'candidates' => [
                     [
+                        'finishReason' => 'STOP',
                         'content' => [
                             'parts' => [
                                 [
@@ -1148,6 +1148,7 @@ class InterviewSecurityTest extends TestCase
                 return Http::response([
                     'candidates' => [
                         [
+                            'finishReason' => 'STOP',
                             'content' => [
                                 'parts' => [
                                     [

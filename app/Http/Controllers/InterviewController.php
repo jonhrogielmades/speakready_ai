@@ -34,6 +34,7 @@ use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
 use App\Support\InterviewScope;
 use App\Support\QuestionSchema;
+use App\Support\RuntimeConfiguration;
 use App\Support\ScoreSchema;
 use App\Support\SystemSettings;
 use Illuminate\Http\Request;
@@ -856,7 +857,8 @@ return response()->json([
  $validated['audio'],
  $session,
  $question,
- $isFinalRecording? '': (string) ($validated['previous_transcript']?? '')
+ $isFinalRecording? '': (string) ($validated['previous_transcript']?? ''),
+ $isFinalRecording
  );
  $transcript = $transcription['transcript'];
  $transcriptionSource = $transcription['transcription_source'];
@@ -917,10 +919,11 @@ return response()->json([
  ], static fn ($value) => $value!== null));
  }
 
- private function transcriptionContext(InterviewSession $session, Question $question, string $previousTranscript = ''): array
+ private function transcriptionContext(InterviewSession $session, Question $question, string $previousTranscript = '', bool $isFinalRecording = false): array
  {
  return [
  'previous_transcript' => $previousTranscript,
+ 'final_recording' => $isFinalRecording,
  'question_text' => $question->question_text,
  'target_position' => $session->target_position,
  'interview_focus' => $session->interview_focus,
@@ -932,21 +935,31 @@ return response()->json([
  UploadedFile $audioFile,
  InterviewSession $session,
  Question $question,
- string $previousTranscript = ''
+ string $previousTranscript = '',
+ bool $isFinalRecording = true,
+?float $deadlineAt = null,
+ bool $includePronunciationAnalysis = true
  ): array {
+ $deadlineAt = AIService::speechTranscriptionDeadlineAt($isFinalRecording, $deadlineAt);
  $localSpeechService = app(LocalSpeechAssessmentService::class);
- $speechAssessment = $localSpeechService->assessUploadedAudio($audioFile, null, $this->currentLanguageConfig());
- $localTranscript = $localSpeechService->transcriptFrom($speechAssessment);
+ $speechAssessment = $localSpeechService->notMeasuredAssessment(
+ $isFinalRecording
+ ? 'local_pronunciation_deferred_for_transcript_recovery'
+ : 'local_pronunciation_deferred_for_live_transcription',
+ ['The local pronunciation pipeline was deferred to keep transcription within its shared request deadline.']
+ );
  $transcript = null;
  $transcriptionSource = 'ai';
  $transcriptionStatus = null;
  $transcriptionErrorCode = null;
  $transcriptionRetryAfterSeconds = null;
 
+ $context = $this->transcriptionContext($session, $question, $previousTranscript, $isFinalRecording);
+ $context['_transcription_deadline'] = AIService::cloudSpeechTranscriptionDeadlineAt($deadlineAt);
  $aiTranscription = AIService::transcribeSpeechResult(
  $audioFile,
  $this->currentLanguageConfig(),
- $this->transcriptionContext($session, $question, $previousTranscript)
+ $context
  );
  if (is_array($aiTranscription)) {
  $transcript = array_key_exists('transcript', $aiTranscription)? (string) $aiTranscription['transcript']: null;
@@ -959,6 +972,19 @@ return response()->json([
  $transcriptionRetryAfterSeconds = $aiTranscription['retry_after_seconds']?? null;
  }
 
+ $needsLocalTranscript = $transcript === null || trim((string) $transcript) === '';
+ $shouldRunLocalAssessment = $needsLocalTranscript
+ || ($isFinalRecording && $includePronunciationAnalysis);
+ if ($shouldRunLocalAssessment && $deadlineAt - microtime(true) >= 1.0) {
+ $speechAssessment = $localSpeechService->assessUploadedAudioWithinDeadline(
+ $audioFile,
+ null,
+ $this->currentLanguageConfig(),
+ $deadlineAt,
+! $isFinalRecording ||! $includePronunciationAnalysis || $needsLocalTranscript
+ );
+ }
+ $localTranscript = $localSpeechService->transcriptFrom($speechAssessment);
  if (
  $localTranscript!== null
  && (
@@ -1087,6 +1113,9 @@ return response()->json([
  'is_skipped' => (bool) $answer->is_skipped,
  'expected_guide' => $answer->question->expected_guide?? null,
  'mapped_skills' => $answer->question->mapped_skills?? [],
+ 'response_mode' => $answer->response_mode?? 'text',
+ 'voice_duration' => (int) ($answer->voice_duration?? 0),
+ 'uses_asr_transcript' => $this->answerContentUsesAsrFormatting($answer),
  ];
  })->toArray();
 
@@ -1902,12 +1931,10 @@ return response()->json([
  ->whereNotNull('voice_recording_path')
  ->where('voice_recording_path', '!=', '')
  ->where(function ($query) {
- $query->whereNull('answer_text')
- ->orWhere('answer_text', '');
- })
- ->where(function ($query) {
  $query->whereNull('delivery_transcript')
- ->orWhere('delivery_transcript', '');
+ ->orWhere('delivery_transcript', '')
+ ->orWhereNull('voice_recording_transcription_status')
+ ->orWhere('voice_recording_transcription_status', '!=', 'transcribed_verified');
  })
  ->where(function ($query) {
  $query->whereNull('voice_recording_transcription_status')
@@ -2064,6 +2091,7 @@ return response()->json([
  ): array {
  $validated['_voice_transcript_verified'] = false;
  $validated['_voice_duration_verified'] = false;
+ $validated['_voice_transcription_source'] = null;
  $validated['pronunciation_analysis'] = null;
  $validated['voice_duration'] = 0;
  $validated['wpm'] = 0;
@@ -2107,6 +2135,7 @@ return response()->json([
  if (is_array($proofData)) {
  $validated['speech_transcript'] = $submittedTranscript;
  $validated['voice_recording_transcription_status'] = 'transcribed_verified';
+ $validated['_voice_transcription_source'] = $this->safeVoiceRecordingTranscriptionSource($proofData['provider']?? null);
  $validated['_voice_transcript_verified'] = true;
 
  return $validated;
@@ -2139,6 +2168,7 @@ return response()->json([
  if ($transcript!== '') {
  $validated['speech_transcript'] = $transcript;
  $validated['voice_recording_transcription_status'] = 'transcribed_verified';
+ $validated['_voice_transcription_source'] = $this->safeVoiceRecordingTranscriptionSource($transcription['transcription_source']?? null);
  $validated['_voice_transcript_verified'] = true;
  } else {
  $validated['voice_recording_transcription_status'] = $this->feedbackTranscriptionStatusFrom($transcription)?: ($validated['voice_recording_transcription_status']?? null);
@@ -2160,11 +2190,29 @@ return response()->json([
  return $answers;
  }
 
- return $answers->map(function ($answer) use ($session) {
+ $recoverySeconds = max(1, min(
+ 60,
+ (int) config('services.ai_transcription.finish_recovery_timeout_seconds', 20)
+ ));
+ $deadlineAt = AIService::speechTranscriptionDeadlineAt(true, null, $recoverySeconds);
+
+ return $answers->map(function ($answer) use ($session, $deadlineAt) {
  if (! $answer instanceof InterviewAnswer
- || $this->answerContentForAssessment($answer)!== ''
  ||! $this->answerHasStoredVoiceRecording($answer)
  ||! ($answer->question instanceof Question)) {
+ return $answer;
+ }
+
+ $deliveryTranscript = trim((string) ($answer->delivery_transcript?? ''));
+ $transcriptionStatus = $this->safeVoiceRecordingTranscriptionStatus($answer->voice_recording_transcription_status?? null);
+ if ($deliveryTranscript!== '' && $transcriptionStatus === 'transcribed_verified') {
+ return $answer;
+ }
+
+ // Every missing voice transcript shares this one finish-recovery deadline.
+ // This prevents N recordings from each starting a fresh full provider/local
+ // timeout while still allowing high-confidence local ASR as the final fallback.
+ if ($deadlineAt - microtime(true) < 1.0) {
  return $answer;
  }
 
@@ -2174,7 +2222,15 @@ return response()->json([
  }
 
  try {
- $transcription = $this->transcribeUploadedSpeechAnswer($upload, $session, $answer->question);
+ $transcription = $this->transcribeUploadedSpeechAnswer(
+ $upload,
+ $session,
+ $answer->question,
+ '',
+ true,
+ $deadlineAt,
+ false
+ );
  } catch (\Throwable $error) {
  Log::warning('Stored voice answer feedback transcription failed.', [
  'session_id' => $session->id,
@@ -2191,6 +2247,7 @@ return response()->json([
  if ($transcript === '') {
  $answer->forceFill([
  'voice_recording_transcription_status' => $this->feedbackTranscriptionStatusFrom($transcription)?: $answer->voice_recording_transcription_status,
+ 'voice_recording_transcription_source' => null,
  ])->save();
 
  return $answer->refresh()->load('question');
@@ -2232,6 +2289,7 @@ return response()->json([
  $answer->forceFill([
  'delivery_transcript' => $transcript,
  'voice_recording_transcription_status' => 'transcribed_verified',
+ 'voice_recording_transcription_source' => $this->safeVoiceRecordingTranscriptionSource($transcription['transcription_source']?? null),
  'pronunciation_analysis' => $pronunciationAnalysis,
  'pronunciation_score' => $pronunciationScore,
  'wpm' => $deliveryMetrics['wpm'],
@@ -2305,6 +2363,7 @@ return response()->json([
  $byteSize = (int) ($upload->getSize()?: 0);
  $originalName = Str::limit((string) $upload->getClientOriginalName(), 255, '');
  $transcriptionStatus = $this->safeVoiceRecordingTranscriptionStatus($validated['voice_recording_transcription_status']?? null);
+ $transcriptionSource = $this->safeVoiceRecordingTranscriptionSource($validated['_voice_transcription_source']?? null);
  $stored = null;
 
  try {
@@ -2335,6 +2394,7 @@ return response()->json([
  'byte_size' => $byteSize,
  'original_name' => $originalName,
  'transcription_status' => $transcriptionStatus,
+ 'transcription_source' => $transcriptionSource,
  'uploaded_at' => now(),
  ];
  }
@@ -2393,6 +2453,7 @@ return response()->json([
  'voice_recording_byte_size' => $stagedRecording['byte_size'],
  'voice_recording_original_name' => $stagedRecording['original_name'],
  'voice_recording_transcription_status' => $stagedRecording['transcription_status'],
+ 'voice_recording_transcription_source' => $stagedRecording['transcription_source'],
  'voice_recording_uploaded_at' => $stagedRecording['uploaded_at'],
  ];
  }
@@ -2406,6 +2467,7 @@ return response()->json([
  'voice_recording_byte_size' => 0,
  'voice_recording_original_name' => null,
  'voice_recording_transcription_status' => null,
+ 'voice_recording_transcription_source' => null,
  'voice_recording_uploaded_at' => null,
  ];
  }
@@ -2502,6 +2564,15 @@ return response()->json([
  $status = preg_replace('/[^a-z0-9_\-]/', '', $status)?: '';
 
  return $status!== ''? Str::limit($status, 40, ''): null;
+ }
+
+ private function safeVoiceRecordingTranscriptionSource(mixed $source):?string
+ {
+ $source = strtolower(trim((string) $source));
+ $source = preg_replace('/[^a-z0-9._-]+/', '-', $source)?? '';
+ $source = trim(preg_replace('/-+/', '-', $source)?? $source, '.-_');
+
+ return $source!== ''? substr($source, 0, 64): null;
  }
 
  private function answerPersistencePayload(InterviewSession $session, Question $question, array $validated,?string $answerText = null): array
@@ -5201,7 +5272,7 @@ return response()->json([
  } catch (AiFeedbackProviderFailureException $error) {
  $fallbackFeedback = AIService::generateLocalFeedback($sessionData, $answersData);
  $fallbackFeedback['_api_refresh_blocked_until'] = now()
- ->addMinutes(max(1, (int) env('AI_FEEDBACK_REVIEW_RETRY_COOLDOWN_MINUTES', 10)))
+ ->addMinutes(max(1, (int) RuntimeConfiguration::get('services.ai_feedback_review.retry_cooldown_minutes', 'AI_FEEDBACK_REVIEW_RETRY_COOLDOWN_MINUTES', 10)))
  ->toIso8601String();
  Log::warning('AI feedback providers failed; completing report with local feedback fallback.', [
  'session_id' => $session->id,
@@ -5237,11 +5308,11 @@ return response()->json([
  false,
  true,
  [
- 'timeout_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', $defaultFinalizationTimeout)),
- 'deadline_seconds' => (int) env('AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', $defaultFinalizationDeadline)),
- 'max_attempts' => (int) env('AI_FEEDBACK_FINALIZATION_ATTEMPTS', 2),
- 'http_attempts' => (int) env('AI_FEEDBACK_FINALIZATION_HTTP_ATTEMPTS', env('AI_FEEDBACK_HTTP_ATTEMPTS', 2)),
- 'retry_delay_ms' => (int) env('AI_FEEDBACK_FINALIZATION_RETRY_DELAY_MS', env('AI_FEEDBACK_RETRY_DELAY_MS', 250)),
+ 'timeout_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_finalization.timeout_seconds', 'AI_FEEDBACK_FINALIZATION_TIMEOUT', $defaultFinalizationTimeout),
+ 'deadline_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_finalization.deadline_seconds', 'AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', $defaultFinalizationDeadline),
+ 'max_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_finalization.max_attempts', 'AI_FEEDBACK_FINALIZATION_ATTEMPTS', 2),
+ 'http_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_finalization.http_attempts', 'AI_FEEDBACK_FINALIZATION_HTTP_ATTEMPTS', 2),
+ 'retry_delay_ms' => (int) RuntimeConfiguration::get('services.ai_feedback_finalization.retry_delay_ms', 'AI_FEEDBACK_FINALIZATION_RETRY_DELAY_MS', 250),
  ]
  );
  }
@@ -5254,7 +5325,8 @@ return response()->json([
  ->all();
 
  $overall = (int) round(collect($perQuestion)->avg('score')?? 0);
- $starScore = (int) round(collect($perQuestion)->avg('star_method_score')?? 0);
+ $starItems = collect($perQuestion)->filter(fn (array $item): bool => (bool) ($item['star_applicable']?? false));
+ $starScore = (int) round($starItems->avg('star_method_score')?? 0);
  $lowestArea = $this->lowestGameScoreArea($perQuestion);
 
  return [
@@ -5307,7 +5379,7 @@ return response()->json([
  $bannedHits = $this->gameBannedWordHits($answerText, (string) ($gameLevel->banned_words?? ''));
 
  $criteriaScore = $this->gameCriteriaScore($answerText, $gameLevel->guidance_checklist?? []);
- $starScore = $this->gameStarScore($answerText);
+ $starScore = $starApplicable? $this->gameStarScore($answerText): 0;
  $keywordScore = $this->gameKeywordOverlapScore($answerText, implode(' ', array_filter([
  $questionText,
  $gameLevel->skill_focus,
@@ -5339,8 +5411,7 @@ return response()->json([
  $grammar = $this->clampInt(
  45
  + min(30, $wordCount)
- + (preg_match('/^[A-Z]/', $answerText)? 8: 0)
- + (preg_match('/[.!?]$/', $answerText)? 8: 0)
+ + $this->gameGrammarFormattingBonus($answerText, $answer)
  - $fillerPenalty
  - ($this->hasRepeatedAdjacentWords($answerText)? 10: 0),
  0,
@@ -5358,7 +5429,7 @@ return response()->json([
  100
  );
 
- $gameStructure = max($criteriaScore, $starScore);
+ $gameStructure = $starApplicable? max($criteriaScore, $starScore): $criteriaScore;
  $score = $this->clampInt(
  round(($clarity * 0.24) + ($relevance * 0.34) + ($grammar * 0.14) + ($professionalism * 0.14) + ($gameStructure * 0.14)),
  0,
@@ -5444,8 +5515,11 @@ return response()->json([
  'relevance' => collect($perQuestion)->avg('relevance_score')?? 0,
  'grammar' => collect($perQuestion)->avg('grammar_score')?? 0,
  'professionalism' => collect($perQuestion)->avg('professionalism_score')?? 0,
- 'STAR structure or level checklist coverage' => collect($perQuestion)->avg('star_method_score')?? 0,
  ];
+ $starItems = collect($perQuestion)->filter(fn (array $item): bool => (bool) ($item['star_applicable']?? false));
+ if ($starItems->isNotEmpty()) {
+ $averages['STAR structure'] = $starItems->avg('star_method_score')?? 0;
+ }
 
  asort($averages);
 
@@ -5667,6 +5741,33 @@ return response()->json([
  };
  }
 
+ private function gameGrammarFormattingBonus(string $answerText, array $answer): int
+ {
+ // Typed casing and terminal punctuation are scoreable. ASR formatting is
+ // provider-controlled. Eight is the midpoint of the observable typed range
+ // (0-16), so provider formatting gets neither minimum nor maximum credit.
+ if ($this->gameAnswerUsesAsrFormatting($answer)) {
+ return 8;
+ }
+
+ return (preg_match('/^\p{Lu}/u', $answerText)? 8: 0)
+ + (preg_match('/[.!?]$/u', $answerText)? 8: 0);
+ }
+
+ private function gameAnswerUsesAsrFormatting(array $answer): bool
+ {
+ if (array_key_exists('uses_asr_transcript', $answer)) {
+ return filter_var($answer['uses_asr_transcript'], FILTER_VALIDATE_BOOLEAN);
+ }
+
+ $mode = $this->normalizeResponseMode($answer['response_mode']?? 'text');
+ if ($mode === 'voice') {
+ return true;
+ }
+
+ return $mode === 'hybrid' && (int) ($answer['voice_duration']?? 0) > 0;
+ }
+
  private function hasRepeatedAdjacentWords(string $text): bool
  {
  return (bool) preg_match('/\b(\w+)\s+\1\b/i', $text);
@@ -5726,6 +5827,28 @@ return response()->json([
  }
 
  return $deliveryTranscript;
+ }
+
+ private function answerContentUsesAsrFormatting(InterviewAnswer $answer): bool
+ {
+ $mode = $this->normalizeResponseMode($answer->response_mode?? 'text');
+ if ($mode === 'voice') {
+ return true;
+ }
+
+ if ($mode !== 'hybrid') {
+ return false;
+ }
+
+ $answerText = trim((string) ($answer->answer_text?? ''));
+ $deliveryTranscript = trim((string) ($answer->delivery_transcript?? ''));
+
+ if ($deliveryTranscript!== '' && $answerText === $deliveryTranscript) {
+ return true;
+ }
+
+ return $answerText === ''
+ && ($deliveryTranscript!== '' || $this->answerHasStoredVoiceRecording($answer));
  }
 
  private function answerHasStoredVoiceRecording(InterviewAnswer $answer): bool

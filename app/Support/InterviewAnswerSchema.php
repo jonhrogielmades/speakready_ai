@@ -97,6 +97,9 @@ class InterviewAnswerSchema
                 if (self::isMissing($missing, 'voice_recording_transcription_status')) {
                     $table->string('voice_recording_transcription_status', 40)->nullable();
                 }
+                if (self::isMissing($missing, 'voice_recording_transcription_source')) {
+                    $table->string('voice_recording_transcription_source', 64)->nullable();
+                }
                 if (self::isMissing($missing, 'voice_recording_uploaded_at')) {
                     $table->timestamp('voice_recording_uploaded_at')->nullable();
                 }
@@ -234,6 +237,7 @@ class InterviewAnswerSchema
             $table->unsignedInteger('voice_recording_byte_size')->default(0);
             $table->string('voice_recording_original_name')->nullable();
             $table->string('voice_recording_transcription_status', 40)->nullable();
+            $table->string('voice_recording_transcription_source', 64)->nullable();
             $table->timestamp('voice_recording_uploaded_at')->nullable();
             $table->json('coaching_feedback')->nullable();
             $table->string('response_mode')->default('text');
@@ -314,6 +318,7 @@ class InterviewAnswerSchema
             'voice_recording_byte_size',
             'voice_recording_original_name',
             'voice_recording_transcription_status',
+            'voice_recording_transcription_source',
             'voice_recording_uploaded_at',
             'coaching_feedback',
             'response_mode',

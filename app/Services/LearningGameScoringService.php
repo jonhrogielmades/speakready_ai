@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class LearningGameScoringService
 {
-    private const SCORECARD_VERSION = 2;
+    private const SCORECARD_VERSION = 3;
 
     private const OWNERSHIP_PATTERN = '\b(?:I|my|me|we|our)\b';
 
@@ -23,13 +23,15 @@ class LearningGameScoringService
             ->all();
 
         $score = (int) round(collect($perQuestion)->avg('score') ?? 0);
+        $starItems = collect($perQuestion)
+            ->filter(fn (array $item): bool => (bool) ($item['star_applicable'] ?? false));
         $averages = [
             'clarity' => (int) round(collect($perQuestion)->avg('clarity_score') ?? 0),
             'relevance' => (int) round(collect($perQuestion)->avg('relevance_score') ?? 0),
             'confidence' => (int) round(collect($perQuestion)->avg('confidence_score') ?? 0),
             'grammar' => (int) round(collect($perQuestion)->avg('grammar_score') ?? 0),
             'professionalism' => (int) round(collect($perQuestion)->avg('professionalism_score') ?? 0),
-            'star_method' => (int) round(collect($perQuestion)->avg('star_method_score') ?? 0),
+            'star_method' => (int) round($starItems->avg('star_method_score') ?? 0),
             'goal_coverage' => (int) round(collect($perQuestion)->avg('criteria_score') ?? 0),
         ];
         $reliabilityScore = $this->scoreReliability($perQuestion);
@@ -77,7 +79,8 @@ class LearningGameScoringService
         $bannedHits = $this->bannedWordHits($answerText, (string) ($level->banned_words ?? ''));
 
         $criteriaScore = $this->criteriaScore($answerText, $level->guidance_checklist ?? []);
-        $starScore = $this->starScore($answerText);
+        $starApplicable = $this->starIsApplicable($answer, $level);
+        $starScore = $starApplicable ? $this->starScore($answerText) : 0;
         $keywordScore = $this->keywordOverlapScore($answerText, implode(' ', array_filter([
             $questionText,
             $level->skill_focus,
@@ -105,8 +108,7 @@ class LearningGameScoringService
         $grammar = $this->clamp(
             45
             + min(30, $wordCount)
-            + (preg_match('/^[A-Z]/', $answerText) ? 8 : 0)
-            + (preg_match('/[.!?]$/', $answerText) ? 8 : 0)
+            + $this->grammarFormattingBonus($answerText, $answer)
             - $fillerPenalty
             - ($this->hasRepeatedAdjacentWords($answerText) ? 10 : 0)
         );
@@ -121,7 +123,7 @@ class LearningGameScoringService
         );
         $confidence = $this->confidenceScore($answerText, $wordCount, $fillerPenalty, $answer, $starScore, $criteriaScore);
 
-        $gameStructure = max($criteriaScore, $starScore);
+        $gameStructure = $starApplicable ? max($criteriaScore, $starScore) : $criteriaScore;
         $score = $this->clamp(
             round(($clarity * 0.24) + ($relevance * 0.34) + ($grammar * 0.14) + ($professionalism * 0.14) + ($gameStructure * 0.14))
         );
@@ -130,7 +132,7 @@ class LearningGameScoringService
         if ($criteriaScore < 70) {
             $goalNotes[] = 'Add clearer evidence for the level goal checklist.';
         }
-        if ($starScore < 70 && $this->starIsApplicable($answer, $level)) {
+        if ($starScore < 70 && $starApplicable) {
             $goalNotes[] = 'Use Situation, Task, Action, and Result more completely.';
         }
         if (count($bannedHits) > 0) {
@@ -150,8 +152,10 @@ class LearningGameScoringService
             'grammar' => $grammar,
             'professionalism' => $professionalism,
             'goal_coverage' => $criteriaScore,
-            'star_method' => $starScore,
         ];
+        if ($starApplicable) {
+            $metricScores['star_method'] = $starScore;
+        }
         asort($metricScores);
         $lowestMetric = (string) array_key_first($metricScores);
 
@@ -168,7 +172,7 @@ class LearningGameScoringService
             'criteria_score' => $criteriaScore,
             'banned_words' => $bannedHits,
             'goal_notes' => implode(' ', $goalNotes),
-            'star_applicable' => $this->starIsApplicable($answer, $level),
+            'star_applicable' => $starApplicable,
             'scorecard_feedback' => $this->feedbackForMetric($lowestMetric, (int) $metricScores[$lowestMetric], $score),
             'weakest_metric' => $lowestMetric,
             'evidence_flags' => [
@@ -323,8 +327,7 @@ class LearningGameScoringService
         $avgWords = (int) floor((float) (collect($perQuestion)->avg('evidence_flags.word_count') ?? 0) + PHP_FLOAT_EPSILON);
         $shortAnswers = collect($perQuestion)->filter(fn (array $item): bool => (int) data_get($item, 'evidence_flags.word_count', 0) > 0 && (int) data_get($item, 'evidence_flags.word_count', 0) < 15)->count();
         $substantiveAnswers = collect($perQuestion)->filter(fn (array $item): bool => (int) data_get($item, 'evidence_flags.word_count', 0) >= 20)->count();
-        $specificEvidenceAnswers = collect($perQuestion)->filter(fn (array $item): bool =>
-            (bool) data_get($item, 'evidence_flags.has_ownership', false)
+        $specificEvidenceAnswers = collect($perQuestion)->filter(fn (array $item): bool => (bool) data_get($item, 'evidence_flags.has_ownership', false)
             && (bool) data_get($item, 'evidence_flags.has_action', false)
             && (bool) data_get($item, 'evidence_flags.has_result', false)
         )->count();
@@ -514,9 +517,15 @@ class LearningGameScoringService
 
     private function starIsApplicable(array $answer, GameLevel $level): bool
     {
-        return str_contains(Str::lower((string) ($answer['question_type'] ?? '')), 'behavioral')
-            || str_contains(Str::lower((string) ($level->skill_focus ?? '')), 'star')
-            || (bool) preg_match('/\b(describe|tell me about|time when|example|situation)\b/i', (string) ($answer['question'] ?? ''));
+        return QuestionIntentService::starApplicable([
+            'question' => $answer['question'] ?? '',
+            'question_type' => $answer['question_type'] ?? null,
+            'expected_guide' => implode(' ', array_filter([
+                $level->learning_objective,
+                $level->guidance_checklist_text,
+            ])),
+            'mapped_skills' => array_filter([(string) ($level->skill_focus ?? '')]),
+        ]);
     }
 
     private function starScore(string $answerText): int
@@ -558,6 +567,35 @@ class LearningGameScoringService
             str_contains($tone, 'professional') => preg_match('/\b(collaborated|prioritized|communicated|resolved|delivered)\b/i', $answerText) ? 8 : -4,
             default => 0,
         };
+    }
+
+    private function grammarFormattingBonus(string $answerText, array $answer): int
+    {
+        // Casing and terminal punctuation are meaningful for text the learner
+        // typed, but ASR providers may add or omit both. Eight is the midpoint
+        // of the observable typed range (0-16), so unknown provider formatting
+        // receives neither the minimum nor the maximum formatting credit.
+        if ($this->answerUsesAsrFormatting($answer)) {
+            return 8;
+        }
+
+        return (preg_match('/^\p{Lu}/u', $answerText) ? 8 : 0)
+            + (preg_match('/[.!?]$/u', $answerText) ? 8 : 0);
+    }
+
+    private function answerUsesAsrFormatting(array $answer): bool
+    {
+        if (array_key_exists('uses_asr_transcript', $answer)) {
+            return filter_var($answer['uses_asr_transcript'], FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $mode = Str::lower(trim((string) ($answer['response_mode'] ?? 'text')));
+        if ($mode === 'voice') {
+            return true;
+        }
+
+        return in_array($mode, ['hybrid', 'voice_and_text'], true)
+            && (int) ($answer['voice_duration'] ?? 0) > 0;
     }
 
     private function hasRepeatedAdjacentWords(string $text): bool

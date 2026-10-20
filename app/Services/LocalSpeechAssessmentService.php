@@ -12,6 +12,48 @@ class LocalSpeechAssessmentService
 
     private const STATUS_VALUES = ['measured', 'partial', 'not_measured', 'unavailable', 'failed'];
 
+    private ?float $activeDeadlineAt = null;
+
+    private bool $activeAsrOnly = false;
+
+    /**
+     * Run the existing, override-friendly assessment entry point inside a
+     * caller-owned deadline. ASR-only mode avoids pronunciation/alignment/GOP
+     * work when a live request or finish-time recovery only needs a transcript.
+     */
+    public function assessUploadedAudioWithinDeadline(
+        UploadedFile $audioFile,
+        ?string $referenceText = null,
+        array|string|null $targetLanguage = null,
+        ?float $deadlineAt = null,
+        bool $asrOnly = false
+    ): array {
+        if (is_numeric($deadlineAt) && (float) $deadlineAt - microtime(true) < 1.0) {
+            return $this->notMeasuredAssessment('transcription_deadline_exhausted', [
+                'The shared transcription deadline elapsed before local speech assessment could start.',
+            ]);
+        }
+
+        $previousDeadline = $this->activeDeadlineAt;
+        $previousAsrOnly = $this->activeAsrOnly;
+        $this->activeDeadlineAt = is_numeric($deadlineAt) ? (float) $deadlineAt : null;
+        $this->activeAsrOnly = $asrOnly;
+
+        try {
+            // Calling the public method preserves application/test extensions
+            // which override the original assessment entry point.
+            return $this->assessUploadedAudio($audioFile, $referenceText, $targetLanguage);
+        } finally {
+            $this->activeDeadlineAt = $previousDeadline;
+            $this->activeAsrOnly = $previousAsrOnly;
+        }
+    }
+
+    public function notMeasuredAssessment(string $reason, array $limitations = []): array
+    {
+        return $this->emptyAssessment('not_measured', $reason, $limitations);
+    }
+
     public function assessUploadedAudio(UploadedFile $audioFile, ?string $referenceText = null, array|string|null $targetLanguage = null): array
     {
         if (! filter_var(config('services.local_speech.enabled', false), FILTER_VALIDATE_BOOLEAN)) {
@@ -34,11 +76,28 @@ class LocalSpeechAssessmentService
             ]);
         }
 
+        $configuredTimeout = max(1, (int) config('services.local_speech.timeout', 90));
+        $processTimeout = (float) $configuredTimeout;
+        if ($this->activeDeadlineAt !== null) {
+            $remainingSeconds = $this->activeDeadlineAt - microtime(true);
+            if ($remainingSeconds < 1.0) {
+                return $this->notMeasuredAssessment('transcription_deadline_exhausted', [
+                    'The shared transcription deadline elapsed before local speech assessment could start.',
+                ]);
+            }
+            $processTimeout = min($processTimeout, max(0.1, $remainingSeconds));
+        }
+        $backendOrDisabled = fn (string $key, string $default): string => $this->activeAsrOnly
+            ? 'none'
+            : (string) config("services.local_speech.{$key}", $default);
+
         $command = [
             (string) config('services.local_speech.python', 'python'),
             $script,
             '--audio',
             $path,
+            '--timeout',
+            (string) max(1, (int) floor($processTimeout)),
             '--asr-backend',
             (string) config('services.local_speech.asr_backend', 'whisper'),
             '--asr-model',
@@ -46,17 +105,17 @@ class LocalSpeechAssessmentService
             '--asr-device',
             (string) config('services.local_speech.asr_device', 'auto'),
             '--pronunciation-backend',
-            (string) config('services.local_speech.pronunciation_backend', 'ctc'),
+            $backendOrDisabled('pronunciation_backend', 'ctc'),
             '--pronunciation-model',
             (string) config('services.local_speech.pronunciation_model', 'facebook/wav2vec2-base-960h'),
             '--alignment-backend',
-            (string) config('services.local_speech.alignment_backend', 'mfa'),
+            $backendOrDisabled('alignment_backend', 'mfa'),
             '--mfa-command',
             (string) config('services.local_speech.mfa_command', 'mfa'),
             '--ffmpeg-command',
             (string) config('services.local_speech.ffmpeg_command', 'ffmpeg'),
             '--gop-backend',
-            (string) config('services.local_speech.gop_backend', 'mfa'),
+            $backendOrDisabled('gop_backend', 'mfa'),
         ];
 
         $language = $this->languageCode($targetLanguage);
@@ -84,7 +143,7 @@ class LocalSpeechAssessmentService
         }
 
         $process = new Process($command);
-        $process->setTimeout(max(10, (int) config('services.local_speech.timeout', 90)));
+        $process->setTimeout($processTimeout);
 
         try {
             $process->run();

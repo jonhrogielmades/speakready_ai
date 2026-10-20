@@ -303,6 +303,8 @@ let gameStateAutosaveTimer = null;
 let gameStateSaveInFlight = false;
 let gameStateSavePending = false;
 const gameTimeLimitSeconds = {{ max(0, (int) ($gameLevel->time_limit_seconds ?? 0)) }};
+const gameVoiceFullTranscriptionTimeoutMs = {{ max(60000, min(300000, (int) config('services.ai_transcription.full_request_timeout_ms', 120000))) }};
+const gameVoiceAudioBitsPerSecond = {{ max(64000, min(256000, (int) config('services.ai_transcription.recording_audio_bitrate', 128000))) }};
  
  // Answers state
  let answersData = @json($initialAnswersData);
@@ -679,7 +681,7 @@ saveGameStateOnPageHide();
  const clean = cleanTranscriptText(part);
  if (clean) merged = appendWithoutOverlap(merged, clean);
  });
- return collapseRepeatedSpeech(merged);
+ return merged;
  }
 
  function mergeFullVoiceTranscriptWithAnswer(existingText, previousSpeechTranscript, fullTranscript) {
@@ -690,7 +692,7 @@ saveGameStateOnPageHide();
  if (!existing) return transcript;
 
  if (previousSpeech && existing.includes(previousSpeech)) {
- return collapseRepeatedSpeech(cleanTranscriptText(existing.replace(previousSpeech, transcript)));
+ return cleanTranscriptText(existing.replace(previousSpeech, transcript));
  }
 
  const existingNorm = normalizeTranscriptForMatch(existing);
@@ -930,17 +932,20 @@ saveGameStateOnPageHide();
  updateGameVoiceSessionActionState();
  }
 
- async function requestGameVoiceTranscript(recording, questionIndex, previousTranscript = '') {
+ async function requestGameVoiceTranscript(recording, questionIndex) {
+ const attempts = 1;
+ let lastError = null;
+
+ for (let attempt = 1; attempt <= attempts; attempt++) {
  const formData = new FormData();
  formData.append('_token', '{{ csrf_token() }}');
  formData.append('game_session_id', gameSessionId);
  formData.append('question_index', questionIndex);
- formData.append('previous_transcript', cleanTranscriptText(previousTranscript).slice(-3000));
  formData.append('final_recording', '1');
  formData.append('audio', recording.blob, recording.filename || voiceFileName(questionIndex, recording.mime_type));
 
  const controller = new AbortController();
- const timeout = setTimeout(() => controller.abort(), 60000);
+ const timeout = setTimeout(() => controller.abort(), gameVoiceFullTranscriptionTimeoutMs);
  try {
  const response = await fetch('{{ route("user.game.transcribe") }}', {
  method: 'POST',
@@ -965,13 +970,24 @@ saveGameStateOnPageHide();
 
  return payload;
  } catch (error) {
+ lastError = error;
  if (error?.name === 'AbortError') {
- throw new Error('Automatic transcription timed out. Try again with a shorter answer.');
+ const timeoutError = new Error('Automatic transcription timed out. Try again with a shorter answer.');
+ timeoutError.status = 408;
+ lastError = timeoutError;
  }
- throw error;
+
+ const retryable = lastError instanceof TypeError || [408, 425, 500, 502, 503, 504].includes(Number(lastError?.status || 0));
+ if (attempt >= attempts || !retryable) throw lastError;
+
+ setTranscriptionStatus('Retrying full voice transcription...', '#fbbf24');
+ await new Promise(resolve => setTimeout(resolve, 900 * attempt));
  } finally {
  clearTimeout(timeout);
  }
+ }
+
+ throw lastError || new Error('Automatic transcription failed.');
  }
 
  function applyGameVoiceTranscript(questionIndex, transcript, data = {}, recording = null, options = {}) {
@@ -1035,8 +1051,7 @@ saveGameStateOnPageHide();
 
  setTranscriptionStatus('Transcribing voice answer...', '#fbbf24');
  try {
- const previousTranscript = recordingStartText || '';
- const data = await requestGameVoiceTranscript(recording, questionIndex, previousTranscript);
+ const data = await requestGameVoiceTranscript(recording, questionIndex);
  const transcriptText = cleanTranscriptText(data.transcript || data.transcription || data.text || '');
  const browserTranscript = cleanTranscriptText(bufferedGameSpeechTranscript());
  const transcript = applyGameVoiceTranscript(questionIndex, transcriptText, data, recording, { recordingStartText });
@@ -2156,6 +2171,52 @@ function updateGameTimerDisplay() {
  return Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && typeof MediaRecorder!== 'undefined');
  }
 
+ function gameVoiceAudioCaptureConstraints() {
+ return {
+ audio: {
+ echoCancellation: { ideal: true },
+ noiseSuppression: { ideal: true },
+ autoGainControl: { ideal: true },
+ channelCount: { ideal: 1 },
+ sampleRate: { ideal: 48000 },
+ sampleSize: { ideal: 16 }
+ }
+ };
+ }
+
+ async function requestGameVoiceAudioStream() {
+ try {
+ return await navigator.mediaDevices.getUserMedia(gameVoiceAudioCaptureConstraints());
+ } catch (error) {
+ if (error?.name === 'OverconstrainedError' || error?.name === 'ConstraintNotSatisfiedError') {
+ return navigator.mediaDevices.getUserMedia({ audio: true });
+ }
+ throw error;
+ }
+ }
+
+ function createGameVoiceMediaRecorder(stream, mimeType) {
+ const attempts = mimeType
+ ? [
+ { mimeType, audioBitsPerSecond: gameVoiceAudioBitsPerSecond },
+ { mimeType },
+ { audioBitsPerSecond: gameVoiceAudioBitsPerSecond },
+ null
+ ]
+ : [{ audioBitsPerSecond: gameVoiceAudioBitsPerSecond }, null];
+ let lastError = null;
+
+ for (const options of attempts) {
+ try {
+ return options? new MediaRecorder(stream, options): new MediaRecorder(stream);
+ } catch (error) {
+ lastError = error;
+ }
+ }
+
+ throw lastError || new Error('MediaRecorder could not start.');
+ }
+
  function normalizeRecordingMimeType(value) {
  const type = String(value || 'audio/webm').split(';')[0].toLowerCase().trim();
  return type || 'audio/webm';
@@ -2341,14 +2402,13 @@ function updateGameTimerDisplay() {
  }
 
  try {
- const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+ const stream = await requestGameVoiceAudioStream();
  const recorderMimeType = preferredRecordingMimeType();
- const recorderOptions = recorderMimeType? { mimeType: recorderMimeType }: undefined;
  const recordingQuestionIndex = currentQIdx;
 
  mediaRecorderChunks = [];
  mediaRecorderStream = stream;
- mediaRecorder = new MediaRecorder(stream, recorderOptions);
+ mediaRecorder = createGameVoiceMediaRecorder(stream, recorderMimeType);
  voiceRecordingStopPromise = null;
 
  mediaRecorder.ondataavailable = function(event) {

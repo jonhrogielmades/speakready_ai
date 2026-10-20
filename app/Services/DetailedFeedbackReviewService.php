@@ -9,6 +9,7 @@ use App\Models\InterviewSession;
 use App\Models\Profile;
 use App\Models\Score;
 use App\Models\Setting;
+use App\Support\RuntimeConfiguration;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -91,6 +92,13 @@ class DetailedFeedbackReviewService
  'required_reliability_percent' => $validation['required_reliability_percent']?? null,
  'minimum_scoreable_reliability_percent' => $validation['minimum_scoreable_reliability_percent']?? null,
  'reasons' => $validation['reasons']?? [],
+ 'failed_answer_checks' => collect((array) ($validation['answer_checks']?? []))
+ ->map(fn (array $checks): array => array_keys(array_filter(
+ $checks,
+ fn ($passed): bool => $passed!== true
+ )))
+ ->filter()
+ ->all(),
  ]);
 
  return false;
@@ -434,6 +442,8 @@ class DetailedFeedbackReviewService
  $checks = [
  'api_provider_supported' => $this->isApiProviderKey($providerKey),
  'provider_metadata_matches' => AIService::normalizeProviderKey($feedback['_provider_key']?? null) === $providerKey,
+ 'strict_provider_validation_passed' => ($feedback['_strict_validation_passed']?? null) === true,
+ 'provider_repair_not_applied' => ($feedback['_repair_applied']?? null) === false,
  'exact_answer_count' => count($items) === count($expectedIds),
  'unique_answer_ids' => count($suppliedIds) === count(array_unique($suppliedIds)) && ! in_array('', $suppliedIds, true),
  'exact_answer_coverage' => $sortedExpectedIds === $sortedSuppliedIds,
@@ -537,11 +547,11 @@ class DetailedFeedbackReviewService
  private function reviewRefreshRuntimeOptions(): array
  {
  return [
- 'timeout_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', 30)),
- 'deadline_seconds' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', 60)),
- 'max_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', env('AI_FEEDBACK_ATTEMPTS', 2)),
- 'http_attempts' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', env('AI_FEEDBACK_HTTP_ATTEMPTS', 2)),
- 'retry_delay_ms' => (int) env('AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', env('AI_FEEDBACK_RETRY_DELAY_MS', 250)),
+ 'timeout_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_review.timeout_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 30),
+ 'deadline_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_review.deadline_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 60),
+ 'max_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_review.max_attempts', 'AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', 2),
+ 'http_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_review.http_attempts', 'AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', 2),
+ 'retry_delay_ms' => (int) RuntimeConfiguration::get('services.ai_feedback_review.retry_delay_ms', 'AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', 250),
  ];
  }
 
@@ -724,7 +734,32 @@ class DetailedFeedbackReviewService
  'is_skipped' => (bool) ($answer->is_skipped?? false),
  'expected_guide' => $answer->question->expected_guide?? null,
  'mapped_skills' => $answer->question->mapped_skills?? [],
+ 'response_mode' => $answer->response_mode?? 'text',
+ 'voice_duration' => (int) ($answer->voice_duration?? 0),
+ 'uses_asr_transcript' => $this->answerContentUsesAsrFormatting($answer),
  ];
+ }
+
+ private function answerContentUsesAsrFormatting(InterviewAnswer $answer): bool
+ {
+ $mode = Str::lower(trim((string) ($answer->response_mode?? 'text')));
+ if ($mode === 'voice') {
+ return true;
+ }
+
+ if (! in_array($mode, ['hybrid', 'voice_and_text'], true)) {
+ return false;
+ }
+
+ $answerText = trim((string) ($answer->answer_text?? ''));
+ $deliveryTranscript = trim((string) ($answer->delivery_transcript?? ''));
+
+ if ($deliveryTranscript!== '' && $answerText === $deliveryTranscript) {
+ return true;
+ }
+
+ return $answerText === ''
+ && ($deliveryTranscript!== '' || trim((string) ($answer->voice_recording_path?? ''))!== '');
  }
 
  private function originalAnswers(InterviewSession $session): Collection

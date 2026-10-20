@@ -167,7 +167,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/interview/chat-reply', [InterviewController::class, 'chatReply'])->middleware('throttle:ai')->name('interview.chatReply');
     Route::post('/interview/coach-answer', [InterviewController::class, 'coachAnswer'])->middleware('throttle:ai')->name('interview.coachAnswer');
     Route::post('/interview/closing', [InterviewController::class, 'closing'])->middleware('throttle:ai')->name('interview.closing');
-    Route::post('/interview/speech', [InterviewController::class, 'speech'])->middleware('throttle:ai-transcribe')->name('interview.speech');
+    Route::post('/interview/speech', [InterviewController::class, 'speech'])->middleware('throttle:ai')->name('interview.speech');
     Route::post('/interview/transcribe', [InterviewController::class, 'transcribe'])
         ->middleware('throttle:ai-transcribe')
         ->name('interview.transcribe');
@@ -241,7 +241,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/game/level/{id}/start', [\App\Http\Controllers\GameController::class, 'startLevel'])->middleware('throttle:ai-expensive')->name('user.game.start');
     Route::get('/game/match', [\App\Http\Controllers\GameController::class, 'arenaSession'])->name('user.game.match');
     Route::post('/game/answer', [\App\Http\Controllers\GameController::class, 'answer'])->middleware('throttle:ai')->name('user.game.answer');
-    Route::post('/game/speech', [\App\Http\Controllers\GameController::class, 'speech'])->middleware('throttle:ai-transcribe')->name('user.game.speech');
+    Route::post('/game/speech', [\App\Http\Controllers\GameController::class, 'speech'])->middleware('throttle:ai')->name('user.game.speech');
     Route::post('/game/transcribe', [\App\Http\Controllers\GameController::class, 'transcribe'])
         ->middleware('throttle:ai-transcribe')
         ->name('user.game.transcribe');

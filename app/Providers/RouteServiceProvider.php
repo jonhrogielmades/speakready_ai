@@ -61,7 +61,7 @@ class RouteServiceProvider extends ServiceProvider
 
         RateLimiter::for('ai-transcribe', function (Request $request) {
             $actor = $request->user()?->getAuthIdentifier() ?: $request->ip();
-            $limit = max(1, (int) env('AI_TRANSCRIBE_RATE_LIMIT_PER_MINUTE', 10));
+            $limit = max(1, (int) config('services.ai_transcription.rate_limit_per_minute', 20));
 
             return [
                 Limit::perMinute($limit)->by('ai-transcribe-actor|'.$actor),

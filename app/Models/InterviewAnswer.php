@@ -30,6 +30,7 @@ class InterviewAnswer extends Model
         'voice_recording_byte_size',
         'voice_recording_original_name',
         'voice_recording_transcription_status',
+        'voice_recording_transcription_source',
         'voice_recording_uploaded_at',
         'coaching_feedback',
         'response_mode',

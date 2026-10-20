@@ -302,6 +302,129 @@ class RemovedAiProviderSupportTest extends TestCase
  $this->assertCount(2, Http::recorded());
  }
 
+ public function test_openai_retries_with_json_object_when_a_recognised_schema_error_is_returned(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('OPENAI_JSON_MODE_FALLBACK', 'true');
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+ $schema = $this->providerContractSchema();
+
+ Http::fakeSequence()
+ ->push(['error' => ['message' => 'response_format json_schema is unsupported']], 400)
+ ->push($this->openAiCompatibleResponse('openai'), 200);
+
+ $result = $providerMethod->invoke(null, 'openai', 'Return JSON.', [
+ 'attempts' => 1,
+ 'response_format' => $schema,
+ ]);
+
+ $this->assertSame('openai', $result['provider']);
+ $requests = collect(Http::recorded())->map(fn (array $entry) => $entry[0])->values();
+ $this->assertCount(2, $requests);
+ $this->assertSame('json_schema', data_get($requests[0]->data(), 'response_format.type'));
+ $this->assertSame('json_object', data_get($requests[1]->data(), 'response_format.type'));
+ }
+
+ public function test_openai_does_not_use_json_fallback_for_an_unrecognised_client_error(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('OPENAI_JSON_MODE_FALLBACK', 'true');
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ Http::fakeSequence()
+ ->push(['error' => ['message' => 'invalid project configuration']], 400)
+ ->push($this->openAiCompatibleResponse('openai'), 200);
+
+ try {
+ $providerMethod->invoke(null, 'openai', 'Return JSON.', [
+ 'attempts' => 1,
+ 'response_format' => $this->providerContractSchema(),
+ ]);
+ $this->fail('Expected an unrelated HTTP 400 response to fail without JSON-mode fallback.');
+ } catch (\Throwable $exception) {
+ $this->assertNotInstanceOf(\PHPUnit\Framework\AssertionFailedError::class, $exception);
+ }
+
+ $this->assertCount(1, Http::recorded());
+ }
+
+ public function test_openai_does_not_use_json_fallback_when_it_is_disabled(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('OPENAI_JSON_MODE_FALLBACK', 'false');
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ Http::fakeSequence()
+ ->push(['error' => ['message' => 'response_format json_schema is unsupported']], 422)
+ ->push($this->openAiCompatibleResponse('openai'), 200);
+
+ $failed = false;
+ try {
+ $providerMethod->invoke(null, 'openai', 'Return JSON.', [
+ 'attempts' => 1,
+ 'response_format' => $this->providerContractSchema(),
+ ]);
+ } catch (\Throwable) {
+ $failed = true;
+ }
+
+ $this->assertTrue($failed);
+ $this->assertCount(1, Http::recorded());
+ }
+
+ public function test_json_fallback_does_not_start_when_provider_slice_has_less_than_one_second_left(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('OPENAI_JSON_MODE_FALLBACK', 'true');
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ Http::fakeSequence()
+ ->push(['error' => ['message' => 'response_format json_schema is unsupported']], 400)
+ ->push($this->openAiCompatibleResponse('openai'), 200);
+
+ $failed = false;
+ try {
+ $providerMethod->invoke(null, 'openai', 'Return JSON.', [
+ 'attempts' => 1,
+ 'timeout_seconds' => 5,
+ 'request_deadline_at' => microtime(true) + 0.5,
+ 'response_format' => $this->providerContractSchema(),
+ ]);
+ } catch (\Throwable) {
+ $failed = true;
+ }
+
+ $this->assertTrue($failed);
+ $this->assertCount(1, Http::recorded());
+ }
+
+ public function test_openai_compatible_provider_retries_with_json_object_after_schema_error(): void
+ {
+ $this->setEnvValue('GROQ_API_KEY', 'groq_test_token');
+ config()->set('services.ai_providers.json_mode_fallback', true);
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ Http::fakeSequence()
+ ->push(['error' => ['message' => 'structured output schema is not supported']], 422)
+ ->push($this->openAiCompatibleResponse('groq'), 200);
+
+ $result = $providerMethod->invoke(null, 'groq', 'Return JSON.', [
+ 'attempts' => 1,
+ 'response_format' => $this->providerContractSchema(),
+ ]);
+
+ $this->assertSame('groq', $result['provider']);
+ $requests = collect(Http::recorded())->map(fn (array $entry) => $entry[0])->values();
+ $this->assertCount(2, $requests);
+ $this->assertSame('json_schema', data_get($requests[0]->data(), 'response_format.type'));
+ $this->assertSame('json_object', data_get($requests[1]->data(), 'response_format.type'));
+ }
+
  public function test_openai_reasoning_models_use_supported_generation_parameters(): void
  {
  config()->set('services.openai.reasoning_effort', 'high');
@@ -362,6 +485,25 @@ class RemovedAiProviderSupportTest extends TestCase
  'content' => json_encode(['provider' => $provider]),
  ],
  ]],
+ ];
+ }
+
+ private function providerContractSchema(): array
+ {
+ return [
+ 'type' => 'json_schema',
+ 'json_schema' => [
+ 'name' => 'provider_contract',
+ 'strict' => true,
+ 'schema' => [
+ 'type' => 'object',
+ 'additionalProperties' => false,
+ 'properties' => [
+ 'provider' => ['type' => 'string'],
+ ],
+ 'required' => ['provider'],
+ ],
+ ],
  ];
  }
 

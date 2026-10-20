@@ -31,7 +31,10 @@
  ? review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $questionSource, false)
  : '';
  if (trim($possibleAnswer) === '') {
- $possibleAnswer = 'No verified AI possible answer is available for this response yet.';
+ $possibleAnswer = review_better_answer_fallback($answer, $questionSource);
+ }
+ if (trim($possibleAnswer) === '') {
+ $possibleAnswer = 'No evidence-grounded possible answer is available for this response yet.';
  }
  $coachQuestion = review_question_text($questionSource);
  if ($coachQuestion === '') {

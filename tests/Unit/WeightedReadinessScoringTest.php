@@ -142,6 +142,10 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString('The customer received the item the next day and thanked us for the quick update.', $starDraftWithResult);
         $this->assertStringNotContainsString('add the true customer result', $starDraftWithResult);
 
+        $singleSentenceAnswer = 'I improved improved improved the customer process and explained the action clearly.';
+        $singleSentenceDraft = review_better_answer_text('', ['answer_text' => $singleSentenceAnswer], ['question_text' => 'Explain a time you helped a customer.']);
+        $this->assertSame(1, substr_count($singleSentenceDraft, $singleSentenceAnswer));
+
         $questionOnly = review_better_answer_text($question, $answer, ['question_text' => $question]);
         $this->assertStringContainsString('Karyl from Cebu', $questionOnly);
         $this->assertStringNotContainsString($question, $questionOnly);
@@ -235,6 +239,142 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringNotContainsString('[', $normalized['better_sample_answer']);
     }
 
+    public function test_provider_better_answer_rejects_invented_employer_tool_and_outcome_claims(): void
+    {
+        $answer = [
+            'id' => 79,
+            'question_type' => 'Behavioral',
+            'question' => 'Tell me about a time you helped a customer.',
+            'answer' => 'I listened to an upset customer, checked the order status, and explained the next step clearly.',
+        ];
+        $grounded = 'I listened to an upset customer and checked the order status. I explained the next step clearly. I would add only the true customer result without inventing new facts.';
+        $inventedEmployer = 'I listened to an upset customer and checked the order status. At Northstar Retail, I explained the next step clearly. I would add only the true customer result.';
+        $inventedTool = 'I listened to an upset customer and checked the order status. I tracked the case in Salesforce before explaining the next step. I would add only the true customer result.';
+        $inventedOutcome = 'I listened to an upset customer and checked the order status. The customer renewed the contract and praised my service. I would keep the next step clear.';
+        $inventedScope = 'I listened to an upset customer and checked the order status. I led a team of ten engineers across three countries and became their trusted adviser.';
+
+        $this->assertTrue($this->invokePrivate('providerBetterSampleAnswerIsValid', [$grounded, $answer]));
+        $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$inventedEmployer, $answer]));
+        $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$inventedTool, $answer]));
+        $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$inventedOutcome, $answer]));
+        $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$inventedScope, $answer]));
+        $this->assertTrue($this->invokePrivate('sessionFeedbackHasUnsupportedSpecificClaims', [
+            'The answer says you listened to an upset customer. You led a team of ten engineers across three countries.',
+            [$answer],
+        ]));
+
+        $feedback = $this->v4FeedbackFor($answer, 86, 'directly_addressed', true, 75);
+        $feedback['better_sample_answer'] = $inventedTool;
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertSame('local_evidence', $normalized['better_sample_answer_source']);
+        $this->assertStringNotContainsString('Salesforce', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('I listened to an upset customer', $normalized['better_sample_answer']);
+    }
+
+    public function test_all_visible_provider_fields_reject_invented_employer_tool_and_outcome_claims(): void
+    {
+        $answer = [
+            'id' => 80,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'expected_guide' => 'Explain query plan inspection, row estimates, indexes, locks, and verification.',
+            'answer' => 'I inspect the query plan, compare row estimates, check indexes and locks, and verify the same workload after each change.',
+        ];
+        $item = $this->v4FeedbackFor($answer, 90, 'directly_addressed');
+        $response = [
+            'per_question_feedback' => [$item],
+            'session_feedback' => $this->sessionFeedback(88, 0, [$answer]),
+        ];
+        $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [$response, [$answer]]));
+
+        $invalidFeedback = $response;
+        $invalidFeedback['per_question_feedback'][0]['ai_feedback'] .= ' At Google, the candidate used AWS and renewed the contract.';
+        $feedbackErrors = $this->invokePrivate('feedbackResponseValidationErrors', [$invalidFeedback, [$answer]]);
+        $this->assertContains(
+            'Feedback ID 80 contains unsupported employer, tool, or outcome claims.',
+            $feedbackErrors
+        );
+
+        $invalidFollowUp = $response;
+        $invalidFollowUp['per_question_feedback'][0]['follow_up_question'] = 'What result followed after you used AWS at Google and renewed the contract?';
+        $followUpErrors = $this->invokePrivate('feedbackResponseValidationErrors', [$invalidFollowUp, [$answer]]);
+        $this->assertContains('Feedback ID 80 has an invalid follow_up_question.', $followUpErrors);
+
+        $invalidCoaching = $response;
+        $invalidCoaching['per_question_feedback'][0]['coaching']['keep'] .= ' At Google, AWS renewed the contract.';
+        $coachingErrors = $this->invokePrivate('feedbackResponseValidationErrors', [$invalidCoaching, [$answer]]);
+        $this->assertContains('Feedback ID 80 has invalid visible coaching text.', $coachingErrors);
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [
+            $invalidFeedback['per_question_feedback'][0],
+            $answer,
+            [],
+        ]);
+        $this->assertStringNotContainsString('Google', $normalized['ai_feedback']);
+        $this->assertStringNotContainsString('AWS', $normalized['ai_feedback']);
+        $this->assertStringNotContainsString('renewed the contract', $normalized['ai_feedback']);
+    }
+
+    public function test_clause_level_grounding_rejects_novel_personal_facts_but_allows_explicit_coaching(): void
+    {
+        $answer = [
+            'id' => 801,
+            'question_type' => 'Personal',
+            'question' => 'How do you keep customer issue records accurate?',
+            'expected_guide' => 'Explain the steps used to help the customer and document the issue.',
+            'answer' => 'I helped a customer with an issue and documented it.',
+        ];
+        $inventedPossibleAnswer = 'I helped a customer with an issue and documented it. I analyzed financial forecasts and automated monthly reporting. I would keep the answer focused on details I can confirm.';
+        $inventedVisibleFeedback = 'For "'.$answer['question'].'", the exact answer evidence "'.$answer['answer'].'" addresses the question. You analyzed financial forecasts and automated monthly reporting. This explains the score using only the saved answer evidence.';
+
+        $this->assertFalse(AIService::visibleReviewPossibleAnswerIsProviderUsable($inventedPossibleAnswer, $answer));
+        $this->assertFalse(AIService::visibleReviewFeedbackIsProviderUsable($inventedVisibleFeedback, $answer));
+        $this->assertTrue($this->invokePrivate(
+            'providerVisibleTextHasUnsupportedSpecificClaims',
+            ['You analyzed financial forecasts and automated monthly reporting.', $answer]
+        ));
+        $this->assertTrue($this->invokePrivate(
+            'providerVisibleTextHasUnsupportedSpecificClaims',
+            ['The candidate analyzed financial forecasts and automated monthly reporting.', $answer]
+        ));
+        $this->assertTrue($this->invokePrivate(
+            'providerVisibleTextHasUnsupportedSpecificClaims',
+            ['They automated monthly reporting after reviewing financial forecasts.', $answer]
+        ));
+
+        $this->assertFalse($this->invokePrivate(
+            'providerVisibleTextHasUnsupportedSpecificClaims',
+            ['Next step: explain how you would analyze financial forecasts or automate monthly reporting only if that is true.', $answer]
+        ));
+        $this->assertFalse($this->invokePrivate(
+            'providerVisibleTextHasUnsupportedSpecificClaims',
+            ['The answer did not mention whether you analyzed financial forecasts or automated monthly reporting.', $answer]
+        ));
+    }
+
+    public function test_visible_feedback_allows_an_exact_prompt_reference_without_treating_it_as_outcome_evidence(): void
+    {
+        $answer = [
+            'id' => 81,
+            'question_type' => 'Behavioral',
+            'question' => 'Tell me about a process you improved.',
+            'expected_guide' => 'Explain your action and the result of the improvement.',
+            'answer' => 'I reviewed the checklist with my supervisor and documented each approval step.',
+        ];
+
+        $quotedPrompt = 'Answer "'.$answer['question'].'" by connecting the checklist to one true result.';
+
+        $this->assertFalse($this->invokePrivate(
+            'providerVisibleTextHasUnsupportedSpecificClaims',
+            [$quotedPrompt, $answer]
+        ));
+        $this->assertTrue($this->invokePrivate(
+            'providerVisibleTextHasUnsupportedSpecificClaims',
+            ['You improved the process.', $answer]
+        ));
+    }
+
     public function test_it_uses_the_versioned_readiness_weights_for_relevance(): void
     {
         $score = AIService::calculateWeightedReadinessScore(
@@ -269,7 +409,7 @@ class WeightedReadinessScoringTest extends TestCase
                 $this->feedbackItem(11, 99, 80, 90, 70, 80, false, 100),
                 $this->feedbackItem(12, 1, 60, 70, 80, 90, true, 40),
             ],
-            'session_feedback' => $this->sessionFeedback(100, 100),
+            'session_feedback' => $this->sessionFeedback(100, 100, $answers),
         ];
         $response['per_question_feedback'][0]['evidence_quotes'] = [$answers[0]['answer']];
         $response['per_question_feedback'][0]['question_focus'] = $answers[0]['question'];
@@ -312,11 +452,14 @@ class WeightedReadinessScoringTest extends TestCase
         $validItem['coaching'] = $this->coachingFor($answers[0], 'An index can improve selective reads but adds storage and write overhead');
         $validResponse = [
             'per_question_feedback' => [$validItem],
-            'session_feedback' => $this->sessionFeedback(80, 0),
+            'session_feedback' => $this->sessionFeedback(80, 0, $answers),
         ];
         $validResponse['session_feedback']['overall_summary'] = 'Across the indexing tradeoff answer, the candidate explained selective reads, storage, write overhead, workload, and query plan checks. The next focus is to keep those tradeoffs clear.';
 
-        $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [$validResponse, $answers]));
+        $this->assertTrue(
+            $this->invokePrivate('feedbackResponseIsComplete', [$validResponse, $answers]),
+            json_encode($this->invokePrivate('feedbackResponseValidationErrors', [$validResponse, $answers]))
+        );
 
         $duplicate = $validResponse;
         $duplicate['per_question_feedback'][] = $validItem;
@@ -548,12 +691,16 @@ class WeightedReadinessScoringTest extends TestCase
         $item['better_sample_answer'] = 'I inspected the query plan and verified the index usage before changing the query. I would explain what each check showed. This keeps the diagnostic answer clear and grounded in the steps I described.';
         $item['coaching'] = $this->coachingFor($answers[0], 'I inspected the query plan and verified the index usage');
 
-        $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
+        $validResponse = [
             'per_question_feedback' => [$item],
-            'session_feedback' => array_merge($this->sessionFeedback(80, 0), [
+            'session_feedback' => array_merge($this->sessionFeedback(80, 0, $answers), [
                 'overall_summary' => 'Across the slow query answer, the candidate used query plan and index usage details. The next focus is to explain what each diagnostic check showed.',
             ]),
-        ], $answers]));
+        ];
+        $this->assertTrue(
+            $this->invokePrivate('feedbackResponseIsComplete', [$validResponse, $answers]),
+            json_encode($this->invokePrivate('feedbackResponseValidationErrors', [$validResponse, $answers]))
+        );
     }
 
     public function test_session_summary_cites_candidate_evidence_and_counts_observed_gaps(): void
@@ -579,6 +726,104 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString($strongAnswer, $normalized['session_feedback']['strengths']);
         $this->assertStringContainsString('1 of 2 responses that needed your own action did not clearly say what you did', $normalized['session_feedback']['weaknesses']);
         $this->assertStringNotContainsString('appears to have', $normalized['session_feedback']['strengths']);
+    }
+
+    public function test_every_provider_session_note_must_be_grounded_in_saved_answer_evidence(): void
+    {
+        $answer = [
+            'id' => 53,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'expected_guide' => 'Explain query plan inspection, row estimates, indexes, locks, and verification.',
+            'answer' => 'I inspect the query plan, compare row estimates, check indexes and locks, and verify the same workload after each change.',
+        ];
+        $item = $this->v4FeedbackFor($answer, 90, 'directly_addressed');
+        $session = [
+            'overall_readiness_score' => 88,
+            'star_method_score' => 0,
+            'overall_summary' => 'The database answer explains query plan inspection, row estimates, indexes, locks, and workload verification.',
+            'strengths' => 'The answer clearly connects query plan inspection with row estimates and index checks.',
+            'weaknesses' => 'The database diagnosis could explain the lock findings and workload tradeoff more fully.',
+            'improvement_suggestions' => 'Practice linking each query plan finding to the verified workload change.',
+        ];
+        $response = [
+            'per_question_feedback' => [$item],
+            'session_feedback' => $session,
+        ];
+
+        $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [$response, [$answer]]));
+
+        $ungroundedNotes = [
+            'strengths' => 'The candidate led international banking mergers across several corporate divisions.',
+            'weaknesses' => 'The response omitted pediatric clinical safety and pharmaceutical dosage controls.',
+            'improvement_suggestions' => 'Practice explaining maritime navigation permits and vessel inspections more clearly.',
+        ];
+        foreach ($ungroundedNotes as $field => $note) {
+            $invalid = $response;
+            $invalid['session_feedback'][$field] = $note;
+            $errors = $this->invokePrivate('feedbackResponseValidationErrors', [$invalid, [$answer]]);
+
+            $this->assertContains("session_feedback.{$field} is not specific to the saved answers.", $errors);
+            $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [$invalid, [$answer]]));
+        }
+
+        $overlapWithInventedClaims = $response;
+        $overlapWithInventedClaims['session_feedback']['strengths'] = 'The query answer showed AWS expertise at Google and renewed a contract.';
+        $claimErrors = $this->invokePrivate('feedbackResponseValidationErrors', [$overlapWithInventedClaims, [$answer]]);
+        $this->assertContains(
+            'session_feedback.strengths contains unsupported employer, tool, or outcome claims.',
+            $claimErrors
+        );
+        $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [$overlapWithInventedClaims, [$answer]]));
+
+        $imperativeSuggestion = $response;
+        $imperativeSuggestion['session_feedback']['improvement_suggestions'] = 'Practice improving the query plan explanation by connecting each finding to the verified workload.';
+        $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [$imperativeSuggestion, [$answer]]));
+
+        $normalized = $this->invokePrivate('normalizeFeedbackResponse', [[
+            'per_question_feedback' => [$item],
+            'session_feedback' => array_merge($session, [
+                'strengths' => $ungroundedNotes['strengths'],
+            ]),
+        ], [$answer], []]);
+
+        $this->assertStringNotContainsString('banking mergers', $normalized['session_feedback']['strengths']);
+        $this->assertStringContainsString('query plan', $normalized['session_feedback']['strengths']);
+    }
+
+    public function test_strict_normalization_preserves_grounded_provider_session_fields_and_never_silently_replaces_them(): void
+    {
+        $answer = [
+            'id' => 54,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'expected_guide' => 'Inspect the query plan, row estimates, indexes, locks, and cardinality estimator before verification.',
+            'answer' => 'I inspect the query plan, compare row estimates, check indexes and locks, and verify the same workload after each change.',
+        ];
+        $item = $this->v4FeedbackFor($answer, 90, 'directly_addressed');
+        $providerStrength = 'The cardinality estimator check adds a useful database verification detail.';
+        $response = [
+            'per_question_feedback' => [$item],
+            'session_feedback' => [
+                'overall_readiness_score' => 88,
+                'star_method_score' => 0,
+                'overall_summary' => 'The query plan answer connects row estimates, indexes, locks, and workload verification.',
+                'strengths' => $providerStrength,
+                'weaknesses' => 'The database answer could explain the lock findings and workload tradeoff more fully.',
+                'improvement_suggestions' => 'Practice connecting the cardinality estimator finding to the verified workload change.',
+            ],
+        ];
+
+        $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [$response, [$answer]]));
+        $normalized = $this->invokePrivate('normalizeFeedbackResponse', [$response, [$answer], [], true, 'openai']);
+        $this->assertStringContainsString('cardinality estimator', $normalized['session_feedback']['strengths']);
+
+        $invalid = $response;
+        $invalid['session_feedback']['strengths'] = 'The database answer used AWS at Google and renewed the contract.';
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('AI session feedback was incomplete after validation.');
+        $this->invokePrivate('normalizeFeedbackResponse', [$invalid, [$answer], [], true, 'openai']);
     }
 
     public function test_each_local_fallback_is_tied_to_its_own_question(): void
@@ -760,12 +1005,15 @@ class WeightedReadinessScoringTest extends TestCase
 
         $response = [
             'per_question_feedback' => $items,
-            'session_feedback' => array_merge($this->sessionFeedback(88, 0), [
+            'session_feedback' => array_merge($this->sessionFeedback(88, 0, $answers), [
                 'overall_summary' => 'Across the indexing and transaction answers, the candidate gave different database tradeoff details. The next focus is to connect each tradeoff to the final workload choice.',
             ]),
         ];
 
-        $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [$response, $answers]));
+        $this->assertTrue(
+            $this->invokePrivate('feedbackResponseIsComplete', [$response, $answers]),
+            json_encode($this->invokePrivate('feedbackResponseValidationErrors', [$response, $answers]))
+        );
 
         $normalized = $this->invokePrivate('normalizeFeedbackResponse', [$response, $answers, [], true, 'openai']);
 
@@ -846,7 +1094,7 @@ class WeightedReadinessScoringTest extends TestCase
 
         $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
             'per_question_feedback' => [$feedback],
-            'session_feedback' => array_merge($this->sessionFeedback(88, 0), [
+            'session_feedback' => array_merge($this->sessionFeedback(88, 0, [$answer]), [
                 'overall_summary' => 'Across the role fit answer, the candidate connected support experience, careful documentation, and customer requests to the role. The next focus is to add a clearer result.',
             ]),
         ], [$answer]]));
@@ -931,6 +1179,83 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertFalse($normalized['score_calibration']['adjustment_applied']);
         $this->assertGreaterThanOrEqual(95, $normalized['feedback_quality']['reliability_percent']);
         $this->assertSame('High', $normalized['feedback_quality']['reliability_band']);
+    }
+
+    public function test_provider_scores_are_symmetrically_calibrated_without_erasing_moderate_uncertainty(): void
+    {
+        $answer = [
+            'id' => 705,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I inspect the query plan, compare estimated and actual rows, check indexes and locks, time the query, and verify each change against the same workload.',
+        ];
+        $severelyLow = $this->v4FeedbackFor($answer, 0, 'not_addressed');
+        foreach (['score', 'clarity_score', 'relevance_score', 'grammar_score', 'professionalism_score'] as $field) {
+            $severelyLow[$field] = 0;
+        }
+        $profile = $this->invokePrivate('answerEvidenceProfile', [
+            $answer['answer'],
+            $answer['question'],
+            false,
+            $answer,
+        ]);
+        $this->assertFalse($this->invokePrivate('providerVisibleTextHasUnsupportedSpecificClaims', [
+            $severelyLow['ai_feedback'],
+            $answer,
+        ]));
+        $this->assertTrue($this->invokePrivate('feedbackHasAnswerSpecificCommentary', [
+            $severelyLow['ai_feedback'],
+            $severelyLow,
+            $answer,
+        ]));
+        $this->assertTrue($this->invokePrivate('providerRelevanceIsPlausible', [
+            $severelyLow,
+            $answer,
+            $profile,
+        ]));
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [
+            $severelyLow,
+            $answer,
+            [],
+            true,
+            'openai',
+        ]);
+        $calibration = $normalized['score_calibration'];
+
+        $this->assertLessThanOrEqual(-35, $calibration['provider_delta']);
+        $this->assertTrue($calibration['adjustment_applied']);
+        $this->assertContains('provider_score_below_local_evidence_band', $calibration['risk_flags']);
+        $this->assertGreaterThanOrEqual(
+            max(0, $calibration['local_reference_score'] - 25),
+            $calibration['calibrated_readiness_score']
+        );
+        $this->assertGreaterThan(0, $normalized['score']);
+        $this->assertSame(80, $normalized['scoring_confidence']);
+        $this->assertLessThan(95, $normalized['feedback_quality']['reliability_percent']);
+
+        $moderateScore = max(0, $calibration['local_reference_score'] - 20);
+        $moderatelyLow = $this->v4FeedbackFor(
+            $answer,
+            $moderateScore,
+            $moderateScore >= 75 ? 'directly_addressed' : ($moderateScore >= 50 ? 'partially_addressed' : 'not_addressed')
+        );
+        foreach (['score', 'clarity_score', 'relevance_score', 'grammar_score', 'professionalism_score'] as $field) {
+            $moderatelyLow[$field] = $moderateScore;
+        }
+
+        $moderate = $this->invokePrivate('normalizeQuestionFeedback', [
+            $moderatelyLow,
+            $answer,
+            [],
+            true,
+            'openai',
+        ]);
+
+        $this->assertSame(-20, $moderate['score_calibration']['provider_delta']);
+        $this->assertFalse($moderate['score_calibration']['adjustment_applied']);
+        $this->assertNotContains('provider_score_below_local_evidence_band', $moderate['score_calibration']['risk_flags']);
+        $this->assertSame($moderateScore, $moderate['score_calibration']['calibrated_readiness_score']);
     }
 
     public function test_provider_ai_feedback_is_saved_in_plain_words(): void
@@ -1117,6 +1442,135 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString('did not clearly say what you did', $weak);
     }
 
+    public function test_voice_and_unedited_hybrid_transcripts_receive_neutral_formatting_credit(): void
+    {
+        $question = 'Tell me about a time you improved a support process.';
+        $formatted = "I reviewed the support queue and identified repeated login requests. I updated the troubleshooting guide and trained two teammates. I checked the next week's tickets and confirmed the new steps reduced repeated requests.";
+        $unformatted = "i reviewed the support queue and identified repeated login requests i updated the troubleshooting guide and trained two teammates i checked the next week's tickets and confirmed the new steps reduced repeated requests";
+        $answers = [
+            [
+                'id' => 801,
+                'question_type' => 'Behavioral',
+                'question' => $question,
+                'answer' => $formatted,
+                'response_mode' => 'voice',
+                'uses_asr_transcript' => true,
+            ],
+            [
+                'id' => 802,
+                'question_type' => 'Behavioral',
+                'question' => $question,
+                'answer' => $unformatted,
+                'response_mode' => 'voice',
+                'uses_asr_transcript' => true,
+            ],
+            [
+                'id' => 803,
+                'question_type' => 'Behavioral',
+                'question' => $question,
+                'answer' => $formatted,
+                'response_mode' => 'hybrid',
+                'voice_duration' => 24,
+                'uses_asr_transcript' => true,
+            ],
+            [
+                'id' => 804,
+                'question_type' => 'Behavioral',
+                'question' => $question,
+                'answer' => $unformatted,
+                'response_mode' => 'hybrid',
+                'voice_duration' => 24,
+                'uses_asr_transcript' => true,
+            ],
+        ];
+
+        $normalized = array_map(
+            fn (array $answer): array => $this->invokePrivate('normalizeQuestionFeedback', [[], $answer, []]),
+            $answers
+        );
+        $grammarScores = array_column($normalized, 'grammar_score');
+        $clarityScores = array_column($normalized, 'clarity_score');
+        $overallScores = array_column($normalized, 'score');
+
+        $this->assertCount(1, array_unique($grammarScores));
+        $this->assertCount(1, array_unique($clarityScores));
+        $this->assertCount(1, array_unique($overallScores));
+        foreach ($normalized as $item) {
+            $this->assertTrue($item['uses_asr_transcript']);
+            $this->assertTrue($item['score_calibration']['uses_asr_transcript']);
+            $this->assertSame('neutral_midpoint', $item['score_calibration']['formatting_treatment']);
+        }
+
+        $profile = $this->invokePrivate('answerEvidenceProfile', [
+            $formatted,
+            $question,
+            true,
+            $answers[0],
+        ]);
+        $this->assertTrue($profile['uses_asr_transcript']);
+
+        $localScores = $this->invokePrivate('localEvidenceScores', [$formatted, $question, true, $profile]);
+        [, , $providerCalibration] = $this->invokePrivate('applyProviderScoreCalibration', [
+            [
+                'score' => 85,
+                'clarity_score' => 85,
+                'relevance_score' => 85,
+                'grammar_score' => 85,
+                'professionalism_score' => 85,
+            ],
+            75,
+            $localScores,
+            $profile,
+            true,
+            $formatted,
+            $question,
+            [],
+        ]);
+        $this->assertTrue($providerCalibration['uses_asr_transcript']);
+        $this->assertSame('neutral_midpoint', $providerCalibration['formatting_treatment']);
+    }
+
+    public function test_typed_interview_answers_keep_observable_formatting_credit(): void
+    {
+        $question = 'Tell me about a time you improved a support process.';
+        $formatted = "I reviewed the support queue and identified repeated login requests. I updated the troubleshooting guide and trained two teammates. I checked the next week's tickets and confirmed the new steps reduced repeated requests.";
+        $unformatted = "i reviewed the support queue and identified repeated login requests i updated the troubleshooting guide and trained two teammates i checked the next week's tickets and confirmed the new steps reduced repeated requests";
+        $base = [
+            'question_type' => 'Behavioral',
+            'question' => $question,
+            'response_mode' => 'text',
+            'uses_asr_transcript' => false,
+        ];
+        $formattedTyped = $this->invokePrivate('normalizeQuestionFeedback', [[], array_merge($base, [
+            'id' => 805,
+            'answer' => $formatted,
+        ]), []]);
+        $unformattedTyped = $this->invokePrivate('normalizeQuestionFeedback', [[], array_merge($base, [
+            'id' => 806,
+            'answer' => $unformatted,
+        ]), []]);
+        $asrMidpoint = $this->invokePrivate('normalizeQuestionFeedback', [[], array_merge($base, [
+            'id' => 807,
+            'answer' => $formatted,
+            'response_mode' => 'voice',
+            'uses_asr_transcript' => true,
+        ]), []]);
+
+        $this->assertSame(14, $formattedTyped['grammar_score'] - $unformattedTyped['grammar_score']);
+        $this->assertSame(10, $formattedTyped['clarity_score'] - $unformattedTyped['clarity_score']);
+        $this->assertSame(
+            (int) (($formattedTyped['grammar_score'] + $unformattedTyped['grammar_score']) / 2),
+            $asrMidpoint['grammar_score']
+        );
+        $this->assertSame(
+            (int) (($formattedTyped['clarity_score'] + $unformattedTyped['clarity_score']) / 2),
+            $asrMidpoint['clarity_score']
+        );
+        $this->assertFalse($formattedTyped['uses_asr_transcript']);
+        $this->assertFalse($formattedTyped['score_calibration']['uses_asr_transcript']);
+        $this->assertSame('typed_observable', $formattedTyped['score_calibration']['formatting_treatment']);
+    }
+
     private function feedbackItem(
         int $id,
         int $score,
@@ -1210,15 +1664,19 @@ class WeightedReadinessScoringTest extends TestCase
         return 'answer';
     }
 
-    private function sessionFeedback(int $readiness, int $starScore): array
+    private function sessionFeedback(int $readiness, int $starScore, array $answers = []): array
     {
+        $first = is_array($answers[0] ?? null) ? $answers[0] : [];
+        $question = trim((string) ($first['question'] ?? 'the saved interview question'));
+        $answer = trim((string) ($first['answer'] ?? 'the saved answer detail'));
+
         return [
             'overall_readiness_score' => $readiness,
             'star_method_score' => $starScore,
-            'overall_summary' => 'Across the submitted answers, the candidate used specific evidence and should practice connecting each decision to a measurable result.',
-            'strengths' => 'The candidate used specific evidence in the submitted answers.',
-            'weaknesses' => 'Some answers could explain tradeoffs and constraints more clearly.',
-            'improvement_suggestions' => 'Practice connecting each decision to a measurable result.',
+            'overall_summary' => 'Across the saved response to "'.$question.'", the candidate used "'.$answer.'" as specific answer evidence.',
+            'strengths' => 'The saved answer "'.$answer.'" gives relevant detail for "'.$question.'".',
+            'weaknesses' => 'The response to "'.$question.'" could explain one true limit from "'.$answer.'" more fully.',
+            'improvement_suggestions' => 'Practice answering "'.$question.'" by organizing the saved details from "'.$answer.'".',
         ];
     }
 

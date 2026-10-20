@@ -49,6 +49,13 @@ final class QuestionIntentService
             return 'weakness';
         }
 
+        // A request to explain how a system works is descriptive, not a request
+        // for a personal past-event story. Keep the exact prompt authoritative
+        // even when a broad level guide or mapped skill happens to mention STAR.
+        if (preg_match('/\b(?:describe|explain|walk me through)\s+(?:how|what)\b.*\b(?:works|operates|functions)\b/i', $text)) {
+            return 'technical';
+        }
+
         if ($type === 'technical') {
             return 'technical';
         }

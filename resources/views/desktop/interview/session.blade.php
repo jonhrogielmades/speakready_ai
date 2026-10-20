@@ -712,11 +712,12 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  })();
  const voiceSessionTimesliceMs = 1000;
  const voiceSessionStopTimeoutMs = 8000;
- const serverTranscriptionTimesliceMs = mobileSpeechSurface? {{ max(2200, min(5000, (int) config('services.ai_transcription.mobile_chunk_ms', 3500))) }}: {{ max(1800, min(4000, (int) config('services.ai_transcription.chunk_ms', 2500))) }};
+ const voiceSessionAudioBitsPerSecond = {{ max(64000, min(256000, (int) config('services.ai_transcription.recording_audio_bitrate', 128000))) }};
+ const serverTranscriptionTimesliceMs = mobileSpeechSurface? {{ max(8000, min(15000, (int) config('services.ai_transcription.mobile_chunk_ms', 10000))) }}: {{ max(6000, min(12000, (int) config('services.ai_transcription.chunk_ms', 8000))) }};
  const serverTranscriptionDrainTimeoutMs = {{ max(8000, min(60000, (int) config('services.ai_transcription.drain_timeout_ms', 20000))) }};
  const serverTranscriptionRequestTimeoutMs = {{ max(10000, min(60000, (int) config('services.ai_transcription.request_timeout_ms', 30000))) }};
  const voiceSessionTranscriptionMaxBytes = 25600 * 1024;
- const voiceSessionFullTranscriptionTimeoutMs = Math.max(serverTranscriptionRequestTimeoutMs, 120000);
+ const voiceSessionFullTranscriptionTimeoutMs = Math.max(serverTranscriptionRequestTimeoutMs, {{ max(60000, min(300000, (int) config('services.ai_transcription.full_request_timeout_ms', 120000))) }});
  const serverTranscriptionMaxInFlight = {{ max(1, min(3, (int) config('services.ai_transcription.max_in_flight', 2))) }};
  const serverTranscriptionMaxQueuedChunks = Math.max(4, serverTranscriptionMaxInFlight * 3);
  const serverTranscriptionFailureLimit = 3;
@@ -1155,7 +1156,14 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function createVoiceSessionRecorder(stream) {
- const attempts = voiceSessionMimeType? [{ mimeType: voiceSessionMimeType }, null]: [null];
+ const attempts = voiceSessionMimeType
+ ? [
+ { mimeType: voiceSessionMimeType, audioBitsPerSecond: voiceSessionAudioBitsPerSecond },
+ { mimeType: voiceSessionMimeType },
+ { audioBitsPerSecond: voiceSessionAudioBitsPerSecond },
+ null
+ ]
+ : [{ audioBitsPerSecond: voiceSessionAudioBitsPerSecond }, null];
  let lastError = null;
 
  for (const options of attempts) {
@@ -1640,7 +1648,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  async function requestFullVoiceSessionTranscript(recording, question, previousTranscript = '') {
- const attempts = 2;
+ const attempts = 1;
  let lastError = null;
 
  for (let attempt = 1; attempt <= attempts; attempt++) {

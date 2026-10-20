@@ -9,6 +9,7 @@ use App\Services\AiProviderReliabilityService;
 use App\Services\AIService;
 use App\Services\CsvExportService;
 use App\Support\AiProviderSchema;
+use App\Support\RuntimeConfiguration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
@@ -218,8 +219,8 @@ class AdminAiController extends Controller
  'mapped_skills' => ['customer service', 'communication'],
  ]];
  $runtimeOptions = [
- 'timeout_seconds' => (int) env('AI_PROVIDER_SMOKE_TIMEOUT', 20),
- 'deadline_seconds' => (int) env('AI_PROVIDER_SMOKE_DEADLINE_SECONDS', 45),
+ 'timeout_seconds' => (int) RuntimeConfiguration::get('services.ai_providers.smoke_timeout_seconds', 'AI_PROVIDER_SMOKE_TIMEOUT', 20),
+ 'deadline_seconds' => (int) RuntimeConfiguration::get('services.ai_providers.smoke_deadline_seconds', 'AI_PROVIDER_SMOKE_DEADLINE_SECONDS', 45),
  'max_attempts' => 1,
  'http_attempts' => 1,
  'retry_delay_ms' => 0,

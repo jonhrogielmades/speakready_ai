@@ -1061,6 +1061,7 @@ class AdminAiProviderEvaluationTest extends TestCase
 
  if ($providerLabel === 'Cohere') {
  return [
+ 'finish_reason' => 'COMPLETE',
  'message' => [
  'content' => [[
  'type' => 'text',
@@ -1130,10 +1131,19 @@ class AdminAiProviderEvaluationTest extends TestCase
  ],
  ],
  'session_feedback' => [
- 'overall_summary' => 'Across the saved answer, the response used "'.$evidenceQuote.'" and '.$specificDetail.' as the main details. The next focus is to add the final result or effect only if it is missing.',
+ 'overall_summary' => 'Across the saved answer, the exact evidence "'.$evidenceQuote.'" supports the review. Keep that evidence and connect it to the true final result or effect when the answer needs that link.',
  'strengths' => 'The answer used the saved detail "'.$evidenceQuote.'" clearly.',
- 'weaknesses' => 'The answer can be stronger by naming the final result or effect after that action.',
- 'improvement_suggestions' => 'Keep the same saved detail and add the true outcome without inventing facts.',
+ 'weaknesses' => 'The review should check whether "'.$evidenceQuote.'" is clearly connected to the final result or effect.',
+ 'improvement_suggestions' => 'Keep "'.$evidenceQuote.'" and clearly connect it to the true outcome without inventing facts.',
+ ],
+ 'review_context' => [
+ 'rubric_name' => 'SpeakReady detailed interview feedback rubric',
+ 'rubric_version' => 'provider-evaluation-v1',
+ 'evidence_policy' => 'Use only exact details from the saved candidate answer.',
+ 'confidence_policy' => 'Base confidence on answer detail and exact evidence quotes.',
+ 'provider_confidence' => 'high',
+ 'insufficient_data' => false,
+ 'risk_flags' => ['none'],
  ],
  ];
  }

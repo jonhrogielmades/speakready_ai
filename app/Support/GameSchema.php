@@ -257,6 +257,7 @@ class GameSchema
  $table->unsignedInteger('question_index');
  $table->text('question_text');
  $table->text('answer_text')->nullable();
+ $table->text('delivery_transcript')->nullable();
  $table->boolean('is_skipped')->default(false);
  $table->string('response_mode')->default('hybrid');
  $table->integer('elapsed_seconds')->default(0);
@@ -268,6 +269,7 @@ class GameSchema
  $table->unsignedInteger('voice_recording_byte_size')->default(0);
  $table->string('voice_recording_original_name')->nullable();
  $table->string('voice_recording_transcription_status', 40)->nullable();
+ $table->string('voice_recording_transcription_source', 64)->nullable();
  $table->timestamp('voice_recording_uploaded_at')->nullable();
  $table->integer('filler_words_count')->default(0);
  $table->integer('pause_count')->default(0);
@@ -309,6 +311,9 @@ class GameSchema
  if (self::isMissing($missing, 'answer_text')) {
  $table->text('answer_text')->nullable();
  }
+ if (self::isMissing($missing, 'delivery_transcript')) {
+ $table->text('delivery_transcript')->nullable();
+ }
  if (self::isMissing($missing, 'is_skipped')) {
  $table->boolean('is_skipped')->default(false);
  }
@@ -341,6 +346,9 @@ class GameSchema
  }
  if (self::isMissing($missing, 'voice_recording_transcription_status')) {
  $table->string('voice_recording_transcription_status', 40)->nullable();
+ }
+ if (self::isMissing($missing, 'voice_recording_transcription_source')) {
+ $table->string('voice_recording_transcription_source', 64)->nullable();
  }
  if (self::isMissing($missing, 'voice_recording_uploaded_at')) {
  $table->timestamp('voice_recording_uploaded_at')->nullable();
@@ -493,6 +501,7 @@ class GameSchema
  'question_index',
  'question_text',
  'answer_text',
+ 'delivery_transcript',
  'is_skipped',
  'response_mode',
  'elapsed_seconds',
@@ -504,6 +513,7 @@ class GameSchema
  'voice_recording_byte_size',
  'voice_recording_original_name',
  'voice_recording_transcription_status',
+ 'voice_recording_transcription_source',
  'voice_recording_uploaded_at',
  'filler_words_count',
  'pause_count',
