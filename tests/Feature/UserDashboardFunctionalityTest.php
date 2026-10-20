@@ -100,13 +100,13 @@ class UserDashboardFunctionalityTest extends TestCase
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => [],
                 'shell' => 'class="user-desktop-shell desktop-shell',
-                'css' => 'css/desktop/dashboard.css?v=56',
+                'css' => 'css/desktop/dashboard.css?v=57',
             ],
             [
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => ['User-Agent' => $iphoneUserAgent],
                 'shell' => 'class="user-mobile-shell mobile-shell',
-                'css' => 'css/mobile/dashboard.css?v=49',
+                'css' => 'css/mobile/dashboard.css?v=50',
             ],
         ];
 
@@ -150,6 +150,13 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('navigator.mediaDevices.getUserMedia', false)
                 ->assertSee('Notification.requestPermission', false)
                 ->assertSee('Some selected tools still need browser permission.', false);
+
+            $response
+                ->assertSee('id="card-daily-challenge"', false)
+                ->assertSee('href="'.route('interview.setup').'"', false)
+                ->assertSee('id="card-current-goal"', false)
+                ->assertSee('href="'.route('user.progress').'"', false)
+                ->assertDontSee('Sharpen 3 advanced advanced answers', false);
 
             if (str_contains($case['css'], 'mobile/dashboard.css')) {
                 $response

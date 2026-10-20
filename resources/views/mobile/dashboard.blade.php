@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=49') }}" data-page-style="dashboard-v49">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=50') }}" data-page-style="dashboard-v50">
 @endpush
 
 @section('content')
@@ -81,7 +81,7 @@
             : ($goalPercent >= 40
                 ? 'You are building momentum toward this goal.'
                 : 'Start with one scored session to build momentum.'));
-    $challengeTitle = $scoreVal >= 75 ? 'Sharpen 3 advanced advanced answers' : 'Answer 3 HR questions';
+    $challengeTitle = $scoreVal >= 75 ? 'Sharpen 3 advanced answers' : 'Answer 3 HR questions';
     $challengeCopy = $scoreVal >= 75
         ? 'Polish role-fit stories, metrics, and confident closing answers.'
         : 'Practice structure, confidence, and local role-fit responses.';
@@ -389,7 +389,7 @@
                 <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100 sr-challenge-cta"><i class="fa-solid fa-play"></i> START INTERVIEW</a>
             </section>
 
-            <section class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#ef4444">
+            <section id="card-current-goal" class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#ef4444">
                 <div class="sr-side-feature-header">
                     <div class="sr-side-title-row">
                         <div class="sr-side-icon"><i class="fa-solid fa-bullseye"></i></div>
@@ -410,6 +410,7 @@
                         </div>
                         <div class="sr-goal-footer">
                             <div class="sr-goal-note"><i class="fa-solid fa-chart-line"></i> {{ $goalNote }}</div>
+                            <a href="{{ route('user.progress') }}" class="sr-side-detail-btn">View Goals <i class="fa-solid fa-chevron-right"></i></a>
                         </div>
                     </div>
                 @else

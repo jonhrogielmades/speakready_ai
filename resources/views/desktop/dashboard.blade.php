@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=56') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=57') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -78,7 +78,7 @@
             : ($goalPercent >= 40
                 ? 'You are building momentum toward this goal.'
                 : 'Start with one scored session to build momentum.'));
-    $challengeTitle = $scoreVal >= 75 ? 'Sharpen 3 advanced advanced answers' : 'Answer 3 HR questions';
+    $challengeTitle = $scoreVal >= 75 ? 'Sharpen 3 advanced answers' : 'Answer 3 HR questions';
     $challengeCopy = $scoreVal >= 75
         ? 'Polish role-fit stories, metrics, and confident closing answers.'
         : 'Practice structure, confidence, and local role-fit responses.';

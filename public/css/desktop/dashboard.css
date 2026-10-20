@@ -10599,3 +10599,18 @@ body.user-desktop-shell:not(.admin-shell) .sr-dashboard #card-achievements.sr-ac
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* Keep the support cards content-sized so a taller sibling cannot create a
+   large empty area beneath the challenge or goal content. */
+@media (min-width: 992px) {
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row {
+        align-items: start !important;
+        grid-auto-rows: auto !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row > .sr-card {
+        align-self: start !important;
+        height: auto !important;
+        min-height: 0 !important;
+    }
+}

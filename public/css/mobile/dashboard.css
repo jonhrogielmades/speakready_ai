@@ -10088,6 +10088,30 @@ body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-pr
     height: clamp(190px, 46vh, 240px) !important;
 }
 
+/* Keep mobile support cards content-sized and prevent an unused vertical
+   stretch from making the dashboard feel sparse. */
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-side-stack > .sr-side-feature,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-daily-challenge,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-current-goal {
+    height: auto !important;
+    min-height: 0 !important;
+    align-self: stretch !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-current-goal .sr-goal-footer {
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-current-goal .sr-goal-note {
+    flex: 1 1 170px !important;
+    min-width: 0 !important;
+}
+
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard #card-current-goal .sr-side-detail-btn {
+    flex: 0 0 auto !important;
+}
+
 @media (max-width: 380px) {
     body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid,
     body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-readiness-card-grid {
