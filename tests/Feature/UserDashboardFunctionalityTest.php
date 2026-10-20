@@ -100,7 +100,7 @@ class UserDashboardFunctionalityTest extends TestCase
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => [],
                 'shell' => 'class="user-desktop-shell desktop-shell',
-                'css' => 'css/desktop/dashboard.css?v=57',
+                'css' => 'css/desktop/dashboard.css?v=58',
             ],
             [
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
@@ -176,6 +176,10 @@ class UserDashboardFunctionalityTest extends TestCase
                     ->assertDontSee("localStorage.removeItem('speakready.dashboardCoachLauncher.mobile')", false);
             } else {
                 $response
+                    ->assertSee('class="sr-saas-command-metric"', false)
+                    ->assertSee('aria-label="Open readiness status:', false)
+                    ->assertSee('aria-label="Open readiness trend:', false)
+                    ->assertSee('aria-label="Open readiness target:', false)
                     ->assertSee('id="dashboardCoachImageTrigger"', false)
                     ->assertSee('sr-image-coach-trigger', false)
                     ->assertSee('Click the robot for AI Coach.')

@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=57') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=58') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -147,18 +147,18 @@
             <p>Track interview readiness, practice momentum, and next actions in one focused view.</p>
         </div>
         <div class="sr-saas-command-metrics" role="group" aria-label="Dashboard state">
-            <div class="sr-saas-command-metric">
+            <a href="{{ route('user.progress') }}" class="sr-saas-command-metric" aria-label="Open readiness status: {{ $scoreText }}">
                 <span>Status</span>
                 <strong>{{ $scoreText }}</strong>
-            </div>
-            <div class="sr-saas-command-metric">
+            </a>
+            <a href="{{ route('user.progress') }}" class="sr-saas-command-metric" aria-label="Open readiness trend: {{ $trendDirectionText }}">
                 <span>Trend</span>
                 <strong>{{ $trendDirectionText }}</strong>
-            </div>
-            <div class="sr-saas-command-metric">
+            </a>
+            <a href="{{ route('user.progress') }}" class="sr-saas-command-metric" aria-label="Open readiness target: {{ $goalTarget }} percent">
                 <span>Target</span>
                 <strong>{{ $goalTarget }}%</strong>
-            </div>
+            </a>
         </div>
     </section>
 
@@ -289,7 +289,7 @@
                 </div>
                 <div class="sr-score-layout">
                     <div class="sr-score-primary">
-                        <div class="sr-readiness-ring" style="--ring-value: {{ $scoreVal }}%;" aria-label="Overall readiness {{ $scoreVal }} percent">
+                        <div class="sr-readiness-ring" role="img" style="--ring-value: {{ $scoreVal }}%;" aria-label="Overall readiness {{ $scoreVal }} percent">
                             <div class="sr-ring-content">
                                 <div class="sr-score-value">{{ $scoreVal }}<span>%</span></div>
                                 <div class="sr-ring-label">Overall Readiness</div>
