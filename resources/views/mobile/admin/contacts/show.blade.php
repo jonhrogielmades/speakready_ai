@@ -63,7 +63,7 @@
                 <i class="fa-solid fa-reply me-2"></i> Reply via Email
             </a>
             
-            <form action="{{ route('admin.contacts.destroy', $contact->id) }}" method="POST" class="admin-contact-detail-delete-form" onsubmit="return confirm('Are you sure you want to delete this message?');">
+            <form action="{{ route('admin.contacts.destroy', $contact->id) }}" method="POST" class="admin-contact-detail-delete-form" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Are you sure you want to delete this message?');">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-outline-danger" style="border-radius:10px; font-weight:600;">

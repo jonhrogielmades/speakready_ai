@@ -21,7 +21,7 @@
             <button type="button" class="btn btn-danger" style="border-radius:12px;" data-bs-toggle="modal" data-bs-target="#flagModal">
                 <i class="fa-solid fa-flag me-2"></i>Flag Session
             </button>
-            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Delete this interview session? This cannot be undone.');">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-outline-danger" style="border-radius:12px;">

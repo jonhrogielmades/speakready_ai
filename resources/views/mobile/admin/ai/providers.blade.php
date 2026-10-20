@@ -322,7 +322,7 @@
                                     @endif
                                     <li><hr class="dropdown-divider" style="border-color:var(--bd);"></li>
                                     <li>
-                                        <form action="{{ route('admin.ai.providers.destroy', $provider->id) }}" method="POST" class="ai-provider-menu-form" onsubmit="return confirm('Are you sure you want to delete this AI Provider?');">
+                                        <form action="{{ route('admin.ai.providers.destroy', $provider->id) }}" method="POST" class="ai-provider-menu-form" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Are you sure you want to delete this AI Provider?');">
                                             @csrf
                                             @method('DELETE')
                                             <button class="dropdown-item text-danger" type="submit"><i class="fa-solid fa-trash me-2 text-danger"></i>Delete Provider</button>

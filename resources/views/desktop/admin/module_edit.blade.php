@@ -165,7 +165,7 @@
                                 </div>
                                 <div class="d-flex justify-content-end gap-2 mt-3 flex-wrap">
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editChapterModal{{ $chapter->id }}">Edit Chapter</button>
-                                    <form action="{{ route('admin.modules.chapters.destroy', $chapter->id) }}" method="POST" onsubmit="return confirm('Delete this chapter?');">
+                                    <form action="{{ route('admin.modules.chapters.destroy', $chapter->id) }}" method="POST" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Delete this chapter?');">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Delete Chapter</button>
                                     </form>

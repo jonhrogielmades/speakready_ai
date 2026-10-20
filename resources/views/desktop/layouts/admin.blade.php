@@ -282,6 +282,8 @@
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+      <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
+      <script src="{{ asset('js/admin-ui.js?v=1') }}"></script>
       @include('desktop.partials.flash-modal')
       <!-- AOS -->
       <script src="{{ asset('js/aos.js') }}"></script>
@@ -359,7 +361,8 @@
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                navigator.serviceWorker.register('/sw.js?v=24').then(function(registration) {
-                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                  if (!registration) return;
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
                });
@@ -703,12 +706,17 @@
           function clearAllActivities(event) {
               event.preventDefault();
               event.stopPropagation();
-              if(confirm('Are you sure you want to clear all important activity logs? This cannot be undone.')) {
+              const confirmation = window.SpeakReadyAdminConfirm
+               ? window.SpeakReadyAdminConfirm('Are you sure you want to clear all important activity logs? This cannot be undone.')
+               : Promise.resolve(false);
+              confirmation.then(function(confirmed) {
+               if (confirmed) {
                   fetch(`/admin/api/activities/clear-all`, {
                       method: 'DELETE',
                       headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
                   }).then(() => fetchAdminActivities());
-              }
+               }
+              });
           }
 
           document.addEventListener('DOMContentLoaded', function() {

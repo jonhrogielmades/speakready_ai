@@ -159,7 +159,7 @@
                                     </button>
                                     <form action="{{ route('admin.game.destroy', $level->id) }}" method="POST" style="margin:0;">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Delete" onclick="return confirm('Are you sure you want to delete this game?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Delete" onclick="return window.SpeakReadyAdminConfirm(event, this.form, 'Are you sure you want to delete this game?');">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </form>

@@ -113,7 +113,7 @@
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px;">
                         <div class="module-actions">
                         <a href="{{ route('admin.modules.edit', $m->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:.7rem"><i class="fa-solid fa-sliders me-1"></i>Manage</a>
-                        <form action="{{ route('admin.modules.destroy', $m->id) }}" method="POST" onsubmit="return confirm('Delete this module?');">
+                        <form action="{{ route('admin.modules.destroy', $m->id) }}" method="POST" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Delete this module?');">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:.7rem"><i class="fa-solid fa-trash me-1"></i>Delete</button>
                         </form>

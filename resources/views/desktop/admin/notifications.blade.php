@@ -185,7 +185,7 @@
                                 </td>
                                 <td data-label="Date" style="color:var(--tx2);">{{ $announcement->created_at->format('M d, Y h:i A') }}</td>
                                 <td data-label="Actions" class="text-end">
-                                    <form action="{{ route('admin.notifications.destroy', $announcement->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this record? Note: This will not delete the actual notifications already delivered to users.');">
+                                    <form action="{{ route('admin.notifications.destroy', $announcement->id) }}" method="POST" class="d-inline" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Delete this record? Note: This will not delete the actual notifications already delivered to users.');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm" style="background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.2);" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
@@ -312,14 +312,16 @@ function markActivityReadFromPage(id, event) {
 
 function deleteActivityFromPage(id, event) {
     event.preventDefault();
-    if (!confirm('Delete this activity log?')) {
-        return;
-    }
-
-    fetch(adminActivityPageUrl(`/${encodeURIComponent(id)}`), {
-        method: 'DELETE',
-        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
-    }).then(reloadAdminNotificationsPage);
+    const confirmation = window.SpeakReadyAdminConfirm
+        ? window.SpeakReadyAdminConfirm('Delete this activity log?')
+        : Promise.resolve(false);
+    confirmation.then(confirmed => {
+        if (!confirmed) return;
+        fetch(adminActivityPageUrl(`/${encodeURIComponent(id)}`), {
+            method: 'DELETE',
+            headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
+        }).then(reloadAdminNotificationsPage);
+    });
 }
 
 function markAllActivitiesReadFromPage(event) {
@@ -332,14 +334,16 @@ function markAllActivitiesReadFromPage(event) {
 
 function clearAllActivitiesFromPage(event) {
     event.preventDefault();
-    if (!confirm('Are you sure you want to clear all important activity logs? This cannot be undone.')) {
-        return;
-    }
-
-    fetch(adminActivityPageUrl('/clear-all'), {
-        method: 'DELETE',
-        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
-    }).then(reloadAdminNotificationsPage);
+    const confirmation = window.SpeakReadyAdminConfirm
+        ? window.SpeakReadyAdminConfirm('Are you sure you want to clear all important activity logs? This cannot be undone.')
+        : Promise.resolve(false);
+    confirmation.then(confirmed => {
+        if (!confirmed) return;
+        fetch(adminActivityPageUrl('/clear-all'), {
+            method: 'DELETE',
+            headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
+        }).then(reloadAdminNotificationsPage);
+    });
 }
 </script>
 @endsection

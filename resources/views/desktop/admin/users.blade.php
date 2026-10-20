@@ -345,7 +345,7 @@
                         <td class="text-end">
                             <div class="user-action-cell">
                             @if($showTrashed)
-                            <form action="{{ route('admin.users.restore', $user->id) }}" method="POST" onsubmit="return confirm('Restore this user account?');">
+                            <form action="{{ route('admin.users.restore', $user->id) }}" method="POST" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Restore this user account?');">
                                 @csrf
                                 <button type="submit" class="action-btn text-success border-success" title="Restore User" aria-label="Restore {{ $user->name }}">
                                     <i class="fa-solid fa-trash-arrow-up"></i>
@@ -990,7 +990,7 @@
             })
             .catch(err => {
                 console.error('Error fetching user details:', err);
-                alert('Unable to load this user right now. Please refresh and try again.');
+                window.SpeakReadyUiNotice?.('Unable to load this user right now. Please refresh and try again.');
             });
     }
 </script>

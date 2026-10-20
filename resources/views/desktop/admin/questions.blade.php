@@ -455,23 +455,27 @@ function toggleBulkDeleteBtn() {
 }
 
 function submitBulkDelete() {
-    if(!confirm('Are you sure you want to delete all selected questions?')) return;
-    
-    let form = document.getElementById('bulkDeleteForm');
-    
-    // remove existing hidden inputs
-    form.querySelectorAll('input[name="question_ids[]"]').forEach(el => el.remove());
+    const confirmation = window.SpeakReadyAdminConfirm
+        ? window.SpeakReadyAdminConfirm('Are you sure you want to delete all selected questions?')
+        : Promise.resolve(false);
 
-    let checkboxes = document.querySelectorAll('.question-checkbox:checked');
-    checkboxes.forEach(cb => {
-        let input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'question_ids[]';
-        input.value = cb.value;
-        form.appendChild(input);
+    confirmation.then(confirmed => {
+        if (!confirmed) return;
+
+        let form = document.getElementById('bulkDeleteForm');
+        form.querySelectorAll('input[name="question_ids[]"]').forEach(el => el.remove());
+
+        let checkboxes = document.querySelectorAll('.question-checkbox:checked');
+        checkboxes.forEach(cb => {
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'question_ids[]';
+            input.value = cb.value;
+            form.appendChild(input);
+        });
+
+        form.submit();
     });
-    
-    form.submit();
 }
 
 function clearGeneratedQuestionSource() {
@@ -591,7 +595,7 @@ function generateAiQuestion(triggerEvent) {
     .catch(err => {
         btn.innerHTML = originalHtml;
         btn.disabled = false;
-        alert(err.name === 'AbortError' ? 'Question generation took too long. Please try again.' : err.message || "Error generating question.");
+        window.SpeakReadyUiNotice?.(err.name === 'AbortError' ? 'Question generation took too long. Please try again.' : err.message || 'Error generating question.');
     })
     .finally(() => {
         clearTimeout(timeout);
