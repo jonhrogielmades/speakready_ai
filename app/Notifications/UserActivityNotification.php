@@ -21,11 +21,12 @@ class UserActivityNotification extends Notification
     protected $url;
     protected $tag;
     protected $requireInteraction;
+    protected $sendEmail;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($title, $message, $icon = 'fa-bell', $type = 'info', $sendPush = false, $url = null, $tag = null, $requireInteraction = false)
+    public function __construct($title, $message, $icon = 'fa-bell', $type = 'info', $sendPush = false, $url = null, $tag = null, $requireInteraction = false, $sendEmail = true)
     {
         $this->title = $title;
         $this->message = $message;
@@ -35,6 +36,7 @@ class UserActivityNotification extends Notification
         $this->url = $url;
         $this->tag = $tag;
         $this->requireInteraction = (bool) $requireInteraction;
+        $this->sendEmail = (bool) $sendEmail;
     }
 
     /**
@@ -46,7 +48,7 @@ class UserActivityNotification extends Notification
     {
         $channels = ['database'];
 
-        if (SystemSettings::enabled('notif_email', false)) {
+        if ($this->sendEmail && SystemSettings::enabled('notif_email', false)) {
             $channels[] = 'mail';
         }
 

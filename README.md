@@ -256,16 +256,18 @@ php artisan migrate --seed
 `DatabaseSeeder` seeds the admin account only. By default, local development creates:
 
 ```text
-Email: admin@speakreadyai.online
+Email: capstonespeakreadyai@gmail.com
 Password: password
 ```
 
 For production, set these before seeding. `ADMIN_PASSWORD` is required before the production admin account can be created. It is a bootstrap value only; rerunning the seeder preserves a password changed later through account settings:
 
 ```env
-ADMIN_EMAIL=admin@speakreadyai.online
+ADMIN_EMAIL=capstonespeakreadyai@gmail.com
 ADMIN_NAME="System Admin"
 ADMIN_PASSWORD=change-this-password
+ADMIN_EMAIL_NOTIFICATIONS=true
+ADMIN_ALERT_EMAIL=capstonespeakreadyai@gmail.com
 ```
 
 There is no tracked `database_dump.sql` in this repository, so migrations are the source of truth for setup.
@@ -382,6 +384,8 @@ Gmail requires a Google App Password. Some hosts block common SMTP ports, so use
 Local username/password registration requires a recovery email. The Forgot Password page verifies the username and recovery email, then sends a one-time recovery code. The code expires after 15 minutes, is stored only as a hash, and is invalidated after a successful password reset. Google Login accounts continue using Google Login and are not eligible for the local recovery-code email flow.
 
 The public contact form saves each request to the database and sends it immediately to `capstonespeakreadyai@gmail.com`. The destination is intentionally not taken from the admin-user table, so an old admin address cannot cause a delivery bounce. Configure Gmail SMTP with a Google App Password, set `MAIL_USERNAME` and `MAIL_FROM_ADDRESS` to the sending Gmail account, then redeploy so the container rebuilds Laravel's cached configuration.
+
+Important administrator activity is also delivered to `ADMIN_ALERT_EMAIL` when `ADMIN_EMAIL_NOTIFICATIONS=true`. This includes registrations, reactivation requests, sign-ins, account/security changes, completed interviews and games, certificates, and administrator changes that appear in the admin notification feed. Routine progress events are kept in the application without generating inbox noise. These alerts are separate from the optional `notif_email` user setting, which controls mail sent to each user about their own notifications.
 
 For production username/password recovery, the same mail configuration is used. Set `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_ENCRYPTION=tls`, `MAIL_USERNAME` to the sending Gmail address, `MAIL_PASSWORD` to that account's Google App Password (not the normal Gmail password), and `MAIL_FROM_ADDRESS` to the same authorized sender. Keep `MAIL_USE_SYSTEM_SETTINGS=false` so deployment secrets cannot be replaced by old values stored in the admin settings table. If `BREVO_API_KEY` is set, recovery mail uses Brevo instead and `MAIL_FROM_ADDRESS` must be a verified Brevo sender. Keep `RUN_MIGRATIONS_ON_START=true`, redeploy, and confirm the startup log contains a successful `php artisan migrate --force` run.
 

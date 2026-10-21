@@ -17,8 +17,10 @@ class ActivityLog extends Model
      * history, but should not create noise in the admin feed.
      */
     public const ADMIN_IMPORTANT_ACTIONS = [
+        'user_registered',
         'user_logged_in',
         'user_logged_out',
+        'reactivation_requested',
         'password_changed',
         'account_deleted',
         'interview_completed',
@@ -33,6 +35,7 @@ class ActivityLog extends Model
         'ai_coach_conversations_cleared',
         'admin_profile_updated',
         'admin_password_changed',
+        'admin_password_recovery_code_rotated',
         'admin_settings_updated',
         'admin_settings_backup_downloaded',
         'admin_settings_backup_restored',

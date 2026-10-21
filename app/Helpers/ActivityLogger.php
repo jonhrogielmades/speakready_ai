@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use App\Models\ActivityLog;
 use App\Notifications\UserActivityNotification;
+use App\Services\AdminActivityNotificationService;
 use App\Support\AccountNotificationSchema;
 use App\Support\SystemSettings;
 use Illuminate\Support\Facades\Log;
@@ -32,6 +33,22 @@ class ActivityLogger
             'ip_address' => $ipAddress,
         ]);
 
+        $adminAlertDispatched = false;
+
+        try {
+            $adminAlertDispatched = app(AdminActivityNotificationService::class)->notify($log, $user);
+        } catch (\Throwable $error) {
+            // An unavailable mail transport must never prevent the action that
+            // produced this audit record from completing successfully.
+            Log::warning('Unable to dispatch administrator activity email.', [
+                'activity_log_id' => $log->id,
+                'user_id' => $user->id ?? null,
+                'action' => $action,
+                'error_type' => $error::class,
+                'message' => $error->getMessage(),
+            ]);
+        }
+
         $defaults = self::importantNotificationDefaults($action);
         $shouldNotify = $notify || $defaults !== [];
 
@@ -48,6 +65,11 @@ class ActivityLogger
             $url = $notificationOptions['url'] ?? null;
             $tag = $notificationOptions['tag'] ?? null;
             $requireInteraction = (bool) ($notificationOptions['requireInteraction'] ?? $sendPush);
+            $adminAlertAddress = strtolower(trim((string) config('mail.admin_alerts.address')));
+            $actorAddress = strtolower(trim((string) ($user->email ?? '')));
+            $sendActorEmail = ! ($adminAlertDispatched
+                && $adminAlertAddress !== ''
+                && $actorAddress === $adminAlertAddress);
 
             try {
                 $user->notify(new UserActivityNotification(
@@ -58,7 +80,8 @@ class ActivityLogger
                     $sendPush,
                     $url,
                     $tag,
-                    $requireInteraction
+                    $requireInteraction,
+                    $sendActorEmail
                 ));
             } catch (\Throwable $error) {
                 Log::warning('Unable to write user activity notification.', [

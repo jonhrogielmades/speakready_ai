@@ -561,7 +561,8 @@ class AdminUserController extends Controller
     private function defaultAdminEmails(): array
     {
         return collect([
-            env('ADMIN_EMAIL', 'admin@speakreadyai.online'),
+            env('ADMIN_EMAIL', 'capstonespeakreadyai@gmail.com'),
+            'capstonespeakreadyai@gmail.com',
             'admin@speakreadyai.online',
             'admin@speakreadyai.com',
         ])

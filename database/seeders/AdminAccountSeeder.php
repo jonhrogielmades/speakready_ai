@@ -8,7 +8,7 @@ use RuntimeException;
 
 class AdminAccountSeeder extends Seeder
 {
-    private const DEFAULT_EMAIL = 'admin@speakreadyai.online';
+    private const DEFAULT_EMAIL = 'capstonespeakreadyai@gmail.com';
     private const DEFAULT_NAME = 'System Admin';
     private const DEFAULT_PASSWORD = 'password';
 

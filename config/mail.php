@@ -141,6 +141,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Administrator Activity Alerts
+    |--------------------------------------------------------------------------
+    |
+    | Important account and platform activity is delivered to one canonical
+    | administrator inbox. Keep this separate from the SMTP sender and the
+    | public contact recipient so each address can be changed independently.
+    |
+    */
+
+    'admin_alerts' => [
+        'enabled' => env('ADMIN_EMAIL_NOTIFICATIONS', true),
+        'address' => env('ADMIN_ALERT_EMAIL', 'capstonespeakreadyai@gmail.com'),
+        'name' => env('ADMIN_NAME', 'System Admin'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Markdown Mail Settings
     |--------------------------------------------------------------------------
     |

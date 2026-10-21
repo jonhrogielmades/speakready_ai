@@ -23,7 +23,7 @@ class AdminAccountSeederTest extends TestCase
         $admin = User::firstOrFail();
 
         $this->assertSame('System Admin', $admin->name);
-        $this->assertSame('admin@speakreadyai.online', $admin->email);
+        $this->assertSame('capstonespeakreadyai@gmail.com', $admin->email);
         $this->assertTrue((bool) $admin->is_admin);
         $this->assertSame('active', $admin->status);
         $this->assertTrue(Hash::check('password', $admin->password));
@@ -32,7 +32,7 @@ class AdminAccountSeederTest extends TestCase
     public function test_admin_seeder_promotes_existing_account_without_creating_duplicates(): void
     {
         $existing = User::factory()->create([
-            'email' => 'admin@speakreadyai.online',
+            'email' => 'capstonespeakreadyai@gmail.com',
             'is_admin' => false,
             'status' => 'inactive',
             'password' => 'existing-password',
@@ -65,7 +65,7 @@ class AdminAccountSeederTest extends TestCase
 
         try {
             $admin = User::factory()->create([
-                'email' => 'admin@speakreadyai.online',
+                'email' => 'capstonespeakreadyai@gmail.com',
                 'is_admin' => true,
                 'password' => 'rotated-in-account-settings',
             ]);
