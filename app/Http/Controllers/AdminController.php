@@ -1750,7 +1750,7 @@ class AdminController extends Controller
 
  $html = '';
  if ($latestActivities->isEmpty()) {
- $html = '<div class="p-3 text-center text-muted" style="font-size:0.85rem;">No recent activities.</div>';
+ $html = '<div class="p-3 text-center text-muted" style="font-size:0.85rem;">No important activities.</div>';
  } else {
  foreach ($latestActivities as $activity) {
  $time = $activity->created_at->diffForHumans();

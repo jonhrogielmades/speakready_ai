@@ -398,7 +398,7 @@ class AdminNewFeatureConnectionTest extends TestCase
             ->assertJsonPath('new_count', ActivityLog::importantForAdmin()->whereNull('read_at')->count());
 
         $this->assertStringNotContainsString('Visible Candidate changed preferred language to Cebuano.', $activityResponse->json('html'));
-        $this->assertStringContainsString('Visible Candidate unlocked the Energy Efficiency skill perk.', $activityResponse->json('html'));
+        $this->assertStringNotContainsString('Visible Candidate unlocked the Energy Efficiency skill perk.', $activityResponse->json('html'));
 
         $this->actingAs($admin)
             ->getJson(route('admin.users.show', $user))

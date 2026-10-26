@@ -147,7 +147,7 @@ class AdminIntegrationHardeningTest extends TestCase
             ->assertSee('value="'.$user->id.'" selected', false);
     }
 
-    public function test_routine_user_updates_render_on_dashboard_but_stay_out_of_important_feed(): void
+    public function test_routine_user_updates_render_on_dashboard_but_only_critical_events_reach_admin_feed(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
         $user = User::factory()->create(['name' => 'Visible Candidate', 'is_admin' => false, 'status' => 'active']);
@@ -161,6 +161,11 @@ class AdminIntegrationHardeningTest extends TestCase
             'action' => 'interview_completed',
             'description' => 'Visible Candidate completed an interview.',
         ]);
+        ActivityLog::create([
+            'user_id' => $user->id,
+            'action' => 'reactivation_requested',
+            'description' => 'Visible Candidate requested account reactivation.',
+        ]);
 
         $this->actingAs($admin)
             ->get(route('admin.dashboard'))
@@ -170,7 +175,8 @@ class AdminIntegrationHardeningTest extends TestCase
 
         $feed = $this->actingAs($admin)->getJson(route('admin.api.latest-activities'))->assertOk();
         $this->assertStringNotContainsString('interview confidence module', $feed->json('html'));
-        $this->assertStringContainsString('completed an interview', $feed->json('html'));
+        $this->assertStringNotContainsString('completed an interview', $feed->json('html'));
+        $this->assertStringContainsString('requested account reactivation', $feed->json('html'));
         $feed->assertJsonPath('new_count', 1);
     }
 

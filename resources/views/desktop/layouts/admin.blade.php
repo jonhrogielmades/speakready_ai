@@ -204,7 +204,7 @@
                </form>
                <div class="db-top-actions ms-auto d-flex align-items-center gap-3 flex-shrink-0">
                   <div class="dropdown admin-activity-dropdown-wrap">
-                      <button class="boc d-flex align-items-center justify-content-center position-relative db-activity-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open live activity" title="Live Activity" style="width:38px;height:38px;padding:0;border-radius:12px;text-decoration:none;color:var(--tx);" onclick="resetAdminActivityBadge('desktop')">
+                      <button class="boc d-flex align-items-center justify-content-center position-relative db-activity-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open important activity" title="Important Activity" style="width:38px;height:38px;padding:0;border-radius:12px;text-decoration:none;color:var(--tx);" onclick="resetAdminActivityBadge('desktop')">
                           <i class="fa-regular fa-bell"></i>
                           <span id="admin-activity-badge-desktop" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display:none; width: 10px; height: 10px;">
                               <span class="visually-hidden">New alerts</span>
@@ -214,7 +214,7 @@
                           <div class="admin-activity-header">
                               <div class="admin-activity-title">
                                   <i class="fa-regular fa-bell"></i>
-                                  <span>Live User Activity</span>
+                                  <span>Important User Activity</span>
                                   <span id="admin-activity-count-desktop" class="admin-activity-count" style="display:none;">0 new</span>
                               </div>
                               <div class="admin-activity-actions">
@@ -227,7 +227,7 @@
                           </div>
                           <div class="admin-activity-footer">
                               <a href="{{ route('admin.notifications.index') }}" class="admin-activity-view-all">
-                                  <i class="fa-solid fa-list-check"></i>View All Activities
+                                  <i class="fa-solid fa-list-check"></i>View Important Activity
                               </a>
                           </div>
                       </div>

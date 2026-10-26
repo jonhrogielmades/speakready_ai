@@ -11,28 +11,17 @@ class ActivityLog extends Model
     use HasFactory;
 
     /**
-     * Activities that are useful in the admin notification feed.
+     * High-impact activities that require administrator awareness.
      *
-     * Routine user interactions remain available in the user's own activity
-     * history, but should not create noise in the admin feed.
+     * Routine authentication, interview, learning, career, and AI-coach
+     * activity remains in the audit log without creating live-feed or email
+     * noise for administrators.
      */
     public const ADMIN_IMPORTANT_ACTIONS = [
         'user_registered',
-        'user_logged_in',
-        'user_logged_out',
         'reactivation_requested',
         'password_changed',
         'account_deleted',
-        'interview_completed',
-        'interview_session_deleted',
-        'interview_sessions_cleared',
-        'learning_game_completed',
-        'learning_game_certificate_issued',
-        'perk_unlocked',
-        'job_application_created',
-        'job_application_deleted',
-        'ai_coach_conversation_deleted',
-        'ai_coach_conversations_cleared',
         'admin_profile_updated',
         'admin_password_changed',
         'admin_password_recovery_code_rotated',

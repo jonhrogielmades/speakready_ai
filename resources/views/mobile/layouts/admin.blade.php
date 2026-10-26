@@ -2191,7 +2191,7 @@
          </a>
          <div class="mob-header-right">
             <div class="dropdown mob-notification-wrap">
-                <a href="#" id="mobNotificationBtn" class="mob-icon-btn position-relative" aria-expanded="false" aria-haspopup="dialog" title="Live Activity" style="text-decoration:none;" onclick="toggleMobileNotifications(event);">
+                <a href="#" id="mobNotificationBtn" class="mob-icon-btn position-relative" aria-expanded="false" aria-haspopup="dialog" title="Important Activity" style="text-decoration:none;" onclick="toggleMobileNotifications(event);">
                    <i class="fa-regular fa-bell"></i>
                    <span id="admin-activity-badge-mobile" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-dark rounded-circle" style="display:none; width: 8px; height: 8px; margin-left: -5px; margin-top: 5px;">
                       <span class="visually-hidden">New alerts</span>
@@ -2201,7 +2201,7 @@
                     <div class="admin-mob-notif-header">
                         <div class="admin-mob-notif-title">
                             <i class="fa-regular fa-bell" style="color:var(--pur)"></i>
-                            <span>Notifications</span>
+                            <span>Important Activity</span>
                             <span id="admin-activity-count-mobile" class="admin-mob-notif-count">0 new</span>
                         </div>
                         <div class="admin-mob-notif-actions">
@@ -2215,7 +2215,7 @@
                     </div>
                     <div class="admin-mob-notif-footer">
                         <a href="{{ route('admin.notifications.index') }}" class="admin-mob-notif-view-all">
-                            <i class="fa-solid fa-list-check me-2"></i>View All Activities
+                            <i class="fa-solid fa-list-check me-2"></i>View Important Activity
                         </a>
                     </div>
                 </div>

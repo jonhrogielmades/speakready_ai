@@ -1,6 +1,6 @@
 @extends('mobile.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/modules.css?v=5') }}" data-page-style="admin-modules">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/modules.css?v=6') }}" data-page-style="admin-modules">
 @endpush
 
 @section('content')
