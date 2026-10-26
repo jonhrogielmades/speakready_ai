@@ -277,7 +277,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::prefix('admin/users')->name('admin.users.')->group(function () {
         Route::get('/', [AdminUserController::class, 'index'])->name('index');
-        Route::get('/export', [AdminUserController::class, 'export'])->name('export');
         Route::post('/', [AdminUserController::class, 'store'])->name('store');
         Route::post('/{user}/restore', [AdminUserController::class, 'restore'])->whereNumber('user')->name('restore');
         Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
@@ -306,15 +305,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Admin Routes - Questions
     Route::post('/admin/questions', [AdminController::class, 'storeQuestion'])->name('admin.questions.store');
-    Route::put('/admin/questions/{question}', [AdminController::class, 'updateQuestion'])->name('admin.questions.update');
-    Route::delete('/admin/questions/{question}', [AdminController::class, 'destroyQuestion'])->name('admin.questions.destroy');
-    Route::post('/admin/questions/bulk-delete', [AdminController::class, 'bulkDestroyQuestions'])->name('admin.questions.bulk-delete');
-    Route::patch('/admin/questions/{question}/status', [AdminController::class, 'toggleQuestionStatus'])->name('admin.questions.status');
-    Route::get('/admin/questions/{question}/analytics', [AdminController::class, 'questionAnalytics'])->name('admin.questions.analytics');
     Route::post('/admin/questions/ai-generate', [AdminController::class, 'generateAiQuestion'])->name('admin.questions.ai-generate');
     Route::post('/admin/questions/import', [AdminController::class, 'importQuestions'])->name('admin.questions.import');
     Route::post('/admin/questions/import-dataset', [AdminController::class, 'importDataset'])->name('admin.questions.import-dataset');
     Route::get('/admin/questions/export', [AdminController::class, 'exportQuestions'])->name('admin.questions.export');
+    Route::post('/admin/questions/bulk-delete', [AdminController::class, 'bulkDestroyQuestions'])->name('admin.questions.bulk-delete');
+    Route::put('/admin/questions/{question}', [AdminController::class, 'updateQuestion'])->name('admin.questions.update');
+    Route::delete('/admin/questions/{question}', [AdminController::class, 'destroyQuestion'])->name('admin.questions.destroy');
+    Route::patch('/admin/questions/{question}/status', [AdminController::class, 'toggleQuestionStatus'])->name('admin.questions.status');
+    Route::get('/admin/questions/{question}/analytics', [AdminController::class, 'questionAnalytics'])->name('admin.questions.analytics');
 
     Route::get('/admin/modules', [AdminController::class, 'modulesDashboard'])->name('admin.modules');
 

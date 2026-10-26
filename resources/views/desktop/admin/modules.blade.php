@@ -1,6 +1,6 @@
 @extends('desktop.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/modules.css?v=3') }}" data-page-style="admin-modules">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/modules.css?v=4') }}" data-page-style="admin-modules">
 @endpush
 
 @section('content')
@@ -24,12 +24,7 @@
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage action modules for what learners need to prepare, rehearse, revise, and check before interviews.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
-            <button type="button" class="btn px-3 py-2" style="font-size:.85rem; background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" data-bs-toggle="modal" data-bs-target="#aiGenerateModuleModal">
-                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Module
-            </button>
-            <button type="button" class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addModuleModal">
-                <i class="fa-solid fa-plus me-1"></i> Add Interview Module
-            </button>
+            @include('shared.admin.module-bank-toolbar')
         </div>
     </div>
 
@@ -115,7 +110,7 @@
                         <a href="{{ route('admin.modules.edit', $m->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:.7rem"><i class="fa-solid fa-sliders me-1"></i>Manage</a>
                         <form action="{{ route('admin.modules.destroy', $m->id) }}" method="POST" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Delete this module?');">
                             @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:.7rem"><i class="fa-solid fa-trash me-1"></i>Delete</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger admin-module-delete-button" style="font-size:.7rem"><i class="fa-solid fa-trash me-1"></i>Delete</button>
                         </form>
                         </div>
                     </td>
@@ -134,101 +129,7 @@
     </div>
 </div>
 
-<!-- Add Module Modal -->
-<div class="modal fade" id="addModuleModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
-    <div class="modal-dialog">
-        <div class="modal-content" style="border:1px solid var(--bd)">
-            <form action="{{ route('admin.modules.store') }}" method="POST">
-                @csrf
-                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Add Interview Learning Module</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
-                </div>
-                <div class="modal-body">
-                    <label class="olbl">Module Title</label>
-                    <input class="oinp mb-3" type="text" name="title" placeholder="e.g. Answering Tell Me About Yourself in your target context" required>
-                    
-                    <label class="olbl">Category</label>
-                    <select class="oinp mb-3" name="category" id="categorySelect" required onchange="if(this.value === 'new_category') { document.getElementById('newCategoryInput').style.display='block'; document.getElementById('newCategoryInput').name='category'; document.getElementById('newCategoryInput').required=true; this.name=''; } else { document.getElementById('newCategoryInput').style.display='none'; document.getElementById('newCategoryInput').name=''; document.getElementById('newCategoryInput').required=false; this.name='category'; }">
-                        <option value="" disabled selected>Select a Category...</option>
-                        @if(isset($categories) && count($categories) > 0)
-                            @foreach($categories as $cat)
-                                @if(!empty($cat))
-                                    <option value="{{ $cat }}">{{ $cat }}</option>
-                                @endif
-                            @endforeach
-                        @endif
-                        <option value="new_category">+ Add New Category</option>
-                    </select>
-                    <input type="text" id="newCategoryInput" class="oinp mb-3" placeholder="Enter new category name" style="display: none;">
-                    
-                    <label class="olbl">Difficulty Level</label>
-                    <select class="oinp mb-3" name="difficulty" required>
-                        <option value="Beginner">Beginner</option>
-                        <option value="Intermediate">Intermediate</option>
-                        <option value="Advanced">Advanced</option>
-                    </select>
-
-                    <label class="olbl">Description</label>
-                    <textarea class="oinp mb-3" name="description" rows="3" placeholder="What users will do in this interview module"></textarea>
-
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="featureSwitch">
-                        <label class="form-check-label olbl" for="featureSwitch">Mark as Featured</label>
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--bd)">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Create Interview Module</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- AI Generate Module Modal -->
-<div class="modal fade" id="aiGenerateModuleModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
-    <div class="modal-dialog">
-        <div class="modal-content" style="border:1px solid var(--bd)">
-            <form action="{{ route('admin.modules.generate') }}" method="POST" id="aiGenerateForm">
-                @csrf
-                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>AI Generate Interview Module</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
-                </div>
-                <div class="modal-body">
-                    <p style="color:var(--tx3); font-size:0.9rem; margin-bottom:20px;">
-                        Enter a interview topic or prompt, and the AI will generate an action-focused module about what users need to prepare, rehearse, revise, and check.
-                    </p>
-                    <label class="olbl">Interview Topic Prompt</label>
-                    <textarea class="oinp mb-3" name="prompt" rows="3" placeholder="e.g. job interview answers or role-fit evidence." required></textarea>
-                    
-                    <div id="aiLoadingIndicator" style="display:none; text-align:center; padding:15px; border-radius:10px; background:rgba(59,130,246,0.1);">
-                        <i class="fa-solid fa-circle-notch fa-spin text-primary" style="font-size:1.5rem; margin-bottom:10px;"></i>
-                        <h6 style="color:var(--tx); margin:0;">Generating Interview Actions...</h6>
-                        <p style="color:var(--tx3); font-size:0.8rem; margin:0;">This may take up to 30 seconds.</p>
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--bd)" id="aiModalFooter">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4" id="aiGenerateBtn">Generate</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const aiForm = document.getElementById('aiGenerateForm');
-        if(aiForm) {
-            aiForm.addEventListener('submit', function() {
-                document.getElementById('aiLoadingIndicator').style.display = 'block';
-                document.getElementById('aiModalFooter').style.display = 'none';
-            });
-        }
-    });
-</script>
+@include('shared.admin.module-bank-actions')
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

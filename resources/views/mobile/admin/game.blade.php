@@ -1,9 +1,19 @@
 @extends('mobile.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/game.css?v=5') }}" data-page-style="admin-game">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/game.css?v=6') }}" data-page-style="admin-game">
 @endpush
 
 @section('content')
+@php
+    $availableGameCategoryIds = $categories->pluck('id')->map(fn ($id) => (int) $id);
+    $oldGameCategoryId = (int) old('category_id', 0);
+    $requestedGameCategoryId = $errors->any()
+        ? $oldGameCategoryId
+        : (int) session('active_game_category_id', request()->query('category_id', 0));
+    $activeGameCategoryId = $availableGameCategoryIds->contains($requestedGameCategoryId)
+        ? $requestedGameCategoryId
+        : (int) ($categories->first()?->id ?? 0);
+@endphp
 <div class="db-section active" id="sec-admin-game">
     <div class="mb-4 d-flex justify-content-between align-items-center admin-game-header">
         <div>
@@ -11,12 +21,18 @@
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage gamified interview drills, local practice prompts, and coaching modifiers.</p>
         </div>
         <div class="d-flex gap-2 admin-game-actions">
+            @if($categories->isNotEmpty())
             <button type="button" class="btn btn-outline-info px-3 py-2" style="font-size:.85rem;font-weight:600" data-bs-toggle="modal" data-bs-target="#generateGameModal">
                 <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Interview Games
             </button>
             <button type="button" class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addGameModal">
                 <i class="fa-solid fa-plus me-1"></i> Add Interview Game
             </button>
+            @else
+            <a href="{{ route('admin.categories') }}" class="btn btn-outline-info px-3 py-2" style="font-size:.85rem;font-weight:600">
+                <i class="fa-solid fa-folder-plus me-1"></i> Set Up Game Category
+            </a>
+            @endif
         </div>
     </div>
 
@@ -53,18 +69,24 @@
     @endphp
 
 
-    <div class="game-category-select-wrap">
+    @if($categories->isEmpty())
+        <div class="alert alert-info admin-game-empty-state" role="alert">
+            <i class="fa-solid fa-circle-info me-2"></i>Create an active category with the <strong>Game</strong> type before adding or generating interview games.
+        </div>
+    @endif
+
+    <div class="game-category-select-wrap" @if($categories->isEmpty()) style="display:none" @endif>
         <select id="gameCategorySelect" aria-label="Select learning game category">
-            @foreach($categories as $index => $categoryRow)
-                <option value="#cat-pane-{{ $categoryRow->id }}" {{ $index === 0 ? 'selected' : '' }}>{{ $categoryRow->title }}</option>
+            @foreach($categories as $categoryRow)
+                <option value="#cat-pane-{{ $categoryRow->id }}" {{ (int) $categoryRow->id === $activeGameCategoryId ? 'selected' : '' }}>{{ $categoryRow->title }}</option>
             @endforeach
         </select>
     </div>
 
     <ul class="nav nav-pills mb-4 game-categories-scroll" id="game-categories-tab" role="tablist" style="gap:10px;">
-        @foreach($categories as $index => $categoryRow)
+        @foreach($categories as $categoryRow)
             <li class="nav-item" role="presentation">
-                <button class="nav-link game-cat-pill {{ $index === 0 ? 'active' : '' }}" 
+                <button class="nav-link game-cat-pill {{ (int) $categoryRow->id === $activeGameCategoryId ? 'active' : '' }}"
                     id="cat-tab-{{ $categoryRow->id }}" 
                     data-bs-toggle="pill" 
                     data-bs-target="#cat-pane-{{ $categoryRow->id }}" 
@@ -76,12 +98,12 @@
     </ul>
 
     <div class="tab-content" id="game-categories-tabContent">
-        @foreach($categories as $index => $categoryRow)
+        @foreach($categories as $categoryRow)
             @php
                 $catLevels = $groupedLevels->get($categoryRow->id, collect());
             @endphp
 
-            <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="cat-pane-{{ $categoryRow->id }}" role="tabpanel">
+            <div class="tab-pane fade {{ (int) $categoryRow->id === $activeGameCategoryId ? 'show active' : '' }}" id="cat-pane-{{ $categoryRow->id }}" role="tabpanel">
                 <div class="mb-4 admin-game-panel">
             <div class="p-3 d-flex justify-content-between align-items-center admin-game-panel-header">
                 <h6 style="color:var(--tx);margin:0;font-size:1.05rem;font-weight:700;"><i class="fa-solid fa-layer-group text-info me-2"></i>{{ $categoryRow->title }}</h6>
@@ -153,14 +175,14 @@
                                 </div>
                             </td>
                             <td style="padding:16px;vertical-align:middle;text-align:right;">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="modal" data-bs-target="#editGameModal{{ $level->id }}" title="Edit">
-                                        <i class="fa-solid fa-pen"></i>
+                                <div class="d-flex justify-content-end gap-2 admin-game-row-actions">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary admin-game-row-action" data-bs-toggle="modal" data-bs-target="#editGameModal{{ $level->id }}" title="Edit Interview Game" aria-label="Edit {{ $level->title }}">
+                                        <i class="fa-solid fa-pen"></i><span>Edit</span>
                                     </button>
-                                    <form action="{{ route('admin.game.destroy', $level->id) }}" method="POST" style="margin:0;">
+                                    <form action="{{ route('admin.game.destroy', $level->id) }}" method="POST" class="admin-game-delete-form" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Are you sure you want to delete this game?');">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Delete" onclick="return window.SpeakReadyAdminConfirm(event, this.form, 'Are you sure you want to delete this game?');">
-                                            <i class="fa-solid fa-trash"></i>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger admin-game-row-action admin-game-delete-button" title="Delete Interview Game" aria-label="Delete {{ $level->title }}">
+                                            <i class="fa-solid fa-trash"></i><span>Delete</span>
                                         </button>
                                     </form>
                                 </div>
@@ -196,8 +218,10 @@
 <div class="modal fade" id="editGameModal{{ $level->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
     <div class="modal-dialog modal-xl">
         <div class="modal-content" style="border:1px solid var(--bd)">
-            <form action="{{ route('admin.game.update', $level->id) }}" method="POST">
+            <form action="{{ route('admin.game.update', $level->id) }}" method="POST" class="admin-game-form" data-game-form="edit">
                 @csrf @method('PUT')
+                <input type="hidden" name="_game_form" value="edit">
+                <input type="hidden" name="_game_level_id" value="{{ $level->id }}">
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
                     <h5 class="modal-title" style="color:var(--tx)">Edit Interview Game: Lvl {{ $level->level_number }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
@@ -348,7 +372,7 @@
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Save Changes</button>
+                    <button type="submit" class="bgrd btn px-4" data-loading-text="Saving...">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -360,14 +384,15 @@
 <div class="modal fade" id="generateGameModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
     <div class="modal-dialog">
         <div class="modal-content" style="border:1px solid var(--bd)">
-            <form action="{{ route('admin.game.generate') }}" method="POST" id="generateGameForm">
+            <form action="{{ route('admin.game.generate') }}" method="POST" id="generateGameForm" class="admin-game-form" data-game-form="generate">
                 @csrf
+                <input type="hidden" name="_game_form" value="generate">
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
                     <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-wand-magic-sparkles text-info me-2"></i> Auto-Generate Interview Game</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
-                    <p style="color:var(--tx3); font-size:0.85rem;">Let the AI craft a interview practice level complete with local prompts, a coaching persona, modifiers, and rewards.</p>
+                    <p style="color:var(--tx3); font-size:0.85rem;">Let the AI craft an interview practice level complete with local prompts, a coaching persona, modifiers, and rewards.</p>
                     
                     <div class="row g-3 mb-3">
                         <div class="col-md-3">
@@ -395,7 +420,7 @@
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-info px-4 text-white" onclick="this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Generating...';">Generate Interview Games</button>
+                    <button type="submit" class="btn btn-info px-4 text-white" data-loading-text="Generating...">Generate Interview Games</button>
                 </div>
             </form>
         </div>
@@ -406,8 +431,9 @@
 <div class="modal fade" id="addGameModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
     <div class="modal-dialog modal-xl">
         <div class="modal-content" style="border:1px solid var(--bd)">
-            <form action="{{ route('admin.game.store') }}" method="POST">
+            <form action="{{ route('admin.game.store') }}" method="POST" id="addGameForm" class="admin-game-form" data-game-form="add">
                 @csrf
+                <input type="hidden" name="_game_form" value="add">
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
                     <h5 class="modal-title" style="color:var(--tx)">Add Interview Game</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
@@ -556,60 +582,11 @@
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Create Interview Game</button>
+                    <button type="submit" class="bgrd btn px-4" data-loading-text="Creating...">Create Interview Game</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const gameCategorySelect = document.getElementById('gameCategorySelect');
-    const perPage = 5;
-
-    document.querySelectorAll('.admin-game-panel').forEach(panel => {
-        const rows = Array.from(panel.querySelectorAll('.game-level-row'));
-        const countLabel = panel.querySelector('[data-game-pagination-count]');
-        const prevButton = panel.querySelector('[data-game-prev]');
-        const nextButton = panel.querySelector('[data-game-next]');
-        let currentPage = 1;
-
-        function renderPage() {
-            const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
-            currentPage = Math.min(currentPage, totalPages);
-            const start = (currentPage - 1) * perPage;
-            const visibleRows = rows.slice(start, start + perPage);
-
-            rows.forEach(row => row.style.display = 'none');
-            visibleRows.forEach(row => row.style.display = '');
-
-            const first = rows.length === 0 ? 0 : start + 1;
-            const last = start + visibleRows.length;
-            countLabel.textContent = `Showing ${first}-${last} of ${rows.length}`;
-            prevButton.disabled = currentPage <= 1;
-            nextButton.disabled = currentPage >= totalPages || rows.length === 0;
-        }
-
-        prevButton.addEventListener('click', () => {
-            currentPage = Math.max(1, currentPage - 1);
-            renderPage();
-        });
-
-        nextButton.addEventListener('click', () => {
-            currentPage += 1;
-            renderPage();
-        });
-
-        renderPage();
-    });
-
-    if (!gameCategorySelect) return;
-
-    gameCategorySelect.addEventListener('change', function () {
-        const tabButton = document.querySelector(`[data-bs-target="${this.value}"]`);
-        if (!tabButton || !window.bootstrap) return;
-        bootstrap.Tab.getOrCreateInstance(tabButton).show();
-    });
-});
-</script>
+@include('shared.admin.game-management-script')
 @endsection

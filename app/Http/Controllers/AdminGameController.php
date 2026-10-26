@@ -21,7 +21,12 @@ class AdminGameController extends Controller
 
  public function index()
  {
- $levels = GameLevel::with(['progress', 'category'])->orderBy('level_number', 'asc')->get();
+ $categories = $this->gameAdminCategories();
+ $categoryIds = $categories->pluck('id');
+ $levels = GameLevel::with(['progress', 'category', 'prerequisiteLevel'])
+ ->whereIn('category_id', $categoryIds)
+ ->orderBy('level_number', 'asc')
+ ->get();
  
  // Calculate analytics
  foreach ($levels as $level) {
@@ -31,27 +36,32 @@ class AdminGameController extends Controller
  $level->avg_score = $totalAttempts > 0? round($level->progress->avg('best_score')): 0;
  }
 
- $allLevels = GameLevel::orderBy('level_number', 'asc')->get(); // For prerequisite dropdown
- $categories = $this->gameAdminCategories();
+ $allLevels = $levels->sortBy([
+ ['category_id', 'asc'],
+ ['level_number', 'asc'],
+ ])->values();
+ $nextLevelNumbers = $this->nextLevelNumbersByCategory($categories, $levels);
 
- return $this->mobileView('admin.game', compact('levels', 'allLevels', 'categories'));
+ return $this->mobileView('admin.game', compact('levels', 'allLevels', 'categories', 'nextLevelNumbers'));
  }
 
  public function store(Request $request, UserContentUpdateNotificationService $contentNotifications)
  {
- $data = $request->validate($this->validationRules(null, $request->category_id));
- $data['is_hidden'] = $request->has('is_hidden');
+ $data = $request->validate($this->validationRules(null, $request->input('category_id')));
+ $data['is_hidden'] = $request->boolean('is_hidden');
 
  $level = GameLevel::create($this->gameLevelDataForCurrentSchema($data));
  $contentNotifications->learningGameCreated($level);
 
- return redirect()->route('admin.game')->with('success', 'interview learning game created successfully.');
+ return redirect()->route('admin.game')
+ ->with('active_game_category_id', $level->category_id)
+ ->with('success', 'Interview learning game created successfully.');
  }
 
  public function update(Request $request, GameLevel $arena_level, UserContentUpdateNotificationService $contentNotifications)
  {
- $data = $request->validate($this->validationRules($arena_level->id, $request->category_id));
- $data['is_hidden'] = $request->has('is_hidden');
+ $data = $request->validate($this->validationRules($arena_level->id, $request->input('category_id')));
+ $data['is_hidden'] = $request->boolean('is_hidden');
  $wasHidden = (bool) $arena_level->is_hidden;
 
  $arena_level->update($this->gameLevelDataForCurrentSchema($data));
@@ -60,13 +70,18 @@ class AdminGameController extends Controller
  $contentNotifications->learningGameCreated($arena_level);
  }
 
- return redirect()->route('admin.game')->with('success', 'interview learning game updated successfully.');
+ return redirect()->route('admin.game')
+ ->with('active_game_category_id', $arena_level->category_id)
+ ->with('success', 'Interview learning game updated successfully.');
  }
 
  public function destroy(GameLevel $arena_level)
  {
+ $categoryId = $arena_level->category_id;
  $arena_level->delete();
- return redirect()->route('admin.game')->with('success', 'interview learning game deleted successfully.');
+ return redirect()->route('admin.game')
+ ->with('active_game_category_id', $categoryId)
+ ->with('success', 'Interview learning game deleted successfully.');
  }
 
  public function generate(Request $request, UserContentUpdateNotificationService $contentNotifications)
@@ -120,22 +135,37 @@ class AdminGameController extends Controller
  if ($difficulty == 'intermediate') $gameData['required_score'] = max(70, min(85, $gameData['required_score']));
  if ($difficulty == 'advanced') $gameData['required_score'] = max(85, min(100, $gameData['required_score']));
 
- GameLevel::create($this->gameLevelDataForCurrentSchema($gameData));
+ $levelData = $this->gameLevelDataForCurrentSchema($gameData);
+ $levelAttributes = [
+ 'category_id' => $categoryId,
+ 'level_number' => (int) $slot['level_number'],
+ ];
+ unset($levelData['category_id'], $levelData['level_number']);
+
+ $level = GameLevel::query()->firstOrCreate($levelAttributes, $levelData);
+ if ($level->wasRecentlyCreated) {
  $generatedCount++;
+ }
  }
  }
 
  if ($generatedCount === 0) {
- return redirect()->route('admin.game')->with('error', 'No open level slots are available between levels 1 and 100 for this category.');
+ return redirect()->route('admin.game')
+ ->with('active_game_category_id', $categoryId)
+ ->with('error', 'No open level slots are available between levels 1 and 100 for this category.');
  }
 
  $contentNotifications->learningGamesGenerated($generatedCount, $topic, Category::find($categoryId));
 
  if ($generatedCount < $numLevels) {
- return redirect()->route('admin.game')->with('success', "Generated {$generatedCount} of {$numLevels} requested Learning Game(s). Only {$generatedCount} open slot(s) were available between levels 1 and 100.");
+ return redirect()->route('admin.game')
+ ->with('active_game_category_id', $categoryId)
+ ->with('success', "Generated {$generatedCount} of {$numLevels} requested Learning Game(s). Only {$generatedCount} open slot(s) were available between levels 1 and 100.");
  }
 
- return redirect()->route('admin.game')->with('success', "Successfully generated {$generatedCount} Learning Game(s)!");
+ return redirect()->route('admin.game')
+ ->with('active_game_category_id', $categoryId)
+ ->with('success', "Successfully generated {$generatedCount} Learning Game(s)!");
  }
 
  private function openLevelSlots(int $categoryId, int $startLevel, int $requestedLevels): array
@@ -248,27 +278,50 @@ class AdminGameController extends Controller
  'level_number' => ['required', 'integer', 'min:1', 'max:'.self::MAX_LEVEL_NUMBER, $uniqueRule],
  'category_id' => ['required', $this->activeGameCategoryRule()],
  'title' => 'required|string|max:255',
- 'description' => 'nullable|string',
- 'mission_text' => 'nullable|string',
+ 'description' => 'nullable|string|max:5000',
+ 'mission_text' => 'nullable|string|max:10000',
  'target_position' => 'required|string|max:255',
  'skill_focus' => 'nullable|string|max:255',
  'learning_objective' => 'nullable|string|max:1000',
  'success_criteria' => 'nullable|string|max:2000',
  'retry_hint' => 'nullable|string|max:1000',
- 'difficulty' => 'required|string|max:255',
+ 'difficulty' => ['required', Rule::in(['beginner', 'intermediate', 'advanced'])],
  'required_score' => 'required|integer|min:0|max:100',
- 'xp_reward' => 'required|integer|min:0',
- 'energy_cost' => 'required|integer|min:0',
+ 'xp_reward' => 'required|integer|min:0|max:1000000',
+ 'energy_cost' => 'required|integer|min:0|max:1000',
  'ai_persona' => 'nullable|string|max:255',
- 'ai_custom_prompt' => 'nullable|string',
- 'time_limit_seconds' => 'nullable|integer|min:0',
- 'banned_words' => 'nullable|string',
+ 'ai_custom_prompt' => 'nullable|string|max:10000',
+ 'time_limit_seconds' => 'nullable|integer|min:0|max:86400',
+ 'banned_words' => 'nullable|string|max:1000',
  'target_tone' => 'nullable|string|max:255',
  'custom_badge_name' => 'nullable|string|max:255',
  'skill_xp_type' => 'nullable|string|max:255',
- 'skill_xp_amount' => 'nullable|integer|min:0',
+ 'skill_xp_amount' => 'nullable|integer|min:0|max:1000000',
  'prerequisite_level_id' => $prerequisiteRules,
+ 'is_hidden' => 'nullable|boolean',
  ];
+ }
+
+ private function nextLevelNumbersByCategory($categories, $levels): array
+ {
+ $numbers = [];
+
+ foreach ($categories as $category) {
+ $usedNumbers = $levels
+ ->where('category_id', $category->id)
+ ->pluck('level_number')
+ ->mapWithKeys(fn ($levelNumber) => [(int) $levelNumber => true]);
+ $numbers[(int) $category->id] = null;
+
+ for ($levelNumber = 1; $levelNumber <= self::MAX_LEVEL_NUMBER; $levelNumber++) {
+ if (! $usedNumbers->has($levelNumber)) {
+ $numbers[(int) $category->id] = $levelNumber;
+ break;
+ }
+ }
+ }
+
+ return $numbers;
  }
 
  private function normalizeGeneratedGameData(?array $gameData, string $topic, string $difficulty,?int $generationNumber = null,?int $totalLevels = null): array
@@ -372,7 +425,7 @@ class AdminGameController extends Controller
  return [
  'title' => "{$titleDifficulty} {$topic} Challenge{$titleSuffix}",
  'description' => "A structured practice level for improving {$topic} through role-focused interview prompts.{$partContext}",
- 'mission_text' => "1. In a interview, how would you describe your current challenge with {$topic}?\n2. Share one school, internship, BPO, freelance, or workplace example where this skill mattered.\n3. Explain the action you personally took.\n4. Name the result, lesson learned, or impact.\n5. Describe how you will improve for your next local interview.",
+ 'mission_text' => "1. In an interview, how would you describe your current challenge with {$topic}?\n2. Share one school, internship, BPO, freelance, or workplace example where this skill mattered.\n3. Explain the action you personally took.\n4. Name the result, lesson learned, or impact.\n5. Describe how you will improve for your next local interview.",
  'target_position' => 'Interview Readiness',
  'skill_focus' => $this->skillFocusForTopic($topic),
  'learning_objective' => "Practice {$topic} in a realistic interview answer while keeping the response clear, specific, and professionally structured.",

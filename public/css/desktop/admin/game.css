@@ -30,6 +30,21 @@
     white-space: nowrap;
 }
 
+#sec-admin-game .admin-game-actions .btn-outline-info:hover,
+#sec-admin-game .admin-game-actions .btn-outline-info:focus-visible,
+#sec-admin-game .admin-game-actions .btn-outline-info:active {
+    background: #0dcaf0 !important;
+    border-color: #0dcaf0 !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+#sec-admin-game .admin-game-empty-state {
+    border: 1px solid rgba(14, 165, 233, .25);
+    border-radius: 12px;
+    color: var(--tx);
+}
+
 #sec-admin-game .admin-game-panel {
     width: 100%;
     max-width: 100%;
@@ -126,36 +141,104 @@
 
 .game-table th:nth-child(1),
 .game-table td:nth-child(1) {
-    width: 8%;
+    width: 7%;
 }
 
 .game-table th:nth-child(2),
 .game-table td:nth-child(2) {
-    width: 34%;
+    width: 30%;
 }
 
 .game-table th:nth-child(3),
 .game-table td:nth-child(3) {
-    width: 18%;
+    width: 16%;
 }
 
 .game-table th:nth-child(4),
 .game-table td:nth-child(4) {
-    width: 17%;
+    width: 15%;
 }
 
 .game-table th:nth-child(5),
 .game-table td:nth-child(5) {
-    width: 15%;
+    width: 14%;
 }
 
 .game-table th:nth-child(6),
 .game-table td:nth-child(6) {
-    width: 8%;
+    width: 18%;
 }
 
 .game-table td:nth-child(6) .d-flex {
     flex-wrap: nowrap;
+}
+
+#sec-admin-game .admin-game-row-actions {
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+#sec-admin-game .admin-game-delete-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+#sec-admin-game .admin-game-row-action {
+    align-items: center;
+    display: inline-flex;
+    font-size: .72rem;
+    font-weight: 700;
+    gap: 5px;
+    justify-content: center;
+    min-height: 34px;
+    padding: .32rem .55rem;
+    white-space: nowrap;
+}
+
+#sec-admin-game .admin-game-row-action.btn-outline-secondary,
+#sec-admin-game .admin-game-row-action.btn-outline-secondary i {
+    color: var(--tx) !important;
+    -webkit-text-fill-color: var(--tx) !important;
+}
+
+#sec-admin-game .admin-game-row-action.btn-outline-secondary:hover,
+#sec-admin-game .admin-game-row-action.btn-outline-secondary:focus-visible,
+#sec-admin-game .admin-game-row-action.btn-outline-secondary:active {
+    background: #475569 !important;
+    border-color: #475569 !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+#sec-admin-game .admin-game-row-action.btn-outline-secondary:hover i,
+#sec-admin-game .admin-game-row-action.btn-outline-secondary:focus-visible i,
+#sec-admin-game .admin-game-row-action.btn-outline-secondary:active i {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+#sec-admin-game .admin-game-delete-button,
+#sec-admin-game .admin-game-delete-button i {
+    color: #dc3545 !important;
+    -webkit-text-fill-color: #dc3545 !important;
+}
+
+#sec-admin-game .admin-game-delete-button:hover,
+#sec-admin-game .admin-game-delete-button:focus,
+#sec-admin-game .admin-game-delete-button:focus-visible,
+#sec-admin-game .admin-game-delete-button:active {
+    background: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+#sec-admin-game .admin-game-delete-button:hover i,
+#sec-admin-game .admin-game-delete-button:focus i,
+#sec-admin-game .admin-game-delete-button:focus-visible i,
+#sec-admin-game .admin-game-delete-button:active i {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
 }
 
 .game-table td:nth-child(2) > div:first-child,
@@ -238,6 +321,24 @@
 :is(#addGameModal, #generateGameModal, [id^="editGameModal"]) .modal-title {
     min-width: 0;
     overflow-wrap: anywhere;
+}
+
+:is(#addGameModal, #generateGameModal, [id^="editGameModal"]) .admin-game-form-errors {
+    border-radius: 10px;
+    font-size: .84rem;
+}
+
+:is(#addGameModal, #generateGameModal, [id^="editGameModal"]) button[aria-busy="true"] {
+    cursor: wait;
+}
+
+:is(#addGameModal, #generateGameModal, [id^="editGameModal"]) .btn-outline-secondary:hover,
+:is(#addGameModal, #generateGameModal, [id^="editGameModal"]) .btn-outline-secondary:focus-visible,
+:is(#addGameModal, #generateGameModal, [id^="editGameModal"]) .btn-outline-secondary:active {
+    background: #475569 !important;
+    border-color: #475569 !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
 }
 
 :is(#addGameModal, #generateGameModal, [id^="editGameModal"]) .row {

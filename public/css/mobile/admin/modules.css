@@ -97,6 +97,27 @@
         display: inline-flex;
         margin: 0;
     }
+    #sec-admin-modules .module-actions .admin-module-delete-button,
+    #sec-admin-modules .module-actions .admin-module-delete-button i {
+        color: #dc3545 !important;
+        -webkit-text-fill-color: #dc3545 !important;
+    }
+    #sec-admin-modules .module-actions .admin-module-delete-button:hover,
+    #sec-admin-modules .module-actions .admin-module-delete-button:focus,
+    #sec-admin-modules .module-actions .admin-module-delete-button:focus-visible,
+    #sec-admin-modules .module-actions .admin-module-delete-button:active {
+        background: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    #sec-admin-modules .module-actions .admin-module-delete-button:hover i,
+    #sec-admin-modules .module-actions .admin-module-delete-button:focus i,
+    #sec-admin-modules .module-actions .admin-module-delete-button:focus-visible i,
+    #sec-admin-modules .module-actions .admin-module-delete-button:active i {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
     #modulesTable .btn-sm {
         min-height: 30px;
         padding: 0.28rem 0.5rem;

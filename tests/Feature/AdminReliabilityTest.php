@@ -486,24 +486,6 @@ class AdminReliabilityTest extends TestCase
             ->assertDontSee('Active Today');
     }
 
-    public function test_admin_users_export_respects_current_filters(): void
-    {
-        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active', 'email' => 'admin@example.com']);
-        $activeUser = User::factory()->create(['is_admin' => false, 'status' => 'active', 'email' => 'active@example.com']);
-        $inactiveUser = User::factory()->create(['is_admin' => false, 'status' => 'inactive', 'email' => 'inactive@example.com']);
-
-        $response = $this->actingAs($admin)
-            ->get(route('admin.users.export', ['role' => 'user', 'status' => 'active']));
-
-        $response->assertOk();
-        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
-
-        $csv = $response->streamedContent();
-        $this->assertStringContainsString($activeUser->email, $csv);
-        $this->assertStringNotContainsString($inactiveUser->email, $csv);
-        $this->assertStringNotContainsString($admin->email, $csv);
-    }
-
     public function test_admin_session_export_respects_filters_and_neutralizes_formulas(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
@@ -649,14 +631,6 @@ class AdminReliabilityTest extends TestCase
             ->assertDontSee('System Admin')
             ->assertDontSee(route('admin.users.update', $defaultAdmin), false)
             ->assertDontSee(route('admin.users.destroy', $defaultAdmin), false);
-
-        $response = $this->actingAs($viewer)
-            ->get(route('admin.users.export'));
-
-        $csv = $response->assertOk()->streamedContent();
-        $this->assertStringNotContainsString('System Admin', $csv);
-        $this->assertStringNotContainsString('admin@speakreadyai.online', $csv);
-        $this->assertStringContainsString($candidate->email, $csv);
 
         $this->actingAs($viewer)
             ->getJson(route('admin.users.show', $defaultAdmin))

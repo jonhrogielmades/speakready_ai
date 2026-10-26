@@ -75,15 +75,6 @@
             <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#broadcastModal"><i class="fa-solid fa-bullhorn me-2"></i>Broadcast</button>
             <!-- Feature 3: Add User -->
             <button type="button" class="btn btn-primary" style="background:#3b82f6;border-color:#3b82f6;" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="fa-solid fa-user-plus me-2"></i>Add User</button>
-            <!-- Feature 18: Export -->
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fa-solid fa-file-export me-2"></i>Export</button>
-                <ul class="dropdown-menu dropdown-menu-end" style="background:var(--sf);border:1px solid var(--bd);">
-                    <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); window.print();" style="color:var(--tx);"><i class="fa-solid fa-file-pdf me-2 text-danger"></i>PDF</a></li>
-                    <li><a class="dropdown-item" href="{{ route('admin.users.export', array_merge(request()->query(), ['format' => 'excel'])) }}" style="color:var(--tx);"><i class="fa-solid fa-file-excel me-2 text-success"></i>Excel CSV</a></li>
-                    <li><a class="dropdown-item" href="{{ route('admin.users.export', array_merge(request()->query(), ['format' => 'csv'])) }}" style="color:var(--tx);"><i class="fa-solid fa-file-csv me-2 text-info"></i>CSV</a></li>
-                </ul>
-            </div>
         </div>
     </div>
 
@@ -612,59 +603,7 @@
 </div>
 
 <!-- Add User Modal -->
-<div class="modal fade custom-modal" id="addUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="{{ route('admin.users.store') }}" method="POST">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Add New User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Full Name</label>
-                        <input type="text" name="name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Email</label>
-                        <input type="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Password</label>
-                        <div class="password-field">
-                            <input type="password" name="password" id="createUserPassword" class="form-control" required minlength="8">
-                            <button class="password-toggle toggle-password" type="button" onclick="togglePasswordVisibility('createUserPassword', this)" aria-label="Show password">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="form-label text-muted">Role</label>
-                            <select name="role" class="form-select" required>
-                                <option value="user">Candidate/User</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label text-muted">Status</label>
-                            <select name="status" class="form-select" required>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="suspended">Suspended</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="background:#3b82f6;border-color:#3b82f6;">Create User</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+@include('shared.admin.add-user-modal')
 
 <!-- Edit User Modal -->
 <div class="modal fade custom-modal" id="editUserModal" tabindex="-1">

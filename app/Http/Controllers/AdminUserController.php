@@ -16,12 +16,12 @@ use App\Models\Profile;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
-use App\Services\CsvExportService;
 use App\Support\SystemSettings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 
@@ -88,60 +88,64 @@ class AdminUserController extends Controller
         ));
     }
 
-    public function export(Request $request)
-    {
-        $users = $this->filteredUsers($request)
-            ->latest()
-            ->get();
-        $fileName = 'users_export_'.now()->format('Ymd_His').'.csv';
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename={$fileName}",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
-
-        $callback = function () use ($users) {
-            $file = fopen('php://output', 'w');
-            CsvExportService::writeRow($file, ['ID', 'Name', 'Username/Email', 'Role', 'Status', 'Registered At']);
-
-            foreach ($users as $user) {
-                CsvExportService::writeRow($file, [
-                    $user->id,
-                    $user->name,
-                    $this->usernameEmailLabel($user),
-                    $user->is_admin ? 'Admin' : 'User',
-                    $user->status,
-                    optional($user->created_at)->toDateTimeString(),
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
-    }
-
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => $this->newPasswordRules(),
-            'role' => 'required|in:admin,user',
-            'status' => 'required|in:active,inactive,suspended',
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+            'username' => $this->normalizeUsername($request->input('username')),
+            'email' => Str::lower(trim((string) $request->input('email'))),
         ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'is_admin' => $validated['role'] === 'admin',
-            'status' => $validated['status'],
-            'email_verified_at' => now(),
+        $validated = $request->validateWithBag('addUser', [
+            'name' => ['required', 'string', 'max:255'],
+            // Username remains nullable for older admin clients. The current UI
+            // requires it, while legacy submissions receive a safe unique value.
+            'username' => [
+                'nullable',
+                'string',
+                'min:3',
+                'max:64',
+                'regex:/^[a-z0-9._-]+$/',
+                Rule::unique('users', 'username'),
+            ],
+            'email' => [
+                'required',
+                'string',
+                'max:255',
+                'email:rfc,filter',
+                'regex:/^[^@\s]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i',
+                Rule::unique('users', 'email'),
+            ],
+            'password' => $this->newPasswordRules(),
+            // Kept optional at the HTTP boundary for backwards compatibility;
+            // when supplied by the admin UI it must match the password.
+            'password_confirmation' => ['sometimes', 'required', 'string', 'same:password'],
+            'role' => ['required', Rule::in(['admin', 'user'])],
+            'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
         ]);
+
+        $username = filled($validated['username'] ?? null)
+            ? $validated['username']
+            : $this->uniqueUsernameFromSeed($validated['email'] ?: $validated['name']);
+
+        $user = DB::transaction(function () use ($validated, $username): User {
+            $user = User::create([
+                'name' => $validated['name'],
+                'username' => $username,
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'is_admin' => $validated['role'] === 'admin',
+                'status' => $validated['status'],
+            ]);
+
+            $user->forceFill(['email_verified_at' => now()])->save();
+
+            if (! $user->is_admin) {
+                Profile::query()->firstOrCreate(['user_id' => $user->id]);
+            }
+
+            return $user;
+        }, 3);
 
         $this->logAdminUserActivity(
             $request,
@@ -149,7 +153,9 @@ class AdminUserController extends Controller
             "Created {$validated['role']} account {$user->name} (#{$user->id})."
         );
 
-        return redirect()->back()->with('success', 'User created successfully');
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', "User created successfully. Sign-in username: {$user->username}");
     }
 
     public function update(Request $request, User $user)
@@ -573,18 +579,6 @@ class AdminUserController extends Controller
             ->all();
     }
 
-    private function usernameEmailLabel(User $user): string
-    {
-        $username = trim((string) ($user->username ?? ''));
-        $email = trim((string) ($user->email ?? ''));
-
-        if ($username !== '' && $email !== '') {
-            return "{$username} / {$email}";
-        }
-
-        return $username !== '' ? $username : $email;
-    }
-
     private function onlineUserIds(?\Illuminate\Support\Collection $lastActiveByUserId = null): \Illuminate\Support\Collection
     {
         $cutoff = now()->subMinutes(5);
@@ -641,5 +635,38 @@ class AdminUserController extends Controller
         }
 
         return [$required ? 'required' : 'nullable', 'string', $rule];
+    }
+
+    private function normalizeUsername(mixed $username): string
+    {
+        return Str::lower(trim((string) $username));
+    }
+
+    private function uniqueUsernameFromSeed(string $seed): string
+    {
+        $base = $this->usernameBase($seed);
+        $candidate = $base;
+        $suffix = 2;
+
+        while (User::withTrashed()->where('username', $candidate)->exists()) {
+            $candidate = Str::limit($base, 55, '').'-'.$suffix;
+            $suffix++;
+        }
+
+        return $candidate;
+    }
+
+    private function usernameBase(string $seed): string
+    {
+        $seed = Str::before($seed, '@');
+        $seed = Str::ascii(Str::lower($seed));
+        $seed = preg_replace('/[^a-z0-9._-]+/', '-', $seed) ?: '';
+        $seed = trim($seed, '.-_');
+
+        if (strlen($seed) < 3) {
+            $seed = 'user-'.$seed;
+        }
+
+        return Str::limit($seed, 60, '');
     }
 }
