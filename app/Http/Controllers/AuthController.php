@@ -6,6 +6,7 @@ use App\Helpers\ActivityLogger;
 use App\Mail\PasswordRecoveryCodeMail;
 use App\Models\Profile;
 use App\Models\Setting;
+use App\Services\AccountDeletionService;
 use App\Services\BrevoTransactionalMail;
 use App\Models\User;
 use App\Support\AccountNotificationSchema;
@@ -46,6 +47,12 @@ class AuthController extends Controller
     private const GOOGLE_AUTH_LAYOUT_SESSION_KEY = 'google_auth_layout';
 
     private const GOOGLE_AUTH_NONCE_SESSION_KEY = 'google_auth_nonce';
+
+    private const GOOGLE_ACCOUNT_DELETE_USER_SESSION_KEY = 'google_account_delete_user_id';
+
+    private const GOOGLE_ACCOUNT_DELETE_INTENT = 'account_delete';
+
+    private const GOOGLE_AUTH_INTENTS = ['login', 'register', self::GOOGLE_ACCOUNT_DELETE_INTENT];
 
     private const AUTH_TAB_OLD_INPUT_KEY = 'auth_tab';
 
@@ -523,7 +530,28 @@ class AuthController extends Controller
         return $this->redirectToGoogleWithIntent($request, 'register');
     }
 
-    public function handleGoogleCallback(Request $request)
+    public function redirectToGoogleAccountDeletion(Request $request)
+    {
+        if (! SystemSettings::userCan('delete_own_account')) {
+            return redirect()->back()->withErrors([
+                'account_delete' => 'Account deletion is currently disabled by the administrator.',
+            ]);
+        }
+
+        $user = $request->user();
+
+        if (! $user || blank($user->google_id)) {
+            return redirect()->back()->withErrors([
+                'account_delete' => 'This account must be confirmed with its current password.',
+            ]);
+        }
+
+        $request->session()->put(self::GOOGLE_ACCOUNT_DELETE_USER_SESSION_KEY, (int) $user->id);
+
+        return $this->redirectToGoogleWithIntent($request, self::GOOGLE_ACCOUNT_DELETE_INTENT);
+    }
+
+    public function handleGoogleCallback(Request $request, AccountDeletionService $accountDeletionService)
     {
         $stateContext = $this->googleAuthStateContext($request);
 
@@ -532,12 +560,20 @@ class AuthController extends Controller
 
         if (! app()->runningUnitTests()
             && ($expectedNonce === '' || $returnedNonce === '' || ! hash_equals($expectedNonce, $returnedNonce))) {
+            $failedIntent = $this->googleAuthIntent($request, $stateContext['intent'] ?? null);
+
             Log::warning('Google authentication callback failed state validation.', [
                 'has_state' => $request->filled('state'),
                 'has_session_nonce' => $expectedNonce !== '',
             ]);
 
-            return $this->googleAuthFailureResponse($request, 'Google sign-in expired. Please start Google login again.');
+            return $this->googleAuthFailureResponse(
+                $request,
+                $failedIntent === self::GOOGLE_ACCOUNT_DELETE_INTENT
+                    ? 'Google confirmation expired. Please start again.'
+                    : 'Google sign-in expired. Please start Google login again.',
+                $failedIntent
+            );
         }
 
         $this->restoreGoogleLayoutPreference($request, $stateContext['layout'] ?? null);
@@ -582,6 +618,14 @@ class AuthController extends Controller
 
             $googleEmail = $this->normalizeEmail($googleUser->email);
             $googleVerifiedAt = now();
+
+            if ($intent === self::GOOGLE_ACCOUNT_DELETE_INTENT) {
+                return $this->completeGoogleAccountDeletion(
+                    $request,
+                    $googleUser,
+                    $accountDeletionService
+                );
+            }
 
             $user = User::withTrashed()
                 ->where('google_id', $googleUser->id)
@@ -716,6 +760,7 @@ class AuthController extends Controller
 
     private function redirectToGoogleWithIntent(Request $request, string $intent)
     {
+        $intent = in_array($intent, self::GOOGLE_AUTH_INTENTS, true) ? $intent : 'login';
         $layout = $this->requestLayoutPreference($request) ?? 'desktop';
 
         $nonce = Str::random(40);
@@ -731,13 +776,95 @@ class AuthController extends Controller
             return $this->googleAuthFailureResponse($request, $configurationError, $intent);
         }
 
+        $parameters = [
+            'state' => $this->googleAuthState($intent, $layout, $nonce),
+            'prompt' => 'select_account',
+        ];
+
+        if ($intent === self::GOOGLE_ACCOUNT_DELETE_INTENT) {
+            $parameters['max_age'] = 0;
+        }
+
         return Socialite::driver('google')
             ->stateless()
-            ->with([
-                'state' => $this->googleAuthState($intent, $layout, $nonce),
-                'prompt' => 'select_account',
-            ])
+            ->with($parameters)
             ->redirect();
+    }
+
+    private function completeGoogleAccountDeletion(
+        Request $request,
+        $googleUser,
+        AccountDeletionService $accountDeletionService
+    ) {
+        $expectedUserId = (int) $request->session()->pull(
+            self::GOOGLE_ACCOUNT_DELETE_USER_SESSION_KEY,
+            0
+        );
+        $user = $request->user();
+
+        if (! $user || $expectedUserId < 1 || (int) $user->id !== $expectedUserId) {
+            return $this->googleAuthFailureResponse(
+                $request,
+                'Account deletion confirmation expired. Sign in and try again.',
+                self::GOOGLE_ACCOUNT_DELETE_INTENT
+            );
+        }
+
+        if ($user->is_admin) {
+            return $this->googleAuthFailureResponse(
+                $request,
+                'Administrator accounts cannot be deleted from the user account page.',
+                self::GOOGLE_ACCOUNT_DELETE_INTENT
+            );
+        }
+
+        if (! SystemSettings::userCan('delete_own_account')) {
+            return $this->googleAuthFailureResponse(
+                $request,
+                'Account deletion is currently disabled by the administrator.',
+                self::GOOGLE_ACCOUNT_DELETE_INTENT
+            );
+        }
+
+        $expectedGoogleId = trim((string) $user->google_id);
+        $selectedGoogleId = trim((string) ($googleUser->id ?? ''));
+
+        if ($expectedGoogleId === ''
+            || $selectedGoogleId === ''
+            || ! hash_equals($expectedGoogleId, $selectedGoogleId)) {
+            return $this->googleAuthFailureResponse(
+                $request,
+                'The selected Google account is not connected to this SpeakReady account. Choose the connected Google account and try again.',
+                self::GOOGLE_ACCOUNT_DELETE_INTENT
+            );
+        }
+
+        Auth::logout();
+
+        try {
+            $accountDeletionService->permanentlyDelete($user);
+        } catch (Throwable $error) {
+            Log::error('Permanent Google account deletion failed.', [
+                'user_id' => $expectedUserId,
+                'exception_type' => $error::class,
+            ]);
+
+            $remainingUser = User::query()->find($expectedUserId);
+            if ($remainingUser) {
+                Auth::login($remainingUser, true);
+            }
+
+            return $this->googleAuthFailureResponse(
+                $request,
+                'We could not delete your account right now. Please try again.',
+                self::GOOGLE_ACCOUNT_DELETE_INTENT
+            );
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('success', 'Your account and its data were permanently deleted.');
     }
 
     private function restoreGoogleLayoutPreference(Request $request, ?string $fallbackLayout = null): ?string
@@ -829,15 +956,27 @@ class AuthController extends Controller
 
     private function googleAuthIntent(Request $request, ?string $fallbackIntent = null): string
     {
-        $intent = in_array($fallbackIntent, ['login', 'register'], true)
+        $intent = in_array($fallbackIntent, self::GOOGLE_AUTH_INTENTS, true)
             ? $fallbackIntent
             : $request->session()->get(self::GOOGLE_AUTH_INTENT_SESSION_KEY, 'login');
 
-        return in_array($intent, ['login', 'register'], true) ? $intent : 'login';
+        return in_array($intent, self::GOOGLE_AUTH_INTENTS, true) ? $intent : 'login';
     }
 
     private function googleAuthFailureResponse(Request $request, string $message, ?string $intent = null, array $input = [], string $field = 'email', array $homeQuery = [])
     {
+        $intent = $this->googleAuthIntent($request, $intent);
+
+        if ($intent === self::GOOGLE_ACCOUNT_DELETE_INTENT) {
+            $request->session()->forget(self::GOOGLE_ACCOUNT_DELETE_USER_SESSION_KEY);
+
+            $redirect = Auth::check()
+                ? $this->redirectToRouteWithGoogleLayout($request, 'user.account')
+                : $this->redirectToHomeWithGoogleLayout($request, $homeQuery);
+
+            return $redirect->withErrors(['account_delete' => $message]);
+        }
+
         return $this->redirectToHomeWithGoogleLayout($request, $homeQuery)
             ->withErrors([$field => $message])
             ->withInput($this->googleAuthOldInput($request, $intent, $input));
@@ -857,7 +996,7 @@ class AuthController extends Controller
     private function googleAuthState(string $intent, string $layout, string $nonce): string
     {
         $payload = [
-            'intent' => in_array($intent, ['login', 'register'], true) ? $intent : 'login',
+            'intent' => in_array($intent, self::GOOGLE_AUTH_INTENTS, true) ? $intent : 'login',
             'layout' => in_array($layout, ['mobile', 'desktop'], true) ? $layout : 'desktop',
             'issued_at' => time(),
             'nonce' => $nonce,
@@ -899,7 +1038,7 @@ class AuthController extends Controller
         }
 
         return [
-            'intent' => in_array($payload['intent'] ?? null, ['login', 'register'], true) ? $payload['intent'] : null,
+            'intent' => in_array($payload['intent'] ?? null, self::GOOGLE_AUTH_INTENTS, true) ? $payload['intent'] : null,
             'layout' => sr_normalized_layout($payload['layout'] ?? null),
             'nonce' => is_string($payload['nonce'] ?? null) ? $payload['nonce'] : null,
         ];

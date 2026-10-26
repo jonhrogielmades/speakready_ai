@@ -17,6 +17,8 @@ use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
+use App\Models\User;
+use App\Services\AccountDeletionService;
 use App\Services\AIService;
 use App\Services\ProfilePhotoStorage;
 use App\Services\ChallengePositionService;
@@ -4366,32 +4368,61 @@ class UserController extends Controller
  return ['required', 'string', $rule];
  }
 
- public function deleteAccount(Request $request, ProfilePhotoStorage $photoStorage)
+ public function deleteAccount(Request $request, AccountDeletionService $accountDeletionService)
  {
  AccountNotificationSchema::ensure();
 
  if (! SystemSettings::userCan('delete_own_account')) {
- return redirect()->back()->with('error', 'Account deletion is currently disabled by the administrator.');
+ return redirect()->back()->withErrors([
+  'account_delete' => 'Account deletion is currently disabled by the administrator.',
+ ]);
  }
 
  $user = Auth::user();
- ActivityLogger::log(
- $user,
- 'account_deleted',
- "{$user->name} ({$user->email}) deleted their account.",
- $request->ip(),
- false
- );
+
+ if ($user->is_admin) {
+  return redirect()->back()->withErrors([
+   'account_delete' => 'Administrator accounts cannot be deleted from the user account page.',
+  ]);
+ }
+
+ if (filled($user->google_id)) {
+  return redirect()->back()->withErrors([
+   'account_delete' => 'Confirm this account through Google before deleting it.',
+  ]);
+ }
+
+ $request->validate([
+  'delete_password' => ['required', 'string', 'current_password'],
+ ], [
+  'delete_password.required' => 'Enter your current password to delete your account.',
+  'delete_password.current_password' => 'The password you entered is incorrect.',
+ ]);
 
  Auth::logout();
- $photoStorage->delete($user->profile_photo_path);
- $user->forceFill(['profile_photo_path' => null])->save();
- \App\Models\PushSubscription::where('user_id', $user->id)->delete();
- $user->delete(); // Soft delete as configured in User model
+
+ try {
+  $accountDeletionService->permanentlyDelete($user);
+ } catch (\Throwable $error) {
+  Log::error('Permanent user account deletion failed.', [
+   'user_id' => $user->id,
+   'exception_type' => $error::class,
+  ]);
+
+  $remainingUser = User::query()->find($user->id);
+  if ($remainingUser) {
+   Auth::login($remainingUser, true);
+  }
+
+  return redirect()->route('user.account', sr_layout_query($request))->withErrors([
+   'account_delete' => 'We could not delete your account right now. Please try again.',
+  ]);
+ }
+
  $request->session()->invalidate();
  $request->session()->regenerateToken();
 
- return redirect('/')->with('success', 'Your account has been deleted.');
+ return redirect('/')->with('success', 'Your account and its data were permanently deleted.');
  }
 
  public function skills()

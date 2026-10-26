@@ -2,7 +2,7 @@
 @section('title', 'Account Management')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/account.css?v=2') }}" data-page-style="user-account">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/account.css?v=3') }}" data-page-style="user-account">
 <link rel="stylesheet" href="{{ asset('css/mobile/user/account-2.css?v=12') }}" data-page-style="user-account-2">
 @endpush
 
@@ -172,11 +172,10 @@
 
                 <div class="account-danger-section">
                     <h6 class="danger-title"><span class="danger-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>Danger Zone</h6>
-                    <p class="danger-copy">Once you delete your account, there is no going back. Please be certain.</p>
-                    <form action="{{ route('user.account.delete') }}" method="POST" id="accountDeleteForm" data-sr-confirm-form data-sr-confirm-title="Delete account" data-sr-confirm-message="This will permanently disable access to your account. This cannot be undone." data-sr-confirm-action="Delete Account" data-sr-confirm-variant="danger">
-                        @csrf
-                        <button type="submit" class="btn delete-account-btn"><i class="fa-regular fa-trash-can"></i>Delete Account</button>
-                    </form>
+                    <p class="danger-copy">Deletion requires {{ filled($accountUser?->google_id) ? 'confirmation from your connected Google account' : 'your current password' }} and permanently removes your saved account data.</p>
+                    <div class="danger-action-form" id="accountDeleteForm">
+                        <button type="button" class="btn delete-account-btn" data-bs-toggle="modal" data-bs-target="#accountDeleteModal"><i class="fa-regular fa-trash-can"></i>Delete Account</button>
+                    </div>
                 </div>
             </div>
 
@@ -188,6 +187,7 @@
     </div>
 </div>
 
+@include('shared.user.account-delete-modal', ['accountUser' => $accountUser])
 @include('shared.user.dashboard-setup-tools-modal')
 @include('shared.user.account-no-changes-modal')
 
@@ -343,6 +343,21 @@
 
     const accountProfileForm = document.getElementById('accountProfileForm');
     const accountNoChangesModal = document.getElementById('accountNoChangesModal');
+    const accountDeleteModal = document.getElementById('accountDeleteModal');
+    const shouldOpenAccountDeleteModal = @json($errors->has('delete_password') || $errors->has('account_delete'));
+
+    function showAccountDeleteModalAfterValidation() {
+        if (!shouldOpenAccountDeleteModal || !accountDeleteModal || !window.bootstrap?.Modal) return;
+        window.bootstrap.Modal.getOrCreateInstance(accountDeleteModal).show();
+    }
+
+    if (shouldOpenAccountDeleteModal) {
+        if (document.readyState === 'complete') {
+            showAccountDeleteModalAfterValidation();
+        } else {
+            window.addEventListener('load', showAccountDeleteModalAfterValidation, { once: true });
+        }
+    }
 
     function accountProfileSnapshot() {
         if (!accountProfileForm) return '';
