@@ -12,9 +12,7 @@ use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Score;
 use App\Models\LearningModule;
-use App\Models\ModuleQuiz;
-use App\Models\ModuleQuizQuestion;
-use App\Models\ModuleResource;
+use App\Models\ModuleChapter;
 use App\Services\AIService;
 use App\Services\CsvExportService;
 use App\Services\QuestionDatasetProvider;
@@ -26,10 +24,8 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
@@ -1293,7 +1289,7 @@ class AdminController extends Controller
 
  return redirect()
  ->route('admin.modules')
- ->with('success', 'Interview learning module created successfully. Use Manage to add lessons, resources, or quizzes.');
+ ->with('success', 'Interview learning module created successfully. Use Manage to add lessons.');
  }
 
  public function generateModule(Request $request)
@@ -1496,7 +1492,7 @@ class AdminController extends Controller
 
  public function editModule(LearningModule $module)
  {
- $module->load(['chapters', 'activities', 'resources', 'quizzes.questions']);
+ $module->load(['chapters', 'activities']);
  $categories = $this->learningCategoryNames();
  return $this->mobileView('admin.module_edit', compact('module', 'categories'));
  }
@@ -1539,37 +1535,34 @@ class AdminController extends Controller
  // Chapters
  public function storeModuleChapter(Request $request, LearningModule $module)
  {
- $request->validate([
- 'title' => 'required|string|max:255',
- 'content' => 'nullable|string',
- 'video_url' => 'nullable|string',
- ]);
+ $validated = $request->validateWithBag('addChapter', $this->moduleChapterRules());
 
  $module->chapters()->create([
- 'title' => $request->title,
- 'content' => ModuleChapterHtml::sanitize($request->content),
- 'video_url' => $request->video_url,
- 'order' => $module->chapters()->count() + 1,
+ 'title' => trim($validated['title']),
+ 'content' => ModuleChapterHtml::sanitize($validated['content'] ?? ''),
+ 'video_url' => $this->nullableTrimmedString($validated['video_url'] ?? null),
+ 'order' => ((int) $module->chapters()->max('order')) + 1,
  ]);
 
- return redirect()->back()->with('success', 'Chapter added successfully');
+ return redirect()->back()
+ ->with('success', 'Chapter added successfully')
+ ->with('active_module_tab', '#chapters');
  }
 
- public function updateModuleChapter(Request $request, \App\Models\ModuleChapter $chapter)
+ public function updateModuleChapter(Request $request, LearningModule $module, ModuleChapter $chapter)
  {
- $request->validate([
- 'title' => 'required|string|max:255',
- 'content' => 'nullable|string',
- 'video_url' => 'nullable|string',
- ]);
+ $this->ensureModuleChapterOwnership($module, $chapter);
+ $validated = $request->validateWithBag('editChapter'.$chapter->id, $this->moduleChapterRules());
 
  $chapter->update([
- 'title' => $request->title,
- 'content' => ModuleChapterHtml::sanitize($request->content),
- 'video_url' => $request->video_url,
+ 'title' => trim($validated['title']),
+ 'content' => ModuleChapterHtml::sanitize($validated['content'] ?? ''),
+ 'video_url' => $this->nullableTrimmedString($validated['video_url'] ?? null),
  ]);
 
- return redirect()->back()->with('success', 'Chapter updated successfully');
+ return redirect()->back()
+ ->with('success', 'Chapter updated successfully')
+ ->with('active_module_tab', '#chapters');
  }
 
  public function generateModuleChapter(Request $request, LearningModule $module)
@@ -1606,129 +1599,33 @@ class AdminController extends Controller
  'order' => ((int) $module->chapters()->max('order')) + 1,
  ]);
 
- return redirect()->back()->with('success', 'AI Chapter generated successfully!');
+ return redirect()->back()
+ ->with('success', 'AI Chapter generated successfully!')
+ ->with('active_module_tab', '#chapters');
  }
 
- public function destroyModuleChapter(\App\Models\ModuleChapter $chapter)
+ public function destroyModuleChapter(LearningModule $module, ModuleChapter $chapter)
  {
+ $this->ensureModuleChapterOwnership($module, $chapter);
  $chapter->delete();
- return redirect()->back()->with('success', 'Chapter deleted successfully');
+
+ return redirect()->back()
+ ->with('success', 'Chapter deleted successfully')
+ ->with('active_module_tab', '#chapters');
  }
 
- public function storeModuleResource(Request $request, LearningModule $module)
+ private function moduleChapterRules(): array
  {
- $validated = $request->validate([
+ return [
  'title' => ['required', 'string', 'max:255'],
- 'file' => ['required', 'file', 'mimes:pdf,doc,docx,ppt,pptx,txt', 'max:10240'],
- ]);
-
- $file = $validated['file'];
- $module->resources()->create([
- 'title' => $validated['title'],
- 'file_path' => $file->store('module-resources', 'public'),
- 'file_type' => strtolower($file->getClientOriginalExtension()),
- ]);
-
- return redirect()->back()->with('success', 'Module resource added successfully.');
+ 'content' => ['nullable', 'string', 'max:100000'],
+ 'video_url' => ['nullable', 'url:http,https', 'max:2048'],
+ ];
  }
 
- public function updateModuleResource(Request $request, LearningModule $module, ModuleResource $resource)
+ private function ensureModuleChapterOwnership(LearningModule $module, ModuleChapter $chapter): void
  {
- $this->ensureModuleResourceOwnership($module, $resource);
-
- $validated = $request->validate([
- 'title' => ['required', 'string', 'max:255'],
- 'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,ppt,pptx,txt', 'max:10240'],
- ]);
-
- $oldPath = $resource->file_path;
- $updates = ['title' => $validated['title']];
- if ($request->hasFile('file')) {
- $file = $validated['file'];
- $updates['file_path'] = $file->store('module-resources', 'public');
- $updates['file_type'] = strtolower($file->getClientOriginalExtension());
- }
-
- $resource->update($updates);
- if (isset($updates['file_path'])) {
- $this->deleteManagedModuleResourceFile($oldPath);
- }
-
- return redirect()->back()->with('success', 'Module resource updated successfully.');
- }
-
- public function destroyModuleResource(LearningModule $module, ModuleResource $resource)
- {
- $this->ensureModuleResourceOwnership($module, $resource);
- $path = $resource->file_path;
- $resource->delete();
- $this->deleteManagedModuleResourceFile($path);
-
- return redirect()->back()->with('success', 'Module resource deleted successfully.');
- }
-
- public function storeModuleQuiz(Request $request, LearningModule $module)
- {
- $validated = $request->validate([
- 'title' => ['required', 'string', 'max:255'],
- 'passing_score' => ['required', 'integer', 'between:1,100'],
- ]);
-
- $module->quizzes()->create($validated);
-
- return redirect()->back()->with('success', 'Module quiz added successfully.');
- }
-
- public function updateModuleQuiz(Request $request, LearningModule $module, ModuleQuiz $quiz)
- {
- $this->ensureModuleQuizOwnership($module, $quiz);
- $validated = $request->validate([
- 'title' => ['required', 'string', 'max:255'],
- 'passing_score' => ['required', 'integer', 'between:1,100'],
- ]);
-
- $quiz->update($validated);
-
- return redirect()->back()->with('success', 'Module quiz updated successfully.');
- }
-
- public function destroyModuleQuiz(LearningModule $module, ModuleQuiz $quiz)
- {
- $this->ensureModuleQuizOwnership($module, $quiz);
- $quiz->delete();
-
- return redirect()->back()->with('success', 'Module quiz deleted successfully.');
- }
-
- public function storeModuleQuizQuestion(Request $request, LearningModule $module, ModuleQuiz $quiz)
- {
- $this->ensureModuleQuizOwnership($module, $quiz);
- $quiz->questions()->create($this->validatedModuleQuizQuestion($request));
-
- return redirect()->back()->with('success', 'Quiz question added successfully.');
- }
-
- public function updateModuleQuizQuestion(
- Request $request,
- LearningModule $module,
- ModuleQuiz $quiz,
- ModuleQuizQuestion $question
- ) {
- $this->ensureModuleQuizQuestionOwnership($module, $quiz, $question);
- $question->update($this->validatedModuleQuizQuestion($request));
-
- return redirect()->back()->with('success', 'Quiz question updated successfully.');
- }
-
- public function destroyModuleQuizQuestion(
- LearningModule $module,
- ModuleQuiz $quiz,
- ModuleQuizQuestion $question
- ) {
- $this->ensureModuleQuizQuestionOwnership($module, $quiz, $question);
- $question->delete();
-
- return redirect()->back()->with('success', 'Quiz question deleted successfully.');
+ abort_unless((int) $chapter->learning_module_id === (int) $module->id, 404);
  }
 
  public function fetchLatestActivities(Request $request)
@@ -1812,90 +1709,6 @@ class AdminController extends Controller
  $log->delete();
  }
  return response()->json(['success' => true]);
- }
-
- private function ensureModuleResourceOwnership(LearningModule $module, ModuleResource $resource): void
- {
- abort_unless((int) $resource->learning_module_id === (int) $module->id, 404);
- }
-
- private function ensureModuleQuizOwnership(LearningModule $module, ModuleQuiz $quiz): void
- {
- abort_unless((int) $quiz->learning_module_id === (int) $module->id, 404);
- }
-
- private function ensureModuleQuizQuestionOwnership(
- LearningModule $module,
- ModuleQuiz $quiz,
- ModuleQuizQuestion $question
- ): void {
- $this->ensureModuleQuizOwnership($module, $quiz);
- abort_unless((int) $question->module_quiz_id === (int) $quiz->id, 404);
- }
-
- private function deleteManagedModuleResourceFile(?string $path): void
- {
- $path = trim((string) $path);
- if ($path !== '' && str_starts_with($path, 'module-resources/')) {
- Storage::disk('public')->delete($path);
- }
- }
-
- private function validatedModuleQuizQuestion(Request $request): array
- {
- $validated = $request->validate([
- 'type' => ['required', Rule::in(['multiple_choice', 'true_false', 'short_answer'])],
- 'question_text' => ['required', 'string', 'max:2000'],
- 'options' => ['nullable', 'string', 'max:4000'],
- 'correct_answer' => ['required', 'string', 'max:500'],
- ]);
-
- $type = $validated['type'];
- $correctAnswer = trim($validated['correct_answer']);
- $options = null;
-
- if ($type === 'true_false') {
- $options = ['True', 'False'];
- $matchingAnswer = collect($options)->first(
- fn (string $option): bool => strcasecmp($option, $correctAnswer) === 0
- );
- if ($matchingAnswer === null) {
- throw ValidationException::withMessages([
- 'correct_answer' => 'The correct answer must be True or False.',
- ]);
- }
- $correctAnswer = $matchingAnswer;
- } elseif ($type === 'multiple_choice') {
- $options = collect(preg_split('/\R/', (string) ($validated['options'] ?? '')))
- ->map(fn ($option) => trim((string) $option))
- ->filter()
- ->unique(fn (string $option): string => mb_strtolower($option))
- ->values()
- ->all();
-
- if (count($options) < 2) {
- throw ValidationException::withMessages([
- 'options' => 'Multiple-choice questions require at least two distinct options, one per line.',
- ]);
- }
-
- $matchingAnswer = collect($options)->first(
- fn (string $option): bool => strcasecmp($option, $correctAnswer) === 0
- );
- if ($matchingAnswer === null) {
- throw ValidationException::withMessages([
- 'correct_answer' => 'The correct answer must match one of the provided options.',
- ]);
- }
- $correctAnswer = $matchingAnswer;
- }
-
- return [
- 'type' => $type,
- 'question_text' => trim($validated['question_text']),
- 'options' => $options,
- 'correct_answer' => $correctAnswer,
- ];
  }
 
  private function normalizeGeneratedModuleData(

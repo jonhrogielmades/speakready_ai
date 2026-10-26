@@ -1,6 +1,6 @@
 @extends('desktop.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/game.css?v=6') }}" data-page-style="admin-game">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/game.css?v=7') }}" data-page-style="admin-game">
 @endpush
 
 @section('content')
@@ -176,7 +176,7 @@
                             </td>
                             <td style="padding:16px;vertical-align:middle;text-align:right;">
                                 <div class="d-flex justify-content-end gap-2 admin-game-row-actions">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary admin-game-row-action" data-bs-toggle="modal" data-bs-target="#editGameModal{{ $level->id }}" title="Edit Interview Game" aria-label="Edit {{ $level->title }}">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary admin-game-row-action admin-game-edit-button" data-bs-toggle="modal" data-bs-target="#editGameModal{{ $level->id }}" title="Edit Interview Game" aria-label="Edit {{ $level->title }}">
                                         <i class="fa-solid fa-pen"></i><span>Edit</span>
                                     </button>
                                     <form action="{{ route('admin.game.destroy', $level->id) }}" method="POST" class="admin-game-delete-form" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Are you sure you want to delete this game?');">

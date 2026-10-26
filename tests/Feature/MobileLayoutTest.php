@@ -480,7 +480,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('class="admin-mobile-shell mobile-shell"', false)
             ->assertSee('id="sec-admin-modules"', false)
-            ->assertSee('css/mobile/admin/modules.css?v=4', false)
+            ->assertSee('css/mobile/admin/modules.css?v=6', false)
             ->assertSee('admin-modules-header-actions', false)
             ->assertSee('modules-stats-row', false)
             ->assertSee('modules-panel', false)
@@ -532,7 +532,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-mobile-shell mobile-shell"', false)
             ->assertSee('id="sec-admin-module-edit"', false)
             ->assertSee('css/mobile/admin/module_edit.css?v=2', false)
-            ->assertSee('css/mobile/admin/module_edit-2.css?v=2', false)
+            ->assertSee('css/mobile/admin/module_edit-2.css?v=3', false)
             ->assertSee('admin-module-edit-header', false)
             ->assertSee('admin-module-edit-back-btn', false)
             ->assertSee('id="moduleEditTabs"', false)
@@ -851,7 +851,7 @@ class MobileLayoutTest extends TestCase
 
         ActivityLog::create([
             'user_id' => $user->id,
-            'action' => 'user_logged_in',
+            'action' => 'user_registered',
             'description' => 'Reviewed notification cards on a narrow mobile viewport.',
             'ip_address' => '127.0.0.1',
         ]);

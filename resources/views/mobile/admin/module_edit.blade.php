@@ -2,7 +2,7 @@
 @push('styles')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/mobile/admin/module_edit.css?v=2') }}" data-page-style="admin-module_edit">
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/module_edit-2.css?v=2') }}" data-page-style="admin-module_edit-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/module_edit-2.css?v=3') }}" data-page-style="admin-module_edit-2">
 @endpush
 
 @section('content')
@@ -55,7 +55,6 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link oinp" id="chapters-tab" data-bs-toggle="pill" data-bs-target="#chapters" type="button" role="tab" style="width:auto;margin:0;">Interview Lessons</button>
         </li>
-        @include('shared.admin.module-content-tab-buttons')
     </ul>
 
     <div class="tab-content" id="moduleEditTabsContent">
@@ -155,7 +154,7 @@
                                 @endif
                                 <div class="mb-3">
                                     <span class="badge bg-secondary mb-2">Text Content</span>
-                                    <div class="p-3 mt-2" style="background:#1a1a1a;border-radius:8px;max-height:200px;overflow-y:auto;">
+                                    <div class="admin-module-chapter-content p-3 mt-2">
                                         @if(filled($chapter->content))
                                             {!! \App\Support\ModuleChapterHtml::sanitize($chapter->content) !!}
                                         @else
@@ -165,7 +164,7 @@
                                 </div>
                                 <div class="d-flex justify-content-end gap-2 mt-3 flex-wrap admin-module-chapter-actions">
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editChapterModal{{ $chapter->id }}">Edit Chapter</button>
-                                    <form action="{{ route('admin.modules.chapters.destroy', $chapter->id) }}" method="POST" class="admin-module-chapter-delete-form" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Delete this chapter?');">
+                                    <form action="{{ route('admin.modules.chapters.destroy', [$module, $chapter]) }}" method="POST" class="admin-module-chapter-delete-form" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Delete this chapter?');">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Delete Chapter</button>
                                     </form>
@@ -178,157 +177,8 @@
             @endif
         </div>
 
-        @include('shared.admin.module-content-tab-panes')
-
     </div>
 </div>
 
-<!-- Add Chapter Modal -->
-<div class="modal fade" id="addChapterModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="border:1px solid var(--bd)">
-            <form action="{{ route('admin.modules.chapters.store', $module->id) }}" method="POST" id="chapterForm">
-                @csrf
-                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Add Interview Chapter</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
-                </div>
-                <div class="modal-body">
-                    <label class="olbl">Interview Chapter Title</label>
-                    <input class="oinp mb-3 w-100" type="text" name="title" required>
-
-                    <label class="olbl">Video URL (Optional YouTube Embed link)</label>
-                    <input class="oinp mb-3 w-100" type="text" name="video_url" placeholder="https://www.youtube.com/embed/...">
-
-                    <label class="olbl">Interview Lesson Content</label>
-                    <!-- Quill Editor Container -->
-                    <div id="editor-container" style="height: 250px; background: var(--bg); color: var(--tx); border-radius: 0 0 8px 8px; border: 1px solid var(--bd);"></div>
-                    <input type="hidden" name="content" id="chapterContent">
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--bd)">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Save Interview Chapter</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Chapter Modals -->
-@foreach($module->chapters as $chapter)
-<div class="modal fade" id="editChapterModal{{ $chapter->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="border:1px solid var(--bd)">
-            <form action="{{ route('admin.modules.chapters.update', $chapter->id) }}" method="POST" id="editChapterForm-{{ $chapter->id }}">
-                @csrf @method('PUT')
-                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Edit Interview Chapter {{ $chapter->order }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
-                </div>
-                <div class="modal-body">
-                    <label class="olbl">Interview Chapter Title</label>
-                    <input class="oinp mb-3 w-100" type="text" name="title" value="{{ $chapter->title }}" required>
-
-                    <label class="olbl">Video URL (Optional YouTube Embed link)</label>
-                    <input class="oinp mb-3 w-100" type="text" name="video_url" value="{{ $chapter->video_url }}" placeholder="https://www.youtube.com/embed/...">
-
-                    <label class="olbl">Interview Lesson Content</label>
-                    <!-- Quill Editor Container -->
-                    <div id="edit-editor-container-{{ $chapter->id }}" style="height: 250px; background: var(--bg); color: var(--tx); border-radius: 0 0 8px 8px; border: 1px solid var(--bd);"></div>
-                    <input type="hidden" name="content" id="editChapterContent-{{ $chapter->id }}" value="{{ \App\Support\ModuleChapterHtml::sanitize($chapter->content) }}">
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--bd)">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Update Interview Chapter</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endforeach
-
-<!-- Quill JS -->
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var toolbarOptions = [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline'],
-        ['link', 'image'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['clean']
-    ];
-
-    var quill = new Quill('#editor-container', {
-        theme: 'snow',
-        modules: {
-            toolbar: toolbarOptions
-        }
-    });
-
-    var form = document.getElementById('chapterForm');
-    if(form) {
-        form.onsubmit = function() {
-            var content = document.getElementById('chapterContent');
-            content.value = quill.root.innerHTML;
-        };
-    }
-
-    // Initialize Quill for Edit Modals
-    var chapters = @json($module->chapters);
-    chapters.forEach(function(chapter) {
-        var containerId = '#edit-editor-container-' + chapter.id;
-        var editQuill = new Quill(containerId, {
-            theme: 'snow',
-            modules: {
-                toolbar: toolbarOptions
-            }
-        });
-        
-        // Load initial content
-        var initialContent = document.getElementById('editChapterContent-' + chapter.id).value;
-        editQuill.root.innerHTML = initialContent;
-
-        var editForm = document.getElementById('editChapterForm-' + chapter.id);
-        if(editForm) {
-            editForm.onsubmit = function() {
-                var contentInput = document.getElementById('editChapterContent-' + chapter.id);
-                contentInput.value = editQuill.root.innerHTML;
-            };
-        }
-    });
-
-    // Tab persistence logic
-    var activeTab = localStorage.getItem('activeModuleTab_' + {{ $module->id }});
-    if (activeTab) {
-        var triggerEl = document.querySelector('button[data-bs-target="' + activeTab + '"]');
-        if (triggerEl) {
-            // Remove active class from all tabs
-            document.querySelectorAll('#moduleEditTabs .nav-link').forEach(function(btn) {
-                btn.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-pane').forEach(function(pane) {
-                pane.classList.remove('show', 'active');
-            });
-            
-            // Set saved tab as active
-            triggerEl.classList.add('active');
-            var paneId = activeTab.replace('#', '');
-            var pane = document.getElementById(paneId);
-            if(pane) {
-               pane.classList.add('show', 'active');
-            }
-        }
-    }
-
-    var tabEls = document.querySelectorAll('button[data-bs-toggle="pill"]');
-    tabEls.forEach(function(el) {
-        el.addEventListener('shown.bs.tab', function (event) {
-            var target = event.target.getAttribute('data-bs-target');
-            localStorage.setItem('activeModuleTab_' + {{ $module->id }}, target);
-        });
-    });
-});
-</script>
+@include('shared.admin.module-chapter-modals')
 @endsection

@@ -78,6 +78,46 @@ class LearningGameGuidanceTest extends TestCase
  ->assertDontSee('Inactive Interview Category');
  }
 
+ public function test_admin_game_action_labels_remain_visible_for_desktop_and_mobile(): void
+ {
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $category = $this->category(['title' => 'Interview Challenges', 'type' => 'game']);
+ $this->gameLevel($category);
+
+ $clients = [
+ 'desktop' => [
+ 'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36',
+ 'stylesheet' => 'css/desktop/admin/game.css?v=7',
+ ],
+ 'mobile' => [
+ 'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Version/17.5 Mobile/15E148 Safari/604.1',
+ 'stylesheet' => 'css/mobile/admin/game.css?v=7',
+ ],
+ ];
+
+ foreach ($clients as $client) {
+ $this->actingAs($admin)
+ ->withHeader('User-Agent', $client['user_agent'])
+ ->get(route('admin.game'))
+ ->assertOk()
+ ->assertSee($client['stylesheet'], false)
+ ->assertSee('admin-game-edit-button', false)
+ ->assertSee('admin-game-delete-button', false)
+ ->assertSee('<span>Edit</span>', false)
+ ->assertSee('<span>Delete</span>', false);
+ }
+
+ $desktopCss = file_get_contents(public_path('css/desktop/admin/game.css'));
+ $mobileCss = file_get_contents(public_path('css/mobile/admin/game.css'));
+
+ $this->assertStringContainsString('.admin-game-edit-button:hover > :is(i, span)', $desktopCss);
+ $this->assertStringContainsString('.admin-game-delete-button:hover > :is(i, span)', $desktopCss);
+ $this->assertStringContainsString('.admin-game-edit-button:hover > :is(i, span)', $mobileCss);
+ $this->assertStringContainsString('.admin-game-delete-button:hover > :is(i, span)', $mobileCss);
+ $this->assertStringContainsString('visibility: visible !important;', $desktopCss);
+ $this->assertStringContainsString('visibility: visible !important;', $mobileCss);
+ }
+
  public function test_learning_guidance_renders_for_learners_and_live_game_sessions(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

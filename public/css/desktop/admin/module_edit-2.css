@@ -50,3 +50,120 @@
     body.dark-mode #sec-admin-module-edit .ql-snow .ql-picker {
         color: #e2e8f0;
     }
+
+/* Theme-safe chapter preview and resilient chapter editor. */
+#sec-admin-module-edit .admin-module-chapter-content {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #d9e2ec;
+    border-radius: 10px;
+    background: #f8fafc !important;
+    color: #172033 !important;
+    color-scheme: light;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    scrollbar-gutter: stable;
+}
+
+#sec-admin-module-edit .admin-module-chapter-content :is(h1, h2, h3, h4, h5, h6, p, ul, ol, li, strong, em) {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+    text-shadow: none !important;
+}
+
+#sec-admin-module-edit .admin-module-chapter-content :is(h1, h2, h3, h4, h5, h6) {
+    margin-top: 0;
+    background: none !important;
+    line-height: 1.3;
+}
+
+#sec-admin-module-edit .admin-module-chapter-content :is(ul, ol) {
+    padding-left: 1.35rem;
+}
+
+#sec-admin-module-edit .admin-module-chapter-content > :last-child {
+    margin-bottom: 0;
+}
+
+html.dm #sec-admin-module-edit .admin-module-chapter-content,
+html[data-theme="dark"] #sec-admin-module-edit .admin-module-chapter-content,
+html:not(.lm) #sec-admin-module-edit .admin-module-chapter-content,
+body.dm #sec-admin-module-edit .admin-module-chapter-content,
+body.dark-mode #sec-admin-module-edit .admin-module-chapter-content {
+    border-color: #334155;
+    background: #151b28 !important;
+    color: #e6edf7 !important;
+    color-scheme: dark;
+}
+
+.admin-chapter-modal .modal-content {
+    background: var(--sf, #ffffff);
+    color: var(--tx, #172033);
+}
+
+.admin-chapter-modal .modal-header,
+.admin-chapter-modal .modal-footer {
+    border-color: var(--bd, #d9e2ec) !important;
+}
+
+.admin-chapter-modal .form-text {
+    color: var(--tx3, #64748b);
+}
+
+.admin-chapter-content-source {
+    display: block;
+    min-height: 250px;
+    resize: vertical;
+    border: 1px solid var(--bd, #d9e2ec) !important;
+    border-radius: 8px !important;
+    background: var(--bg, #f8fafc) !important;
+    color: var(--tx, #172033) !important;
+    font-family: inherit;
+    line-height: 1.55;
+}
+
+.admin-chapter-rich-editor {
+    width: 100%;
+    min-height: 250px;
+    border-color: var(--bd, #d9e2ec) !important;
+    border-radius: 0 0 8px 8px;
+    background: var(--bg, #f8fafc);
+    color: var(--tx, #172033);
+}
+
+.admin-chapter-rich-editor .ql-editor {
+    min-height: 248px;
+    max-height: min(42vh, 420px);
+    overflow-y: auto;
+    color: inherit !important;
+}
+
+.admin-chapter-rich-editor[hidden],
+.admin-chapter-content-source[hidden],
+.admin-chapter-editor-fallback-note[hidden] {
+    display: none !important;
+}
+
+html.lm .admin-chapter-modal .btn-close,
+html[data-theme="light"] .admin-chapter-modal .btn-close,
+body.lm .admin-chapter-modal .btn-close {
+    filter: none;
+}
+
+html.dm .admin-chapter-modal .btn-close,
+html[data-theme="dark"] .admin-chapter-modal .btn-close,
+html:not(.lm) .admin-chapter-modal .btn-close,
+body.dm .admin-chapter-modal .btn-close,
+body.dark-mode .admin-chapter-modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(180%);
+}
+
+html.dm .admin-chapter-modal :is(.admin-chapter-content-source, .admin-chapter-rich-editor, .ql-toolbar),
+html[data-theme="dark"] .admin-chapter-modal :is(.admin-chapter-content-source, .admin-chapter-rich-editor, .ql-toolbar),
+html:not(.lm) .admin-chapter-modal :is(.admin-chapter-content-source, .admin-chapter-rich-editor, .ql-toolbar),
+body.dm .admin-chapter-modal :is(.admin-chapter-content-source, .admin-chapter-rich-editor, .ql-toolbar),
+body.dark-mode .admin-chapter-modal :is(.admin-chapter-content-source, .admin-chapter-rich-editor, .ql-toolbar) {
+    border-color: #334155 !important;
+    background: #111827 !important;
+    color: #e6edf7 !important;
+}

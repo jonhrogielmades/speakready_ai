@@ -324,15 +324,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/modules', [AdminController::class, 'storeModule'])->name('admin.modules.store');
     Route::put('/admin/modules/{module}', [AdminController::class, 'updateModule'])->name('admin.modules.update');
     Route::delete('/admin/modules/{module}', [AdminController::class, 'destroyModule'])->name('admin.modules.destroy');
-    Route::post('/admin/modules/{module}/resources', [AdminController::class, 'storeModuleResource'])->name('admin.modules.resources.store');
-    Route::put('/admin/modules/{module}/resources/{resource}', [AdminController::class, 'updateModuleResource'])->name('admin.modules.resources.update');
-    Route::delete('/admin/modules/{module}/resources/{resource}', [AdminController::class, 'destroyModuleResource'])->name('admin.modules.resources.destroy');
-    Route::post('/admin/modules/{module}/quizzes', [AdminController::class, 'storeModuleQuiz'])->name('admin.modules.quizzes.store');
-    Route::put('/admin/modules/{module}/quizzes/{quiz}', [AdminController::class, 'updateModuleQuiz'])->name('admin.modules.quizzes.update');
-    Route::delete('/admin/modules/{module}/quizzes/{quiz}', [AdminController::class, 'destroyModuleQuiz'])->name('admin.modules.quizzes.destroy');
-    Route::post('/admin/modules/{module}/quizzes/{quiz}/questions', [AdminController::class, 'storeModuleQuizQuestion'])->name('admin.modules.quizzes.questions.store');
-    Route::put('/admin/modules/{module}/quizzes/{quiz}/questions/{question}', [AdminController::class, 'updateModuleQuizQuestion'])->name('admin.modules.quizzes.questions.update');
-    Route::delete('/admin/modules/{module}/quizzes/{quiz}/questions/{question}', [AdminController::class, 'destroyModuleQuizQuestion'])->name('admin.modules.quizzes.questions.destroy');
     // Admin Routes - Learning Games
     Route::get('/admin/game', [\App\Http\Controllers\AdminGameController::class, 'index'])->name('admin.game');
     Route::post('/admin/game', [\App\Http\Controllers\AdminGameController::class, 'store'])->name('admin.game.store');
@@ -343,8 +334,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Admin Routes - Module Chapters
     Route::post('/admin/modules/{module}/chapters/generate', [AdminController::class, 'generateModuleChapter'])->name('admin.modules.chapters.generate');
     Route::post('/admin/modules/{module}/chapters', [AdminController::class, 'storeModuleChapter'])->name('admin.modules.chapters.store');
-    Route::put('/admin/modules/chapters/{chapter}', [AdminController::class, 'updateModuleChapter'])->name('admin.modules.chapters.update');
-    Route::delete('/admin/modules/chapters/{chapter}', [AdminController::class, 'destroyModuleChapter'])->name('admin.modules.chapters.destroy');
+    Route::put('/admin/modules/{module}/chapters/{chapter}', [AdminController::class, 'updateModuleChapter'])->name('admin.modules.chapters.update');
+    Route::delete('/admin/modules/{module}/chapters/{chapter}', [AdminController::class, 'destroyModuleChapter'])->name('admin.modules.chapters.destroy');
 
     // Admin Session Monitoring
     Route::get('/admin/sessions', [AdminSessionController::class, 'index'])->name('admin.sessions.index');

@@ -364,17 +364,17 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertTrue($userPayload['requireInteraction']);
  }
 
- public function test_account_delete_soft_deletes_user_and_logs_out(): void
+ public function test_account_delete_requires_password_permanently_deletes_user_and_logs_out(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
 
  $this->actingAs($user)
- ->post(route('user.account.delete'))
+ ->post(route('user.account.delete'), ['delete_password' => 'password'])
  ->assertRedirect('/')
- ->assertSessionHas('success', 'Your account has been deleted.');
+ ->assertSessionHas('success', 'Your account and its data were permanently deleted.');
 
  $this->assertGuest();
- $this->assertSoftDeleted('users', ['id' => $user->id]);
+ $this->assertDatabaseMissing('users', ['id' => $user->id]);
  }
 
  public function test_notification_actions_are_scoped_to_the_current_user(): void

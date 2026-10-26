@@ -233,7 +233,7 @@ class AdminReliabilityTest extends TestCase
         ]);
     }
 
-    public function test_module_edit_exposes_resources_and_quizzes_but_hides_linked_games_controls(): void
+    public function test_module_edit_only_exposes_module_info_and_interview_lessons(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
         $module = LearningModule::create([
@@ -249,10 +249,10 @@ class AdminReliabilityTest extends TestCase
             ->assertOk()
             ->assertSee('Interview Module Info')
             ->assertSee('Interview Lessons')
-            ->assertSee('Resources')
-            ->assertSee('Add Downloadable Resource')
-            ->assertSee('Quizzes')
-            ->assertSee('Add Module Quiz')
+            ->assertDontSee('id="resources-tab"', false)
+            ->assertDontSee('Add Downloadable Resource')
+            ->assertDontSee('id="quizzes-tab"', false)
+            ->assertDontSee('Add Module Quiz')
             ->assertDontSee('Linked Interview Games')
             ->assertDontSee('AI Generate Quiz');
     }
@@ -932,7 +932,7 @@ class AdminReliabilityTest extends TestCase
         for ($i = 1; $i <= 18; $i++) {
             ActivityLog::create([
                 'user_id' => $user->id,
-                'action' => 'user_logged_in',
+                'action' => 'user_registered',
                 'description' => 'Activity history item '.$i,
             ]);
         }

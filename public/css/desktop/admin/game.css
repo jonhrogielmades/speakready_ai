@@ -195,50 +195,60 @@
     white-space: nowrap;
 }
 
-#sec-admin-game .admin-game-row-action.btn-outline-secondary,
-#sec-admin-game .admin-game-row-action.btn-outline-secondary i {
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button,
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button > i,
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button > span {
     color: var(--tx) !important;
     -webkit-text-fill-color: var(--tx) !important;
 }
 
-#sec-admin-game .admin-game-row-action.btn-outline-secondary:hover,
-#sec-admin-game .admin-game-row-action.btn-outline-secondary:focus-visible,
-#sec-admin-game .admin-game-row-action.btn-outline-secondary:active {
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button:hover,
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button:focus,
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button:focus-visible,
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button:active {
     background: #475569 !important;
     border-color: #475569 !important;
     color: #fff !important;
     -webkit-text-fill-color: #fff !important;
 }
 
-#sec-admin-game .admin-game-row-action.btn-outline-secondary:hover i,
-#sec-admin-game .admin-game-row-action.btn-outline-secondary:focus-visible i,
-#sec-admin-game .admin-game-row-action.btn-outline-secondary:active i {
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button:hover > :is(i, span),
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button:focus > :is(i, span),
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button:focus-visible > :is(i, span),
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-edit-button:active > :is(i, span) {
     color: #fff !important;
     -webkit-text-fill-color: #fff !important;
 }
 
-#sec-admin-game .admin-game-delete-button,
-#sec-admin-game .admin-game-delete-button i {
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button,
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button > i,
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button > span {
     color: #dc3545 !important;
     -webkit-text-fill-color: #dc3545 !important;
 }
 
-#sec-admin-game .admin-game-delete-button:hover,
-#sec-admin-game .admin-game-delete-button:focus,
-#sec-admin-game .admin-game-delete-button:focus-visible,
-#sec-admin-game .admin-game-delete-button:active {
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button:hover,
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button:focus,
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button:focus-visible,
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button:active {
     background: #dc3545 !important;
     border-color: #dc3545 !important;
     color: #fff !important;
     -webkit-text-fill-color: #fff !important;
 }
 
-#sec-admin-game .admin-game-delete-button:hover i,
-#sec-admin-game .admin-game-delete-button:focus i,
-#sec-admin-game .admin-game-delete-button:focus-visible i,
-#sec-admin-game .admin-game-delete-button:active i {
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button:hover > :is(i, span),
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button:focus > :is(i, span),
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button:focus-visible > :is(i, span),
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-delete-button:active > :is(i, span) {
     color: #fff !important;
     -webkit-text-fill-color: #fff !important;
+}
+
+body.admin-shell #dashboard #sec-admin-game .game-table .admin-game-row-action > span {
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .game-table td:nth-child(2) > div:first-child,
