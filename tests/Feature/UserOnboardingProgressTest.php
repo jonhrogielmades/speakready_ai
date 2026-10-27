@@ -123,7 +123,7 @@ class UserOnboardingProgressTest extends TestCase
         $this->post(route('register'), [
             'name' => 'Recovery Acknowledgement User',
             'username' => 'recovery-ack-user',
-            'email' => 'recovery-ack@example.com',
+            'email' => 'recovery-ack@gmail.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])->assertRedirect(route('terms.acceptance.show'));
@@ -157,7 +157,7 @@ class UserOnboardingProgressTest extends TestCase
         $this->post(route('register'), [
             'name' => 'Durable Recovery Acknowledgement User',
             'username' => 'durable-recovery-ack-user',
-            'email' => 'durable-recovery-ack@example.com',
+            'email' => 'durable-recovery-ack@gmail.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])->assertRedirect(route('terms.acceptance.show'));

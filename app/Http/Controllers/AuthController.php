@@ -81,10 +81,14 @@ class AuthController extends Controller
                 'string',
                 'max:255',
                 'email:rfc,filter',
-                'regex:/^[^@\s]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i',
+                'regex:/^[^@\s]+@gmail\.com$/i',
                 'unique:users,email',
             ],
             'password' => $this->newPasswordRules(['confirmed']),
+        ], [
+            'email.email' => 'Enter a valid Gmail recovery email ending in @gmail.com.',
+            'email.regex' => 'Enter a valid Gmail recovery email ending in @gmail.com.',
+            'email.unique' => 'This recovery email is already registered.',
         ]);
 
         $recoveryCode = PasswordRecovery::generate();
@@ -215,7 +219,7 @@ class AuthController extends Controller
                 $request->session()->regenerateToken();
 
                 return back()->withErrors([
-                    'username' => 'Email verification is required before you can sign in. Check your recovery email for a new verification link.',
+                    'username' => 'Email verification is required before you can sign in. Check your Gmail inbox for a new verification link, or use Log in with Google with the same address to verify instantly.',
                 ])->withInput([
                     'username' => $identifier,
                 ]);

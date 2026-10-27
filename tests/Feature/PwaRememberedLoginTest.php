@@ -156,7 +156,7 @@ class PwaRememberedLoginTest extends TestCase
             'username' => $user->username,
             'password' => 'password',
         ])->assertSessionHasErrors([
-            'username' => 'Email verification is required before you can sign in. Check your recovery email for a new verification link.',
+            'username' => 'Email verification is required before you can sign in. Check your Gmail inbox for a new verification link, or use Log in with Google with the same address to verify instantly.',
         ]);
 
         $this->assertNull($user->fresh()->email_verified_at);
@@ -207,7 +207,7 @@ class PwaRememberedLoginTest extends TestCase
         $response = $this->post(route('register'), [
             'name' => 'New Interview User',
             'username' => 'new-interview-user',
-            'email' => 'new-interview-user@example.com',
+            'email' => 'new-interview-user@gmail.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
@@ -220,7 +220,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertDatabaseHas('users', [
             'name' => 'New Interview User',
             'username' => 'new-interview-user',
-            'email' => 'new-interview-user@example.com',
+            'email' => 'new-interview-user@gmail.com',
         ]);
         $this->assertDatabaseHas('profiles', [
             'user_id' => User::where('username', 'new-interview-user')->value('id'),
@@ -247,24 +247,42 @@ class PwaRememberedLoginTest extends TestCase
             ->assertDontSee('Registration successful. Welcome to SpeakReady AI!');
     }
 
-    public function test_registration_requires_a_valid_recovery_email_address(): void
+    public function test_registration_requires_a_valid_gmail_recovery_email_address(): void
     {
-        foreach (['not-an-email', 'candidate@localhost', 'candidate@example'] as $index => $email) {
+        $invalidEmails = [
+            'not-an-email',
+            'candidate@localhost',
+            'candidate@example',
+            'candidate@yahoo.com',
+            'candidate@gmail.co',
+            'candidate@gmai1.com',
+            'candidate@gmail.com.example.com',
+        ];
+
+        foreach ($invalidEmails as $index => $email) {
+            $username = 'invalid-email-user-'.$index;
+
             $this->from('/')
                 ->post(route('register'), [
                     'name' => 'Recovery Email Candidate',
-                    'username' => 'invalid-email-user-'.$index,
+                    'username' => $username,
                     'email' => $email,
                     'password' => 'password123',
                     'password_confirmation' => 'password123',
                 ])
-                ->assertSessionHasErrors('email');
+                ->assertSessionHasErrors([
+                    'email' => 'Enter a valid Gmail recovery email ending in @gmail.com.',
+                ]);
+
+            $this->assertDatabaseMissing('users', [
+                'username' => $username,
+            ]);
         }
 
         $this->post(route('register'), [
             'name' => 'Valid Recovery Candidate',
             'username' => 'valid-recovery-email-user',
-            'email' => 'valid.recovery@gmail.com',
+            'email' => '  Valid.Recovery@GMAIL.COM  ',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])->assertRedirect(route('terms.acceptance.show'));
@@ -287,6 +305,10 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('Username', false)
             ->assertDontSee('id="loginEmail"', false)
             ->assertSee('id="signupEmail"', false)
+            ->assertSee('pattern="^[^\s@]+@[gG][mM][aA][iI][lL]\.[cC][oO][mM]$"', false)
+            ->assertSee('id="signupEmailFeedback"', false)
+            ->assertSee('Enter a valid Gmail recovery email ending in @gmail.com.')
+            ->assertSee('Sign up with Google for instant verification.')
             ->assertDontSee('name="identifier"', false)
             ->assertDontSee('id="loginIdentifier"', false)
             ->assertDontSee('id="signupIdentifier"', false)

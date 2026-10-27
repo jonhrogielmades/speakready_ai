@@ -25,7 +25,7 @@ class RecoveryEmailVerificationTest extends TestCase
         $this->post(route('register'), [
             'name' => 'Verification Candidate',
             'username' => 'verification-candidate',
-            'email' => 'verification@example.com',
+            'email' => 'verification.candidate@gmail.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])->assertRedirect(route('terms.acceptance.show'));
