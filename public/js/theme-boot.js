@@ -1,7 +1,7 @@
 (function () {
   var storageKey = "theme";
-  var darkMetaColor = "#08080f";
-  var lightMetaColor = "#f7f9fc";
+  var darkMetaColor = "#102b46";
+  var lightMetaColor = "#f1f6fb";
 
   function getStoredTheme() {
     try {

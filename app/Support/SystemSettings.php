@@ -65,8 +65,8 @@ class SystemSettings
 
         'system_logo' => ['value' => 'img/logo.png', 'group' => 'appearance', 'type' => 'string'],
         'system_favicon' => ['value' => 'favicon.ico', 'group' => 'appearance', 'type' => 'string'],
-        'color_primary' => ['value' => '#3b82f6', 'group' => 'appearance', 'type' => 'string'],
-        'color_secondary' => ['value' => '#34d399', 'group' => 'appearance', 'type' => 'string'],
+        'color_primary' => ['value' => '#d97706', 'group' => 'appearance', 'type' => 'string'],
+        'color_secondary' => ['value' => '#a35405', 'group' => 'appearance', 'type' => 'string'],
 
         'retention_interview' => ['value' => 365, 'group' => 'retention', 'type' => 'integer'],
         'retention_feedback' => ['value' => 365, 'group' => 'retention', 'type' => 'integer'],

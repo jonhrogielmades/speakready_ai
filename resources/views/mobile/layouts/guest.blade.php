@@ -3,7 +3,7 @@
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-      <meta name="theme-color" content="#f7fbff">
+      <meta name="theme-color" content="#f1f6fb">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - Practice Smarter. Interview Better.')</title>
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
@@ -30,9 +30,9 @@
          :root,
          .lm {
             --sr-visual-vh: var(--sr-js-vh, 100dvh);
-            --pur: {{ $systemPrimaryColor ?? '#3b82f6' }};
-            --blu: {{ $systemPrimaryColor ?? '#3b82f6' }};
-            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#3b82f6' }}, {{ $systemSecondaryColor ?? '#34d399' }});
+            --pur: {{ $systemPrimaryColor ?? '#d97706' }};
+            --blu: {{ $systemPrimaryColor ?? '#d97706' }};
+            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#d97706' }}, {{ $systemSecondaryColor ?? '#a35405' }});
          }
 
          @media (max-width: 767.98px) {

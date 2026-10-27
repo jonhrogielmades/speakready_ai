@@ -3,7 +3,7 @@
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-      <meta name="theme-color" content="#1a0a0a">
+      <meta name="theme-color" content="#f1f6fb">
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
       <title>{{ $systemName ?? 'SpeakReady AI' }} Interview Admin Portal</title>
@@ -22,9 +22,9 @@
       <style>
          :root,
          .lm {
-            --pur: {{ $systemPrimaryColor ?? '#3b82f6' }};
-            --blu: {{ $systemPrimaryColor ?? '#3b82f6' }};
-            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#3b82f6' }}, {{ $systemSecondaryColor ?? '#34d399' }});
+            --pur: {{ $systemPrimaryColor ?? '#d97706' }};
+            --blu: {{ $systemPrimaryColor ?? '#d97706' }};
+            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#d97706' }}, {{ $systemSecondaryColor ?? '#a35405' }});
          }
          /* ===== ADMIN MOBILE LAYOUT SHELL ===== */
          html, body {

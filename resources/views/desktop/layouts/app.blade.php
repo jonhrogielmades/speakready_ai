@@ -36,7 +36,7 @@
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-      <meta name="theme-color" content="#ffffff">
+      <meta name="theme-color" content="#f1f6fb">
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
       @include('desktop.partials.early-mobile-shell-repair')
@@ -58,9 +58,9 @@
       <style>
           :root,
           .lm {
-              --pur: {{ $systemPrimaryColor ?? '#3b82f6' }};
-              --blu: {{ $systemPrimaryColor ?? '#3b82f6' }};
-              --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#3b82f6' }}, {{ $systemSecondaryColor ?? '#34d399' }});
+              --pur: {{ $systemPrimaryColor ?? '#d97706' }};
+              --blu: {{ $systemPrimaryColor ?? '#d97706' }};
+              --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#d97706' }}, {{ $systemSecondaryColor ?? '#a35405' }});
           }
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
