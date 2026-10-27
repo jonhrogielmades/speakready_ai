@@ -153,6 +153,18 @@
         color: #ffffff !important;
     }
 
+    .driver-popover.sr-driver-popover .sr-tour-voice-replay-btn {
+        white-space: nowrap;
+        background: rgba(14, 165, 233, 0.12);
+        border-color: rgba(56, 189, 248, 0.42);
+    }
+
+    .driver-popover.sr-driver-popover.driverjs-theme-light .sr-tour-voice-replay-btn {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        color: #1d4ed8;
+    }
+
     .driver-popover.sr-driver-popover .driver-popover-close-btn {
         width: auto;
         min-width: 58px;
@@ -221,6 +233,7 @@
 
         .driver-popover.sr-driver-popover .driver-popover-footer button {
             flex: 1 1 0;
+            padding-inline: 8px;
         }
     }
 </style>

@@ -57,6 +57,11 @@ return [
  'enabled' => env('AI_TTS_ENABLED', false),
  'provider' => env('AI_TTS_PROVIDER', 'elevenlabs,openai,gemini'),
  'timeout' => env('AI_TTS_TIMEOUT', 30),
+ 'onboarding_cache_ttl_seconds' => env('AI_TTS_ONBOARDING_CACHE_TTL_SECONDS', 604800),
+ 'onboarding_failure_cache_ttl_seconds' => env('AI_TTS_ONBOARDING_FAILURE_CACHE_TTL_SECONDS', 30),
+ 'onboarding_deadline_seconds' => env('AI_TTS_ONBOARDING_DEADLINE_SECONDS', 6),
+ 'onboarding_rate_limit_per_minute' => env('AI_TTS_ONBOARDING_RATE_LIMIT_PER_MINUTE', 30),
+ 'onboarding_rate_limit_per_day' => env('AI_TTS_ONBOARDING_RATE_LIMIT_PER_DAY', 120),
  ],
 
  'ai_transcription' => [

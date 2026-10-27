@@ -289,7 +289,6 @@
                      <div class="db-dropdown profile-dd" id="profileDropdown" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="userPill" style="right:0">
                         <div style="padding:8px 0">
                            <a href="{{ route('user.account') }}" class="profile-menu-item profile-menu-account {{ request()->routeIs('user.account') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-user-gear me-2"></i>Account Management</a>
-                           <button type="button" class="profile-menu-item" data-sr-open-onboarding-modal style="display:block;width:100%;text-align:left;"><i class="fa-solid fa-route me-2"></i>First Steps</button>
                            <a href="{{ route('user.notifications') }}" class="profile-menu-item profile-menu-notifications {{ request()->routeIs('user.notifications') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-bell me-2"></i>Notifications</a>
                            <form action="{{ route('user.language.update') }}" method="POST" class="profile-language-form" style="padding:10px 16px 8px;">
                               @csrf
@@ -1288,6 +1287,7 @@
       @endif
       @include('desktop.partials.desktop-theme-contrast')
       @include('desktop.partials.user-theme-contrast')
+      <script src="{{ asset('js/onboarding-voiceover.js?v=1') }}"></script>
       @include('desktop.partials.onboarding-script')
       <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')

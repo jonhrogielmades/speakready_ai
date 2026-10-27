@@ -32,6 +32,11 @@ class AiDeploymentConfigurationTest extends TestCase
             'services.ai_transcription.finish_recovery_timeout_seconds',
             'services.ai_transcription.local_fallback_reserve_seconds',
             'services.ai_transcription.rate_limit_per_minute',
+            'services.ai_tts.onboarding_cache_ttl_seconds',
+            'services.ai_tts.onboarding_failure_cache_ttl_seconds',
+            'services.ai_tts.onboarding_deadline_seconds',
+            'services.ai_tts.onboarding_rate_limit_per_minute',
+            'services.ai_tts.onboarding_rate_limit_per_day',
             'services.ai_feedback_finalization.timeout_seconds',
             'services.ai_feedback_review.retry_cooldown_minutes',
             'services.ai_feedback_review.min_reliability_percent',
@@ -43,6 +48,8 @@ class AiDeploymentConfigurationTest extends TestCase
             $this->assertIsArray($parent, "Missing configuration parent for {$key}.");
             $this->assertArrayHasKey($leaf, $parent, "Missing cached configuration entry {$key}.");
         }
+
+        $this->assertSame('cache_locks', config('cache.stores.database.lock_table'));
     }
 
     public function test_runtime_environment_override_is_limited_to_tests(): void
@@ -107,6 +114,38 @@ class AiDeploymentConfigurationTest extends TestCase
         }
     }
 
+    public function test_onboarding_voice_rate_limiter_uses_its_own_cached_configuration(): void
+    {
+        $previous = config('services.ai_tts.onboarding_rate_limit_per_minute');
+        $previousDaily = config('services.ai_tts.onboarding_rate_limit_per_day');
+
+        try {
+            config([
+                'services.ai_tts.onboarding_rate_limit_per_minute' => 9,
+                'services.ai_tts.onboarding_rate_limit_per_day' => 75,
+            ]);
+
+            $resolver = $this->app->make(RateLimiter::class)->limiter('ai-voice');
+
+            $this->assertIsCallable($resolver);
+
+            $limits = $resolver(Request::create('/onboarding/speech', 'POST', server: [
+                'REMOTE_ADDR' => '203.0.113.26',
+            ]));
+
+            $this->assertIsArray($limits);
+            $this->assertSame([9, 18, 75], array_map(
+                static fn ($limit): int => $limit->maxAttempts,
+                $limits
+            ));
+        } finally {
+            config([
+                'services.ai_tts.onboarding_rate_limit_per_minute' => $previous,
+                'services.ai_tts.onboarding_rate_limit_per_day' => $previousDaily,
+            ]);
+        }
+    }
+
     public function test_container_examples_forward_reliability_controls_and_share_the_gemini_model(): void
     {
         $compose = file_get_contents(base_path('docker-compose.yml'));
@@ -118,6 +157,11 @@ class AiDeploymentConfigurationTest extends TestCase
         $this->assertIsString($environment);
 
         foreach ([
+            'AI_TTS_ONBOARDING_CACHE_TTL_SECONDS',
+            'AI_TTS_ONBOARDING_FAILURE_CACHE_TTL_SECONDS',
+            'AI_TTS_ONBOARDING_DEADLINE_SECONDS',
+            'AI_TTS_ONBOARDING_RATE_LIMIT_PER_MINUTE',
+            'AI_TTS_ONBOARDING_RATE_LIMIT_PER_DAY',
             'AI_TRANSCRIPTION_PROOF_TTL_SECONDS',
             'AI_TRANSCRIPTION_FINISH_RECOVERY_TIMEOUT',
             'AI_TRANSCRIPTION_LOCAL_FALLBACK_RESERVE_SECONDS',

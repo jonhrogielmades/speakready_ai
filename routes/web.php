@@ -195,7 +195,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/language/translate', [UserController::class, 'translateLanguage'])->name('user.language.translate');
     Route::post('/onboarding/progress', [UserController::class, 'updateOnboardingProgress'])->name('user.onboarding.progress');
     Route::post('/onboarding/personalization', [UserController::class, 'updateOnboardingPersonalization'])->name('user.onboarding.personalization');
-    Route::post('/onboarding/speech', [UserController::class, 'onboardingSpeech'])->middleware('throttle:ai-transcribe')->name('user.onboarding.speech');
+    Route::post('/onboarding/speech', [UserController::class, 'onboardingSpeech'])->middleware('throttle:ai-voice')->name('user.onboarding.speech');
     Route::post('/account/profile', [UserController::class, 'updateProfile'])->name('user.account.profile');
     Route::post('/account/password', [UserController::class, 'updatePassword'])->name('user.account.password');
     Route::post('/account/recovery-code', [UserController::class, 'rotateRecoveryCode'])->name('user.account.recovery-code');

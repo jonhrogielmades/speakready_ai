@@ -6,6 +6,7 @@
         "dev": "vite",
         "build": "vite build",
         "check:frontend": "node scripts/check-frontend.mjs",
+        "test:onboarding-voiceover": "node --test tests/Frontend/onboarding-voiceover.test.mjs",
         "test:media-permissions": "node --test tests/Frontend/media-permission-support.test.mjs"
     },
     "engines": {

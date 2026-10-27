@@ -4313,16 +4313,119 @@ class UserController extends Controller
  return response()->json(['error' => 'Tutorial speech text is required.'], 422);
  }
 
- $languageCode = Setting::preferredLanguageFor(Auth::user())?: ($validated['language']?? 'en');
- $speech = AIService::synthesizeSpeech($speechText, Setting::languageConfig($languageCode));
- if (! $speech) {
- return response()->json(['error' => 'Tutorial voiceover is not available.'], 503);
- }
+  $languageCode = Setting::preferredLanguageFor(Auth::user())?: ($validated['language']?? 'en');
+  $language = Setting::languageConfig($languageCode);
+  $cacheTtl = max(60, (int) config('services.ai_tts.onboarding_cache_ttl_seconds', 604800));
+  $failureCacheTtl = max(5, min(300, (int) config('services.ai_tts.onboarding_failure_cache_ttl_seconds', 30)));
+  $deadlineSeconds = max(1, min(15, (int) config('services.ai_tts.onboarding_deadline_seconds', 6)));
+  $cacheKey = 'onboarding-speech:v2:'.hash('sha256', json_encode([
+   'text' => $speechText,
+   'language' => $languageCode,
+   'voice' => AIService::speechSynthesisCacheSignature(),
+  ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)?: $speechText.'|'.$languageCode);
+  $failureCacheKey = $cacheKey.':failure';
+  $readCachedSpeech = static function () use ($cacheKey):?array {
+   try {
+    $cached = Cache::get($cacheKey);
+   } catch (\Throwable $e) {
+    Log::warning('Tutorial voice cache read failed: '.$e->getMessage());
 
- return response($speech['audio'], 200)
- ->header('Content-Type', $speech['mime_type'])
- ->header('Cache-Control', 'private, no-store, max-age=0')
- ->header('X-Content-Type-Options', 'nosniff');
+    return null;
+   }
+
+   $audio = is_array($cached)
+    ? base64_decode((string) ($cached['audio_base64']?? ''), true)
+    : false;
+   $mimeType = is_array($cached) ? trim((string) ($cached['mime_type']?? '')) : '';
+   if (! is_string($audio) || $audio === '' ||! str_starts_with(strtolower($mimeType), 'audio/')) {
+    return null;
+   }
+
+   return ['audio' => $audio, 'mime_type' => $mimeType, 'cache_status' => 'HIT'];
+  };
+  $hasRecentGenerationFailure = static function () use ($failureCacheKey): bool {
+   try {
+    return Cache::get($failureCacheKey) === true;
+   } catch (\Throwable $e) {
+    return false;
+   }
+  };
+  $rememberGenerationFailure = static function () use ($failureCacheKey, $failureCacheTtl): void {
+   try {
+    Cache::put($failureCacheKey, true, now()->addSeconds($failureCacheTtl));
+   } catch (\Throwable $e) {
+    Log::warning('Tutorial voice failure cache write failed: '.$e->getMessage());
+   }
+  };
+  $generateSpeech = static function () use (
+   $speechText,
+   $language,
+   $deadlineSeconds,
+   $cacheKey,
+   $cacheTtl,
+   $failureCacheKey,
+   $rememberGenerationFailure
+  ):?array {
+   $speech = AIService::synthesizeSpeech($speechText, $language, [
+    'deadline_seconds' => $deadlineSeconds,
+   ]);
+   if (! $speech) {
+    $rememberGenerationFailure();
+
+    return null;
+   }
+
+   $audio = (string) ($speech['audio']?? '');
+   $mimeType = trim((string) ($speech['mime_type']?? ''));
+   if ($audio === '' ||! str_starts_with(strtolower($mimeType), 'audio/')) {
+    $rememberGenerationFailure();
+
+    return null;
+   }
+
+   try {
+    Cache::put($cacheKey, [
+     'audio_base64' => base64_encode($audio),
+     'mime_type' => $mimeType,
+    ], now()->addSeconds($cacheTtl));
+    Cache::forget($failureCacheKey);
+   } catch (\Throwable $e) {
+    Log::warning('Tutorial voice cache write failed: '.$e->getMessage());
+   }
+
+   return ['audio' => $audio, 'mime_type' => $mimeType, 'cache_status' => 'MISS'];
+  };
+
+  $resolvedSpeech = $readCachedSpeech();
+  if ($resolvedSpeech === null &&! $hasRecentGenerationFailure()) {
+   try {
+    $resolvedSpeech = Cache::lock($cacheKey.':generate', $deadlineSeconds + 5)
+     ->block($deadlineSeconds + 1, static function () use (
+      $readCachedSpeech,
+      $hasRecentGenerationFailure,
+      $generateSpeech
+     ):?array {
+      return $readCachedSpeech()?? ($hasRecentGenerationFailure() ? null : $generateSpeech());
+     });
+   } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
+    $resolvedSpeech = $readCachedSpeech();
+   } catch (\Throwable $e) {
+    // Continue without single-flight locking when a deployment has not yet
+    // provisioned its cache lock store. Voice playback must still recover.
+    Log::warning('Tutorial voice cache lock failed: '.$e->getMessage());
+    $resolvedSpeech = $readCachedSpeech()?? ($hasRecentGenerationFailure() ? null : $generateSpeech());
+   }
+  }
+
+  if (! is_array($resolvedSpeech)) {
+   return response()->json(['error' => 'Tutorial voiceover is not available.'], 503);
+  }
+
+  return response($resolvedSpeech['audio'], 200)
+  ->header('Content-Type', $resolvedSpeech['mime_type'])
+  ->header('Cache-Control', 'private, no-store, max-age=0')
+  ->header('X-SpeakReady-Voice-Cache', $resolvedSpeech['cache_status'])
+  ->header('X-Content-Type-Options', 'nosniff');
  }
 
  public function updateProfile(Request $request, ProfilePhotoStorage $photoStorage, \App\Services\RecoveryEmailVerification $emailVerification)

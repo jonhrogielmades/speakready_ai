@@ -228,29 +228,15 @@
             return (sourceSteps || []).filter(isVisibleStep);
         }
 
+        @php
+            $tourProviderVoiceoverTimeoutMs = (max(1, min(15, (int) config('services.ai_tts.onboarding_deadline_seconds', 6))) + 1) * 1000;
+        @endphp
         const tourVoiceoverEndpoint = @json(route('user.onboarding.speech'));
-        const tourProviderVoiceoverPlaybackRate = 1.0;
-        let activeTourVoiceoverAudio = null;
-        let activeTourVoiceoverUrl = null;
-        let activeTourVoiceoverRequestController = null;
-
-        function supportsBrowserTourVoiceover() {
-            return 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
-        }
+        const tourProviderVoiceoverAvailable = @json(\App\Services\AIService::speechSynthesisAvailable());
+        const tourProviderVoiceoverTimeoutMs = @json($tourProviderVoiceoverTimeoutMs);
 
         function tourCsrfToken() {
             return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        }
-
-        function supportsProviderTourVoiceover(config = {}) {
-            return config.providerVoiceover !== false &&
-                Boolean(tourVoiceoverEndpoint) &&
-                typeof window.fetch === 'function' &&
-                tourCsrfToken() !== '';
-        }
-
-        function supportsTourVoiceover(config = {}) {
-            return supportsProviderTourVoiceover(config) || supportsBrowserTourVoiceover();
         }
 
         function getTourSpeechLocale(config) {
@@ -260,69 +246,23 @@
                 'en-PH';
         }
 
-        function tourSpeechLocalePriority(config) {
-            const locale = getTourSpeechLocale(config);
-            const language = String(locale || '').split('-')[0];
-            const priority = [locale, language, 'en-PH', 'en-US', 'en'];
+        const tourVoiceoverRuntime = window.SpeakReadyOnboardingVoiceover?.create?.({
+            endpoint: tourVoiceoverEndpoint,
+            getCsrfToken: tourCsrfToken,
+            providerAvailable: tourProviderVoiceoverAvailable,
+            defaultLocale: getTourSpeechLocale({}),
+            providerTimeoutMs: tourProviderVoiceoverTimeoutMs,
+            playbackStartTimeoutMs: 2500,
+        }) || null;
 
-            return priority.filter((value, index, list) => value && list.indexOf(value) === index);
+        function supportsTourVoiceover() {
+            return Boolean(tourVoiceoverRuntime && typeof tourVoiceoverRuntime.speak === 'function');
         }
 
-        function tourVoiceMatchesLanguage(voice, language) {
-            const voiceLang = String(voice?.lang || '').toLowerCase();
-            const target = String(language || '').toLowerCase();
-
-            return voiceLang === target || voiceLang.startsWith(`${target}-`) || target.startsWith(`${voiceLang}-`);
-        }
-
-        function tourVoiceLooksNatural(voice) {
-            return /google|premium|natural|siri|microsoft|enhanced|neural/i.test(voice?.name || '');
-        }
-
-        function tourVoiceLooksMale(voice) {
-            return /\b(male|man|boy|david|mark|george|daniel|alex|fred|tom|ralph|bruce|arthur|albert|jorge|diego|carlos|miguel|juan|paul|ryan|liam|brian|guy|aaron|eric|nathan|christopher|jacob|justin|matthew|joey|onyx|echo)\b/i.test(voice?.name || '');
-        }
-
-        let preferredTourVoice = null;
-
-        function loadTourVoices(config) {
-            if (!supportsBrowserTourVoiceover()) return null;
-
-            const voices = window.speechSynthesis.getVoices();
-            if (!voices.length) return preferredTourVoice;
-
-            const languagePriority = tourSpeechLocalePriority(config);
-            preferredTourVoice = languagePriority.map(language =>
-                voices.find(voice => tourVoiceMatchesLanguage(voice, language) && tourVoiceLooksNatural(voice) && !tourVoiceLooksMale(voice)) ||
-                voices.find(voice => tourVoiceMatchesLanguage(voice, language) && !tourVoiceLooksMale(voice)) ||
-                voices.find(voice => tourVoiceMatchesLanguage(voice, language))
-            ).find(Boolean) ||
-                voices.find(voice => tourVoiceLooksNatural(voice) && !tourVoiceLooksMale(voice)) ||
-                voices.find(voice => !tourVoiceLooksMale(voice)) ||
-                voices[0] ||
-                null;
-
-            return preferredTourVoice;
-        }
-
-        if (supportsBrowserTourVoiceover()) {
-            loadTourVoices();
-
-            if (typeof window.speechSynthesis.addEventListener === 'function') {
-                window.speechSynthesis.addEventListener('voiceschanged', () => loadTourVoices());
-            } else {
-                const previousVoicesChanged = window.speechSynthesis.onvoiceschanged;
-                window.speechSynthesis.onvoiceschanged = function(event) {
-                    if (typeof previousVoicesChanged === 'function') {
-                        previousVoicesChanged.call(this, event);
-                    }
-
-                    loadTourVoices();
-                };
-            }
-        }
-
-        let tourVoiceoverToken = 0;
+        window.addEventListener('pagehide', (event) => {
+            tourVoiceoverRuntime?.stop?.({ abortPending: true });
+            if (!event.persisted) tourVoiceoverRuntime?.destroy?.();
+        });
 
         function textFromTourHtml(value) {
             const raw = String(value || '').trim();
@@ -349,140 +289,76 @@
         }
 
         function stopTourVoiceover() {
-            tourVoiceoverToken += 1;
-
-            if (activeTourVoiceoverRequestController) {
-                activeTourVoiceoverRequestController.abort();
-                activeTourVoiceoverRequestController = null;
-            }
-
-            if (activeTourVoiceoverAudio) {
-                activeTourVoiceoverAudio.pause();
-                activeTourVoiceoverAudio.removeAttribute('src');
-                activeTourVoiceoverAudio.load();
-                activeTourVoiceoverAudio = null;
-            }
-
-            if (activeTourVoiceoverUrl) {
-                URL.revokeObjectURL(activeTourVoiceoverUrl);
-                activeTourVoiceoverUrl = null;
-            }
-
-            if (supportsBrowserTourVoiceover()) {
-                window.speechSynthesis.cancel();
-            }
-        }
-
-        async function speakTourStepWithProvider(text, token, config) {
-            if (!supportsProviderTourVoiceover(config) || token !== tourVoiceoverToken) return false;
-
-            const formData = new FormData();
-            formData.append('_token', tourCsrfToken());
-            formData.append('speech_text', text);
-            formData.append('language', String(getTourSpeechLocale(config) || '').split('-')[0] || 'en');
-            const controller = new AbortController();
-            const timeout = window.setTimeout(() => controller.abort(), 30000);
-            activeTourVoiceoverRequestController = controller;
-
-            try {
-                const response = await fetch(tourVoiceoverEndpoint, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Accept': 'audio/mpeg',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': tourCsrfToken(),
-                    },
-                    credentials: 'same-origin',
-                    signal: controller.signal,
-                });
-
-                if (!response.ok || token !== tourVoiceoverToken) return false;
-
-                const blob = await response.blob();
-                if (!blob || blob.size === 0 || token !== tourVoiceoverToken) return false;
-
-                const url = URL.createObjectURL(blob);
-                activeTourVoiceoverUrl = url;
-                const audio = new Audio(url);
-                audio.defaultPlaybackRate = tourProviderVoiceoverPlaybackRate;
-                audio.playbackRate = tourProviderVoiceoverPlaybackRate;
-                activeTourVoiceoverAudio = audio;
-
-                audio.addEventListener('ended', () => {
-                    if (token === tourVoiceoverToken) {
-                        tourVoiceoverToken += 1;
-                    }
-                }, { once: true });
-
-                audio.addEventListener('error', () => {
-                    if (token === tourVoiceoverToken) {
-                        activeTourVoiceoverAudio = null;
-                        speakTourStepWithBrowser(text, token, config);
-                    }
-                }, { once: true });
-
-                await audio.play();
-
-                return true;
-            } catch (error) {
-                if (error?.name !== 'AbortError') console.warn('Tutorial provider voiceover failed:', error);
-                return false;
-            } finally {
-                window.clearTimeout(timeout);
-                if (activeTourVoiceoverRequestController === controller) activeTourVoiceoverRequestController = null;
-            }
-        }
-
-        function speakTourStepWithBrowser(text, token, config) {
-            if (!supportsBrowserTourVoiceover() || token !== tourVoiceoverToken) return;
-
-            window.speechSynthesis.cancel();
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = getTourSpeechLocale(config);
-
-            const voice = loadTourVoices(config);
-            if (voice) {
-                utterance.voice = voice;
-            }
-
-            utterance.rate = Number.isFinite(Number(config.voiceoverRate)) ? Number(config.voiceoverRate) : 0.90;
-            utterance.pitch = Number.isFinite(Number(config.voiceoverPitch)) ? Number(config.voiceoverPitch) : 1;
-            utterance.volume = Number.isFinite(Number(config.voiceoverVolume)) ? Number(config.voiceoverVolume) : 1;
-            utterance.onend = () => {
-                if (token === tourVoiceoverToken) {
-                    tourVoiceoverToken += 1;
-                }
-            };
-            utterance.onerror = () => {
-                if (token === tourVoiceoverToken) {
-                    tourVoiceoverToken += 1;
-                }
-            };
-
-            try {
-                window.speechSynthesis.speak(utterance);
-            } catch (error) {
-                console.warn('Tutorial browser voiceover failed:', error);
-            }
+            tourVoiceoverRuntime?.stop?.({ abortPending: true });
         }
 
         function speakTourStep(step, config) {
-            if (config.voiceover === false || config.aiVoiceover === false || !supportsTourVoiceover(config)) return;
+            if (config.voiceover === false || config.aiVoiceover === false || !supportsTourVoiceover()) {
+                return Promise.resolve({ source: 'none' });
+            }
 
             const text = getTourStepVoiceText(step);
-            if (!text) return;
+            if (!text) return Promise.resolve({ source: 'none' });
 
-            const token = ++tourVoiceoverToken;
-            stopTourVoiceover();
-            tourVoiceoverToken = token;
-
-            speakTourStepWithProvider(text, token, config).then((usedProviderVoice) => {
-                if (!usedProviderVoice && token === tourVoiceoverToken) {
-                    speakTourStepWithBrowser(text, token, config);
-                }
+            return Promise.resolve(tourVoiceoverRuntime.speak(text, {
+                locale: getTourSpeechLocale(config),
+                providerVoiceover: config.providerVoiceover,
+                providerVoiceoverRate: config.providerVoiceoverRate,
+                voiceoverRate: config.voiceoverRate,
+                voiceoverPitch: config.voiceoverPitch,
+                voiceoverVolume: config.voiceoverVolume,
+            })).catch((error) => {
+                console.warn('Tutorial voiceover failed:', error);
+                return { source: 'none' };
             });
+        }
+
+        function ensureTourVoiceReplayButton(step, config) {
+            if (config.voiceover === false || config.aiVoiceover === false || !supportsTourVoiceover()) return;
+
+            const popovers = Array.from(document.querySelectorAll('.driver-popover.sr-driver-popover'));
+            const popover = popovers.reverse().find((candidate) => candidate.getClientRects().length > 0);
+            if (!popover || popover.classList.contains('sr-native-tour-popover')) return;
+
+            const controls = popover.querySelector('.driver-popover-navigation-btns, .driver-popover-footer');
+            if (!controls) return;
+
+            let button = controls.querySelector('.sr-tour-voice-replay-btn');
+            if (!button) {
+                button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'sr-tour-voice-replay-btn';
+                button.textContent = '🔊 Voice';
+                button.setAttribute('aria-label', 'Play tutorial voice');
+                button.title = 'Play tutorial voice';
+                controls.prepend(button);
+            }
+
+            button.onclick = (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                void speakTourStep(step, config);
+            };
+        }
+
+        function prefetchTourSteps(steps, config, startIndex = 0, count = 2) {
+            if (!tourVoiceoverRuntime || config.voiceover === false || config.aiVoiceover === false) return;
+
+            const prefetch = typeof tourVoiceoverRuntime.prefetch === 'function'
+                ? tourVoiceoverRuntime.prefetch
+                : tourVoiceoverRuntime.preload;
+            if (typeof prefetch !== 'function') return;
+
+            const texts = steps
+                .slice(Math.max(0, startIndex), Math.max(0, startIndex) + count)
+                .map(getTourStepVoiceText)
+                .filter(Boolean);
+            if (!texts.length) return;
+
+            Promise.resolve(prefetch.call(tourVoiceoverRuntime, texts, {
+                locale: getTourSpeechLocale(config),
+                providerVoiceover: config.providerVoiceover,
+            })).catch(() => {});
         }
 
         function escapeTourHtml(value) {
@@ -695,6 +571,7 @@
                             <footer class="driver-popover-footer">
                                 <span class="driver-popover-progress-text">${activeIndex + 1} of ${steps.length}</span>
                                 <div class="driver-popover-navigation-btns">
+                                    <button type="button" class="sr-tour-voice-replay-btn" aria-label="Play tutorial voice" title="Play tutorial voice">🔊 Voice</button>
                                     <button type="button" class="driver-popover-prev-btn" ${activeIndex === 0 ? 'disabled' : ''}>Back</button>
                                     <button type="button" class="driver-popover-next-btn">${isLast ? 'Done' : 'Next'}</button>
                                 </div>
@@ -702,10 +579,12 @@
                         `;
 
                         const closeButton = popover.querySelector('.sr-native-tour-close');
+                        const voiceButton = popover.querySelector('.sr-tour-voice-replay-btn');
                         const previousButton = popover.querySelector('.driver-popover-prev-btn');
                         const nextButton = popover.querySelector('.driver-popover-next-btn');
 
                         closeButton?.addEventListener('click', requestDestroy, { once: true });
+                        voiceButton?.addEventListener('click', () => options.onVoiceReplay?.(getCurrentStep()));
                         previousButton?.addEventListener('click', () => api.moveTo(activeIndex - 1), { once: true });
                         nextButton?.addEventListener('click', () => {
                             if (api.hasNextStep()) api.moveTo(activeIndex + 1);
@@ -1447,6 +1326,14 @@
                 }
             }
 
+            function prefetchInitialTourVoiceover() {
+                let initialSteps = getSteps(config);
+                if (!initialSteps.length && config.allowDefaultFallback !== false) {
+                    initialSteps = buildUniversalTourSteps(config).filter(isVisibleStep);
+                }
+                prefetchTourSteps(initialSteps, config, 0, 2);
+            }
+
             if (isFallbackTour) {
                 window.__speakReadyFallbackTourRegistered = true;
             } else {
@@ -1461,6 +1348,8 @@
                 }
 
                 if (!steps.length) return null;
+
+                prefetchTourSteps(steps, config, 0, 2);
 
                 let driverObj;
                 driverObj = driverFactory({
@@ -1489,6 +1378,14 @@
                     onHighlighted: (element, step, options) => {
                         setTourHighlightedElement(element);
                         speakTourStep(step, config);
+                        ensureTourVoiceReplayButton(step, config);
+                        window.setTimeout(() => ensureTourVoiceReplayButton(step, config), 80);
+                        const activeIndex = typeof driverObj.getActiveIndex === 'function'
+                            ? driverObj.getActiveIndex()
+                            : steps.indexOf(step);
+                        if (Number.isInteger(activeIndex) && activeIndex >= 0) {
+                            prefetchTourSteps(steps, config, activeIndex + 1, 2);
+                        }
 
                         if (typeof config.onHighlighted === 'function') {
                             config.onHighlighted(element, driverObj, step, options);
@@ -1496,6 +1393,7 @@
 
                         refreshTourPlacement(driverObj);
                     },
+                    onVoiceReplay: (step) => speakTourStep(step, config),
                     onDestroyStarted: () => {
                         const forceDestroy = window.__speakReadyForceDestroy === true;
                         const reachedFinalStep = !driverObj.hasNextStep();
@@ -1553,6 +1451,7 @@
                     if (activeTour || isStarting) return true;
 
                     isStarting = true;
+                    prefetchInitialTourVoiceover();
 
                     if (typeof config.beforeStart === 'function') {
                         config.beforeStart();
@@ -1611,6 +1510,7 @@
                     }
 
                     if (!isTourCompleted()) {
+                        prefetchInitialTourVoiceover();
                         window.setTimeout(() => {
                             if (isCurrentTourScope(registrationScope) && !isTourCompleted()) {
                                 controller.start();

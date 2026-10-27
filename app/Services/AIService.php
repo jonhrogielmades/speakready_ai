@@ -2834,7 +2834,7 @@ PROMPT;
  return collect($texts)->mapWithKeys(fn ($text) => [$text => $text])->all();
  }
 
- public static function synthesizeSpeech(string $text, array|string|null $targetLanguage = null):?array
+ public static function synthesizeSpeech(string $text, array|string|null $targetLanguage = null, array $options = []):?array
  {
  if (! self::speechSynthesisEnabled()) {
  return null;
@@ -2846,11 +2846,29 @@ PROMPT;
  return null;
  }
 
- foreach (self::speechSynthesisProviderPriority() as $provider) {
+ $deadlineAt = isset($options['deadline_seconds'])
+ ? microtime(true) + max(1, min(60, (int) $options['deadline_seconds']))
+ : null;
+ $attempts = isset($options['attempts']) ? max(1, min(3, (int) $options['attempts'])) : null;
+ $providers = self::speechSynthesisProviderPriority();
+
+ foreach ($providers as $providerIndex => $provider) {
+ if ($deadlineAt!== null && $deadlineAt <= microtime(true)) {
+ break;
+ }
+
+ $remainingSeconds = $deadlineAt === null ? null : max(0.0, $deadlineAt - microtime(true));
+ $remainingProviders = max(1, count($providers) - $providerIndex);
+ $timeoutSeconds = $remainingSeconds === null
+ ? null
+ : max(1, (int) ceil($remainingSeconds * ($remainingProviders > 1 ? 0.65 : 1.0)));
+ // A latency-bounded request must never multiply its remaining budget with
+ // provider retries. Fast failures can still continue to the next provider.
+ $providerAttempts = $deadlineAt === null ? $attempts : 1;
  $speech = match ($provider) {
- 'gemini' => self::synthesizeSpeechWithGemini($text, $targetLanguage),
- 'openai' => self::synthesizeSpeechWithOpenAI($text, $targetLanguage),
- 'elevenlabs' => self::synthesizeSpeechWithElevenLabs($text, $targetLanguage),
+ 'gemini' => self::synthesizeSpeechWithGemini($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $deadlineAt),
+ 'openai' => self::synthesizeSpeechWithOpenAI($text, $targetLanguage, $timeoutSeconds, $providerAttempts),
+ 'elevenlabs' => self::synthesizeSpeechWithElevenLabs($text, $targetLanguage, $timeoutSeconds, $providerAttempts),
  default => null,
  };
 
@@ -2862,7 +2880,12 @@ PROMPT;
  return null;
  }
 
- private static function synthesizeSpeechWithElevenLabs(string $text, array|string|null $targetLanguage = null):?array
+ private static function synthesizeSpeechWithElevenLabs(
+ string $text,
+ array|string|null $targetLanguage = null,
+?int $timeoutSeconds = null,
+?int $attempts = null
+ ):?array
  {
  $credentials = self::elevenLabsSpeechCredentials();
  if (! $credentials) {
@@ -2885,9 +2908,9 @@ PROMPT;
  }
 
  try {
- $response = Http::timeout(self::speechSynthesisTimeout())
+ $response = Http::timeout($timeoutSeconds?? self::speechSynthesisTimeout())
  ->retry(
- (int) RuntimeConfiguration::get('services.ai_providers.attempts', 'AI_PROVIDER_RETRIES', 2),
+ $attempts?? (int) RuntimeConfiguration::get('services.ai_providers.attempts', 'AI_PROVIDER_RETRIES', 2),
  (int) RuntimeConfiguration::get('services.ai_providers.retry_delay_ms', 'AI_PROVIDER_RETRY_DELAY_MS', 250)
  )
  ->withHeaders([
@@ -2929,7 +2952,12 @@ PROMPT;
  ];
  }
 
- private static function synthesizeSpeechWithOpenAI(string $text, array|string|null $targetLanguage = null):?array
+ private static function synthesizeSpeechWithOpenAI(
+ string $text,
+ array|string|null $targetLanguage = null,
+?int $timeoutSeconds = null,
+?int $attempts = null
+ ):?array
  {
  $credentials = self::openAiSpeechCredentials();
  if (! $credentials) {
@@ -2956,9 +2984,9 @@ PROMPT;
  }
 
  try {
- $response = Http::timeout((int) config('services.openai.tts_timeout', 30))
+ $response = Http::timeout($timeoutSeconds?? (int) config('services.openai.tts_timeout', 30))
  ->retry(
- (int) RuntimeConfiguration::get('services.ai_providers.attempts', 'AI_PROVIDER_RETRIES', 2),
+ $attempts?? (int) RuntimeConfiguration::get('services.ai_providers.attempts', 'AI_PROVIDER_RETRIES', 2),
  (int) RuntimeConfiguration::get('services.ai_providers.retry_delay_ms', 'AI_PROVIDER_RETRY_DELAY_MS', 250)
  )
  ->withHeaders([
@@ -3001,7 +3029,13 @@ PROMPT;
  return in_array($voice, $femaleVoices, true)? $voice: 'nova';
  }
 
- private static function synthesizeSpeechWithGemini(string $text, array|string|null $targetLanguage = null):?array
+ private static function synthesizeSpeechWithGemini(
+ string $text,
+ array|string|null $targetLanguage = null,
+?int $timeoutSeconds = null,
+?int $attempts = null,
+?float $deadlineAt = null
+ ):?array
  {
  $model = trim((string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))?: 'gemini-3.1-flash-tts-preview';
  $credentials = self::providerCredentials('gemini', $model);
@@ -3014,8 +3048,9 @@ PROMPT;
 
  try {
  $response = self::providerRequest(
- self::speechSynthesisTimeout(),
- (int) RuntimeConfiguration::get('services.ai_providers.attempts', 'AI_PROVIDER_RETRIES', 2)
+ $timeoutSeconds?? self::speechSynthesisTimeout(),
+ $attempts?? (int) RuntimeConfiguration::get('services.ai_providers.attempts', 'AI_PROVIDER_RETRIES', 2),
+ requestDeadlineAt: $deadlineAt
  )
  ->withHeaders([
  'x-goog-api-key' => $credentials['api_key'],
@@ -3813,6 +3848,11 @@ PROMPT;
  'elevenlabs_voice_id' => config('services.elevenlabs.tts_voice_id'),
  'elevenlabs_output_format' => config('services.elevenlabs.tts_output_format'),
  'elevenlabs_speed' => config('services.elevenlabs.tts_speed'),
+ 'elevenlabs_language_code' => config('services.elevenlabs.tts_language_code'),
+ 'elevenlabs_stability' => config('services.elevenlabs.tts_stability'),
+ 'elevenlabs_similarity_boost' => config('services.elevenlabs.tts_similarity_boost'),
+ 'elevenlabs_style' => config('services.elevenlabs.tts_style'),
+ 'elevenlabs_speaker_boost' => config('services.elevenlabs.tts_speaker_boost'),
  ];
  }
 

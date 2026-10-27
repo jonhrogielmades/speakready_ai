@@ -522,18 +522,137 @@ class InterviewSecurityTest extends TestCase
 
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
 
-        $this->actingAs($user)
+        $firstResponse = $this->actingAs($user)
             ->post(route('user.onboarding.speech'), [
                 'speech_text' => 'Welcome to your dashboard tutorial.',
                 'language' => 'en',
             ])
             ->assertOk()
             ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS')
             ->assertSee('onboarding-audio');
+
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), [
+                'speech_text' => 'Welcome   to your dashboard tutorial.',
+                'language' => 'en',
+            ])
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'HIT')
+            ->assertSee('onboarding-audio');
+
+        $this->assertStringContainsString('private', (string) $firstResponse->headers->get('Cache-Control'));
+        $this->assertStringContainsString('no-store', (string) $firstResponse->headers->get('Cache-Control'));
 
         Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'
             && $request['input'] === 'Welcome to your dashboard tutorial.'
             && $request['voice'] === 'nova');
+        Http::assertSentCount(1);
+    }
+
+    public function test_failed_onboarding_speech_uses_a_short_cooldown_without_caching_audio(): void
+    {
+        config([
+            'services.ai_tts.enabled' => true,
+            'services.ai_tts.provider' => 'openai',
+            'services.openai.tts_enabled' => true,
+        ]);
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/speech' => Http::sequence()
+                ->push(['error' => ['message' => 'Temporary provider failure']], 503)
+                ->push('recovered-onboarding-audio', 200, ['Content-Type' => 'audio/mpeg']),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $payload = ['speech_text' => 'Retry this tutorial line.', 'language' => 'en'];
+
+        $this->actingAs($user)
+            ->postJson(route('user.onboarding.speech'), $payload)
+            ->assertStatus(503);
+
+        $this->actingAs($user)
+            ->postJson(route('user.onboarding.speech'), $payload)
+            ->assertStatus(503);
+
+        Http::assertSentCount(1);
+        Cache::flush();
+
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), $payload)
+            ->assertOk()
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS')
+            ->assertSee('recovered-onboarding-audio');
+
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), $payload)
+            ->assertOk()
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'HIT');
+
+        Http::assertSentCount(2);
+    }
+
+    public function test_onboarding_speech_cache_is_separated_by_language_and_voice(): void
+    {
+        config([
+            'services.ai_tts.enabled' => true,
+            'services.ai_tts.provider' => 'openai',
+            'services.openai.tts_enabled' => true,
+            'services.openai.tts_voice' => 'nova',
+        ]);
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/speech' => Http::response('localized-onboarding-audio', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+        $payload = ['speech_text' => 'Your next tutorial step.', 'language' => 'en'];
+
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), $payload)
+            ->assertOk()
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS');
+
+        $user->update(['preferred_language' => 'fil']);
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), $payload)
+            ->assertOk()
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS');
+
+        config(['services.openai.tts_voice' => 'shimmer']);
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), $payload)
+            ->assertOk()
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS');
+
+        Http::assertSentCount(3);
+        Http::assertSent(fn ($request) => $request['voice'] === 'nova'
+            && str_contains((string) $request['instructions'], 'natural English pronunciation'));
+        Http::assertSent(fn ($request) => $request['voice'] === 'nova'
+            && str_contains((string) $request['instructions'], 'natural Filipino pronunciation'));
+        Http::assertSent(fn ($request) => $request['voice'] === 'shimmer'
+            && str_contains((string) $request['instructions'], 'natural Filipino pronunciation'));
     }
 
     public function test_user_can_request_speech_for_their_active_learning_game(): void

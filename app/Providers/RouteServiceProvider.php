@@ -69,6 +69,18 @@ class RouteServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('ai-voice', function (Request $request) {
+            $actor = $request->user()?->getAuthIdentifier() ?: $request->ip();
+            $limit = max(1, (int) config('services.ai_tts.onboarding_rate_limit_per_minute', 30));
+            $dailyLimit = max($limit, (int) config('services.ai_tts.onboarding_rate_limit_per_day', 120));
+
+            return [
+                Limit::perMinute($limit)->by('ai-voice-actor|'.$actor),
+                Limit::perMinute(min(90, $limit * 2))->by('ai-voice-ip|'.$request->ip()),
+                Limit::perDay($dailyLimit)->by('ai-voice-daily-actor|'.$actor),
+            ];
+        });
+
         RateLimiter::for('admin-ai', function (Request $request) {
             return Limit::perMinute((int) env('ADMIN_AI_RATE_LIMIT_PER_MINUTE', 5))
                 ->by('admin-ai|'.($request->user()?->getAuthIdentifier() ?: $request->ip()));
