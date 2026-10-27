@@ -1287,7 +1287,7 @@
       @endif
       @include('desktop.partials.desktop-theme-contrast')
       @include('desktop.partials.user-theme-contrast')
-      <script src="{{ asset('js/onboarding-voiceover.js?v=1') }}"></script>
+      <script src="{{ asset('js/onboarding-voiceover.js?v=2') }}"></script>
       @include('desktop.partials.onboarding-script')
       <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')

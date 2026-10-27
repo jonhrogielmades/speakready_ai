@@ -182,6 +182,47 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  }
  }
 
+ public function test_mobile_account_actions_share_a_bottom_right_alignment_without_changing_desktop_assets(): void
+ {
+ $user = User::factory()->create([
+ 'is_admin' => false,
+ 'status' => 'active',
+ 'email' => 'mobile-actions@example.com',
+ 'email_verified_at' => null,
+ ]);
+ $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+ $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+
+ $this->actingAs($user)
+ ->withHeader('User-Agent', $mobileUserAgent)
+ ->get(route('user.account'))
+ ->assertOk()
+ ->assertSee('user-mobile-shell', false)
+ ->assertSee('css/mobile/user/account-2.css?v=13', false)
+ ->assertSee('class="account-record-item account-record-action-item"', false)
+ ->assertSee('class="account-record-action"', false)
+ ->assertSee('class="account-notification-setup-btn account-record-action"', false)
+ ->assertSee('Verify')
+ ->assertSee('Manage')
+ ->assertSee('class="danger-action-form"', false)
+ ->assertSee('Delete Account');
+
+ $mobileCss = File::get(public_path('css/mobile/user/account-2.css'));
+ $this->assertStringContainsString('Keep mobile account actions on one shared bottom-right edge.', $mobileCss);
+ $this->assertStringContainsString('grid-template-areas:', $mobileCss);
+ $this->assertStringContainsString('justify-self: end !important;', $mobileCss);
+ $this->assertStringContainsString('justify-content: flex-end !important;', $mobileCss);
+ $this->assertStringContainsString('.danger-action-form .delete-account-btn', $mobileCss);
+ $this->assertStringContainsString('margin: 0 !important;', $mobileCss);
+
+ $this->actingAs($user)
+ ->withHeader('User-Agent', $desktopUserAgent)
+ ->get(route('user.account'))
+ ->assertOk()
+ ->assertSee('css/desktop/user/account-2.css?v=11', false)
+ ->assertDontSee('css/mobile/user/account-2.css?v=13', false);
+ }
+
  public function test_account_privacy_times_are_displayed_in_philippine_time(): void
  {
  $user = User::factory()->create([

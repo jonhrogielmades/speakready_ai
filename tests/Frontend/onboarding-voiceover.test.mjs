@@ -234,17 +234,39 @@ test('provider opt-out ignores previously cached AI audio', async () => {
     assert.equal(MockAudio.instances.length, 0);
 });
 
-test('uses fallback exactly once when the provider returns an error response', async () => {
+test('uses fallback and suppresses another provider request for the same failed line during cooldown', async () => {
     const context = harness({ fetchImpl: async () => response('unavailable', false) });
 
     const result = await context.runtime.speak('Recover from provider failure.', { locale: 'en-US' });
-    const cooldownResult = await context.runtime.speak('Do not wait on the failed provider again.', { locale: 'en-US' });
+    const cooldownResult = await context.runtime.speak('Recover from provider failure.', { locale: 'en-US' });
 
     assert.equal(result.source, 'fallback');
     assert.equal(cooldownResult.source, 'fallback');
     assert.equal(context.fetchCalls.length, 1);
     assert.equal(context.fallbackCalls.length, 2);
     assert.equal(MockAudio.instances.length, 0);
+});
+
+test('a failed line does not block another line from fetching saved provider audio', async () => {
+    let requestCount = 0;
+    const context = harness({
+        fetchImpl: async () => {
+            requestCount += 1;
+            return requestCount === 1
+                ? response('unavailable', false)
+                : response('saved-provider-audio');
+        },
+    });
+
+    const failedLine = await context.runtime.speak('This line is not saved yet.', { locale: 'en-US' });
+    const savedLine = await context.runtime.speak('This line already has saved AI audio.', { locale: 'en-US' });
+
+    assert.equal(failedLine.source, 'fallback');
+    assert.equal(savedLine.source, 'provider');
+    assert.equal(context.fetchCalls.length, 2);
+    assert.equal(context.fallbackCalls.length, 1);
+    assert.equal(MockAudio.instances.length, 1);
+    assert.equal(MockAudio.instances[0].playCalls, 1);
 });
 
 test('rejects non-audio provider responses and falls back exactly once', async () => {

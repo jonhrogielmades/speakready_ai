@@ -232,7 +232,7 @@
             $tourProviderVoiceoverTimeoutMs = (max(1, min(15, (int) config('services.ai_tts.onboarding_deadline_seconds', 6))) + 1) * 1000;
         @endphp
         const tourVoiceoverEndpoint = @json(route('user.onboarding.speech'));
-        const tourProviderVoiceoverAvailable = @json(\App\Services\AIService::speechSynthesisAvailable());
+        const tourSavedOrLiveVoiceoverAvailable = Boolean(tourVoiceoverEndpoint);
         const tourProviderVoiceoverTimeoutMs = @json($tourProviderVoiceoverTimeoutMs);
 
         function tourCsrfToken() {
@@ -249,7 +249,7 @@
         const tourVoiceoverRuntime = window.SpeakReadyOnboardingVoiceover?.create?.({
             endpoint: tourVoiceoverEndpoint,
             getCsrfToken: tourCsrfToken,
-            providerAvailable: tourProviderVoiceoverAvailable,
+            providerAvailable: tourSavedOrLiveVoiceoverAvailable,
             defaultLocale: getTourSpeechLocale({}),
             providerTimeoutMs: tourProviderVoiceoverTimeoutMs,
             playbackStartTimeoutMs: 2500,
@@ -311,34 +311,6 @@
                 console.warn('Tutorial voiceover failed:', error);
                 return { source: 'none' };
             });
-        }
-
-        function ensureTourVoiceReplayButton(step, config) {
-            if (config.voiceover === false || config.aiVoiceover === false || !supportsTourVoiceover()) return;
-
-            const popovers = Array.from(document.querySelectorAll('.driver-popover.sr-driver-popover'));
-            const popover = popovers.reverse().find((candidate) => candidate.getClientRects().length > 0);
-            if (!popover || popover.classList.contains('sr-native-tour-popover')) return;
-
-            const controls = popover.querySelector('.driver-popover-navigation-btns, .driver-popover-footer');
-            if (!controls) return;
-
-            let button = controls.querySelector('.sr-tour-voice-replay-btn');
-            if (!button) {
-                button = document.createElement('button');
-                button.type = 'button';
-                button.className = 'sr-tour-voice-replay-btn';
-                button.textContent = '🔊 Voice';
-                button.setAttribute('aria-label', 'Play tutorial voice');
-                button.title = 'Play tutorial voice';
-                controls.prepend(button);
-            }
-
-            button.onclick = (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                void speakTourStep(step, config);
-            };
         }
 
         function prefetchTourSteps(steps, config, startIndex = 0, count = 2) {
@@ -571,7 +543,6 @@
                             <footer class="driver-popover-footer">
                                 <span class="driver-popover-progress-text">${activeIndex + 1} of ${steps.length}</span>
                                 <div class="driver-popover-navigation-btns">
-                                    <button type="button" class="sr-tour-voice-replay-btn" aria-label="Play tutorial voice" title="Play tutorial voice">🔊 Voice</button>
                                     <button type="button" class="driver-popover-prev-btn" ${activeIndex === 0 ? 'disabled' : ''}>Back</button>
                                     <button type="button" class="driver-popover-next-btn">${isLast ? 'Done' : 'Next'}</button>
                                 </div>
@@ -579,12 +550,10 @@
                         `;
 
                         const closeButton = popover.querySelector('.sr-native-tour-close');
-                        const voiceButton = popover.querySelector('.sr-tour-voice-replay-btn');
                         const previousButton = popover.querySelector('.driver-popover-prev-btn');
                         const nextButton = popover.querySelector('.driver-popover-next-btn');
 
                         closeButton?.addEventListener('click', requestDestroy, { once: true });
-                        voiceButton?.addEventListener('click', () => options.onVoiceReplay?.(getCurrentStep()));
                         previousButton?.addEventListener('click', () => api.moveTo(activeIndex - 1), { once: true });
                         nextButton?.addEventListener('click', () => {
                             if (api.hasNextStep()) api.moveTo(activeIndex + 1);
@@ -1378,8 +1347,6 @@
                     onHighlighted: (element, step, options) => {
                         setTourHighlightedElement(element);
                         speakTourStep(step, config);
-                        ensureTourVoiceReplayButton(step, config);
-                        window.setTimeout(() => ensureTourVoiceReplayButton(step, config), 80);
                         const activeIndex = typeof driverObj.getActiveIndex === 'function'
                             ? driverObj.getActiveIndex()
                             : steps.indexOf(step);
@@ -1393,7 +1360,6 @@
 
                         refreshTourPlacement(driverObj);
                     },
-                    onVoiceReplay: (step) => speakTourStep(step, config),
                     onDestroyStarted: () => {
                         const forceDestroy = window.__speakReadyForceDestroy === true;
                         const reachedFinalStep = !driverObj.hasNextStep();

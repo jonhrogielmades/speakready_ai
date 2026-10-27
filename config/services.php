@@ -62,6 +62,11 @@ return [
  'onboarding_deadline_seconds' => env('AI_TTS_ONBOARDING_DEADLINE_SECONDS', 6),
  'onboarding_rate_limit_per_minute' => env('AI_TTS_ONBOARDING_RATE_LIMIT_PER_MINUTE', 30),
  'onboarding_rate_limit_per_day' => env('AI_TTS_ONBOARDING_RATE_LIMIT_PER_DAY', 120),
+ 'onboarding_storage_disk' => env('AI_TTS_ONBOARDING_STORAGE_DISK', 'local'),
+ 'onboarding_storage_directory' => env('AI_TTS_ONBOARDING_STORAGE_DIRECTORY', 'private/onboarding-voice'),
+ 'onboarding_storage_max_bytes' => env('AI_TTS_ONBOARDING_STORAGE_MAX_BYTES', 10485760),
+ 'onboarding_storage_max_clips' => env('AI_TTS_ONBOARDING_STORAGE_MAX_CLIPS', 2000),
+ 'onboarding_storage_max_total_bytes' => env('AI_TTS_ONBOARDING_STORAGE_MAX_TOTAL_BYTES', 536870912),
  ],
 
  'ai_transcription' => [

@@ -16,6 +16,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class InterviewSecurityTest extends TestCase
@@ -501,9 +502,11 @@ class InterviewSecurityTest extends TestCase
 
     public function test_user_can_request_onboarding_speech_from_tts_providers(): void
     {
+        Storage::fake('local');
         config([
             'services.ai_tts.enabled' => true,
             'services.ai_tts.provider' => 'openai',
+            'services.ai_tts.onboarding_storage_disk' => 'local',
             'services.openai.tts_enabled' => true,
         ]);
 
@@ -530,6 +533,7 @@ class InterviewSecurityTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Type', 'audio/mpeg')
             ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'PROVIDER')
             ->assertSee('onboarding-audio');
 
         $this->actingAs($user)
@@ -540,6 +544,36 @@ class InterviewSecurityTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Type', 'audio/mpeg')
             ->assertHeader('X-SpeakReady-Voice-Cache', 'HIT')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'CACHE')
+            ->assertSee('onboarding-audio');
+
+        Cache::flush();
+
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), [
+                'speech_text' => 'Welcome to your dashboard tutorial.',
+                'language' => 'en',
+            ])
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'HIT')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'SAVED')
+            ->assertSee('onboarding-audio');
+
+        config([
+            'services.ai_tts.enabled' => false,
+            'services.openai.tts_enabled' => false,
+        ]);
+        Cache::flush();
+
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), [
+                'speech_text' => 'Welcome to your dashboard tutorial.',
+                'language' => 'en',
+            ])
+            ->assertOk()
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'HIT')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'SAVED_FALLBACK')
             ->assertSee('onboarding-audio');
 
         $this->assertStringContainsString('private', (string) $firstResponse->headers->get('Cache-Control'));
@@ -553,9 +587,11 @@ class InterviewSecurityTest extends TestCase
 
     public function test_failed_onboarding_speech_uses_a_short_cooldown_without_caching_audio(): void
     {
+        Storage::fake('local');
         config([
             'services.ai_tts.enabled' => true,
             'services.ai_tts.provider' => 'openai',
+            'services.ai_tts.onboarding_storage_disk' => 'local',
             'services.openai.tts_enabled' => true,
         ]);
 
@@ -579,6 +615,8 @@ class InterviewSecurityTest extends TestCase
             ->postJson(route('user.onboarding.speech'), $payload)
             ->assertStatus(503);
 
+        $this->assertSame([], Storage::disk('local')->allFiles());
+
         $this->actingAs($user)
             ->postJson(route('user.onboarding.speech'), $payload)
             ->assertStatus(503);
@@ -590,29 +628,42 @@ class InterviewSecurityTest extends TestCase
             ->post(route('user.onboarding.speech'), $payload)
             ->assertOk()
             ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'PROVIDER')
             ->assertSee('recovered-onboarding-audio');
 
         $this->actingAs($user)
             ->post(route('user.onboarding.speech'), $payload)
             ->assertOk()
-            ->assertHeader('X-SpeakReady-Voice-Cache', 'HIT');
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'HIT')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'CACHE');
+
+        Cache::flush();
+
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), $payload)
+            ->assertOk()
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'HIT')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'SAVED')
+            ->assertSee('recovered-onboarding-audio');
 
         Http::assertSentCount(2);
     }
 
     public function test_onboarding_speech_cache_is_separated_by_language_and_voice(): void
     {
+        Storage::fake('local');
         config([
             'services.ai_tts.enabled' => true,
             'services.ai_tts.provider' => 'openai',
+            'services.ai_tts.onboarding_storage_disk' => 'local',
             'services.openai.tts_enabled' => true,
             'services.openai.tts_voice' => 'nova',
         ]);
 
         Http::fake([
-            'https://api.openai.com/v1/audio/speech' => Http::response('localized-onboarding-audio', 200, [
-                'Content-Type' => 'audio/mpeg',
-            ]),
+            'https://api.openai.com/v1/audio/speech' => Http::sequence()
+                ->push('english-onboarding-audio', 200, ['Content-Type' => 'audio/mpeg'])
+                ->push('filipino-onboarding-audio', 200, ['Content-Type' => 'audio/mpeg']),
         ]);
 
         AiProvider::create([
@@ -632,27 +683,42 @@ class InterviewSecurityTest extends TestCase
         $this->actingAs($user)
             ->post(route('user.onboarding.speech'), $payload)
             ->assertOk()
-            ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS');
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'PROVIDER')
+            ->assertSee('english-onboarding-audio');
 
         $user->update(['preferred_language' => 'fil']);
         $this->actingAs($user)
             ->post(route('user.onboarding.speech'), $payload)
             ->assertOk()
-            ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS');
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'PROVIDER')
+            ->assertSee('filipino-onboarding-audio');
 
         config(['services.openai.tts_voice' => 'shimmer']);
+        Cache::flush();
         $this->actingAs($user)
             ->post(route('user.onboarding.speech'), $payload)
             ->assertOk()
-            ->assertHeader('X-SpeakReady-Voice-Cache', 'MISS');
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'HIT')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'SAVED_FALLBACK')
+            ->assertSee('filipino-onboarding-audio');
 
-        Http::assertSentCount(3);
+        $user->update(['preferred_language' => 'en']);
+        Cache::flush();
+        $this->actingAs($user)
+            ->post(route('user.onboarding.speech'), $payload)
+            ->assertOk()
+            ->assertHeader('X-SpeakReady-Voice-Cache', 'HIT')
+            ->assertHeader('X-SpeakReady-Voice-Source', 'SAVED_FALLBACK')
+            ->assertSee('english-onboarding-audio');
+
+        Http::assertSentCount(2);
         Http::assertSent(fn ($request) => $request['voice'] === 'nova'
             && str_contains((string) $request['instructions'], 'natural English pronunciation'));
         Http::assertSent(fn ($request) => $request['voice'] === 'nova'
             && str_contains((string) $request['instructions'], 'natural Filipino pronunciation'));
-        Http::assertSent(fn ($request) => $request['voice'] === 'shimmer'
-            && str_contains((string) $request['instructions'], 'natural Filipino pronunciation'));
+        Http::assertNotSent(fn ($request) => $request['voice'] === 'shimmer');
     }
 
     public function test_user_can_request_speech_for_their_active_learning_game(): void

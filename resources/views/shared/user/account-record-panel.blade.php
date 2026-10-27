@@ -40,7 +40,7 @@
             </span>
         </div>
 
-        <div class="account-record-item">
+        <div class="account-record-item{{ ! $accountEmailVerifiedAt && filled($accountUser?->email) ? ' account-record-action-item' : '' }}">
             <span class="account-record-icon"><i class="fa-regular fa-envelope"></i></span>
             <span class="account-record-copy">
                 <span class="account-record-label">Email Status</span>
@@ -48,7 +48,7 @@
                 <small>{{ $accountEmailStatusMeta }}</small>
             </span>
             @if(! $accountEmailVerifiedAt && filled($accountUser?->email))
-                <form method="POST" action="{{ route('verification.send') }}">
+                <form method="POST" action="{{ route('verification.send') }}" class="account-record-action">
                     @csrf
                     <button type="submit" class="account-notification-setup-btn" aria-label="Resend recovery email verification">
                         <i class="fa-regular fa-paper-plane"></i>
@@ -58,14 +58,14 @@
             @endif
         </div>
 
-        <div class="account-record-item account-record-notification-item">
+        <div class="account-record-item account-record-notification-item account-record-action-item">
             <span class="account-record-icon"><i class="fa-regular fa-bell"></i></span>
             <span class="account-record-copy">
                 <span class="account-record-label">Device Notifications</span>
                 <strong><span class="account-record-status is-pending" data-account-push-status>Off</span></strong>
                 <small data-account-push-meta>PWA alerts</small>
             </span>
-            <button type="button" class="account-notification-setup-btn" data-account-open-notification-setup aria-label="Manage device notifications">
+            <button type="button" class="account-notification-setup-btn account-record-action" data-account-open-notification-setup aria-label="Manage device notifications">
                 <i class="fa-solid fa-sliders"></i>
                 <span>Manage</span>
             </button>

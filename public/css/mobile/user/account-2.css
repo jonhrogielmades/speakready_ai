@@ -2146,3 +2146,47 @@ html body #account-page .account-record-notification-item .account-notification-
         white-space: normal !important;
     }
 }
+
+/* Keep mobile account actions on one shared bottom-right edge. */
+@media (max-width: 767px) {
+    body.user-mobile-shell #mob-content #account-page .account-record-action-item {
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        grid-template-areas:
+            "icon copy"
+            ". action" !important;
+        row-gap: 8px !important;
+        align-items: center !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-action-item > .account-record-icon {
+        grid-area: icon !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-action-item > .account-record-copy {
+        grid-area: copy !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-action-item > .account-record-action {
+        grid-area: action !important;
+        justify-self: end !important;
+        align-self: end !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-record-action-item > form.account-record-action {
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-danger-section .danger-action-form {
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+        text-align: right !important;
+    }
+
+    body.user-mobile-shell #mob-content #account-page .account-danger-section .danger-action-form .delete-account-btn {
+        margin: 0 !important;
+    }
+}

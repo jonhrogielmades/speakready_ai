@@ -4759,7 +4759,7 @@
          };
       </script>
       <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
-      <script src="{{ asset('js/onboarding-voiceover.js?v=1') }}"></script>
+      <script src="{{ asset('js/onboarding-voiceover.js?v=2') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
       @include('shared.user.first-steps-modal-script')

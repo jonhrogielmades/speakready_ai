@@ -29,6 +29,7 @@ use App\Services\DetailedFeedbackReviewService;
 use App\Services\LearningChallengeGenerationService;
 use App\Services\LearningModuleGenerationService;
 use App\Services\LearningRecommendationService;
+use App\Services\OnboardingVoiceStorage;
 use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
@@ -4301,7 +4302,7 @@ class UserController extends Controller
   return redirect()->route('dashboard', sr_layout_query($request))->with('success', $message);
  }
 
- public function onboardingSpeech(Request $request)
+ public function onboardingSpeech(Request $request, OnboardingVoiceStorage $voiceStorage)
  {
  $validated = $request->validate([
  'speech_text' => ['required', 'string', 'max:900'],
@@ -4318,13 +4319,38 @@ class UserController extends Controller
   $cacheTtl = max(60, (int) config('services.ai_tts.onboarding_cache_ttl_seconds', 604800));
   $failureCacheTtl = max(5, min(300, (int) config('services.ai_tts.onboarding_failure_cache_ttl_seconds', 30)));
   $deadlineSeconds = max(1, min(15, (int) config('services.ai_tts.onboarding_deadline_seconds', 6)));
-  $cacheKey = 'onboarding-speech:v2:'.hash('sha256', json_encode([
+  $voiceSignature = AIService::speechSynthesisCacheSignature();
+  $versionedStorageKey = hash('sha256', json_encode([
+   'schema' => 1,
    'text' => $speechText,
    'language' => $languageCode,
-   'voice' => AIService::speechSynthesisCacheSignature(),
-  ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)?: $speechText.'|'.$languageCode);
+   'voice' => $voiceSignature,
+  ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)?: $speechText.'|'.$languageCode);
+  $stableStorageKey = hash('sha256', json_encode([
+   'schema' => 1,
+   'text' => $speechText,
+   'language' => $languageCode,
+  ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)?: $speechText.'|'.$languageCode);
+  $cacheKey = 'onboarding-speech:v3:'.$versionedStorageKey;
   $failureCacheKey = $cacheKey.':failure';
-  $readCachedSpeech = static function () use ($cacheKey):?array {
+  $cacheSpeech = static function (array $speech) use ($cacheKey, $cacheTtl): void {
+   try {
+    Cache::put($cacheKey, [
+     'audio_base64' => base64_encode((string) $speech['audio']),
+     'mime_type' => (string) $speech['mime_type'],
+     'persistent_saved' => (bool) ($speech['persistent_saved']?? true),
+    ], now()->addSeconds($cacheTtl));
+   } catch (\Throwable $e) {
+    Log::warning('Tutorial voice cache write failed: '.$e->getMessage());
+   }
+  };
+  $readCachedSpeech = static function () use (
+   $cacheKey,
+   $cacheTtl,
+   $voiceStorage,
+   $versionedStorageKey,
+   $stableStorageKey
+  ):?array {
    try {
     $cached = Cache::get($cacheKey);
    } catch (\Throwable $e) {
@@ -4341,7 +4367,72 @@ class UserController extends Controller
     return null;
    }
 
-   return ['audio' => $audio, 'mime_type' => $mimeType, 'cache_status' => 'HIT'];
+   $persistentSaved = (bool) ($cached['persistent_saved']?? false);
+   if (! $persistentSaved) {
+    $persistentSaved = $voiceStorage->store(
+     $versionedStorageKey,
+     $stableStorageKey,
+     $audio,
+     $mimeType
+    );
+
+    if ($persistentSaved) {
+     try {
+      $cached['persistent_saved'] = true;
+      Cache::put($cacheKey, $cached, now()->addSeconds($cacheTtl));
+     } catch (\Throwable $e) {
+      Log::warning('Tutorial voice persistence repair cache write failed: '.$e->getMessage());
+     }
+    } else {
+     Log::warning('Tutorial voice persistent storage repair failed for cached audio.');
+    }
+   }
+
+   return [
+    'audio' => $audio,
+    'mime_type' => $mimeType,
+    'cache_status' => 'HIT',
+    'source' => 'CACHE',
+    'persistent_saved' => $persistentSaved,
+   ];
+  };
+  $readSavedSpeech = static function () use (
+   $voiceStorage,
+   $versionedStorageKey,
+   $stableStorageKey,
+   $cacheSpeech
+  ):?array {
+   $saved = $voiceStorage->getExact($versionedStorageKey);
+   $source = 'SAVED';
+
+   if ($saved === null) {
+    $saved = $voiceStorage->getFallback($stableStorageKey);
+    $source = 'SAVED_FALLBACK';
+   }
+
+   if (! is_array($saved)) {
+    return null;
+   }
+
+   $audio = (string) ($saved['audio']?? '');
+   $mimeType = trim((string) ($saved['mime_type']?? ''));
+   if ($audio === '' ||! str_starts_with(strtolower($mimeType), 'audio/')) {
+    return null;
+   }
+
+   $speech = [
+    'audio' => $audio,
+    'mime_type' => $mimeType,
+    'cache_status' => 'HIT',
+    'source' => $source,
+    'persistent_saved' => true,
+   ];
+   $cacheSpeech($speech);
+
+   return $speech;
+  };
+  $readResolvedSpeech = static function () use ($readCachedSpeech, $readSavedSpeech):?array {
+   return $readCachedSpeech()?? $readSavedSpeech();
   };
   $hasRecentGenerationFailure = static function () use ($failureCacheKey): bool {
    try {
@@ -4361,10 +4452,12 @@ class UserController extends Controller
    $speechText,
    $language,
    $deadlineSeconds,
-   $cacheKey,
-   $cacheTtl,
    $failureCacheKey,
-   $rememberGenerationFailure
+   $rememberGenerationFailure,
+   $cacheSpeech,
+   $voiceStorage,
+   $versionedStorageKey,
+   $stableStorageKey
   ):?array {
    $speech = AIService::synthesizeSpeech($speechText, $language, [
     'deadline_seconds' => $deadlineSeconds,
@@ -4383,37 +4476,51 @@ class UserController extends Controller
     return null;
    }
 
+   $resolved = [
+    'audio' => $audio,
+    'mime_type' => $mimeType,
+    'cache_status' => 'MISS',
+    'source' => 'PROVIDER',
+   ];
+
+   $resolved['persistent_saved'] = $voiceStorage->store(
+    $versionedStorageKey,
+    $stableStorageKey,
+    $audio,
+    $mimeType
+   );
+   if (! $resolved['persistent_saved']) {
+    Log::warning('Tutorial voice persistent storage write failed for provider audio.');
+   }
+   $cacheSpeech($resolved);
+
    try {
-    Cache::put($cacheKey, [
-     'audio_base64' => base64_encode($audio),
-     'mime_type' => $mimeType,
-    ], now()->addSeconds($cacheTtl));
     Cache::forget($failureCacheKey);
    } catch (\Throwable $e) {
-    Log::warning('Tutorial voice cache write failed: '.$e->getMessage());
+    Log::warning('Tutorial voice failure cache clear failed: '.$e->getMessage());
    }
 
-   return ['audio' => $audio, 'mime_type' => $mimeType, 'cache_status' => 'MISS'];
+   return $resolved;
   };
 
-  $resolvedSpeech = $readCachedSpeech();
+  $resolvedSpeech = $readResolvedSpeech();
   if ($resolvedSpeech === null &&! $hasRecentGenerationFailure()) {
    try {
     $resolvedSpeech = Cache::lock($cacheKey.':generate', $deadlineSeconds + 5)
      ->block($deadlineSeconds + 1, static function () use (
-      $readCachedSpeech,
+      $readResolvedSpeech,
       $hasRecentGenerationFailure,
       $generateSpeech
      ):?array {
-      return $readCachedSpeech()?? ($hasRecentGenerationFailure() ? null : $generateSpeech());
+      return $readResolvedSpeech()?? ($hasRecentGenerationFailure() ? null : $generateSpeech());
      });
    } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
-    $resolvedSpeech = $readCachedSpeech();
+    $resolvedSpeech = $readResolvedSpeech();
    } catch (\Throwable $e) {
     // Continue without single-flight locking when a deployment has not yet
     // provisioned its cache lock store. Voice playback must still recover.
     Log::warning('Tutorial voice cache lock failed: '.$e->getMessage());
-    $resolvedSpeech = $readCachedSpeech()?? ($hasRecentGenerationFailure() ? null : $generateSpeech());
+    $resolvedSpeech = $readResolvedSpeech()?? ($hasRecentGenerationFailure() ? null : $generateSpeech());
    }
   }
 
@@ -4425,6 +4532,7 @@ class UserController extends Controller
   ->header('Content-Type', $resolvedSpeech['mime_type'])
   ->header('Cache-Control', 'private, no-store, max-age=0')
   ->header('X-SpeakReady-Voice-Cache', $resolvedSpeech['cache_status'])
+  ->header('X-SpeakReady-Voice-Source', $resolvedSpeech['source'])
   ->header('X-Content-Type-Options', 'nosniff');
  }
 

@@ -31,7 +31,7 @@
         let sequence = 0;
         let destroyed = false;
         let preferredVoice = null;
-        let providerRetryAfter = 0;
+        const providerRetryAfterByKey = new Map();
 
         const getCsrfToken = () => {
             if (typeof options.getCsrfToken === 'function') return String(options.getCsrfToken() || '');
@@ -65,10 +65,16 @@
             return error;
         }
 
-        function canUseProvider() {
-            return !destroyed && providerAvailable && endpoint !== '' && typeof fetchImpl === 'function' &&
+        function canUseProvider(key = '') {
+            const available = !destroyed && providerAvailable && endpoint !== '' && typeof fetchImpl === 'function' &&
                 typeof AudioCtor === 'function' && typeof createObjectURL === 'function' &&
-                typeof revokeObjectURL === 'function' && getCsrfToken() !== '' && Date.now() >= providerRetryAfter;
+                typeof revokeObjectURL === 'function' && getCsrfToken() !== '';
+            if (!available || !key) return available;
+
+            const retryAfter = Number(providerRetryAfterByKey.get(key) || 0);
+            if (Date.now() < retryAfter) return false;
+            if (retryAfter > 0) providerRetryAfterByKey.delete(key);
+            return true;
         }
 
         function requestBody(text, locale) {
@@ -98,7 +104,7 @@
             const cached = cachedAudio(key);
             if (cached) return Promise.resolve(cached);
             if (inflight.has(key)) return inflight.get(key).promise;
-            if (!canUseProvider()) {
+            if (!canUseProvider(key)) {
                 return Promise.reject(namedError('ProviderVoiceError', 'AI tutorial voice is unavailable.'));
             }
 
@@ -137,11 +143,13 @@
             entry.promise = Promise.race([request, timeout])
                 .then((blob) => {
                     if (destroyed) throw namedError('AbortError', 'AI tutorial voice runtime was destroyed.');
-                    providerRetryAfter = 0;
+                    providerRetryAfterByKey.delete(key);
                     return rememberAudio(key, blob);
                 })
                 .catch((error) => {
-                    if (error?.name !== 'AbortError') providerRetryAfter = Date.now() + providerFailureCooldownMs;
+                    if (error?.name !== 'AbortError') {
+                        providerRetryAfterByKey.set(key, Date.now() + providerFailureCooldownMs);
+                    }
                     throw error;
                 })
                 .finally(() => {
@@ -336,6 +344,7 @@
             if (destroyed) return;
             stop({ abortPending: true });
             clearCache();
+            providerRetryAfterByKey.clear();
             destroyed = true;
         }
 
