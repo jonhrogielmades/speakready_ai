@@ -354,6 +354,11 @@
         white-space: nowrap;
     }
 
+    .modal.sr-dashboard-setup-modal .sr-dashboard-media-control {
+        display: block;
+        min-width: 0;
+    }
+
     .modal.sr-dashboard-setup-modal .modal-footer {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto auto;
@@ -509,7 +514,7 @@
             grid-template-columns: 32px minmax(0, 1fr);
         }
 
-        .modal.sr-dashboard-setup-modal .sr-dashboard-camera-retry {
+        .modal.sr-dashboard-setup-modal .sr-dashboard-media-control {
             grid-column: 2;
             justify-self: start;
         }
@@ -559,7 +564,7 @@
                 <div class="modal-body">
                     <div class="sr-dashboard-setup-intro" role="note">
                         <span><i class="fa-solid fa-shield-halved"></i> Browser permission check</span>
-                        <strong>Ready for desktop and mobile</strong>
+                        <strong data-sr-live-permission-summary>Check this device</strong>
                     </div>
 
                     <div class="sr-dashboard-setup-list" role="group" aria-label="Dashboard tool permissions">
@@ -603,15 +608,25 @@
                         </label>
                     </div>
 
-                    <div class="sr-dashboard-camera-help" data-sr-camera-permission-help role="alert" hidden>
-                        <span class="sr-dashboard-camera-help-icon" aria-hidden="true"><i class="fa-solid fa-camera-rotate"></i></span>
+                    <div class="sr-dashboard-camera-help" data-sr-media-permission-help role="alert" hidden>
+                        <span class="sr-dashboard-camera-help-icon" aria-hidden="true"><i class="fa-solid fa-shield-halved" data-sr-media-permission-icon></i></span>
                         <span class="sr-dashboard-camera-help-copy">
-                            <strong data-sr-camera-permission-title>Camera permission needs attention</strong>
-                            <small data-sr-camera-permission-instructions>Allow Camera in this site's browser permissions, then retry.</small>
+                            <strong data-sr-media-permission-title>Media permission needs attention</strong>
+                            <small data-sr-media-permission-instructions>Allow camera or microphone in this site's browser permissions, then retry.</small>
                         </span>
-                        <button type="button" class="sr-dashboard-camera-retry" data-sr-retry-camera>
-                            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Retry camera
-                        </button>
+                        <usermedia class="sr-dashboard-media-control" data-sr-user-media>
+                            <button type="button" class="sr-dashboard-camera-retry" data-sr-retry-media>
+                                <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Retry media
+                            </button>
+                        </usermedia>
+                    </div>
+
+                    <div class="sr-dashboard-camera-help" data-sr-notification-permission-help role="alert" hidden>
+                        <span class="sr-dashboard-camera-help-icon" aria-hidden="true"><i class="fa-solid fa-bell"></i></span>
+                        <span class="sr-dashboard-camera-help-copy">
+                            <strong>Notification permission needs attention</strong>
+                            <small data-sr-notification-permission-instructions>Allow notifications in this site's or installed app's settings.</small>
+                        </span>
                     </div>
 
                     <div class="sr-dashboard-coach-status sr-dashboard-setup-status" id="dashboardSetupToolsStatus" role="status" aria-live="polite"></div>
@@ -626,6 +641,12 @@
     </div>
 </div>
 
+@once
+@push('scripts')
+<script src="{{ asset('js/media-permission-support.js?v=1') }}"></script>
+@endpush
+@endonce
+
 @push('scripts')
 <script>
     (function() {
@@ -639,11 +660,16 @@
             const allowButton = document.getElementById('dashboardSetupToolsAllow');
             const status = document.getElementById('dashboardSetupToolsStatus');
             const toggles = Array.from(form.querySelectorAll('[data-sr-setup-tool]'));
-            const cameraToggle = form.querySelector('[data-sr-setup-tool="camera"]');
-            const cameraPermissionHelp = form.querySelector('[data-sr-camera-permission-help]');
-            const cameraPermissionTitle = form.querySelector('[data-sr-camera-permission-title]');
-            const cameraPermissionInstructions = form.querySelector('[data-sr-camera-permission-instructions]');
-            const retryCameraButton = form.querySelector('[data-sr-retry-camera]');
+            const livePermissionSummary = form.querySelector('[data-sr-live-permission-summary]');
+            const mediaPermissionHelp = form.querySelector('[data-sr-media-permission-help]');
+            const mediaPermissionIcon = form.querySelector('[data-sr-media-permission-icon]');
+            const mediaPermissionTitle = form.querySelector('[data-sr-media-permission-title]');
+            const mediaPermissionInstructions = form.querySelector('[data-sr-media-permission-instructions]');
+            const retryMediaElement = form.querySelector('[data-sr-user-media]');
+            const retryMediaButton = form.querySelector('[data-sr-retry-media]');
+            const notificationPermissionHelp = form.querySelector('[data-sr-notification-permission-help]');
+            const notificationPermissionInstructions = form.querySelector('[data-sr-notification-permission-instructions]');
+            const mediaPermissionSupport = window.SpeakReadyMediaPermissions || null;
             const onboardingUser = modalElement?.dataset.srOnboardingUser || 'guest';
             const snoozeKey = 'speakready.dashboardSetupTools.snoozed.' + onboardingUser;
             const shouldAutoShow = modalElement?.dataset.srSetupAutoShow === 'true';
@@ -659,6 +685,7 @@
             const activeToolRequests = new Map();
             const permissionResults = Object.create(null);
             const permissionWatchers = new Map();
+            const mediaPermissionIssues = new Map();
 
             function safeSessionGet(key) {
                 try {
@@ -729,59 +756,207 @@
                 if (statusElement) statusElement.textContent = message;
             }
 
-            function cameraRecoveryInstructions(reason = 'blocked') {
-                if (reason === 'insecure_context') {
-                    return 'Camera access requires a secure HTTPS page. Reopen SpeakReady AI using HTTPS, then retry.';
-                }
-
-                if (reason === 'not_found') {
-                    return 'No usable camera was found. Connect or enable a camera on this device, then retry.';
-                }
-
-                if (reason === 'busy') {
-                    return 'Another app may be using the camera. Close that app, return here, then retry.';
-                }
-
-                const userAgent = navigator.userAgent || '';
-                const standalone = Boolean(
+            function isInstalledWebApp() {
+                return Boolean(
                     (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
                     window.navigator.standalone === true
                 );
+            }
 
-                if (standalone && /Android/i.test(userAgent)) {
-                    return 'Open Android Settings, then Apps, SpeakReady AI (or your browser), Permissions, Camera, and Allow. Return here to retry automatically.';
+            function mediaToolList(tools) {
+                const labels = tools.map((tool) => toolLabel(tool));
+                if (labels.length < 2) return labels[0] || 'Media';
+
+                return labels.slice(0, -1).join(', ') + ' and ' + labels[labels.length - 1];
+            }
+
+            function mediaFeatureAllowed(tool) {
+                if (mediaPermissionSupport && typeof mediaPermissionSupport.featureAllowed === 'function') {
+                    return mediaPermissionSupport.featureAllowed(document, tool);
                 }
 
-                if (standalone && /iPad|iPhone|iPod/i.test(userAgent)) {
-                    return 'Open this site in Safari, allow Camera in Page Settings, then return here and tap Retry camera.';
+                const policy = document.permissionsPolicy || document.featurePolicy;
+                if (!policy || typeof policy.allowsFeature !== 'function') return true;
+
+                try {
+                    return policy.allowsFeature(tool);
+                } catch (error) {
+                    return true;
+                }
+            }
+
+            function mediaIssueReason(error) {
+                if (mediaPermissionSupport && typeof mediaPermissionSupport.issueReason === 'function') {
+                    return mediaPermissionSupport.issueReason(error);
+                }
+
+                const errorName = error && error.name ? error.name : '';
+                if (errorName === 'NotFoundError' || errorName === 'OverconstrainedError') return 'not_found';
+                if (errorName === 'NotReadableError' || errorName === 'AbortError') return 'busy';
+                if (errorName === 'NotAllowedError' || errorName === 'SecurityError') return 'blocked';
+
+                return 'unavailable';
+            }
+
+            function mediaRecoveryInstructions(tools, reason = 'blocked') {
+                const mediaNames = mediaToolList(tools);
+
+                if (reason === 'policy_blocked') {
+                    return mediaNames + ' is disabled by this page\'s Permissions-Policy. Refresh after the server policy is updated.';
+                }
+
+                if (reason === 'insecure_context') {
+                    return mediaNames + ' requires a secure HTTPS page. Reopen SpeakReady AI using HTTPS, then retry.';
+                }
+
+                if (reason === 'not_found') {
+                    return 'No usable ' + mediaNames.toLowerCase() + ' was found. Connect or enable the device, then retry.';
+                }
+
+                if (reason === 'busy') {
+                    return 'Another app may be using ' + mediaNames.toLowerCase() + '. Close that app, return here, then retry.';
+                }
+
+                if (reason === 'unsupported') {
+                    return 'This browser cannot provide ' + mediaNames.toLowerCase() + ' access. Update it or open SpeakReady AI in a current Chrome, Edge, Firefox, or Safari browser.';
+                }
+
+                const userAgent = navigator.userAgent || '';
+                const permissionNames = tools.map((tool) => toolLabel(tool)).join(' and ');
+
+                if (isInstalledWebApp() && /Android/i.test(userAgent)) {
+                    return 'Installed web apps keep ' + permissionNames + ' in the browser\'s Site settings, not the SpeakReady App permissions page. Open SpeakReady AI in Chrome, use Site controls > Permissions, allow ' + permissionNames + ', and check Android Privacy plus Chrome app permissions.';
+                }
+
+                if (isInstalledWebApp() && /iPad|iPhone|iPod/i.test(userAgent)) {
+                    return 'Open SpeakReady AI in Safari, choose Page Settings > Website Settings, allow ' + permissionNames + ', then return here and retry.';
                 }
 
                 if (/iPad|iPhone|iPod/i.test(userAgent)) {
-                    return 'In Safari, open Page Settings (aA), then Website Settings, Camera, and Allow. Return here, then tap Retry camera.';
+                    return 'In Safari, open Page Settings (aA) > Website Settings, set ' + permissionNames + ' to Allow, then retry.';
                 }
 
                 if (/Android/i.test(userAgent)) {
-                    return 'Open this site\'s browser settings from the address-bar icon, then Permissions, Camera, and Allow. Return here, then tap Retry camera.';
+                    return 'Open Site controls beside the address bar > Permissions, allow ' + permissionNames + ', and verify Android Privacy plus the browser app\'s ' + permissionNames + ' permissions.';
                 }
 
-                return 'Open the lock or site-settings icon beside the address bar, then Camera and Allow. Return here, then tap Retry camera.';
+                return 'Open the lock or site-controls icon beside the address bar, allow ' + permissionNames + ' for this site, then return and retry.';
             }
 
-            function setCameraPermissionHelp(visible, reason = 'blocked') {
-                if (!cameraPermissionHelp) return;
+            function activeMediaIssueTools() {
+                return Array.from(mediaPermissionIssues.keys()).filter((tool) => {
+                    const input = form.querySelector('[data-sr-setup-tool="' + tool + '"]');
+                    return input && input.checked;
+                });
+            }
 
-                cameraPermissionHelp.hidden = !visible;
-                if (visible && cameraPermissionTitle) {
-                    cameraPermissionTitle.textContent = {
-                        insecure_context: 'Camera access requires HTTPS',
-                        not_found: 'No camera was detected',
-                        busy: 'Camera is being used elsewhere',
-                        blocked: 'Camera is selected, but browser access is blocked',
-                    }[reason] || 'Camera permission needs attention';
+            function updateMediaPermissionHelp() {
+                if (!mediaPermissionHelp) return;
+
+                const tools = activeMediaIssueTools();
+                mediaPermissionHelp.hidden = tools.length === 0;
+                if (!tools.length) return;
+
+                const reasonPriority = ['policy_blocked', 'insecure_context', 'blocked', 'busy', 'not_found', 'unsupported', 'unavailable'];
+                const reason = reasonPriority.find((candidate) => tools.some((tool) => mediaPermissionIssues.get(tool) === candidate)) || 'blocked';
+                const mediaNames = mediaToolList(tools);
+
+                if (mediaPermissionIcon) {
+                    mediaPermissionIcon.className = tools.length === 1 && tools[0] === 'camera'
+                        ? 'fa-solid fa-camera-rotate'
+                        : (tools.length === 1 ? 'fa-solid fa-microphone-lines' : 'fa-solid fa-shield-halved');
                 }
-                if (visible && cameraPermissionInstructions) {
-                    cameraPermissionInstructions.textContent = cameraRecoveryInstructions(reason);
+                if (mediaPermissionTitle) {
+                    mediaPermissionTitle.textContent = {
+                        policy_blocked: mediaNames + ' is blocked by the page policy',
+                        insecure_context: mediaNames + ' requires HTTPS',
+                        not_found: 'No ' + mediaNames.toLowerCase() + ' was detected',
+                        busy: mediaNames + ' is being used elsewhere',
+                        unsupported: mediaNames + ' is unsupported in this browser',
+                        blocked: mediaNames + ' is selected, but browser access is blocked',
+                    }[reason] || mediaNames + ' permission needs attention';
                 }
+                if (mediaPermissionInstructions) {
+                    mediaPermissionInstructions.textContent = mediaRecoveryInstructions(tools, reason);
+                }
+                if (retryMediaButton) {
+                    retryMediaButton.innerHTML = '<i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Retry ' + mediaNames.toLowerCase();
+                }
+
+                if (retryMediaElement && typeof retryMediaElement.setConstraints === 'function') {
+                    const constraints = mediaPermissionSupport && typeof mediaPermissionSupport.constraintsFor === 'function'
+                        ? mediaPermissionSupport.constraintsFor(tools)
+                        : {
+                            ...(tools.includes('camera') ? { video: { facingMode: { ideal: 'user' } } } : {}),
+                            ...(tools.includes('microphone') ? { audio: { echoCancellation: true, noiseSuppression: true } } : {}),
+                        };
+                    try { retryMediaElement.setConstraints(constraints); } catch (error) {}
+                }
+            }
+
+            function setMediaPermissionIssue(tool, reason = null) {
+                if (reason) {
+                    mediaPermissionIssues.set(tool, reason);
+                } else {
+                    mediaPermissionIssues.delete(tool);
+                }
+                updateMediaPermissionHelp();
+                updateLivePermissionSummary();
+            }
+
+            function notificationRecoveryInstructions(reason = 'blocked') {
+                const userAgent = navigator.userAgent || '';
+
+                if (reason === 'unsupported') {
+                    return 'Notifications are not available in this browser. On iPhone and iPad, install SpeakReady AI to the Home Screen first.';
+                }
+
+                if (isInstalledWebApp() && /Android/i.test(userAgent)) {
+                    return 'Open Android Settings > Apps > SpeakReady > Notifications and turn notifications on. Also allow notifications for this site in the browser if shown.';
+                }
+
+                if (isInstalledWebApp() && /iPad|iPhone|iPod/i.test(userAgent)) {
+                    return 'Open iPhone or iPad Settings > Notifications > SpeakReady and turn Allow Notifications on.';
+                }
+
+                if (/Android/i.test(userAgent)) {
+                    return 'Open Site controls > Permissions > Notifications and choose Allow. Also verify the browser app can show notifications in Android Settings.';
+                }
+
+                return 'Open the lock or site-controls icon beside the address bar, set Notifications to Allow, then retry.';
+            }
+
+            function setNotificationPermissionHelp(visible, reason = 'blocked') {
+                if (!notificationPermissionHelp) return;
+
+                notificationPermissionHelp.hidden = !visible;
+                if (visible && notificationPermissionInstructions) {
+                    notificationPermissionInstructions.textContent = notificationRecoveryInstructions(reason);
+                }
+                updateLivePermissionSummary();
+            }
+
+            function updateLivePermissionSummary() {
+                if (!livePermissionSummary) return;
+
+                const selectedTools = toggles
+                    .filter((input) => input.checked)
+                    .map((input) => input.dataset.srSetupTool);
+
+                if (!selectedTools.length) {
+                    livePermissionSummary.textContent = 'No tools selected';
+                    return;
+                }
+
+                const values = selectedTools.map((tool) => permissionResults[tool]);
+                const hasIssue = activeMediaIssueTools().length > 0 ||
+                    Boolean(notificationPermissionHelp && !notificationPermissionHelp.hidden) || values.some((value) =>
+                    value && !['granted', 'off', 'prompt', 'unknown'].includes(value)
+                );
+
+                livePermissionSummary.textContent = hasIssue
+                    ? 'Needs attention'
+                    : (values.every((value) => value === 'granted') ? 'Ready on this device' : 'Check this device');
             }
 
             function syncToggle(input) {
@@ -795,8 +970,10 @@
 
                 if (!enabled) {
                     permissionResults[tool] = 'off';
-                    if (tool === 'camera') setCameraPermissionHelp(false);
+                    if (tool === 'camera' || tool === 'microphone') setMediaPermissionIssue(tool);
+                    if (tool === 'notifications') setNotificationPermissionHelp(false);
                 }
+                updateLivePermissionSummary();
             }
 
             function toolLabel(tool) {
@@ -818,7 +995,7 @@
                     return toolLabel(tool) + ' not found';
                 }
 
-                if (errorName === 'NotReadableError') {
+                if (errorName === 'NotReadableError' || errorName === 'AbortError') {
                     return toolLabel(tool) + ' busy';
                 }
 
@@ -826,15 +1003,44 @@
             }
 
             async function requestMediaTool(tool) {
+                if (mediaPermissionSupport && typeof mediaPermissionSupport.probe === 'function') {
+                    const result = await mediaPermissionSupport.probe(tool, {
+                        navigatorRef: navigator,
+                        documentRef: document,
+                        isSecureContext: window.isSecureContext,
+                    });
+
+                    if (result.status === 'granted') {
+                        setToolStatus(tool, 'Allowed', 'success');
+                        setMediaPermissionIssue(tool);
+                    } else {
+                        const statusLabel = {
+                            policy_blocked: 'Page policy blocked',
+                            insecure_context: 'HTTPS required',
+                            unsupported: 'Unsupported',
+                        }[result.status] || permissionErrorMessage(tool, result.error);
+                        setToolStatus(tool, statusLabel, 'error');
+                        setMediaPermissionIssue(tool, result.reason);
+                    }
+
+                    return result.status;
+                }
+
+                if (!mediaFeatureAllowed(tool)) {
+                    setToolStatus(tool, 'Page policy blocked', 'error');
+                    setMediaPermissionIssue(tool, 'policy_blocked');
+                    return 'policy_blocked';
+                }
+
                 if (window.isSecureContext === false) {
                     setToolStatus(tool, 'HTTPS required', 'error');
-                    if (tool === 'camera') setCameraPermissionHelp(true, 'insecure_context');
+                    setMediaPermissionIssue(tool, 'insecure_context');
                     return 'insecure_context';
                 }
 
                 if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
                     setToolStatus(tool, 'Unsupported', 'error');
-                    if (tool === 'camera') setCameraPermissionHelp(true, 'not_found');
+                    setMediaPermissionIssue(tool, 'unsupported');
                     return 'unsupported';
                 }
 
@@ -846,21 +1052,132 @@
                     const stream = await navigator.mediaDevices.getUserMedia(constraints);
                     stream.getTracks().forEach((track) => track.stop());
                     setToolStatus(tool, 'Allowed', 'success');
-                    if (tool === 'camera') setCameraPermissionHelp(false);
+                    setMediaPermissionIssue(tool);
                     return 'granted';
                 } catch (error) {
                     setToolStatus(tool, permissionErrorMessage(tool, error), 'error');
-
-                    if (tool === 'camera') {
-                        const errorName = error && error.name ? error.name : '';
-                        const reason = errorName === 'NotFoundError' || errorName === 'OverconstrainedError'
-                            ? 'not_found'
-                            : (errorName === 'NotReadableError' ? 'busy' : 'blocked');
-                        setCameraPermissionHelp(true, reason);
-                    }
+                    setMediaPermissionIssue(tool, mediaIssueReason(error));
 
                     return error && error.name ? error.name : 'error';
                 }
+            }
+
+            async function requestMediaTools(tools) {
+                const requestedTools = [...new Set(tools)].filter((tool) => tool === 'camera' || tool === 'microphone');
+                const results = {};
+
+                if (!requestedTools.length) return results;
+                if (requestedTools.length === 1) {
+                    results[requestedTools[0]] = await requestTool(requestedTools[0]);
+                    return results;
+                }
+
+                requestedTools.forEach((tool) => setToolStatus(tool, 'Requesting', 'pending'));
+
+                let combinedResult;
+                if (mediaPermissionSupport && typeof mediaPermissionSupport.probeTools === 'function') {
+                    combinedResult = await mediaPermissionSupport.probeTools(requestedTools, {
+                        navigatorRef: navigator,
+                        documentRef: document,
+                        isSecureContext: window.isSecureContext,
+                    });
+                } else if (requestedTools.some((tool) => !mediaFeatureAllowed(tool))) {
+                    combinedResult = {
+                        status: 'policy_blocked',
+                        reason: 'policy_blocked',
+                        policyBlockedTools: requestedTools.filter((tool) => !mediaFeatureAllowed(tool)),
+                    };
+                } else if (window.isSecureContext === false) {
+                    combinedResult = { status: 'insecure_context', reason: 'insecure_context' };
+                } else if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+                    combinedResult = { status: 'unsupported', reason: 'unsupported' };
+                } else {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: { ideal: 'user' } },
+                            audio: { echoCancellation: true, noiseSuppression: true },
+                        });
+                        stream.getTracks().forEach((track) => track.stop());
+                        combinedResult = { status: 'granted', reason: null };
+                    } catch (error) {
+                        combinedResult = {
+                            status: error && error.name ? error.name : 'error',
+                            reason: mediaIssueReason(error),
+                            error,
+                        };
+                    }
+                }
+
+                if (combinedResult.status === 'granted') {
+                    requestedTools.forEach((tool) => {
+                        results[tool] = 'granted';
+                        permissionResults[tool] = 'granted';
+                        setToolStatus(tool, 'Allowed', 'success');
+                        setMediaPermissionIssue(tool);
+                    });
+                    return results;
+                }
+
+                const policyBlockedTools = Array.isArray(combinedResult.policyBlockedTools)
+                    ? combinedResult.policyBlockedTools
+                    : [];
+                if (combinedResult.reason === 'policy_blocked' && policyBlockedTools.length) {
+                    for (const tool of requestedTools) {
+                        if (policyBlockedTools.includes(tool)) {
+                            results[tool] = 'policy_blocked';
+                            permissionResults[tool] = 'policy_blocked';
+                            setToolStatus(tool, 'Page policy blocked', 'error');
+                            setMediaPermissionIssue(tool, 'policy_blocked');
+                        } else {
+                            results[tool] = await requestTool(tool);
+                        }
+                    }
+                    return results;
+                }
+
+                if (combinedResult.reason === 'blocked') {
+                    // Chromium exposes media permission state per device. Use
+                    // that state after a combined denial so an allowed
+                    // microphone is not mislabeled when only camera is denied.
+                    for (const tool of requestedTools) {
+                        const permissionState = await queryMediaPermission(tool);
+
+                        if (permissionState === 'granted') {
+                            results[tool] = await requestTool(tool);
+                            continue;
+                        }
+
+                        results[tool] = permissionState === 'denied' ? 'denied' : combinedResult.status;
+                        permissionResults[tool] = results[tool];
+                        setToolStatus(tool, toolLabel(tool) + ' blocked', 'error');
+                        setMediaPermissionIssue(tool, 'blocked');
+                    }
+                    return results;
+                }
+
+                if (combinedResult.reason === 'not_found' || combinedResult.reason === 'busy') {
+                    // Permission was already handled by the combined request.
+                    // Probe each device only to identify which one needs attention.
+                    for (const tool of requestedTools) {
+                        results[tool] = await requestTool(tool);
+                    }
+                    return results;
+                }
+
+                for (const tool of requestedTools) {
+                    const statusLabel = {
+                        policy_blocked: 'Page policy blocked',
+                        insecure_context: 'HTTPS required',
+                        unsupported: 'Unsupported',
+                    }[combinedResult.status] || permissionErrorMessage(tool, combinedResult.error);
+
+                    results[tool] = combinedResult.status;
+                    permissionResults[tool] = combinedResult.status;
+                    setToolStatus(tool, statusLabel, 'error');
+                    setMediaPermissionIssue(tool, combinedResult.reason || 'unavailable');
+                }
+
+                return results;
             }
 
             async function requestNotifications() {
@@ -869,6 +1186,7 @@
                         const result = await window.SpeakReadyPush.enable({ sendTest: true });
 
                         if (result.status === 'granted') {
+                            setNotificationPermissionHelp(false);
                             if (result.test && result.test.success === false && result.test.skipped !== true) {
                                 setToolStatus('notifications', 'Test failed', 'error');
                                 return 'test_failed';
@@ -879,40 +1197,48 @@
                         }
 
                         if (result.status === 'unconfigured') {
+                            setNotificationPermissionHelp(false);
                             setToolStatus('notifications', 'Server setup needed', 'error');
                             return 'unconfigured';
                         }
 
                         if (result.status === 'unsupported') {
                             setToolStatus('notifications', 'Unsupported', 'error');
+                            setNotificationPermissionHelp(true, 'unsupported');
                             return 'unsupported';
                         }
 
                         setToolStatus('notifications', 'Blocked', 'error');
+                        setNotificationPermissionHelp(true, 'blocked');
                         return result.status || 'denied';
                     } catch (error) {
                         setToolStatus('notifications', permissionErrorMessage('notifications', error), 'error');
+                        setNotificationPermissionHelp(true, 'blocked');
                         return error && error.name ? error.name : 'error';
                     }
                 }
 
                 if (!('Notification' in window) || typeof Notification.requestPermission !== 'function') {
                     setToolStatus('notifications', 'Unsupported', 'error');
+                    setNotificationPermissionHelp(true, 'unsupported');
                     return 'unsupported';
                 }
 
                 if (Notification.permission === 'granted') {
                     setToolStatus('notifications', 'Allowed', 'success');
+                    setNotificationPermissionHelp(false);
                     return 'granted';
                 }
 
                 if (Notification.permission === 'denied') {
                     setToolStatus('notifications', 'Blocked', 'error');
+                    setNotificationPermissionHelp(true, 'blocked');
                     return 'denied';
                 }
 
                 const permission = await Notification.requestPermission();
                 setToolStatus('notifications', permission === 'granted' ? 'Allowed' : 'Blocked', permission === 'granted' ? 'success' : 'error');
+                setNotificationPermissionHelp(permission !== 'granted', 'blocked');
                 return permission;
             }
 
@@ -929,6 +1255,7 @@
                         : await requestMediaTool(tool);
 
                     permissionResults[tool] = result;
+                    updateLivePermissionSummary();
                     return result;
                 })();
 
@@ -980,22 +1307,55 @@
                         } else {
                             permissionResults[tool] = 'granted';
                             setToolStatus(tool, 'Allowed', 'success');
-                            if (tool === 'camera') setCameraPermissionHelp(false);
+                            setMediaPermissionIssue(tool);
                         }
                     } else if (permissionState === 'denied') {
                         permissionResults[tool] = 'denied';
                         setToolStatus(tool, toolLabel(tool) + ' blocked', 'error');
-                        if (tool === 'camera') setCameraPermissionHelp(true, 'blocked');
+                        setMediaPermissionIssue(tool, 'blocked');
                     } else if (permissionState === 'prompt') {
                         permissionResults[tool] = 'prompt';
                         setToolStatus(tool, 'Tap Allow', 'ready');
-                        if (tool === 'camera') setCameraPermissionHelp(false);
+                        setMediaPermissionIssue(tool);
                     } else if (permissionState === null && verifyGranted) {
                         // Safari does not consistently expose camera/microphone
                         // through the Permissions API. A real stream check is
                         // the authoritative fallback after returning to the app.
                         await requestTool(tool);
+                    } else if (permissionState === null) {
+                        permissionResults[tool] = 'unknown';
+                        setToolStatus(tool, 'Check needed', 'ready');
                     }
+                }
+
+                updateLivePermissionSummary();
+            }
+
+            function refreshNotificationPermission() {
+                const input = form.querySelector('[data-sr-setup-tool="notifications"]');
+                if (!input || !input.checked) {
+                    if (input) permissionResults.notifications = 'off';
+                    setNotificationPermissionHelp(false);
+                    return;
+                }
+
+                if (!('Notification' in window)) {
+                    permissionResults.notifications = 'unsupported';
+                    setToolStatus('notifications', 'Unsupported', 'error');
+                    setNotificationPermissionHelp(true, 'unsupported');
+                    return;
+                }
+
+                permissionResults.notifications = Notification.permission;
+                if (Notification.permission === 'granted') {
+                    setToolStatus('notifications', 'Allowed', 'success');
+                    setNotificationPermissionHelp(false);
+                } else if (Notification.permission === 'denied') {
+                    setToolStatus('notifications', 'Blocked', 'error');
+                    setNotificationPermissionHelp(true, 'blocked');
+                } else {
+                    setToolStatus('notifications', 'Tap Allow', 'ready');
+                    setNotificationPermissionHelp(false);
                 }
             }
 
@@ -1003,6 +1363,7 @@
                 window.clearTimeout(permissionRefreshTimer);
                 permissionRefreshTimer = window.setTimeout(() => {
                     if (document.visibilityState === 'hidden') return;
+                    refreshNotificationPermission();
                     refreshSelectedMediaPermissions(verifyGranted).catch(() => {});
                 }, 120);
             }
@@ -1022,8 +1383,8 @@
 
                     if (result === 'granted') {
                         setStatus(toolLabel(tool) + ' access is ready.', 'success');
-                    } else if (tool === 'camera') {
-                        setStatus('Camera access is still blocked. Follow the browser-permission steps below, then retry.', 'warning');
+                    } else if (tool === 'camera' || tool === 'microphone') {
+                        setStatus(toolLabel(tool) + ' access is not ready. Follow the device-specific steps below, then retry.', 'warning');
                     } else {
                         setStatus(toolLabel(tool) + ' permission was not granted. Retry or switch it off to continue.', 'warning');
                     }
@@ -1104,20 +1465,75 @@
                 });
             });
 
-            retryCameraButton?.addEventListener('click', async () => {
-                if (!cameraToggle || activeToolRequests.has('camera')) return;
+            const supportsUserMediaElement = Boolean(
+                'HTMLUserMediaElement' in window &&
+                retryMediaElement &&
+                typeof retryMediaElement.setConstraints === 'function'
+            );
 
-                cameraToggle.checked = true;
-                retryCameraButton.disabled = true;
-                retryCameraButton.setAttribute('aria-busy', 'true');
+            async function retryMediaPermissionsFallback() {
+                const tools = activeMediaIssueTools();
+                if (!tools.length || tools.some((tool) => activeToolRequests.has(tool))) return;
+
+                retryMediaButton.disabled = true;
+                retryMediaButton.setAttribute('aria-busy', 'true');
 
                 try {
-                    await requestEnabledToolOnToggle(cameraToggle);
+                    tools.forEach((tool) => {
+                        const input = form.querySelector('[data-sr-setup-tool="' + tool + '"]');
+                        if (input) input.checked = true;
+                    });
+                    const results = await requestMediaTools(tools);
+                    const ready = tools.every((tool) => results[tool] === 'granted');
+                    setStatus(
+                        ready
+                            ? mediaToolList(tools) + ' access is ready on this device.'
+                            : 'One or more media devices still need attention.',
+                        ready ? 'success' : 'warning'
+                    );
                 } finally {
-                    retryCameraButton.disabled = false;
-                    retryCameraButton.setAttribute('aria-busy', 'false');
+                    retryMediaButton.disabled = false;
+                    retryMediaButton.setAttribute('aria-busy', 'false');
                 }
-            });
+            }
+
+            if (supportsUserMediaElement) {
+                retryMediaElement.addEventListener('stream', () => {
+                    const stream = retryMediaElement.stream;
+                    const tools = activeMediaIssueTools();
+                    const hasAudio = Boolean(stream && stream.getAudioTracks().length);
+                    const hasVideo = Boolean(stream && stream.getVideoTracks().length);
+
+                    tools.forEach((tool) => {
+                        const granted = tool === 'camera' ? hasVideo : hasAudio;
+                        permissionResults[tool] = granted ? 'granted' : 'not_found';
+                        setToolStatus(tool, granted ? 'Allowed' : toolLabel(tool) + ' not found', granted ? 'success' : 'error');
+                        setMediaPermissionIssue(tool, granted ? null : 'not_found');
+                    });
+
+                    stream?.getTracks().forEach((track) => track.stop());
+                    setStatus(tools.every((tool) => permissionResults[tool] === 'granted')
+                        ? mediaToolList(tools) + ' access is ready on this device.'
+                        : 'One or more media devices still need attention.', tools.every((tool) => permissionResults[tool] === 'granted') ? 'success' : 'warning');
+                });
+
+                retryMediaElement.addEventListener('error', () => {
+                    const error = retryMediaElement.error;
+                    const reason = mediaIssueReason(error);
+                    activeMediaIssueTools().forEach((tool) => {
+                        permissionResults[tool] = error?.name || reason;
+                        setToolStatus(tool, permissionErrorMessage(tool, error), 'error');
+                        setMediaPermissionIssue(tool, reason);
+                    });
+                    setStatus('Media access is still blocked. Follow the device-specific steps and retry.', 'warning');
+                });
+
+                retryMediaElement.addEventListener('cancel', () => {
+                    setStatus('The permission prompt was closed. Retry when you are ready.', 'warning');
+                });
+            } else {
+                retryMediaButton?.addEventListener('click', retryMediaPermissionsFallback);
+            }
 
             form.querySelectorAll('[data-sr-setup-later]').forEach((button) => {
                 button.addEventListener('click', () => {
@@ -1168,14 +1584,14 @@
                 setStatus(enabledTools.length ? 'Requesting selected tools...' : 'Saved with all tools off.', enabledTools.length ? 'info' : 'success');
 
                 try {
-                    const requestOrder = enabledTools.slice().sort((left, right) => {
-                        if (left === 'notifications') return -1;
-                        if (right === 'notifications') return 1;
-                        return 0;
-                    });
+                    // Ask for all selected media in one browser prompt while
+                    // this submit click still supplies a direct user gesture.
+                    // Notification registration runs afterward.
+                    const mediaTools = enabledTools.filter((tool) => tool === 'camera' || tool === 'microphone');
+                    Object.assign(results, await requestMediaTools(mediaTools));
 
-                    for (const tool of requestOrder) {
-                        results[tool] = await requestTool(tool);
+                    if (enabledTools.includes('notifications')) {
+                        results.notifications = await requestTool('notifications');
                     }
 
                     toggles

@@ -64,6 +64,7 @@ assert(cacheVersion && cacheVersion === refreshVersion, 'Service-worker cache an
 
 for (const relativePath of [
     'public/js/main.js',
+    'public/js/media-permission-support.js',
     'public/js/user-ui.js',
     'public/js/push-notifications.js',
     'public/sw.js',

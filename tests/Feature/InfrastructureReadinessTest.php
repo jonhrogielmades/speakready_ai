@@ -23,6 +23,27 @@ class InfrastructureReadinessTest extends TestCase
         );
     }
 
+    public function test_web_servers_allow_first_party_camera_and_microphone_permissions(): void
+    {
+        $policy = 'camera=(self), microphone=(self), geolocation=(), payment=(), usb=()';
+        $nginx = File::get(base_path('nginx.conf'));
+        $apache = File::get(public_path('.htaccess'));
+
+        $this->assertStringContainsString(
+            'add_header Permissions-Policy "'.$policy.'" always;',
+            $nginx
+        );
+        $this->assertStringContainsString(
+            'Header always set Permissions-Policy "'.$policy.'"',
+            $apache
+        );
+
+        foreach ([$nginx, $apache] as $serverConfig) {
+            $this->assertStringNotContainsString('camera=()', $serverConfig);
+            $this->assertStringNotContainsString('microphone=()', $serverConfig);
+        }
+    }
+
     public function test_readiness_endpoint_checks_laravel_php_and_database(): void
     {
         DB::shouldReceive('selectOne')

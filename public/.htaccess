@@ -41,6 +41,10 @@
 </IfModule>
 
 <IfModule mod_headers.c>
+    # Match the production Nginx policy when the app is served by
+    # Apache/Laragon. User consent is still required by every browser.
+    Header always set Permissions-Policy "camera=(self), microphone=(self), geolocation=(), payment=(), usb=()"
+
     <FilesMatch "\.(?:css|js|mjs|avif|gif|jpe?g|png|svg|webp|ico|otf|ttf|woff2?)$">
         Header set Cache-Control "public, max-age=2592000"
     </FilesMatch>

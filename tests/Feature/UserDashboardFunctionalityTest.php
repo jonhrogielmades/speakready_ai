@@ -148,10 +148,17 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('id="dashboardSetupToolsAllow"', false)
                 ->assertSee('Do later')
                 ->assertSee('navigator.mediaDevices.getUserMedia', false)
+                ->assertSee('js/media-permission-support.js?v=1', false)
+                ->assertSee('mediaPermissionSupport.probeTools(requestedTools', false)
                 ->assertSee('async function requestEnabledToolOnToggle', false)
                 ->assertSee('requestEnabledToolOnToggle(input)', false)
-                ->assertSee('data-sr-camera-permission-help', false)
-                ->assertSee('data-sr-retry-camera', false)
+                ->assertSee('data-sr-media-permission-help', false)
+                ->assertSee('data-sr-retry-media', false)
+                ->assertSee('<usermedia', false)
+                ->assertSee("'HTMLUserMediaElement' in window", false)
+                ->assertSee('document.permissionsPolicy || document.featurePolicy', false)
+                ->assertSee("setMediaPermissionIssue(tool, 'policy_blocked')", false)
+                ->assertSee("Site controls > Permissions", false)
                 ->assertSee('window.isSecureContext === false', false)
                 ->assertSee('navigator.permissions.query({ name: tool })', false)
                 ->assertSee("document.addEventListener('visibilitychange'", false)
@@ -165,6 +172,13 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('speakready.firstSteps.returnAfterSetup.', false)
                 ->assertSee('speakready.firstSteps.returnAfterTour.', false)
                 ->assertSee("speakready:dashboard-tour-closed", false);
+
+            $html = $response->getContent();
+            $supportScriptPosition = strpos($html, 'js/media-permission-support.js?v=1');
+            $modalInitializerPosition = strpos($html, 'function initDashboardSetupToolsModal');
+            $this->assertIsInt($supportScriptPosition);
+            $this->assertIsInt($modalInitializerPosition);
+            $this->assertTrue($supportScriptPosition < $modalInitializerPosition);
 
             $response
                 ->assertSee('id="card-daily-challenge"', false)
