@@ -17,19 +17,20 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f1f6fb">
+    <meta name="theme-color" content="#effbff">
     <title>{{ $errorCode }} &middot; {{ $systemName }}</title>
     <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
     <style>
         :root {
             color-scheme: light;
-            --ink: #153b63;
-            --muted: #607995;
-            --soft: #edf5fc;
-            --line: #dceaf5;
-            --accent: #2563eb;
-            --accent-dark: #174ea6;
-            --accent-soft: #dceafe;
+            --ink: #123b63;
+            --muted: #5f7b96;
+            --soft: #f0fcff;
+            --line: #d8f1f7;
+            --accent: #0891b2;
+            --accent-dark: #0e7490;
+            --accent-end: #1d4ed8;
+            --accent-soft: #cffafe;
             font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
@@ -42,9 +43,9 @@
             min-height: 100dvh;
             color: var(--ink);
             background:
-                radial-gradient(circle at 8% 12%, rgba(37, 99, 235, .14), transparent 27rem),
-                radial-gradient(circle at 92% 88%, rgba(34, 211, 238, .15), transparent 25rem),
-                #f1f6fb;
+                radial-gradient(circle at 12% 10%, rgba(34, 211, 238, .16), transparent 25rem),
+                radial-gradient(circle at 90% 90%, rgba(37, 99, 235, .11), transparent 27rem),
+                #effbff;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
         }
@@ -64,7 +65,7 @@
         .error-shell::after {
             content: "";
             position: absolute;
-            border: 1px solid rgba(37, 99, 235, .10);
+            border: 1px solid rgba(8, 145, 178, .10);
             border-radius: 50%;
             pointer-events: none;
         }
@@ -89,10 +90,10 @@
             z-index: 1;
             padding: clamp(32px, 7vw, 64px) clamp(22px, 7vw, 72px) 34px;
             text-align: center;
-            background: rgba(255, 255, 255, .92);
-            border: 1px solid rgba(220, 234, 245, .96);
+            background: rgba(255, 255, 255, .94);
+            border: 1px solid #dbeafe;
             border-radius: 30px;
-            box-shadow: 0 24px 70px rgba(35, 77, 119, .14), 0 3px 12px rgba(35, 77, 119, .05);
+            box-shadow: 0 24px 70px rgba(37, 99, 235, .14), 0 3px 12px rgba(38, 91, 145, .05);
             backdrop-filter: blur(14px);
         }
 
@@ -140,11 +141,11 @@
             width: 116px;
             height: 116px;
             margin: 38px auto 22px;
-            color: var(--accent-dark);
+            color: var(--accent);
             background: linear-gradient(145deg, #fff, var(--accent-soft));
-            border: 1px solid rgba(37, 99, 235, .14);
+            border: 1px solid #c7e8f2;
             border-radius: 34px;
-            box-shadow: inset 0 1px rgba(255, 255, 255, .85), 0 16px 34px rgba(37, 99, 235, .13);
+            box-shadow: inset 0 1px rgba(255, 255, 255, .85), 0 16px 34px rgba(8, 145, 178, .15);
         }
 
         .error-visual svg {
@@ -171,7 +172,7 @@
             align-items: center;
             gap: 7px;
             margin: 26px 0 12px;
-            color: var(--accent-dark);
+            color: var(--accent);
             font-size: 12px;
             font-weight: 800;
             letter-spacing: 1.2px;
@@ -236,7 +237,7 @@
 
         .error-button-primary {
             color: #fff;
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            background: linear-gradient(135deg, var(--accent), var(--accent-end));
             box-shadow: 0 10px 20px rgba(37, 99, 235, .22);
         }
 
@@ -244,15 +245,15 @@
 
         .error-button-secondary {
             color: #355574;
-            background: #f7fbff;
-            border-color: #d8e7f4;
+            background: var(--soft);
+            border-color: var(--line);
         }
 
-        .error-button-secondary:hover { background: #eef6fd; }
+        .error-button-secondary:hover { background: #e6f9fd; }
 
         .error-button:focus-visible,
         .brand:focus-visible {
-            outline: 3px solid rgba(37, 99, 235, .28);
+            outline: 3px solid rgba(8, 145, 178, .28);
             outline-offset: 4px;
         }
 
@@ -260,21 +261,26 @@
             max-width: 500px;
             margin: 28px auto 0;
             padding-top: 20px;
-            color: #879bb0;
-            border-top: 1px solid #e6eff7;
+            color: #8099ad;
+            border-top: 1px solid #e0eef7;
             font-size: .82rem;
             line-height: 1.55;
         }
 
         .error-footer {
             margin-top: 22px;
-            color: #9aabbb;
+            color: #9aafbf;
             font-size: .73rem;
         }
 
-        .tone-amber { --accent: #d97706; --accent-dark: #a35405; --accent-soft: #fff0d7; }
-        .tone-coral { --accent: #e05252; --accent-dark: #b83232; --accent-soft: #ffe3e3; }
-        .tone-cyan { --accent: #0891b2; --accent-dark: #0e7490; --accent-soft: #cffafe; }
+        .tone-amber,
+        .tone-coral,
+        .tone-cyan {
+            --accent: #0891b2;
+            --accent-dark: #0e7490;
+            --accent-end: #1d4ed8;
+            --accent-soft: #cffafe;
+        }
 
         @media (max-width: 560px) {
             .error-shell { padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
