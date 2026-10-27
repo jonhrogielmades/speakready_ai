@@ -145,6 +145,7 @@
           }
       </style>
       @include('desktop.partials.onboarding-styles')
+      @include('shared.user.first-steps-modal-styles')
       @stack('styles')
    </head>
    <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user">
@@ -288,6 +289,7 @@
                      <div class="db-dropdown profile-dd" id="profileDropdown" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="userPill" style="right:0">
                         <div style="padding:8px 0">
                            <a href="{{ route('user.account') }}" class="profile-menu-item profile-menu-account {{ request()->routeIs('user.account') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-user-gear me-2"></i>Account Management</a>
+                           <button type="button" class="profile-menu-item" data-sr-open-onboarding-modal style="display:block;width:100%;text-align:left;"><i class="fa-solid fa-route me-2"></i>First Steps</button>
                            <a href="{{ route('user.notifications') }}" class="profile-menu-item profile-menu-notifications {{ request()->routeIs('user.notifications') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-bell me-2"></i>Notifications</a>
                            <form action="{{ route('user.language.update') }}" method="POST" class="profile-language-form" style="padding:10px 16px 8px;">
                               @csrf
@@ -318,6 +320,7 @@
             </div>
          </div>
       </div>
+      @include('shared.user.first-steps-modal')
       @include('desktop.partials.user-command-palette')
       @include('desktop.partials.viewport-mobile-cookie')
       <div class="modal fade sr-confirm-modal" id="srConfirmModal" tabindex="-1" aria-labelledby="srConfirmModalTitle" aria-hidden="true">
@@ -360,6 +363,7 @@
       <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
       <script src="{{ asset('js/user-ui.js') }}?v=26&build=20261020" defer></script>
       @include('desktop.partials.language-translation')
+      @include('shared.user.first-steps-modal-script')
       <!-- PWA Service Worker Registration -->
       <script>
          (function initializeSpeakReadyConfirm() {

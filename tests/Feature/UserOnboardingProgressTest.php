@@ -6,6 +6,7 @@ use App\Models\InterviewSession;
 use App\Models\Score;
 use App\Models\User;
 use App\Models\UserOnboardingProgress;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -163,14 +164,62 @@ class UserOnboardingProgressTest extends TestCase
         $this->assertNotNull($user->fresh()->terms_accepted_at);
     }
 
-    public function test_dashboard_renders_account_scoped_onboarding_controls(): void
+    public function test_existing_user_can_generate_and_acknowledge_a_saved_recovery_code_from_account(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('current-password'),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.account.recovery-code.acknowledge'), [
+                'recovery_code_saved' => '1',
+            ])
+            ->assertSessionHasErrors('recovery_code_saved');
+
+        $this->post(route('user.account.recovery-code'), [
+            'current_password' => 'current-password',
+        ])->assertRedirect()
+            ->assertSessionHas('recovery_code');
+
+        $progress = UserOnboardingProgress::forUser($user)->fresh();
+        $this->assertNotNull($progress->recovery_code_ack_required_at);
+        $this->assertNull($progress->recovery_code_saved_at);
+
+        $this->get(route('user.account'))
+            ->assertOk()
+            ->assertSee('data-recovery-code-saved-account', false)
+            ->assertSee('I saved this recovery code somewhere private and secure.');
+
+        $this->post(route('user.account.recovery-code.acknowledge'), [
+            'recovery_code_saved' => '1',
+        ])->assertRedirect(route('user.account').'#password-recovery-code');
+
+        $this->assertNotNull(UserOnboardingProgress::forUser($user)->fresh()->recovery_code_saved_at);
+
+        $this->get(route('user.account'))
+            ->assertOk()
+            ->assertSee('Saved-code acknowledgement recorded')
+            ->assertSee('1 of 4 complete');
+    }
+
+    public function test_dashboard_renders_account_scoped_four_step_onboarding_modal(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('id="dashboardOnboardingChecklist"', false)
+            ->assertSee('id="firstStepsOnboardingModal"', false)
+            ->assertSee('data-sr-onboarding-modal', false)
+            ->assertSee('data-sr-open-onboarding-modal', false)
+            ->assertSee('Get interview-ready')
+            ->assertSee('0 of 4 complete')
+            ->assertSee('0 of 4 onboarding steps complete')
+            ->assertSee('role="progressbar"', false)
+            ->assertSee('aria-valuemax="4"', false)
+            ->assertSee('aria-valuenow="0"', false)
+            ->assertSee('data-full-reload="true"', false)
+            ->assertDontSee('Complete your first scored interview')
             ->assertSee('data-sr-onboarding-progress-url="'.route('user.onboarding.progress').'"', false)
             ->assertSee('data-sr-setup-completed="false"', false)
             ->assertSee('data-sr-setup-snoozed="false"', false)
@@ -179,6 +228,33 @@ class UserOnboardingProgressTest extends TestCase
             ->assertSee('localStorage.setItem(scopedCompletionKey', false)
             ->assertDontSee('localStorage.getItem(completionKey)', false)
             ->assertDontSee("const completionKey = 'onboarding_completed'", false);
+
+        $this->assertSame(4, substr_count($response->getContent(), 'data-sr-onboarding-step="'));
+    }
+
+    public function test_four_step_onboarding_modal_is_available_outside_the_dashboard_on_both_shells(): void
+    {
+        $user = User::factory()->create();
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        foreach ([null, $iphoneUserAgent] as $userAgent) {
+            $request = $this->actingAs($user);
+            if ($userAgent !== null) {
+                $request = $request->withHeader('User-Agent', $userAgent);
+            }
+
+            $response = $request
+                ->get(route('user.account'))
+                ->assertOk()
+                ->assertSee('id="firstStepsOnboardingModal"', false)
+                ->assertSee('data-sr-onboarding-modal', false)
+                ->assertSee('data-sr-open-onboarding-modal', false)
+                ->assertSee('Get interview-ready')
+                ->assertSee('0 of 4 complete')
+                ->assertDontSee('Complete your first scored interview');
+
+            $this->assertSame(4, substr_count($response->getContent(), 'data-sr-onboarding-step="'));
+        }
     }
 
     public function test_activation_requires_current_terms_and_a_completed_scored_interview(): void

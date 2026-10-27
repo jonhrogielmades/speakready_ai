@@ -134,7 +134,7 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertDontSee('DashboardCoachSpeechRecognition', false)
                 ->assertDontSee('initDashboardCoachModal', false)
                 ->assertSee('id="dashboardSetupToolsModal"', false)
-                ->assertSee('data-sr-setup-auto-show="true"', false)
+                ->assertSee('data-sr-setup-auto-show="false"', false)
                 ->assertSee('id="dashboardSetupToolsForm"', false)
                 ->assertSee('data-sr-setup-tool="microphone"', false)
                 ->assertSee('data-sr-setup-tool="camera"', false)
@@ -148,8 +148,23 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('id="dashboardSetupToolsAllow"', false)
                 ->assertSee('Do later')
                 ->assertSee('navigator.mediaDevices.getUserMedia', false)
+                ->assertSee('async function requestEnabledToolOnToggle', false)
+                ->assertSee('requestEnabledToolOnToggle(input)', false)
+                ->assertSee('data-sr-camera-permission-help', false)
+                ->assertSee('data-sr-retry-camera', false)
+                ->assertSee('window.isSecureContext === false', false)
+                ->assertSee('navigator.permissions.query({ name: tool })', false)
+                ->assertSee("document.addEventListener('visibilitychange'", false)
+                ->assertSee("window.matchMedia('(display-mode: standalone)')", false)
+                ->assertSee("permissionState === null && verifyGranted", false)
+                ->assertSee('input.disabled = true', false)
+                ->assertSee("const blockedTools = finalEnabledTools.filter((tool) => results[tool] !== 'granted');", false)
+                ->assertSee('if (blockedTools.length)', false)
                 ->assertSee('Notification.requestPermission', false)
-                ->assertSee('Some selected tools still need browser permission.', false);
+                ->assertSee('Some selected tools still need browser permission.', false)
+                ->assertSee('speakready.firstSteps.returnAfterSetup.', false)
+                ->assertSee('speakready.firstSteps.returnAfterTour.', false)
+                ->assertSee("speakready:dashboard-tour-closed", false);
 
             $response
                 ->assertSee('id="card-daily-challenge"', false)

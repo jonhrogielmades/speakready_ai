@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Setting;
+use App\Models\UserOnboardingProgress;
 use App\Support\DatabaseIdSequences;
 use App\Support\SystemSettings;
 use Illuminate\Database\Events\QueryExecuted;
@@ -82,6 +83,29 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with($request->attributes->get('languageViewData'));
+        });
+
+        View::composer(['desktop.layouts.app', 'mobile.layouts.app'], function ($view): void {
+            if (! auth()->check() || auth()->user()?->is_admin) {
+                return;
+            }
+
+            $data = $view->getData();
+            if (isset($data['onboardingState']) && is_array($data['onboardingState'])) {
+                return;
+            }
+
+            try {
+                if (! Schema::hasTable('user_onboarding_progress')) {
+                    return;
+                }
+
+                $user = auth()->user();
+                $view->with('onboardingState', UserOnboardingProgress::forUser($user)->toStateArray($user));
+            } catch (\Throwable) {
+                // Keep authenticated pages available during installation or a
+                // partially applied deployment; the modal can render later.
+            }
         });
     }
 

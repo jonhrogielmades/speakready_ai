@@ -123,7 +123,6 @@
 @endphp
 
 <div class="db-section active sr-dashboard" id="sec-overview">
-    @include('shared.user.dashboard-onboarding-checklist')
 
     <div class="sr-summary-grid">
         <div class="sr-welcome-stack">
@@ -455,7 +454,7 @@
     </div>
 </div>
 
-@include('shared.user.dashboard-setup-tools-modal', ['setupToolsAutoShow' => true])
+@include('shared.user.dashboard-setup-tools-modal')
 
 
 @push('scripts')
@@ -952,6 +951,7 @@ document.addEventListener("DOMContentLoaded", function() {
         let dashboardTourSkipped = @json((bool) ($onboardingState['dashboard_tour_skipped'] ?? false));
         const onboardingProgressUrl = @json(route('user.onboarding.progress'));
         const serverDetectedMobile = true;
+        const dashboardTourRequested = new URLSearchParams(window.location.search).get('onboarding') === 'tour';
 
         async function saveDashboardTourMilestone(milestone) {
             const response = await fetch(onboardingProgressUrl, {
@@ -1018,6 +1018,7 @@ document.addEventListener("DOMContentLoaded", function() {
             persistLocalCompletion: false,
             onCompleted: saveDashboardTourCompletion,
             onSkipped: saveDashboardTourSkipped,
+            onDestroyed: () => window.dispatchEvent(new CustomEvent('speakready:dashboard-tour-closed')),
         });
 
         const registrationAlertModal = document.getElementById('srFlashModal');
@@ -1030,7 +1031,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ));
 
         function startDashboardTourWhenReady() {
-            if (!dashboardTour || dashboardTour.isCompleted() || dashboardTourSkipped || tourStartScheduled) return;
+            if (!dashboardTourRequested || !dashboardTour || tourStartScheduled) return;
 
             const setupState = window.__speakReadyDashboardSetupState;
             if (isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || setupState?.pending) return;
@@ -1039,10 +1040,13 @@ document.addEventListener("DOMContentLoaded", function() {
             window.setTimeout(() => {
                 tourStartScheduled = false;
 
-                if (dashboardTour.isCompleted() || dashboardTourSkipped || isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || window.__speakReadyDashboardSetupState?.pending) {
+                if (isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || window.__speakReadyDashboardSetupState?.pending) {
                     return;
                 }
 
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('onboarding');
+                window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
                 dashboardTour.start();
             }, 350);
         }

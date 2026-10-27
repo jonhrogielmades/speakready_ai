@@ -199,6 +199,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/account/profile', [UserController::class, 'updateProfile'])->name('user.account.profile');
     Route::post('/account/password', [UserController::class, 'updatePassword'])->name('user.account.password');
     Route::post('/account/recovery-code', [UserController::class, 'rotateRecoveryCode'])->name('user.account.recovery-code');
+    Route::post('/account/recovery-code/acknowledge', [UserController::class, 'acknowledgeRecoveryCode'])->name('user.account.recovery-code.acknowledge');
     Route::post('/account/delete', [UserController::class, 'deleteAccount'])->middleware('throttle:auth')->name('user.account.delete');
     Route::post('/account/delete/google', [AuthController::class, 'redirectToGoogleAccountDeletion'])->middleware('throttle:auth')->name('user.account.delete.google');
 

@@ -12,6 +12,7 @@
     $accountUser = Auth::user();
     $accountPhotoUrl = $accountUser?->profile_photo_url;
     $accountTargetPosition = old('target_position', $accountUser?->target_position);
+    $accountRecoveryCodeSaved = (bool) ($onboardingState['recovery_code_saved'] ?? false);
     $accountJobPositionOptions = collect(\App\Services\QuestionDatasetProvider::targetPositionOptionGroups())
         ->flatten()
         ->map(fn ($position) => trim((string) $position))
@@ -152,11 +153,27 @@
                     <button type="submit" class="btn account-submit-btn btn-shine"><i class="fa-solid fa-shield-halved"></i>Update Password</button>
                 </form>
 
-                <div class="account-recovery-code" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--bd,#e2e8f0)">
+                <div class="account-recovery-code" id="password-recovery-code" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--bd,#e2e8f0);scroll-margin-top:96px">
                     <h6 class="account-card-title" style="font-size:1rem"><span class="account-title-icon"><i class="fa-solid fa-key"></i></span>Password Recovery Code</h6>
                     <p class="text-muted" style="font-size:.84rem;line-height:1.55">Use a recovery code with your username if you forget your password. Generating a new code invalidates the old one.</p>
+                    @if($accountRecoveryCodeSaved)
+                        <p style="margin:0 0 12px;color:#16a34a;font-size:.82rem;font-weight:800"><i class="fa-solid fa-circle-check"></i> Saved-code acknowledgement recorded</p>
+                    @elseif(! session('recovery_code'))
+                        <p style="margin:0 0 12px;color:#b45309;font-size:.82rem;font-weight:750">Generate a fresh code below, save it somewhere secure, then confirm that you saved it.</p>
+                    @endif
                     @if(session('recovery_code'))
                         <code style="display:block;padding:11px;border-radius:10px;background:rgba(37,99,235,.08);color:var(--tx,#111827);font-size:1rem;letter-spacing:.08em;text-align:center;user-select:all;margin-bottom:14px">{{ session('recovery_code') }}</code>
+                        <form action="{{ route('user.account.recovery-code.acknowledge') }}" method="POST" data-recovery-code-saved-account>
+                            @csrf
+                            <label style="display:flex;align-items:flex-start;gap:9px;color:var(--tx2,#475569);font-size:.8rem;line-height:1.45;font-weight:700">
+                                <input type="checkbox" name="recovery_code_saved" value="1" required style="margin-top:3px">
+                                <span>I saved this recovery code somewhere private and secure.</span>
+                            </label>
+                            @error('recovery_code_saved')
+                                <p style="margin:7px 0 0;color:#dc2626;font-size:.76rem;font-weight:700">{{ $message }}</p>
+                            @enderror
+                            <button type="submit" class="btn account-submit-btn btn-shine" style="margin-top:12px"><i class="fa-solid fa-check"></i>Confirm Code Saved</button>
+                        </form>
                     @endif
                     <form action="{{ route('user.account.recovery-code') }}" method="POST">
                         @csrf
@@ -166,7 +183,7 @@
                             <label class="account-field-label" for="recoveryCurrentPassword">Current Password</label>
                             <input type="password" class="oinp" name="current_password" id="recoveryCurrentPassword" placeholder="Enter your current password" autocomplete="current-password" required>
                         @endif
-                        <button type="submit" class="btn account-submit-btn btn-shine" style="margin-top:12px"><i class="fa-solid fa-rotate"></i>Generate New Recovery Code</button>
+                        <button type="submit" class="btn account-submit-btn btn-shine" style="margin-top:12px"><i class="fa-solid fa-rotate"></i>{{ session('recovery_code') ? 'Generate Another Recovery Code' : 'Generate New Recovery Code' }}</button>
                     </form>
                 </div>
 

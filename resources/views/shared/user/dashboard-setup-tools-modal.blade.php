@@ -290,6 +290,70 @@
         color: var(--sr-setup-danger);
     }
 
+    .modal.sr-dashboard-setup-modal .sr-dashboard-setup-tool[data-state="error"] .sr-dashboard-setup-switch input:checked + .sr-dashboard-setup-switch-ui {
+        border-color: rgba(220, 38, 38, 0.55);
+        background: linear-gradient(135deg, #dc2626, #f97316);
+    }
+
+    .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid rgba(220, 38, 38, 0.24);
+        border-radius: 13px;
+        background: rgba(254, 242, 242, 0.92);
+        color: #7f1d1d;
+    }
+
+    .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help[hidden] {
+        display: none;
+    }
+
+    .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        background: rgba(220, 38, 38, 0.11);
+        color: #dc2626;
+    }
+
+    .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help-copy {
+        min-width: 0;
+    }
+
+    .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help-copy strong {
+        display: block;
+        font-size: 0.76rem;
+        line-height: 1.25;
+        font-weight: 900;
+    }
+
+    .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help-copy small {
+        display: block;
+        margin-top: 3px;
+        color: #991b1b;
+        font-size: 0.68rem;
+        line-height: 1.4;
+        font-weight: 650;
+    }
+
+    .modal.sr-dashboard-setup-modal .sr-dashboard-camera-retry {
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid rgba(220, 38, 38, 0.28);
+        border-radius: 9px;
+        background: #ffffff;
+        color: #b91c1c;
+        font-size: 0.7rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
     .modal.sr-dashboard-setup-modal .modal-footer {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto auto;
@@ -356,6 +420,27 @@
         color: var(--sr-setup-text);
     }
 
+    html:not(.lm) .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help,
+    html[data-theme="dark"] .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help,
+    body.dm .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help {
+        border-color: rgba(248, 113, 113, 0.28);
+        background: rgba(127, 29, 29, 0.22);
+        color: #fecaca;
+    }
+
+    html:not(.lm) .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help-copy small,
+    html[data-theme="dark"] .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help-copy small,
+    body.dm .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help-copy small {
+        color: #fca5a5;
+    }
+
+    html:not(.lm) .modal.sr-dashboard-setup-modal .sr-dashboard-camera-retry,
+    html[data-theme="dark"] .modal.sr-dashboard-setup-modal .sr-dashboard-camera-retry,
+    body.dm .modal.sr-dashboard-setup-modal .sr-dashboard-camera-retry {
+        background: rgba(15, 23, 42, 0.72);
+        color: #fecaca;
+    }
+
     @media (max-width: 575px) {
         .modal.sr-dashboard-setup-modal {
             --sr-setup-viewport-gap: 10px;
@@ -418,6 +503,15 @@
 
         .modal.sr-dashboard-setup-modal .modal-footer {
             grid-template-columns: 1fr 1fr;
+        }
+
+        .modal.sr-dashboard-setup-modal .sr-dashboard-camera-help {
+            grid-template-columns: 32px minmax(0, 1fr);
+        }
+
+        .modal.sr-dashboard-setup-modal .sr-dashboard-camera-retry {
+            grid-column: 2;
+            justify-self: start;
         }
 
         .modal.sr-dashboard-setup-modal .sr-dashboard-setup-footer-note {
@@ -509,6 +603,17 @@
                         </label>
                     </div>
 
+                    <div class="sr-dashboard-camera-help" data-sr-camera-permission-help role="alert" hidden>
+                        <span class="sr-dashboard-camera-help-icon" aria-hidden="true"><i class="fa-solid fa-camera-rotate"></i></span>
+                        <span class="sr-dashboard-camera-help-copy">
+                            <strong data-sr-camera-permission-title>Camera permission needs attention</strong>
+                            <small data-sr-camera-permission-instructions>Allow Camera in this site's browser permissions, then retry.</small>
+                        </span>
+                        <button type="button" class="sr-dashboard-camera-retry" data-sr-retry-camera>
+                            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Retry camera
+                        </button>
+                    </div>
+
                     <div class="sr-dashboard-coach-status sr-dashboard-setup-status" id="dashboardSetupToolsStatus" role="status" aria-live="polite"></div>
                 </div>
                 <div class="modal-footer">
@@ -534,6 +639,11 @@
             const allowButton = document.getElementById('dashboardSetupToolsAllow');
             const status = document.getElementById('dashboardSetupToolsStatus');
             const toggles = Array.from(form.querySelectorAll('[data-sr-setup-tool]'));
+            const cameraToggle = form.querySelector('[data-sr-setup-tool="camera"]');
+            const cameraPermissionHelp = form.querySelector('[data-sr-camera-permission-help]');
+            const cameraPermissionTitle = form.querySelector('[data-sr-camera-permission-title]');
+            const cameraPermissionInstructions = form.querySelector('[data-sr-camera-permission-instructions]');
+            const retryCameraButton = form.querySelector('[data-sr-retry-camera]');
             const onboardingUser = modalElement?.dataset.srOnboardingUser || 'guest';
             const snoozeKey = 'speakready.dashboardSetupTools.snoozed.' + onboardingUser;
             const shouldAutoShow = modalElement?.dataset.srSetupAutoShow === 'true';
@@ -545,6 +655,10 @@
             let completed = modalElement?.dataset.srSetupCompleted === 'true';
             let serverSnoozed = modalElement?.dataset.srSetupSnoozed === 'true';
             let submitActive = false;
+            let permissionRefreshTimer = null;
+            const activeToolRequests = new Map();
+            const permissionResults = Object.create(null);
+            const permissionWatchers = new Map();
 
             function safeSessionGet(key) {
                 try {
@@ -615,6 +729,61 @@
                 if (statusElement) statusElement.textContent = message;
             }
 
+            function cameraRecoveryInstructions(reason = 'blocked') {
+                if (reason === 'insecure_context') {
+                    return 'Camera access requires a secure HTTPS page. Reopen SpeakReady AI using HTTPS, then retry.';
+                }
+
+                if (reason === 'not_found') {
+                    return 'No usable camera was found. Connect or enable a camera on this device, then retry.';
+                }
+
+                if (reason === 'busy') {
+                    return 'Another app may be using the camera. Close that app, return here, then retry.';
+                }
+
+                const userAgent = navigator.userAgent || '';
+                const standalone = Boolean(
+                    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+                    window.navigator.standalone === true
+                );
+
+                if (standalone && /Android/i.test(userAgent)) {
+                    return 'Open Android Settings, then Apps, SpeakReady AI (or your browser), Permissions, Camera, and Allow. Return here to retry automatically.';
+                }
+
+                if (standalone && /iPad|iPhone|iPod/i.test(userAgent)) {
+                    return 'Open this site in Safari, allow Camera in Page Settings, then return here and tap Retry camera.';
+                }
+
+                if (/iPad|iPhone|iPod/i.test(userAgent)) {
+                    return 'In Safari, open Page Settings (aA), then Website Settings, Camera, and Allow. Return here, then tap Retry camera.';
+                }
+
+                if (/Android/i.test(userAgent)) {
+                    return 'Open this site\'s browser settings from the address-bar icon, then Permissions, Camera, and Allow. Return here, then tap Retry camera.';
+                }
+
+                return 'Open the lock or site-settings icon beside the address bar, then Camera and Allow. Return here, then tap Retry camera.';
+            }
+
+            function setCameraPermissionHelp(visible, reason = 'blocked') {
+                if (!cameraPermissionHelp) return;
+
+                cameraPermissionHelp.hidden = !visible;
+                if (visible && cameraPermissionTitle) {
+                    cameraPermissionTitle.textContent = {
+                        insecure_context: 'Camera access requires HTTPS',
+                        not_found: 'No camera was detected',
+                        busy: 'Camera is being used elsewhere',
+                        blocked: 'Camera is selected, but browser access is blocked',
+                    }[reason] || 'Camera permission needs attention';
+                }
+                if (visible && cameraPermissionInstructions) {
+                    cameraPermissionInstructions.textContent = cameraRecoveryInstructions(reason);
+                }
+            }
+
             function syncToggle(input) {
                 const tool = input.dataset.srSetupTool;
                 const enabled = input.checked;
@@ -623,6 +792,11 @@
                 input.setAttribute('aria-checked', enabled ? 'true' : 'false');
                 if (row) row.classList.toggle('is-off', !enabled);
                 setToolStatus(tool, enabled ? 'On' : 'Off', enabled ? 'ready' : 'off');
+
+                if (!enabled) {
+                    permissionResults[tool] = 'off';
+                    if (tool === 'camera') setCameraPermissionHelp(false);
+                }
             }
 
             function toolLabel(tool) {
@@ -652,20 +826,39 @@
             }
 
             async function requestMediaTool(tool) {
+                if (window.isSecureContext === false) {
+                    setToolStatus(tool, 'HTTPS required', 'error');
+                    if (tool === 'camera') setCameraPermissionHelp(true, 'insecure_context');
+                    return 'insecure_context';
+                }
+
                 if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
                     setToolStatus(tool, 'Unsupported', 'error');
+                    if (tool === 'camera') setCameraPermissionHelp(true, 'not_found');
                     return 'unsupported';
                 }
 
-                const constraints = tool === 'camera' ? { video: true } : { audio: true };
+                const constraints = tool === 'camera'
+                    ? { video: { facingMode: { ideal: 'user' } } }
+                    : { audio: true };
 
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia(constraints);
                     stream.getTracks().forEach((track) => track.stop());
                     setToolStatus(tool, 'Allowed', 'success');
+                    if (tool === 'camera') setCameraPermissionHelp(false);
                     return 'granted';
                 } catch (error) {
                     setToolStatus(tool, permissionErrorMessage(tool, error), 'error');
+
+                    if (tool === 'camera') {
+                        const errorName = error && error.name ? error.name : '';
+                        const reason = errorName === 'NotFoundError' || errorName === 'OverconstrainedError'
+                            ? 'not_found'
+                            : (errorName === 'NotReadableError' ? 'busy' : 'blocked');
+                        setCameraPermissionHelp(true, reason);
+                    }
+
                     return error && error.name ? error.name : 'error';
                 }
             }
@@ -724,13 +917,122 @@
             }
 
             async function requestTool(tool) {
-                setToolStatus(tool, 'Requesting', 'pending');
-
-                if (tool === 'notifications') {
-                    return requestNotifications();
+                if (activeToolRequests.has(tool)) {
+                    return activeToolRequests.get(tool);
                 }
 
-                return requestMediaTool(tool);
+                const request = (async () => {
+                    setToolStatus(tool, 'Requesting', 'pending');
+
+                    const result = tool === 'notifications'
+                        ? await requestNotifications()
+                        : await requestMediaTool(tool);
+
+                    permissionResults[tool] = result;
+                    return result;
+                })();
+
+                activeToolRequests.set(tool, request);
+
+                try {
+                    return await request;
+                } finally {
+                    activeToolRequests.delete(tool);
+                }
+            }
+
+            async function queryMediaPermission(tool) {
+                if (!navigator.permissions || typeof navigator.permissions.query !== 'function') {
+                    return null;
+                }
+
+                try {
+                    const permissionStatus = await navigator.permissions.query({ name: tool });
+
+                    if (!permissionWatchers.has(tool)) {
+                        const onPermissionChange = () => schedulePermissionRefresh(true);
+                        if (typeof permissionStatus.addEventListener === 'function') {
+                            permissionStatus.addEventListener('change', onPermissionChange);
+                        } else {
+                            permissionStatus.onchange = onPermissionChange;
+                        }
+                        permissionWatchers.set(tool, permissionStatus);
+                    }
+
+                    return permissionStatus.state || null;
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            async function refreshSelectedMediaPermissions(verifyGranted = false) {
+                const selectedMediaToggles = toggles.filter((input) =>
+                    input.checked && (input.dataset.srSetupTool === 'camera' || input.dataset.srSetupTool === 'microphone')
+                );
+
+                for (const input of selectedMediaToggles) {
+                    const tool = input.dataset.srSetupTool;
+                    const permissionState = await queryMediaPermission(tool);
+
+                    if (permissionState === 'granted') {
+                        if (verifyGranted) {
+                            await requestTool(tool);
+                        } else {
+                            permissionResults[tool] = 'granted';
+                            setToolStatus(tool, 'Allowed', 'success');
+                            if (tool === 'camera') setCameraPermissionHelp(false);
+                        }
+                    } else if (permissionState === 'denied') {
+                        permissionResults[tool] = 'denied';
+                        setToolStatus(tool, toolLabel(tool) + ' blocked', 'error');
+                        if (tool === 'camera') setCameraPermissionHelp(true, 'blocked');
+                    } else if (permissionState === 'prompt') {
+                        permissionResults[tool] = 'prompt';
+                        setToolStatus(tool, 'Tap Allow', 'ready');
+                        if (tool === 'camera') setCameraPermissionHelp(false);
+                    } else if (permissionState === null && verifyGranted) {
+                        // Safari does not consistently expose camera/microphone
+                        // through the Permissions API. A real stream check is
+                        // the authoritative fallback after returning to the app.
+                        await requestTool(tool);
+                    }
+                }
+            }
+
+            function schedulePermissionRefresh(verifyGranted = false) {
+                window.clearTimeout(permissionRefreshTimer);
+                permissionRefreshTimer = window.setTimeout(() => {
+                    if (document.visibilityState === 'hidden') return;
+                    refreshSelectedMediaPermissions(verifyGranted).catch(() => {});
+                }, 120);
+            }
+
+            async function requestEnabledToolOnToggle(input) {
+                syncToggle(input);
+                setStatus('');
+
+                const tool = input.dataset.srSetupTool;
+                if (!input.checked) return 'off';
+
+                input.disabled = true;
+                input.setAttribute('aria-busy', 'true');
+
+                try {
+                    const result = await requestTool(tool);
+
+                    if (result === 'granted') {
+                        setStatus(toolLabel(tool) + ' access is ready.', 'success');
+                    } else if (tool === 'camera') {
+                        setStatus('Camera access is still blocked. Follow the browser-permission steps below, then retry.', 'warning');
+                    } else {
+                        setStatus(toolLabel(tool) + ' permission was not granted. Retry or switch it off to continue.', 'warning');
+                    }
+
+                    return result;
+                } finally {
+                    input.disabled = false;
+                    input.setAttribute('aria-busy', 'false');
+                }
             }
 
             async function persistMilestone(milestone, results) {
@@ -797,10 +1099,24 @@
 
             toggles.forEach((input) => {
                 syncToggle(input);
-                input.addEventListener('change', () => {
-                    syncToggle(input);
-                    setStatus('');
+                input.addEventListener('change', async () => {
+                    await requestEnabledToolOnToggle(input);
                 });
+            });
+
+            retryCameraButton?.addEventListener('click', async () => {
+                if (!cameraToggle || activeToolRequests.has('camera')) return;
+
+                cameraToggle.checked = true;
+                retryCameraButton.disabled = true;
+                retryCameraButton.setAttribute('aria-busy', 'true');
+
+                try {
+                    await requestEnabledToolOnToggle(cameraToggle);
+                } finally {
+                    retryCameraButton.disabled = false;
+                    retryCameraButton.setAttribute('aria-busy', 'false');
+                }
             });
 
             form.querySelectorAll('[data-sr-setup-later]').forEach((button) => {
@@ -814,6 +1130,20 @@
                 markSetupReady();
             });
 
+            modalElement?.addEventListener('shown.bs.modal', () => {
+                schedulePermissionRefresh(false);
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && isModalOpen(modalElement)) {
+                    schedulePermissionRefresh(true);
+                }
+            });
+
+            window.addEventListener('focus', () => {
+                if (isModalOpen(modalElement)) schedulePermissionRefresh(true);
+            });
+
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
 
@@ -825,6 +1155,10 @@
                 const results = {};
 
                 submitActive = true;
+                toggles.forEach((input) => {
+                    input.disabled = true;
+                    input.setAttribute('aria-busy', 'true');
+                });
                 if (allowButton) {
                     allowButton.disabled = true;
                     allowButton.setAttribute('aria-busy', 'true');
@@ -850,7 +1184,10 @@
                             results[input.dataset.srSetupTool] = 'off';
                         });
 
-                    const blockedTools = enabledTools.filter((tool) => results[tool] !== 'granted');
+                    const finalEnabledTools = toggles
+                        .filter((input) => input.checked)
+                        .map((input) => input.dataset.srSetupTool);
+                    const blockedTools = finalEnabledTools.filter((tool) => results[tool] !== 'granted');
 
                     if (blockedTools.length) {
                         setStatus('Some selected tools still need browser permission. Allow them in site settings, switch them off, or choose Do later.', 'warning');
@@ -864,6 +1201,10 @@
                     setStatus('Setup could not finish. Check browser permissions and try again.', 'error');
                 } finally {
                     submitActive = false;
+                    toggles.forEach((input) => {
+                        input.disabled = false;
+                        input.setAttribute('aria-busy', 'false');
+                    });
                     if (allowButton) {
                         allowButton.disabled = false;
                         allowButton.setAttribute('aria-busy', 'false');

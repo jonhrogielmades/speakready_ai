@@ -4530,6 +4530,7 @@
          }
 
       </style>
+      @include('shared.user.first-steps-modal-styles')
       @stack('styles')
       @include('mobile.partials.user-mobile-side-gutter')
    </head>
@@ -4608,6 +4609,7 @@
                <a href="{{ route('user.progress') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-simple"></i><span>Progress</span></a>
                <a href="{{ route('user.practice.calendar') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.practice.calendar') ? 'active' : '' }}"><i class="fa-regular fa-calendar-days"></i><span>Calendar</span></a>
                <a href="{{ route('user.reports') }}" class="mob-profile-link mob-profile-link-wide profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports and Sessions"><i class="fa-solid fa-folder-open"></i><span>Reports and Sessions</span></a>
+               <button type="button" class="mob-profile-action" data-sr-open-onboarding-modal><i class="fa-solid fa-route"></i><span>First Steps</span></button>
                </div>
             </div>
 
@@ -4663,6 +4665,7 @@
             @yield('content')
          </div>
       </div>
+      @include('shared.user.first-steps-modal')
 
       <div id="mobMoreBackdrop" class="mob-more-backdrop" aria-hidden="true" onclick="closeMobileProfile()"></div>
 
@@ -4759,6 +4762,7 @@
       <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
+      @include('shared.user.first-steps-modal-script')
       <script src="{{ asset('js/user-ui.js') }}?v=26&build=20261020" defer></script>
 
       <script>

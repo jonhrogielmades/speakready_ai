@@ -4104,14 +4104,20 @@ class UserController extends Controller
  {
  AccountNotificationSchema::ensure();
 
+ $user = Auth::user();
  $lastLoginAt = ActivityLog::where('user_id', Auth::id())
  ->where('action', 'user_logged_in')
  ->latest('created_at')
  ->first()
  ?->created_at;
 
+ if (session()->has('recovery_code')) {
+  session()->keep('recovery_code');
+ }
+
  return $this->mobileView('user.account', [
  'lastLoginAt' => $lastLoginAt,
+ 'onboardingState' => UserOnboardingProgress::forUser($user)->toStateArray($user),
  ]);
  }
 
@@ -4462,6 +4468,12 @@ class UserController extends Controller
   'password_recovery_code_expires_at' => null,
  ])->save();
 
+ $onboardingProgress = UserOnboardingProgress::forUser($user);
+ $onboardingProgress->forceFill([
+  'recovery_code_ack_required_at' => now(),
+  'recovery_code_saved_at' => null,
+ ])->save();
+
  ActivityLogger::log(
   $user,
   'password_recovery_code_rotated',
@@ -4473,6 +4485,47 @@ class UserController extends Controller
  return redirect()->back()
   ->with('success', 'A new recovery code was generated. Save it somewhere safe; the old code no longer works.')
   ->with('recovery_code', $recoveryCode);
+ }
+
+ public function acknowledgeRecoveryCode(Request $request)
+ {
+  if (! $request->session()->has('recovery_code')) {
+   return redirect()
+    ->to(route('user.account', sr_layout_query($request)).'#password-recovery-code')
+    ->withErrors([
+     'recovery_code_saved' => 'Generate a new recovery code first so you can save it before confirming.',
+    ]);
+  }
+
+  // Keep the one-time code visible if validation redirects back.
+  $request->session()->keep('recovery_code');
+
+  $request->validate([
+   'recovery_code_saved' => ['accepted'],
+  ], [
+   'recovery_code_saved.accepted' => 'Confirm that you saved the recovery code before continuing.',
+  ]);
+
+  $user = Auth::user();
+  $onboardingProgress = UserOnboardingProgress::forUser($user);
+  $onboardingProgress->forceFill([
+   'recovery_code_ack_required_at' => $onboardingProgress->recovery_code_ack_required_at ?? now(),
+   'recovery_code_saved_at' => now(),
+  ])->save();
+
+  $request->session()->forget('recovery_code');
+
+  ActivityLogger::log(
+   $user,
+   'password_recovery_code_saved',
+   "{$user->name} confirmed that their password recovery code was saved.",
+   $request->ip(),
+   false
+  );
+
+  return redirect()
+   ->to(route('user.account', sr_layout_query($request)).'#password-recovery-code')
+   ->with('success', 'Recovery code saved acknowledgement recorded.');
  }
 
  private function newPasswordRules(): array
