@@ -40,6 +40,14 @@ assert(!/{!!\s*json_encode\(/.test(viewSource), 'Raw json_encode output remains 
 assert(!/{!!\s*\$chapter->content\b/.test(viewSource), 'Stored chapter HTML is rendered without the ModuleChapterHtml sanitizer.');
 assert(!/overflow-x\s*:\s*visible/i.test(shellSource), 'A mobile shell still forces table overflow to remain visible.');
 assert(!/table-layout\s*:\s*fixed/i.test(shellSource), 'A mobile shell still forces all tables into fixed layout.');
+assert(
+    !/fetch\(\s*personalizationForm\.action\b/.test(viewSource),
+    'The onboarding personalization request uses form.action, which can be shadowed by named controls. Read the action attribute instead.'
+);
+assert(
+    !/new URL\(\s*form\.action\b/.test(viewSource),
+    'A form transition reads form.action through named properties. Read the action attribute to avoid control-name collisions.'
+);
 
 const buttonSource = viewSource.replace(/{{[\s\S]*?}}/g, '');
 const buttonsWithoutType = [...buttonSource.matchAll(/<button\b[^>]*>/gis)]

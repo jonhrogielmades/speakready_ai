@@ -79,18 +79,18 @@
                         </span>
                     </section>
 
-                    <section class="sr-first-steps-step {{ $firstStepsProfileHandled ? 'is-done' : '' }}" data-sr-onboarding-step="profile_personalized">
+                    <section class="sr-first-steps-step sr-first-steps-step--personalization {{ $firstStepsProfileHandled ? 'is-done' : '' }}" data-sr-onboarding-step="profile_personalized">
                         <span class="sr-first-steps-step-icon"><i class="fa-solid {{ $firstStepsProfileHandled ? 'fa-check' : 'fa-bullseye' }}" aria-hidden="true"></i></span>
                         <span class="sr-first-steps-step-copy">
                             <strong>2. Personalize your practice</strong>
                             <small data-sr-personalization-summary>{{ $firstStepsPersonalized ? 'Your role and practice goal are ready.' : ($firstStepsPersonalizationSkipped ? 'Skipped for now; you can update it anytime.' : 'Choose your role, goal, experience, and language.') }}</small>
                         </span>
-                        <span class="sr-first-steps-step-actions">
+                        <span class="sr-first-steps-step-actions" data-sr-step-status-actions @if(! $firstStepsProfileHandled) hidden @endif>
                             @if($firstStepsProfileHandled)<span class="sr-first-steps-status" data-sr-personalization-status>{{ $firstStepsPersonalized ? 'Complete' : 'Skipped' }}</span>@endif
                         </span>
-                        <details class="sr-first-steps-personalization" {{ $firstStepsProfileHandled ? '' : 'open' }}>
-                            <summary>{{ $firstStepsPersonalized ? 'Edit personalization' : 'Personalize now' }}</summary>
-                            <form action="{{ route('user.onboarding.personalization') }}" method="POST" data-sr-first-steps-personalization-form>
+                        <details class="sr-first-steps-personalization" data-sr-personalization-details {{ $firstStepsProfileHandled ? '' : 'open' }}>
+                            <summary data-sr-personalization-toggle>{{ $firstStepsPersonalized ? 'Edit personalization' : 'Personalize now' }}</summary>
+                            <form action="{{ route('user.onboarding.personalization') }}" method="POST" data-sr-first-steps-personalization-form data-sr-personalization-endpoint="{{ route('user.onboarding.personalization') }}">
                                 @csrf
                                 <div class="sr-first-steps-form-grid">
                                     <div class="sr-first-steps-field">
@@ -128,7 +128,7 @@
                                     </div>
                                 </div>
                                 <p class="sr-first-steps-form-status" data-sr-first-steps-form-status role="status" aria-live="polite"></p>
-                                <div class="sr-first-steps-step-actions">
+                                <div class="sr-first-steps-step-actions" data-sr-personalization-actions>
                                     <button class="sr-first-steps-action" type="submit" name="action" value="skip" formnovalidate>Skip for now</button>
                                     <button class="sr-first-steps-action" type="submit" name="action" value="save"><i class="fa-solid fa-check"></i> Save profile</button>
                                 </div>

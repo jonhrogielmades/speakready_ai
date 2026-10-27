@@ -86,6 +86,38 @@ class UserOnboardingProgressTest extends TestCase
         ]);
     }
 
+    public function test_personalization_can_be_skipped_without_overwriting_the_profile(): void
+    {
+        $user = User::factory()->create([
+            'target_position' => 'Existing Role',
+            'preferred_language' => 'en',
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(route('user.onboarding.personalization'), [
+                'action' => 'skip',
+                'target_position' => 'Unwanted Replacement',
+                'preferred_language' => 'fil',
+                'experience_level' => 'senior',
+                'interview_goal' => 'This should not be persisted',
+            ])
+            ->assertOk()
+            ->assertJsonPath('onboarding.personalization_skipped', true)
+            ->assertJsonPath('onboarding.profile_personalized', false);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'target_position' => 'Existing Role',
+            'preferred_language' => 'en',
+        ]);
+        $this->assertDatabaseHas('user_onboarding_progress', [
+            'user_id' => $user->id,
+            'profile_personalized_at' => null,
+            'experience_level' => null,
+            'interview_goal' => null,
+        ]);
+    }
+
     public function test_registration_requires_recovery_code_acknowledgement_and_records_it(): void
     {
         $this->post(route('register'), [
@@ -229,7 +261,7 @@ class UserOnboardingProgressTest extends TestCase
             ->assertDontSee('localStorage.getItem(completionKey)', false)
             ->assertDontSee("const completionKey = 'onboarding_completed'", false);
 
-        $this->assertSame(4, substr_count($response->getContent(), 'data-sr-onboarding-step="'));
+        $this->assertSame(4, preg_match_all('/<section\b[^>]*\bdata-sr-onboarding-step="/', $response->getContent()));
     }
 
     public function test_four_step_onboarding_modal_is_available_outside_the_dashboard_on_both_shells(): void
@@ -251,9 +283,26 @@ class UserOnboardingProgressTest extends TestCase
                 ->assertSee('data-sr-open-onboarding-modal', false)
                 ->assertSee('Get interview-ready')
                 ->assertSee('0 of 4 complete')
+                ->assertSee('action="'.route('user.onboarding.personalization').'"', false)
+                ->assertSee('data-sr-personalization-endpoint="'.route('user.onboarding.personalization').'"', false)
+                ->assertSee('sr-first-steps-step--personalization', false)
+                ->assertSee('"personalization personalization"', false)
+                ->assertSee('data-sr-step-status-actions', false)
+                ->assertSee('data-sr-personalization-details', false)
+                ->assertSee('data-sr-personalization-toggle', false)
+                ->assertSee('data-sr-personalization-actions', false)
+                ->assertSee('@media (max-width: 359.98px)', false)
+                ->assertSee('body.user-mobile-shell .sr-first-steps-modal .modal-footer', false)
+                ->assertSee('flex-wrap: nowrap !important;', false)
+                ->assertSee("personalizationForm?.getAttribute('action')", false)
+                ->assertSee('fetch(personalizationEndpoint', false)
+                ->assertDontSee('fetch(personalizationForm.action', false)
+                ->assertSee("new URL(form.getAttribute('action')", false)
+                ->assertSee('{ collapsePersonalization: true }', false)
                 ->assertDontSee('Complete your first scored interview');
 
-            $this->assertSame(4, substr_count($response->getContent(), 'data-sr-onboarding-step="'));
+            $this->assertMatchesRegularExpression('/data-sr-step-status-actions\s+hidden/', $response->getContent());
+            $this->assertSame(4, preg_match_all('/<section\b[^>]*\bdata-sr-onboarding-step="/', $response->getContent()));
         }
     }
 

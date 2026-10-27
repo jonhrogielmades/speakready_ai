@@ -347,7 +347,7 @@
 
             var action;
             try {
-                action = new URL(form.action || window.location.href, window.location.href);
+                action = new URL(form.getAttribute('action') || window.location.href, window.location.href);
             } catch (error) {
                 return false;
             }

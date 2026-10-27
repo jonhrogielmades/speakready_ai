@@ -119,8 +119,16 @@
     .sr-first-steps-list {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+            "recovery recovery"
+            "personalization personalization"
+            "tools tour";
         gap: 11px;
     }
+
+    .sr-first-steps-step[data-sr-onboarding-step="recovery_code_saved"] { grid-area: recovery; }
+    .sr-first-steps-step[data-sr-onboarding-step="setup_tools_completed"] { grid-area: tools; }
+    .sr-first-steps-step[data-sr-onboarding-step="dashboard_tour_completed"] { grid-area: tour; }
 
     .sr-first-steps-step {
         display: grid;
@@ -132,6 +140,11 @@
         border: 1px solid var(--sr-first-line);
         border-radius: 15px;
         background: var(--sr-first-surface);
+    }
+
+    .sr-first-steps-step--personalization {
+        grid-area: personalization;
+        grid-column: 1 / -1;
     }
 
     .sr-first-steps-step.is-done {
@@ -184,6 +197,11 @@
         margin-top: 1px;
     }
 
+    .sr-first-steps-step-actions:empty,
+    .sr-first-steps-step-actions[hidden] {
+        display: none;
+    }
+
     .sr-first-steps-status {
         color: var(--sr-first-success);
         font-size: 0.7rem;
@@ -195,7 +213,7 @@
         align-items: center;
         justify-content: center;
         gap: 6px;
-        min-height: 34px;
+        min-height: 38px;
         padding: 7px 11px;
         border: 1px solid color-mix(in srgb, var(--sr-first-accent) 30%, transparent);
         border-radius: 10px;
@@ -234,6 +252,10 @@
 
     .sr-first-steps-field-wide { grid-column: 1 / -1; }
 
+    .sr-first-steps-field {
+        min-width: 0;
+    }
+
     .sr-first-steps-field label {
         display: block;
         margin-bottom: 4px;
@@ -244,13 +266,28 @@
 
     .sr-first-steps-field :is(input, select) {
         width: 100%;
-        min-height: 38px;
+        min-width: 0;
+        min-height: 42px;
         padding: 7px 9px;
         border: 1px solid var(--sr-first-line);
         border-radius: 9px;
         background: var(--sr-first-bg);
         color: var(--sr-first-text);
-        font-size: 0.74rem;
+        font-size: 0.82rem;
+    }
+
+    .sr-first-steps-field select {
+        text-overflow: ellipsis;
+    }
+
+    .sr-first-steps-step-actions[data-sr-personalization-actions] {
+        flex-wrap: wrap;
+        margin-top: 11px;
+    }
+
+    .sr-first-steps-action:disabled {
+        cursor: wait;
+        opacity: 0.66;
     }
 
     .sr-first-steps-form-status {
@@ -326,15 +363,62 @@
             grid-template-columns: 1fr;
         }
 
+        .sr-first-steps-list {
+            grid-template-areas:
+                "recovery"
+                "personalization"
+                "tools"
+                "tour";
+        }
+
         .sr-first-steps-field-wide { grid-column: auto; }
 
-        .sr-first-steps-modal .modal-footer {
+        .sr-first-steps-field :is(input, select),
+        .sr-first-steps-step-actions[data-sr-personalization-actions] .sr-first-steps-action {
+            min-height: 44px;
+        }
+
+        .sr-first-steps-field label {
+            font-size: 0.75rem;
+        }
+
+        .sr-first-steps-field :is(input, select) {
+            padding-inline: 11px;
+            font-size: 1rem;
+        }
+
+        .sr-first-steps-step-actions[data-sr-personalization-actions] {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            width: 100%;
+        }
+
+        .sr-first-steps-step-actions[data-sr-personalization-actions] .sr-first-steps-action {
+            width: 100%;
+            min-width: 0;
+        }
+
+        body.user-mobile-shell .sr-first-steps-modal .modal-footer,
+        .sr-first-steps-modal .modal-footer {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            flex-wrap: nowrap !important;
+            gap: 8px !important;
         }
 
         .sr-first-steps-later,
-        .sr-first-steps-close { width: 100%; }
+        .sr-first-steps-close {
+            width: 100%;
+            min-width: 0;
+            padding-inline: 8px;
+            white-space: nowrap;
+        }
+    }
+
+    @media (max-width: 359.98px) {
+        .sr-first-steps-step-actions[data-sr-personalization-actions] {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 @endonce

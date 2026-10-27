@@ -12,6 +12,13 @@
         const returnAfterTourKey = `speakready.firstSteps.returnAfterTour.${userId}`;
         const personalizationForm = modalElement.querySelector('[data-sr-first-steps-personalization-form]');
         const personalizationFormStatus = modalElement.querySelector('[data-sr-first-steps-form-status]');
+        const personalizationDetails = modalElement.querySelector('[data-sr-personalization-details]');
+        const personalizationToggle = modalElement.querySelector('[data-sr-personalization-toggle]');
+        // Named controls called "action" shadow HTMLFormElement.action and
+        // return a RadioNodeList. Read the attribute to keep the real URL.
+        const personalizationEndpoint = personalizationForm?.getAttribute('action')?.trim()
+            || personalizationForm?.dataset.srPersonalizationEndpoint?.trim()
+            || '';
 
         function sessionGet(key) {
             try { return window.sessionStorage.getItem(key); } catch (error) { return null; }
@@ -53,8 +60,9 @@
 
         function ensureStepStatus(step, label) {
             if (!step) return;
-            const actions = step.querySelector('.sr-first-steps-step-actions');
+            const actions = step.querySelector('[data-sr-step-status-actions]');
             if (!actions) return;
+            actions.hidden = false;
 
             let status = actions.querySelector('.sr-first-steps-status');
             if (!status) {
@@ -92,7 +100,7 @@
             updateProgress();
         }
 
-        function applyOnboardingState(state) {
+        function applyOnboardingState(state, options = {}) {
             if (!state || typeof state !== 'object') return;
             if (state.recovery_code_saved) markStepComplete('recovery_code_saved');
 
@@ -103,6 +111,14 @@
                     summary.textContent = state.profile_personalized
                         ? 'Your role and practice goal are ready.'
                         : 'Skipped for now; you can update it anytime.';
+                }
+                if (personalizationToggle) {
+                    personalizationToggle.textContent = state.profile_personalized
+                        ? 'Edit personalization'
+                        : 'Personalize now';
+                }
+                if (options.collapsePersonalization && personalizationDetails) {
+                    personalizationDetails.open = false;
                 }
             }
 
@@ -197,7 +213,7 @@
 
         personalizationForm?.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const submitter = event.submitter;
+            const submitter = event.submitter || personalizationForm.querySelector('button[type="submit"]:focus');
             const action = submitter?.value === 'skip' ? 'skip' : 'save';
 
             if (action === 'save' && !personalizationForm.checkValidity()) {
@@ -205,15 +221,23 @@
                 return;
             }
 
+            if (!personalizationEndpoint) {
+                setFormStatus('Personalization cannot be saved because its endpoint is unavailable. Refresh and try again.', 'error');
+                return;
+            }
+
             const buttons = Array.from(personalizationForm.querySelectorAll('button[type="submit"]'));
-            buttons.forEach((button) => { button.disabled = true; });
+            buttons.forEach((button) => {
+                button.disabled = true;
+                button.setAttribute('aria-busy', 'true');
+            });
             setFormStatus(action === 'skip' ? 'Saving your choice...' : 'Saving your personalization...');
 
             const formData = new FormData(personalizationForm);
             formData.set('action', action);
 
             try {
-                const response = await fetch(personalizationForm.action, {
+                const response = await fetch(personalizationEndpoint, {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
@@ -229,15 +253,19 @@
                     throw new Error(firstError || payload.message || 'Personalization could not be saved.');
                 }
 
-                applyOnboardingState(payload.onboarding || {});
+                applyOnboardingState(payload.onboarding || {}, { collapsePersonalization: true });
                 window.dispatchEvent(new CustomEvent('speakready:onboarding-updated', {
                     detail: payload.onboarding || {},
                 }));
                 setFormStatus(payload.message || 'Your personalization has been saved.', 'success');
+                personalizationToggle?.focus({ preventScroll: true });
             } catch (error) {
                 setFormStatus(error.message || 'Personalization could not be saved. Please try again.', 'error');
             } finally {
-                buttons.forEach((button) => { button.disabled = false; });
+                buttons.forEach((button) => {
+                    button.disabled = false;
+                    button.removeAttribute('aria-busy');
+                });
             }
         });
 
