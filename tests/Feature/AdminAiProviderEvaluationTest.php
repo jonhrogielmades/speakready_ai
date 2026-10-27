@@ -98,49 +98,17 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSessionHas('error', 'No configured AI API key is available for the live feedback smoke test.');
  }
 
- public function test_admin_provider_dashboard_shows_openai_process_connections(): void
+ public function test_admin_provider_dashboard_omits_openai_process_connections(): void
  {
  $this->clearProviderEnv();
  $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
- $provider = $this->configuredProvider();
-
- AiProviderLog::create([
- 'provider_id' => $provider->id,
- 'module' => 'attachment_text_extraction',
- 'endpoint' => 'openai',
- 'response_time_ms' => 700,
- 'status' => 'success',
- ]);
- AiProviderLog::create([
- 'provider_id' => $provider->id,
- 'module' => 'speech_transcription',
- 'endpoint' => 'openai',
- 'response_time_ms' => 1100,
- 'status' => 'success',
- ]);
+ $this->configuredProvider();
 
  $this->actingAs($admin)
  ->get(route('admin.ai.providers'))
  ->assertOk()
- ->assertSee('OpenAI Process Connections')
- ->assertSee('Live API paths')
- ->assertSee('Safeguarded processes')
- ->assertSee('Question Generation')
- ->assertSee('Answer Evaluation and Feedback')
- ->assertSee('Resume/CV Evaluation')
- ->assertSee('Job Fit Match Scoring')
- ->assertSee('Standalone Improved Answer Generation')
- ->assertSee('Learning Recommendations')
- ->assertSee('Question Recommendation / RAG Selection')
- ->assertSee('Readiness Score Calculation')
- ->assertSee('Readiness Band Classification')
- ->assertSee('Pronunciation Scoring')
- ->assertSee('Voice Delivery Scoring')
- ->assertSee('Answer Integrity Detection')
- ->assertSee('Learning Game Answer Scoring')
- ->assertSee('Document/PDF Text Extraction')
- ->assertSee('Full Module Provider Evaluation')
- ->assertSee('Safeguarded');
+ ->assertDontSee('OpenAI Process Connections')
+ ->assertDontSee('id="openAiProcessTable"', false);
  }
 
  public function test_admin_can_export_ai_provider_evaluation_as_excel_csv(): void

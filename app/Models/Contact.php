@@ -14,6 +14,6 @@ class Contact extends Model
         'email',
         'subject',
         'message',
-        'status', // 'unread' or 'read'
+        'status', // 'unread', 'read', or 'replied'
     ];
 }

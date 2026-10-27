@@ -4701,6 +4701,7 @@ PROMPT;
  'key' => $key,
  'label' => self::PROVIDER_LABELS[$key],
  'enabled' => $credentials['api_key']!== '',
+ 'endpoint' => self::PROVIDER_DEFAULT_ENDPOINTS[$key]?? $credentials['endpoint'],
  'model' => $credentials['model'],
  ];
  }

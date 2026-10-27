@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/feedback/index.css?v=8') }}" data-page-style="admin-feedback-index">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/feedback/index.css?v=9') }}" data-page-style="admin-feedback-index">
 @endpush
 
 @section('content')
@@ -11,11 +11,6 @@
         <div>
             <h2 class="feedback-page-title mb-1" style="font-weight: 700; color: var(--tx);"><i class="fa-solid fa-clipboard-check"></i> Interview Feedback Audit</h2>
             <p class="feedback-page-subtitle mb-0" style="color: var(--tx3);">Monitor, review, and evaluate AI feedback for interview practice.</p>
-        </div>
-        <div class="feedback-header-actions">
-            <a href="{{ route('admin.feedback.export', request()->query()) }}" class="btn feedback-export-btn" style="border-radius: 10px; background-color: var(--danger-bg); color: var(--danger-tx); border: 1px solid var(--danger-tx);">
-                <i class="fa-solid fa-download me-2"></i>Export Report
-            </a>
         </div>
     </div>
 
@@ -83,18 +78,8 @@
         </div>
     </div>
 
-    <!-- Analytics Charts -->
+    <!-- Feedback Audit List -->
     <div class="row g-4 mb-4 feedback-main-grid">
-        <div class="col-md-4">
-            <div class="card boc feedback-content-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
-                <div class="card-body p-4">
-                    <h6 class="fw-bold mb-3" style="color: var(--tx);">Average Scores</h6>
-                    <div class="feedback-chart-box" style="position: relative; height: 250px; width: 100%;">
-                        <canvas id="scoresChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="col-12">
             <div class="card boc feedback-content-card feedback-audit-list-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-body p-4">
@@ -212,67 +197,4 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof window.Chart === 'undefined') return;
-
-    const scoresCanvas = document.getElementById('scoresChart');
-    if (!scoresCanvas) return;
-
-    const compactFeedbackChart = window.matchMedia('(max-width: 767px)').matches;
-    const ctx = scoresCanvas.getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        options: {
-            indexAxis: compactFeedbackChart ? 'y' : 'x',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    beginAtZero: compactFeedbackChart,
-                    max: compactFeedbackChart ? 100 : undefined,
-                    ticks: { color: '#888' },
-                    grid: { color: 'rgba(128, 128, 128, 0.2)' }
-                },
-                y: {
-                    beginAtZero: !compactFeedbackChart,
-                    max: compactFeedbackChart ? undefined : 100,
-                    ticks: { color: '#888' },
-                    grid: { color: 'rgba(128, 128, 128, 0.2)' }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: !compactFeedbackChart,
-                    labels: { color: '#888' }
-                }
-            }
-        },
-        data: {
-            labels: ['Overall', 'Clarity', 'Relevance'],
-            datasets: [{
-                label: 'Average Score (%)',
-                data: [
-                    {{ round($stats['avg_score']) }}, 
-                    {{ round($stats['avg_clarity']) }}, 
-                    {{ round($stats['avg_relevance']) }}
-                ],
-                backgroundColor: [
-                    'rgba(59, 130, 246, 0.6)',
-                    'rgba(16, 185, 129, 0.6)',
-                    'rgba(245, 158, 11, 0.6)'
-                ],
-                borderColor: [
-                    'rgb(59, 130, 246)',
-                    'rgb(16, 185, 129)',
-                    'rgb(245, 158, 11)'
-                ],
-                borderWidth: 1,
-                borderRadius: 4
-            }]
-        }
-    });
-});
-</script>
 @endsection

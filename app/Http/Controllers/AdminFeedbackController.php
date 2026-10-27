@@ -21,9 +21,6 @@ class AdminFeedbackController extends Controller
             'reviewed' => InterviewAnswer::whereNotNull('ai_feedback')->whereIn('audit_status', ['approved', 'archived'])->count(),
             'pending' => InterviewAnswer::whereNotNull('ai_feedback')->where('audit_status', 'under_review')->count(),
             'flagged' => InterviewAnswer::whereNotNull('ai_feedback')->where('audit_status', 'flagged')->count(),
-            'avg_score' => InterviewAnswer::whereNotNull('ai_feedback')->avg('score') ?? 0,
-            'avg_clarity' => InterviewAnswer::whereNotNull('ai_feedback')->avg('clarity_score') ?? 0,
-            'avg_relevance' => InterviewAnswer::whereNotNull('ai_feedback')->avg('relevance_score') ?? 0,
         ];
 
         $feedbacks = $query->latest()->paginate(5)->withQueryString();

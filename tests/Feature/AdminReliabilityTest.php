@@ -562,6 +562,35 @@ class AdminReliabilityTest extends TestCase
         $this->assertStringNotContainsString('Tell me about teamwork.', $csv);
     }
 
+    public function test_admin_feedback_audit_omits_average_scores_and_export_report_controls(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $clients = [
+            [
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36',
+                'stylesheet' => 'css/desktop/admin/feedback/index.css?v=7',
+            ],
+            [
+                'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Version/17.5 Mobile/15E148 Safari/604.1',
+                'stylesheet' => 'css/mobile/admin/feedback/index.css?v=9',
+            ],
+        ];
+
+        foreach ($clients as $client) {
+            $this->actingAs($admin)
+                ->withHeader('User-Agent', $client['user_agent'])
+                ->get(route('admin.feedback.index'))
+                ->assertOk()
+                ->assertSee($client['stylesheet'], false)
+                ->assertDontSee('Average Scores')
+                ->assertDontSee('scoresChart', false)
+                ->assertDontSee('cdn.jsdelivr.net/npm/chart.js', false)
+                ->assertDontSee('Export Report')
+                ->assertDontSee('feedback-export-btn', false)
+                ->assertDontSee(route('admin.feedback.export'), false);
+        }
+    }
+
     public function test_users_page_broadcast_form_sends_notifications(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);

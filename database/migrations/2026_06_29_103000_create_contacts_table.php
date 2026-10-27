@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('subject');
             $table->text('message');
-            $table->string('status')->default('unread'); // unread, read
+            $table->string('status')->default('unread'); // unread, read, replied
             $table->timestamps();
         });
     }

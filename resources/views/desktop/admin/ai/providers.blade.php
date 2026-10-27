@@ -1,7 +1,11 @@
 @extends('desktop.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/ai/providers.css?v=6') }}" data-page-style="admin-ai-providers">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/ai/providers.css?v=9') }}" data-page-style="admin-ai-providers">
+@endpush
+
+@push('scripts')
+<script src="{{ asset('js/admin-ai-providers.js?v=1') }}" defer></script>
 @endpush
 
 @section('content')
@@ -83,171 +87,7 @@
         </div>
     </div>
 
-    @include('admin.ai.partials.provider-process-connections')
-
-    <div class="row g-4 mb-4 ai-main-grid">
-        <!-- Main Column -->
-        <div class="col-lg-8">
-            <!-- Feature 7: Module Requests Breakdown -->
-            <div class="premium-card h-100">
-                <h6 class="fw-bold mb-4">Requests by Module</h6>
-                <div class="table-responsive" id="moduleUsageTableWrapper">
-                    <table class="table custom-table mb-0 w-100" id="moduleUsageTable">
-                        <thead>
-                            <tr>
-                                <th>Module Name</th>
-                                <th class="text-end">Requests</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($moduleUsage as $usage)
-                            <tr>
-                                <td><span class="stat-badge primary">{{ ucfirst(str_replace('_', ' ', $usage->module)) }}</span></td>
-                                <td class="text-end fw-bold">{{ number_format($usage->count) }}</td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="2" class="text-center text-muted">No usage data available today.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sidebar Column -->
-        <div class="col-lg-4">
-            <!-- Feature 8: Cost Monitoring -->
-            <div class="premium-card mb-4 ai-monitoring-card">
-                <h6 class="fw-bold mb-3"><i class="fa-solid fa-coins me-2 text-warning"></i>Cost Monitoring</h6>
-                
-                <div class="d-flex justify-content-between mb-3 align-items-center">
-                    <span style="color:var(--tx2);">Monthly Cost</span>
-                    <span class="fw-bold fs-3 text-warning">${{ number_format($monthlyCost, 2) }}</span>
-                </div>
-                
-                <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;">
-                    <span style="color:var(--tx2);">Daily Cost (Avg)</span>
-                    <span class="fw-bold">${{ number_format($monthlyCost / max(now()->day, 1), 2) }}</span>
-                </div>
-
-                <div class="ai-monitoring-divider"></div>
-
-                <h6 class="fw-bold mb-3"><i class="fa-solid fa-network-wired me-2 text-info"></i>Provider Status</h6>
-                
-                <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background:var(--bg3);">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-robot text-primary"></i>
-                        <span>{{ $activeProvider ? $activeProvider->name : 'N/A' }}</span>
-                    </div>
-                    @if($successRate === null)
-                        <span class="stat-badge text-muted"><i class="fa-solid fa-circle-question me-1"></i> No evidence</span>
-                    @elseif($successRate >= 95)
-                        <span class="stat-badge success"><i class="fa-solid fa-circle fa-2xs me-1"></i> Reliable</span>
-                    @elseif($successRate >= 80)
-                        <span class="stat-badge warning"><i class="fa-solid fa-circle fa-2xs me-1"></i> Degraded</span>
-                    @else
-                        <span class="stat-badge danger"><i class="fa-solid fa-circle fa-2xs me-1"></i> Offline</span>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Active & Fallback System -->
-    <div class="row g-4 mb-4 ai-provider-role-grid">
-        <div class="col-md-6">
-            <div class="premium-card h-100">
-                <h6 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-star me-2"></i>Primary Provider</h6>
-                @if($primary)
-                    <h4 class="fw-bold">{{ $primary->name }}</h4>
-                    <p class="mb-0 text-muted" style="font-size:0.85rem;">Default provider; evaluated interview routing still requires the 95% quality gate.</p>
-                @else
-                    <p class="mb-0 text-warning">No primary provider selected. System will not generate AI responses.</p>
-                @endif
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="premium-card h-100">
-                <h6 class="fw-bold mb-3 text-warning"><i class="fa-solid fa-life-ring me-2"></i>Fallback Provider</h6>
-                @if($fallback)
-                    <h4 class="fw-bold">{{ $fallback->name }}</h4>
-                    <p class="mb-0 text-muted" style="font-size:0.85rem;">Used after a primary failure only when its response passes validation.</p>
-                @else
-                    <p class="mb-0 text-warning">No fallback provider selected. System risks downtime if primary fails.</p>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    <!-- Individual Providers Status & Usage -->
-    <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Providers Status & Usage</h5>
-    <div class="row g-4 mb-4 ai-provider-stats-grid">
-        @foreach($providerStats as $provider)
-        <div class="col-md-6 col-lg-4">
-            <div class="premium-card h-100 position-relative">
-                @if($provider->is_primary)
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">Primary</span>
-                @elseif($provider->is_fallback)
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">Fallback</span>
-                @endif
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">
-                        @if(stripos($provider->name, 'openai') !== false)
-                            <i class="fa-solid fa-robot text-success me-2"></i>
-                        @elseif(stripos($provider->name, 'anthropic') !== false)
-                            <i class="fa-solid fa-brain text-warning me-2"></i>
-                        @elseif(stripos($provider->name, 'gemini') !== false)
-                            <i class="fa-solid fa-star-of-life text-primary me-2"></i>
-                        @elseif(stripos($provider->name, 'groq') !== false)
-                            <i class="fa-solid fa-bolt text-danger me-2"></i>
-                        @elseif(stripos($provider->name, 'cohere') !== false)
-                            <i class="fa-solid fa-leaf text-success me-2"></i>
-                        @elseif(stripos($provider->name, 'llama') !== false)
-                            <i class="fa-solid fa-paw text-info me-2"></i>
-                        @else
-                            <i class="fa-solid fa-microchip text-secondary me-2"></i>
-                        @endif
-                        {{ $provider->name }}
-                    </h5>
-                    @if($provider->status == 'active')
-                        <span class="stat-badge success">Active</span>
-                    @elseif($provider->status == 'unconfigured')
-                        <span class="stat-badge text-muted" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);"><i class="fa-solid fa-circle-xmark me-1"></i>Not Setup</span>
-                    @else
-                        <span class="stat-badge danger">Inactive</span>
-                    @endif
-                </div>
-                
-                <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
-                    <span style="color:var(--tx2);">Requests Today</span>
-                    <span class="fw-bold">{{ number_format($provider->requests_today) }}</span>
-                </div>
-
-                <div class="d-flex justify-content-between gap-3 mb-2" style="font-size:0.9rem;">
-                    <span style="color:var(--tx2);">Runtime Model</span>
-                    <span class="fw-bold text-end text-break">{{ $provider->model }}</span>
-                </div>
-                
-                <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
-                    <span style="color:var(--tx2);">Avg Latency</span>
-                    <span class="fw-bold">{{ number_format($provider->avg_response_time) }}ms</span>
-                </div>
-                
-                <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
-                    <span style="color:var(--tx2);">Success Rate</span>
-                    <span class="fw-bold {{ $provider->success_rate === null ? 'text-muted' : ($provider->success_rate >= 95 ? 'text-success' : 'text-warning') }}">{{ $provider->success_rate === null ? 'No data' : number_format($provider->success_rate, 2).'%' }}</span>
-                </div>
-                
-                <div class="d-flex justify-content-between" style="font-size:0.9rem;">
-                    <span style="color:var(--tx2);">Monthly Cost</span>
-                    <span class="fw-bold text-warning">${{ number_format($provider->monthly_cost, 2) }}</span>
-                </div>
-            </div>
-        </div>
-        @endforeach
-    </div>
+    @include('shared.admin.ai-provider-status-usage')
 
     <!-- Providers Table -->
     <div class="premium-card mb-4">
@@ -334,7 +174,15 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center text-muted">No providers registered yet.</td>
+                        <td colspan="5" class="text-center text-muted ai-provider-empty-cell">
+                            <div class="ai-provider-empty-state">
+                                <i class="fa-solid fa-plug-circle-plus" aria-hidden="true"></i>
+                                <span>No providers registered yet.</span>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addProviderModal">
+                                    Add Your First Provider
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -343,45 +191,7 @@
     </div>
 </div>
 
-<!-- Add Provider Modal -->
-<div class="modal fade" id="addProviderModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background:var(--sf);border:1px solid var(--bd);color:var(--tx);">
-            <div class="modal-header border-bottom-0">
-                <h5 class="modal-title fw-bold">Add New AI Provider</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ route('admin.ai.providers.store') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label" style="color:var(--tx2);font-size:0.85rem;">Provider Name</label>
-                        <input type="text" name="name" class="form-control input-dark" placeholder="e.g. OpenAI" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" style="color:var(--tx2);font-size:0.85rem;">API Endpoint</label>
-                        <input type="url" name="api_endpoint" class="form-control input-dark" placeholder="e.g. https://api.openai.com/v1" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" style="color:var(--tx2);font-size:0.85rem;">API Key</label>
-                        <input type="password" name="api_key" class="form-control input-dark" placeholder="sk-..." required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" style="color:var(--tx2);font-size:0.85rem;">Status</label>
-                        <select name="status" class="form-select input-dark" required>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Provider</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+@include('shared.admin.ai-provider-add-modal')
 
 <!-- Edit Provider Modal -->
 <div class="modal fade" id="editProviderModal" tabindex="-1">

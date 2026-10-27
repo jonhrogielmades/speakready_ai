@@ -352,6 +352,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Admin Contacts
     Route::get('/admin/contacts', [App\Http\Controllers\AdminContactController::class, 'index'])->name('admin.contacts.index');
     Route::get('/admin/contacts/{contact}', [App\Http\Controllers\AdminContactController::class, 'show'])->name('admin.contacts.show');
+    Route::post('/admin/contacts/{contact}/reply', [App\Http\Controllers\AdminContactController::class, 'reply'])->name('admin.contacts.reply');
     Route::delete('/admin/contacts/{contact}', [App\Http\Controllers\AdminContactController::class, 'destroy'])->name('admin.contacts.destroy');
 
     // Admin Feedback Audit Features

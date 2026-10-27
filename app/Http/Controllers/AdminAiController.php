@@ -11,12 +11,14 @@ use App\Services\CsvExportService;
 use App\Support\AiProviderSchema;
 use App\Support\RuntimeConfiguration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AdminAiController extends Controller
 {
- public function providers(AiProviderReliabilityService $reliability)
+ public function providers()
  {
  AiProviderSchema::ensure(createIfMissing: true);
 
@@ -26,8 +28,6 @@ class AdminAiController extends Controller
  }
  $todayStart = today()->startOfDay();
  $tomorrowStart = today()->addDay()->startOfDay();
- $monthStart = now()->startOfMonth();
- $nextMonthStart = now()->addMonthNoOverflow()->startOfMonth();
  $todayLogs = AiProviderLog::where('created_at', '>=', $todayStart)
  ->where('created_at', '<', $tomorrowStart);
  $todayTotals = (clone $todayLogs)
@@ -41,105 +41,71 @@ class AdminAiController extends Controller
 
  $successRate = $totalRequests > 0? round(($successfulRequests / $totalRequests) * 100, 2): null;
 
- $monthlyCost = AiProviderLog::where('created_at', '>=', $monthStart)
- ->where('created_at', '<', $nextMonthStart)
- ->sum('cost')?? 0;
-
- $moduleUsage = AiProviderLog::selectRaw('module, count(*) as count')
- ->groupBy('module')
- ->get();
-
  $defaultProviders = collect(AIService::supportedProviderOptions());
  $supportedProviderKeys = $defaultProviders->pluck('key')->all();
  $providers = AiProvider::all()
  ->filter(fn (AiProvider $provider): bool => in_array(AIService::normalizeProviderKey($provider->name), $supportedProviderKeys, true))
  ->values();
- $todayStatsByProvider = (clone $todayLogs)
- ->whereNotNull('provider_id')
- ->selectRaw("provider_id, COUNT(*) as requests_today, SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as successful_requests, AVG(response_time_ms) as avg_response_time")
- ->groupBy('provider_id')
- ->get()
- ->keyBy('provider_id');
- $monthlyCostByProvider = AiProviderLog::where('created_at', '>=', $monthStart)
- ->where('created_at', '<', $nextMonthStart)
- ->whereNotNull('provider_id')
- ->selectRaw('provider_id, SUM(cost) as monthly_cost')
- ->groupBy('provider_id')
- ->pluck('monthly_cost', 'provider_id');
- $openAiProviderIds = $providers
- ->filter(fn (AiProvider $provider): bool => AIService::normalizeProviderKey($provider->name) === 'openai')
- ->pluck('id')
- ->values()
+ $configuredProviderKeys = $providers
+ ->map(fn (AiProvider $provider): string => AIService::normalizeProviderKey($provider->name))
  ->all();
- $openAiLogCounts = AiProviderLog::query()
- ->where(function ($query) use ($openAiProviderIds): void {
- $query->where('endpoint', 'openai');
-
- if ($openAiProviderIds!== []) {
- $query->orWhereIn('provider_id', $openAiProviderIds);
- }
- })
- ->selectRaw('module, count(*) as count')
- ->groupBy('module')
- ->pluck('count', 'module');
- $openAiProcessConnections = collect(AIService::providerProcessConnections('openai'))
- ->map(function (array $process) use ($openAiLogCounts): array {
- $logModules = array_values(array_filter((array) ($process['log_modules']?? [])));
- $process['request_count'] = collect($logModules)
- ->sum(fn ($module): int => (int) ($openAiLogCounts[$module]?? 0));
-
- return $process;
- })
+ $availableProviderOptions = $defaultProviders
+ ->reject(fn (array $providerOption): bool => in_array($providerOption['key'], $configuredProviderKeys, true))
  ->values();
-
- $providerStats = $defaultProviders->map(function (array $providerOption) use ($providers, $todayStatsByProvider, $monthlyCostByProvider) {
+ $providerKeysById = $providers->mapWithKeys(
+ fn (AiProvider $provider): array => [$provider->id => AIService::normalizeProviderKey($provider->name)]
+ );
+ $todayUsageRows = (clone $todayLogs)
+ ->selectRaw("provider_id, endpoint, COUNT(*) as requests_today, SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as successful_requests, SUM(CASE WHEN status = 'success' THEN 0 ELSE 1 END) as failed_requests, COALESCE(SUM(response_time_ms), 0) as response_time_total, COUNT(response_time_ms) as response_time_samples, MAX(created_at) as last_activity_at")
+ ->groupBy('provider_id', 'endpoint')
+ ->get();
+ $providerStats = $defaultProviders->map(function (array $providerOption) use ($providers, $providerKeysById, $todayUsageRows) {
  $dbProvider = $providers->first(
  fn (AiProvider $provider): bool => AIService::normalizeProviderKey($provider->name) === $providerOption['key']
  );
+ $usageRows = $todayUsageRows->filter(function ($usage) use ($providerKeysById, $providerOption): bool {
+ $providerKey = $usage->provider_id === null
+ ? AIService::normalizeProviderKey($usage->endpoint)
+ : (string) ($providerKeysById[(int) $usage->provider_id]?? AIService::normalizeProviderKey($usage->endpoint));
+
+ return $providerKey === $providerOption['key'];
+ });
+ $responseTimeSamples = (int) $usageRows->sum('response_time_samples');
+ $lastActivityAt = $usageRows->max('last_activity_at');
  $stats = new \stdClass;
+ $stats->key = $providerOption['key'];
  $stats->name = $providerOption['label'];
  $stats->model = $providerOption['model']?? 'Not configured';
+ $stats->is_configured = (bool) $providerOption['enabled'];
+ $stats->has_saved_provider = $dbProvider !== null;
+ $stats->is_primary = (bool) ($dbProvider?->is_primary?? false);
+ $stats->is_fallback = (bool) ($dbProvider?->is_fallback?? false);
+ $stats->requests_today = (int) $usageRows->sum('requests_today');
+ $stats->successful_requests = (int) $usageRows->sum('successful_requests');
+ $stats->failed_requests = (int) $usageRows->sum('failed_requests');
+ $stats->avg_response_time = $responseTimeSamples > 0
+ ? (int) round((float) $usageRows->sum('response_time_total') / $responseTimeSamples)
+ : null;
+ $stats->success_rate = $stats->requests_today > 0
+ ? round(($stats->successful_requests / $stats->requests_today) * 100, 2)
+ : null;
+ $stats->last_activity_at = $lastActivityAt? Carbon::parse($lastActivityAt): null;
 
  if ($dbProvider) {
- $stats->is_configured = (bool) $providerOption['enabled'];
- $stats->status = $dbProvider->status;
- $stats->is_primary = $dbProvider->is_primary;
- $stats->is_fallback = $dbProvider->is_fallback;
- $providerTodayStats = $todayStatsByProvider->get($dbProvider->id);
- $stats->requests_today = (int) ($providerTodayStats->requests_today?? 0);
- $stats->successful_requests = (int) ($providerTodayStats->successful_requests?? 0);
- $stats->avg_response_time = $providerTodayStats->avg_response_time?? 0;
- $stats->success_rate = $stats->requests_today > 0? round(($stats->successful_requests / $stats->requests_today) * 100, 2): null;
- $stats->monthly_cost = $monthlyCostByProvider[$dbProvider->id]?? 0;
+ $stats->status = $dbProvider->status!== 'active'
+ ? 'inactive'
+ : ($stats->is_configured? 'active': 'misconfigured');
  } else {
- $stats->is_configured = $providerOption['enabled'];
- $stats->status = $providerOption['enabled']? 'active': 'unconfigured';
- $stats->is_primary = false;
- $stats->is_fallback = false;
- $stats->requests_today = 0;
- $stats->successful_requests = 0;
- $stats->avg_response_time = 0;
- $stats->success_rate = null;
- $stats->monthly_cost = 0;
+ $stats->status = $stats->is_configured? 'active': 'unconfigured';
  }
 
  return $stats;
  });
 
- $primary = $providers->first(
- fn (AiProvider $provider): bool => $provider->is_primary
- && $this->providerRoutingError($provider, $reliability) === null
- );
- $fallback = $providers->first(
- fn (AiProvider $provider): bool => $provider->is_fallback
- && $this->providerRoutingError($provider, $reliability) === null
- );
-
  return $this->mobileView('admin.ai.providers', compact(
- 'providers', 'providerStats', 'primary', 'fallback',
+ 'providers', 'providerStats', 'availableProviderOptions',
  'activeProvider', 'totalRequests', 'successfulRequests', 'failedRequests',
- 'avgResponseTime', 'successRate', 'monthlyCost', 'moduleUsage',
- 'openAiProcessConnections'
+ 'avgResponseTime', 'successRate'
  ));
  }
 
@@ -327,6 +293,8 @@ class AdminAiController extends Controller
 
  public function storeProvider(Request $request, AiProviderReliabilityService $reliability)
  {
+ AiProviderSchema::ensure(createIfMissing: true);
+
  $validated = $request->validate([
  'name' => 'required|string|max:80',
  'api_endpoint' => 'required|url|max:2048',
@@ -337,29 +305,30 @@ class AdminAiController extends Controller
  $providerKey = AIService::normalizeProviderKey($validated['name']);
  if (! AIService::providerIsSupported($providerKey)) {
  return redirect()->back()
- ->withInput()
- ->with('error', 'This AI provider is not in the active provider pool. Use OpenAI, Gemini, Groq, or Cohere.');
+ ->withInput($request->except('api_key'))
+ ->withErrors(['name' => 'Select one of the supported AI providers.']);
  }
 
  if (trim($validated['api_key']) === '') {
  return redirect()->back()
- ->withInput()
+ ->withInput($request->except('api_key'))
  ->withErrors(['api_key' => 'The API key cannot be blank.']);
  }
 
  $endpointCheck = $reliability->validateEndpoint($providerKey, $validated['api_endpoint']);
  if (! $endpointCheck['valid']) {
  return redirect()->back()
- ->withInput()
+ ->withInput($request->except('api_key'))
  ->withErrors(['api_endpoint' => $endpointCheck['reason']]);
  }
 
  if ($this->providerRecordExists($providerKey)) {
  return redirect()->back()
- ->withInput()
+ ->withInput($request->except('api_key'))
  ->withErrors(['name' => 'This AI provider is already configured. Update the existing provider instead.']);
  }
 
+ DB::transaction(function () use ($providerKey, $validated): void {
  $provider = AiProvider::create([
  'name' => $this->providerLabel($providerKey),
  'api_endpoint' => trim($validated['api_endpoint']),
@@ -367,9 +336,10 @@ class AdminAiController extends Controller
  'status' => $validated['status'],
  ]);
 
- if (AiProvider::count() == 1 && $provider->status === 'active') {
+ if ($provider->status === 'active' && ! AiProvider::where('is_primary', true)->exists()) {
  $provider->update(['is_primary' => true]);
  }
+ });
 
  return redirect()->route('admin.ai.providers')->with('message', 'AI Provider added successfully.');
  }
@@ -386,20 +356,20 @@ class AdminAiController extends Controller
  $providerKey = AIService::normalizeProviderKey($validated['name']);
  if (! AIService::providerIsSupported($providerKey)) {
  return redirect()->back()
- ->withInput()
- ->with('error', 'This AI provider is not in the active provider pool. Use OpenAI, Gemini, Groq, or Cohere.');
+ ->withInput($request->except('api_key'))
+ ->withErrors(['name' => 'Select one of the supported AI providers.']);
  }
 
  $endpointCheck = $reliability->validateEndpoint($providerKey, $validated['api_endpoint']);
  if (! $endpointCheck['valid']) {
  return redirect()->back()
- ->withInput()
+ ->withInput($request->except('api_key'))
  ->withErrors(['api_endpoint' => $endpointCheck['reason']]);
  }
 
  if ($this->providerRecordExists($providerKey, $provider->id)) {
  return redirect()->back()
- ->withInput()
+ ->withInput($request->except('api_key'))
  ->withErrors(['name' => 'This AI provider is already configured. Update the existing provider instead.']);
  }
 

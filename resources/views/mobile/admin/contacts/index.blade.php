@@ -1,69 +1,84 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/contacts.css?v=1') }}" data-page-style="admin-contacts">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/contacts.css?v=2') }}" data-page-style="admin-contacts">
 @endpush
 
 @section('content')
 <div class="db-section active admin-contacts-shell" id="sec-admin-contacts">
-    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 admin-contacts-header">
+    <div class="admin-contacts-header">
         <div>
-            <h4 class="admin-contacts-title" style="color:var(--tx);font-weight:700"><i class="fa-solid fa-envelope me-2"></i>Contact Messages</h4>
-            <p class="admin-contacts-subtitle" style="color:var(--tx3)">View and manage messages sent from the Contact Us form.</p>
+            <h4 class="admin-contacts-title"><i class="fa-solid fa-envelope" aria-hidden="true"></i>Contact Messages</h4>
+            <p class="admin-contacts-subtitle">View, find, reply to, and manage messages sent from the Contact Us form.</p>
         </div>
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success" style="border-radius:12px; font-weight:600;">
-            <i class="fa-solid fa-circle-check me-2"></i> {{ session('success') }}
+        <div class="alert alert-success admin-contact-alert" role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span>{{ session('success') }}</span>
         </div>
     @endif
 
-    <div class="card admin-contacts-card" style="border:none;background:var(--bg2);border-radius:16px;box-shadow:0 4px 15px rgba(0,0,0,0.05);">
+    @if($errors->any())
+        <div class="alert alert-danger admin-contact-alert" role="alert">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            <span>{{ $errors->first() }}</span>
+        </div>
+    @endif
+
+    <div class="admin-contacts-filter-card">
+        @include('shared.admin.contact-filters')
+    </div>
+
+    <div class="card admin-contacts-card">
         <div class="table-responsive" id="mainContactsTableWrapper">
-            <table class="table mb-0" id="mainContactsTable" style="color:var(--tx);">
+            <table class="table mb-0" id="mainContactsTable">
                 <thead>
-                    <tr style="border-bottom: 2px solid var(--bd);">
-                        <th style="padding:15px; border-bottom:none; color:var(--tx2);">Date</th>
-                        <th style="padding:15px; border-bottom:none; color:var(--tx2);">Name</th>
-                        <th style="padding:15px; border-bottom:none; color:var(--tx2);">Email</th>
-                        <th style="padding:15px; border-bottom:none; color:var(--tx2);">Subject</th>
-                        <th style="padding:15px; border-bottom:none; color:var(--tx2);">Status</th>
-                        <th style="padding:15px; border-bottom:none; color:var(--tx2); text-align:right;">Action</th>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($contacts as $contact)
-                        <tr style="border-bottom: 1px solid var(--bd); {{ $contact->status === 'unread' ? 'background:rgba(59,130,246,0.05);' : '' }}">
-                            <td data-label="Date" style="padding:15px; border:none; vertical-align:middle;">
-                                {{ $contact->created_at->format('M d, Y h:i A') }}
-                            </td>
-                            <td data-label="Name" class="contact-name-cell" style="padding:15px; border:none; vertical-align:middle; font-weight:{{ $contact->status === 'unread' ? 'bold' : 'normal' }};">
+                        <tr @class(['contact-message-unread' => $contact->status === 'unread'])>
+                            <td data-label="Date">{{ $contact->created_at->format('M d, Y h:i A') }}</td>
+                            <td data-label="Name" @class(['contact-name-cell', 'contact-message-emphasis' => $contact->status === 'unread'])>
                                 {{ $contact->name }}
                             </td>
-                            <td data-label="Email" style="padding:15px; border:none; vertical-align:middle;">
-                                {{ $contact->email }}
+                            <td data-label="Email">{{ $contact->email }}</td>
+                            <td data-label="Subject" @class(['contact-message-emphasis' => $contact->status === 'unread'])>
+                                {{ \Illuminate\Support\Str::limit($contact->subject, 42) }}
                             </td>
-                            <td data-label="Subject" style="padding:15px; border:none; vertical-align:middle; font-weight:{{ $contact->status === 'unread' ? 'bold' : 'normal' }};">
-                                {{ \Illuminate\Support\Str::limit($contact->subject, 30) }}
+                            <td data-label="Status">
+                                @switch($contact->status)
+                                    @case('unread')
+                                        <span class="badge admin-contact-status admin-contact-status-unread">Unread</span>
+                                        @break
+                                    @case('replied')
+                                        <span class="badge admin-contact-status admin-contact-status-replied">Replied</span>
+                                        @break
+                                    @default
+                                        <span class="badge admin-contact-status admin-contact-status-read">Read</span>
+                                @endswitch
                             </td>
-                            <td data-label="Status" style="padding:15px; border:none; vertical-align:middle;">
-                                @if($contact->status === 'unread')
-                                    <span class="badge bg-primary">Unread</span>
-                                @else
-                                    <span class="badge bg-secondary">Read</span>
-                                @endif
-                            </td>
-                            <td data-label="Actions" class="contact-action-cell" style="padding:15px; border:none; vertical-align:middle; text-align:right;">
-                                <div class="d-flex justify-content-end gap-2 contact-actions">
-                                    <a href="{{ route('admin.contacts.show', $contact->id) }}" class="btn btn-sm" style="background:var(--bg3); color:var(--tx2); border:1px solid var(--bd);">
-                                        <i class="fa-solid fa-eye"></i> View
+                            <td data-label="Actions" class="contact-action-cell">
+                                <div class="contact-actions">
+                                    <a href="{{ route('admin.contacts.show', $contact) }}" class="btn btn-sm admin-contact-view-button">
+                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                        <span>View</span>
                                     </a>
-                                    <form action="{{ route('admin.contacts.destroy', $contact->id) }}" method="POST" class="contact-row-action-form" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Are you sure you want to delete this message?');">
+                                    <form action="{{ route('admin.contacts.destroy', $contact) }}" method="POST" class="contact-row-action-form" onsubmit="return window.SpeakReadyAdminConfirm(event, this, 'Are you sure you want to delete this message?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="fa-solid fa-trash"></i>
+                                            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                            <span>Delete</span>
                                         </button>
                                     </form>
                                 </div>
@@ -71,17 +86,18 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4 contacts-empty-cell" style="color:var(--tx3);">
-                                <i class="fa-solid fa-inbox fa-3x mb-3" style="color:var(--bd);"></i>
-                                <p>No contact messages found.</p>
+                            <td colspan="6" class="contacts-empty-cell">
+                                <i class="fa-solid fa-inbox" aria-hidden="true"></i>
+                                <p>{{ $filters['search'] !== '' || $filters['status'] !== '' ? 'No messages match the selected filters.' : 'No contact messages found.' }}</p>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
         @if($contacts->hasPages())
-            <div class="card-footer admin-contacts-pagination" style="background:transparent; border-top:1px solid var(--bd); padding:15px;">
+            <div class="card-footer admin-contacts-pagination">
                 {{ $contacts->links() }}
             </div>
         @endif
