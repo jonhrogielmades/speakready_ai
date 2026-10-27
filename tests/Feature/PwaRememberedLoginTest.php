@@ -7,6 +7,7 @@ use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery;
@@ -136,8 +137,10 @@ class PwaRememberedLoginTest extends TestCase
         $response->assertCookieMissing(Auth::guard()->getRecallerName());
     }
 
-    public function test_password_login_auto_verifies_an_existing_local_account(): void
+    public function test_required_email_verification_blocks_login_without_auto_verifying(): void
     {
+        config(['services.brevo.api_key' => null]);
+        Notification::fake();
         Setting::setVal('acc_verify_email', true, 'account', 'boolean');
 
         $user = User::factory()->unverified()->create([
@@ -152,10 +155,12 @@ class PwaRememberedLoginTest extends TestCase
         $this->post(route('login'), [
             'username' => $user->username,
             'password' => 'password',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertSessionHasErrors([
+            'username' => 'Email verification is required before you can sign in. Check your recovery email for a new verification link.',
+        ]);
 
-        $this->assertNotNull($user->fresh()->email_verified_at);
-        $this->assertAuthenticatedAs($user->fresh());
+        $this->assertNull($user->fresh()->email_verified_at);
+        $this->assertGuest();
     }
 
     public function test_password_login_reports_unregistered_accounts_and_password_mismatches(): void
@@ -197,7 +202,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_registration_logs_user_in_and_flashes_success_alert(): void
+    public function test_registration_logs_user_in_and_shows_success_only_on_terms_page(): void
     {
         $response = $this->post(route('register'), [
             'name' => 'New Interview User',
@@ -231,15 +236,15 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->post(route('terms.acceptance.store'), [
             'terms_accepted' => '1',
+            'recovery_code_saved' => '1',
         ])->assertRedirect(route('dashboard'))
-            ->assertSessionHas('registration_success', true)
-            ->assertSessionHas('success', 'Registration successful. Welcome to SpeakReady AI!');
+            ->assertSessionMissing('registration_success')
+            ->assertSessionMissing('success');
 
         $this->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('id="srFlashModal"', false)
-            ->assertSee('data-sr-flash-modal', false)
-            ->assertSee('Registration successful. Welcome to SpeakReady AI!');
+            ->assertDontSee('id="srFlashModal"', false)
+            ->assertDontSee('Registration successful. Welcome to SpeakReady AI!');
     }
 
     public function test_registration_requires_a_valid_recovery_email_address(): void
@@ -705,6 +710,7 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->post(route('terms.acceptance.store'), [
             'terms_accepted' => '1',
+            'recovery_code_saved' => '1',
         ])->assertRedirect(route('dashboard', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']));
     }
 

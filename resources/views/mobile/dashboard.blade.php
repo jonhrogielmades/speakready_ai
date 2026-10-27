@@ -123,6 +123,8 @@
 @endphp
 
 <div class="db-section active sr-dashboard" id="sec-overview">
+    @include('shared.user.dashboard-onboarding-checklist')
+
     <div class="sr-summary-grid">
         <div class="sr-welcome-stack">
             <section class="sr-card sr-hero-card sr-hero-image-panel p-0" aria-label="SpeakReady AI welcome hero">
@@ -945,8 +947,44 @@ document.addEventListener("DOMContentLoaded", function() {
     document.addEventListener("DOMContentLoaded", function() {
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
-        const completionKey = 'onboarding_completed';
+        const completionKey = null;
+        let dashboardTourCompleted = @json((bool) ($onboardingState['dashboard_tour_completed'] ?? false));
+        let dashboardTourSkipped = @json((bool) ($onboardingState['dashboard_tour_skipped'] ?? false));
+        const onboardingProgressUrl = @json(route('user.onboarding.progress'));
         const serverDetectedMobile = true;
+
+        async function saveDashboardTourMilestone(milestone) {
+            const response = await fetch(onboardingProgressUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                },
+                body: JSON.stringify({ milestone }),
+            });
+
+            if (!response.ok) throw new Error('Dashboard tutorial progress could not be saved.');
+
+            const payload = await response.json().catch(() => ({}));
+            if (payload.onboarding) {
+                window.dispatchEvent(new CustomEvent('speakready:onboarding-updated', {
+                    detail: payload.onboarding,
+                }));
+            }
+        }
+
+        async function saveDashboardTourCompletion() {
+            await saveDashboardTourMilestone('dashboard_tour_completed');
+            dashboardTourCompleted = true;
+            dashboardTourSkipped = false;
+        }
+
+        async function saveDashboardTourSkipped() {
+            await saveDashboardTourMilestone('dashboard_tour_skipped');
+            dashboardTourSkipped = true;
+        }
 
         const stepsMobile = [
             { element: '#mobTutorialBtn', popover: { title: 'Replay Tutorial', description: 'Use this anytime you want a quick walkthrough of the current page.', side: 'bottom', align: 'end' }},
@@ -975,6 +1013,11 @@ document.addEventListener("DOMContentLoaded", function() {
             stepsMobile,
             stepsDesktop,
             autoStart: false,
+            initiallyCompleted: dashboardTourCompleted,
+            isCompleted: () => dashboardTourCompleted,
+            persistLocalCompletion: false,
+            onCompleted: saveDashboardTourCompletion,
+            onSkipped: saveDashboardTourSkipped,
         });
 
         const registrationAlertModal = document.getElementById('srFlashModal');
@@ -987,7 +1030,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ));
 
         function startDashboardTourWhenReady() {
-            if (!dashboardTour || dashboardTour.isCompleted() || tourStartScheduled) return;
+            if (!dashboardTour || dashboardTour.isCompleted() || dashboardTourSkipped || tourStartScheduled) return;
 
             const setupState = window.__speakReadyDashboardSetupState;
             if (isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || setupState?.pending) return;
@@ -996,7 +1039,7 @@ document.addEventListener("DOMContentLoaded", function() {
             window.setTimeout(() => {
                 tourStartScheduled = false;
 
-                if (dashboardTour.isCompleted() || isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || window.__speakReadyDashboardSetupState?.pending) {
+                if (dashboardTour.isCompleted() || dashboardTourSkipped || isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || window.__speakReadyDashboardSetupState?.pending) {
                     return;
                 }
 

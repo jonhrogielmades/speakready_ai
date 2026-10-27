@@ -128,7 +128,7 @@
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
                               <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@gmail.com" required maxlength="255" inputmode="email" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" title="Enter a valid recovery email, for example name@gmail.com." autocomplete="email" spellcheck="false" value="{{ old('email') }}">
                            </div>
-                           <small class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">Used only for password recovery codes.</small>
+                           <small class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">Verify this address before it can receive password recovery emails.</small>
                         </div>
                         <div class="auth-field auth-register-password">
                            <label class="olbl" for="signupPass"><i class="fa-solid fa-lock" aria-hidden="true"></i>Password</label>

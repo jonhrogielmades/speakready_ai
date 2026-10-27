@@ -605,6 +605,9 @@
 
                   <form class="terms-form" method="POST" action="{{ route('terms.acceptance.store') }}">
                      @csrf
+                     @if(! empty($recoveryCodeAcknowledgementRequired) && session('registration_success') && filled(session('recovery_code')))
+                        <input type="hidden" name="recovery_code_saved" id="recoveryCodeSaved" value="{{ old('recovery_code_saved', '0') }}">
+                     @endif
                      <div class="terms-check">
                         <input type="checkbox" name="terms_accepted" value="1" id="termsAccepted" required @checked(old('terms_accepted'))>
                         <label for="termsAccepted">
@@ -614,7 +617,18 @@
                            <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
                         </label>
                      </div>
+                     @if(! empty($recoveryCodeAcknowledgementRequired) && (! session('registration_success') || blank(session('recovery_code'))))
+                        <div class="terms-check">
+                           <input type="checkbox" name="recovery_code_saved" value="1" id="recoveryCodeSavedInline" data-recovery-code-saved-inline required @checked(old('recovery_code_saved'))>
+                           <label for="recoveryCodeSavedInline">
+                              I confirm that I saved the one-time recovery code shown during registration. The original code cannot be displayed again; I can replace it from Account after continuing if needed.
+                           </label>
+                        </div>
+                     @endif
                      @error('terms_accepted')
+                        <div class="terms-error" role="alert">{{ $message }}</div>
+                     @enderror
+                     @error('recovery_code_saved')
                         <div class="terms-error" role="alert">{{ $message }}</div>
                      @enderror
                      <button class="terms-submit" id="termsSubmit" type="submit" disabled>
@@ -630,16 +644,18 @@
          (function () {
             const checkbox = document.getElementById('termsAccepted');
             const button = document.getElementById('termsSubmit');
+             const recoveryAcknowledgement = document.querySelector('[data-recovery-code-saved-inline]');
 
             if (!checkbox || !button) {
                return;
             }
 
             function syncButton() {
-               button.disabled = !checkbox.checked;
+                button.disabled = !checkbox.checked || Boolean(recoveryAcknowledgement && !recoveryAcknowledgement.checked);
             }
 
             checkbox.addEventListener('change', syncButton);
+             recoveryAcknowledgement?.addEventListener('change', syncButton);
             syncButton();
          })();
       </script>

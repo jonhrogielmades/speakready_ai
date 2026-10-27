@@ -47,6 +47,15 @@
                 <strong><span class="account-record-status {{ $accountEmailVerifiedAt ? 'is-verified' : 'is-pending' }}">{{ $accountEmailStatus }}</span></strong>
                 <small>{{ $accountEmailStatusMeta }}</small>
             </span>
+            @if(! $accountEmailVerifiedAt && filled($accountUser?->email))
+                <form method="POST" action="{{ route('verification.send') }}">
+                    @csrf
+                    <button type="submit" class="account-notification-setup-btn" aria-label="Resend recovery email verification">
+                        <i class="fa-regular fa-paper-plane"></i>
+                        <span>Verify</span>
+                    </button>
+                </form>
+            @endif
         </div>
 
         <div class="account-record-item account-record-notification-item">

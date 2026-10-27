@@ -18,6 +18,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -40,7 +41,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  'target_position' => 'Data Analyst',
  ])
  ->assertRedirect()
- ->assertSessionHas('success', 'Profile updated successfully.');
+ ->assertSessionHas('success', 'Profile updated. Verify your new recovery email before using email password recovery.');
 
  $this->assertDatabaseHas('users', [
  'id' => $user->id,
@@ -61,8 +62,11 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
  }
 
- public function test_adding_a_recovery_email_auto_verifies_local_user_and_allows_login(): void
+ public function test_adding_a_recovery_email_requires_verification_and_allows_login(): void
  {
+  config(['services.brevo.api_key' => null]);
+  Notification::fake();
+
  $user = User::factory()->create([
  'username' => 'auto-verify-user',
  'email' => null,
@@ -79,12 +83,12 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  'target_position' => $user->target_position,
  ])
  ->assertRedirect()
- ->assertSessionHas('success', 'Profile updated successfully.');
+ ->assertSessionHas('success', 'Profile updated. Verify your new recovery email before using email password recovery.');
 
  $updatedUser = $user->fresh();
 
  $this->assertSame('recovery-login@example.com', $updatedUser->email);
- $this->assertNotNull($updatedUser->email_verified_at);
+ $this->assertNull($updatedUser->email_verified_at);
 
  $this->post(route('logout'))->assertRedirect();
 
@@ -225,7 +229,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  'target_position' => 'Network Administrator',
  ])
  ->assertRedirect()
- ->assertSessionHas('success', 'Profile updated successfully.');
+ ->assertSessionHas('success', 'Profile updated. Verify your new recovery email before using email password recovery.');
 
  $this->assertAccountNotificationSchemaReady();
  $this->assertDatabaseHas('activity_logs', [

@@ -21,10 +21,20 @@
                     <button type="button" class="terms-success-button" style="min-height:40px;margin-top:10px;background:#2563eb;" data-copy-recovery-code="{{ $registrationRecoveryCode }}">
                         <i class="fa-regular fa-copy" aria-hidden="true"></i> Copy Recovery Code
                     </button>
+                    <label style="display:flex;align-items:flex-start;gap:9px;margin-top:12px;color:var(--tx,#111827);font-size:.8rem;line-height:1.45;cursor:pointer;">
+                        <input type="checkbox" data-recovery-code-saved-ack style="width:17px;height:17px;margin-top:1px;accent-color:#2563eb;flex:0 0 auto;" @checked(old('recovery_code_saved'))>
+                        <span>I saved this recovery code in a secure place.</span>
+                    </label>
+                    @error('recovery_code_saved')
+                        <p role="alert" style="margin:8px 0 0;color:#dc2626;font-size:.76rem;font-weight:750;line-height:1.4;">{{ $message }}</p>
+                    @enderror
                 </div>
             @endif
+            @if(Auth::user() && ! Auth::user()->hasVerifiedEmail())
+                <p class="terms-success-note"><i class="fa-regular fa-envelope" aria-hidden="true"></i> Check your recovery email for a verification link before using email password recovery.</p>
+            @endif
             <p class="terms-success-note">One quick agreement step unlocks your dashboard, practice tools, and AI feedback workspace.</p>
-            <button class="terms-success-button" type="button" data-terms-success-close>
+            <button class="terms-success-button" type="button" data-terms-success-continue {{ $registrationRecoveryCode !== '' ? 'disabled' : '' }}>
                 Continue Review <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
             </button>
         </div>
@@ -37,8 +47,10 @@
                 return;
             }
 
-            const closeButtons = modal.querySelectorAll('[data-terms-success-close]');
-            const actionButton = modal.querySelector('.terms-success-button');
+            const continueButton = modal.querySelector('[data-terms-success-continue]');
+            const savedAcknowledgement = modal.querySelector('[data-recovery-code-saved-ack]');
+            const savedInput = document.getElementById('recoveryCodeSaved');
+            const recoveryCodeRequired = Boolean(savedAcknowledgement);
 
             function closeModal() {
                 modal.classList.remove('is-open');
@@ -48,8 +60,23 @@
                 }, 180);
             }
 
-            closeButtons.forEach(function (button) {
-                button.addEventListener('click', closeModal);
+            function syncRecoveryAcknowledgement() {
+                const acknowledged = !recoveryCodeRequired || Boolean(savedAcknowledgement.checked);
+
+                if (continueButton) {
+                    continueButton.disabled = !acknowledged;
+                    continueButton.setAttribute('aria-disabled', acknowledged ? 'false' : 'true');
+                }
+
+                if (savedInput) {
+                    savedInput.value = acknowledged ? '1' : '0';
+                }
+            }
+
+            savedAcknowledgement?.addEventListener('change', syncRecoveryAcknowledgement);
+            continueButton?.addEventListener('click', function () {
+                if (continueButton.disabled) return;
+                closeModal();
             });
 
             const copyButton = modal.querySelector('[data-copy-recovery-code]');
@@ -69,13 +96,17 @@
             }
 
             document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape' && document.body.contains(modal)) {
+                if (event.key === 'Escape' && document.body.contains(modal) && !recoveryCodeRequired) {
                     closeModal();
                 }
             });
 
-            if (actionButton) {
-                actionButton.focus({ preventScroll: true });
+            syncRecoveryAcknowledgement();
+
+            if (savedAcknowledgement) {
+                savedAcknowledgement.focus({ preventScroll: true });
+            } else if (continueButton) {
+                continueButton.focus({ preventScroll: true });
             }
         })();
     </script>

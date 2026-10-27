@@ -2,6 +2,14 @@
     (function() {
         if (window.createSpeakReadyTour) return;
 
+        const tutorialStorageUserId = @json((int) Auth::id());
+
+        function accountScopedCompletionKey(completionKey) {
+            if (!completionKey) return null;
+
+            return `${completionKey}::user:${tutorialStorageUserId || 'guest'}`;
+        }
+
         function isMobileTour(serverDetectedMobile) {
             return Boolean(serverDetectedMobile) ||
                 Boolean(document.getElementById('mob-content')) ||
@@ -1384,6 +1392,7 @@
                 window.driver.js.driver :
                 getNativeTourFactory();
             const completionKey = config.completionKey;
+            const scopedCompletionKey = accountScopedCompletionKey(completionKey);
             const registrationScope = normalizePageScope(config.pageScope) || getCurrentPageScope();
             const registrationKey = makeRegistrationKey(registrationScope, completionKey, isFallbackTour);
             const existingRegistration = getRegisteredTour();
@@ -1412,6 +1421,31 @@
             const registrationVersion = bumpTourRegistrationVersion();
             let activeTour = null;
             let isStarting = false;
+            let completedInSession = Boolean(config.initiallyCompleted);
+
+            function isTourCompleted() {
+                if (completedInSession) return true;
+
+                if (typeof config.isCompleted === 'function') {
+                    return Boolean(config.isCompleted());
+                }
+
+                return Boolean(scopedCompletionKey && localStorage.getItem(scopedCompletionKey));
+            }
+
+            function markTourCompleted() {
+                completedInSession = true;
+
+                if (scopedCompletionKey && config.persistLocalCompletion !== false) {
+                    localStorage.setItem(scopedCompletionKey, 'true');
+                }
+
+                if (typeof config.onCompleted === 'function') {
+                    Promise.resolve(config.onCompleted()).catch((error) => {
+                        console.warn('Tutorial completion could not be saved:', error);
+                    });
+                }
+            }
 
             if (isFallbackTour) {
                 window.__speakReadyFallbackTourRegistered = true;
@@ -1464,11 +1498,16 @@
                     },
                     onDestroyStarted: () => {
                         const forceDestroy = window.__speakReadyForceDestroy === true;
+                        const reachedFinalStep = !driverObj.hasNextStep();
                         const exitText = config.exitConfirmText || 'Are you sure you want to exit the tutorial?';
 
-                        if (forceDestroy || !driverObj.hasNextStep() || confirm(exitText)) {
-                            if (!forceDestroy && completionKey) {
-                                localStorage.setItem(completionKey, 'true');
+                        if (forceDestroy || reachedFinalStep || confirm(exitText)) {
+                            if (!forceDestroy && reachedFinalStep) {
+                                markTourCompleted();
+                            } else if (!forceDestroy && typeof config.onSkipped === 'function') {
+                                Promise.resolve(config.onSkipped()).catch((error) => {
+                                    console.warn('Tutorial skip could not be saved:', error);
+                                });
                             }
 
                             if (typeof config.onBeforeDestroy === 'function') {
@@ -1571,9 +1610,9 @@
                         return;
                     }
 
-                    if (!completionKey || !localStorage.getItem(completionKey)) {
+                    if (!isTourCompleted()) {
                         window.setTimeout(() => {
-                            if (isCurrentTourScope(registrationScope) && (!completionKey || !localStorage.getItem(completionKey))) {
+                            if (isCurrentTourScope(registrationScope) && !isTourCompleted()) {
                                 controller.start();
                             }
                         }, delay ?? config.autoStartDelay ?? 500);
@@ -1581,7 +1620,7 @@
                 },
 
                 isCompleted() {
-                    return Boolean(completionKey && localStorage.getItem(completionKey));
+                    return isTourCompleted();
                 },
 
                 isForCurrentPage() {

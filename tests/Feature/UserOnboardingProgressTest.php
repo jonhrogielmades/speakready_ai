@@ -1,0 +1,233 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\InterviewSession;
+use App\Models\Score;
+use App\Models\User;
+use App\Models\UserOnboardingProgress;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class UserOnboardingProgressTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_onboarding_milestones_are_persisted_per_user_and_skipping_does_not_complete_tour(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('user.onboarding.progress'), [
+                'milestone' => 'dashboard_tour_skipped',
+            ])
+            ->assertOk()
+            ->assertJsonPath('onboarding.dashboard_tour_skipped', true)
+            ->assertJsonPath('onboarding.dashboard_tour_completed', false);
+
+        $this->assertDatabaseHas('user_onboarding_progress', [
+            'user_id' => $user->id,
+            'dashboard_tour_completed_at' => null,
+        ]);
+        $this->assertDatabaseMissing('user_onboarding_progress', [
+            'user_id' => $otherUser->id,
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(route('user.onboarding.progress'), [
+                'milestone' => 'dashboard_tour_completed',
+            ])
+            ->assertOk()
+            ->assertJsonPath('onboarding.dashboard_tour_completed', true)
+            ->assertJsonPath('onboarding.dashboard_tour_skipped', false);
+    }
+
+    public function test_setup_results_and_personalization_are_saved_on_the_server(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('user.onboarding.progress'), [
+                'milestone' => 'setup_tools_completed',
+                'tools' => [
+                    'microphone' => 'granted',
+                    'camera' => 'off',
+                    'notifications' => 'granted',
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('onboarding.setup_tools_completed', true)
+            ->assertJsonPath('onboarding.setup_tools.microphone', 'granted');
+
+        $this->actingAs($user)
+            ->postJson(route('user.onboarding.personalization'), [
+                'action' => 'save',
+                'target_position' => 'Software Engineer',
+                'preferred_language' => 'en',
+                'experience_level' => 'entry',
+                'interview_goal' => 'Prepare for my first technical interview',
+                'interview_date' => now()->addWeek()->toDateString(),
+            ])
+            ->assertOk()
+            ->assertJsonPath('onboarding.profile_personalized', true)
+            ->assertJsonPath('onboarding.experience_level', 'entry');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'target_position' => 'Software Engineer',
+            'preferred_language' => 'en',
+        ]);
+        $this->assertDatabaseHas('user_onboarding_progress', [
+            'user_id' => $user->id,
+            'experience_level' => 'entry',
+            'interview_goal' => 'Prepare for my first technical interview',
+        ]);
+    }
+
+    public function test_registration_requires_recovery_code_acknowledgement_and_records_it(): void
+    {
+        $this->post(route('register'), [
+            'name' => 'Recovery Acknowledgement User',
+            'username' => 'recovery-ack-user',
+            'email' => 'recovery-ack@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect(route('terms.acceptance.show'));
+
+        $this->get(route('terms.acceptance.show'))
+            ->assertOk()
+            ->assertSee('name="recovery_code_saved"', false)
+            ->assertSee('data-recovery-code-saved-ack', false)
+            ->assertSee('data-terms-success-continue disabled', false);
+
+        $this->post(route('terms.acceptance.store'), [
+            'terms_accepted' => '1',
+        ])->assertSessionHasErrors('recovery_code_saved')
+            ->assertSessionHas('registration_success', true);
+
+        $this->post(route('terms.acceptance.store'), [
+            'terms_accepted' => '1',
+            'recovery_code_saved' => '1',
+        ])->assertRedirect(route('dashboard'))
+            ->assertSessionMissing('registration_success')
+            ->assertSessionMissing('success');
+
+        $user = User::where('username', 'recovery-ack-user')->firstOrFail();
+        $this->assertNotNull(UserOnboardingProgress::forUser($user)->recovery_code_ack_required_at);
+        $this->assertNotNull($user->fresh()->terms_accepted_at);
+        $this->assertNotNull(UserOnboardingProgress::forUser($user)->recovery_code_saved_at);
+    }
+
+    public function test_recovery_code_acknowledgement_cannot_be_bypassed_after_registration_flash_expires(): void
+    {
+        $this->post(route('register'), [
+            'name' => 'Durable Recovery Acknowledgement User',
+            'username' => 'durable-recovery-ack-user',
+            'email' => 'durable-recovery-ack@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect(route('terms.acceptance.show'));
+
+        // Two unrelated requests age and remove Laravel's one-request flash
+        // data, reproducing the navigation path that previously bypassed the
+        // recovery-code acknowledgement requirement.
+        $this->get(route('legal.privacy'))->assertOk();
+        $this->get(route('legal.privacy'))
+            ->assertOk()
+            ->assertSessionMissing('registration_success')
+            ->assertSessionMissing('recovery_code');
+
+        $this->get(route('terms.acceptance.show'))
+            ->assertOk()
+            ->assertSee('data-recovery-code-saved-inline', false)
+            ->assertDontSee('data-recovery-code-saved-ack', false);
+
+        $this->post(route('terms.acceptance.store'), [
+            'terms_accepted' => '1',
+        ])->assertSessionHasErrors('recovery_code_saved');
+
+        $user = User::where('username', 'durable-recovery-ack-user')->firstOrFail();
+        $progress = UserOnboardingProgress::forUser($user);
+        $this->assertTrue($progress->requiresRecoveryCodeAcknowledgement());
+        $this->assertNull($user->fresh()->terms_accepted_at);
+        $this->assertNull($progress->recovery_code_saved_at);
+
+        $this->post(route('terms.acceptance.store'), [
+            'terms_accepted' => '1',
+            'recovery_code_saved' => '1',
+        ])->assertRedirect(route('dashboard'))
+            ->assertSessionMissing('success');
+
+        $this->assertFalse(UserOnboardingProgress::forUser($user)->fresh()->requiresRecoveryCodeAcknowledgement());
+        $this->assertNotNull($user->fresh()->terms_accepted_at);
+    }
+
+    public function test_dashboard_renders_account_scoped_onboarding_controls(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('id="dashboardOnboardingChecklist"', false)
+            ->assertSee('data-sr-onboarding-progress-url="'.route('user.onboarding.progress').'"', false)
+            ->assertSee('data-sr-setup-completed="false"', false)
+            ->assertSee('data-sr-setup-snoozed="false"', false)
+            ->assertSee("const tutorialStorageUserId = {$user->id};", false)
+            ->assertSee('localStorage.getItem(scopedCompletionKey)', false)
+            ->assertSee('localStorage.setItem(scopedCompletionKey', false)
+            ->assertDontSee('localStorage.getItem(completionKey)', false)
+            ->assertDontSee("const completionKey = 'onboarding_completed'", false);
+    }
+
+    public function test_activation_requires_current_terms_and_a_completed_scored_interview(): void
+    {
+        $user = User::factory()->create([
+            'terms_accepted_at' => null,
+            'terms_version' => null,
+        ]);
+        $progress = UserOnboardingProgress::forUser($user)->syncFromUserState($user);
+
+        $this->assertNull($progress->first_interview_completed_at);
+        $this->assertNull($progress->activated_at);
+
+        $session = InterviewSession::create([
+            'user_id' => $user->id,
+            'difficulty' => 'medium',
+            'target_position' => 'Software Engineer',
+            'status' => 'completed',
+            'assessment_mode' => 'legacy',
+            'score_eligible' => true,
+        ]);
+        Score::create([
+            'interview_session_id' => $session->id,
+            'score_version' => 5,
+            'assessment_mode' => 'legacy',
+            'clarity_score' => 70,
+            'relevance_score' => 70,
+            'grammar_score' => 70,
+            'professionalism_score' => 70,
+            'confidence_score' => 0,
+            'delivery_stability_score' => 0,
+            'star_method_score' => 70,
+            'overall_readiness_score' => 70,
+            'readiness_band' => 'Developing',
+        ]);
+
+        $progress->syncFromUserState($user->fresh());
+
+        $this->assertNotNull($progress->first_interview_completed_at);
+        $this->assertNull($progress->activated_at);
+        $this->assertFalse($progress->toStateArray($user->fresh())['activated']);
+
+        $user->forceFill([
+            'terms_accepted_at' => now(),
+            'terms_version' => User::TERMS_VERSION,
+        ])->save();
+        $progress->syncFromUserState($user->fresh());
+
+        $this->assertNotNull($progress->activated_at);
+        $this->assertTrue($progress->toStateArray($user->fresh())['activated']);
+    }
+}

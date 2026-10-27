@@ -18,6 +18,7 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\UserOnboardingProgress;
 use App\Services\AccountDeletionService;
 use App\Services\AIService;
 use App\Services\ProfilePhotoStorage;
@@ -157,8 +158,11 @@ class UserController extends Controller
  public function dashboard()
  {
  $user_id = Auth::id();
+  $userObj = Auth::user();
  AccountNotificationSchema::ensure();
  $profile = Profile::forUser((int) $user_id);
+  $onboardingProgress = UserOnboardingProgress::forUser($userObj);
+  $onboardingState = $onboardingProgress->toStateArray($userObj);
 
  // Base query for completed sessions
  $completedSessions = InterviewSession::where('user_id', $user_id)
@@ -341,7 +345,7 @@ class UserController extends Controller
   'profile', 'totalSessions', 'avgScore', 'scoreTrend', 'dashboardTrend',
  'radarData', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
  'learningLabProgress', 'recentNotifications', 'upcomingGoal',
- 'dashboardMockScenarios', 'dashboardBubbleMessages'
+  'dashboardMockScenarios', 'dashboardBubbleMessages', 'onboardingProgress', 'onboardingState'
  ));
  }
 
@@ -4196,6 +4200,101 @@ class UserController extends Controller
  ]);
  }
 
+ public function updateOnboardingProgress(Request $request)
+ {
+  $validated = $request->validate([
+   'milestone' => ['required', 'string', Rule::in([
+    'setup_tools_completed',
+    'setup_tools_snoozed',
+    'dashboard_tour_completed',
+    'dashboard_tour_skipped',
+   ])],
+   'tools' => ['nullable', 'array:microphone,camera,notifications'],
+   'tools.*' => ['nullable', 'string', 'max:80'],
+  ]);
+
+  $user = $request->user();
+  $progress = UserOnboardingProgress::forUser($user);
+  $now = now();
+
+  match ($validated['milestone']) {
+   'setup_tools_completed' => $progress->forceFill([
+    'setup_tools_completed_at' => $progress->setup_tools_completed_at ?: $now,
+    'setup_tools_snoozed_at' => null,
+    'setup_tools' => $validated['tools']?? $progress->setup_tools?? [],
+   ]),
+   'setup_tools_snoozed' => $progress->forceFill([
+    'setup_tools_snoozed_at' => $now,
+   ]),
+   'dashboard_tour_completed' => $progress->forceFill([
+    'dashboard_tour_completed_at' => $progress->dashboard_tour_completed_at ?: $now,
+    'dashboard_tour_skipped_at' => null,
+   ]),
+   'dashboard_tour_skipped' => $progress->forceFill([
+    'dashboard_tour_skipped_at' => $now,
+   ]),
+  };
+
+  $progress->save();
+
+  return response()->json([
+   'success' => true,
+   'onboarding' => $progress->toStateArray($user),
+  ]);
+ }
+
+ public function updateOnboardingPersonalization(Request $request)
+ {
+  $action = (string) $request->input('action', 'save');
+  $saving = $action === 'save';
+
+  $validated = $request->validate([
+   'action' => ['required', Rule::in(['save', 'skip'])],
+   'target_position' => [Rule::requiredIf($saving), 'nullable', 'string', 'max:255'],
+   'preferred_language' => [Rule::requiredIf($saving), 'nullable', 'string', Rule::in(array_keys(Setting::supportedLanguages()))],
+   'experience_level' => [Rule::requiredIf($saving), 'nullable', Rule::in(['student', 'entry', 'mid', 'senior', 'career_change'])],
+   'interview_goal' => ['nullable', 'string', 'max:255'],
+   'interview_date' => ['nullable', 'date', 'after_or_equal:today'],
+  ]);
+
+  $user = $request->user();
+  $progress = UserOnboardingProgress::forUser($user);
+
+  if ($validated['action'] === 'skip') {
+   $progress->forceFill([
+    'personalization_skipped_at' => now(),
+   ])->save();
+
+   $message = 'Personalization skipped. You can complete it from your dashboard anytime.';
+  } else {
+   $user->forceFill([
+    'target_position' => trim((string) $validated['target_position']),
+    'preferred_language' => $validated['preferred_language'],
+   ])->save();
+   session(['preferred_language' => $validated['preferred_language']]);
+
+   $progress->forceFill([
+    'profile_personalized_at' => $progress->profile_personalized_at ?: now(),
+    'personalization_skipped_at' => null,
+    'experience_level' => $validated['experience_level'],
+    'interview_goal' => filled($validated['interview_goal']?? null) ? trim((string) $validated['interview_goal']) : null,
+    'interview_date' => $validated['interview_date']?? null,
+   ])->save();
+
+   $message = 'Your interview goal has been saved.';
+  }
+
+  if ($request->expectsJson()) {
+   return response()->json([
+    'success' => true,
+    'message' => $message,
+    'onboarding' => $progress->toStateArray($user),
+   ]);
+  }
+
+  return redirect()->route('dashboard', sr_layout_query($request))->with('success', $message);
+ }
+
  public function onboardingSpeech(Request $request)
  {
  $validated = $request->validate([
@@ -4220,7 +4319,7 @@ class UserController extends Controller
  ->header('X-Content-Type-Options', 'nosniff');
  }
 
- public function updateProfile(Request $request, ProfilePhotoStorage $photoStorage)
+ public function updateProfile(Request $request, ProfilePhotoStorage $photoStorage, \App\Services\RecoveryEmailVerification $emailVerification)
  {
  AccountNotificationSchema::ensure();
 
@@ -4246,8 +4345,8 @@ class UserController extends Controller
  $user->email = $normalizedRecoveryEmail;
  if ($normalizedRecoveryEmail === null) {
   $user->email_verified_at = null;
- } elseif ($emailChanged || ! $user->email_verified_at) {
-  $user->email_verified_at = now();
+ } elseif ($emailChanged) {
+  $user->email_verified_at = null;
  }
  $user->target_position = $request->target_position;
 
@@ -4278,6 +4377,19 @@ class UserController extends Controller
  $photoStorage->delete($previousPhoto);
  }
 
+ $verificationDeliveryFailed = false;
+ if ($emailChanged && filled($normalizedRecoveryEmail)) {
+  try {
+   $emailVerification->send($user);
+  } catch (\Throwable $error) {
+   $verificationDeliveryFailed = true;
+   Log::warning('Updated recovery email verification could not be delivered.', [
+    'user_id' => $user->getKey(),
+    'exception_type' => $error::class,
+   ]);
+  }
+ }
+
  ActivityLogger::log(
  $user,
  'profile_updated',
@@ -4292,7 +4404,13 @@ class UserController extends Controller
  ]
  );
 
- return redirect()->back()->with('success', 'Profile updated successfully.');
+ $response = redirect()->back()->with('success', $emailChanged && filled($normalizedRecoveryEmail)
+  ? 'Profile updated. Verify your new recovery email before using email password recovery.'
+  : 'Profile updated successfully.');
+
+ return $verificationDeliveryFailed
+  ? $response->with('error', 'The verification email could not be sent. Use Resend verification from your account later.')
+  : $response;
  }
 
  public function updatePassword(Request $request)

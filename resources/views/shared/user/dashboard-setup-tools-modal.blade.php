@@ -1,3 +1,14 @@
+@php
+    $dashboardSetupState = is_array($onboardingState ?? null) ? $onboardingState : [];
+    $dashboardSavedTools = is_array($dashboardSetupState['setup_tools'] ?? null) ? $dashboardSetupState['setup_tools'] : [];
+    $dashboardSetupCompleted = (bool) ($dashboardSetupState['setup_tools_completed'] ?? false);
+    $dashboardToolIsEnabled = static function (string $tool, bool $default) use ($dashboardSavedTools): bool {
+        if (! array_key_exists($tool, $dashboardSavedTools)) return $default;
+
+        return $dashboardSavedTools[$tool] !== 'off';
+    };
+@endphp
+
 @once
 @push('styles')
 <style data-sr-dashboard-setup-styles>
@@ -437,7 +448,7 @@
 @endpush
 @endonce
 
-<div class="modal fade sr-dashboard-coach-modal sr-dashboard-setup-modal" id="dashboardSetupToolsModal" tabindex="-1" aria-labelledby="dashboardSetupToolsModalTitle" aria-hidden="true" data-sr-dashboard-setup-modal data-sr-setup-auto-show="{{ ! empty($setupToolsAutoShow) ? 'true' : 'false' }}">
+<div class="modal fade sr-dashboard-coach-modal sr-dashboard-setup-modal" id="dashboardSetupToolsModal" tabindex="-1" aria-labelledby="dashboardSetupToolsModalTitle" aria-hidden="true" data-sr-dashboard-setup-modal data-sr-setup-auto-show="{{ ! empty($setupToolsAutoShow) ? 'true' : 'false' }}" data-sr-setup-completed="{{ $dashboardSetupCompleted ? 'true' : 'false' }}" data-sr-setup-snoozed="{{ ! empty($dashboardSetupState['setup_tools_snoozed']) ? 'true' : 'false' }}" data-sr-onboarding-user="{{ (int) Auth::id() }}" data-sr-onboarding-progress-url="{{ route('user.onboarding.progress') }}">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form id="dashboardSetupToolsForm" data-sr-dashboard-setup-form>
@@ -465,7 +476,7 @@
                                 <small>Voice answers and AI coach prompts.</small>
                             </span>
                             <span class="sr-dashboard-setup-switch">
-                                <input type="checkbox" role="switch" aria-label="Enable microphone" aria-checked="true" data-sr-setup-tool="microphone" checked>
+                                <input type="checkbox" role="switch" aria-label="Enable microphone" aria-checked="{{ $dashboardToolIsEnabled('microphone', true) ? 'true' : 'false' }}" data-sr-setup-tool="microphone" @checked($dashboardToolIsEnabled('microphone', true))>
                                 <span class="sr-dashboard-setup-switch-ui" aria-hidden="true"></span>
                             </span>
                             <span class="sr-dashboard-setup-tool-status" data-sr-setup-tool-status="microphone">On</span>
@@ -478,7 +489,7 @@
                                 <small>Camera checks for monitored practice.</small>
                             </span>
                             <span class="sr-dashboard-setup-switch">
-                                <input type="checkbox" role="switch" aria-label="Enable camera" aria-checked="true" data-sr-setup-tool="camera" checked>
+                                <input type="checkbox" role="switch" aria-label="Enable camera" aria-checked="{{ $dashboardToolIsEnabled('camera', true) ? 'true' : 'false' }}" data-sr-setup-tool="camera" @checked($dashboardToolIsEnabled('camera', true))>
                                 <span class="sr-dashboard-setup-switch-ui" aria-hidden="true"></span>
                             </span>
                             <span class="sr-dashboard-setup-tool-status" data-sr-setup-tool-status="camera">On</span>
@@ -491,7 +502,7 @@
                                 <small>Practice reminders and progress alerts.</small>
                             </span>
                             <span class="sr-dashboard-setup-switch">
-                                <input type="checkbox" role="switch" aria-label="Enable notifications" aria-checked="false" data-sr-setup-tool="notifications">
+                                <input type="checkbox" role="switch" aria-label="Enable notifications" aria-checked="{{ $dashboardToolIsEnabled('notifications', false) ? 'true' : 'false' }}" data-sr-setup-tool="notifications" @checked($dashboardToolIsEnabled('notifications', false))>
                                 <span class="sr-dashboard-setup-switch-ui" aria-hidden="true"></span>
                             </span>
                             <span class="sr-dashboard-setup-tool-status" data-sr-setup-tool-status="notifications">Off</span>
@@ -523,33 +534,17 @@
             const allowButton = document.getElementById('dashboardSetupToolsAllow');
             const status = document.getElementById('dashboardSetupToolsStatus');
             const toggles = Array.from(form.querySelectorAll('[data-sr-setup-tool]'));
-            const storageKey = 'speakready.dashboardSetupTools.v1';
-            const snoozeKey = 'speakready.dashboardSetupTools.snoozed';
+            const onboardingUser = modalElement?.dataset.srOnboardingUser || 'guest';
+            const snoozeKey = 'speakready.dashboardSetupTools.snoozed.' + onboardingUser;
             const shouldAutoShow = modalElement?.dataset.srSetupAutoShow === 'true';
+            const progressUrl = modalElement?.dataset.srOnboardingProgressUrl || '';
             const setupState = window.__speakReadyDashboardSetupState = window.__speakReadyDashboardSetupState || {
                 pending: false,
                 ready: false,
             };
-            let completed = false;
+            let completed = modalElement?.dataset.srSetupCompleted === 'true';
+            let serverSnoozed = modalElement?.dataset.srSetupSnoozed === 'true';
             let submitActive = false;
-
-            function safeLocalGet(key) {
-                try {
-                    return window.localStorage.getItem(key);
-                } catch (error) {
-                    return null;
-                }
-            }
-
-            function safeLocalSet(key, value) {
-                try {
-                    window.localStorage.setItem(key, value);
-                } catch (error) {
-                    return false;
-                }
-
-                return true;
-            }
 
             function safeSessionGet(key) {
                 try {
@@ -580,15 +575,7 @@
             }
 
             function hasCompletedSetup() {
-                const saved = safeLocalGet(storageKey);
-                if (!saved) return false;
-
-                try {
-                    const parsed = JSON.parse(saved);
-                    return Boolean(parsed && parsed.completedAt);
-                } catch (error) {
-                    return false;
-                }
+                return completed;
             }
 
             function isModalOpen(element) {
@@ -746,13 +733,60 @@
                 return requestMediaTool(tool);
             }
 
-            function saveSetup(results) {
+            async function persistMilestone(milestone, results) {
+                if (!progressUrl) {
+                    throw new Error('Onboarding progress endpoint is unavailable.');
+                }
+
+                const response = await fetch(progressUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    },
+                    body: JSON.stringify({
+                        milestone,
+                        ...(results ? { tools: results } : {}),
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Setup progress could not be saved.');
+                }
+
+                const payload = await response.json().catch(() => ({}));
+                if (payload.onboarding) {
+                    window.dispatchEvent(new CustomEvent('speakready:onboarding-updated', {
+                        detail: payload.onboarding,
+                    }));
+                }
+
+                return payload.onboarding || null;
+            }
+
+            async function saveSetup(results) {
+                await persistMilestone('setup_tools_completed', results);
+
                 completed = true;
-                safeLocalSet(storageKey, JSON.stringify({
-                    completedAt: new Date().toISOString(),
-                    tools: results,
-                }));
+                serverSnoozed = false;
+                modalElement.dataset.srSetupCompleted = 'true';
+                modalElement.dataset.srSetupSnoozed = 'false';
                 safeSessionRemove(snoozeKey);
+            }
+
+            function snoozeSetup() {
+                if (completed || serverSnoozed) return;
+
+                serverSnoozed = true;
+                modalElement.dataset.srSetupSnoozed = 'true';
+                safeSessionSet(snoozeKey, '1');
+                persistMilestone('setup_tools_snoozed').catch((error) => {
+                    serverSnoozed = false;
+                    modalElement.dataset.srSetupSnoozed = 'false';
+                    console.warn('Setup reminder could not be snoozed:', error);
+                });
             }
 
             function dismissModal() {
@@ -771,12 +805,12 @@
 
             form.querySelectorAll('[data-sr-setup-later]').forEach((button) => {
                 button.addEventListener('click', () => {
-                    if (!completed) safeSessionSet(snoozeKey, '1');
+                    snoozeSetup();
                 });
             });
 
             modalElement?.addEventListener('hidden.bs.modal', () => {
-                if (!completed && !submitActive) safeSessionSet(snoozeKey, '1');
+                if (!completed && !submitActive) snoozeSetup();
                 markSetupReady();
             });
 
@@ -823,7 +857,7 @@
                         return;
                     }
 
-                    saveSetup(results);
+                    await saveSetup(results);
                     setStatus('Setup saved. You can change browser permissions anytime from site settings.', 'success');
                     window.setTimeout(dismissModal, 650);
                 } catch (error) {
@@ -838,7 +872,7 @@
                 }
             });
 
-            const shouldPromptForSetup = shouldAutoShow && !hasCompletedSetup() && !safeSessionGet(snoozeKey) && window.bootstrap && modalElement;
+            const shouldPromptForSetup = shouldAutoShow && !hasCompletedSetup() && !serverSnoozed && !safeSessionGet(snoozeKey) && window.bootstrap && modalElement;
             const registrationAlertModal = document.getElementById('srFlashModal');
 
             if (!shouldPromptForSetup) {
@@ -850,7 +884,7 @@
             setupState.ready = false;
 
             function showSetupToolsModal() {
-                if (hasCompletedSetup() || safeSessionGet(snoozeKey)) {
+                if (hasCompletedSetup() || serverSnoozed || safeSessionGet(snoozeKey)) {
                     markSetupReady();
                     return;
                 }

@@ -91,7 +91,7 @@
                             <input type="text" class="oinp" name="name" id="accountName" value="{{ old('name', Auth::user()->name) }}" autocomplete="name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="account-field-label" for="accountEmail"><span class="account-label-icon"><i class="fa-regular fa-envelope"></i></span>Email Address <small>(optional, for Google Login)</small></label>
+                            <label class="account-field-label" for="accountEmail"><span class="account-label-icon"><i class="fa-regular fa-envelope"></i></span>Recovery Email <small>(verification required)</small></label>
                             <input type="email" class="oinp" name="email" id="accountEmail" value="{{ old('email', Auth::user()->email) }}" autocomplete="email">
                         </div>
                     </div>

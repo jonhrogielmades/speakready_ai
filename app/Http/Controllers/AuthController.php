@@ -6,8 +6,10 @@ use App\Helpers\ActivityLogger;
 use App\Mail\PasswordRecoveryCodeMail;
 use App\Models\Profile;
 use App\Models\Setting;
+use App\Models\UserOnboardingProgress;
 use App\Services\AccountDeletionService;
 use App\Services\BrevoTransactionalMail;
+use App\Services\RecoveryEmailVerification;
 use App\Models\User;
 use App\Support\AccountNotificationSchema;
 use App\Support\PasswordRecovery;
@@ -58,7 +60,7 @@ class AuthController extends Controller
 
     private const MOBILE_VIEWPORT_MAX = 820;
 
-    public function register(Request $request)
+    public function register(Request $request, RecoveryEmailVerification $emailVerification)
     {
         if (! Setting::enabled('acc_registration')) {
             return back()->withErrors([
@@ -95,12 +97,28 @@ class AuthController extends Controller
             'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
             'password_recovery_code_generated_at' => now(),
             'password_recovery_code_expires_at' => null,
-            'email_verified_at' => now(),
+            'email_verified_at' => null,
         ]);
+
+        UserOnboardingProgress::forUser($user)->forceFill([
+            'recovery_code_ack_required_at' => now(),
+            'recovery_code_saved_at' => null,
+        ])->save();
 
         $this->ensureAuthenticationProfile($user);
 
         Auth::login($user, true);
+
+        try {
+            $emailVerification->send($user);
+        } catch (Throwable $error) {
+            // Account creation must remain available when outbound email is
+            // temporarily unavailable; the user can resend from Account.
+            Log::warning('Initial recovery email verification could not be delivered.', [
+                'user_id' => $user->getKey(),
+                'exception_type' => $error::class,
+            ]);
+        }
 
         $this->safeActivityLog(
             $user,
@@ -125,7 +143,7 @@ class AuthController extends Controller
             ->with('recovery_code', $recoveryCode);
     }
 
-    public function login(Request $request)
+    public function login(Request $request, RecoveryEmailVerification $emailVerification)
     {
         $loginValue = $request->input('username', $request->input('email'));
 
@@ -163,16 +181,6 @@ class AuthController extends Controller
             );
         }
 
-        // Local accounts use a successful username/password sign-in as their
-        // verification step. This repairs existing accounts created before
-        // automatic recovery-email verification was introduced, so they are
-        // never locked out by the legacy email-verification flag.
-        if (filled($user->email) && ! $user->email_verified_at) {
-            $user->forceFill([
-                'email_verified_at' => now(),
-            ])->save();
-        }
-
         Auth::login($user, $rememberDevice);
 
         if (Auth::check()) {
@@ -192,13 +200,22 @@ class AuthController extends Controller
                 ]);
             }
 
-            if (! $user->is_admin && filled($user->email) && SystemSettings::enabled('acc_verify_email', false) && ! $user->email_verified_at) {
+            if (! $user->is_admin && filled($user->email) && SystemSettings::enabled('acc_verify_email', false) && ! $user->hasVerifiedEmail()) {
+                try {
+                    $emailVerification->send($user);
+                } catch (Throwable $error) {
+                    Log::warning('Required recovery email verification could not be delivered during login.', [
+                        'user_id' => $user->getKey(),
+                        'exception_type' => $error::class,
+                    ]);
+                }
+
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
                 return back()->withErrors([
-                    'username' => 'Email verification is required before you can sign in.',
+                    'username' => 'Email verification is required before you can sign in. Check your recovery email for a new verification link.',
                 ])->withInput([
                     'username' => $identifier,
                 ]);
@@ -288,6 +305,12 @@ class AuthController extends Controller
                 ->withInput($request->only('username', 'email'));
         }
 
+        if (! $user->hasVerifiedEmail()) {
+            return redirect()->route('password.request')
+                ->withErrors(['email' => 'Verify this recovery email from your account before requesting an emailed recovery code.'])
+                ->withInput($request->only('username', 'email'));
+        }
+
         $recoveryCode = PasswordRecovery::generate();
         $expiresInMinutes = max(5, (int) config('auth.passwords.users.recovery_code_expire', 15));
         $recoveryCodeHash = PasswordRecovery::hash($recoveryCode);
@@ -366,6 +389,18 @@ class AuthController extends Controller
         $request->validate([
             'email' => ['required', 'email'],
         ]);
+
+        $eligibleUser = User::query()
+            ->whereNull('google_id')
+            ->whereNotNull('email_verified_at')
+            ->whereRaw('LOWER(email) = ?', [$request->email])
+            ->exists();
+
+        if (! $eligibleUser) {
+            return back()
+                ->with('status', 'If a verified local account matches that email, a password reset link will be sent shortly.')
+                ->onlyInput('email');
+        }
 
         try {
             $status = Password::sendResetLink($request->only('email'));
@@ -687,6 +722,10 @@ class AuthController extends Controller
                 $user = User::create($userAttributes);
                 $user->forceFill([
                     'email_verified_at' => $googleVerifiedAt,
+                ])->save();
+                UserOnboardingProgress::forUser($user)->forceFill([
+                    'recovery_code_ack_required_at' => now(),
+                    'recovery_code_saved_at' => null,
                 ])->save();
                 $registeredWithGoogle = true;
 

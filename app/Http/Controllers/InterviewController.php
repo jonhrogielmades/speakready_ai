@@ -14,6 +14,7 @@ use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
+use App\Models\UserOnboardingProgress;
 use App\Services\AIService;
 use App\Services\AiProviderEvaluationService;
 use App\Services\AudioDurationService;
@@ -1054,6 +1055,8 @@ return response()->json([
  $session->refresh()->load(['score', 'feedback']);
  }
 
+  $this->syncScoredInterviewOnboarding($request, $session);
+
  $this->forgetCompletedSessionState($session, $gameLevel);
  $redirect = $this->completedSessionRedirect($session, $gameLevel);
 
@@ -1451,6 +1454,7 @@ return response()->json([
 
  DB::commit();
  $reportTransactionStarted = false;
+  $this->syncScoredInterviewOnboarding($request, $session);
  $this->forgetCompletedSessionState($session, $gameLevel);
 
  $redirect = $this->completedSessionRedirect($session, $gameLevel, $gameStatus, $gameResultScore, [
@@ -1489,6 +1493,27 @@ return response()->json([
  'retry_after_ms' => 1500,
  ], fn ($value) => $value!== null), 503): back()->with('error', $message);
  }
+ }
+
+ private function syncScoredInterviewOnboarding(Request $request, InterviewSession $session): void
+ {
+  if ($session->status !== 'completed' || ! $session->score()->exists()) {
+   return;
+  }
+
+  try {
+   $user = $request->user();
+   if ($user) {
+    UserOnboardingProgress::forUser($user)->syncFromUserState($user);
+   }
+  } catch (\Throwable $error) {
+   // Onboarding telemetry must never turn a completed interview into a failure.
+   Log::warning('Unable to update onboarding activation after interview completion.', [
+    'session_id' => $session->id,
+    'user_id' => $request->user()?->id,
+    'error_type' => $error::class,
+   ]);
+  }
  }
 
  private function ensureInterviewRuntimeSchema(): void

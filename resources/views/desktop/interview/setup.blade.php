@@ -64,7 +64,7 @@
  $targetFieldCopy = $targetFieldCopies[$targetFieldMode];
  $targetPositionDefault = old(
  'target_position',
- ''
+ Auth::user()?->target_position ?? ''
  );
  $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
  $maxQuestionSetting = (int) \App\Support\SystemSettings::value('int_max_questions', 20);

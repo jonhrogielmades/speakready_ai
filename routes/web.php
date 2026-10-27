@@ -10,6 +10,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\RecoveryEmailVerificationController;
 use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserMasteryController;
@@ -70,6 +71,16 @@ Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('a
 Route::get('/auth/google/login', [AuthController::class, 'redirectToGoogle'])->name('auth.google.login');
 Route::get('/auth/google/register', [AuthController::class, 'redirectToGoogleRegister'])->name('auth.google.register');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
+Route::get('/email/verify/{id}/{hash}', [RecoveryEmailVerificationController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/email/verification-notification', [RecoveryEmailVerificationController::class, 'send'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+});
 
 // Contact Form Route
 Route::post('/contact/send', [ContactController::class, 'send'])->middleware('throttle:contact')->name('contact.send');
@@ -182,6 +193,8 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/account', [UserController::class, 'account'])->name('user.account');
     Route::post('/language', [UserController::class, 'updateLanguage'])->name('user.language.update');
     Route::post('/language/translate', [UserController::class, 'translateLanguage'])->name('user.language.translate');
+    Route::post('/onboarding/progress', [UserController::class, 'updateOnboardingProgress'])->name('user.onboarding.progress');
+    Route::post('/onboarding/personalization', [UserController::class, 'updateOnboardingPersonalization'])->name('user.onboarding.personalization');
     Route::post('/onboarding/speech', [UserController::class, 'onboardingSpeech'])->middleware('throttle:ai-transcribe')->name('user.onboarding.speech');
     Route::post('/account/profile', [UserController::class, 'updateProfile'])->name('user.account.profile');
     Route::post('/account/password', [UserController::class, 'updatePassword'])->name('user.account.password');

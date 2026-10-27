@@ -74,6 +74,34 @@ class BrevoTransactionalMail
             ->throw();
     }
 
+    public function sendRecoveryEmailVerification(User $user, string $verificationUrl, int $expiresInMinutes): void
+    {
+        $appName = config('app.name', 'SpeakReady AI');
+        $payload = [
+            'sender' => [
+                'name' => config('mail.from.name', $appName),
+                'email' => config('mail.from.address'),
+            ],
+            'to' => [
+                array_filter([
+                    'email' => $user->email,
+                    'name' => $user->name,
+                ]),
+            ],
+            'subject' => "Verify your {$appName} recovery email",
+            'htmlContent' => $this->recoveryEmailVerificationHtml($user, $verificationUrl, $expiresInMinutes, $appName),
+            'textContent' => $this->recoveryEmailVerificationText($verificationUrl, $expiresInMinutes, $appName),
+        ];
+
+        Http::timeout((int) config('services.brevo.timeout', 15))
+            ->acceptJson()
+            ->withHeaders([
+                'api-key' => config('services.brevo.api_key'),
+            ])
+            ->post(config('services.brevo.endpoint'), $payload)
+            ->throw();
+    }
+
     private function passwordResetHtml(User $user, string $resetUrl, int $expireMinutes, string $appName): string
     {
         $name = e($user->name ?: 'there');
@@ -127,5 +155,34 @@ class BrevoTransactionalMail
             ."Your one-time recovery code is: {$recoveryCode}\n\n"
             ."Use it with your username on the password reset page. It expires in {$expiresInMinutes} minutes and works only once.\n\n"
             .'If you did not request this code, you can safely ignore this email.';
+    }
+
+    private function recoveryEmailVerificationHtml(User $user, string $verificationUrl, int $expiresInMinutes, string $appName): string
+    {
+        $name = e($user->name ?: 'there');
+        $safeAppName = e($appName);
+        $safeUrl = e($verificationUrl);
+
+        return <<<HTML
+            <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a">
+                <h2 style="margin:0 0 16px">Verify your recovery email</h2>
+                <p>Hello {$name},</p>
+                <p>Verify this address before it can receive password recovery emails for your {$safeAppName} account.</p>
+                <p style="margin:24px 0">
+                    <a href="{$safeUrl}" style="display:inline-block;background:#3b82f6;color:#ffffff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:700">Verify Recovery Email</a>
+                </p>
+                <p>This link expires in {$expiresInMinutes} minutes.</p>
+                <p>If you did not add this address, you can safely ignore this message.</p>
+                <p style="font-size:12px;color:#64748b">If the button does not work, copy and paste this link into your browser:<br>{$safeUrl}</p>
+            </div>
+        HTML;
+    }
+
+    private function recoveryEmailVerificationText(string $verificationUrl, int $expiresInMinutes, string $appName): string
+    {
+        return "Verify your {$appName} recovery email\n\n"
+            ."Open this link to verify the address:\n{$verificationUrl}\n\n"
+            ."This link expires in {$expiresInMinutes} minutes.\n\n"
+            .'If you did not add this address, you can safely ignore this message.';
     }
 }

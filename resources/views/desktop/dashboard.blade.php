@@ -162,6 +162,8 @@
         </div>
     </section>
 
+    @include('shared.user.dashboard-onboarding-checklist')
+
     <div class="sr-summary-grid">
         <div class="sr-welcome-stack">
             <section class="sr-card sr-hero-card sr-hero-image-panel p-0" aria-label="SpeakReady AI welcome hero">
@@ -585,10 +587,10 @@
 
                         <div class="sr-dashboard-mock-field">
                             <label class="sr-dashboard-coach-label" for="dashboardMockPosition">Target position</label>
-                            <select class="sr-dashboard-mock-control" name="target_position" id="dashboardMockPosition" required data-selected-target="{{ old('target_position') }}">
-                                <option value="" disabled {{ old('target_position') ? '' : 'selected' }}>Choose a target position</option>
+                            <select class="sr-dashboard-mock-control" name="target_position" id="dashboardMockPosition" required data-selected-target="{{ old('target_position', Auth::user()?->target_position) }}">
+                                <option value="" disabled {{ old('target_position', Auth::user()?->target_position) ? '' : 'selected' }}>Choose a target position</option>
                                 @foreach($dashboardJobPositionOptions as $positionOption)
-                                    <option value="{{ $positionOption }}" {{ old('target_position') === $positionOption ? 'selected' : '' }}>{{ $positionOption }}</option>
+                                    <option value="{{ $positionOption }}" {{ old('target_position', Auth::user()?->target_position) === $positionOption ? 'selected' : '' }}>{{ $positionOption }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -1284,8 +1286,44 @@ document.addEventListener("DOMContentLoaded", function() {
     document.addEventListener("DOMContentLoaded", function() {
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
-        const completionKey = 'onboarding_completed';
+        const completionKey = null;
+        let dashboardTourCompleted = @json((bool) ($onboardingState['dashboard_tour_completed'] ?? false));
+        let dashboardTourSkipped = @json((bool) ($onboardingState['dashboard_tour_skipped'] ?? false));
+        const onboardingProgressUrl = @json(route('user.onboarding.progress'));
         const serverDetectedMobile = false;
+
+        async function saveDashboardTourMilestone(milestone) {
+            const response = await fetch(onboardingProgressUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                },
+                body: JSON.stringify({ milestone }),
+            });
+
+            if (!response.ok) throw new Error('Dashboard tutorial progress could not be saved.');
+
+            const payload = await response.json().catch(() => ({}));
+            if (payload.onboarding) {
+                window.dispatchEvent(new CustomEvent('speakready:onboarding-updated', {
+                    detail: payload.onboarding,
+                }));
+            }
+        }
+
+        async function saveDashboardTourCompletion() {
+            await saveDashboardTourMilestone('dashboard_tour_completed');
+            dashboardTourCompleted = true;
+            dashboardTourSkipped = false;
+        }
+
+        async function saveDashboardTourSkipped() {
+            await saveDashboardTourMilestone('dashboard_tour_skipped');
+            dashboardTourSkipped = true;
+        }
 
         const stepsMobile = [];
 
@@ -1306,6 +1344,11 @@ document.addEventListener("DOMContentLoaded", function() {
             stepsMobile,
             stepsDesktop,
             autoStart: false,
+            initiallyCompleted: dashboardTourCompleted,
+            isCompleted: () => dashboardTourCompleted,
+            persistLocalCompletion: false,
+            onCompleted: saveDashboardTourCompletion,
+            onSkipped: saveDashboardTourSkipped,
         });
 
         const registrationAlertModal = document.getElementById('srFlashModal');
@@ -1318,7 +1361,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ));
 
         function startDashboardTourWhenReady() {
-            if (!dashboardTour || dashboardTour.isCompleted() || tourStartScheduled) return;
+            if (!dashboardTour || dashboardTour.isCompleted() || dashboardTourSkipped || tourStartScheduled) return;
 
             const setupState = window.__speakReadyDashboardSetupState;
             if (isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || setupState?.pending) return;
@@ -1327,7 +1370,7 @@ document.addEventListener("DOMContentLoaded", function() {
             window.setTimeout(() => {
                 tourStartScheduled = false;
 
-                if (dashboardTour.isCompleted() || isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || window.__speakReadyDashboardSetupState?.pending) {
+                if (dashboardTour.isCompleted() || dashboardTourSkipped || isModalOpen(registrationAlertModal) || isModalOpen(setupToolsModal) || window.__speakReadyDashboardSetupState?.pending) {
                     return;
                 }
 
