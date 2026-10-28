@@ -22,12 +22,30 @@
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=33') }}">
       <style>
          body.terms-accept-shell {
+            --terms-primary: #60a5fa;
+            --terms-primary-strong: #3b82f6;
+            --terms-secondary: #22d3ee;
+            --terms-primary-soft: rgba(96, 165, 250, 0.14);
+            --terms-primary-border: rgba(96, 165, 250, 0.3);
+            --terms-secondary-soft: rgba(34, 211, 238, 0.12);
+            --terms-focus-ring: rgba(96, 165, 250, 0.32);
+            --terms-gradient: linear-gradient(135deg, var(--terms-primary), var(--terms-secondary));
             min-height: 100vh;
             background:
                linear-gradient(180deg, color-mix(in srgb, var(--bg, #08080f) 90%, #111827), var(--bg, #08080f) 58%, color-mix(in srgb, var(--bg2, #0f172a) 70%, var(--bg, #08080f)));
             color: var(--tx, #f8fafc);
             font-family: 'Poppins', sans-serif;
             letter-spacing: 0;
+         }
+
+         .lm body.terms-accept-shell {
+            --terms-primary: #2563eb;
+            --terms-primary-strong: #1d4ed8;
+            --terms-secondary: #06b6d4;
+            --terms-primary-soft: rgba(37, 99, 235, 0.12);
+            --terms-primary-border: rgba(37, 99, 235, 0.24);
+            --terms-secondary-soft: rgba(6, 182, 212, 0.11);
+            --terms-focus-ring: rgba(37, 99, 235, 0.26);
          }
 
          .terms-mobile-shell {
@@ -102,7 +120,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: var(--pur, #a78bfa);
+            color: var(--terms-primary);
             font-size: 0.78rem;
             font-weight: 900;
             margin-bottom: 10px;
@@ -147,9 +165,9 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            color: var(--pur, #a78bfa);
-            border: 1px solid rgba(167, 139, 250, 0.22);
-            background: rgba(167, 139, 250, 0.1);
+            color: var(--terms-primary);
+            border: 1px solid var(--terms-primary-border);
+            background: var(--terms-primary-soft);
             border-radius: 8px;
             padding: 6px 9px;
             font-size: 0.7rem;
@@ -178,14 +196,14 @@
             align-items: center;
             justify-content: center;
             border-radius: 8px;
-            background: rgba(14, 165, 233, 0.12);
-            color: #38bdf8;
+            background: var(--terms-secondary-soft);
+            color: var(--terms-secondary);
             margin-bottom: 8px;
          }
 
          .terms-mobile-progress-step.is-current span {
-            background: rgba(167, 139, 250, 0.14);
-            color: var(--pur, #a78bfa);
+            background: var(--terms-primary-soft);
+            color: var(--terms-primary);
          }
 
          .terms-mobile-progress-step strong {
@@ -210,7 +228,7 @@
          }
 
          .terms-mobile-meta-item i {
-            color: var(--pur, #a78bfa);
+            color: var(--terms-primary);
             margin-bottom: 8px;
          }
 
@@ -295,8 +313,8 @@
             align-items: center;
             justify-content: center;
             border-radius: 8px;
-            background: rgba(167, 139, 250, 0.12);
-            color: var(--pur, #a78bfa);
+            background: var(--terms-primary-soft);
+            color: var(--terms-primary);
          }
 
          .terms-mobile-section h2 {
@@ -334,7 +352,7 @@
             width: 22px;
             height: 22px;
             margin-top: 2px;
-            accent-color: var(--pur, #a78bfa);
+            accent-color: var(--terms-primary);
          }
 
          .terms-mobile-check label {
@@ -345,7 +363,7 @@
          }
 
          .terms-mobile-check a {
-            color: var(--pur, #a78bfa);
+            color: var(--terms-primary);
             font-weight: 900;
             text-decoration: none;
          }
@@ -366,7 +384,7 @@
             min-height: 52px;
             border: 0;
             border-radius: 8px;
-            background: var(--pur, #7c3aed);
+            background: var(--terms-gradient);
             color: #ffffff;
             font-weight: 900;
             margin-top: 14px;
@@ -462,10 +480,19 @@
             min-height: 48px;
             border: 0;
             border-radius: 8px;
-            background: var(--pur, #7c3aed);
+            background: var(--terms-gradient);
             color: #ffffff;
             font-weight: 900;
             margin-top: 18px;
+         }
+
+         .terms-mobile-logout:focus-visible,
+         .terms-mobile-check input:focus-visible,
+         .terms-mobile-check a:focus-visible,
+         .terms-mobile-submit:focus-visible,
+         .terms-success-button:focus-visible {
+            outline: 3px solid var(--terms-focus-ring);
+            outline-offset: 3px;
          }
 
          @media (max-width: 359.98px) {

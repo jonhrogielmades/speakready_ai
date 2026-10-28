@@ -40,6 +40,48 @@ class TermsAcceptanceGateTest extends TestCase
             ->assertSee('Review the Terms and Conditions');
     }
 
+    public function test_terms_acceptance_pages_use_speakready_palette_on_both_shells(): void
+    {
+        $user = $this->unacceptedUser();
+
+        foreach ([
+            'desktop' => [
+                'query' => [],
+                'shell' => 'data-layout-shell="desktop"',
+                'error_color' => '#dc2626',
+                'success_color' => '#16a34a',
+            ],
+            'mobile' => [
+                'query' => ['sr_layout' => 'mobile'],
+                'shell' => 'data-layout-shell="mobile"',
+                'error_color' => '#fca5a5',
+                'success_color' => '#4ade80',
+            ],
+        ] as $expectation) {
+            $this->actingAs($user)
+                ->get(route('terms.acceptance.show', $expectation['query']))
+                ->assertOk()
+                ->assertSee($expectation['shell'], false)
+                ->assertSee('--terms-primary: #60a5fa;', false)
+                ->assertSee('--terms-secondary: #22d3ee;', false)
+                ->assertSee('--terms-primary: #2563eb;', false)
+                ->assertSee('--terms-secondary: #06b6d4;', false)
+                ->assertSee('--terms-primary-soft: rgba(37, 99, 235, 0.12);', false)
+                ->assertSee('--terms-primary-border: rgba(37, 99, 235, 0.24);', false)
+                ->assertSee('--terms-gradient: linear-gradient(135deg, var(--terms-primary), var(--terms-secondary));', false)
+                ->assertSee('color: var(--terms-primary);', false)
+                ->assertSee('accent-color: var(--terms-primary);', false)
+                ->assertSee('background: var(--terms-gradient);', false)
+                ->assertSee('color: '.$expectation['error_color'].';', false)
+                ->assertSee('color: '.$expectation['success_color'].';', false)
+                ->assertDontSee('var(--pur', false)
+                ->assertDontSee('#7c3aed', false)
+                ->assertDontSee('#a78bfa', false)
+                ->assertDontSee('rgba(124, 58, 237', false)
+                ->assertDontSee('rgba(167, 139, 250', false);
+        }
+    }
+
     public function test_registration_success_appears_as_modal_on_terms_page(): void
     {
         $user = $this->unacceptedUser();

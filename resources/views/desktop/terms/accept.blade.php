@@ -20,12 +20,30 @@
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=35') }}">
       <style>
          body.terms-accept-shell {
+            --terms-primary: #60a5fa;
+            --terms-primary-strong: #3b82f6;
+            --terms-secondary: #22d3ee;
+            --terms-primary-soft: rgba(96, 165, 250, 0.14);
+            --terms-primary-border: rgba(96, 165, 250, 0.3);
+            --terms-secondary-soft: rgba(34, 211, 238, 0.12);
+            --terms-focus-ring: rgba(96, 165, 250, 0.32);
+            --terms-gradient: linear-gradient(135deg, var(--terms-primary), var(--terms-secondary));
             min-height: 100vh;
             background:
                linear-gradient(180deg, color-mix(in srgb, var(--bg, #f7fbff) 88%, #ffffff), var(--bg, #f7fbff) 48%, color-mix(in srgb, var(--bg2, #f8fafc) 84%, var(--sf, #ffffff)));
             color: var(--tx, #111827);
             font-family: 'Poppins', sans-serif;
             letter-spacing: 0;
+         }
+
+         .lm body.terms-accept-shell {
+            --terms-primary: #2563eb;
+            --terms-primary-strong: #1d4ed8;
+            --terms-secondary: #06b6d4;
+            --terms-primary-soft: rgba(37, 99, 235, 0.12);
+            --terms-primary-border: rgba(37, 99, 235, 0.24);
+            --terms-secondary-soft: rgba(6, 182, 212, 0.11);
+            --terms-focus-ring: rgba(37, 99, 235, 0.26);
          }
 
          .terms-topbar {
@@ -100,7 +118,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: var(--pur, #7c3aed);
+            color: var(--terms-primary);
             font-size: 0.84rem;
             font-weight: 800;
             margin-bottom: 14px;
@@ -145,9 +163,9 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            border: 1px solid rgba(124, 58, 237, 0.22);
-            background: rgba(124, 58, 237, 0.1);
-            color: var(--pur, #7c3aed);
+            border: 1px solid var(--terms-primary-border);
+            background: var(--terms-primary-soft);
+            color: var(--terms-primary);
             border-radius: 8px;
             padding: 7px 10px;
             font-size: 0.75rem;
@@ -176,14 +194,14 @@
             align-items: center;
             justify-content: center;
             border-radius: 8px;
-            background: rgba(14, 165, 233, 0.1);
-            color: #0284c7;
+            background: var(--terms-secondary-soft);
+            color: var(--terms-secondary);
             margin-bottom: 9px;
          }
 
          .terms-progress-step.is-current span {
-            background: rgba(124, 58, 237, 0.12);
-            color: var(--pur, #7c3aed);
+            background: var(--terms-primary-soft);
+            color: var(--terms-primary);
          }
 
          .terms-progress-step strong {
@@ -215,7 +233,7 @@
          }
 
          .terms-summary-item i {
-            color: var(--pur, #7c3aed);
+            color: var(--terms-primary);
             font-size: 1rem;
             margin-bottom: 10px;
          }
@@ -305,8 +323,8 @@
             align-items: center;
             justify-content: center;
             border-radius: 8px;
-            background: rgba(124, 58, 237, 0.1);
-            color: var(--pur, #7c3aed);
+            background: var(--terms-primary-soft);
+            color: var(--terms-primary);
          }
 
          .terms-section h2 {
@@ -344,7 +362,7 @@
             width: 20px;
             height: 20px;
             margin-top: 2px;
-            accent-color: var(--pur, #7c3aed);
+            accent-color: var(--terms-primary);
          }
 
          .terms-check label {
@@ -355,7 +373,7 @@
          }
 
          .terms-check a {
-            color: var(--pur, #7c3aed);
+            color: var(--terms-primary);
             font-weight: 800;
             text-decoration: none;
          }
@@ -376,7 +394,7 @@
             min-height: 52px;
             border: 0;
             border-radius: 8px;
-            background: var(--pur, #7c3aed);
+            background: var(--terms-gradient);
             color: #ffffff;
             font-weight: 900;
             margin-top: 18px;
@@ -476,10 +494,19 @@
             min-height: 48px;
             border: 0;
             border-radius: 8px;
-            background: var(--pur, #7c3aed);
+            background: var(--terms-gradient);
             color: #ffffff;
             font-weight: 900;
             margin-top: 20px;
+         }
+
+         .terms-logout-button:focus-visible,
+         .terms-check input:focus-visible,
+         .terms-check a:focus-visible,
+         .terms-submit:focus-visible,
+         .terms-success-button:focus-visible {
+            outline: 3px solid var(--terms-focus-ring);
+            outline-offset: 3px;
          }
 
          @media (max-width: 991.98px) {
