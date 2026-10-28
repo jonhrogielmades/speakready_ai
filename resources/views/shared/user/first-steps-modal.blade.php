@@ -6,15 +6,22 @@
     $firstStepsPersonalizationSkipped = (bool) ($firstStepsState['personalization_skipped'] ?? false);
     $firstStepsProfileHandled = $firstStepsPersonalized || $firstStepsPersonalizationSkipped;
     $firstStepsSetupComplete = (bool) ($firstStepsState['setup_tools_completed'] ?? false);
+    $firstStepsEmailVerificationApplicable = (bool) ($firstStepsState['email_verification_applicable'] ?? true);
+    $firstStepsEmailVerified = (bool) ($firstStepsState['email_verified'] ?? false);
     $firstStepsTourComplete = (bool) ($firstStepsState['dashboard_tour_completed'] ?? false);
     $firstStepsCompletedCount = collect([
         $firstStepsRecoverySaved,
         $firstStepsProfileHandled,
         $firstStepsSetupComplete,
+        $firstStepsEmailVerified,
         $firstStepsTourComplete,
     ])->filter()->count();
-    $firstStepsComplete = $firstStepsCompletedCount === 4;
-    $firstStepsPercent = (int) round(($firstStepsCompletedCount / 4) * 100);
+    $firstStepsComplete = $firstStepsCompletedCount === 5;
+    $firstStepsReadyForTour = $firstStepsRecoverySaved
+        && $firstStepsProfileHandled
+        && $firstStepsSetupComplete
+        && $firstStepsEmailVerified;
+    $firstStepsPercent = (int) round(($firstStepsCompletedCount / 5) * 100);
     $firstStepsUser = Auth::user();
     $firstStepsPositions = collect(\App\Services\QuestionDatasetProvider::targetPositionOptionGroups())
         ->flatten()
@@ -30,16 +37,18 @@
     $firstStepsSelectedDate = old('interview_date', $firstStepsState['interview_date'] ?? '');
     $firstStepsLayoutQuery = sr_layout_query(request());
     $firstStepsAccountUrl = route('user.account', $firstStepsLayoutQuery).'#password-recovery-code';
+    $firstStepsDashboardUrl = route('dashboard', $firstStepsLayoutQuery);
     $firstStepsToolsUrl = route('dashboard', array_merge($firstStepsLayoutQuery, ['onboarding' => 'tools']));
     $firstStepsTourUrl = route('dashboard', array_merge($firstStepsLayoutQuery, ['onboarding' => 'tour']));
     $firstStepsAutoShow = request()->routeIs('dashboard') && ! $firstStepsComplete && ! in_array(request()->query('onboarding'), ['tools', 'tour'], true);
 @endphp
 
-<div class="modal fade sr-first-steps-modal" id="firstStepsOnboardingModal" tabindex="-1" aria-labelledby="firstStepsOnboardingTitle" aria-hidden="true"
+<div class="modal fade sr-first-steps-modal" id="firstStepsOnboardingModal" tabindex="-1" aria-labelledby="firstStepsOnboardingTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false"
      data-sr-onboarding-modal
      data-sr-onboarding-user="{{ (int) Auth::id() }}"
      data-sr-first-steps-auto-show="{{ $firstStepsAutoShow ? 'true' : 'false' }}"
      data-sr-first-steps-complete="{{ $firstStepsComplete ? 'true' : 'false' }}"
+     data-sr-dashboard-url="{{ $firstStepsDashboardUrl }}"
      data-sr-dashboard-tools-url="{{ $firstStepsToolsUrl }}"
      data-sr-dashboard-tour-url="{{ $firstStepsTourUrl }}">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -50,18 +59,17 @@
                     <div>
                         <p class="sr-first-steps-kicker">First steps</p>
                         <h2 class="modal-title" id="firstStepsOnboardingTitle">Get interview-ready</h2>
-                        <p class="sr-first-steps-subtitle">Complete these four setup steps at your pace. Progress follows your account on every device.</p>
+                        <p class="sr-first-steps-subtitle">Complete these five setup steps to unlock your dashboard. Progress follows your account on every device.</p>
                     </div>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" data-sr-first-steps-later aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
-                <div class="sr-first-steps-progress" data-sr-onboarding-progress role="progressbar" aria-label="{{ $firstStepsCompletedCount }} of 4 onboarding steps complete" aria-valuemin="0" aria-valuemax="4" aria-valuenow="{{ $firstStepsCompletedCount }}">
+                <div class="sr-first-steps-progress" data-sr-onboarding-progress role="progressbar" aria-label="{{ $firstStepsCompletedCount }} of 5 onboarding steps complete" aria-valuemin="0" aria-valuemax="5" aria-valuenow="{{ $firstStepsCompletedCount }}">
                     <div class="sr-first-steps-progress-track" aria-hidden="true">
                         <span data-sr-onboarding-progress-bar style="--sr-first-progress:{{ $firstStepsPercent }}%"></span>
                     </div>
-                    <strong data-sr-onboarding-progress-label aria-live="polite" aria-atomic="true">{{ $firstStepsCompletedCount }} of 4 complete</strong>
+                    <strong data-sr-onboarding-progress-label aria-live="polite" aria-atomic="true">{{ $firstStepsCompletedCount }} of 5 complete</strong>
                 </div>
 
                 <div class="sr-first-steps-list">
@@ -71,7 +79,7 @@
                             <strong>1. {{ $firstStepsRecoveryApplicable ? 'Save your recovery code' : 'Secure your Google sign-in' }}</strong>
                             <small>{{ $firstStepsRecoveryApplicable ? ($firstStepsRecoverySaved ? 'Your saved-code acknowledgement is attached to this account.' : 'Keep a backup code somewhere private and secure.') : 'This account signs in through Google and does not use a local password or recovery code.' }}</small>
                         </span>
-                        <span class="sr-first-steps-step-actions">
+                        <span class="sr-first-steps-step-actions" data-sr-step-status-actions>
                             @if($firstStepsRecoverySaved)
                                 <span class="sr-first-steps-status">Complete</span>
                             @else
@@ -143,29 +151,57 @@
                             <strong>3. Check your practice tools</strong>
                             <small>Confirm camera, microphone, and notification access for this account.</small>
                         </span>
-                        <span class="sr-first-steps-step-actions">
+                        <span class="sr-first-steps-step-actions" data-sr-step-status-actions>
                             @if($firstStepsSetupComplete)<span class="sr-first-steps-status">Complete</span>@endif
                             <button class="sr-first-steps-action" type="button" data-sr-open-setup-tools>{{ $firstStepsSetupComplete ? 'Review' : 'Set up' }}</button>
                         </span>
                     </section>
 
+                    <section class="sr-first-steps-step {{ $firstStepsEmailVerified ? 'is-done' : '' }}" data-sr-onboarding-step="email_verified">
+                        <span class="sr-first-steps-step-icon"><i class="fa-solid {{ $firstStepsEmailVerified ? 'fa-check' : 'fa-envelope-circle-check' }}" aria-hidden="true"></i></span>
+                        <span class="sr-first-steps-step-copy">
+                            <strong>4. Verify your recovery email</strong>
+                            <small>
+                                @if(! $firstStepsEmailVerificationApplicable)
+                                    Google has already verified the email used for this account.
+                                @elseif($firstStepsEmailVerified)
+                                    Your recovery email is verified and ready for password recovery.
+                                @else
+                                    Check {{ $firstStepsUser?->email }} for the verification link, or send a new one.
+                                @endif
+                            </small>
+                        </span>
+                        <div class="sr-first-steps-step-actions" data-sr-step-status-actions data-sr-email-verification-actions>
+                            @if($firstStepsEmailVerified)
+                                <span class="sr-first-steps-status">Complete</span>
+                            @else
+                                <form method="POST" action="{{ route('verification.send') }}" data-sr-email-verification-form>
+                                    @csrf
+                                    <button class="sr-first-steps-action" type="submit"><i class="fa-regular fa-paper-plane"></i> Send verification email</button>
+                                </form>
+                            @endif
+                        </div>
+                    </section>
+
                     <section class="sr-first-steps-step {{ $firstStepsTourComplete ? 'is-done' : '' }}" data-sr-onboarding-step="dashboard_tour_completed">
                         <span class="sr-first-steps-step-icon"><i class="fa-solid {{ $firstStepsTourComplete ? 'fa-check' : 'fa-compass' }}" aria-hidden="true"></i></span>
                         <span class="sr-first-steps-step-copy">
-                            <strong>4. Learn your dashboard</strong>
+                            <strong>5. Learn your dashboard</strong>
                             <small>Take the guided dashboard tour. Leaving early keeps this step open.</small>
                         </span>
-                        <span class="sr-first-steps-step-actions">
+                        <span class="sr-first-steps-step-actions" data-sr-step-status-actions>
                             @if($firstStepsTourComplete)<span class="sr-first-steps-status">Complete</span>@endif
-                            <button class="sr-first-steps-action" type="button" data-sr-start-dashboard-tour>{{ $firstStepsTourComplete ? 'Replay' : 'Start tour' }}</button>
+                            <button class="sr-first-steps-action" type="button" data-sr-start-dashboard-tour @disabled(! $firstStepsReadyForTour && ! $firstStepsTourComplete)>{{ $firstStepsTourComplete ? 'Replay' : ($firstStepsReadyForTour ? 'Start tour' : 'Finish Steps 1-4') }}</button>
                         </span>
                     </section>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="sr-first-steps-later" data-bs-dismiss="modal" data-sr-first-steps-later>Continue later</button>
-                <button type="button" class="sr-first-steps-close" data-bs-dismiss="modal">Close</button>
+                <p class="sr-first-steps-footer-copy" data-sr-first-steps-footer-copy>{{ $firstStepsComplete ? 'Setup complete. Your dashboard is ready.' : 'Complete all five steps to continue to your dashboard.' }}</p>
+                <button type="button" class="sr-first-steps-proceed" data-sr-first-steps-proceed @disabled(! $firstStepsComplete)>
+                    <i class="fa-solid fa-arrow-right"></i> Proceed to Dashboard
+                </button>
             </div>
         </div>
     </div>

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\UserOnboardingProgress;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,6 +41,8 @@ class RecoveryEmailVerificationTest extends TestCase
         $this->assertSame(User::AUTH_METHOD_LOCAL, $user->auth_method);
         $this->assertNull($user->google_id);
         $this->assertNull($user->email_verified_at);
+        $this->assertTrue(UserOnboardingProgress::forUser($user)->toStateArray($user)['email_verification_applicable']);
+        $this->assertFalse(UserOnboardingProgress::forUser($user)->toStateArray($user)['email_verified']);
         $this->assertAuthenticatedAs($user);
         Notification::assertSentTo($user, VerifyEmail::class);
     }
@@ -64,11 +67,13 @@ class RecoveryEmailVerificationTest extends TestCase
         $this->assertSame(User::AUTH_METHOD_GOOGLE, $user->auth_method);
         $this->assertNotNull($user->email_verified_at);
         $this->assertSame('verification-candidate-google-id', $user->google_id);
+        $this->assertFalse(UserOnboardingProgress::forUser($user)->toStateArray($user)['email_verification_applicable']);
+        $this->assertTrue(UserOnboardingProgress::forUser($user)->toStateArray($user)['email_verified']);
         $this->assertAuthenticatedAs($user);
         Notification::assertNotSentTo($user, VerifyEmail::class);
     }
 
-    public function test_signed_verification_link_enables_email_recovery(): void
+    public function test_signed_verification_link_completes_step_four_and_returns_to_dashboard(): void
     {
         $user = User::factory()->unverified()->create([
             'username' => 'signed-verification-user',
@@ -87,10 +92,24 @@ class RecoveryEmailVerificationTest extends TestCase
 
         $this->actingAs($user)
             ->get($verificationUrl)
-            ->assertRedirect(route('user.account'))
-            ->assertSessionHas('success', 'Recovery email verified. Email password recovery is now available.');
+            ->assertRedirect(route('dashboard', ['onboarding' => 'first-steps']))
+            ->assertSessionHas('success', 'Recovery email verified. Continue your remaining setup steps.');
 
-        $this->assertNotNull($user->fresh()->email_verified_at);
+        $user->refresh();
+        $this->assertNotNull($user->email_verified_at);
+        $onboarding = UserOnboardingProgress::forUser($user)->toStateArray($user);
+        $this->assertTrue($onboarding['email_verification_applicable']);
+        $this->assertTrue($onboarding['email_verified']);
+        $this->assertFalse($onboarding['first_steps_complete']);
+
+        $response = $this->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('1 of 5 complete')
+            ->assertSee('4. Verify your recovery email');
+        $this->assertMatchesRegularExpression(
+            '/<section\b(?=[^>]*\bis-done\b)(?=[^>]*\bdata-sr-onboarding-step="email_verified")[^>]*>/',
+            $response->getContent()
+        );
     }
 
     public function test_signed_verification_link_works_without_an_authenticated_session(): void

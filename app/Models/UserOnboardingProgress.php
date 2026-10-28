@@ -100,16 +100,28 @@ class UserOnboardingProgress extends Model
     {
         $this->syncFromUserState($user);
 
+        $recoveryCodeSaved = $user->isGoogleAccount() || (bool) $this->recovery_code_saved_at;
+        $profileHandled = (bool) $this->profile_personalized_at || (bool) $this->personalization_skipped_at;
+        $emailVerified = $user->isGoogleAccount() || $user->hasVerifiedEmail();
+        $firstStepsComplete = $recoveryCodeSaved
+            && $profileHandled
+            && (bool) $this->setup_tools_completed_at
+            && $emailVerified
+            && (bool) $this->dashboard_tour_completed_at;
+
         return [
             'recovery_code_ack_required' => $this->requiresRecoveryCodeAcknowledgement($user),
             'recovery_code_applicable' => $user->isLocalAccount(),
-            'recovery_code_saved' => $user->isGoogleAccount() || (bool) $this->recovery_code_saved_at,
+            'recovery_code_saved' => $recoveryCodeSaved,
             'profile_personalized' => (bool) $this->profile_personalized_at,
             'personalization_skipped' => (bool) $this->personalization_skipped_at,
             'setup_tools_completed' => (bool) $this->setup_tools_completed_at,
             'setup_tools_snoozed' => (bool) $this->setup_tools_snoozed_at,
+            'email_verification_applicable' => $user->isLocalAccount(),
+            'email_verified' => $emailVerified,
             'dashboard_tour_completed' => (bool) $this->dashboard_tour_completed_at,
             'dashboard_tour_skipped' => (bool) $this->dashboard_tour_skipped_at,
+            'first_steps_complete' => $firstStepsComplete,
             'first_interview_completed' => (bool) $this->first_interview_completed_at,
             'terms_accepted' => $user->hasAcceptedCurrentTerms(),
             'activated' => $user->hasAcceptedCurrentTerms() && (bool) $this->first_interview_completed_at,

@@ -7,9 +7,10 @@
         if (!modalElement) return;
 
         const userId = modalElement.dataset.srOnboardingUser || 'guest';
-        const dismissalKey = `speakready.firstSteps.dismissed.${userId}`;
         const returnAfterSetupKey = `speakready.firstSteps.returnAfterSetup.${userId}`;
         const returnAfterTourKey = `speakready.firstSteps.returnAfterTour.${userId}`;
+        const proceedButton = modalElement.querySelector('[data-sr-first-steps-proceed]');
+        const footerCopy = modalElement.querySelector('[data-sr-first-steps-footer-copy]');
         const personalizationForm = modalElement.querySelector('[data-sr-first-steps-personalization-form]');
         const personalizationFormStatus = modalElement.querySelector('[data-sr-first-steps-form-status]');
         const personalizationDetails = modalElement.querySelector('[data-sr-personalization-details]');
@@ -35,8 +36,8 @@
         function modalController() {
             if (!window.bootstrap?.Modal) return null;
             return window.bootstrap.Modal.getOrCreateInstance(modalElement, {
-                backdrop: true,
-                keyboard: true,
+                backdrop: 'static',
+                keyboard: false,
             });
         }
 
@@ -45,13 +46,19 @@
             if (typeof window.closeUserHeaderDropdowns === 'function') window.closeUserHeaderDropdowns();
         }
 
-        function openFirstSteps(options = {}) {
-            if (options.forgetDismissal !== false) sessionRemove(dismissalKey);
+        function openFirstSteps() {
             closeShellMenus();
             modalController()?.show();
         }
 
         window.openSpeakReadyFirstSteps = openFirstSteps;
+
+        modalElement.addEventListener('show.bs.modal', () => {
+            document.body.classList.add('sr-first-steps-active');
+        });
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            document.body.classList.remove('sr-first-steps-active');
+        });
 
         function stepElement(stepName) {
             return Array.from(modalElement.querySelectorAll('[data-sr-onboarding-step]'))
@@ -76,17 +83,39 @@
         function updateProgress() {
             const steps = Array.from(modalElement.querySelectorAll('[data-sr-onboarding-step]'));
             const completeCount = steps.filter((step) => step.classList.contains('is-done')).length;
+            const totalSteps = steps.length;
+            const allStepsComplete = totalSteps > 0 && completeCount === totalSteps;
             const progress = modalElement.querySelector('[data-sr-onboarding-progress]');
             const label = modalElement.querySelector('[data-sr-onboarding-progress-label]');
             const bar = modalElement.querySelector('[data-sr-onboarding-progress-bar]');
 
             if (progress) {
-                progress.setAttribute('aria-label', `${completeCount} of 4 onboarding steps complete`);
+                progress.setAttribute('aria-label', `${completeCount} of ${totalSteps} onboarding steps complete`);
+                progress.setAttribute('aria-valuemax', String(totalSteps));
                 progress.setAttribute('aria-valuenow', String(completeCount));
             }
-            if (label) label.textContent = `${completeCount} of 4 complete`;
-            if (bar) bar.style.setProperty('--sr-first-progress', `${Math.round((completeCount / 4) * 100)}%`);
-            modalElement.dataset.srFirstStepsComplete = completeCount === 4 ? 'true' : 'false';
+            if (label) label.textContent = `${completeCount} of ${totalSteps} complete`;
+            if (bar) bar.style.setProperty('--sr-first-progress', `${totalSteps > 0 ? Math.round((completeCount / totalSteps) * 100) : 0}%`);
+            modalElement.dataset.srFirstStepsComplete = allStepsComplete ? 'true' : 'false';
+            if (proceedButton) {
+                proceedButton.disabled = !allStepsComplete;
+                proceedButton.setAttribute('aria-disabled', allStepsComplete ? 'false' : 'true');
+            }
+            const tourStep = stepElement('dashboard_tour_completed');
+            const tourButton = tourStep?.querySelector('[data-sr-start-dashboard-tour]');
+            const tourComplete = Boolean(tourStep?.classList.contains('is-done'));
+            const priorStepsComplete = steps
+                .filter((step) => step !== tourStep)
+                .every((step) => step.classList.contains('is-done'));
+            if (tourButton) {
+                tourButton.disabled = !priorStepsComplete && !tourComplete;
+                tourButton.textContent = tourComplete ? 'Replay' : (priorStepsComplete ? 'Start tour' : 'Finish Steps 1-4');
+            }
+            if (footerCopy) {
+                footerCopy.textContent = allStepsComplete
+                    ? 'Setup complete. Your dashboard is ready.'
+                    : 'Complete all five steps to continue to your dashboard.';
+            }
         }
 
         function markStepComplete(stepName, label = 'Complete') {
@@ -96,6 +125,14 @@
             step.classList.add('is-done');
             const icon = step.querySelector('.sr-first-steps-step-icon i');
             if (icon) icon.className = 'fa-solid fa-check';
+            if (stepName === 'email_verified') {
+                const verificationForm = step.querySelector('[data-sr-email-verification-form]');
+                if (verificationForm) verificationForm.hidden = true;
+                const verificationCopy = step.querySelector('.sr-first-steps-step-copy small');
+                if (verificationCopy) {
+                    verificationCopy.textContent = 'Your recovery email is verified and ready for password recovery.';
+                }
+            }
             ensureStepStatus(step, label);
             updateProgress();
         }
@@ -123,7 +160,9 @@
             }
 
             if (state.setup_tools_completed) markStepComplete('setup_tools_completed');
+            if (state.email_verified) markStepComplete('email_verified');
             if (state.dashboard_tour_completed) markStepComplete('dashboard_tour_completed');
+            updateProgress();
         }
 
         window.addEventListener('speakready:onboarding-updated', (event) => {
@@ -131,6 +170,25 @@
         });
 
         document.addEventListener('click', (event) => {
+            const proceed = event.target.closest('[data-sr-first-steps-proceed]');
+            if (proceed && modalElement.contains(proceed)) {
+                event.preventDefault();
+                if (proceed.disabled || modalElement.dataset.srFirstStepsComplete !== 'true') return;
+
+                removeOnboardingQuery();
+                const dashboardUrl = new URL(modalElement.dataset.srDashboardUrl, window.location.origin);
+                const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+                const dashboardPath = dashboardUrl.pathname.replace(/\/$/, '') || '/';
+
+                if (currentPath === dashboardPath) {
+                    modalController()?.hide();
+                    return;
+                }
+
+                window.location.assign(dashboardUrl.toString());
+                return;
+            }
+
             const launcher = event.target.closest('[data-sr-open-onboarding-modal]');
             if (launcher) {
                 event.preventDefault();
@@ -163,6 +221,7 @@
             const tourButton = event.target.closest('[data-sr-start-dashboard-tour]');
             if (tourButton && modalElement.contains(tourButton)) {
                 event.preventDefault();
+                if (tourButton.disabled) return;
                 const dashboardTourUrl = new URL(modalElement.dataset.srDashboardTourUrl, window.location.origin);
                 const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
                 const dashboardPath = dashboardTourUrl.pathname.replace(/\/$/, '') || '/';
@@ -197,11 +256,7 @@
         window.addEventListener('speakready:dashboard-tour-closed', () => {
             if (sessionGet(returnAfterTourKey) !== '1') return;
             sessionRemove(returnAfterTourKey);
-            window.setTimeout(() => openFirstSteps({ forgetDismissal: false }), 160);
-        });
-
-        modalElement.querySelectorAll('[data-sr-first-steps-later]').forEach((button) => {
-            button.addEventListener('click', () => sessionSet(dismissalKey, '1'));
+            window.setTimeout(openFirstSteps, 220);
         });
 
         function setFormStatus(message, type = 'info') {
@@ -286,7 +341,7 @@
                 setupModalElement.addEventListener('hidden.bs.modal', () => {
                     if (sessionGet(returnAfterSetupKey) !== '1') return;
                     sessionRemove(returnAfterSetupKey);
-                    window.setTimeout(() => openFirstSteps({ forgetDismissal: false }), 140);
+                    window.setTimeout(openFirstSteps, 140);
                 }, { once: true });
                 window.bootstrap.Modal.getOrCreateInstance(setupModalElement).show();
                 removeOnboardingQuery();
@@ -298,14 +353,14 @@
 
         if (openRequestedSetupTools()) return;
 
-        if (modalElement.dataset.srFirstStepsAutoShow === 'true' && !sessionGet(dismissalKey)) {
+        if (modalElement.dataset.srFirstStepsAutoShow === 'true') {
             const showWhenClear = () => {
                 const openModal = document.querySelector('.modal.show');
                 if (openModal && openModal !== modalElement) {
                     openModal.addEventListener('hidden.bs.modal', () => window.setTimeout(showWhenClear, 120), { once: true });
                     return;
                 }
-                openFirstSteps({ forgetDismissal: false });
+                openFirstSteps();
             };
             window.setTimeout(showWhenClear, 420);
         }

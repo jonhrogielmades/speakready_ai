@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserOnboardingProgress;
 use App\Services\RecoveryEmailVerification;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
@@ -29,11 +30,21 @@ class RecoveryEmailVerificationController extends Controller
         }
 
         if (Auth::check() && Auth::id() === $user->getKey()) {
-            $route = $user->hasAcceptedCurrentTerms()
-                ? 'user.account'
-                : 'terms.acceptance.show';
+            if (! $user->hasAcceptedCurrentTerms()) {
+                return redirect()->route('terms.acceptance.show', sr_layout_query($request))
+                    ->with('success', 'Recovery email verified. Email password recovery is now available.');
+            }
 
-            return redirect()->route($route, sr_layout_query($request))
+            $onboardingState = UserOnboardingProgress::forUser($user)->toStateArray($user);
+
+            if (! ($onboardingState['first_steps_complete'] ?? false)) {
+                return redirect()->route('dashboard', array_merge(
+                    sr_layout_query($request),
+                    ['onboarding' => 'first-steps']
+                ))->with('success', 'Recovery email verified. Continue your remaining setup steps.');
+            }
+
+            return redirect()->route('user.account', sr_layout_query($request))
                 ->with('success', 'Recovery email verified. Email password recovery is now available.');
         }
 

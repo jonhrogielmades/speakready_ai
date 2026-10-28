@@ -10,6 +10,13 @@
         --sr-first-success: #16a34a;
     }
 
+    body.sr-first-steps-active .modal-backdrop.show {
+        opacity: 1;
+        background-color: rgba(15, 23, 42, 0.68);
+        -webkit-backdrop-filter: blur(12px) saturate(0.82);
+        backdrop-filter: blur(12px) saturate(0.82);
+    }
+
     .sr-first-steps-modal .modal-dialog {
         width: min(720px, calc(100vw - 24px));
         max-width: min(720px, calc(100vw - 24px));
@@ -122,12 +129,14 @@
         grid-template-areas:
             "recovery recovery"
             "personalization personalization"
-            "tools tour";
+            "tools verification"
+            "tour tour";
         gap: 11px;
     }
 
     .sr-first-steps-step[data-sr-onboarding-step="recovery_code_saved"] { grid-area: recovery; }
     .sr-first-steps-step[data-sr-onboarding-step="setup_tools_completed"] { grid-area: tools; }
+    .sr-first-steps-step[data-sr-onboarding-step="email_verified"] { grid-area: verification; }
     .sr-first-steps-step[data-sr-onboarding-step="dashboard_tour_completed"] { grid-area: tour; }
 
     .sr-first-steps-step {
@@ -200,6 +209,10 @@
     .sr-first-steps-step-actions:empty,
     .sr-first-steps-step-actions[hidden] {
         display: none;
+    }
+
+    .sr-first-steps-step-actions form {
+        margin: 0;
     }
 
     .sr-first-steps-status {
@@ -303,31 +316,41 @@
     .sr-first-steps-form-status[data-type="success"] { color: var(--sr-first-success); }
 
     .sr-first-steps-modal .modal-footer {
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
         gap: 10px;
         padding: 14px 22px;
         border-top: 1px solid var(--sr-first-line);
     }
 
-    .sr-first-steps-later,
-    .sr-first-steps-close {
+    .sr-first-steps-footer-copy {
+        margin: 0;
+        color: var(--sr-first-muted);
+        font-size: 0.72rem;
+        line-height: 1.4;
+        font-weight: 750;
+    }
+
+    .sr-first-steps-proceed {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
         min-height: 40px;
         padding: 8px 15px;
+        border: 1px solid color-mix(in srgb, var(--sr-first-accent) 24%, transparent);
         border-radius: 11px;
+        background: linear-gradient(135deg, var(--sr-first-accent), #06b6d4);
+        color: #ffffff;
         font-size: 0.76rem;
         font-weight: 900;
     }
 
-    .sr-first-steps-later {
-        border: 1px solid var(--sr-first-line);
-        background: transparent;
-        color: var(--sr-first-muted);
-    }
-
-    .sr-first-steps-close {
-        border: 1px solid color-mix(in srgb, var(--sr-first-accent) 24%, transparent);
-        background: linear-gradient(135deg, var(--sr-first-accent), #06b6d4);
-        color: #ffffff;
+    .sr-first-steps-proceed:disabled {
+        cursor: not-allowed;
+        filter: grayscale(0.35);
+        opacity: 0.48;
     }
 
     html:not(.lm) .sr-first-steps-modal,
@@ -368,6 +391,7 @@
                 "recovery"
                 "personalization"
                 "tools"
+                "verification"
                 "tour";
         }
 
@@ -401,17 +425,26 @@
         body.user-mobile-shell .sr-first-steps-modal .modal-footer,
         .sr-first-steps-modal .modal-footer {
             display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: 1fr;
             flex-wrap: nowrap !important;
             gap: 8px !important;
         }
 
-        .sr-first-steps-later,
-        .sr-first-steps-close {
+        .sr-first-steps-footer-copy {
+            text-align: center;
+        }
+
+        .sr-first-steps-proceed {
             width: 100%;
             min-width: 0;
             padding-inline: 8px;
             white-space: nowrap;
+        }
+
+        body.sr-first-steps-active .modal-backdrop.show {
+            background-color: rgba(15, 23, 42, 0.64);
+            -webkit-backdrop-filter: blur(8px) saturate(0.86);
+            backdrop-filter: blur(8px) saturate(0.86);
         }
     }
 

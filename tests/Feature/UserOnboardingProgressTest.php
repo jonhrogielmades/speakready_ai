@@ -29,7 +29,8 @@ class UserOnboardingProgressTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonPath('onboarding.dashboard_tour_skipped', true)
-            ->assertJsonPath('onboarding.dashboard_tour_completed', false);
+            ->assertJsonPath('onboarding.dashboard_tour_completed', false)
+            ->assertJsonPath('onboarding.first_steps_complete', false);
 
         $this->assertDatabaseHas('user_onboarding_progress', [
             'user_id' => $user->id,
@@ -45,7 +46,8 @@ class UserOnboardingProgressTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonPath('onboarding.dashboard_tour_completed', true)
-            ->assertJsonPath('onboarding.dashboard_tour_skipped', false);
+            ->assertJsonPath('onboarding.dashboard_tour_skipped', false)
+            ->assertJsonPath('onboarding.first_steps_complete', false);
     }
 
     public function test_setup_results_and_personalization_are_saved_on_the_server(): void
@@ -214,6 +216,9 @@ class UserOnboardingProgressTest extends TestCase
         $this->assertSame(User::AUTH_METHOD_GOOGLE, $user->auth_method);
         $this->assertNull($progress->recovery_code_ack_required_at);
         $this->assertFalse($progress->requiresRecoveryCodeAcknowledgement());
+        $this->assertFalse($progress->toStateArray($user)['email_verification_applicable']);
+        $this->assertTrue($progress->toStateArray($user)['email_verified']);
+        $this->assertFalse($progress->toStateArray($user)['first_steps_complete']);
 
         $this->get(route('terms.acceptance.show'))
             ->assertOk()
@@ -290,12 +295,15 @@ class UserOnboardingProgressTest extends TestCase
         $this->get(route('user.account'))
             ->assertOk()
             ->assertSee('Saved-code acknowledgement recorded')
-            ->assertSee('1 of 4 complete');
+            ->assertSee('2 of 5 complete');
     }
 
-    public function test_dashboard_renders_account_scoped_four_step_onboarding_modal(): void
+    public function test_dashboard_renders_account_scoped_five_step_onboarding_modal(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->unverified()->create([
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
 
         $response = $this->actingAs($user)
             ->get(route('dashboard'))
@@ -314,11 +322,32 @@ class UserOnboardingProgressTest extends TestCase
             ->assertDontSee('Play tutorial voice')
             ->assertDontSee('window.setTimeout(() => controller.abort(), 30000)', false)
             ->assertSee('Get interview-ready')
-            ->assertSee('0 of 4 complete')
-            ->assertSee('0 of 4 onboarding steps complete')
+            ->assertSee('Complete these five setup steps')
+            ->assertSee('0 of 5 complete')
+            ->assertSee('0 of 5 onboarding steps complete')
             ->assertSee('role="progressbar"', false)
-            ->assertSee('aria-valuemax="4"', false)
+            ->assertSee('aria-valuemax="5"', false)
             ->assertSee('aria-valuenow="0"', false)
+            ->assertSee('data-sr-onboarding-step="email_verified"', false)
+            ->assertSee('4. Verify your recovery email')
+            ->assertSee('5. Learn your dashboard')
+            ->assertSee('data-bs-backdrop="static"', false)
+            ->assertSee('data-bs-keyboard="false"', false)
+            ->assertSee("backdrop: 'static'", false)
+            ->assertSee('keyboard: false', false)
+            ->assertDontSee('data-sr-first-steps-later', false)
+            ->assertDontSee('sr-first-steps-close', false)
+            ->assertDontSee('Continue later')
+            ->assertSee('data-sr-first-steps-proceed', false)
+            ->assertSee('Proceed to Dashboard')
+            ->assertSee('Finish Steps 1-4')
+            ->assertSee('const totalSteps = steps.length;', false)
+            ->assertSee('proceedButton.disabled = !allStepsComplete;', false)
+            ->assertSee('tourButton.disabled = !priorStepsComplete && !tourComplete;', false)
+            ->assertSee("window.addEventListener('speakready:dashboard-tour-closed'", false)
+            ->assertSee('window.setTimeout(openFirstSteps, 220);', false)
+            ->assertSee('data-sr-dashboard-url="'.route('dashboard').'"', false)
+            ->assertSee('backdrop-filter: blur(', false)
             ->assertSee('data-full-reload="true"', false)
             ->assertDontSee('Complete your first scored interview')
             ->assertSee('data-sr-onboarding-progress-url="'.route('user.onboarding.progress').'"', false)
@@ -330,12 +359,28 @@ class UserOnboardingProgressTest extends TestCase
             ->assertDontSee('localStorage.getItem(completionKey)', false)
             ->assertDontSee("const completionKey = 'onboarding_completed'", false);
 
-        $this->assertSame(4, preg_match_all('/<section\b[^>]*\bdata-sr-onboarding-step="/', $response->getContent()));
+        $content = $response->getContent();
+        $this->assertSame(5, preg_match_all('/<section\b[^>]*\bdata-sr-onboarding-step="/', $content));
+        $this->assertLessThan(
+            strpos($content, '5. Learn your dashboard'),
+            strpos($content, '4. Verify your recovery email')
+        );
+        $this->assertMatchesRegularExpression(
+            '/<button\b(?=[^>]*\bdata-sr-first-steps-proceed\b)(?=[^>]*\bdisabled\b)[^>]*>/',
+            $content
+        );
+        $this->assertMatchesRegularExpression(
+            '/<button\b(?=[^>]*\bdata-sr-start-dashboard-tour\b)(?=[^>]*\bdisabled\b)[^>]*>Finish Steps 1-4<\/button>/',
+            $content
+        );
     }
 
-    public function test_four_step_onboarding_modal_is_available_outside_the_dashboard_on_both_shells(): void
+    public function test_five_step_onboarding_modal_is_available_outside_the_dashboard_on_both_shells(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->unverified()->create([
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
         $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
         foreach ([null, $iphoneUserAgent] as $userAgent) {
@@ -361,7 +406,17 @@ class UserOnboardingProgressTest extends TestCase
                 ->assertDontSee('Play tutorial voice')
                 ->assertDontSee('window.setTimeout(() => controller.abort(), 30000)', false)
                 ->assertSee('Get interview-ready')
-                ->assertSee('0 of 4 complete')
+                ->assertSee('0 of 5 complete')
+                ->assertSee('4. Verify your recovery email')
+                ->assertSee('5. Learn your dashboard')
+                ->assertSee('data-bs-backdrop="static"', false)
+                ->assertSee('data-bs-keyboard="false"', false)
+                ->assertDontSee('data-sr-first-steps-later', false)
+                ->assertDontSee('sr-first-steps-close', false)
+                ->assertDontSee('Continue later')
+                ->assertSee('data-sr-first-steps-proceed', false)
+                ->assertSee('Proceed to Dashboard')
+                ->assertSee('backdrop-filter: blur(', false)
                 ->assertSee('action="'.route('user.onboarding.personalization').'"', false)
                 ->assertSee('data-sr-personalization-endpoint="'.route('user.onboarding.personalization').'"', false)
                 ->assertSee('sr-first-steps-step--personalization', false)
@@ -372,7 +427,6 @@ class UserOnboardingProgressTest extends TestCase
                 ->assertSee('data-sr-personalization-actions', false)
                 ->assertSee('@media (max-width: 359.98px)', false)
                 ->assertSee('body.user-mobile-shell .sr-first-steps-modal .modal-footer', false)
-                ->assertSee('flex-wrap: nowrap !important;', false)
                 ->assertSee("personalizationForm?.getAttribute('action')", false)
                 ->assertSee('fetch(personalizationEndpoint', false)
                 ->assertDontSee('fetch(personalizationForm.action', false)
@@ -381,8 +435,137 @@ class UserOnboardingProgressTest extends TestCase
                 ->assertDontSee('Complete your first scored interview');
 
             $this->assertMatchesRegularExpression('/data-sr-step-status-actions\s+hidden/', $response->getContent());
-            $this->assertSame(4, preg_match_all('/<section\b[^>]*\bdata-sr-onboarding-step="/', $response->getContent()));
+            $this->assertSame(5, preg_match_all('/<section\b[^>]*\bdata-sr-onboarding-step="/', $response->getContent()));
+            $this->assertMatchesRegularExpression(
+                '/<button\b(?=[^>]*\bdata-sr-first-steps-proceed\b)(?=[^>]*\bdisabled\b)[^>]*>/',
+                $response->getContent()
+            );
         }
+    }
+
+    public function test_email_verification_is_derived_from_the_account_and_rendered_as_step_four(): void
+    {
+        $localUser = User::factory()->unverified()->create([
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
+        $progress = UserOnboardingProgress::forUser($localUser);
+
+        $state = $progress->toStateArray($localUser);
+        $this->assertTrue($state['email_verification_applicable']);
+        $this->assertFalse($state['email_verified']);
+        $this->assertFalse($state['first_steps_complete']);
+
+        $response = $this->actingAs($localUser)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('4. Verify your recovery email')
+            ->assertSee('action="'.route('verification.send').'"', false);
+
+        $this->assertMatchesRegularExpression(
+            '/<section\b(?![^>]*\bis-done\b)(?=[^>]*\bdata-sr-onboarding-step="email_verified")[^>]*>/',
+            $response->getContent()
+        );
+
+        $localUser->markEmailAsVerified();
+        $localUser->refresh();
+        $verifiedState = $progress->fresh()->toStateArray($localUser);
+        $this->assertTrue($verifiedState['email_verified']);
+
+        $verifiedResponse = $this->actingAs($localUser)
+            ->get(route('dashboard'))
+            ->assertOk();
+        $this->assertMatchesRegularExpression(
+            '/<section\b(?=[^>]*\bis-done\b)(?=[^>]*\bdata-sr-onboarding-step="email_verified")[^>]*>/',
+            $verifiedResponse->getContent()
+        );
+
+        $googleUser = User::factory()->google()->create();
+        $googleState = UserOnboardingProgress::forUser($googleUser)->toStateArray($googleUser);
+        $this->assertFalse($googleState['email_verification_applicable']);
+        $this->assertTrue($googleState['email_verified']);
+
+        $googleResponse = $this->actingAs($googleUser)
+            ->get(route('dashboard'))
+            ->assertOk();
+        $this->assertMatchesRegularExpression(
+            '/<section\b(?=[^>]*\bis-done\b)(?=[^>]*\bdata-sr-onboarding-step="email_verified")[^>]*>/',
+            $googleResponse->getContent()
+        );
+    }
+
+    public function test_completed_five_step_state_enables_proceed_to_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
+        $progress = UserOnboardingProgress::forUser($user);
+        $progress->forceFill([
+            'recovery_code_ack_required_at' => now(),
+            'recovery_code_saved_at' => now(),
+            'profile_personalized_at' => now(),
+            'setup_tools_completed_at' => now(),
+            'dashboard_tour_completed_at' => now(),
+        ])->save();
+
+        $state = $progress->fresh()->toStateArray($user);
+        $this->assertTrue($state['email_verified']);
+        $this->assertTrue($state['first_steps_complete']);
+
+        $response = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('5 of 5 complete')
+            ->assertSee('data-sr-first-steps-complete="true"', false)
+            ->assertSee('data-sr-first-steps-auto-show="false"', false)
+            ->assertSee('data-sr-dashboard-url="'.route('dashboard').'"', false)
+            ->assertSee('data-sr-first-steps-proceed', false)
+            ->assertSee('Proceed to Dashboard')
+            ->assertDontSee('data-sr-first-steps-later', false)
+            ->assertDontSee('Continue later');
+
+        $this->assertMatchesRegularExpression(
+            '/<button\b(?=[^>]*\bdata-sr-first-steps-proceed\b)(?![^>]*\bdisabled\b)[^>]*>/',
+            $response->getContent()
+        );
+    }
+
+    public function test_dashboard_tour_unlocks_only_after_the_first_four_steps_are_complete(): void
+    {
+        $user = User::factory()->create([
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
+        $progress = UserOnboardingProgress::forUser($user);
+        $progress->forceFill([
+            'recovery_code_ack_required_at' => now(),
+            'recovery_code_saved_at' => now(),
+            'profile_personalized_at' => now(),
+            'setup_tools_completed_at' => now(),
+            'dashboard_tour_completed_at' => null,
+        ])->save();
+
+        $state = $progress->fresh()->toStateArray($user);
+        $this->assertTrue($state['email_verified']);
+        $this->assertFalse($state['dashboard_tour_completed']);
+        $this->assertFalse($state['first_steps_complete']);
+
+        $response = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('4 of 5 complete')
+            ->assertSee('Start tour');
+
+        $content = $response->getContent();
+        $this->assertMatchesRegularExpression(
+            '/<button\b(?=[^>]*\bdata-sr-start-dashboard-tour\b)(?![^>]*\bdisabled\b)[^>]*>Start tour<\/button>/',
+            $content
+        );
+        $this->assertMatchesRegularExpression(
+            '/<button\b(?=[^>]*\bdata-sr-first-steps-proceed\b)(?=[^>]*\bdisabled\b)[^>]*>/',
+            $content
+        );
     }
 
     public function test_activation_requires_current_terms_and_a_completed_scored_interview(): void
