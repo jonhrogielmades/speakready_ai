@@ -1328,6 +1328,7 @@
                     stagePadding: config.stagePadding ?? 8,
                     stageRadius: config.stageRadius ?? 14,
                     overlayOpacity: config.overlayOpacity ?? 0.58,
+                    disableActiveInteraction: true,
                     popoverClass: getPopoverClass(),
                     serverDetectedMobile: config.serverDetectedMobile,
                     mobileTopBuffer: config.mobileTopBuffer,

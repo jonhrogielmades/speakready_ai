@@ -23,7 +23,7 @@
         inset: 0;
         z-index: 12040;
         background: transparent;
-        pointer-events: none;
+        pointer-events: auto;
     }
 
     .sr-native-tour-stage {

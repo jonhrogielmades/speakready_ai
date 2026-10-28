@@ -113,6 +113,8 @@ class PageSmokeTest extends TestCase
  $this->assertStringContainsString('__speakReadyTourRegistrationVersion', $content, "Expected {$url} to cancel stale tutorial auto-starts.");
  $this->assertStringContainsString('isForCurrentPage', $content, "Expected {$url} to expose current-page tutorial validation.");
  $this->assertStringContainsString('.sr-tour-highlighted', $content, "Expected {$url} to keep the selected tutorial target visually clear.");
+ $this->assertMatchesRegularExpression('/\.sr-native-tour-overlay\s*\{[^}]*pointer-events:\s*auto;/s', $content, "Expected {$url} tutorial overlay to block background pointer interactions.");
+ $this->assertStringContainsString('disableActiveInteraction: true', $content, "Expected {$url} tutorial to block interaction with the highlighted target.");
  $this->assertStringContainsString('background: transparent;', $content, "Expected {$url} tutorial overlay not to tint the selected target.");
  $this->assertStringContainsString('0 0 0 9999px rgba(2, 6, 23, 0.62)', $content, "Expected {$url} tutorial dimming to sit outside the selected target.");
  $this->assertStringNotContainsString('A tutorial is not available for this specific page.', $content, "Expected {$url} to have a functional tutorial.");
