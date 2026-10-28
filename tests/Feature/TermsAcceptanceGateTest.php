@@ -88,7 +88,14 @@ class TermsAcceptanceGateTest extends TestCase
 
     public function test_registration_redirects_new_user_to_terms_gate(): void
     {
-        $response = $this->post(route('register'), [
+        $response = $this->withSession([
+            'google_registration_verified' => [
+                'email' => 'new-terms-user@gmail.com',
+                'google_id' => 'new-terms-user-google-id',
+                'avatar' => null,
+                'expires_at' => now()->addMinutes(10)->timestamp,
+            ],
+        ])->post(route('register'), [
             'name' => 'New Terms User',
             'username' => 'new-terms-user',
             'email' => 'new-terms-user@gmail.com',
@@ -109,6 +116,7 @@ class TermsAcceptanceGateTest extends TestCase
 
         $this->get(route('terms.acceptance.show'))
             ->assertSee('Save your recovery code')
+            ->assertSee('Your recovery email was verified by Google and is ready for password recovery.')
             ->assertSee((string) $response->getSession()->get('recovery_code'), false);
     }
 

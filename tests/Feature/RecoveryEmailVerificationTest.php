@@ -17,12 +17,19 @@ class RecoveryEmailVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_local_registration_requires_real_recovery_email_verification_without_blocking_access(): void
+    public function test_google_verified_gmail_registration_is_verified_without_sending_an_email_link(): void
     {
         config(['services.brevo.api_key' => null]);
         Notification::fake();
 
-        $this->post(route('register'), [
+        $this->withSession([
+            'google_registration_verified' => [
+                'email' => 'verification.candidate@gmail.com',
+                'google_id' => 'verification-candidate-google-id',
+                'avatar' => null,
+                'expires_at' => now()->addMinutes(10)->timestamp,
+            ],
+        ])->post(route('register'), [
             'name' => 'Verification Candidate',
             'username' => 'verification-candidate',
             'email' => 'verification.candidate@gmail.com',
@@ -32,9 +39,10 @@ class RecoveryEmailVerificationTest extends TestCase
 
         $user = User::where('username', 'verification-candidate')->firstOrFail();
 
-        $this->assertNull($user->email_verified_at);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertSame('verification-candidate-google-id', $user->google_id);
         $this->assertAuthenticatedAs($user);
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertNotSentTo($user, VerifyEmail::class);
     }
 
     public function test_signed_verification_link_enables_email_recovery(): void

@@ -70,6 +70,12 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middle
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/login', [AuthController::class, 'redirectToGoogle'])->name('auth.google.login');
 Route::get('/auth/google/register', [AuthController::class, 'redirectToGoogleRegister'])->name('auth.google.register');
+Route::post('/auth/google/verify-registration', [AuthController::class, 'redirectToGoogleRegistrationVerification'])
+    ->middleware(['guest', 'throttle:auth'])
+    ->name('auth.google.registration.verify');
+Route::post('/auth/google/verify-registration/reset', [AuthController::class, 'resetGoogleRegistrationVerification'])
+    ->middleware('guest')
+    ->name('auth.google.registration.reset');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 Route::get('/email/verify/{id}/{hash}', [RecoveryEmailVerificationController::class, 'verify'])

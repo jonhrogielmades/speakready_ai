@@ -120,7 +120,14 @@ class UserOnboardingProgressTest extends TestCase
 
     public function test_registration_requires_recovery_code_acknowledgement_and_records_it(): void
     {
-        $this->post(route('register'), [
+        $this->withSession([
+            'google_registration_verified' => [
+                'email' => 'recovery-ack@gmail.com',
+                'google_id' => 'recovery-ack-google-id',
+                'avatar' => null,
+                'expires_at' => now()->addMinutes(10)->timestamp,
+            ],
+        ])->post(route('register'), [
             'name' => 'Recovery Acknowledgement User',
             'username' => 'recovery-ack-user',
             'email' => 'recovery-ack@gmail.com',
@@ -154,7 +161,14 @@ class UserOnboardingProgressTest extends TestCase
 
     public function test_recovery_code_acknowledgement_cannot_be_bypassed_after_registration_flash_expires(): void
     {
-        $this->post(route('register'), [
+        $this->withSession([
+            'google_registration_verified' => [
+                'email' => 'durable-recovery-ack@gmail.com',
+                'google_id' => 'durable-recovery-ack-google-id',
+                'avatar' => null,
+                'expires_at' => now()->addMinutes(10)->timestamp,
+            ],
+        ])->post(route('register'), [
             'name' => 'Durable Recovery Acknowledgement User',
             'username' => 'durable-recovery-ack-user',
             'email' => 'durable-recovery-ack@gmail.com',

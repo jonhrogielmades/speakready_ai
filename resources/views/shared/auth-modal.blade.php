@@ -1,8 +1,21 @@
 @php
    $googleAuthLayoutQuery = ($isMobile ?? false) ? ['sr_layout' => 'mobile', 'sr_is_mobile' => '1'] : [];
+   $googleRegistrationVerification = session('google_registration_verified');
+   $googleRegistrationExpiresAt = is_array($googleRegistrationVerification)
+      ? filter_var($googleRegistrationVerification['expires_at'] ?? null, FILTER_VALIDATE_INT)
+      : false;
+   $verifiedRegistrationEmail = is_array($googleRegistrationVerification)
+      ? strtolower(trim((string) ($googleRegistrationVerification['email'] ?? '')))
+      : '';
+   $hasVerifiedRegistrationEmail = $googleRegistrationExpiresAt !== false
+      && $googleRegistrationExpiresAt >= now()->timestamp
+      && filled($googleRegistrationVerification['google_id'] ?? null)
+      && preg_match('/^[^@\s]+@gmail\.com$/i', $verifiedRegistrationEmail) === 1;
    $authModalRequest = request('auth_modal');
    $authTab = old('auth_tab') ?: (in_array($authModalRequest, ['login', 'signup', 'register'], true) ? $authModalRequest : null);
-   $showSignupAuthTab = in_array($authTab, ['signup', 'register'], true) || ($authTab === null && filled(old('name')));
+   $showSignupAuthTab = $hasVerifiedRegistrationEmail
+      || in_array($authTab, ['signup', 'register'], true)
+      || ($authTab === null && filled(old('name')));
    $authQueryAlert = request('auth_alert') === 'google_login_unregistered'
       ? 'This Google account is not registered. Please register first.'
       : null;
@@ -102,66 +115,90 @@
 
                   <!-- Sign Up -->
                   <div id="fSignup" class="auth-panel" role="tabpanel" aria-labelledby="tabSignup" @unless($showSignupAuthTab) style="display:none" hidden aria-hidden="true" @else aria-hidden="false" @endunless>
-                     <form id="signupForm" class="auth-form" action="{{ route('register') }}" method="POST" autocomplete="on">
-                        @csrf
-                        <input type="hidden" name="auth_tab" value="signup">
-                        @if($errors->any() && $showSignupAuthTab)
-                           <div class="err-msg is-visible" role="alert"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first() }}</span></div>
-                        @endif
-                        <div class="auth-field auth-register-name">
-                           <label class="olbl" for="signupName"><i class="fa-solid fa-user" aria-hidden="true"></i>Full name</label>
-                           <div class="auth-input-wrap">
-                              <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
-                              <input class="oinp" type="text" name="name" id="signupName" placeholder="John Doe" required autocomplete="name" value="{{ old('name') }}">
+                     @if($hasVerifiedRegistrationEmail)
+                        <div class="auth-success-msg" role="status">
+                           <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                           <span><strong>{{ $verifiedRegistrationEmail }}</strong> was verified by Google.</span>
+                        </div>
+                        <form action="{{ route('auth.google.registration.reset', $googleAuthLayoutQuery) }}" method="POST" class="text-end mb-2">
+                           @csrf
+                           <button type="submit" class="btn btn-link auth-inline-link p-0">Use a different Gmail</button>
+                        </form>
+                        <form id="signupForm" class="auth-form" action="{{ route('register') }}" method="POST" autocomplete="on">
+                           @csrf
+                           <input type="hidden" name="auth_tab" value="signup">
+                           <input type="hidden" name="email" value="{{ $verifiedRegistrationEmail }}">
+                           @if($errors->any() && $showSignupAuthTab)
+                              <div class="err-msg is-visible" role="alert"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first() }}</span></div>
+                           @endif
+                           <div class="auth-field auth-register-name">
+                              <label class="olbl" for="signupName"><i class="fa-solid fa-user" aria-hidden="true"></i>Full name</label>
+                              <div class="auth-input-wrap">
+                                 <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+                                 <input class="oinp" type="text" name="name" id="signupName" placeholder="John Doe" required autocomplete="name" value="{{ old('name') }}">
+                              </div>
                            </div>
-                        </div>
-                        <div class="auth-field auth-register-username">
-                           <label class="olbl" for="signupUsername"><i class="fa-solid fa-user-tag" aria-hidden="true"></i>Username</label>
-                           <div class="auth-input-wrap">
-                              <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-user-tag"></i></span>
-                              <input class="oinp" type="text" name="username" id="signupUsername" placeholder="your_username" required autocomplete="username" value="{{ old('username') }}">
+                           <div class="auth-field auth-register-username">
+                              <label class="olbl" for="signupUsername"><i class="fa-solid fa-user-tag" aria-hidden="true"></i>Username</label>
+                              <div class="auth-input-wrap">
+                                 <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-user-tag"></i></span>
+                                 <input class="oinp" type="text" name="username" id="signupUsername" placeholder="your_username" required autocomplete="username" value="{{ old('username') }}">
+                              </div>
                            </div>
-                        </div>
-                        <div class="auth-field auth-register-email">
-                           <label class="olbl" for="signupEmail"><i class="fa-solid fa-envelope" aria-hidden="true"></i>Recovery email</label>
-                           <div class="auth-input-wrap">
-                              <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
-                              <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@gmail.com" required maxlength="255" inputmode="email" pattern="^[^\s@]+@[gG][mM][aA][iI][lL]\.[cC][oO][mM]$" title="Enter a valid Gmail recovery email ending in @gmail.com." autocomplete="email" spellcheck="false" aria-describedby="signupEmailHelp signupEmailFeedback" value="{{ old('email') }}">
+                           <div class="auth-field auth-register-password">
+                              <label class="olbl" for="signupPass"><i class="fa-solid fa-lock" aria-hidden="true"></i>Password</label>
+                              <div class="auth-input-wrap password-field">
+                                 <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+                                 <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required autocomplete="new-password">
+                                 <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('signupPass', this)" aria-label="Show password">
+                                    <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+                                 </button>
+                              </div>
                            </div>
-                           <small id="signupEmailHelp" class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">Use a Gmail address. We will email a link to confirm you own it, or you can use Sign up with Google for instant verification.</small>
-                           <small id="signupEmailFeedback" class="d-block mt-1" role="alert" hidden style="color:var(--danger,#dc2626);font-size:.76rem"></small>
-                        </div>
-                        <div class="auth-field auth-register-password">
-                           <label class="olbl" for="signupPass"><i class="fa-solid fa-lock" aria-hidden="true"></i>Password</label>
-                           <div class="auth-input-wrap password-field">
-                              <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                              <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required autocomplete="new-password">
-                              <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('signupPass', this)" aria-label="Show password">
-                                 <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
-                              </button>
+                           <div class="auth-field auth-register-confirm-password">
+                              <label class="olbl" for="signupPassConfirm"><i class="fa-solid fa-lock" aria-hidden="true"></i>Confirm password</label>
+                              <div class="auth-input-wrap password-field">
+                                 <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+                                 <input class="oinp" type="password" name="password_confirmation" id="signupPassConfirm" placeholder="Confirm your password" required autocomplete="new-password">
+                                 <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('signupPassConfirm', this)" aria-label="Show password">
+                                    <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+                                 </button>
+                              </div>
                            </div>
-                        </div>
-                        <div class="auth-field auth-register-confirm-password">
-                           <label class="olbl" for="signupPassConfirm"><i class="fa-solid fa-lock" aria-hidden="true"></i>Confirm password</label>
-                           <div class="auth-input-wrap password-field">
-                              <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                              <input class="oinp" type="password" name="password_confirmation" id="signupPassConfirm" placeholder="Confirm your password" required autocomplete="new-password">
-                              <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('signupPassConfirm', this)" aria-label="Show password">
-                                 <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
-                              </button>
+                           <div class="form-check auth-check auth-terms">
+                              <input class="form-check-input" type="checkbox" name="terms_accepted" value="1" id="signupTerms" required @checked(old('terms_accepted'))>
+                              <label class="form-check-label" for="signupTerms">I understand I will review and accept the <a href="{{ route('legal.terms') }}">Terms of Service</a> and <a href="{{ route('legal.privacy') }}">Privacy Policy</a> before entering my dashboard.</label>
                            </div>
-                        </div>
-                        <div class="form-check auth-check auth-terms">
-                           <input class="form-check-input" type="checkbox" name="terms_accepted" value="1" id="signupTerms" required @checked(old('terms_accepted'))>
-                           <label class="form-check-label" for="signupTerms">I understand I will review and accept the <a href="{{ route('legal.terms') }}">Terms of Service</a> and <a href="{{ route('legal.privacy') }}">Privacy Policy</a> before entering my dashboard.</label>
-                        </div>
-                        <button type="submit" class="bgrd btn auth-submit w-100 fw-semibold" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm" aria-hidden="true"></i></button>
-                     </form>
-                     <div class="odiv auth-divider">or sign up with</div>
-                     <a href="{{ route('auth.google.register', $googleAuthLayoutQuery) }}" class="oauth auth-oauth" data-auth-transition="google-register">
-                        @include('shared.google-auth-mark')
-                        <span>Sign up with Google</span>
-                     </a>
+                           <button type="submit" class="bgrd btn auth-submit w-100 fw-semibold" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm" aria-hidden="true"></i></button>
+                        </form>
+                     @else
+                        <form id="signupEmailVerificationForm" class="auth-form" action="{{ route('auth.google.registration.verify', $googleAuthLayoutQuery) }}" method="POST" autocomplete="on">
+                           @csrf
+                           <input type="hidden" name="auth_tab" value="signup">
+                           @if($errors->any() && $showSignupAuthTab)
+                              <div class="err-msg is-visible" role="alert"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $errors->first() }}</span></div>
+                           @endif
+                           <p class="auth-secure-note mb-3"><i class="fa-regular fa-shield-check" aria-hidden="true"></i><span>Step 1 of 2: confirm that you own the Gmail used for account recovery.</span></p>
+                           <div class="auth-field auth-register-email">
+                              <label class="olbl" for="signupEmail"><i class="fa-solid fa-envelope" aria-hidden="true"></i>Recovery Gmail</label>
+                              <div class="auth-input-wrap">
+                                 <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
+                                 <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@gmail.com" required maxlength="255" inputmode="email" pattern="^[^\s@]+@[gG][mM][aA][iI][lL]\.[cC][oO][mM]$" title="Enter a valid Gmail recovery email ending in @gmail.com." autocomplete="email" spellcheck="false" aria-describedby="signupEmailHelp signupEmailFeedback" value="{{ old('email') }}">
+                              </div>
+                              <small id="signupEmailHelp" class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">Enter your primary Gmail exactly as shown in Google. You will choose that same account on the next screen.</small>
+                              <small id="signupEmailFeedback" class="d-block mt-1" role="alert" hidden style="color:var(--danger,#dc2626);font-size:.76rem"></small>
+                           </div>
+                           <button type="submit" class="oauth auth-oauth w-100" id="verifyGmailBtn">
+                              @include('shared.google-auth-mark')
+                              <span>Verify Gmail with Google</span>
+                           </button>
+                        </form>
+                        <div class="odiv auth-divider">or create an account directly with</div>
+                        <a href="{{ route('auth.google.register', $googleAuthLayoutQuery) }}" class="oauth auth-oauth" data-auth-transition="google-register">
+                           @include('shared.google-auth-mark')
+                           <span>Sign up with Google</span>
+                        </a>
+                     @endif
                      <p class="auth-secure-note"><i class="fa-regular fa-shield-check" aria-hidden="true"></i><span>Your information is safe and secure.</span></p>
                   </div>
                </div>
@@ -174,9 +211,9 @@
          (function () {
             const emailInput = document.getElementById('signupEmail');
             const emailFeedback = document.getElementById('signupEmailFeedback');
-            const signupForm = document.getElementById('signupForm');
+            const verificationForm = document.getElementById('signupEmailVerificationForm');
 
-            if (!emailInput || !signupForm || emailInput.dataset.gmailValidationBound === 'true') return;
+            if (!emailInput || !verificationForm || emailInput.dataset.gmailValidationBound === 'true') return;
 
             const gmailPattern = /^[^\s@]+@gmail\.com$/i;
             const gmailError = 'Enter a valid Gmail recovery email ending in @gmail.com.';
@@ -213,8 +250,14 @@
                validateGmail(hasInteracted);
             });
 
-            signupForm.addEventListener('submit', function (event) {
-               if (validateGmail(true)) return;
+            verificationForm.addEventListener('submit', function (event) {
+               if (validateGmail(true)) {
+                  if (typeof window.showLoginTransition === 'function') {
+                     window.showLoginTransition('google-verify');
+                  }
+
+                  return;
+               }
 
                event.preventDefault();
                hasInteracted = true;

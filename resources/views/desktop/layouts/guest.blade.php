@@ -1555,6 +1555,9 @@
               if (mode === 'register') {
                   if (title) title.textContent = 'Creating your account...';
                   if (copy) copy.textContent = 'Please wait while we set up your dashboard';
+              } else if (mode === 'google-verify') {
+                  if (title) title.textContent = 'Verifying your Gmail...';
+                  if (copy) copy.textContent = 'Opening Google to confirm your recovery email';
               } else if (mode === 'google-register') {
                   if (title) title.textContent = 'Signing up with Google...';
                   if (copy) copy.textContent = 'Opening secure Google registration';

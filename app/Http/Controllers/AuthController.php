@@ -54,13 +54,26 @@ class AuthController extends Controller
 
     private const GOOGLE_ACCOUNT_DELETE_INTENT = 'account_delete';
 
-    private const GOOGLE_AUTH_INTENTS = ['login', 'register', self::GOOGLE_ACCOUNT_DELETE_INTENT];
+    private const GOOGLE_REGISTRATION_VERIFY_INTENT = 'verify_registration';
+
+    private const GOOGLE_REGISTRATION_PENDING_SESSION_KEY = 'google_registration_pending';
+
+    private const GOOGLE_REGISTRATION_VERIFIED_SESSION_KEY = 'google_registration_verified';
+
+    private const GOOGLE_REGISTRATION_VERIFICATION_TTL_MINUTES = 15;
+
+    private const GOOGLE_AUTH_INTENTS = [
+        'login',
+        'register',
+        self::GOOGLE_ACCOUNT_DELETE_INTENT,
+        self::GOOGLE_REGISTRATION_VERIFY_INTENT,
+    ];
 
     private const AUTH_TAB_OLD_INPUT_KEY = 'auth_tab';
 
     private const MOBILE_VIEWPORT_MAX = 820;
 
-    public function register(Request $request, RecoveryEmailVerification $emailVerification)
+    public function register(Request $request)
     {
         if (! Setting::enabled('acc_registration')) {
             return back()->withErrors([
@@ -91,18 +104,56 @@ class AuthController extends Controller
             'email.unique' => 'This recovery email is already registered.',
         ]);
 
+        $googleVerification = $this->activeGoogleRegistrationVerification($request);
+
+        if (! $googleVerification
+            || ! hash_equals($googleVerification['email'], $validated['email'])) {
+            return back()->withErrors([
+                'email' => 'Verify this Gmail address with Google before creating your account.',
+            ])->withInput($request->only([
+                'name',
+                'username',
+                'email',
+                'terms_accepted',
+                self::AUTH_TAB_OLD_INPUT_KEY,
+            ]));
+        }
+
+        $googleId = trim((string) ($googleVerification['google_id'] ?? ''));
+
+        if ($googleId === '' || User::withTrashed()->where('google_id', $googleId)->exists()) {
+            $request->session()->forget(self::GOOGLE_REGISTRATION_VERIFIED_SESSION_KEY);
+
+            return back()->withErrors([
+                'email' => 'This Google account is already connected to another account. Log in with Google instead.',
+            ])->withInput($request->only([
+                'name',
+                'username',
+                'email',
+                'terms_accepted',
+                self::AUTH_TAB_OLD_INPUT_KEY,
+            ]));
+        }
+
         $recoveryCode = PasswordRecovery::generate();
 
         $user = User::create([
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => $validated['email'],
+            'google_id' => $googleId,
             'password' => Hash::make($validated['password']),
             'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
             'password_recovery_code_generated_at' => now(),
             'password_recovery_code_expires_at' => null,
-            'email_verified_at' => null,
+            'profile_photo_path' => $googleVerification['avatar'] ?? null,
         ]);
+
+        $user->forceFill([
+            'email_verified_at' => now(),
+        ])->save();
+
+        $request->session()->forget(self::GOOGLE_REGISTRATION_VERIFIED_SESSION_KEY);
 
         UserOnboardingProgress::forUser($user)->forceFill([
             'recovery_code_ack_required_at' => now(),
@@ -112,22 +163,12 @@ class AuthController extends Controller
         $this->ensureAuthenticationProfile($user);
 
         Auth::login($user, true);
-
-        try {
-            $emailVerification->send($user);
-        } catch (Throwable $error) {
-            // Account creation must remain available when outbound email is
-            // temporarily unavailable; the user can resend from Account.
-            Log::warning('Initial recovery email verification could not be delivered.', [
-                'user_id' => $user->getKey(),
-                'exception_type' => $error::class,
-            ]);
-        }
+        $request->session()->regenerate();
 
         $this->safeActivityLog(
             $user,
             'user_registered',
-            "{$user->name} ({$this->userIdentifier($user)}) registered a new account.",
+            "{$user->name} ({$this->userIdentifier($user)}) registered a new account with a Google-verified recovery email.",
             $request->ip(),
             false
         );
@@ -569,6 +610,53 @@ class AuthController extends Controller
         return $this->redirectToGoogleWithIntent($request, 'register');
     }
 
+    public function redirectToGoogleRegistrationVerification(Request $request)
+    {
+        if (! Setting::enabled('acc_registration')) {
+            return back()->withErrors([
+                'username' => 'New account registration is currently disabled by the administrator.',
+            ])->withInput($request->only('email', self::AUTH_TAB_OLD_INPUT_KEY));
+        }
+
+        $request->merge([
+            'email' => $this->normalizeEmail($request->input('email')),
+        ]);
+
+        $validated = $request->validate([
+            'email' => [
+                'required',
+                'string',
+                'max:255',
+                'email:rfc,filter',
+                'regex:/^[^@\s]+@gmail\.com$/i',
+                'unique:users,email',
+            ],
+        ], [
+            'email.email' => 'Enter a valid Gmail recovery email ending in @gmail.com.',
+            'email.regex' => 'Enter a valid Gmail recovery email ending in @gmail.com.',
+            'email.unique' => 'This recovery email is already registered. Log in with Google instead.',
+        ]);
+
+        $request->session()->forget(self::GOOGLE_REGISTRATION_VERIFIED_SESSION_KEY);
+        $request->session()->put(self::GOOGLE_REGISTRATION_PENDING_SESSION_KEY, [
+            'email' => $validated['email'],
+            'expires_at' => now()->addMinutes(self::GOOGLE_REGISTRATION_VERIFICATION_TTL_MINUTES)->timestamp,
+        ]);
+
+        return $this->redirectToGoogleWithIntent($request, self::GOOGLE_REGISTRATION_VERIFY_INTENT);
+    }
+
+    public function resetGoogleRegistrationVerification(Request $request)
+    {
+        $request->session()->forget([
+            self::GOOGLE_REGISTRATION_PENDING_SESSION_KEY,
+            self::GOOGLE_REGISTRATION_VERIFIED_SESSION_KEY,
+        ]);
+
+        return $this->redirectToHomeWithGoogleLayout($request)
+            ->withInput([self::AUTH_TAB_OLD_INPUT_KEY => 'signup']);
+    }
+
     public function redirectToGoogleAccountDeletion(Request $request)
     {
         if (! SystemSettings::userCan('delete_own_account')) {
@@ -663,6 +751,15 @@ class AuthController extends Controller
                     $request,
                     $googleUser,
                     $accountDeletionService
+                );
+            }
+
+            if ($intent === self::GOOGLE_REGISTRATION_VERIFY_INTENT) {
+                return $this->completeGoogleRegistrationVerification(
+                    $request,
+                    $googleUser,
+                    $googleEmail,
+                    $googleAvatarUrl
                 );
             }
 
@@ -832,6 +929,78 @@ class AuthController extends Controller
             ->stateless()
             ->with($parameters)
             ->redirect();
+    }
+
+    private function completeGoogleRegistrationVerification(
+        Request $request,
+        $googleUser,
+        string $googleEmail,
+        ?string $googleAvatarUrl
+    ) {
+        $pending = $request->session()->pull(self::GOOGLE_REGISTRATION_PENDING_SESSION_KEY);
+        $request->session()->forget(self::GOOGLE_REGISTRATION_VERIFIED_SESSION_KEY);
+
+        $expectedEmail = $this->activePendingGoogleRegistrationEmail($pending);
+
+        if ($expectedEmail === null) {
+            return $this->googleAuthFailureResponse(
+                $request,
+                'Google verification expired. Enter your Gmail address and try again.',
+                self::GOOGLE_REGISTRATION_VERIFY_INTENT
+            );
+        }
+
+        if (! hash_equals($expectedEmail, $googleEmail)) {
+            return $this->googleAuthFailureResponse(
+                $request,
+                'The selected Google account does not match '.$expectedEmail.'. Choose that Gmail account and try again.',
+                self::GOOGLE_REGISTRATION_VERIFY_INTENT,
+                ['email' => $expectedEmail]
+            );
+        }
+
+        $googleId = trim((string) ($googleUser->id ?? ''));
+
+        if ($googleId === '') {
+            return $this->googleAuthFailureResponse(
+                $request,
+                'Google did not return a valid account identifier. Please try again.',
+                self::GOOGLE_REGISTRATION_VERIFY_INTENT,
+                ['email' => $expectedEmail]
+            );
+        }
+
+        if (User::withTrashed()->where('email', $expectedEmail)->exists()) {
+            return $this->googleAuthFailureResponse(
+                $request,
+                'This recovery email is already registered. Log in with Google instead.',
+                self::GOOGLE_REGISTRATION_VERIFY_INTENT,
+                ['email' => $expectedEmail]
+            );
+        }
+
+        if (User::withTrashed()->where('google_id', $googleId)->exists()) {
+            return $this->googleAuthFailureResponse(
+                $request,
+                'This Google account is already connected to another account. Log in with Google instead.',
+                self::GOOGLE_REGISTRATION_VERIFY_INTENT,
+                ['email' => $expectedEmail]
+            );
+        }
+
+        $request->session()->put(self::GOOGLE_REGISTRATION_VERIFIED_SESSION_KEY, [
+            'email' => $expectedEmail,
+            'google_id' => $googleId,
+            'avatar' => $googleAvatarUrl,
+            'expires_at' => now()->addMinutes(self::GOOGLE_REGISTRATION_VERIFICATION_TTL_MINUTES)->timestamp,
+        ]);
+
+        return $this->redirectToHomeWithGoogleLayout($request)
+            ->with('status', 'Gmail verified by Google. Complete your account details to finish registration.')
+            ->withInput([
+                self::AUTH_TAB_OLD_INPUT_KEY => 'signup',
+                'email' => $expectedEmail,
+            ]);
     }
 
     private function completeGoogleAccountDeletion(
@@ -1020,6 +1189,19 @@ class AuthController extends Controller
             return $redirect->withErrors(['account_delete' => $message]);
         }
 
+        if ($intent === self::GOOGLE_REGISTRATION_VERIFY_INTENT) {
+            $pending = $request->session()->pull(self::GOOGLE_REGISTRATION_PENDING_SESSION_KEY);
+            $request->session()->forget(self::GOOGLE_REGISTRATION_VERIFIED_SESSION_KEY);
+
+            $pendingEmail = is_array($pending)
+                ? $this->normalizeEmail($pending['email'] ?? null)
+                : '';
+
+            if ($pendingEmail !== '' && ! array_key_exists('email', $input)) {
+                $input['email'] = $pendingEmail;
+            }
+        }
+
         return $this->redirectToHomeWithGoogleLayout($request, $homeQuery)
             ->withErrors([$field => $message])
             ->withInput($this->googleAuthOldInput($request, $intent, $input));
@@ -1027,12 +1209,14 @@ class AuthController extends Controller
 
     private function googleAuthOldInput(Request $request, ?string $intent, array $input): array
     {
-        $intent = in_array($intent, ['login', 'register'], true)
+        $intent = in_array($intent, ['login', 'register', self::GOOGLE_REGISTRATION_VERIFY_INTENT], true)
             ? $intent
             : $this->googleAuthIntent($request);
 
         return array_merge([
-            self::AUTH_TAB_OLD_INPUT_KEY => $intent === 'register' ? 'signup' : 'login',
+            self::AUTH_TAB_OLD_INPUT_KEY => in_array($intent, ['register', self::GOOGLE_REGISTRATION_VERIFY_INTENT], true)
+                ? 'signup'
+                : 'login',
         ], $input);
     }
 
@@ -1243,6 +1427,56 @@ class AuthController extends Controller
         }
 
         return 'Google authentication could not be completed. Please start Google login again.';
+    }
+
+    private function activeGoogleRegistrationVerification(Request $request): ?array
+    {
+        $verification = $request->session()->get(self::GOOGLE_REGISTRATION_VERIFIED_SESSION_KEY);
+
+        if (! is_array($verification)) {
+            return null;
+        }
+
+        $email = $this->normalizeEmail($verification['email'] ?? null);
+        $googleId = trim((string) ($verification['google_id'] ?? ''));
+        $expiresAt = filter_var($verification['expires_at'] ?? null, FILTER_VALIDATE_INT);
+
+        if ($email === ''
+            || preg_match('/^[^@\s]+@gmail\.com$/i', $email) !== 1
+            || $googleId === ''
+            || $expiresAt === false
+            || $expiresAt < now()->timestamp) {
+            $request->session()->forget(self::GOOGLE_REGISTRATION_VERIFIED_SESSION_KEY);
+
+            return null;
+        }
+
+        return [
+            'email' => $email,
+            'google_id' => $googleId,
+            'avatar' => filled($verification['avatar'] ?? null)
+                ? (string) $verification['avatar']
+                : null,
+        ];
+    }
+
+    private function activePendingGoogleRegistrationEmail(mixed $pending): ?string
+    {
+        if (! is_array($pending)) {
+            return null;
+        }
+
+        $email = $this->normalizeEmail($pending['email'] ?? null);
+        $expiresAt = filter_var($pending['expires_at'] ?? null, FILTER_VALIDATE_INT);
+
+        if ($email === ''
+            || preg_match('/^[^@\s]+@gmail\.com$/i', $email) !== 1
+            || $expiresAt === false
+            || $expiresAt < now()->timestamp) {
+            return null;
+        }
+
+        return $email;
     }
 
     private function normalizeEmail(mixed $email): string
