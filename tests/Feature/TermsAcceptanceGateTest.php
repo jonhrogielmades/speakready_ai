@@ -4,6 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as SocialiteUser;
+use Mockery;
 use Tests\TestCase;
 
 class TermsAcceptanceGateTest extends TestCase
@@ -88,20 +92,24 @@ class TermsAcceptanceGateTest extends TestCase
 
     public function test_registration_redirects_new_user_to_terms_gate(): void
     {
+        $this->mockGoogleCallback([
+            'id' => 'new-terms-user-google-id',
+            'name' => 'New Terms User',
+            'email' => 'new-terms-user@gmail.com',
+            'avatar' => null,
+        ]);
+
         $response = $this->withSession([
-            'google_registration_verified' => [
+            'google_auth_intent' => 'verify_registration',
+            'google_registration_pending' => [
+                'name' => 'New Terms User',
+                'username' => 'new-terms-user',
                 'email' => 'new-terms-user@gmail.com',
-                'google_id' => 'new-terms-user-google-id',
-                'avatar' => null,
+                'password_hash' => Hash::make('password123'),
                 'expires_at' => now()->addMinutes(10)->timestamp,
             ],
-        ])->post(route('register'), [
-            'name' => 'New Terms User',
-            'username' => 'new-terms-user',
-            'email' => 'new-terms-user@gmail.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ])->assertRedirect(route('terms.acceptance.show'))
+        ])->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect(route('terms.acceptance.show'))
             ->assertSessionHas('registration_success', true)
             ->assertSessionHas('success', 'Registration successful. Welcome to SpeakReady AI!')
             ->assertSessionHas('recovery_code', fn ($code): bool => preg_match('/^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$/', (string) $code) === 1);
@@ -116,7 +124,6 @@ class TermsAcceptanceGateTest extends TestCase
 
         $this->get(route('terms.acceptance.show'))
             ->assertSee('Save your recovery code')
-            ->assertSee('Your recovery email was verified by Google and is ready for password recovery.')
             ->assertSee((string) $response->getSession()->get('recovery_code'), false);
     }
 
@@ -129,5 +136,27 @@ class TermsAcceptanceGateTest extends TestCase
             'terms_version' => null,
             'terms_ip_address' => null,
         ]);
+    }
+
+    private function mockGoogleCallback(array $attributes): void
+    {
+        config([
+            'services.google.client_id' => 'test-google-client-id',
+            'services.google.client_secret' => 'test-google-client-secret',
+            'services.google.redirect' => route('auth.google.callback'),
+        ]);
+
+        $googleUser = SocialiteUser::fake($attributes);
+        $googleUser->setRaw($attributes);
+
+        $provider = Mockery::mock();
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('setHttpClient')->andReturnSelf();
+        $provider->shouldReceive('user')->andReturn($googleUser);
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
     }
 }

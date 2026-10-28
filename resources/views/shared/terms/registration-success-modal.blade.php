@@ -30,14 +30,8 @@
                     @enderror
                 </div>
             @endif
-            @if(Auth::user())
-                @if(auth()->user()?->hasVerifiedEmail() && filled(auth()->user()?->google_id))
-                    <p class="terms-success-note"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Your recovery email was verified by Google and is ready for password recovery.</p>
-                @elseif(auth()->user()?->hasVerifiedEmail())
-                    <p class="terms-success-note"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Your recovery email is verified and ready for password recovery.</p>
-                @else
-                    <p class="terms-success-note"><i class="fa-regular fa-envelope" aria-hidden="true"></i> Check your recovery email for a verification link before using email password recovery.</p>
-                @endif
+            @if(Auth::user() && ! Auth::user()->hasVerifiedEmail())
+                <p class="terms-success-note"><i class="fa-regular fa-envelope" aria-hidden="true"></i> Check your recovery email for a verification link before using email password recovery.</p>
             @endif
             <p class="terms-success-note">One quick agreement step unlocks your dashboard, practice tools, and AI feedback workspace.</p>
             <button class="terms-success-button" type="button" data-terms-success-continue {{ $registrationRecoveryCode !== '' ? 'disabled' : '' }}>

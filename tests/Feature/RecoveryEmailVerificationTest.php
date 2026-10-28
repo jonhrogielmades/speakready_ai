@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as SocialiteUser;
+use Mockery;
 use Tests\TestCase;
 
 class RecoveryEmailVerificationTest extends TestCase
@@ -21,21 +24,24 @@ class RecoveryEmailVerificationTest extends TestCase
     {
         config(['services.brevo.api_key' => null]);
         Notification::fake();
+        $this->mockGoogleCallback([
+            'id' => 'verification-candidate-google-id',
+            'name' => 'Verification Candidate',
+            'email' => 'verification.candidate@gmail.com',
+            'avatar' => null,
+        ]);
 
         $this->withSession([
-            'google_registration_verified' => [
+            'google_auth_intent' => 'verify_registration',
+            'google_registration_pending' => [
+                'name' => 'Verification Candidate',
+                'username' => 'verification-candidate',
                 'email' => 'verification.candidate@gmail.com',
-                'google_id' => 'verification-candidate-google-id',
-                'avatar' => null,
+                'password_hash' => Hash::make('password123'),
                 'expires_at' => now()->addMinutes(10)->timestamp,
             ],
-        ])->post(route('register'), [
-            'name' => 'Verification Candidate',
-            'username' => 'verification-candidate',
-            'email' => 'verification.candidate@gmail.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ])->assertRedirect(route('terms.acceptance.show'));
+        ])->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect(route('terms.acceptance.show'));
 
         $user = User::where('username', 'verification-candidate')->firstOrFail();
 
@@ -188,5 +194,27 @@ class RecoveryEmailVerificationTest extends TestCase
             ->assertSee('Email verification not completed')
             ->assertSee(route('verification.send'), false)
             ->assertSee('Verify');
+    }
+
+    private function mockGoogleCallback(array $attributes): void
+    {
+        config([
+            'services.google.client_id' => 'test-google-client-id',
+            'services.google.client_secret' => 'test-google-client-secret',
+            'services.google.redirect' => route('auth.google.callback'),
+        ]);
+
+        $googleUser = SocialiteUser::fake($attributes);
+        $googleUser->setRaw($attributes);
+
+        $provider = Mockery::mock();
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('setHttpClient')->andReturnSelf();
+        $provider->shouldReceive('user')->andReturn($googleUser);
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
     }
 }

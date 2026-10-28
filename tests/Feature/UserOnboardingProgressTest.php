@@ -8,6 +8,9 @@ use App\Models\User;
 use App\Models\UserOnboardingProgress;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as SocialiteUser;
+use Mockery;
 use Tests\TestCase;
 
 class UserOnboardingProgressTest extends TestCase
@@ -120,20 +123,12 @@ class UserOnboardingProgressTest extends TestCase
 
     public function test_registration_requires_recovery_code_acknowledgement_and_records_it(): void
     {
-        $this->withSession([
-            'google_registration_verified' => [
-                'email' => 'recovery-ack@gmail.com',
-                'google_id' => 'recovery-ack-google-id',
-                'avatar' => null,
-                'expires_at' => now()->addMinutes(10)->timestamp,
-            ],
-        ])->post(route('register'), [
-            'name' => 'Recovery Acknowledgement User',
-            'username' => 'recovery-ack-user',
-            'email' => 'recovery-ack@gmail.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ])->assertRedirect(route('terms.acceptance.show'));
+        $this->completeGoogleRegistration(
+            'Recovery Acknowledgement User',
+            'recovery-ack-user',
+            'recovery-ack@gmail.com',
+            'recovery-ack-google-id'
+        )->assertRedirect(route('terms.acceptance.show'));
 
         $this->get(route('terms.acceptance.show'))
             ->assertOk()
@@ -161,20 +156,12 @@ class UserOnboardingProgressTest extends TestCase
 
     public function test_recovery_code_acknowledgement_cannot_be_bypassed_after_registration_flash_expires(): void
     {
-        $this->withSession([
-            'google_registration_verified' => [
-                'email' => 'durable-recovery-ack@gmail.com',
-                'google_id' => 'durable-recovery-ack-google-id',
-                'avatar' => null,
-                'expires_at' => now()->addMinutes(10)->timestamp,
-            ],
-        ])->post(route('register'), [
-            'name' => 'Durable Recovery Acknowledgement User',
-            'username' => 'durable-recovery-ack-user',
-            'email' => 'durable-recovery-ack@gmail.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ])->assertRedirect(route('terms.acceptance.show'));
+        $this->completeGoogleRegistration(
+            'Durable Recovery Acknowledgement User',
+            'durable-recovery-ack-user',
+            'durable-recovery-ack@gmail.com',
+            'durable-recovery-ack-google-id'
+        )->assertRedirect(route('terms.acceptance.show'));
 
         // Two unrelated requests age and remove Laravel's one-request flash
         // data, reproducing the navigation path that previously bypassed the
@@ -388,5 +375,48 @@ class UserOnboardingProgressTest extends TestCase
 
         $this->assertNotNull($progress->activated_at);
         $this->assertTrue($progress->toStateArray($user->fresh())['activated']);
+    }
+
+    private function completeGoogleRegistration(
+        string $name,
+        string $username,
+        string $email,
+        string $googleId
+    ) {
+        config([
+            'services.google.client_id' => 'test-google-client-id',
+            'services.google.client_secret' => 'test-google-client-secret',
+            'services.google.redirect' => route('auth.google.callback'),
+        ]);
+
+        $attributes = [
+            'id' => $googleId,
+            'name' => $name,
+            'email' => $email,
+            'avatar' => null,
+        ];
+        $googleUser = SocialiteUser::fake($attributes);
+        $googleUser->setRaw($attributes);
+
+        $provider = Mockery::mock();
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('setHttpClient')->andReturnSelf();
+        $provider->shouldReceive('user')->andReturn($googleUser);
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
+
+        return $this->withSession([
+            'google_auth_intent' => 'verify_registration',
+            'google_registration_pending' => [
+                'name' => $name,
+                'username' => $username,
+                'email' => $email,
+                'password_hash' => Hash::make('password123'),
+                'expires_at' => now()->addMinutes(10)->timestamp,
+            ],
+        ])->get(route('auth.google.callback', ['code' => 'test-code']));
     }
 }
