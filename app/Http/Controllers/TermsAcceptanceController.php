@@ -29,7 +29,7 @@ class TermsAcceptanceController extends Controller
             'termsVersion' => User::TERMS_VERSION,
             'lastUpdated' => 'September 23, 2026',
             'sections' => $this->termsSections(),
-            'recoveryCodeAcknowledgementRequired' => $onboardingProgress->requiresRecoveryCodeAcknowledgement(),
+            'recoveryCodeAcknowledgementRequired' => $onboardingProgress->requiresRecoveryCodeAcknowledgement($user),
         ]);
     }
 
@@ -38,7 +38,7 @@ class TermsAcceptanceController extends Controller
         $user = $request->user();
         $onboardingProgress = UserOnboardingProgress::forUser($user);
         $registrationSuccess = (bool) $request->session()->get('registration_success', false);
-        $recoveryCodeAcknowledgementRequired = $onboardingProgress->requiresRecoveryCodeAcknowledgement();
+        $recoveryCodeAcknowledgementRequired = $onboardingProgress->requiresRecoveryCodeAcknowledgement($user);
         $completingRegistration = $registrationSuccess || $recoveryCodeAcknowledgementRequired;
 
         if ($registrationSuccess) {

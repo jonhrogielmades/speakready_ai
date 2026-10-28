@@ -79,8 +79,8 @@
                             <input type="text" class="oinp" name="name" id="adminAccountName" value="{{ old('name', $admin->name) }}" autocomplete="name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="account-field-label" for="adminAccountEmail"><span class="account-label-icon"><i class="fa-regular fa-envelope"></i></span>Email Address</label>
-                            <input type="email" class="oinp" name="email" id="adminAccountEmail" value="{{ old('email', $admin->email) }}" autocomplete="email" required>
+                            <label class="account-field-label" for="adminAccountEmail"><span class="account-label-icon"><i class="fa-regular fa-envelope"></i></span>{{ $admin->isLocalAccount() ? 'Email Address' : 'Google Account Email' }}</label>
+                            <input type="email" class="oinp" name="email" id="adminAccountEmail" value="{{ old('email', $admin->email) }}" autocomplete="email" required @readonly($admin->isGoogleAccount())>
                         </div>
                     </div>
                     <div class="account-field">
@@ -96,7 +96,8 @@
 
         <div class="col-lg-5 animate-fade-up admin-account-side-stack" style="animation-delay: 0.2s;">
             <div class="premium-panel account-card admin-account-security-card" style="padding:32px;margin-bottom:24px">
-                <h5 class="account-card-title"><span class="account-title-icon"><i class="fa-solid fa-lock"></i></span>Security & Password</h5>
+                <h5 class="account-card-title"><span class="account-title-icon"><i class="fa-solid fa-lock"></i></span>@if($admin->isLocalAccount()) Security & Password @else Google Sign-in @endif</h5>
+                @if($admin->isLocalAccount())
                 <form action="{{ route('admin.account.password') }}" method="POST" id="adminAccountPasswordForm">
                     @csrf
                     <div class="account-field">
@@ -145,6 +146,9 @@
                         <button type="submit" class="btn account-submit-btn btn-shine" style="margin-top:12px"><i class="fa-solid fa-rotate"></i>Generate New Recovery Code</button>
                     </form>
                 </div>
+                @else
+                    <p class="text-muted" style="font-size:.9rem;line-height:1.6">This administrator account signs in with Google. Local passwords and password recovery codes are not available.</p>
+                @endif
             </div>
 
             <div class="premium-panel account-card admin-account-status-card" style="padding:32px">

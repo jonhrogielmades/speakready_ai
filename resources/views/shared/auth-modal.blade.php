@@ -126,10 +126,9 @@
                            <label class="olbl" for="signupEmail"><i class="fa-solid fa-envelope" aria-hidden="true"></i>Recovery email</label>
                            <div class="auth-input-wrap">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
-                              <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@gmail.com" required maxlength="255" inputmode="email" pattern="^[^\s@]+@[gG][mM][aA][iI][lL]\.[cC][oO][mM]$" title="Enter a valid Gmail recovery email ending in @gmail.com." autocomplete="email" spellcheck="false" aria-describedby="signupEmailHelp signupEmailFeedback" value="{{ old('email') }}">
+                              <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@example.com" required maxlength="255" inputmode="email" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" title="Enter a valid recovery email address." autocomplete="email" spellcheck="false" aria-describedby="signupEmailHelp" value="{{ old('email') }}">
                            </div>
-                           <small id="signupEmailHelp" class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">Use a Gmail address. We will email a link to confirm you own it, or you can use Sign up with Google for instant verification.</small>
-                           <small id="signupEmailFeedback" class="d-block mt-1" role="alert" hidden style="color:var(--danger,#dc2626);font-size:.76rem"></small>
+                           <small id="signupEmailHelp" class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">This address is used only for password recovery. We will email a verification link to confirm you own it.</small>
                         </div>
                         <div class="auth-field auth-register-password">
                            <label class="olbl" for="signupPass"><i class="fa-solid fa-lock" aria-hidden="true"></i>Password</label>
@@ -169,57 +168,3 @@
             </div>
          </div>
       </div>
-
-      <script>
-         (function () {
-            const emailInput = document.getElementById('signupEmail');
-            const emailFeedback = document.getElementById('signupEmailFeedback');
-            const signupForm = document.getElementById('signupForm');
-
-            if (!emailInput || !signupForm || emailInput.dataset.gmailValidationBound === 'true') return;
-
-            const gmailPattern = /^[^\s@]+@gmail\.com$/i;
-            const gmailError = 'Enter a valid Gmail recovery email ending in @gmail.com.';
-            let hasInteracted = false;
-
-            emailInput.dataset.gmailValidationBound = 'true';
-
-            function validateGmail(showFeedback) {
-               const value = emailInput.value.trim();
-               const message = value !== '' && !gmailPattern.test(value) ? gmailError : '';
-
-               emailInput.setCustomValidity(message);
-
-               if (message) {
-                  emailInput.setAttribute('aria-invalid', 'true');
-               } else {
-                  emailInput.removeAttribute('aria-invalid');
-               }
-
-               if (emailFeedback) {
-                  emailFeedback.textContent = message;
-                  emailFeedback.hidden = !showFeedback || message === '';
-               }
-
-               return message === '';
-            }
-
-            emailInput.addEventListener('blur', function () {
-               hasInteracted = true;
-               validateGmail(true);
-            });
-
-            emailInput.addEventListener('input', function () {
-               validateGmail(hasInteracted);
-            });
-
-            signupForm.addEventListener('submit', function (event) {
-               if (validateGmail(true)) return;
-
-               event.preventDefault();
-               hasInteracted = true;
-               emailInput.focus();
-               emailInput.reportValidity();
-            });
-         })();
-      </script>

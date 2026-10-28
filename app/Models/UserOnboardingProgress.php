@@ -56,8 +56,14 @@ class UserOnboardingProgress extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function requiresRecoveryCodeAcknowledgement(): bool
+    public function requiresRecoveryCodeAcknowledgement(?User $user = null): bool
     {
+        $user ??= $this->user;
+
+        if ($user?->isGoogleAccount()) {
+            return false;
+        }
+
         return (bool) $this->recovery_code_ack_required_at && ! $this->recovery_code_saved_at;
     }
 
@@ -95,8 +101,9 @@ class UserOnboardingProgress extends Model
         $this->syncFromUserState($user);
 
         return [
-            'recovery_code_ack_required' => $this->requiresRecoveryCodeAcknowledgement(),
-            'recovery_code_saved' => (bool) $this->recovery_code_saved_at,
+            'recovery_code_ack_required' => $this->requiresRecoveryCodeAcknowledgement($user),
+            'recovery_code_applicable' => $user->isLocalAccount(),
+            'recovery_code_saved' => $user->isGoogleAccount() || (bool) $this->recovery_code_saved_at,
             'profile_personalized' => (bool) $this->profile_personalized_at,
             'personalization_skipped' => (bool) $this->personalization_skipped_at,
             'setup_tools_completed' => (bool) $this->setup_tools_completed_at,

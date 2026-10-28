@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\ActivityLog;
 use App\Models\Setting;
+use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -156,7 +158,7 @@ class PwaRememberedLoginTest extends TestCase
             'username' => $user->username,
             'password' => 'password',
         ])->assertSessionHasErrors([
-            'username' => 'Email verification is required before you can sign in. Check your Gmail inbox for a new verification link, or use Log in with Google with the same address to verify instantly.',
+            'username' => 'Recovery email verification is required before you can sign in. Check your inbox for a new verification link.',
         ]);
 
         $this->assertNull($user->fresh()->email_verified_at);
@@ -202,51 +204,94 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_registration_logs_user_in_and_shows_success_only_on_terms_page(): void
+    public function test_local_login_accepts_only_a_local_username_not_a_recovery_email_or_google_account(): void
     {
+        $localUser = User::factory()->create([
+            'username' => 'username-only-user',
+            'email' => 'recovery-only@example.com',
+            'password' => Hash::make('correct-password'),
+        ]);
+        $googleUser = User::factory()->google()->create([
+            'username' => 'google-generated-username',
+            'email' => 'google-only@example.com',
+            'password' => Hash::make('known-test-password'),
+        ]);
+
+        $this->post(route('login'), [
+            'username' => $localUser->email,
+            'password' => 'correct-password',
+        ])->assertSessionHasErrors('username');
+
+        $this->post(route('login'), [
+            'username' => $googleUser->username,
+            'password' => 'known-test-password',
+        ])->assertSessionHasErrors('username');
+
+        $this->assertGuest();
+    }
+
+    public function test_google_account_can_request_reactivation_by_its_google_email_without_enabling_email_login(): void
+    {
+        $googleUser = User::factory()->google()->create([
+            'email' => 'inactive-google@example.com',
+            'status' => 'inactive',
+        ]);
+
+        $this->post(route('request.reactivation'), [
+            'username' => $googleUser->email,
+        ])->assertSessionHas('success', 'Your reactivation request has been sent to the admin.');
+
+        $this->assertNotNull($googleUser->fresh()->reactivation_requested_at);
+
+        $this->post(route('login'), [
+            'username' => $googleUser->email,
+            'password' => 'password',
+        ])->assertSessionHasErrors('username');
+    }
+
+    public function test_registration_creates_a_separate_local_account_and_shows_success_only_on_terms_page(): void
+    {
+        config([
+            'services.brevo.api_key' => null,
+            'services.google.client_id' => null,
+            'services.google.client_secret' => null,
+        ]);
+        Notification::fake();
+        Socialite::shouldReceive('driver')->never();
+
         $registration = [
             'name' => 'New Interview User',
             'username' => 'new-interview-user',
-            'email' => 'new-interview-user@gmail.com',
+            'email' => 'new-interview-user@outlook.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ];
-        $state = $this->startBackendRegistration($registration);
 
-        $this->assertGuest();
-        $this->assertDatabaseMissing('users', ['username' => 'new-interview-user']);
-
-        $this->mockGoogleCallback([
-            'id' => 'new-interview-user-google-id',
-            'name' => 'Google Profile Name',
-            'email' => 'new-interview-user@gmail.com',
-            'avatar' => null,
-        ]);
-
-        $response = $this->get(route('auth.google.callback', [
-            'code' => 'test-code',
-            'state' => $state,
-        ]));
+        $response = $this->post(route('register'), $registration);
 
         $response->assertRedirect(route('terms.acceptance.show'))
             ->assertSessionHas('registration_success', true)
             ->assertSessionHas('success', 'Registration successful. Welcome to SpeakReady AI!')
             ->assertSessionHas('recovery_code')
+            ->assertSessionMissing('google_auth_intent')
             ->assertSessionMissing('google_registration_pending');
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [
             'name' => 'New Interview User',
             'username' => 'new-interview-user',
-            'email' => 'new-interview-user@gmail.com',
-            'google_id' => 'new-interview-user-google-id',
+            'email' => 'new-interview-user@outlook.com',
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
         ]);
         $user = User::where('username', 'new-interview-user')->firstOrFail();
-        $this->assertNotNull($user->email_verified_at);
+        $this->assertNull($user->email_verified_at);
         $this->assertTrue(Hash::check('password123', $user->password));
+        $this->assertNotNull($user->password_recovery_code_hash);
         $this->assertDatabaseHas('profiles', [
             'user_id' => $user->id,
         ]);
+        Notification::assertSentTo($user, VerifyEmail::class);
 
         $this->get(route('terms.acceptance.show'))
             ->assertOk()
@@ -269,16 +314,15 @@ class PwaRememberedLoginTest extends TestCase
             ->assertDontSee('Registration successful. Welcome to SpeakReady AI!');
     }
 
-    public function test_registration_requires_a_valid_gmail_recovery_email_address(): void
+    public function test_registration_requires_a_valid_recovery_email_and_accepts_non_google_providers(): void
     {
+        config(['services.brevo.api_key' => null]);
+        Notification::fake();
+
         $invalidEmails = [
             'not-an-email',
             'candidate@localhost',
             'candidate@example',
-            'candidate@yahoo.com',
-            'candidate@gmail.co',
-            'candidate@gmai1.com',
-            'candidate@gmail.com.example.com',
         ];
 
         foreach ($invalidEmails as $index => $email) {
@@ -293,7 +337,7 @@ class PwaRememberedLoginTest extends TestCase
                     'password_confirmation' => 'password123',
                 ])
                 ->assertSessionHasErrors([
-                    'email' => 'Enter a valid Gmail recovery email ending in @gmail.com.',
+                    'email' => 'Enter a valid recovery email address.',
                 ]);
 
             $this->assertDatabaseMissing('users', [
@@ -301,190 +345,22 @@ class PwaRememberedLoginTest extends TestCase
             ]);
         }
 
-        $state = $this->startBackendRegistration([
+        $this->post(route('register'), [
             'name' => 'Valid Recovery Candidate',
             'username' => 'valid-recovery-email-user',
-            'email' => '  Valid.Recovery@GMAIL.COM  ',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ]);
-
-        $this->assertNotSame('', $state);
-        $this->assertDatabaseMissing('users', ['email' => 'valid.recovery@gmail.com']);
-    }
-
-    public function test_backend_registration_rejects_a_different_selected_google_account(): void
-    {
-        $expectedEmail = 'expected.registration@gmail.com';
-        $otherUser = User::factory()->create([
-            'email' => 'different.registration@gmail.com',
-            'google_id' => 'different-google-account-id',
-            'status' => 'active',
-        ]);
-        $state = $this->startBackendRegistration([
-            'name' => 'Expected Registration',
-            'username' => 'expected-registration',
-            'email' => $expectedEmail,
-        ]);
-
-        $this->mockGoogleCallback([
-            'id' => 'different-google-account-id',
-            'name' => 'Different Google Account',
-            'email' => 'different.registration@gmail.com',
-            'avatar' => null,
-        ]);
-
-        $this->get(route('auth.google.callback', [
-            'code' => 'test-code',
-            'state' => $state,
-        ]))
-            ->assertRedirect('/')
-            ->assertSessionHasErrors([
-                'email' => 'The selected Google account does not match '.$expectedEmail.'. Choose that Gmail account and try again.',
-            ])
-            ->assertSessionHas('_old_input.auth_tab', 'signup')
-            ->assertSessionHas('_old_input.name', 'Expected Registration')
-            ->assertSessionHas('_old_input.username', 'expected-registration')
-            ->assertSessionHas('_old_input.email', $expectedEmail)
-            ->assertSessionMissing('_old_input.password')
-            ->assertSessionMissing('_old_input.password_hash')
-            ->assertSessionMissing('google_registration_pending');
-
-        $this->assertGuest();
-        $this->assertDatabaseMissing('users', ['email' => $expectedEmail]);
-        $this->assertSame('different-google-account-id', $otherUser->fresh()->google_id);
-    }
-
-    public function test_backend_registration_rejects_a_google_account_connected_elsewhere(): void
-    {
-        $email = 'new.registration@gmail.com';
-        $existingUser = User::factory()->create([
-            'email' => 'existing.google.owner@example.com',
-            'google_id' => 'already-connected-google-id',
-            'status' => 'active',
-        ]);
-        $state = $this->startBackendRegistration([
-            'name' => 'New Registration',
-            'username' => 'new-registration',
-            'email' => $email,
-        ]);
-
-        $this->mockGoogleCallback([
-            'id' => 'already-connected-google-id',
-            'name' => 'Already Connected Google Account',
-            'email' => $email,
-            'avatar' => null,
-        ]);
-
-        $this->get(route('auth.google.callback', [
-            'code' => 'test-code',
-            'state' => $state,
-        ]))
-            ->assertRedirect('/')
-            ->assertSessionHasErrors([
-                'email' => 'This Google account is already connected to another account. Log in with Google instead.',
-            ])
-            ->assertSessionMissing('google_registration_pending');
-
-        $this->assertGuest();
-        $this->assertSame('already-connected-google-id', $existingUser->fresh()->google_id);
-        $this->assertDatabaseMissing('users', ['email' => $email]);
-    }
-
-    public function test_backend_registration_cancellation_creates_no_user_and_restores_safe_input(): void
-    {
-        $email = 'cancelled.registration@gmail.com';
-        $state = $this->startBackendRegistration([
-            'name' => 'Cancelled Registration',
-            'username' => 'cancelled-registration',
-            'email' => $email,
-        ]);
-
-        $this->get(route('auth.google.callback', [
-            'error' => 'access_denied',
-            'state' => $state,
-        ]))
-            ->assertRedirect('/')
-            ->assertSessionHasErrors([
-                'email' => 'Google sign-in was cancelled. Please choose a Google account and allow access to continue.',
-            ])
-            ->assertSessionHas('_old_input.name', 'Cancelled Registration')
-            ->assertSessionHas('_old_input.username', 'cancelled-registration')
-            ->assertSessionHas('_old_input.email', $email)
-            ->assertSessionMissing('_old_input.password')
-            ->assertSessionMissing('_old_input.password_hash')
-            ->assertSessionMissing('google_registration_pending');
-
-        $this->assertGuest();
-        $this->assertDatabaseMissing('users', ['email' => $email]);
-    }
-
-    public function test_backend_registration_rejects_an_expired_pending_session(): void
-    {
-        $email = 'expired.registration@gmail.com';
-        $this->mockGoogleCallback([
-            'id' => 'expired-registration-google-id',
-            'name' => 'Expired Registration',
-            'email' => $email,
-            'avatar' => null,
-        ]);
-
-        $this->withSession([
-            'google_auth_intent' => 'verify_registration',
-            'google_registration_pending' => [
-                'name' => 'Expired Registration',
-                'username' => 'expired-registration',
-                'email' => $email,
-                'password_hash' => Hash::make('password123'),
-                'expires_at' => now()->subMinute()->timestamp,
-            ],
-        ])->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect('/')
-            ->assertSessionHasErrors([
-                'email' => 'Google verification expired. Submit the registration form and try again.',
-            ])
-            ->assertSessionHas('_old_input.name', 'Expired Registration')
-            ->assertSessionHas('_old_input.username', 'expired-registration')
-            ->assertSessionHas('_old_input.email', $email)
-            ->assertSessionMissing('_old_input.password_hash')
-            ->assertSessionMissing('google_registration_pending');
-
-        $this->assertGuest();
-        $this->assertDatabaseMissing('users', ['email' => $email]);
-    }
-
-    public function test_backend_registration_missing_google_configuration_clears_pending_state(): void
-    {
-        config([
-            'services.google.client_id' => null,
-            'services.google.client_secret' => 'test-secret',
-            'services.google.redirect' => route('auth.google.callback'),
-        ]);
-
-        $email = 'configuration.check@gmail.com';
-
-        $this->post(route('register'), [
-            'auth_tab' => 'signup',
-            'name' => 'Configuration Check',
-            'username' => 'configuration-check',
-            'email' => $email,
+            'email' => '  Valid.Recovery@OUTLOOK.COM  ',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])
-            ->assertRedirect('/')
-            ->assertSessionHasErrors([
-                'email' => 'Google sign-in is not configured correctly. Please contact the administrator.',
-            ])
-            ->assertSessionHas('_old_input.auth_tab', 'signup')
-            ->assertSessionHas('_old_input.name', 'Configuration Check')
-            ->assertSessionHas('_old_input.username', 'configuration-check')
-            ->assertSessionHas('_old_input.email', $email)
-            ->assertSessionMissing('_old_input.password')
-            ->assertSessionMissing('_old_input.password_hash')
-            ->assertSessionMissing('google_registration_pending');
+            ->assertRedirect(route('terms.acceptance.show'));
 
-        $this->assertGuest();
-        $this->assertDatabaseMissing('users', ['email' => $email]);
+        $user = User::where('username', 'valid-recovery-email-user')->firstOrFail();
+
+        $this->assertSame('valid.recovery@outlook.com', $user->email);
+        $this->assertSame(User::AUTH_METHOD_LOCAL, $user->auth_method);
+        $this->assertNull($user->google_id);
+        $this->assertNull($user->email_verified_at);
+        Notification::assertSentTo($user, VerifyEmail::class);
     }
 
     public function test_guest_auth_modal_uses_loading_overlay_for_registration(): void
@@ -500,10 +376,13 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('Username', false)
             ->assertDontSee('id="loginEmail"', false)
             ->assertSee('id="signupEmail"', false)
-            ->assertSee('pattern="^[^\s@]+@[gG][mM][aA][iI][lL]\.[cC][oO][mM]$"', false)
-            ->assertSee('id="signupEmailFeedback"', false)
-            ->assertSee('Enter a valid Gmail recovery email ending in @gmail.com.')
-            ->assertSee('Sign up with Google for instant verification.')
+            ->assertSee('pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"', false)
+            ->assertSee('Enter a valid recovery email address.')
+            ->assertSee('This address is used only for password recovery. We will email a verification link to confirm you own it.')
+            ->assertDontSee('id="signupEmailFeedback"', false)
+            ->assertDontSee('Gmail recovery email')
+            ->assertSee('action="'.route('register').'"', false)
+            ->assertSee(route('auth.google.register'), false)
             ->assertDontSee('name="identifier"', false)
             ->assertDontSee('id="loginIdentifier"', false)
             ->assertDontSee('id="signupIdentifier"', false)
@@ -698,11 +577,12 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('src="'.$avatarUrl.'"', false);
     }
 
-    public function test_google_login_marks_matching_email_as_verified(): void
+    public function test_google_login_marks_its_own_google_account_email_as_verified(): void
     {
         $user = User::factory()->unverified()->create([
             'email' => 'google-unverified@example.com',
             'google_id' => 'google-unverified-id',
+            'auth_method' => User::AUTH_METHOD_GOOGLE,
             'status' => 'active',
         ]);
 
@@ -727,12 +607,13 @@ class PwaRememberedLoginTest extends TestCase
             ->assertDontSee('Email verification not completed');
     }
 
-    public function test_google_account_selection_links_and_verifies_a_matching_local_account(): void
+    public function test_google_login_does_not_link_or_verify_a_matching_local_account(): void
     {
         $user = User::factory()->unverified()->create([
             'username' => 'matching-local-google-user',
             'email' => 'matching-local-google@example.com',
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
             'status' => 'active',
         ]);
 
@@ -745,11 +626,111 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect('/')
+            ->assertSessionHasErrors([
+                'email' => 'This email already belongs to a username/password account. Use username and password to sign in; Google Login is a separate account type.',
+            ]);
 
         $updatedUser = $user->fresh();
-        $this->assertSame('selected-google-account-id', $updatedUser->google_id);
-        $this->assertNotNull($updatedUser->email_verified_at);
+        $this->assertNull($updatedUser->google_id);
+        $this->assertNull($updatedUser->email_verified_at);
+        $this->assertSame(User::AUTH_METHOD_LOCAL, $updatedUser->auth_method);
+        $this->assertGuest();
+    }
+
+    public function test_legacy_local_account_with_a_stale_google_id_still_uses_only_local_authentication(): void
+    {
+        $localUser = User::factory()->create([
+            'username' => 'legacy-separated-local',
+            'email' => 'legacy-separated-local@example.com',
+            'password' => Hash::make('local-password'),
+            'google_id' => 'stale-google-id',
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
+        ActivityLog::create([
+            'user_id' => $localUser->id,
+            'action' => 'user_registered',
+            'description' => "{$localUser->name} ({$localUser->username}) registered a new local account.",
+            'ip_address' => '127.0.0.1',
+        ]);
+
+        $this->mockGoogleCallback([
+            'id' => 'stale-google-id',
+            'name' => 'Stale Google Identity',
+            'email' => $localUser->email,
+            'avatar' => null,
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect('/')
+            ->assertSessionHasErrors('email');
+        $this->assertGuest();
+
+        $this->post(route('login'), [
+            'username' => $localUser->username,
+            'password' => 'local-password',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->get(route('user.account'))
+            ->assertOk()
+            ->assertSee('id="accountPasswordForm"', false)
+            ->assertSee('id="password-recovery-code"', false);
+
+        $this->post(route('user.account.delete'), [
+            'delete_password' => 'local-password',
+        ])->assertRedirect('/');
+
+        $this->assertDatabaseMissing('users', ['id' => $localUser->id]);
+    }
+
+    public function test_google_registration_cannot_reuse_a_local_recovery_email(): void
+    {
+        $localUser = User::factory()->unverified()->create([
+            'username' => 'local-recovery-owner',
+            'email' => 'owned-recovery@example.com',
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
+
+        $this->mockGoogleCallback([
+            'id' => 'separate-google-registration-id',
+            'name' => 'Separate Google Registration',
+            'email' => $localUser->email,
+            'avatar' => null,
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'register'])
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect('/')
+            ->assertSessionHasErrors([
+                'email' => 'This email already belongs to a username/password account. Use username and password to sign in; Google Login is a separate account type.',
+            ]);
+
+        $this->assertSame(1, User::where('email', $localUser->email)->count());
+        $this->assertNull($localUser->fresh()->google_id);
+        $this->assertGuest();
+    }
+
+    public function test_local_registration_cannot_reuse_a_google_account_email(): void
+    {
+        $googleUser = User::factory()->google()->create([
+            'email' => 'owned-google-email@example.com',
+        ]);
+
+        $this->post(route('register'), [
+            'name' => 'Local Collision Candidate',
+            'username' => 'local-collision-candidate',
+            'email' => $googleUser->email,
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertSessionHasErrors([
+            'email' => 'This recovery email is already registered.',
+        ]);
+
+        $this->assertSame(1, User::where('email', $googleUser->email)->count());
+        $this->assertSame(User::AUTH_METHOD_GOOGLE, $googleUser->fresh()->auth_method);
+        $this->assertGuest();
     }
 
     public function test_google_registration_creates_verified_email_account(): void
@@ -764,13 +745,16 @@ class PwaRememberedLoginTest extends TestCase
         $this->withSession(['google_auth_intent' => 'register'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('terms.acceptance.show'))
-            ->assertSessionHas('registration_success', true);
+            ->assertSessionHas('registration_success', true)
+            ->assertSessionMissing('recovery_code');
 
         $user = User::where('email', 'google-register@example.com')->first();
 
         $this->assertNotNull($user);
         $this->assertSame('google-register-id', $user->google_id);
+        $this->assertSame(User::AUTH_METHOD_GOOGLE, $user->auth_method);
         $this->assertNotNull($user->email_verified_at);
+        $this->assertNull($user->password_recovery_code_hash);
     }
 
     public function test_google_login_does_not_replace_uploaded_profile_photo(): void
@@ -929,62 +913,6 @@ class PwaRememberedLoginTest extends TestCase
             'terms_accepted' => '1',
             'recovery_code_saved' => '1',
         ])->assertRedirect(route('dashboard', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']));
-    }
-
-    private function startBackendRegistration(array $overrides = []): string
-    {
-        $this->configureGoogleOAuth();
-
-        $registration = array_merge([
-            'auth_tab' => 'signup',
-            'name' => 'Pending Registration',
-            'username' => 'pending-registration',
-            'email' => 'pending.registration@gmail.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ], $overrides);
-        $state = null;
-        $provider = Mockery::mock();
-        $provider->shouldReceive('stateless')->andReturnSelf();
-        $provider->shouldReceive('with')
-            ->once()
-            ->with(Mockery::on(function (array $parameters) use (&$state): bool {
-                $state = $parameters['state'] ?? null;
-
-                return is_string($state)
-                    && str_starts_with($state, 'sr.')
-                    && ($parameters['prompt'] ?? null) === 'select_account';
-            }))
-            ->andReturnSelf();
-        $provider->shouldReceive('redirect')
-            ->once()
-            ->andReturn(redirect()->away('https://accounts.google.test/oauth'));
-
-        Socialite::shouldReceive('driver')
-            ->once()
-            ->with('google')
-            ->andReturn($provider);
-
-        $this->post(route('register'), $registration)
-            ->assertRedirect('https://accounts.google.test/oauth')
-            ->assertSessionHas('google_auth_intent', 'verify_registration')
-            ->assertSessionHas('google_registration_pending', function ($pending) use ($registration): bool {
-                return is_array($pending)
-                    && ($pending['name'] ?? null) === trim($registration['name'])
-                    && ($pending['username'] ?? null) === strtolower(trim($registration['username']))
-                    && ($pending['email'] ?? null) === strtolower(trim($registration['email']))
-                    && is_string($pending['password_hash'] ?? null)
-                    && ($pending['password_hash'] ?? null) !== $registration['password']
-                    && Hash::check($registration['password'], $pending['password_hash'])
-                    && is_int($pending['expires_at'] ?? null)
-                    && ! array_key_exists('password', $pending)
-                    && ! array_key_exists('password_confirmation', $pending);
-            });
-
-        $this->assertIsString($state);
-        $this->assertNotSame('', $state);
-
-        return $state;
     }
 
     private function mockGoogleCallback(array $attributes, array $raw = []): void

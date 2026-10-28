@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserOnboardingProgress;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery;
@@ -123,11 +124,10 @@ class UserOnboardingProgressTest extends TestCase
 
     public function test_registration_requires_recovery_code_acknowledgement_and_records_it(): void
     {
-        $this->completeGoogleRegistration(
+        $this->completeLocalRegistration(
             'Recovery Acknowledgement User',
             'recovery-ack-user',
-            'recovery-ack@gmail.com',
-            'recovery-ack-google-id'
+            'recovery-ack@gmail.com'
         )->assertRedirect(route('terms.acceptance.show'));
 
         $this->get(route('terms.acceptance.show'))
@@ -149,6 +149,8 @@ class UserOnboardingProgressTest extends TestCase
             ->assertSessionMissing('success');
 
         $user = User::where('username', 'recovery-ack-user')->firstOrFail();
+        $this->assertSame(User::AUTH_METHOD_LOCAL, $user->auth_method);
+        $this->assertNull($user->google_id);
         $this->assertNotNull(UserOnboardingProgress::forUser($user)->recovery_code_ack_required_at);
         $this->assertNotNull($user->fresh()->terms_accepted_at);
         $this->assertNotNull(UserOnboardingProgress::forUser($user)->recovery_code_saved_at);
@@ -156,11 +158,10 @@ class UserOnboardingProgressTest extends TestCase
 
     public function test_recovery_code_acknowledgement_cannot_be_bypassed_after_registration_flash_expires(): void
     {
-        $this->completeGoogleRegistration(
+        $this->completeLocalRegistration(
             'Durable Recovery Acknowledgement User',
             'durable-recovery-ack-user',
-            'durable-recovery-ack@gmail.com',
-            'durable-recovery-ack-google-id'
+            'durable-recovery-ack@gmail.com'
         )->assertRedirect(route('terms.acceptance.show'));
 
         // Two unrelated requests age and remove Laravel's one-request flash
@@ -194,6 +195,63 @@ class UserOnboardingProgressTest extends TestCase
             ->assertSessionMissing('success');
 
         $this->assertFalse(UserOnboardingProgress::forUser($user)->fresh()->requiresRecoveryCodeAcknowledgement());
+        $this->assertNotNull($user->fresh()->terms_accepted_at);
+    }
+
+    public function test_google_registration_does_not_require_a_local_recovery_code_acknowledgement(): void
+    {
+        $this->completeGoogleRegistration(
+            'Google Onboarding User',
+            'google-onboarding@gmail.com',
+            'google-onboarding-id'
+        )->assertRedirect(route('terms.acceptance.show'))
+            ->assertSessionHas('registration_success', true)
+            ->assertSessionMissing('recovery_code');
+
+        $user = User::where('google_id', 'google-onboarding-id')->firstOrFail();
+        $progress = UserOnboardingProgress::forUser($user);
+
+        $this->assertSame(User::AUTH_METHOD_GOOGLE, $user->auth_method);
+        $this->assertNull($progress->recovery_code_ack_required_at);
+        $this->assertFalse($progress->requiresRecoveryCodeAcknowledgement());
+
+        $this->get(route('terms.acceptance.show'))
+            ->assertOk()
+            ->assertDontSee('name="recovery_code_saved"', false)
+            ->assertDontSee('<input type="checkbox" data-recovery-code-saved-ack', false)
+            ->assertDontSee('data-recovery-code-saved-inline required', false);
+
+        $this->post(route('terms.acceptance.store'), [
+            'terms_accepted' => '1',
+        ])->assertRedirect(route('dashboard'))
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertNotNull($user->fresh()->terms_accepted_at);
+    }
+
+    public function test_legacy_google_account_ignores_stale_local_recovery_code_acknowledgement(): void
+    {
+        $user = User::factory()->google()->create([
+            'terms_accepted_at' => null,
+            'terms_version' => null,
+        ]);
+        $progress = UserOnboardingProgress::forUser($user);
+        $progress->forceFill([
+            'recovery_code_ack_required_at' => now(),
+            'recovery_code_saved_at' => null,
+        ])->save();
+
+        $this->actingAs($user)
+            ->get(route('terms.acceptance.show'))
+            ->assertOk()
+            ->assertDontSee('name="recovery_code_saved"', false);
+
+        $this->post(route('terms.acceptance.store'), [
+            'terms_accepted' => '1',
+        ])->assertRedirect(route('dashboard'))
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertFalse($progress->fresh()->requiresRecoveryCodeAcknowledgement());
         $this->assertNotNull($user->fresh()->terms_accepted_at);
     }
 
@@ -377,9 +435,25 @@ class UserOnboardingProgressTest extends TestCase
         $this->assertTrue($progress->toStateArray($user->fresh())['activated']);
     }
 
-    private function completeGoogleRegistration(
+    private function completeLocalRegistration(
         string $name,
         string $username,
+        string $email
+    ) {
+        config(['services.brevo.api_key' => null]);
+        Notification::fake();
+
+        return $this->post(route('register'), [
+            'name' => $name,
+            'username' => $username,
+            'email' => $email,
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+    }
+
+    private function completeGoogleRegistration(
+        string $name,
         string $email,
         string $googleId
     ) {
@@ -408,15 +482,7 @@ class UserOnboardingProgressTest extends TestCase
             ->with('google')
             ->andReturn($provider);
 
-        return $this->withSession([
-            'google_auth_intent' => 'verify_registration',
-            'google_registration_pending' => [
-                'name' => $name,
-                'username' => $username,
-                'email' => $email,
-                'password_hash' => Hash::make('password123'),
-                'expires_at' => now()->addMinutes(10)->timestamp,
-            ],
-        ])->get(route('auth.google.callback', ['code' => 'test-code']));
+        return $this->withSession(['google_auth_intent' => 'register'])
+            ->get(route('auth.google.callback', ['code' => 'test-code']));
     }
 }

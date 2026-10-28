@@ -5,9 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Two\User as SocialiteUser;
-use Mockery;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class TermsAcceptanceGateTest extends TestCase
@@ -92,33 +90,32 @@ class TermsAcceptanceGateTest extends TestCase
 
     public function test_registration_redirects_new_user_to_terms_gate(): void
     {
-        $this->mockGoogleCallback([
-            'id' => 'new-terms-user-google-id',
-            'name' => 'New Terms User',
-            'email' => 'new-terms-user@gmail.com',
-            'avatar' => null,
-        ]);
+        config(['services.brevo.api_key' => null]);
+        Notification::fake();
 
-        $response = $this->withSession([
-            'google_auth_intent' => 'verify_registration',
-            'google_registration_pending' => [
-                'name' => 'New Terms User',
-                'username' => 'new-terms-user',
-                'email' => 'new-terms-user@gmail.com',
-                'password_hash' => Hash::make('password123'),
-                'expires_at' => now()->addMinutes(10)->timestamp,
-            ],
-        ])->get(route('auth.google.callback', ['code' => 'test-code']))
+        $response = $this->post(route('register'), [
+            'name' => 'New Terms User',
+            'username' => 'new-terms-user',
+            'email' => 'new-terms-user@gmail.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])
             ->assertRedirect(route('terms.acceptance.show'))
             ->assertSessionHas('registration_success', true)
             ->assertSessionHas('success', 'Registration successful. Welcome to SpeakReady AI!')
-            ->assertSessionHas('recovery_code', fn ($code): bool => preg_match('/^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$/', (string) $code) === 1);
+            ->assertSessionHas('recovery_code', fn ($code): bool => preg_match('/^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$/', (string) $code) === 1)
+            ->assertSessionMissing('google_auth_intent')
+            ->assertSessionMissing('google_registration_pending');
 
         $this->assertAuthenticated();
 
         $user = User::where('username', 'new-terms-user')->firstOrFail();
 
         $this->assertSame('new-terms-user@gmail.com', $user->email);
+        $this->assertSame(User::AUTH_METHOD_LOCAL, $user->auth_method);
+        $this->assertNull($user->google_id);
+        $this->assertNull($user->email_verified_at);
+        $this->assertTrue(Hash::check('password123', $user->password));
         $this->assertNull($user->terms_accepted_at);
         $this->assertNull($user->terms_version);
 
@@ -138,25 +135,4 @@ class TermsAcceptanceGateTest extends TestCase
         ]);
     }
 
-    private function mockGoogleCallback(array $attributes): void
-    {
-        config([
-            'services.google.client_id' => 'test-google-client-id',
-            'services.google.client_secret' => 'test-google-client-secret',
-            'services.google.redirect' => route('auth.google.callback'),
-        ]);
-
-        $googleUser = SocialiteUser::fake($attributes);
-        $googleUser->setRaw($attributes);
-
-        $provider = Mockery::mock();
-        $provider->shouldReceive('stateless')->andReturnSelf();
-        $provider->shouldReceive('setHttpClient')->andReturnSelf();
-        $provider->shouldReceive('user')->andReturn($googleUser);
-
-        Socialite::shouldReceive('driver')
-            ->once()
-            ->with('google')
-            ->andReturn($provider);
-    }
 }

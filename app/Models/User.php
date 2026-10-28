@@ -19,6 +19,10 @@ class User extends Authenticatable implements MustVerifyEmailContract
 
     public const TERMS_VERSION = '2026-09-23';
 
+    public const AUTH_METHOD_LOCAL = 'local';
+
+    public const AUTH_METHOD_GOOGLE = 'google';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -34,6 +38,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'password_recovery_code_expires_at',
         'is_admin',
         'google_id',
+        'auth_method',
         'status',
         'reactivation_requested_at',
         'profile_photo_path',
@@ -67,6 +72,27 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'password_recovery_code_generated_at' => 'datetime',
         'password_recovery_code_expires_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (blank($user->auth_method)) {
+                $user->auth_method = filled($user->google_id)
+                    ? self::AUTH_METHOD_GOOGLE
+                    : self::AUTH_METHOD_LOCAL;
+            }
+        });
+    }
+
+    public function isLocalAccount(): bool
+    {
+        return $this->auth_method === self::AUTH_METHOD_LOCAL;
+    }
+
+    public function isGoogleAccount(): bool
+    {
+        return $this->auth_method === self::AUTH_METHOD_GOOGLE;
+    }
 
     public function getProfilePhotoUrlAttribute(): ?string
     {

@@ -110,4 +110,42 @@ class AdminAccountManagementTest extends TestCase
             $admin->fresh()->password_recovery_code_hash
         ));
     }
+
+    public function test_google_admin_cannot_use_local_email_password_or_recovery_controls(): void
+    {
+        $admin = User::factory()->google()->create([
+            'email' => 'google-admin@example.com',
+            'password' => Hash::make('unchanged-google-password'),
+            'is_admin' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.account'))
+            ->assertOk()
+            ->assertSee('Google Sign-in')
+            ->assertSee('Google Account Email')
+            ->assertDontSee('id="adminAccountPasswordForm"', false)
+            ->assertDontSee(route('admin.account.recovery-code'), false);
+
+        $this->post(route('admin.account.profile'), [
+            'name' => $admin->name,
+            'email' => 'replacement-admin@example.com',
+            'target_position' => null,
+        ])->assertSessionHasErrors('email');
+
+        $this->post(route('admin.account.password'), [
+            'current_password' => 'unchanged-google-password',
+            'new_password' => 'new-local-password',
+            'confirm_password' => 'new-local-password',
+        ])->assertSessionHasErrors('current_password');
+
+        $this->post(route('admin.account.recovery-code'), [
+            'current_password' => 'unchanged-google-password',
+        ])->assertSessionHasErrors('recovery_code');
+
+        $admin->refresh();
+        $this->assertSame('google-admin@example.com', $admin->email);
+        $this->assertTrue(Hash::check('unchanged-google-password', $admin->password));
+        $this->assertNull($admin->password_recovery_code_hash);
+    }
 }

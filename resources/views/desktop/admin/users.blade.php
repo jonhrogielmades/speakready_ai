@@ -357,6 +357,7 @@
                                 data-update-url="{{ route('admin.users.update', $user) }}"
                                 data-user-name="{{ $user->name }}"
                                 data-user-email="{{ $user->email }}"
+                                data-user-auth-method="{{ $user->auth_method }}"
                                 data-user-role="{{ $user->is_admin ? 'admin' : 'user' }}"
                                 data-user-status="{{ $user->status }}"
                                 onclick="editUser(this)"
@@ -622,10 +623,11 @@
                         <input type="text" name="name" id="editUserName" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-muted">Email</label>
+                        <label class="form-label text-muted" id="editUserEmailLabel" for="editUserEmail">Email</label>
                         <input type="email" name="email" id="editUserEmail" class="form-control" required>
+                        <div class="form-text" id="editUserGoogleAuthNotice" hidden>Google account email and sign-in credentials are managed by Google.</div>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" id="editUserPasswordField">
                         <label class="form-label text-muted">Password (Leave blank to keep current)</label>
                         <div class="password-field">
                             <input type="password" name="password" id="editUserPassword" class="form-control" minlength="8">
@@ -742,10 +744,23 @@
 
     function editUser(button) {
         const form = document.getElementById('editUserForm');
+        const emailInput = document.getElementById('editUserEmail');
+        const emailLabel = document.getElementById('editUserEmailLabel');
+        const googleAuthNotice = document.getElementById('editUserGoogleAuthNotice');
+        const passwordField = document.getElementById('editUserPasswordField');
+        const passwordInput = document.getElementById('editUserPassword');
+        const isGoogleAccount = button.dataset.userAuthMethod === 'google';
+
         form.action = button.dataset.updateUrl;
         document.getElementById('editUserName').value = button.dataset.userName || '';
-        document.getElementById('editUserEmail').value = button.dataset.userEmail || '';
-        document.getElementById('editUserPassword').value = ''; // Clear password field
+        emailInput.value = button.dataset.userEmail || '';
+        emailInput.readOnly = isGoogleAccount;
+        emailInput.setAttribute('aria-readonly', isGoogleAccount ? 'true' : 'false');
+        emailLabel.textContent = isGoogleAccount ? 'Google Account Email' : 'Email';
+        googleAuthNotice.hidden = !isGoogleAccount;
+        passwordField.hidden = isGoogleAccount;
+        passwordInput.disabled = isGoogleAccount;
+        passwordInput.value = '';
         document.getElementById('editUserRole').value = button.dataset.userRole || 'user';
         document.getElementById('editUserStatus').value = button.dataset.userStatus || 'active';
         

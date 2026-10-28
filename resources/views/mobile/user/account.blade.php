@@ -92,8 +92,8 @@
                             <input type="text" class="oinp" name="name" id="accountName" value="{{ old('name', Auth::user()->name) }}" autocomplete="name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="account-field-label" for="accountEmail"><span class="account-label-icon"><i class="fa-regular fa-envelope"></i></span>Recovery Email <small>(verification required)</small></label>
-                            <input type="email" class="oinp" name="email" id="accountEmail" value="{{ old('email', Auth::user()->email) }}" autocomplete="email">
+                            <label class="account-field-label" for="accountEmail"><span class="account-label-icon"><i class="fa-regular fa-envelope"></i></span>{{ $accountUser->isLocalAccount() ? 'Recovery Email' : 'Google Account Email' }} @if($accountUser->isLocalAccount())<small>(verification required)</small>@endif</label>
+                            <input type="email" class="oinp" name="email" id="accountEmail" value="{{ old('email', Auth::user()->email) }}" autocomplete="email" @readonly($accountUser->isGoogleAccount())>
                         </div>
                     </div>
                     <div class="account-field">
@@ -117,7 +117,8 @@
 
         <div class="col-lg-5 animate-fade-up" style="animation-delay: 0.2s;">
             <div class="premium-panel account-card" style="padding:32px">
-                <h5 class="account-card-title"><span class="account-title-icon"><i class="fa-solid fa-lock"></i></span>Security & Password</h5>
+                <h5 class="account-card-title"><span class="account-title-icon"><i class="fa-solid fa-lock"></i></span>{{ $accountUser->isLocalAccount() ? 'Security & Password' : 'Google Sign-in' }}</h5>
+                @if($accountUser->isLocalAccount())
                 <form action="{{ route('user.account.password') }}" method="POST" id="accountPasswordForm">
                     @csrf
                     <div class="account-field">
@@ -177,19 +178,18 @@
                     @endif
                     <form action="{{ route('user.account.recovery-code') }}" method="POST">
                         @csrf
-                        @if(filled(Auth::user()->google_id))
-                            <p class="text-muted" style="font-size:.82rem">You are signed in with Google, so no local password is required to generate a code.</p>
-                        @else
-                            <label class="account-field-label" for="recoveryCurrentPassword">Current Password</label>
-                            <input type="password" class="oinp" name="current_password" id="recoveryCurrentPassword" placeholder="Enter your current password" autocomplete="current-password" required>
-                        @endif
+                        <label class="account-field-label" for="recoveryCurrentPassword">Current Password</label>
+                        <input type="password" class="oinp" name="current_password" id="recoveryCurrentPassword" placeholder="Enter your current password" autocomplete="current-password" required>
                         <button type="submit" class="btn account-submit-btn btn-shine" style="margin-top:12px"><i class="fa-solid fa-rotate"></i>{{ session('recovery_code') ? 'Generate Another Recovery Code' : 'Generate New Recovery Code' }}</button>
                     </form>
                 </div>
+                @else
+                    <p class="text-muted" style="font-size:.9rem;line-height:1.6">This is a Google Login account. Passwords, recovery emails, and local recovery codes are managed only for username/password accounts.</p>
+                @endif
 
                 <div class="account-danger-section">
                     <h6 class="danger-title"><span class="danger-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>Danger Zone</h6>
-                    <p class="danger-copy">Deletion requires {{ filled($accountUser?->google_id) ? 'confirmation from your connected Google account' : 'your current password' }} and permanently removes your saved account data.</p>
+                    <p class="danger-copy">Deletion requires {{ $accountUser?->isGoogleAccount() ? 'confirmation from your Google account' : 'your current password' }} and permanently removes your saved account data.</p>
                     <div class="danger-action-form" id="accountDeleteForm">
                         <button type="button" class="btn delete-account-btn" data-bs-toggle="modal" data-bs-target="#accountDeleteModal"><i class="fa-regular fa-trash-can"></i>Delete Account</button>
                     </div>

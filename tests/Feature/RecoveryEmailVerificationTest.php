@@ -20,7 +20,31 @@ class RecoveryEmailVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_google_verified_gmail_registration_is_verified_without_sending_an_email_link(): void
+    public function test_local_registration_sends_a_verification_link_without_connecting_google(): void
+    {
+        config(['services.brevo.api_key' => null]);
+        Notification::fake();
+
+        $this->post(route('register'), [
+            'name' => 'Verification Candidate',
+            'username' => 'verification-candidate',
+            'email' => 'verification.candidate@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect(route('terms.acceptance.show'))
+            ->assertSessionHas('registration_success', true)
+            ->assertSessionHas('recovery_code');
+
+        $user = User::where('username', 'verification-candidate')->firstOrFail();
+
+        $this->assertSame(User::AUTH_METHOD_LOCAL, $user->auth_method);
+        $this->assertNull($user->google_id);
+        $this->assertNull($user->email_verified_at);
+        $this->assertAuthenticatedAs($user);
+        Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_google_registration_is_verified_without_sending_a_recovery_email_link(): void
     {
         config(['services.brevo.api_key' => null]);
         Notification::fake();
@@ -31,20 +55,13 @@ class RecoveryEmailVerificationTest extends TestCase
             'avatar' => null,
         ]);
 
-        $this->withSession([
-            'google_auth_intent' => 'verify_registration',
-            'google_registration_pending' => [
-                'name' => 'Verification Candidate',
-                'username' => 'verification-candidate',
-                'email' => 'verification.candidate@gmail.com',
-                'password_hash' => Hash::make('password123'),
-                'expires_at' => now()->addMinutes(10)->timestamp,
-            ],
-        ])->get(route('auth.google.callback', ['code' => 'test-code']))
+        $this->withSession(['google_auth_intent' => 'register'])
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('terms.acceptance.show'));
 
-        $user = User::where('username', 'verification-candidate')->firstOrFail();
+        $user = User::where('email', 'verification.candidate@gmail.com')->firstOrFail();
 
+        $this->assertSame(User::AUTH_METHOD_GOOGLE, $user->auth_method);
         $this->assertNotNull($user->email_verified_at);
         $this->assertSame('verification-candidate-google-id', $user->google_id);
         $this->assertAuthenticatedAs($user);
@@ -56,6 +73,7 @@ class RecoveryEmailVerificationTest extends TestCase
         $user = User::factory()->unverified()->create([
             'username' => 'signed-verification-user',
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
         ]);
 
         $verificationUrl = URL::temporarySignedRoute(
@@ -79,6 +97,7 @@ class RecoveryEmailVerificationTest extends TestCase
     {
         $user = User::factory()->unverified()->create([
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
         ]);
 
         $verificationUrl = URL::temporarySignedRoute(
@@ -105,6 +124,7 @@ class RecoveryEmailVerificationTest extends TestCase
 
         $user = User::factory()->unverified()->create([
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
         ]);
 
         $this->actingAs($user)
@@ -130,6 +150,7 @@ class RecoveryEmailVerificationTest extends TestCase
         $user = User::factory()->unverified()->create([
             'email' => 'brevo-verification@example.com',
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
         ]);
 
         $this->actingAs($user)
@@ -153,6 +174,7 @@ class RecoveryEmailVerificationTest extends TestCase
             'username' => 'unverified-recovery-user',
             'email' => 'unverified-recovery@example.com',
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
         ]);
 
         $this->post(route('password.recovery.send'), [
@@ -172,6 +194,7 @@ class RecoveryEmailVerificationTest extends TestCase
         $user = User::factory()->unverified()->create([
             'email' => 'unverified-reset@example.com',
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
             'password' => Hash::make('password'),
         ]);
 
@@ -182,10 +205,40 @@ class RecoveryEmailVerificationTest extends TestCase
         Notification::assertNotSentTo($user, ResetPassword::class);
     }
 
+    public function test_google_account_cannot_use_local_recovery_email_verification_endpoints(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'google_id' => 'google-verification-guard-id',
+            'auth_method' => User::AUTH_METHOD_GOOGLE,
+            'email_verified_at' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('verification.send'))
+            ->assertSessionHas('error', 'Google Login accounts do not use local recovery-email verification.');
+
+        Notification::assertNothingSent();
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'id' => $user->getKey(),
+                'hash' => sha1($user->email),
+            ]
+        );
+
+        $this->get($verificationUrl)->assertNotFound();
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
+
     public function test_account_page_offers_resend_for_unverified_local_recovery_email(): void
     {
         $user = User::factory()->unverified()->create([
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
         ]);
 
         $this->actingAs($user)

@@ -164,12 +164,19 @@ class AdminUserController extends Controller
             return redirect()->back()->with('error', 'The default administrator account is hidden from user management.');
         }
 
+        $isGoogleAccount = $user->isGoogleAccount();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => $this->newPasswordRules(false),
+            'email' => $isGoogleAccount
+                ? ['required', 'string', 'email', 'max:255', Rule::in([(string) $user->email])]
+                : ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'password' => $isGoogleAccount ? ['prohibited'] : $this->newPasswordRules(false),
             'role' => 'required|in:admin,user',
             'status' => 'required|in:active,inactive,suspended',
+        ], [
+            'email.in' => 'Google account email addresses are managed by Google and cannot be changed here.',
+            'password.prohibited' => 'Google Login accounts cannot be assigned a local password.',
         ]);
 
         $removesAdminAccess = (bool) $user->is_admin
@@ -192,13 +199,16 @@ class AdminUserController extends Controller
 
         $data = [
             'name' => $validated['name'],
-            'email' => $validated['email'],
             'is_admin' => $validated['role'] === 'admin',
             'status' => $validated['status'],
         ];
 
-        if (! empty($validated['password'])) {
-            $data['password'] = Hash::make($validated['password']);
+        if (! $isGoogleAccount) {
+            $data['email'] = $validated['email'];
+
+            if (! empty($validated['password'])) {
+                $data['password'] = Hash::make($validated['password']);
+            }
         }
 
         if ($validated['status'] === 'active') {

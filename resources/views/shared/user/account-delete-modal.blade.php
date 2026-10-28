@@ -1,5 +1,5 @@
 @php
-    $accountUsesGoogle = filled($accountUser?->google_id);
+    $accountUsesGoogle = (bool) $accountUser?->isGoogleAccount();
 @endphp
 
 <div class="modal fade account-delete-modal" id="accountDeleteModal" tabindex="-1" aria-labelledby="accountDeleteModalTitle" aria-hidden="true">

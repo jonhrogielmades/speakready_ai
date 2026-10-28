@@ -1,5 +1,6 @@
 @php
     $firstStepsState = is_array($onboardingState ?? null) ? $onboardingState : [];
+    $firstStepsRecoveryApplicable = (bool) ($firstStepsState['recovery_code_applicable'] ?? true);
     $firstStepsRecoverySaved = (bool) ($firstStepsState['recovery_code_saved'] ?? false);
     $firstStepsPersonalized = (bool) ($firstStepsState['profile_personalized'] ?? false);
     $firstStepsPersonalizationSkipped = (bool) ($firstStepsState['personalization_skipped'] ?? false);
@@ -67,8 +68,8 @@
                     <section class="sr-first-steps-step {{ $firstStepsRecoverySaved ? 'is-done' : '' }}" data-sr-onboarding-step="recovery_code_saved">
                         <span class="sr-first-steps-step-icon"><i class="fa-solid {{ $firstStepsRecoverySaved ? 'fa-check' : 'fa-key' }}" aria-hidden="true"></i></span>
                         <span class="sr-first-steps-step-copy">
-                            <strong>1. Save your recovery code</strong>
-                            <small>{{ $firstStepsRecoverySaved ? 'Your saved-code acknowledgement is attached to this account.' : 'Keep a backup code somewhere private and secure.' }}</small>
+                            <strong>1. {{ $firstStepsRecoveryApplicable ? 'Save your recovery code' : 'Secure your Google sign-in' }}</strong>
+                            <small>{{ $firstStepsRecoveryApplicable ? ($firstStepsRecoverySaved ? 'Your saved-code acknowledgement is attached to this account.' : 'Keep a backup code somewhere private and secure.') : 'This account signs in through Google and does not use a local password or recovery code.' }}</small>
                         </span>
                         <span class="sr-first-steps-step-actions">
                             @if($firstStepsRecoverySaved)

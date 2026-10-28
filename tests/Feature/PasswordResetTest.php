@@ -50,6 +50,7 @@ class PasswordResetTest extends TestCase
         $user = User::factory()->create([
             'username' => 'local-recovery-user',
             'email' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
             'password' => Hash::make('old-password'),
             'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
             'password_recovery_code_generated_at' => now(),
@@ -87,6 +88,7 @@ class PasswordResetTest extends TestCase
             'username' => 'email-recovery-user',
             'email' => 'recovery@example.com',
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
             'password_recovery_code_hash' => PasswordRecovery::hash('OLD-CODE-ONLY-1234'),
             'password_recovery_code_generated_at' => now()->subDay(),
             'password_recovery_code_expires_at' => null,
@@ -141,6 +143,7 @@ class PasswordResetTest extends TestCase
             'username' => 'failed-delivery-user',
             'email' => 'failed-delivery@example.com',
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
             'password_recovery_code_hash' => null,
             'password_recovery_code_generated_at' => null,
             'password_recovery_code_expires_at' => null,
@@ -180,6 +183,7 @@ class PasswordResetTest extends TestCase
             'username' => 'brevo-recovery-user',
             'email' => 'brevo-recovery@example.com',
             'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
         ]);
 
         $this->post(route('password.recovery.send'), [
@@ -204,6 +208,7 @@ class PasswordResetTest extends TestCase
             'username' => 'google-only-recovery',
             'email' => 'google@example.com',
             'google_id' => 'google-id-123',
+            'auth_method' => User::AUTH_METHOD_GOOGLE,
         ]);
 
         $this->post(route('password.recovery.send'), [
@@ -218,6 +223,7 @@ class PasswordResetTest extends TestCase
     {
         $user = User::factory()->create([
             'username' => 'expired-recovery-user',
+            'auth_method' => User::AUTH_METHOD_LOCAL,
             'password' => Hash::make('old-password'),
             'password_recovery_code_hash' => PasswordRecovery::hash('ABCD-EFGH-IJKL-MNOP'),
             'password_recovery_code_generated_at' => now()->subMinutes(16),
@@ -239,6 +245,7 @@ class PasswordResetTest extends TestCase
     {
         $user = User::factory()->create([
             'username' => 'rotate-recovery-user',
+            'auth_method' => User::AUTH_METHOD_LOCAL,
             'password' => Hash::make('current-password'),
             'password_recovery_code_hash' => null,
         ]);
@@ -255,25 +262,172 @@ class PasswordResetTest extends TestCase
         $this->assertTrue(PasswordRecovery::check($newCode, $user->fresh()->password_recovery_code_hash));
     }
 
-    public function test_authenticated_google_user_can_generate_a_recovery_code_without_a_local_password(): void
+    public function test_authenticated_google_user_cannot_generate_a_local_recovery_code(): void
     {
         $user = User::factory()->create([
             'username' => 'google-recovery-user',
             'google_id' => 'google-user-123',
+            'auth_method' => User::AUTH_METHOD_GOOGLE,
             'password' => Hash::make('unavailable-google-password'),
             'password_recovery_code_hash' => null,
         ]);
 
-        $response = $this->actingAs($user)->post(route('user.account.recovery-code'));
+        $response = $this
+            ->actingAs($user)
+            ->from(route('user.account'))
+            ->post(route('user.account.recovery-code'));
 
         $response
-            ->assertRedirect()
-            ->assertSessionHas('recovery_code', fn ($code): bool => preg_match('/^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$/', (string) $code) === 1);
+            ->assertRedirect(route('user.account'))
+            ->assertSessionHasErrors([
+                'recovery_code' => 'Google Login accounts do not use local password recovery codes.',
+            ])
+            ->assertSessionMissing('recovery_code');
 
-        $this->assertTrue(PasswordRecovery::check(
-            (string) $response->getSession()->get('recovery_code'),
-            $user->fresh()->password_recovery_code_hash
-        ));
+        $this->assertNull($user->fresh()->password_recovery_code_hash);
+    }
+
+    public function test_google_account_page_hides_local_password_and_recovery_controls(): void
+    {
+        $user = User::factory()->google()->create([
+            'username' => 'google-security-ui',
+            'email' => 'google-security-ui@example.com',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.account'))
+            ->assertOk()
+            ->assertSee('Google Sign-in')
+            ->assertSee('This is a Google Login account.')
+            ->assertDontSee('id="accountPasswordForm"', false)
+            ->assertDontSee('id="password-recovery-code"', false);
+    }
+
+    public function test_google_account_cannot_change_a_local_password(): void
+    {
+        $user = User::factory()->google()->create([
+            'username' => 'google-password-update',
+            'password' => Hash::make('unchanged-google-password'),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.account.password'), [
+                'current_password' => 'unchanged-google-password',
+                'new_password' => 'new-local-password',
+                'confirm_password' => 'new-local-password',
+            ])
+            ->assertSessionHasErrors([
+                'current_password' => 'Google Login accounts do not have a local password.',
+            ]);
+
+        $this->assertTrue(Hash::check('unchanged-google-password', $user->fresh()->password));
+    }
+
+    public function test_google_account_cannot_replace_its_google_email_with_a_recovery_email(): void
+    {
+        $user = User::factory()->google()->create([
+            'email' => 'fixed-google-email@example.com',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.account.profile'), [
+                'name' => $user->name,
+                'email' => 'replacement-recovery@example.com',
+                'target_position' => $user->target_position,
+            ])
+            ->assertSessionHasErrors('email');
+
+        $this->assertSame('fixed-google-email@example.com', $user->fresh()->email);
+    }
+
+    public function test_google_account_cannot_use_password_based_account_deletion(): void
+    {
+        $user = User::factory()->google()->create();
+
+        $this->actingAs($user)
+            ->post(route('user.account.delete'), [
+                'delete_password' => 'password',
+            ])
+            ->assertSessionHasErrors([
+                'account_delete' => 'Confirm this account through Google before deleting it.',
+            ]);
+
+        $this->assertDatabaseHas('users', ['id' => $user->id]);
+    }
+
+    public function test_authenticated_google_user_cannot_acknowledge_a_local_recovery_code(): void
+    {
+        $user = User::factory()->create([
+            'username' => 'google-recovery-ack-user',
+            'google_id' => 'google-user-ack-123',
+            'auth_method' => User::AUTH_METHOD_GOOGLE,
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->withSession(['recovery_code' => 'ABCD-EFGH-IJKL-MNOP'])
+            ->from(route('user.account'))
+            ->post(route('user.account.recovery-code.acknowledge'), [
+                'recovery_code_saved' => '1',
+            ])
+            ->assertRedirect(route('user.account'))
+            ->assertSessionHasErrors([
+                'recovery_code_saved' => 'Google Login accounts do not use local password recovery codes.',
+            ]);
+    }
+
+    public function test_google_user_cannot_reset_a_password_with_a_local_recovery_code(): void
+    {
+        $recoveryCode = 'ABCD-EFGH-IJKL-MNOP';
+        $user = User::factory()->create([
+            'username' => 'google-local-reset-user',
+            'google_id' => 'google-local-reset-id',
+            'auth_method' => User::AUTH_METHOD_GOOGLE,
+            'password' => Hash::make('unchanged-google-password'),
+            'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
+            'password_recovery_code_generated_at' => now(),
+            'password_recovery_code_expires_at' => null,
+        ]);
+
+        $this->from(route('password.request'))->post(route('password.recovery.reset'), [
+            'username' => $user->username,
+            'recovery_code' => $recoveryCode,
+            'password' => 'new-local-password-123',
+            'password_confirmation' => 'new-local-password-123',
+        ])->assertRedirect(route('password.request'))
+            ->assertSessionHasErrors('recovery_code');
+
+        $user->refresh();
+        $this->assertTrue(Hash::check('unchanged-google-password', $user->password));
+        $this->assertTrue(PasswordRecovery::check($recoveryCode, $user->password_recovery_code_hash));
+    }
+
+    public function test_google_account_cannot_use_email_reset_links(): void
+    {
+        config(['services.brevo.api_key' => null]);
+        Notification::fake();
+
+        $user = User::factory()->google()->create([
+            'email' => 'google-reset-link@example.com',
+            'password' => Hash::make('unchanged-google-password'),
+        ]);
+
+        $this->post(route('password.email'), [
+            'email' => $user->email,
+        ])->assertSessionHas('status', 'If a verified local account matches that email, a password reset link will be sent shortly.');
+
+        Notification::assertNothingSent();
+
+        $token = Password::broker()->createToken($user);
+
+        $this->post(route('password.update'), [
+            'token' => $token,
+            'email' => $user->email,
+            'password' => 'new-local-password',
+            'password_confirmation' => 'new-local-password',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertTrue(Hash::check('unchanged-google-password', $user->fresh()->password));
     }
 
     public function test_forgot_password_page_can_send_a_reset_link(): void
@@ -281,7 +435,9 @@ class PasswordResetTest extends TestCase
         config(['services.brevo.api_key' => null]);
         Notification::fake();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
 
         $response = $this->post(route('password.email'), [
             'email' => $user->email,
@@ -298,6 +454,7 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create([
             'email' => 'person@example.com',
+            'auth_method' => User::AUTH_METHOD_LOCAL,
         ]);
 
         $response = $this->post(route('password.email'), [
@@ -321,7 +478,9 @@ class PasswordResetTest extends TestCase
             'api.brevo.test/*' => Http::response(['messageId' => 'test-message'], 201),
         ]);
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
 
         $response = $this->post(route('password.email'), [
             'email' => $user->email,
@@ -340,11 +499,16 @@ class PasswordResetTest extends TestCase
 
     public function test_forgot_password_handles_mail_transport_failure(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
 
         Password::shouldReceive('sendResetLink')
             ->once()
-            ->with(['email' => $user->email])
+            ->with([
+                'email' => $user->email,
+                'auth_method' => User::AUTH_METHOD_LOCAL,
+            ])
             ->andThrow(new RuntimeException('SMTP blocked'));
 
         $response = $this->from(route('password.request'))->post(route('password.email'), [
@@ -358,6 +522,7 @@ class PasswordResetTest extends TestCase
     public function test_user_can_reset_password_with_a_valid_token(): void
     {
         $user = User::factory()->create([
+            'auth_method' => User::AUTH_METHOD_LOCAL,
             'password' => Hash::make('old-password'),
         ]);
 
@@ -380,6 +545,7 @@ class PasswordResetTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'person@example.com',
+            'auth_method' => User::AUTH_METHOD_LOCAL,
             'password' => Hash::make('old-password'),
         ]);
 

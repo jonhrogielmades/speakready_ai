@@ -14,7 +14,7 @@ class RecoveryEmailVerification
 
     public function send(User $user): bool
     {
-        if (blank($user->email) || $user->hasVerifiedEmail()) {
+        if (! $user->isLocalAccount() || blank($user->email) || $user->hasVerifiedEmail()) {
             return false;
         }
 

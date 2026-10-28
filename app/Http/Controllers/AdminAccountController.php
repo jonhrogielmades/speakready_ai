@@ -31,13 +31,17 @@ class AdminAccountController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($admin->id)],
+            'email' => $admin->isLocalAccount()
+                ? ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($admin->id)]
+                : ['required', 'string', 'email', 'max:255', Rule::in([(string) $admin->email])],
             'target_position' => ['nullable', 'string', 'max:255'],
             'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048', 'dimensions:max_width=2000,max_height=2000'],
         ]);
 
         $admin->name = $validated['name'];
-        $admin->email = $validated['email'];
+        if ($admin->isLocalAccount()) {
+            $admin->email = $validated['email'];
+        }
         $admin->target_position = $validated['target_position'] ?? null;
 
         $previousPhoto = $admin->profile_photo_path;
@@ -84,13 +88,20 @@ class AdminAccountController extends Controller
     {
         AccountNotificationSchema::ensure();
 
+        $admin = $request->user();
+
+        if (! $admin->isLocalAccount()) {
+            return redirect()->route('admin.account')->withErrors([
+                'current_password' => 'Google Login accounts do not have a local password.',
+            ]);
+        }
+
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
             'new_password' => $this->newPasswordRules(),
             'confirm_password' => ['required', 'same:new_password'],
         ]);
 
-        $admin = $request->user();
         $admin->password = Hash::make($validated['new_password']);
         $admin->save();
 
@@ -113,11 +124,18 @@ class AdminAccountController extends Controller
 
     public function rotateRecoveryCode(Request $request)
     {
+        $admin = $request->user();
+
+        if (! $admin->isLocalAccount()) {
+            return redirect()->route('admin.account')->withErrors([
+                'recovery_code' => 'Google Login accounts do not use local password recovery codes.',
+            ]);
+        }
+
         $request->validate([
             'current_password' => ['required', 'current_password'],
         ]);
 
-        $admin = $request->user();
         $recoveryCode = PasswordRecovery::generate();
 
         $admin->forceFill([

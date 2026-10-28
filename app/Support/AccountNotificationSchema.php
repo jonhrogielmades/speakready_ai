@@ -22,9 +22,9 @@ class AccountNotificationSchema
             return;
         }
 
+        self::ensureActivityLogsTable();
         self::ensureUserColumns();
         self::ensureNotificationsTable();
-        self::ensureActivityLogsTable();
         self::ensurePushSubscriptionsTable();
 
         self::$checked = true;
@@ -38,6 +38,12 @@ class AccountNotificationSchema
         }
 
         $missing = self::missingColumns('users', self::userColumns());
+        $authMethodWasMissing = self::isMissing($missing, 'auth_method');
+
+        if ($authMethodWasMissing) {
+            self::ensureActivityLogsTable();
+        }
+
         if ($missing !== []) {
             Schema::table('users', function (Blueprint $table) use ($missing): void {
                 if (self::isMissing($missing, 'is_admin')) {
@@ -45,6 +51,9 @@ class AccountNotificationSchema
                 }
                 if (self::isMissing($missing, 'google_id')) {
                     $table->string('google_id')->nullable();
+                }
+                if (self::isMissing($missing, 'auth_method')) {
+                    $table->string('auth_method', 20)->default('local');
                 }
                 if (self::isMissing($missing, 'status')) {
                     $table->string('status')->default('active');
@@ -68,6 +77,7 @@ class AccountNotificationSchema
         }
 
         self::ensureProfilePhotoPathCapacity();
+        self::ensureAuthMethodIndex();
 
         if (Schema::hasColumn('users', 'is_admin')) {
             DB::table('users')->whereNull('is_admin')->update(['is_admin' => false]);
@@ -75,6 +85,10 @@ class AccountNotificationSchema
 
         if (Schema::hasColumn('users', 'status')) {
             DB::table('users')->whereNull('status')->update(['status' => 'active']);
+        }
+
+        if (Schema::hasColumn('users', 'auth_method') && Schema::hasColumn('users', 'google_id')) {
+            self::reconcileLegacyAuthMethods();
         }
     }
 
@@ -313,6 +327,119 @@ class AccountNotificationSchema
         }
     }
 
+    private static function ensureAuthMethodIndex(): void
+    {
+        if (! Schema::hasColumn('users', 'auth_method') || self::hasIndex('users', 'users_auth_method_index')) {
+            return;
+        }
+
+        Schema::table('users', function (Blueprint $table): void {
+            $table->index('auth_method', 'users_auth_method_index');
+        });
+    }
+
+    private static function reconcileLegacyAuthMethods(): void
+    {
+        $candidateQuery = static fn () => DB::table('users')
+            ->select('id')
+            ->whereNotNull('google_id')
+            ->where('google_id', '<>', '')
+            ->where(function ($query): void {
+                $query
+                    ->whereNull('auth_method')
+                    ->orWhere('auth_method', '<>', 'google');
+            });
+
+        if (! $candidateQuery()->exists()) {
+            return;
+        }
+
+        DB::transaction(function () use ($candidateQuery): void {
+            $candidateQuery()
+                ->lockForUpdate()
+                ->chunkById(500, function ($users): void {
+                    $candidateIds = $users->pluck('id')->map(fn ($id): int => (int) $id)->all();
+                    $googleAccountIds = [];
+                    $localAccountIds = [];
+
+                    if (Schema::hasTable('activity_logs')) {
+                        $googleAccountIds = DB::table('activity_logs')
+                            ->whereIn('user_id', $candidateIds)
+                            ->where('action', 'user_registered')
+                            ->where('description', 'like', '%registered a new account with Google.%')
+                            ->whereNotNull('user_id')
+                            ->distinct()
+                            ->pluck('user_id')
+                            ->map(fn ($id): int => (int) $id)
+                            ->all();
+
+                        $localAccountIds = DB::table('activity_logs')
+                            ->whereIn('user_id', $candidateIds)
+                            ->where(function ($query): void {
+                                $query
+                                    ->where(function ($registrationQuery): void {
+                                        $registrationQuery
+                                            ->where('action', 'user_registered')
+                                            ->where(function ($descriptionQuery): void {
+                                                $descriptionQuery
+                                                    ->where('description', 'like', '%registered a new account with a Google-verified recovery email.%')
+                                                    ->orWhere('description', 'like', '%registered a new account.')
+                                                    ->orWhere('description', 'like', '%registered a new local account.');
+                                            });
+                                    })
+                                    ->orWhere(function ($loginQuery): void {
+                                        $loginQuery
+                                            ->where('action', 'user_logged_in')
+                                            ->where('description', 'like', '% logged in.');
+                                    });
+                            })
+                            ->whereNotIn('user_id', $googleAccountIds)
+                            ->whereNotNull('user_id')
+                            ->distinct()
+                            ->pluck('user_id')
+                            ->map(fn ($id): int => (int) $id)
+                            ->all();
+                    }
+
+                    $googleCandidateIds = array_values(array_diff($candidateIds, $localAccountIds));
+
+                    if ($googleCandidateIds !== []) {
+                        DB::table('users')
+                            ->whereIn('id', $googleCandidateIds)
+                            ->update(['auth_method' => 'google']);
+                    }
+
+                    if ($localAccountIds !== []) {
+                        DB::table('users')
+                            ->whereIn('id', $localAccountIds)
+                            ->update([
+                                'auth_method' => 'local',
+                                'google_id' => null,
+                            ]);
+                    }
+                }, 'id');
+        });
+    }
+
+    private static function hasIndex(string $table, string $index): bool
+    {
+        if (! method_exists(Schema::getFacadeRoot(), 'getIndexes')) {
+            return false;
+        }
+
+        try {
+            foreach (Schema::getIndexes($table) as $existingIndex) {
+                if (($existingIndex['name'] ?? null) === $index) {
+                    return true;
+                }
+            }
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return false;
+    }
+
     private static function profilePhotoPathHasRequiredCapacity(): bool
     {
         if (! Schema::hasColumn('users', 'profile_photo_path')) {
@@ -344,6 +471,7 @@ class AccountNotificationSchema
         return [
             'is_admin',
             'google_id',
+            'auth_method',
             'status',
             'reactivation_requested_at',
             'profile_photo_path',

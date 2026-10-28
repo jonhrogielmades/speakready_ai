@@ -45,4 +45,13 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function google(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'auth_method' => User::AUTH_METHOD_GOOGLE,
+            'google_id' => $attributes['google_id'] ?? Str::uuid()->toString(),
+            'email_verified_at' => now(),
+        ]);
+    }
 }

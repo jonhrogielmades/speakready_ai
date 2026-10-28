@@ -4542,22 +4542,32 @@ class UserController extends Controller
 
  $user = Auth::user();
 
+ $isLocalAccount = $user->isLocalAccount();
+
  $request->validate([
  'name' => 'required|string|max:255',
- 'email' => [
+ 'email' => $isLocalAccount ? [
  'nullable',
  'string',
  'max:255',
  'email:rfc,filter',
  'regex:/^[^@\s]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i',
  'unique:users,email,'.$user->id,
+ ] : [
+ 'required',
+ 'string',
+ 'max:255',
+ 'email:rfc,filter',
+ Rule::in([(string) $user->email]),
  ],
  'target_position' => 'nullable|string|max:255',
  'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048|dimensions:max_width=2000,max_height=2000',
  ]);
 
  $user->name = $request->name;
- $normalizedRecoveryEmail = filled($request->email) ? Str::lower(trim((string) $request->email)) : null;
+ $normalizedRecoveryEmail = $isLocalAccount && filled($request->email)
+  ? Str::lower(trim((string) $request->email))
+  : ($isLocalAccount ? null : (string) $user->email);
  $emailChanged = $normalizedRecoveryEmail !== Str::lower(trim((string) ($user->email ?? '')));
  $user->email = $normalizedRecoveryEmail;
  if ($normalizedRecoveryEmail === null) {
@@ -4634,13 +4644,20 @@ class UserController extends Controller
  {
  AccountNotificationSchema::ensure();
 
+ $user = Auth::user();
+
+ if (! $user->isLocalAccount()) {
+  return redirect()->back()->withErrors([
+   'current_password' => 'Google Login accounts do not have a local password.',
+  ]);
+ }
+
  $request->validate([
  'current_password' => 'required|current_password',
  'new_password' => $this->newPasswordRules(),
  'confirm_password' => 'required|same:new_password',
  ]);
 
- $user = Auth::user();
  $user->password = Hash::make($request->new_password);
  $user->save();
 
@@ -4665,11 +4682,15 @@ class UserController extends Controller
  {
  $user = Auth::user();
 
- if (blank($user->google_id)) {
-  $request->validate([
-   'current_password' => 'required|current_password',
+ if (! $user->isLocalAccount()) {
+  return redirect()->back()->withErrors([
+   'recovery_code' => 'Google Login accounts do not use local password recovery codes.',
   ]);
  }
+
+ $request->validate([
+  'current_password' => 'required|current_password',
+ ]);
 
  $recoveryCode = PasswordRecovery::generate();
 
@@ -4700,6 +4721,14 @@ class UserController extends Controller
 
  public function acknowledgeRecoveryCode(Request $request)
  {
+  $user = Auth::user();
+
+  if (! $user->isLocalAccount()) {
+   return redirect()->back()->withErrors([
+    'recovery_code_saved' => 'Google Login accounts do not use local password recovery codes.',
+   ]);
+  }
+
   if (! $request->session()->has('recovery_code')) {
    return redirect()
     ->to(route('user.account', sr_layout_query($request)).'#password-recovery-code')
@@ -4717,7 +4746,6 @@ class UserController extends Controller
    'recovery_code_saved.accepted' => 'Confirm that you saved the recovery code before continuing.',
   ]);
 
-  $user = Auth::user();
   $onboardingProgress = UserOnboardingProgress::forUser($user);
   $onboardingProgress->forceFill([
    'recovery_code_ack_required_at' => $onboardingProgress->recovery_code_ack_required_at ?? now(),
@@ -4768,7 +4796,7 @@ class UserController extends Controller
   ]);
  }
 
- if (filled($user->google_id)) {
+ if ($user->isGoogleAccount()) {
   return redirect()->back()->withErrors([
    'account_delete' => 'Confirm this account through Google before deleting it.',
   ]);

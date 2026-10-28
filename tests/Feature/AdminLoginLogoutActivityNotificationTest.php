@@ -15,6 +15,7 @@ class AdminLoginLogoutActivityNotificationTest extends TestCase
     {
         $user = User::factory()->create([
             'name' => 'Ready User',
+            'username' => 'ready-user',
             'email' => 'ready@example.com',
             'password' => Hash::make('password'),
             'is_admin' => false,
@@ -22,14 +23,14 @@ class AdminLoginLogoutActivityNotificationTest extends TestCase
         ]);
 
         $this->post(route('login'), [
-            'email' => 'ready@example.com',
+            'username' => 'ready-user',
             'password' => 'password',
         ])->assertRedirect(route('dashboard'));
 
         $this->assertDatabaseHas('activity_logs', [
             'user_id' => $user->id,
             'action' => 'user_logged_in',
-            'description' => 'Ready User (ready@example.com) logged in.',
+            'description' => 'Ready User (ready-user) logged in.',
         ]);
 
         $this->assertTrue(

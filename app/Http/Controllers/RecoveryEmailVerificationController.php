@@ -17,6 +17,8 @@ class RecoveryEmailVerificationController extends Controller
     {
         $user = User::query()->findOrFail((int) $request->route('id'));
 
+        abort_unless($user->isLocalAccount(), 404);
+
         abort_unless(
             hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification())),
             403
@@ -42,6 +44,10 @@ class RecoveryEmailVerificationController extends Controller
     public function send(Request $request, RecoveryEmailVerification $verification): RedirectResponse
     {
         $user = $request->user();
+
+        if (! $user->isLocalAccount()) {
+            return back()->with('error', 'Google Login accounts do not use local recovery-email verification.');
+        }
 
         if (blank($user->email)) {
             return back()->with('error', 'Add a recovery email before requesting verification.');

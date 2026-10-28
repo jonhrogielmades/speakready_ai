@@ -836,7 +836,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertTrue(Schema::hasColumn('push_subscriptions', $column), "Missing push_subscriptions.{$column}");
  }
 
- foreach (['is_admin', 'google_id', 'status', 'reactivation_requested_at', 'profile_photo_path', 'target_position', 'preferred_language', 'deleted_at'] as $column) {
+ foreach (['is_admin', 'google_id', 'auth_method', 'status', 'reactivation_requested_at', 'profile_photo_path', 'target_position', 'preferred_language', 'deleted_at'] as $column) {
  $this->assertTrue(Schema::hasColumn('users', $column), "Missing users.{$column}");
  }
  }
