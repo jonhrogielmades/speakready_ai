@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
+use App\Models\User;
 use App\Support\AccountNotificationSchema;
 use App\Support\PasswordRecovery;
 use App\Support\SystemSettings;
@@ -32,7 +33,15 @@ class AdminAccountController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => $admin->isLocalAccount()
-                ? ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($admin->id)]
+                ? [
+                    'required',
+                    'string',
+                    'email',
+                    'max:255',
+                    Rule::unique('users', 'email')
+                        ->ignore($admin->id)
+                        ->where(fn ($query) => $query->where('auth_method', User::AUTH_METHOD_LOCAL)),
+                ]
                 : ['required', 'string', 'email', 'max:255', Rule::in([(string) $admin->email])],
             'target_position' => ['nullable', 'string', 'max:255'],
             'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048', 'dimensions:max_width=2000,max_height=2000'],

@@ -4552,7 +4552,9 @@ class UserController extends Controller
  'max:255',
  'email:rfc,filter',
  'regex:/^[^@\s]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i',
- 'unique:users,email,'.$user->id,
+  Rule::unique('users', 'email')
+   ->ignore($user->id)
+   ->where(fn ($query) => $query->where('auth_method', User::AUTH_METHOD_LOCAL)),
  ] : [
  'required',
  'string',

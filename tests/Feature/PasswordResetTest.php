@@ -430,6 +430,27 @@ class PasswordResetTest extends TestCase
         $this->assertTrue(Hash::check('unchanged-google-password', $user->fresh()->password));
     }
 
+    public function test_email_reset_targets_the_local_account_when_google_uses_the_same_email(): void
+    {
+        config(['services.brevo.api_key' => null]);
+        Notification::fake();
+
+        $localUser = User::factory()->create([
+            'email' => 'shared-account-email@example.com',
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
+        $googleUser = User::factory()->google()->create([
+            'email' => $localUser->email,
+        ]);
+
+        $this->post(route('password.email'), [
+            'email' => $localUser->email,
+        ])->assertSessionHas('status', 'We have emailed your password reset link.');
+
+        Notification::assertSentTo($localUser, ResetPassword::class);
+        Notification::assertNotSentTo($googleUser, ResetPassword::class);
+    }
+
     public function test_forgot_password_page_can_send_a_reset_link(): void
     {
         config(['services.brevo.api_key' => null]);

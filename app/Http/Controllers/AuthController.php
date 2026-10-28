@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
@@ -85,7 +86,9 @@ class AuthController extends Controller
                 'string',
                 'max:255',
                 'email:rfc,filter',
-                'unique:users,email',
+                Rule::unique('users', 'email')->where(
+                    fn ($query) => $query->where('auth_method', User::AUTH_METHOD_LOCAL)
+                ),
             ],
             'password' => $this->newPasswordRules(['confirmed']),
         ], [
@@ -686,10 +689,17 @@ class AuthController extends Controller
                 ]);
             }
 
-            if (! $user && User::withTrashed()->whereRaw('LOWER(email) = ?', [$googleEmail])->exists()) {
+            if (
+                ! $user
+                && $intent === 'register'
+                && User::withTrashed()
+                    ->where('auth_method', User::AUTH_METHOD_GOOGLE)
+                    ->whereRaw('LOWER(email) = ?', [$googleEmail])
+                    ->exists()
+            ) {
                 return $this->googleAuthFailureResponse(
                     $request,
-                    'This email already belongs to a username/password account. Use username and password to sign in; Google Login is a separate account type.',
+                    'This Google email is already registered. Please log in with Google instead.',
                     $intent,
                     ['email' => $googleEmail]
                 );

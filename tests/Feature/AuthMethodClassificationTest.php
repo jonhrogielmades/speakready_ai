@@ -106,6 +106,11 @@ class AuthMethodClassificationTest extends TestCase
             ],
         ]);
 
+        if ($this->hasIndex('users_email_auth_method_unique')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->dropUnique('users_email_auth_method_unique');
+            });
+        }
         Schema::table('users', function (Blueprint $table): void {
             $table->dropIndex('users_auth_method_index');
         });
@@ -172,6 +177,11 @@ class AuthMethodClassificationTest extends TestCase
             'updated_at' => now(),
         ]);
 
+        if ($this->hasIndex('users_email_auth_method_unique')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->dropUnique('users_email_auth_method_unique');
+            });
+        }
         Schema::table('users', function (Blueprint $table): void {
             $table->dropIndex('users_auth_method_index');
         });

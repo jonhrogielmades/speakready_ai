@@ -607,7 +607,7 @@ class PwaRememberedLoginTest extends TestCase
             ->assertDontSee('Email verification not completed');
     }
 
-    public function test_google_login_does_not_link_or_verify_a_matching_local_account(): void
+    public function test_google_login_does_not_auto_register_a_matching_local_recovery_email(): void
     {
         $user = User::factory()->unverified()->create([
             'username' => 'matching-local-google-user',
@@ -626,9 +626,9 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect('/')
+            ->assertRedirect('/?auth_modal=login&auth_alert=google_login_unregistered')
             ->assertSessionHasErrors([
-                'email' => 'This email already belongs to a username/password account. Use username and password to sign in; Google Login is a separate account type.',
+                'email' => 'This Google account is not registered. Please register first.',
             ]);
 
         $updatedUser = $user->fresh();
@@ -663,7 +663,7 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect('/')
+            ->assertRedirect('/?auth_modal=login&auth_alert=google_login_unregistered')
             ->assertSessionHasErrors('email');
         $this->assertGuest();
 
@@ -684,7 +684,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertDatabaseMissing('users', ['id' => $localUser->id]);
     }
 
-    public function test_google_registration_cannot_reuse_a_local_recovery_email(): void
+    public function test_google_registration_can_use_a_local_recovery_email_as_a_separate_account(): void
     {
         $localUser = User::factory()->unverified()->create([
             'username' => 'local-recovery-owner',
@@ -702,17 +702,37 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_intent' => 'register'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect('/')
-            ->assertSessionHasErrors([
-                'email' => 'This email already belongs to a username/password account. Use username and password to sign in; Google Login is a separate account type.',
-            ]);
+            ->assertRedirect(route('terms.acceptance.show'))
+            ->assertSessionHas('registration_success', true);
 
-        $this->assertSame(1, User::where('email', $localUser->email)->count());
+        $googleUser = User::where('google_id', 'separate-google-registration-id')->firstOrFail();
+        $this->assertSame($localUser->email, $googleUser->email);
+        $this->assertSame(User::AUTH_METHOD_GOOGLE, $googleUser->auth_method);
+        $this->assertSame(1, User::where('email', $localUser->email)->where('auth_method', User::AUTH_METHOD_LOCAL)->count());
+        $this->assertSame(1, User::where('email', $localUser->email)->where('auth_method', User::AUTH_METHOD_GOOGLE)->count());
         $this->assertNull($localUser->fresh()->google_id);
-        $this->assertGuest();
+
+        $googleUser->forceFill([
+            'terms_accepted_at' => now(),
+            'terms_version' => User::TERMS_VERSION,
+        ])->save();
+        Auth::logout();
+
+        $this->mockGoogleCallback([
+            'id' => 'separate-google-registration-id',
+            'name' => 'Separate Google Registration',
+            'email' => $localUser->email,
+            'avatar' => null,
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($googleUser->fresh());
     }
 
-    public function test_local_registration_cannot_reuse_a_google_account_email(): void
+    public function test_local_registration_can_use_a_google_account_email_as_recovery_email(): void
     {
         $googleUser = User::factory()->google()->create([
             'email' => 'owned-google-email@example.com',
@@ -724,13 +744,15 @@ class PwaRememberedLoginTest extends TestCase
             'email' => $googleUser->email,
             'password' => 'password123',
             'password_confirmation' => 'password123',
-        ])->assertSessionHasErrors([
-            'email' => 'This recovery email is already registered.',
-        ]);
+        ])->assertRedirect(route('terms.acceptance.show'));
 
-        $this->assertSame(1, User::where('email', $googleUser->email)->count());
+        $localUser = User::where('username', 'local-collision-candidate')->firstOrFail();
+        $this->assertSame($googleUser->email, $localUser->email);
+        $this->assertSame(User::AUTH_METHOD_LOCAL, $localUser->auth_method);
+        $this->assertSame(1, User::where('email', $googleUser->email)->where('auth_method', User::AUTH_METHOD_LOCAL)->count());
+        $this->assertSame(1, User::where('email', $googleUser->email)->where('auth_method', User::AUTH_METHOD_GOOGLE)->count());
         $this->assertSame(User::AUTH_METHOD_GOOGLE, $googleUser->fresh()->auth_method);
-        $this->assertGuest();
+        $this->assertAuthenticatedAs($localUser);
     }
 
     public function test_google_registration_creates_verified_email_account(): void

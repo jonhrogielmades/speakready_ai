@@ -114,7 +114,9 @@ class AdminUserController extends Controller
                 'max:255',
                 'email:rfc,filter',
                 'regex:/^[^@\s]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i',
-                Rule::unique('users', 'email'),
+                Rule::unique('users', 'email')->where(
+                    fn ($query) => $query->where('auth_method', User::AUTH_METHOD_LOCAL)
+                ),
             ],
             'password' => $this->newPasswordRules(),
             // Kept optional at the HTTP boundary for backwards compatibility;
@@ -170,7 +172,15 @@ class AdminUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => $isGoogleAccount
                 ? ['required', 'string', 'email', 'max:255', Rule::in([(string) $user->email])]
-                : ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+                : [
+                    'required',
+                    'string',
+                    'email',
+                    'max:255',
+                    Rule::unique('users', 'email')
+                        ->ignore($user->id)
+                        ->where(fn ($query) => $query->where('auth_method', User::AUTH_METHOD_LOCAL)),
+                ],
             'password' => $isGoogleAccount ? ['prohibited'] : $this->newPasswordRules(false),
             'role' => 'required|in:admin,user',
             'status' => 'required|in:active,inactive,suspended',
