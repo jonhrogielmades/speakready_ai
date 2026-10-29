@@ -290,7 +290,6 @@
                 '/learning',
                 '/skills',
                 '/missions',
-                '/personal-mastery',
                 '/modules',
                 '/game/match',
                 '/progress',

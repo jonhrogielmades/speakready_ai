@@ -330,7 +330,6 @@
       .mission-progress-hero,
       .sr-learning-hero,
       .coach-progress-hero,
-      .mastery-hero-card,
       .notif-hero,
       .skill-tree-hero,
       .mod-hero
@@ -346,7 +345,6 @@
       .feedback-title,
       .setup-hero-title,
       .modules-hero-title,
-      .mastery-title,
       .notif-hero-title
    ) {
       color: var(--sr-unified-hero-text, #f8fbff) !important;
@@ -364,7 +362,6 @@
       .mission-progress-hero,
       .sr-learning-hero,
       .coach-progress-hero,
-      .mastery-hero-card,
       .notif-hero,
       .skill-tree-hero,
       .mod-hero
@@ -376,7 +373,6 @@
       .feedback-subtitle,
       .setup-hero-subtitle,
       .modules-hero-subtitle,
-      .mastery-subtitle,
       .notif-hero-subtitle
    ) {
       color: var(--sr-unified-hero-muted, rgba(248, 251, 255, 0.9)) !important;

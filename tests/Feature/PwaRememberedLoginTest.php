@@ -19,7 +19,7 @@ class PwaRememberedLoginTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_password_login_remembers_the_device_by_default(): void
+    public function test_password_login_does_not_remember_the_device_by_default(): void
     {
         $user = User::factory()->create([
             'username' => 'pwa-user',
@@ -35,7 +35,7 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $response->assertRedirect(route('dashboard'));
-        $response->assertCookie(Auth::guard()->getRecallerName());
+        $response->assertCookieMissing(Auth::guard()->getRecallerName());
         $this->assertAuthenticatedAs($user);
     }
 
@@ -119,7 +119,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertLessThan(5000, $opaquePixels);
     }
 
-    public function test_password_login_can_opt_out_of_remembering_the_device(): void
+    public function test_password_login_can_opt_in_to_remembering_the_device(): void
     {
         User::factory()->create([
             'username' => 'shared-device',
@@ -132,11 +132,11 @@ class PwaRememberedLoginTest extends TestCase
         $response = $this->post(route('login'), [
             'username' => 'shared-device',
             'password' => 'password',
-            'remember' => '0',
+            'remember' => '1',
         ]);
 
         $response->assertRedirect(route('dashboard'));
-        $response->assertCookieMissing(Auth::guard()->getRecallerName());
+        $response->assertCookie(Auth::guard()->getRecallerName());
     }
 
     public function test_required_email_verification_blocks_login_without_auto_verifying(): void
@@ -165,7 +165,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_password_login_reports_unregistered_accounts_and_password_mismatches(): void
+    public function test_password_login_uses_one_generic_error_for_unknown_accounts_and_password_mismatches(): void
     {
         User::factory()->create([
             'username' => 'known-user',
@@ -179,26 +179,26 @@ class PwaRememberedLoginTest extends TestCase
             'username' => 'missing-user',
             'password' => 'correct-password',
         ])->assertSessionHasErrors([
-            'username' => 'This account is not registered. Please register first.',
+            'username' => 'The provided credentials do not match our records.',
         ]);
 
         $this->post(route('login'), [
             'username' => 'known-user',
             'password' => 'wrong-password',
         ])->assertSessionHasErrors([
-            'password' => 'The password do not match our records.',
+            'username' => 'The provided credentials do not match our records.',
         ]);
 
         $this->post(route('login'), [
             'username' => 'missing-user',
             'password' => 'not-a-known-password',
         ])->assertSessionHasErrors([
-            'username' => 'This account is not registered. Please register first.',
+            'username' => 'The provided credentials do not match our records.',
         ]);
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('This account is not registered. Please register first.')
+            ->assertSee('The provided credentials do not match our records.')
             ->assertSee('id="fLogin"', false);
 
         $this->assertGuest();

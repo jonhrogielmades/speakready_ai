@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Throwable;
 
@@ -32,7 +31,8 @@ final class AccountDeletionService
     ];
 
     public function __construct(
-        private readonly ProfilePhotoStorage $profilePhotoStorage
+        private readonly ProfilePhotoStorage $profilePhotoStorage,
+        private readonly VoiceRecordingCleanupService $recordingCleanup
     ) {
     }
 
@@ -83,7 +83,7 @@ final class AccountDeletionService
             ]);
         }
 
-        $this->deleteStoredRecordings($storedRecordings, $userId);
+        $this->recordingCleanup->delete($storedRecordings, 'account_deletion');
     }
 
     private function deleteUserOwnedRecords(string $table, int $userId): void
@@ -186,21 +186,4 @@ final class AccountDeletionService
             && Schema::hasColumn($table, 'voice_recording_path');
     }
 
-    /**
-     * @param array<int, array{disk: string, path: string}> $recordings
-     */
-    private function deleteStoredRecordings(array $recordings, int $userId): void
-    {
-        foreach ($recordings as $recording) {
-            try {
-                Storage::disk($recording['disk'])->delete($recording['path']);
-            } catch (Throwable $error) {
-                Log::warning('A voice recording could not be removed after account deletion.', [
-                    'user_id' => $userId,
-                    'disk' => $recording['disk'],
-                    'exception_type' => $error::class,
-                ]);
-            }
-        }
-    }
 }

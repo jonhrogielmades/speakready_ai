@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\UserOnboardingProgress;
+use App\Notifications\RecoveryEmailChangeAlert;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -136,6 +137,104 @@ class RecoveryEmailVerificationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_recovery_email_change_stays_pending_and_alerts_the_verified_old_address(): void
+    {
+        config(['services.brevo.api_key' => null]);
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+            'email' => 'verified-old@example.com',
+            'email_verified_at' => now(),
+            'password' => Hash::make('current-password'),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.account.profile'), [
+                'name' => $user->name,
+                'email' => 'pending-new@example.com',
+                'target_position' => $user->target_position,
+                'current_password' => 'current-password',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success', 'Profile updated. Verify your new recovery email before using email password recovery.');
+
+        $updated = $user->fresh();
+        $this->assertSame('verified-old@example.com', $updated->email);
+        $this->assertNotNull($updated->email_verified_at);
+        $this->assertSame('pending-new@example.com', $updated->pending_recovery_email);
+        $this->assertNotNull($updated->pending_recovery_email_requested_at);
+
+        Notification::assertSentTo(
+            $user,
+            VerifyEmail::class,
+            fn ($notification, array $channels, User $notifiable): bool => $notifiable->email === 'pending-new@example.com'
+        );
+        Notification::assertSentOnDemand(
+            RecoveryEmailChangeAlert::class,
+            fn (RecoveryEmailChangeAlert $notification, array $channels, $notifiable): bool =>
+                $notification->stage === 'requested'
+                && $notifiable->routeNotificationFor('mail') === 'verified-old@example.com'
+        );
+    }
+
+    public function test_verifying_pending_recovery_email_atomically_promotes_it_and_alerts_old_address(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+            'email' => 'verified-old@example.com',
+            'email_verified_at' => now(),
+            'pending_recovery_email' => 'verified-new@example.com',
+            'pending_recovery_email_requested_at' => now(),
+        ]);
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'id' => $user->getKey(),
+                'hash' => sha1('verified-new@example.com'),
+            ]
+        );
+
+        $this->actingAs($user)->get($verificationUrl)->assertRedirect();
+
+        $updated = $user->fresh();
+        $this->assertSame('verified-new@example.com', $updated->email);
+        $this->assertNotNull($updated->email_verified_at);
+        $this->assertNull($updated->pending_recovery_email);
+        $this->assertNull($updated->pending_recovery_email_requested_at);
+
+        Notification::assertSentOnDemand(
+            RecoveryEmailChangeAlert::class,
+            fn (RecoveryEmailChangeAlert $notification, array $channels, $notifiable): bool =>
+                $notification->stage === 'completed'
+                && $notifiable->routeNotificationFor('mail') === 'verified-old@example.com'
+        );
+    }
+
+    public function test_current_verified_address_remains_the_only_reset_address_while_change_is_pending(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+            'email' => 'still-active@example.com',
+            'email_verified_at' => now(),
+            'pending_recovery_email' => 'not-active-yet@example.com',
+            'pending_recovery_email_requested_at' => now(),
+        ]);
+
+        $this->post(route('password.email'), ['email' => 'still-active@example.com'])
+            ->assertSessionHas('status');
+        $this->post(route('password.email'), ['email' => 'not-active-yet@example.com'])
+            ->assertSessionHas('status');
+
+        Notification::assertSentToTimes($user, ResetPassword::class, 1);
+    }
+
     public function test_user_can_resend_recovery_email_verification(): void
     {
         config(['services.brevo.api_key' => null]);
@@ -199,9 +298,12 @@ class RecoveryEmailVerificationTest extends TestCase
         $this->post(route('password.recovery.send'), [
             'username' => $user->username,
             'email' => $user->email,
-        ])->assertSessionHasErrors([
-            'email' => 'Verify this recovery email from your account before requesting an emailed recovery code.',
-        ]);
+        ])->assertSessionHasNoErrors()
+            ->assertSessionHas(
+                'status',
+                'If the username and verified recovery email match a local account, a recovery code will be sent shortly.'
+            )
+            ->assertSessionHas('recovery_code_sent', true);
 
         Mail::assertNothingSent();
     }

@@ -13,7 +13,6 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\RecoveryEmailVerificationController;
 use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\UserMasteryController;
 use App\Http\Controllers\UserMissionController;
 use App\Models\Category;
 use App\Services\LandingStatsService;
@@ -65,7 +64,7 @@ Route::post('/forgot-password/send-code', [AuthController::class, 'sendRecoveryC
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware(['guest', 'throttle:auth'])->name('password.email');
 Route::post('/forgot-password/reset', [AuthController::class, 'resetWithRecoveryCode'])->middleware(['guest', 'throttle:auth'])->name('password.recovery.reset');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->middleware('guest')->name('password.reset');
-Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('guest')->name('password.update');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware(['guest', 'throttle:auth'])->name('password.update');
 
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/login', [AuthController::class, 'redirectToGoogle'])->name('auth.google.login');
@@ -87,6 +86,9 @@ Route::post('/contact/send', [ContactController::class, 'send'])->middleware('th
 Route::post('/newsletter/subscribe', [ContactController::class, 'subscribe'])
     ->middleware('throttle:6,1')
     ->name('newsletter.subscribe');
+Route::get('/newsletter/confirm/{token}', [ContactController::class, 'confirmNewsletter'])
+    ->middleware('throttle:6,1')
+    ->name('newsletter.confirm');
 
 // Public Legal Routes
 Route::get('/privacy-policy', [LegalPageController::class, 'privacy'])->name('legal.privacy');
@@ -95,7 +97,7 @@ Route::get('/security', [LegalPageController::class, 'security'])->name('legal.s
 Route::get('/cookie-preferences', [LegalPageController::class, 'cookies'])->name('legal.cookies');
 
 // User Routes
-Route::middleware(['auth', 'user'])->group(function () {
+Route::middleware(['auth', 'user', 'auth.session'])->group(function () {
     Route::get('/terms-and-conditions', [TermsAcceptanceController::class, 'show'])->name('terms.acceptance.show');
     Route::post('/terms-and-conditions', [TermsAcceptanceController::class, 'store'])->name('terms.acceptance.store');
 
@@ -192,13 +194,13 @@ Route::middleware(['auth', 'user'])->group(function () {
     // User Side Features
     Route::get('/account', [UserController::class, 'account'])->name('user.account');
     Route::post('/language', [UserController::class, 'updateLanguage'])->name('user.language.update');
-    Route::post('/language/translate', [UserController::class, 'translateLanguage'])->name('user.language.translate');
+    Route::post('/language/translate', [UserController::class, 'translateLanguage'])->middleware('throttle:ai-translation')->name('user.language.translate');
     Route::post('/onboarding/progress', [UserController::class, 'updateOnboardingProgress'])->name('user.onboarding.progress');
     Route::post('/onboarding/personalization', [UserController::class, 'updateOnboardingPersonalization'])->name('user.onboarding.personalization');
     Route::post('/onboarding/speech', [UserController::class, 'onboardingSpeech'])->middleware('throttle:ai-voice')->name('user.onboarding.speech');
-    Route::post('/account/profile', [UserController::class, 'updateProfile'])->name('user.account.profile');
-    Route::post('/account/password', [UserController::class, 'updatePassword'])->name('user.account.password');
-    Route::post('/account/recovery-code', [UserController::class, 'rotateRecoveryCode'])->name('user.account.recovery-code');
+    Route::post('/account/profile', [UserController::class, 'updateProfile'])->middleware('throttle:30,1')->name('user.account.profile');
+    Route::post('/account/password', [UserController::class, 'updatePassword'])->middleware('throttle:auth')->name('user.account.password');
+    Route::post('/account/recovery-code', [UserController::class, 'rotateRecoveryCode'])->middleware('throttle:auth')->name('user.account.recovery-code');
     Route::post('/account/recovery-code/acknowledge', [UserController::class, 'acknowledgeRecoveryCode'])->name('user.account.recovery-code.acknowledge');
     Route::post('/account/delete', [UserController::class, 'deleteAccount'])->middleware('throttle:auth')->name('user.account.delete');
     Route::post('/account/delete/google', [AuthController::class, 'redirectToGoogleAccountDeletion'])->middleware('throttle:auth')->name('user.account.delete.google');
@@ -208,7 +210,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/notifications/push/key', [PushSubscriptionController::class, 'publicKey'])->name('user.notifications.push.key');
     Route::post('/notifications/push/subscribe', [PushSubscriptionController::class, 'store'])->middleware('throttle:push')->name('user.notifications.push.subscribe');
     Route::post('/notifications/push/test', [PushSubscriptionController::class, 'test'])->middleware('throttle:push')->name('user.notifications.push.test');
-    Route::delete('/notifications/push/unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('user.notifications.push.unsubscribe');
+    Route::delete('/notifications/push/unsubscribe', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:push')->name('user.notifications.push.unsubscribe');
     Route::post('/notifications/read-all', [UserController::class, 'markAllNotificationsAsRead'])->name('user.notifications.readAll');
     Route::delete('/notifications/clear-all', [UserController::class, 'clearAllNotifications'])->name('user.notifications.clearAll');
     Route::post('/notifications/{id}/read', [UserController::class, 'markNotificationAsRead'])->name('user.notifications.read');
@@ -230,17 +232,6 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/missions', [UserMissionController::class, 'index'])->name('user.missions');
     Route::post('/missions/generate', [UserMissionController::class, 'generate'])->middleware('throttle:ai-expensive')->name('user.missions.generate');
     Route::post('/missions/submit', [UserMissionController::class, 'submit'])->middleware('throttle:ai')->name('user.missions.submit');
-
-    Route::get('/personal-mastery', [UserMasteryController::class, 'index'])->name('user.mastery');
-    Route::post('/personal-mastery/stories', [UserMasteryController::class, 'storeStory'])->name('user.mastery.stories.store');
-    Route::delete('/personal-mastery/stories/{story}', [UserMasteryController::class, 'destroyStory'])->name('user.mastery.stories.destroy');
-    Route::post('/personal-mastery/checklist/{item}/toggle', [UserMasteryController::class, 'toggleChecklist'])->name('user.mastery.checklist.toggle');
-
-    Route::post('/offline-applications', fn () => abort(404))->name('user.applications.store');
-    Route::put('/offline-applications/{application}', fn () => abort(404))->name('user.applications.update');
-    Route::delete('/offline-applications/{application}', fn () => abort(404))->name('user.applications.destroy');
-    Route::get('/offline-applications/{application}/practice', fn () => abort(404))->name('user.applications.practice');
-    Route::get('/offline-packs/{pack}/practice', fn () => abort(404))->name('user.packs.practice');
 
     // User Learning Modules
     Route::get('/modules', [UserController::class, 'modules'])->name('user.modules.index');
@@ -271,8 +262,8 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/practice-activity-calendar', [UserController::class, 'practiceActivityCalendar'])->name('user.practice.calendar');
     Route::get('/session/{id}/review', [UserController::class, 'review'])->name('user.review');
     Route::get('/session/{session}/export', [UserController::class, 'exportSession'])->name('user.sessions.export');
-    Route::delete('/session/{id}', [UserController::class, 'destroySession'])->name('user.sessions.destroy');
-    Route::delete('/sessions/clear', [UserController::class, 'clearSessions'])->name('user.sessions.clear');
+    Route::delete('/session/{id}', [UserController::class, 'destroySession'])->middleware('throttle:10,1')->name('user.sessions.destroy');
+    Route::delete('/sessions/clear', [UserController::class, 'clearSessions'])->middleware('throttle:5,1')->name('user.sessions.clear');
     Route::get('/reports', [UserController::class, 'reports'])->name('user.reports');
 });
 

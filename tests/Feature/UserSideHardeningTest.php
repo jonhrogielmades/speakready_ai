@@ -547,6 +547,27 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('Job Interview', $session->interview_focus);
  }
 
+ public function test_repeated_identical_interview_start_is_idempotent(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category(['title' => 'Job Interview']);
+ $payload = array_merge($this->interviewPayload($category), [
+ 'target_position' => 'IT Specialist',
+ ]);
+
+ $this->actingAs($user)
+ ->post(route('interview.start'), $payload)
+ ->assertRedirect(route('interview.session'));
+
+ $sessionId = (int) InterviewSession::where('user_id', $user->id)->sole()->id;
+
+ $this->post(route('interview.start'), $payload)
+ ->assertRedirect(route('interview.session'));
+
+ $this->assertDatabaseCount('interview_sessions', 1);
+ $this->assertSame($sessionId, (int) session('active_interview_id'));
+ }
+
  public function test_interview_start_accepts_network_administrator_for_job_interview_scenario(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -1552,7 +1573,7 @@ class UserSideHardeningTest extends TestCase
  $desktopResponse->assertSee($markup, false);
  }
  $desktopResponse->assertSee('class="db-nl db-nav-purple active" title="Interview Practice"', false);
- $desktopResponse->assertSee('js/user-ui.js?v=26', false);
+ $desktopResponse->assertSee('js/user-ui.js?v=27', false);
  foreach ($removedAssistanceMarkup as $markup) {
  $desktopResponse->assertDontSee($markup, false);
  }
@@ -1575,7 +1596,7 @@ class UserSideHardeningTest extends TestCase
  $mobileResponse->assertSee($markup, false);
  }
  $mobileResponse->assertSee('class="mob-nav-item mob-nav-primary active"', false);
- $mobileResponse->assertSee('js/user-ui.js?v=26', false);
+ $mobileResponse->assertSee('js/user-ui.js?v=27', false);
  foreach ($removedAssistanceMarkup as $markup) {
  $mobileResponse->assertDontSee($markup, false);
  }

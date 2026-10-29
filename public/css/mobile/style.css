@@ -7904,7 +7904,6 @@ body :is(.stitle, .landing-section-heading h1, .landing-section-heading h2, .her
   .feedback-title,
   .session-page-title,
   .archive-page-title,
-  .mastery-title,
   .notif-hero-title,
   .sr-title,
   .sr-title-name
@@ -7934,7 +7933,6 @@ body :is(.stitle, .landing-section-heading h1, .landing-section-heading h2, .her
   .feedback-title,
   .session-page-title,
   .archive-page-title,
-  .mastery-title,
   .notif-hero-title,
   .sr-title,
   .sr-title-name
@@ -8220,7 +8218,6 @@ body .modal-title {
     .progress-desktop-grid,
     .learning-desktop-grid,
     .mission-desktop-grid,
-    .mastery-desktop-grid,
     .skills-desktop-grid
   ) {
     grid-template-columns: minmax(0, 1fr) !important;

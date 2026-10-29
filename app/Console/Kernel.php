@@ -17,6 +17,11 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(120)
             ->onOneServer();
 
+        $schedule->command('privacy:retry-recording-cleanup')
+            ->everyTenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer();
+
         if (filter_var(config('services.local_feedback_model.auto_train_enabled', false), FILTER_VALIDATE_BOOLEAN)) {
             $schedule->command('ai:auto-train-feedback-model')
                 ->dailyAt((string) config('services.local_feedback_model.auto_train_time', '02:30'))

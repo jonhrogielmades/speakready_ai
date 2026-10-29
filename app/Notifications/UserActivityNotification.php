@@ -6,10 +6,11 @@ use App\Notifications\Channels\WebPushChannel;
 use App\Services\WebPushNotificationService;
 use App\Support\SystemSettings;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class UserActivityNotification extends Notification
+class UserActivityNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -28,6 +29,7 @@ class UserActivityNotification extends Notification
      */
     public function __construct($title, $message, $icon = 'fa-bell', $type = 'info', $sendPush = false, $url = null, $tag = null, $requireInteraction = false, $sendEmail = true)
     {
+        $this->afterCommit();
         $this->title = $title;
         $this->message = $message;
         $this->icon = $icon;

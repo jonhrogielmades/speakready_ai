@@ -11,6 +11,7 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class UserSessionManagementTest extends TestCase
@@ -19,6 +20,8 @@ class UserSessionManagementTest extends TestCase
 
     public function test_user_can_delete_one_of_their_completed_sessions(): void
     {
+        Storage::fake('local');
+
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
@@ -35,10 +38,15 @@ class UserSessionManagementTest extends TestCase
             'status' => 'active',
         ]);
 
+        $recordingPath = 'interview_voice_answers/test/session.webm';
+        Storage::disk('local')->put($recordingPath, 'voice-data');
+
         InterviewAnswer::create([
             'interview_session_id' => $sessionToDelete->id,
             'question_id' => $question->id,
             'answer_text' => 'A completed answer.',
+            'voice_recording_disk' => 'local',
+            'voice_recording_path' => $recordingPath,
         ]);
 
         Feedback::create([
@@ -63,6 +71,7 @@ class UserSessionManagementTest extends TestCase
         $this->assertDatabaseMissing('feedback', ['interview_session_id' => $sessionToDelete->id]);
         $this->assertDatabaseMissing('interview_answers', ['interview_session_id' => $sessionToDelete->id]);
         $this->assertDatabaseMissing('questions', ['id' => $question->id]);
+        Storage::disk('local')->assertMissing($recordingPath);
 
         $this->assertDatabaseHas('interview_sessions', ['id' => $remainingSession->id]);
         $this->assertDatabaseHas('interview_sessions', ['id' => $otherSession->id]);

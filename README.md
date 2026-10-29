@@ -708,9 +708,9 @@ Recommended container settings:
 - `APP_ENV=production`
 - `APP_DEBUG=false`
 - `SESSION_SECURE_COOKIE=true`
-- `CACHE_DRIVER=file`
-- `QUEUE_CONNECTION=sync`
-- `SESSION_DRIVER=file`
+- `CACHE_DRIVER=database`
+- `QUEUE_CONNECTION=database`
+- `SESSION_DRIVER=database`
 
 On startup, `docker-start.sh`:
 
@@ -721,8 +721,36 @@ On startup, `docker-start.sh`:
 - Removes the maintenance gate only after all required startup work succeeds. `STARTUP_MAINTENANCE_FAIL_OPEN` defaults to `false`; set it to `true` only as an emergency override.
 - Runs the idempotent admin account seeder when `RUN_DATABASE_SEEDERS=true` (the container default). A fresh production database requires `ADMIN_PASSWORD`; set `RUN_DATABASE_SEEDERS=false` only when the administrator is provisioned separately.
 - Links storage and rebuilds optimized caches.
+- Runs the queue worker and scheduler in restart loops and writes heartbeat files for operational health checks.
 
-The container health check calls Laravel's `GET /up` readiness endpoint. It returns `200` only when the supported PHP runtime, Laravel boot, startup-maintenance state, and a live database query are all healthy; otherwise it returns `503`.
+The container health check calls Laravel's `GET /up` readiness endpoint. It returns `200` only when the supported PHP runtime, Laravel boot, startup-maintenance state, writable storage, configured queue/scheduler heartbeats, and a live database query are healthy; otherwise it returns `503`. External AI, mail, and push providers do not block readiness.
+
+Queue and scheduler monitoring defaults are:
+
+```env
+QUEUE_HEALTHCHECK_ENABLED=true
+QUEUE_HEARTBEAT_MAX_AGE_SECONDS=420
+QUEUE_WORKER_MAX_TIME=240
+SCHEDULER_HEALTHCHECK_ENABLED=true
+SCHEDULER_HEARTBEAT_MAX_AGE_SECONDS=180
+```
+
+Set `QUEUE_HEALTHCHECK_ENABLED=false` when `QUEUE_CONNECTION=sync` or `null`. The readiness controller also automatically ignores the queue heartbeat for those two drivers.
+
+### Backups and restores
+
+The Compose `backup` service creates a transactionally consistent MariaDB dump plus a storage archive every 24 hours. Each timestamped backup includes SHA-256 checksums and a manifest in the `speakready_backups` volume. `BACKUP_INTERVAL_SECONDS` and `BACKUP_RETENTION_DAYS` control the schedule and local retention.
+
+A Docker volume is not an off-host backup. Replicate `speakready_backups` to encrypted object storage or another host, monitor the backup container logs, and perform a restore drill after deployment changes. To restore, stop application traffic, mount the selected backup and target storage into a MariaDB client container, then run:
+
+```bash
+RESTORE_CONFIRM=restore-speakready \
+RESTORE_STORAGE_PATH=/restore/storage \
+DB_HOST=db DB_DATABASE=speakready_ai DB_USERNAME=speakready DB_PASSWORD='...' \
+sh ./scripts/restore-backup.sh /backups/20261029T120000Z
+```
+
+The restore script verifies checksums and refuses to run without the explicit confirmation value or a fresh, empty staging storage directory. Swap the restored storage volume into place only after validation; do not overlay a live volume. Re-run migrations and `/up` checks before reopening traffic. Define recovery objectives for the deployment; with the defaults, the maximum planned data-loss window is 24 hours.
 
 Optional production maintenance:
 
@@ -754,7 +782,9 @@ The `app` service sets `pull_policy: build`, so each Dokploy deploy rebuilds the
 compose -p speakready-ai -f docker-compose.yml up -d --build --remove-orphans
 ```
 
-For gated releases, disable Dokploy's direct auto deploy and use the included `.github/workflows/dokploy-deploy.yml`. It validates Composer metadata, PHP syntax, PHP and frontend dependency audits, every unit and feature test in isolated processes, and the production frontend build on pull requests and before it triggers Dokploy on pushes to `main`. Protect `main` with the workflow's `quality` job as a required check. Configure either `DOKPLOY_WEBHOOK_URL`, or all three API secrets: `DOKPLOY_URL`, `DOKPLOY_API_KEY`, and `DOKPLOY_COMPOSE_ID`. If direct Dokploy auto deploy remains enabled, GitHub Actions cannot prevent a broken commit from deploying.
+For gated releases, disable Dokploy's direct auto deploy and use the included `.github/workflows/dokploy-deploy.yml`. It validates Composer metadata and PHP syntax, PHP and frontend dependency audits, frontend contract checks, every unit and feature test in isolated processes, a fresh MariaDB migration, and the production frontend build. Protect `main` with both `quality` and `schema-mariadb` as required checks. Configure either `DOKPLOY_WEBHOOK_URL`, or all three API secrets: `DOKPLOY_URL`, `DOKPLOY_API_KEY`, and `DOKPLOY_COMPOSE_ID`. Set `DEPLOY_HEALTHCHECK_URL` when the public readiness URL is not `https://speakreadyai.online/up`. The workflow waits for three consecutive healthy responses after triggering deployment. If direct Dokploy auto deploy remains enabled, GitHub Actions cannot prevent a broken commit from deploying.
+
+If post-deploy verification fails, keep traffic on the last healthy container when the platform supports rolling updates. Otherwise, redeploy the previous known-good commit from Dokploy without selecting fresh volumes. Never use a volume reset as an application rollback. Verify `/up`, login, and one non-destructive interview page before considering recovery complete.
 
 ## Useful Artisan Commands
 
@@ -787,6 +817,14 @@ Run a focused test file:
 ```bash
 php artisan test tests/Feature/RouteIntegrityTest.php
 ```
+
+Run Laravel-aware static analysis:
+
+```bash
+composer analyse
+```
+
+PHPStan runs at level 5 across the application, configuration, factories, seeders, and routes. Existing legacy findings are recorded in `phpstan-baseline.neon`; do not add new findings to the baseline when changing code. CI fails on any new unbaselined issue.
 
 The current feature tests cover authentication, password reset, route integrity, page smoke checks, mobile layout behavior, landing stats, admin flows, AI provider schema repair, question/voice schema repair, interview security, learning game guidance, progress/report accuracy, user utilities, and hardening paths.
 

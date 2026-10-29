@@ -14,33 +14,54 @@ class RecoveryEmailVerification
 
     public function send(User $user): bool
     {
-        if (! $user->isLocalAccount() || blank($user->email) || $user->hasVerifiedEmail()) {
+        $targetEmail = $this->targetEmail($user);
+        $hasPendingChange = filled($user->pending_recovery_email);
+
+        if (! $user->isLocalAccount()
+            || blank($targetEmail)
+            || (! $hasPendingChange && $user->hasVerifiedEmail())) {
             return false;
         }
 
         $expiresInMinutes = max(5, (int) config('auth.verification.expire', 60));
+        $recipient = clone $user;
+        $recipient->forceFill([
+            'email' => $targetEmail,
+            'email_verified_at' => null,
+        ]);
 
         if ($this->brevoMailer->isConfigured()) {
             $this->brevoMailer->sendRecoveryEmailVerification(
-                $user,
-                $this->verificationUrl($user, $expiresInMinutes),
+                $recipient,
+                $this->verificationUrl($user, $targetEmail, $expiresInMinutes),
                 $expiresInMinutes
             );
         } else {
-            $user->sendEmailVerificationNotification();
+            $recipient->sendEmailVerificationNotification();
         }
 
         return true;
     }
 
-    private function verificationUrl(User $user, int $expiresInMinutes): string
+    public function targetEmail(User $user): ?string
+    {
+        $email = filled($user->pending_recovery_email)
+            ? $user->pending_recovery_email
+            : $user->email;
+
+        $email = strtolower(trim((string) $email));
+
+        return $email !== '' ? $email : null;
+    }
+
+    private function verificationUrl(User $user, string $targetEmail, int $expiresInMinutes): string
     {
         return URL::temporarySignedRoute(
             'verification.verify',
             Carbon::now()->addMinutes($expiresInMinutes),
             [
                 'id' => $user->getKey(),
-                'hash' => sha1($user->getEmailForVerification()),
+                'hash' => sha1($targetEmail),
             ]
         );
     }

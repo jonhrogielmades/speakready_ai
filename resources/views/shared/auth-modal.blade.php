@@ -85,7 +85,7 @@
                         <div class="auth-options-row">
                            <div class="form-check auth-check">
                               <input type="hidden" name="remember" value="0">
-                              <input class="form-check-input" type="checkbox" name="remember" value="1" id="loginRemember" checked>
+                              <input class="form-check-input" type="checkbox" name="remember" value="1" id="loginRemember">
                               <label class="form-check-label" for="loginRemember">Keep me signed in on this device</label>
                            </div>
                            <a href="{{ route('password.request') }}" class="auth-inline-link">Forgot password?</a>

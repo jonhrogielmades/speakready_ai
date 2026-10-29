@@ -19,7 +19,7 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       APP_ENV: testing
       APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
@@ -60,6 +60,9 @@ jobs:
             php -l "${file}" >/dev/null
           done < "${php_file_list}"
 
+      - name: Run Laravel static analysis
+        run: composer analyse
+
       - name: Run unit tests
         run: php artisan test tests/Unit
 
@@ -92,19 +95,73 @@ jobs:
       - name: Audit frontend dependencies
         run: npm audit --audit-level=high
 
+      - name: Run frontend contract tests
+        run: |
+          npm run check:frontend
+          npm run test:onboarding-voiceover
+          npm run test:media-permissions
+
       - name: Build production assets
         run: npm run build
 
+  schema-mariadb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: speakready_ci
+          MARIADB_USER: speakready
+          MARIADB_PASSWORD: speakready-ci-password
+          MARIADB_ROOT_PASSWORD: speakready-root-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -u root -pspeakready-root-password --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: speakready_ci
+      DB_USERNAME: speakready
+      DB_PASSWORD: speakready-ci-password
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up PHP with MariaDB support
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_mysql
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Verify a fresh production database migration
+        run: |
+          php artisan config:clear
+          php artisan migrate:fresh --force --no-interaction
+          php artisan migrate:status --no-interaction
+
   deploy:
-    needs: quality
+    needs: [quality, schema-mariadb]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     env:
       DOKPLOY_WEBHOOK_URL: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
       DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
       DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
       DOKPLOY_COMPOSE_ID: ${{ secrets.DOKPLOY_COMPOSE_ID }}
+      DEPLOY_HEALTHCHECK_URL: ${{ secrets.DEPLOY_HEALTHCHECK_URL }}
     steps:
       - name: Validate Dokploy trigger
         shell: bash
@@ -191,4 +248,45 @@ jobs:
           fi
 
           echo "::error title=Unknown Dokploy trigger mode::DOKPLOY_TRIGGER_MODE was not set by validation."
+          exit 1
+
+      - name: Verify deployed application health
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          health_url="${DEPLOY_HEALTHCHECK_URL:-https://speakreadyai.online/up}"
+          echo "Waiting for the deployment to cycle before checking ${health_url}."
+          sleep 45
+
+          consecutive_successes=0
+          for attempt in $(seq 1 40); do
+            response="$(curl --silent --show-error --fail --connect-timeout 5 --max-time 10 "${health_url}" 2>/dev/null || true)"
+
+            if HEALTH_RESPONSE="${response}" python3 - <<'PY'
+          import json
+          import os
+
+          try:
+              payload = json.loads(os.environ.get("HEALTH_RESPONSE", ""))
+          except json.JSONDecodeError:
+              raise SystemExit(1)
+
+          raise SystemExit(0 if payload.get("status") == "ok" else 1)
+          PY
+            then
+              consecutive_successes=$((consecutive_successes + 1))
+              echo "Health check ${attempt}: healthy (${consecutive_successes}/3 consecutive)."
+              if [ "${consecutive_successes}" -ge 3 ]; then
+                exit 0
+              fi
+            else
+              consecutive_successes=0
+              echo "Health check ${attempt}: not ready yet."
+            fi
+
+            sleep 15
+          done
+
+          echo "::error title=Deployment health verification failed::${health_url} did not report three consecutive healthy responses."
           exit 1

@@ -15,6 +15,7 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
@@ -1114,6 +1115,38 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  preg_match_all('/<div class="sr-session-card-polished" data-recent-session-entry="mobile"[^>]*\shidden\b/', $mobileContent, $mobileHiddenCards);
  $this->assertSame(5, count($mobileHiddenRows[0]));
  $this->assertSame(5, count($mobileHiddenCards[0]));
+ }
+
+ public function test_feedback_reuses_one_history_read_for_the_full_list_and_server_paginator(): void
+ {
+  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+  $category = $this->category('Job Interview');
+
+  foreach (range(1, 8) as $index) {
+   $this->completedSessionFor($user, $category, 50 + $index, now()->subDays($index));
+  }
+
+  DB::flushQueryLog();
+  DB::enableQueryLog();
+  $response = $this->actingAs($user)->get(route('user.feedback'));
+  $queries = collect(DB::getQueryLog())->pluck('query');
+  DB::disableQueryLog();
+
+  $sessionReads = $queries
+   ->filter(fn (string $sql): bool => preg_match('/^\s*select\b/i', $sql) === 1
+    && preg_match('/\bfrom\s+[`"]?interview_sessions[`"]?\b/i', $sql) === 1)
+   ->reject(fn (string $sql): bool => str_contains(strtolower($sql), 'exists')
+    && str_contains(strtolower($sql), 'scores'))
+   ->values();
+
+  $response->assertOk()
+   ->assertViewHas('sessions', fn ($sessions) => $sessions->total() === 8 && $sessions->count() === 6)
+   ->assertViewHas('practiceHistorySessions', fn ($sessions) => $sessions->count() === 8);
+
+  // One read builds both history representations; the second fetches the
+  // separate latest-session detail panel. The shared shell's latest-score
+  // lookup is excluded above because it is independent of feedback history.
+  $this->assertCount(2, $sessionReads, $sessionReads->implode("\n"));
  }
 
  public function test_reports_do_not_render_placeholder_scores_for_unscored_sessions(): void

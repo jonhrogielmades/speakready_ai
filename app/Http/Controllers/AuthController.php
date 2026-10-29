@@ -10,6 +10,7 @@ use App\Models\UserOnboardingProgress;
 use App\Services\AccountDeletionService;
 use App\Services\BrevoTransactionalMail;
 use App\Services\RecoveryEmailVerification;
+use App\Services\UserSessionRevoker;
 use App\Models\User;
 use App\Support\AccountNotificationSchema;
 use App\Support\PasswordRecovery;
@@ -35,9 +36,12 @@ use Throwable;
 
 class AuthController extends Controller
 {
+    private static ?string $dummyLoginPasswordHash = null;
+
     private const LOGIN_PASSWORD_MISMATCH_MESSAGE = 'The password do not match our records.';
 
     private const LOGIN_CREDENTIALS_MISMATCH_MESSAGE = 'The provided credentials do not match our records.';
+    private const PASSWORD_RECOVERY_REQUEST_MESSAGE = 'If the username and verified recovery email match a local account, a recovery code will be sent shortly.';
 
     private const LOGIN_UNREGISTERED_ACCOUNT_MESSAGE = 'This account is not registered. Please register first.';
 
@@ -161,7 +165,7 @@ class AuthController extends Controller
             'remember' => 'sometimes|boolean',
         ]);
 
-        $rememberDevice = $request->boolean('remember', true);
+        $rememberDevice = $request->boolean('remember', false);
         $identifier = $validated['username'];
 
         if ($lockoutMessage = $this->loginLockoutMessage($request, $identifier)) {
@@ -171,6 +175,7 @@ class AuthController extends Controller
         $user = $this->findUserByLoginIdentifier($identifier);
 
         if (! $user) {
+            $this->consumePasswordVerificationTime($validated['password']);
             $this->recordFailedLoginAttempt($request, $identifier);
 
             return $this->failedLoginResponse('username', $this->loginFailureMessage(self::LOGIN_UNREGISTERED_ACCOUNT_MESSAGE));
@@ -305,13 +310,15 @@ class AuthController extends Controller
 
         if (! $user || blank($user->email)) {
             return redirect()->route('password.request')
-                ->withErrors(['email' => 'The username and recovery email do not match a local account.'])
+                ->with('status', self::PASSWORD_RECOVERY_REQUEST_MESSAGE)
+                ->with('recovery_code_sent', true)
                 ->withInput($request->only('username', 'email'));
         }
 
         if (! $user->hasVerifiedEmail()) {
             return redirect()->route('password.request')
-                ->withErrors(['email' => 'Verify this recovery email from your account before requesting an emailed recovery code.'])
+                ->with('status', self::PASSWORD_RECOVERY_REQUEST_MESSAGE)
+                ->with('recovery_code_sent', true)
                 ->withInput($request->only('username', 'email'));
         }
 
@@ -379,7 +386,7 @@ class AuthController extends Controller
         }
 
         return redirect()->route('password.request')
-            ->with('status', 'Recovery code sent to '.$this->maskRecoveryEmail($user->email).'. Check your inbox and spam folder.')
+            ->with('status', self::PASSWORD_RECOVERY_REQUEST_MESSAGE)
             ->with('recovery_code_sent', true)
             ->withInput($request->only('username', 'email'));
     }
@@ -432,7 +439,7 @@ class AuthController extends Controller
             ->onlyInput('email');
     }
 
-    public function resetWithRecoveryCode(Request $request)
+    public function resetWithRecoveryCode(Request $request, UserSessionRevoker $sessionRevoker)
     {
         $request->merge([
             'username' => $this->normalizeUsername($request->input('username')),
@@ -478,6 +485,8 @@ class AuthController extends Controller
                     'password_recovery_code_hash' => null,
                     'password_recovery_code_generated_at' => null,
                     'password_recovery_code_expires_at' => null,
+                    'pending_recovery_email' => null,
+                    'pending_recovery_email_requested_at' => null,
                 ])->save();
 
                 return $user;
@@ -502,6 +511,7 @@ class AuthController extends Controller
         }
 
         RateLimiter::clear($rateLimitKey);
+        $sessionRevoker->revoke($user);
         event(new PasswordReset($user));
 
         return redirect('/')->with('success', 'Your password has been reset. You can now sign in with your username.');
@@ -515,7 +525,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function resetPassword(Request $request)
+    public function resetPassword(Request $request, UserSessionRevoker $sessionRevoker)
     {
         $request->merge([
             'email' => $this->normalizeEmail($request->input('email')),
@@ -532,11 +542,18 @@ class AuthController extends Controller
                 $request->only('email', 'password', 'password_confirmation', 'token'),
                 ['auth_method' => User::AUTH_METHOD_LOCAL]
             ),
-            function (User $user, string $password) {
+            function (User $user, string $password) use ($sessionRevoker) {
                 $user->forceFill([
                     'password' => Hash::make($password),
                     'remember_token' => Str::random(60),
+                    'password_recovery_code_hash' => null,
+                    'password_recovery_code_generated_at' => null,
+                    'password_recovery_code_expires_at' => null,
+                    'pending_recovery_email' => null,
+                    'pending_recovery_email_requested_at' => null,
                 ])->save();
+
+                $sessionRevoker->revoke($user);
 
                 event(new PasswordReset($user));
             }
@@ -1314,22 +1331,6 @@ class AuthController extends Controller
         }
     }
 
-    private function maskRecoveryEmail(?string $email): string
-    {
-        $email = $this->normalizeEmail($email);
-        [$localPart, $domain] = array_pad(explode('@', $email, 2), 2, '');
-
-        if ($localPart === '' || $domain === '') {
-            return 'your recovery email';
-        }
-
-        $visibleLength = min(2, strlen($localPart));
-
-        return substr($localPart, 0, $visibleLength)
-            .str_repeat('*', max(3, strlen($localPart) - $visibleLength))
-            .'@'.$domain;
-    }
-
     private function normalizeUsername(mixed $username): string
     {
         return Str::lower(trim((string) $username));
@@ -1347,6 +1348,12 @@ class AuthController extends Controller
                 fn ($query) => $query->whereRaw('LOWER(email) = ?', [$identifier])
             )
             ->first();
+    }
+
+    private function consumePasswordVerificationTime(string $password): void
+    {
+        self::$dummyLoginPasswordHash ??= Hash::make(Str::random(40));
+        Hash::check($password, self::$dummyLoginPasswordHash);
     }
 
     private function findUserForReactivation(string $identifier): ?User
@@ -1416,7 +1423,7 @@ class AuthController extends Controller
 
     private function genericLoginErrorsEnabled(): bool
     {
-        return filter_var(env('AUTH_GENERIC_LOGIN_ERRORS', false), FILTER_VALIDATE_BOOLEAN);
+        return (bool) config('auth.generic_login_errors', true);
     }
 
     private function newPasswordRules(array $extra = []): array

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\PushSubscription as StoredPushSubscription;
 use App\Models\User;
+use App\Support\WebPushEndpoint;
 use Base64Url\Base64Url;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -126,6 +127,15 @@ class WebPushNotificationService
 
         foreach ($subscriptions as $subscription) {
             try {
+                if (! WebPushEndpoint::isAllowed((string) $subscription->endpoint)) {
+                    $this->markSubscriptionFailed(
+                        $subscription,
+                        new \RuntimeException('Stored push endpoint is no longer trusted.')
+                    );
+
+                    continue;
+                }
+
                 $webPush->queueNotification(
                     Subscription::create([
                         'endpoint' => $subscription->endpoint,

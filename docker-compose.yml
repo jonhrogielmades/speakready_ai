@@ -41,6 +41,19 @@ services:
       SANCTUM_STATEFUL_DOMAINS: "${SANCTUM_STATEFUL_DOMAINS:-speakreadyai.online}"
       QUEUE_CONNECTION: "${QUEUE_CONNECTION:-database}"
       QUEUE_AFTER_COMMIT: "${QUEUE_AFTER_COMMIT:-true}"
+      QUEUE_HEALTHCHECK_ENABLED: "${QUEUE_HEALTHCHECK_ENABLED:-true}"
+      QUEUE_HEARTBEAT_MAX_AGE_SECONDS: "${QUEUE_HEARTBEAT_MAX_AGE_SECONDS:-420}"
+      QUEUE_WORKER_MAX_TIME: "${QUEUE_WORKER_MAX_TIME:-240}"
+      QUEUE_WORKER_TIMEOUT: "${QUEUE_WORKER_TIMEOUT:-180}"
+      QUEUE_RETRY_AFTER: "${QUEUE_RETRY_AFTER:-240}"
+      QUEUE_DATABASE_HEALTHCHECK_ENABLED: "${QUEUE_DATABASE_HEALTHCHECK_ENABLED:-true}"
+      QUEUE_MAX_PENDING_JOBS: "${QUEUE_MAX_PENDING_JOBS:-1000}"
+      QUEUE_MAX_OLDEST_JOB_AGE_SECONDS: "${QUEUE_MAX_OLDEST_JOB_AGE_SECONDS:-900}"
+      QUEUE_MAX_RECENT_FAILED_JOBS: "${QUEUE_MAX_RECENT_FAILED_JOBS:-5}"
+      QUEUE_FAILED_JOB_WINDOW_MINUTES: "${QUEUE_FAILED_JOB_WINDOW_MINUTES:-60}"
+      SCHEDULER_HEALTHCHECK_ENABLED: "${SCHEDULER_HEALTHCHECK_ENABLED:-true}"
+      SCHEDULER_HEARTBEAT_MAX_AGE_SECONDS: "${SCHEDULER_HEARTBEAT_MAX_AGE_SECONDS:-180}"
+      PROCESS_RESTART_DELAY_SECONDS: "${PROCESS_RESTART_DELAY_SECONDS:-5}"
       FILESYSTEM_DISK: "${FILESYSTEM_DISK:-local}"
       RUN_MIGRATIONS_ON_START: "${RUN_MIGRATIONS_ON_START:-true}"
       RUN_SCHEMA_REPAIRS_ON_START: "${RUN_SCHEMA_REPAIRS_ON_START:-true}"
@@ -261,7 +274,7 @@ services:
     volumes:
       - speakready_storage:/var/www/storage
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent --show-error --max-time 4 http://127.0.0.1:80/up || exit 1"]
+      test: ["CMD-SHELL", "app_host=\"$${APP_URL#*://}\"; app_host=\"$${app_host%%/*}\"; curl --fail --silent --show-error --max-time 4 http://127.0.0.1:80/up --header \"Host: $${app_host}\" || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -314,9 +327,40 @@ services:
         aliases:
           - database
 
+  backup:
+    image: mariadb:11.4
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/opt/speakready/backup-loop.sh"]
+    environment:
+      DB_HOST: "${DB_HOST:-db}"
+      DB_PORT: "${DB_PORT:-3306}"
+      DB_DATABASE: "${DB_DATABASE:-speakready_ai}"
+      DB_USERNAME: "${DB_USERNAME:-speakready}"
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD}"
+      BACKUP_INTERVAL_SECONDS: "${BACKUP_INTERVAL_SECONDS:-86400}"
+      BACKUP_RETRY_SECONDS: "${BACKUP_RETRY_SECONDS:-300}"
+      BACKUP_RETENTION_DAYS: "${BACKUP_RETENTION_DAYS:-14}"
+      BACKUP_HEALTH_MAX_AGE_MINUTES: "${BACKUP_HEALTH_MAX_AGE_MINUTES:-1560}"
+    volumes:
+      - speakready_storage:/source/storage:ro
+      - speakready_backups:/backups
+      - ./scripts/backup-loop.sh:/opt/speakready/backup-loop.sh:ro
+    networks:
+      - speakready-internal
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /backups/.last-success && find /backups/.last-success -mmin -$${BACKUP_HEALTH_MAX_AGE_MINUTES} | grep -q ."]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 5m
+
 volumes:
   speakready_storage:
   speakready_database:
+  speakready_backups:
 
 networks:
   dokploy-network:

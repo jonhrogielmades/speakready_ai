@@ -26,6 +26,7 @@ class SystemNotification extends Notification implements ShouldQueue
      */
     public function __construct($title, $message, $type = 'info', $url = null, $tag = null, $requireInteraction = true)
     {
+        $this->afterCommit();
         $this->title = $title;
         $this->message = $message;
         $this->type = $type;

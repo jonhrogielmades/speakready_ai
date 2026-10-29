@@ -2,14 +2,13 @@
 
 namespace App\Console\Commands;
 
-use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
+use App\Models\GameSession;
+use App\Services\VoiceRecordingCleanupService;
 use App\Support\SystemSettings;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
-use Throwable;
 
 class PruneExpiredData extends Command
 {
@@ -34,11 +33,15 @@ class PruneExpiredData extends Command
         $chatDays = max(1, (int) SystemSettings::value('retention_feedback', 365));
 
         $deletedSessions = $this->pruneInterviewSessions($interviewDays, $archiveDays, $dryRun);
+        $deletedGameSessions = $this->pruneGameSessions($interviewDays, $dryRun);
         $deletedConversations = $this->pruneChatbotConversations($chatDays, $dryRun);
+        $deletedActivityLogs = $this->pruneActivityLogs($archiveDays, $dryRun);
         $deletedPushSubscriptions = $this->prunePushSubscriptions($dryRun);
+        $clearedPendingEmails = $this->prunePendingRecoveryEmails($dryRun);
+        $deletedPendingNewsletters = $this->prunePendingNewsletters($dryRun);
 
         $mode = $dryRun ? 'would remove' : 'removed';
-        $this->info("Privacy cleanup complete: {$mode} {$deletedSessions} interview sessions, {$deletedConversations} coaching conversations, and {$deletedPushSubscriptions} push subscriptions.");
+        $this->info("Privacy cleanup complete: {$mode} {$deletedSessions} interview sessions, {$deletedGameSessions} game sessions, {$deletedConversations} coaching conversations, {$deletedActivityLogs} activity logs, {$deletedPushSubscriptions} push subscriptions, {$clearedPendingEmails} stale recovery-email requests, and {$deletedPendingNewsletters} unconfirmed newsletter requests.");
 
         return self::SUCCESS;
     }
@@ -53,7 +56,6 @@ class PruneExpiredData extends Command
         $archiveCutoff = now()->subDays($archiveDays);
 
         $query = InterviewSession::query()
-            ->whereIn('status', ['completed', 'aborted', 'cancelled'])
             ->where(function ($builder) use ($interviewCutoff, $archiveCutoff): void {
                 if (InterviewSession::hasColumn('is_archived')) {
                     $builder
@@ -87,35 +89,44 @@ class PruneExpiredData extends Command
         return $count;
     }
 
+    private function pruneGameSessions(int $days, bool $dryRun): int
+    {
+        if (! Schema::hasTable('game_sessions')) {
+            return 0;
+        }
+
+        $query = GameSession::query()->where('updated_at', '<', now()->subDays($days));
+        $count = (int) $query->count();
+
+        if ($dryRun || $count === 0) {
+            return $count;
+        }
+
+        $query->select(['id'])->orderBy('id')->chunkById(50, function ($sessions): void {
+            $sessionIds = $sessions->pluck('id')->map(fn ($id): int => (int) $id)->all();
+            $this->deleteGameArtifacts($sessionIds);
+            GameSession::query()->whereIn('id', $sessionIds)->delete();
+        });
+
+        return $count;
+    }
+
     private function deleteInterviewArtifacts(array $sessionIds): void
     {
-        if ($sessionIds === [] || ! Schema::hasTable('interview_answers')
-            || ! Schema::hasColumn('interview_answers', 'voice_recording_path')) {
-            return;
-        }
+        $cleanup = app(VoiceRecordingCleanupService::class);
+        $cleanup->delete(
+            $cleanup->interviewRecordings($sessionIds),
+            'privacy_prune_interview_sessions'
+        );
+    }
 
-        $columns = ['voice_recording_path'];
-        if (Schema::hasColumn('interview_answers', 'voice_recording_disk')) {
-            $columns[] = 'voice_recording_disk';
-        }
-
-        InterviewAnswer::query()
-            ->whereIn('interview_session_id', $sessionIds)
-            ->get($columns)
-            ->each(function (InterviewAnswer $answer): void {
-                $path = trim((string) $answer->voice_recording_path);
-                if ($path === '') {
-                    return;
-                }
-
-                $disk = trim((string) ($answer->voice_recording_disk ?: 'local'));
-
-                try {
-                    Storage::disk($disk)->delete($path);
-                } catch (Throwable $error) {
-                    $this->warn('Unable to remove one interview recording: '.$error::class);
-                }
-            });
+    private function deleteGameArtifacts(array $sessionIds): void
+    {
+        $cleanup = app(VoiceRecordingCleanupService::class);
+        $cleanup->delete(
+            $cleanup->gameRecordings($sessionIds),
+            'privacy_prune_game_sessions'
+        );
     }
 
     private function pruneChatbotConversations(int $days, bool $dryRun): int
@@ -162,6 +173,68 @@ class PruneExpiredData extends Command
                 });
         });
 
+        $count = (int) $query->count();
+
+        if (! $dryRun && $count > 0) {
+            $query->delete();
+        }
+
+        return $count;
+    }
+
+    private function pruneActivityLogs(int $days, bool $dryRun): int
+    {
+        if (! Schema::hasTable('activity_logs') || ! Schema::hasColumn('activity_logs', 'created_at')) {
+            return 0;
+        }
+
+        $query = DB::table('activity_logs')->where('created_at', '<', now()->subDays($days));
+        $count = (int) $query->count();
+
+        if (! $dryRun && $count > 0) {
+            $query->delete();
+        }
+
+        return $count;
+    }
+
+    private function prunePendingRecoveryEmails(bool $dryRun): int
+    {
+        if (! Schema::hasTable('users')
+            || ! Schema::hasColumn('users', 'pending_recovery_email')
+            || ! Schema::hasColumn('users', 'pending_recovery_email_requested_at')) {
+            return 0;
+        }
+
+        $query = DB::table('users')
+            ->whereNotNull('pending_recovery_email')
+            ->where('pending_recovery_email_requested_at', '<', now()->subDays(
+                (int) config('operations.privacy.pending_recovery_email_days', 7)
+            ));
+        $count = (int) $query->count();
+
+        if (! $dryRun && $count > 0) {
+            $query->update([
+                'pending_recovery_email' => null,
+                'pending_recovery_email_requested_at' => null,
+            ]);
+        }
+
+        return $count;
+    }
+
+    private function prunePendingNewsletters(bool $dryRun): int
+    {
+        if (! Schema::hasTable('newsletter_subscriptions')
+            || ! Schema::hasColumn('newsletter_subscriptions', 'confirmation_expires_at')) {
+            return 0;
+        }
+
+        $query = DB::table('newsletter_subscriptions')
+            ->where('status', 'pending')
+            ->where('confirmation_expires_at', '<', now()->subDays(
+                (int) config('operations.privacy.pending_newsletter_days', 7)
+            ));
         $count = (int) $query->count();
 
         if (! $dryRun && $count > 0) {

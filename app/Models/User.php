@@ -32,6 +32,8 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'name',
         'username',
         'email',
+        'pending_recovery_email',
+        'pending_recovery_email_requested_at',
         'password',
         'password_recovery_code_hash',
         'password_recovery_code_generated_at',
@@ -58,6 +60,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'password',
         'remember_token',
         'password_recovery_code_hash',
+        'pending_recovery_email',
     ];
 
     /**
@@ -71,6 +74,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'password' => 'hashed',
         'password_recovery_code_generated_at' => 'datetime',
         'password_recovery_code_expires_at' => 'datetime',
+        'pending_recovery_email_requested_at' => 'datetime',
     ];
 
     protected static function booted(): void

@@ -152,6 +152,24 @@ class FeedbackCoachingRepair
  return $changed;
  }
 
+ public function sessionNeedsRepair(InterviewSession $session): bool
+ {
+ $answers = $this->originalAnswersFor($session);
+ $feedback = $session->relationLoaded('feedback')
+  ? $session->getRelation('feedback')
+  : Feedback::query()->where('interview_session_id', $session->id)->first();
+
+ if ($this->canPersistAnswerCoaching()
+  && $answers->contains(fn ($answer): bool => $answer instanceof InterviewAnswer
+   && $this->answerCoachingNeedsRepair($answer->coaching_feedback?? null))) {
+ return true;
+ }
+
+ return $feedback instanceof Feedback
+  && $this->canPersistSummary()
+  && $this->summaryNeedsRepair($feedback->coaching_summary?? null);
+ }
+
  private function originalAnswersFor(InterviewSession $session): Collection
  {
  if ($session->relationLoaded('answers')) {

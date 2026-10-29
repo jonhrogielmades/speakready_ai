@@ -7677,7 +7677,6 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     .mission-progress-hero,
     .sr-learning-hero,
     .coach-progress-hero,
-    .mastery-hero-card,
     .notif-hero
   ) {
     border-radius: var(--user-panel-radius, 16px) !important;
@@ -7701,7 +7700,6 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     .mission-progress-hero,
     .sr-learning-hero,
     .coach-progress-hero,
-    .mastery-hero-card,
     .notif-hero
   ) :is(
     h1, h2, h3, h4, h5, h6,
@@ -7709,7 +7707,6 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     .setup-hero-title,
     .modules-hero-title,
     .notif-hero-title,
-    .mastery-title,
     .feedback-title,
     .text-gradient-primary
   ) {
@@ -7728,7 +7725,6 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     .mission-progress-hero,
     .sr-learning-hero,
     .coach-progress-hero,
-    .mastery-hero-card,
     .notif-hero
   ) :is(
     p,
@@ -7736,7 +7732,6 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     .setup-hero-subtitle,
     .modules-hero-subtitle,
     .notif-hero-subtitle,
-    .mastery-subtitle,
     .feedback-subtitle
   ) {
     color: rgba(248, 251, 255, 0.9) !important;
@@ -7754,7 +7749,6 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     .mission-progress-hero,
     .sr-learning-hero,
     .coach-progress-hero,
-    .mastery-hero-card,
     .notif-hero
   ) :is(
     .setup-hero-icon,
@@ -7764,7 +7758,6 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     .learning-hero-icon,
     .coach-hero-icon,
     .reports-hero-icon,
-    .mastery-badge,
     .notif-hero-icon,
     .account-hero-icon,
     .skill-tree-hero-icon,
@@ -7925,7 +7918,7 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
   }
 
   body:not(.admin-shell) :is(
-    .premium-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero),
+    .premium-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.notif-hero),
     .premium-panel,
     .setup-panel,
     .panel,
@@ -7935,13 +7928,13 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     .module-card,
     .perk-card,
     .level-card,
-    .sr-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero),
+    .sr-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.notif-hero),
     .sr-stat-card,
     .tracker-panel,
     .chapter-card,
     .retry-panel,
     .stat-box,
-    .card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero),
+    .card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.notif-hero),
     .accordion-item
   ) {
     background: var(--saas-panel) !important;
@@ -7951,7 +7944,7 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
   }
 
   body:not(.admin-shell) :is(
-    .premium-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero),
+    .premium-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.notif-hero),
     .premium-panel,
     .setup-panel,
     .panel,
@@ -7961,13 +7954,13 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     .module-card,
     .perk-card,
     .level-card,
-    .sr-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero),
+    .sr-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.notif-hero),
     .sr-stat-card,
     .tracker-panel,
     .chapter-card,
     .retry-panel,
     .stat-box,
-    .card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero)
+    .card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.notif-hero)
   ):hover {
     border-color: var(--saas-line-strong) !important;
     box-shadow: var(--saas-shadow-lg) !important;
@@ -8658,7 +8651,6 @@ body :is(.stitle, .landing-section-heading h1, .landing-section-heading h2, .her
   .feedback-title,
   .session-page-title,
   .archive-page-title,
-  .mastery-title,
   .notif-hero-title,
   .sr-title,
   .sr-title-name
@@ -8688,7 +8680,6 @@ body :is(.stitle, .landing-section-heading h1, .landing-section-heading h2, .her
   .feedback-title,
   .session-page-title,
   .archive-page-title,
-  .mastery-title,
   .notif-hero-title,
   .sr-title,
   .sr-title-name
@@ -8975,7 +8966,6 @@ body .modal-title {
     .progress-desktop-grid,
     .learning-desktop-grid,
     .mission-desktop-grid,
-    .mastery-desktop-grid,
     .skills-desktop-grid
   ) {
     grid-template-columns: minmax(0, 1fr) !important;

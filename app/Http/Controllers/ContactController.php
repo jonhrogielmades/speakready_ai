@@ -5,15 +5,24 @@ namespace App\Http\Controllers;
 use App\Mail\ContactMessage;
 use App\Models\Contact;
 use App\Models\NewsletterSubscription;
+use App\Notifications\NewsletterConfirmation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Throwable;
 
 class ContactController extends Controller
 {
     private const CONTACT_RECEIVER_EMAIL = 'capstonespeakreadyai@gmail.com';
+
+    private const NEWSLETTER_CONFIRMATION_HOURS = 24;
+
+    private const NEWSLETTER_RESPONSE = 'If this address can be subscribed, a confirmation link has been sent. Please check your inbox.';
 
     public function send(Request $request)
     {
@@ -67,27 +76,95 @@ class ContactController extends Controller
             'email' => 'required|email:rfc|max:255',
         ]);
 
-        $now = now();
-        NewsletterSubscription::query()->upsert([
-            [
-                'email' => $validated['email'],
-                'status' => NewsletterSubscription::STATUS_SUBSCRIBED,
-                'source' => 'website_footer',
-                'subscribed_at' => $now,
-                'unsubscribed_at' => null,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-        ], ['email'], [
-            'status',
-            'source',
-            'subscribed_at',
-            'unsubscribed_at',
-            'updated_at',
-        ]);
+        $token = null;
+        $lock = Cache::lock('newsletter:subscribe:'.hash('sha256', $validated['email']), 10);
+
+        if ($lock->get()) {
+            try {
+                DB::transaction(function () use ($validated, &$token): void {
+                    $subscription = NewsletterSubscription::query()
+                        ->where('email', $validated['email'])
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($subscription?->status === NewsletterSubscription::STATUS_SUBSCRIBED) {
+                        return;
+                    }
+
+                    $token = Str::random(64);
+                    $now = now();
+                    $subscription ??= new NewsletterSubscription([
+                        'email' => $validated['email'],
+                        'subscribed_at' => $now,
+                    ]);
+
+                    $subscription->forceFill([
+                        'status' => NewsletterSubscription::STATUS_PENDING,
+                        'source' => 'website_footer',
+                        'confirmation_token_hash' => hash('sha256', $token),
+                        'confirmation_expires_at' => $now->copy()->addHours(self::NEWSLETTER_CONFIRMATION_HOURS),
+                        'confirmed_at' => null,
+                        'unsubscribed_at' => null,
+                    ])->save();
+                });
+            } finally {
+                $lock->release();
+            }
+        }
+
+        if (is_string($token)) {
+            Notification::route('mail', $validated['email'])
+                ->notify(new NewsletterConfirmation(Crypt::encryptString($token)));
+        }
 
         return redirect()
             ->back()
-            ->with('newsletter_success', 'Thanks for subscribing. We will send updates to '.$validated['email'].'.');
+            ->with('newsletter_success', self::NEWSLETTER_RESPONSE);
+    }
+
+    public function confirmNewsletter(string $token)
+    {
+        if (! preg_match('/^[A-Za-z0-9]{64}$/', $token)) {
+            return $this->invalidNewsletterConfirmation();
+        }
+
+        $confirmed = DB::transaction(function () use ($token): bool {
+            $subscription = NewsletterSubscription::query()
+                ->where('confirmation_token_hash', hash('sha256', $token))
+                ->lockForUpdate()
+                ->first();
+
+            if (! $subscription
+                || ! $subscription->confirmation_expires_at
+                || $subscription->confirmation_expires_at->isPast()) {
+                return false;
+            }
+
+            if ($subscription->status !== NewsletterSubscription::STATUS_SUBSCRIBED) {
+                $subscription->forceFill([
+                    'status' => NewsletterSubscription::STATUS_SUBSCRIBED,
+                    'confirmed_at' => now(),
+                    'subscribed_at' => now(),
+                    'unsubscribed_at' => null,
+                ])->save();
+            }
+
+            return true;
+        });
+
+        if (! $confirmed) {
+            return $this->invalidNewsletterConfirmation();
+        }
+
+        return redirect('/')
+            ->with('newsletter_success', 'Your subscription is confirmed. You can now receive SpeakReady AI updates.');
+    }
+
+    private function invalidNewsletterConfirmation()
+    {
+        return redirect('/')
+            ->withErrors([
+                'email' => 'This newsletter confirmation link is invalid or expired. Submit your email again for a new link.',
+            ], 'newsletter');
     }
 }

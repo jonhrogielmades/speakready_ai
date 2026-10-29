@@ -7,15 +7,18 @@
     $accountCreatedAt = $accountInPhilippineTime($accountUser?->created_at);
     $accountLastLoginAt = $accountInPhilippineTime($lastLoginAt ?? null);
     $accountEmailVerifiedAt = $accountInPhilippineTime($accountUser?->email_verified_at);
+    $accountHasPendingRecoveryEmail = $accountUser?->isLocalAccount() && filled($accountUser?->pending_recovery_email);
 
     $accountCreatedDate = $accountCreatedAt?->format('M d, Y') ?? 'Not recorded';
     $accountCreatedTime = $accountCreatedAt ? $accountCreatedAt->format('h:i A').' '.$accountTimezoneLabel : 'Awaiting record';
     $accountLastLoginDate = $accountLastLoginAt?->format('M d, Y') ?? 'No login recorded';
     $accountLastLoginTime = $accountLastLoginAt ? $accountLastLoginAt->format('h:i A').' '.$accountTimezoneLabel : 'Sign in to update this record';
-    $accountEmailStatus = $accountEmailVerifiedAt ? 'Verified' : 'Pending';
-    $accountEmailStatusMeta = $accountEmailVerifiedAt
-        ? 'Verified '.$accountEmailVerifiedAt->format('M d, Y')
-        : 'Email verification not completed';
+    $accountEmailStatus = $accountHasPendingRecoveryEmail ? 'Change pending' : ($accountEmailVerifiedAt ? 'Verified' : 'Pending');
+    $accountEmailStatusMeta = $accountHasPendingRecoveryEmail
+        ? 'Current address stays active until the replacement is verified'
+        : ($accountEmailVerifiedAt
+            ? 'Verified '.$accountEmailVerifiedAt->format('M d, Y')
+            : 'Email verification not completed');
 @endphp
 
 <div class="premium-panel account-card account-record-card" style="padding:32px;margin-bottom:24px">
@@ -40,14 +43,14 @@
             </span>
         </div>
 
-        <div class="account-record-item{{ ! $accountEmailVerifiedAt && filled($accountUser?->email) ? ' account-record-action-item' : '' }}">
+        <div class="account-record-item{{ $accountHasPendingRecoveryEmail || (! $accountEmailVerifiedAt && filled($accountUser?->email)) ? ' account-record-action-item' : '' }}">
             <span class="account-record-icon"><i class="fa-regular fa-envelope"></i></span>
             <span class="account-record-copy">
                 <span class="account-record-label">Email Status</span>
-                <strong><span class="account-record-status {{ $accountEmailVerifiedAt ? 'is-verified' : 'is-pending' }}">{{ $accountEmailStatus }}</span></strong>
+                <strong><span class="account-record-status {{ $accountEmailVerifiedAt && ! $accountHasPendingRecoveryEmail ? 'is-verified' : 'is-pending' }}">{{ $accountEmailStatus }}</span></strong>
                 <small>{{ $accountEmailStatusMeta }}</small>
             </span>
-            @if(! $accountEmailVerifiedAt && filled($accountUser?->email))
+            @if($accountHasPendingRecoveryEmail || (! $accountEmailVerifiedAt && filled($accountUser?->email)))
                 <form method="POST" action="{{ route('verification.send') }}" class="account-record-action">
                     @csrf
                     <button type="submit" class="account-notification-setup-btn" aria-label="Resend recovery email verification">

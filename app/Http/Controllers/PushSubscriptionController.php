@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\PushSubscription;
 use App\Services\WebPushNotificationService;
 use App\Support\AccountNotificationSchema;
+use App\Support\WebPushEndpoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class PushSubscriptionController extends Controller
 {
@@ -43,6 +45,12 @@ class PushSubscriptionController extends Controller
         ]);
 
         $endpoint = $validated['endpoint'];
+
+        if (! WebPushEndpoint::isAllowed($endpoint)) {
+            throw ValidationException::withMessages([
+                'endpoint' => 'The push service endpoint is not trusted.',
+            ]);
+        }
 
         PushSubscription::updateOrCreate(
             ['endpoint_hash' => hash('sha256', $endpoint)],

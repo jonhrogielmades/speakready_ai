@@ -51,6 +51,13 @@ return [
  'private_key' => env('WEBPUSH_VAPID_PRIVATE_KEY'),
  'auto_generate' => env('WEBPUSH_AUTO_GENERATE', true),
  'storage_path' => env('WEBPUSH_VAPID_STORAGE_PATH'),
+ 'allowed_endpoint_hosts' => array_values(array_filter(array_map(
+  'trim',
+  explode(',', (string) env(
+   'WEBPUSH_ALLOWED_ENDPOINT_HOSTS',
+   'fcm.googleapis.com,push.services.mozilla.com,notify.windows.com,push.apple.com'
+  ))
+ ))),
  ],
 
  'ai_tts' => [

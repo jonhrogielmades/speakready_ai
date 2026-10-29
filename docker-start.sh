@@ -85,6 +85,7 @@ seed_persistent_storage
 mkdir -p \
     storage/app/public \
     storage/framework/cache/data \
+    storage/framework/operations \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
@@ -168,6 +169,64 @@ env_bool() {
     esac
 }
 
+write_process_heartbeat() {
+    heartbeat_file="$1"
+    heartbeat_tmp="${heartbeat_file}.tmp.$$"
+
+    mkdir -p "$(dirname "$heartbeat_file")"
+    date -u +%s > "$heartbeat_tmp"
+    mv -f "$heartbeat_tmp" "$heartbeat_file"
+}
+
+start_supervised_queue_worker() {
+    connection="${QUEUE_CONNECTION:-database}"
+    heartbeat_file="storage/${QUEUE_HEARTBEAT_FILE:-framework/operations/queue-worker.heartbeat}"
+    max_time="${QUEUE_WORKER_MAX_TIME:-240}"
+    timeout="${QUEUE_WORKER_TIMEOUT:-180}"
+    restart_delay="${PROCESS_RESTART_DELAY_SECONDS:-5}"
+
+    echo "Starting supervised queue worker loop for ${connection}." >&2
+    (
+        while true; do
+            write_process_heartbeat "$heartbeat_file"
+
+            if php artisan queue:work "$connection" \
+                --sleep=3 \
+                --tries=3 \
+                --timeout="$timeout" \
+                --backoff=5 \
+                --max-time="$max_time" >> /proc/1/fd/2 2>&1; then
+                status=0
+            else
+                status=$?
+            fi
+
+            write_process_heartbeat "$heartbeat_file"
+            echo "Queue worker exited with status ${status}; restarting in ${restart_delay}s." >&2
+            sleep "$restart_delay"
+        done
+    ) &
+}
+
+start_supervised_scheduler() {
+    heartbeat_file="storage/${SCHEDULER_HEARTBEAT_FILE:-framework/operations/scheduler.heartbeat}"
+    interval="${SCHEDULER_INTERVAL_SECONDS:-60}"
+
+    echo "Starting supervised Laravel scheduler loop." >&2
+    (
+        while true; do
+            write_process_heartbeat "$heartbeat_file"
+
+            if ! php artisan schedule:run --no-interaction >> /proc/1/fd/2 2>&1; then
+                echo "Laravel scheduler invocation failed; retrying after ${interval}s." >&2
+            fi
+
+            write_process_heartbeat "$heartbeat_file"
+            sleep "$interval"
+        done
+    ) &
+}
+
 run_schema_repairs() {
     run_required php artisan app:ensure-ai-provider-schema --force --create-missing
     run_required php artisan app:ensure-voice-schema --force --create-missing
@@ -240,13 +299,11 @@ run_startup_maintenance() {
     run_optional php artisan view:cache
 
     if [ "${QUEUE_CONNECTION:-database}" != "sync" ] && [ "${QUEUE_CONNECTION:-database}" != "null" ]; then
-        echo "Starting queue worker for ${QUEUE_CONNECTION:-database}." >&2
-        php artisan queue:work "${QUEUE_CONNECTION:-database}" --sleep=3 --tries=3 --timeout=180 --backoff=5 --max-time=3600 >> /proc/1/fd/2 2>&1 &
+        start_supervised_queue_worker
     fi
 
     if env_bool RUN_SCHEDULER_ON_START true; then
-        echo "Starting Laravel scheduler worker." >&2
-        php artisan schedule:work >> /proc/1/fd/2 2>&1 &
+        start_supervised_scheduler
     else
         echo "Skipping Laravel scheduler worker because RUN_SCHEDULER_ON_START is disabled." >&2
     fi

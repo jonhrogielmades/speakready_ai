@@ -46,7 +46,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=33') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=34') }}" />
       @include('mobile.partials.onboarding-styles')
       <style>
          :root,
@@ -4763,7 +4763,7 @@
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
       @include('shared.user.first-steps-modal-script')
-      <script src="{{ asset('js/user-ui.js') }}?v=26&build=20261020" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=27&build=20261029" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {
@@ -5755,7 +5755,6 @@
                .mission-progress-hero,
                .sr-learning-hero,
                .coach-progress-hero,
-               .mastery-hero-card,
                .notif-hero,
                .skill-tree-hero,
                .mod-hero
@@ -5776,7 +5775,6 @@
                .mission-progress-hero,
                .sr-learning-hero,
                .coach-progress-hero,
-               .mastery-hero-card,
                .notif-hero,
                .skill-tree-hero,
                .mod-hero
@@ -5799,7 +5797,6 @@
                .mission-progress-hero,
                .sr-learning-hero,
                .coach-progress-hero,
-               .mastery-hero-card,
                .notif-hero,
                .skill-tree-hero,
                .mod-hero
@@ -5815,7 +5812,6 @@
                .feedback-title,
                .setup-hero-title,
                .modules-hero-title,
-               .mastery-title,
                .notif-hero-title
             ) {
                color: var(--sr-unified-hero-text) !important;
@@ -5834,7 +5830,6 @@
                .mission-progress-hero,
                .sr-learning-hero,
                .coach-progress-hero,
-               .mastery-hero-card,
                .notif-hero,
                .skill-tree-hero,
                .mod-hero
@@ -5846,7 +5841,6 @@
                .feedback-subtitle,
                .setup-hero-subtitle,
                .modules-hero-subtitle,
-               .mastery-subtitle,
                .notif-hero-subtitle
             ) {
                color: var(--sr-unified-hero-muted) !important;
@@ -5880,7 +5874,6 @@
                .mission-progress-hero,
                .sr-learning-hero,
                .coach-progress-hero,
-               .mastery-hero-card,
                .notif-hero,
                .skill-tree-hero,
                .mod-hero
@@ -5896,7 +5889,6 @@
                .feedback-title,
                .setup-hero-title,
                .modules-hero-title,
-               .mastery-title,
                .notif-hero-title
             ) {
                color: var(--sr-page-title-accent, #ffffff) !important;
@@ -5932,8 +5924,7 @@
                .practice-hero-icon,
                .skill-hero-icon,
                .skill-tree-hero-icon,
-               .notif-hero-icon,
-               .mastery-badge
+               .notif-hero-icon
             ) {
                background: var(--sr-unified-hero-icon) !important;
                border-color: rgba(255, 255, 255, 0.28) !important;

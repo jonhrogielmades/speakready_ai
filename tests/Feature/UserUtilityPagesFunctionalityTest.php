@@ -33,12 +33,14 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  'status' => 'active',
  'password' => Hash::make('current-password'),
  ]);
+ $originalRecoveryEmail = $user->email;
 
  $this->actingAs($user)
  ->post(route('user.account.profile'), [
  'name' => 'Updated Candidate',
  'email' => 'updated-candidate@example.com',
  'target_position' => 'Data Analyst',
+ 'current_password' => 'current-password',
  ])
  ->assertRedirect()
  ->assertSessionHas('success', 'Profile updated. Verify your new recovery email before using email password recovery.');
@@ -46,7 +48,8 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertDatabaseHas('users', [
  'id' => $user->id,
  'name' => 'Updated Candidate',
- 'email' => 'updated-candidate@example.com',
+ 'email' => $originalRecoveryEmail,
+ 'pending_recovery_email' => 'updated-candidate@example.com',
  'target_position' => 'Data Analyst',
  ]);
 
@@ -60,6 +63,29 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ->assertSessionHas('success', 'Password updated successfully.');
 
  $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
+ $this->assertNull($user->fresh()->pending_recovery_email);
+ $this->assertNull($user->fresh()->pending_recovery_email_requested_at);
+ }
+
+ public function test_changing_recovery_email_requires_the_current_password(): void
+ {
+  $user = User::factory()->create([
+   'auth_method' => User::AUTH_METHOD_LOCAL,
+   'email' => 'current-recovery@example.com',
+   'email_verified_at' => now(),
+   'password' => Hash::make('current-password'),
+  ]);
+
+  $this->actingAs($user)
+   ->post(route('user.account.profile'), [
+    'name' => $user->name,
+    'email' => 'attacker-controlled@example.com',
+    'target_position' => $user->target_position,
+   ])
+   ->assertSessionHasErrors('current_password');
+
+  $this->assertSame('current-recovery@example.com', $user->fresh()->email);
+  $this->assertNotNull($user->fresh()->email_verified_at);
  }
 
  public function test_adding_a_recovery_email_requires_verification_and_allows_login(): void
@@ -81,14 +107,16 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  'name' => $user->name,
  'email' => 'recovery-login@example.com',
  'target_position' => $user->target_position,
+ 'current_password' => 'local-password',
  ])
  ->assertRedirect()
  ->assertSessionHas('success', 'Profile updated. Verify your new recovery email before using email password recovery.');
 
  $updatedUser = $user->fresh();
 
- $this->assertSame('recovery-login@example.com', $updatedUser->email);
+ $this->assertNull($updatedUser->email);
  $this->assertNull($updatedUser->email_verified_at);
+ $this->assertSame('recovery-login@example.com', $updatedUser->pending_recovery_email);
 
  $this->post(route('logout'))->assertRedirect();
 
@@ -268,6 +296,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  'name' => 'Schema Safe Candidate',
  'email' => 'schema-safe@example.com',
  'target_position' => 'Network Administrator',
+ 'current_password' => 'current-password',
  ])
  ->assertRedirect()
  ->assertSessionHas('success', 'Profile updated. Verify your new recovery email before using email password recovery.');
@@ -532,6 +561,25 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->assertDatabaseMissing('push_subscriptions', [
  'endpoint_hash' => hash('sha256', $endpoint),
  ]);
+ }
+
+ public function test_push_subscription_rejects_internal_or_untrusted_endpoints(): void
+ {
+  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+  $this->actingAs($user)
+   ->postJson(route('user.notifications.push.subscribe'), [
+    'endpoint' => 'https://127.0.0.1/internal-metadata',
+    'keys' => [
+     'p256dh' => str_repeat('p', 87),
+     'auth' => str_repeat('a', 22),
+    ],
+    'contentEncoding' => 'aes128gcm',
+   ])
+   ->assertUnprocessable()
+   ->assertJsonValidationErrors('endpoint');
+
+  $this->assertDatabaseCount('push_subscriptions', 0);
  }
 
  public function test_admin_accounts_are_redirected_from_user_push_endpoints(): void

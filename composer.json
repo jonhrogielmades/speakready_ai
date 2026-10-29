@@ -16,6 +16,7 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
+        "larastan/larastan": "^3.13",
         "laravel/breeze": "^2.4",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",
@@ -40,6 +41,7 @@
         }
     },
     "scripts": {
+        "analyse": "@php vendor/bin/phpstan analyse --configuration=phpstan.neon --memory-limit=1G --no-progress",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

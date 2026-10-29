@@ -54,7 +54,7 @@
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=40') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=41') }}" />
       <style>
           :root,
           .lm {
@@ -360,7 +360,7 @@
          };
       </script>
       <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=26&build=20261020" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=27&build=20261029" defer></script>
       @include('desktop.partials.language-translation')
       @include('shared.user.first-steps-modal-script')
       <!-- PWA Service Worker Registration -->
@@ -886,8 +886,7 @@
                .setup-hero-title,
                .progress-hero-title,
                .feedback-title,
-               .notif-hero-title,
-               .mastery-title
+               .notif-hero-title
             ) {
                color: var(--tx) !important;
                -webkit-text-fill-color: var(--tx) !important;

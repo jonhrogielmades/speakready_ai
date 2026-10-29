@@ -3282,7 +3282,7 @@
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <script src="{{ asset('js/main.js?v=7') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=26&build=20261020" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=27&build=20261029" defer></script>
 
       <script>
          function getMobileProfileDropdown(mode = 'pages') {

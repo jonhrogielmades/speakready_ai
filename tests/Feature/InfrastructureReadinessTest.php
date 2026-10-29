@@ -21,6 +21,28 @@ class InfrastructureReadinessTest extends TestCase
             'curl --fail --silent --show-error --max-time 4 http://127.0.0.1:80/up',
             File::get(base_path('docker-compose.yml'))
         );
+        $this->assertStringContainsString(
+            '--header \"Host: $${app_host}\"',
+            File::get(base_path('docker-compose.yml'))
+        );
+    }
+
+    public function test_container_supervises_queue_scheduler_and_backup_processes(): void
+    {
+        $startup = File::get(base_path('docker-start.sh'));
+        $compose = File::get(base_path('docker-compose.yml'));
+        $backup = File::get(base_path('scripts/backup-loop.sh'));
+        $restore = File::get(base_path('scripts/restore-backup.sh'));
+
+        $this->assertStringContainsString('start_supervised_queue_worker', $startup);
+        $this->assertStringContainsString('start_supervised_scheduler', $startup);
+        $this->assertStringNotContainsString('--max-time=3600', $startup);
+        $this->assertStringContainsString('QUEUE_HEALTHCHECK_ENABLED', $compose);
+        $this->assertStringContainsString('scripts/backup-loop.sh', $compose);
+        $this->assertStringContainsString('speakready_backups:', $compose);
+        $this->assertStringContainsString('BACKUP_RETRY_SECONDS', $backup);
+        $this->assertStringContainsString('cleanup_temporary_backup', $backup);
+        $this->assertStringContainsString('RESTORE_ALLOW_NONEMPTY_STORAGE', $restore);
     }
 
     public function test_web_servers_allow_first_party_camera_and_microphone_permissions(): void
@@ -54,12 +76,24 @@ class InfrastructureReadinessTest extends TestCase
         $this->getJson('/up')
             ->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+            ->assertHeader(
+                'Permissions-Policy',
+                'camera=(self), microphone=(self), geolocation=(), payment=(), usb=()'
+            )
+            ->assertHeader('Content-Security-Policy')
             ->assertExactJson([
                 'status' => 'ok',
                 'checks' => [
                     'php' => true,
                     'laravel' => true,
                     'startup_maintenance' => true,
+                    'storage' => true,
+                    'queue_worker' => true,
+                    'scheduler' => true,
+                    'queue_backlog' => true,
+                    'failed_jobs' => true,
                     'database' => true,
                 ],
             ]);
@@ -98,5 +132,31 @@ class InfrastructureReadinessTest extends TestCase
             ->assertJsonPath('status', 'unhealthy')
             ->assertJsonPath('checks.startup_maintenance', false)
             ->assertJsonPath('checks.database', true);
+    }
+
+    public function test_readiness_endpoint_rejects_a_stale_required_queue_heartbeat(): void
+    {
+        $heartbeat = storage_path('framework/operations/test-queue.heartbeat');
+        File::ensureDirectoryExists(dirname($heartbeat));
+        File::put($heartbeat, 'stale');
+        touch($heartbeat, time() - 600);
+
+        config()->set('operations.queue.heartbeat_required', true);
+        config()->set('operations.queue.heartbeat_file', 'framework/operations/test-queue.heartbeat');
+        config()->set('operations.queue.max_age_seconds', 60);
+        config()->set('queue.default', 'database');
+
+        DB::shouldReceive('selectOne')
+            ->once()
+            ->with('SELECT 1 AS ready')
+            ->andReturn((object) ['ready' => 1]);
+
+        try {
+            $this->getJson('/up')
+                ->assertServiceUnavailable()
+                ->assertJsonPath('checks.queue_worker', false);
+        } finally {
+            File::delete($heartbeat);
+        }
     }
 }

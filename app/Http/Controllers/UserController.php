@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
+use App\Jobs\RefreshDetailedFeedbackReview;
 use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\ChatbotConversation;
@@ -30,14 +31,15 @@ use App\Services\LearningChallengeGenerationService;
 use App\Services\LearningModuleGenerationService;
 use App\Services\LearningRecommendationService;
 use App\Services\OnboardingVoiceStorage;
+use App\Services\PracticeStreakService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\AccountNotificationSchema;
 use App\Support\ChatbotSchema;
-use App\Support\FeedbackCoachingRepair;
 use App\Support\FeedbackEvidencePresenter;
+use App\Support\FeedbackCoachingRepair;
 use App\Support\GameSchema;
 use App\Support\LearningModuleSchema;
 use App\Support\PasswordRecovery;
@@ -46,6 +48,7 @@ use App\Support\SystemSettings;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -54,6 +57,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class UserController extends Controller
@@ -61,6 +65,9 @@ class UserController extends Controller
  private const COACH_ATTACHMENT_MAX_FILES = 3;
  private const COACH_ATTACHMENT_MAX_CONTEXT_CHARS = 12000;
  private const COACH_ATTACHMENT_MAX_CONTEXT_CHARS_PER_FILE = 5000;
+ private const COACH_ATTACHMENT_MAX_DECOMPRESSED_BYTES = 2097152;
+ private const COACH_ATTACHMENT_MAX_ARCHIVE_ENTRIES = 64;
+ private const COACH_ATTACHMENT_MAX_COMPRESSION_RATIO = 100;
  private const COACH_ATTACHMENT_ALLOWED_EXTENSIONS = [
  'pdf', 'doc', 'docx', 'odt',
  'txt', 'rtf', 'csv', 'md', 'json', 'html', 'htm',
@@ -187,12 +194,6 @@ class UserController extends Controller
  ]);
  $avgScore = $scoreAverages['overall_readiness_score']?? 0.0;
 
- // Update Profile readiness score if it differs
- if ($profile->readiness_score!= round($avgScore)) {
- $profile->readiness_score = round($avgScore);
- $profile->save();
- }
-
  // Radar Data Averages
  $radarData = [
  'clarity' => round($scoreAverages['clarity_score']?? 0),
@@ -201,10 +202,22 @@ class UserController extends Controller
  'professionalism' => round($scoreAverages['professionalism_score']?? 0),
  ];
 
- // AI Feedback Parsing (Get recent top strengths and areas for improvement)
- $latestFeedback = Feedback::whereHas('session', function ($q) use ($user_id) {
- $q->where('user_id', $user_id)->where('status', 'completed');
- })->with('session.score')->orderBy('created_at', 'desc')->first();
+ // Fetch only the score columns needed for the most recent feedback. The
+ // left join preserves the previous behavior when that feedback is unscored.
+ $latestFeedbackScore = Feedback::query()
+ ->join('interview_sessions', 'interview_sessions.id', '=', 'feedback.interview_session_id')
+ ->leftJoin('scores', 'scores.interview_session_id', '=', 'interview_sessions.id')
+ ->where('interview_sessions.user_id', $user_id)
+ ->where('interview_sessions.status', 'completed')
+ ->orderBy('feedback.created_at', 'desc')
+ ->select([
+ 'scores.id as score_id',
+ 'scores.clarity_score',
+ 'scores.relevance_score',
+ 'scores.grammar_score',
+ 'scores.professionalism_score',
+ ])
+ ->first();
 
  // Extract AI feedback summary dynamically
  $aiFeedback = [
@@ -215,14 +228,12 @@ class UserController extends Controller
  // Loop through recent feedbacks to pick out strengths and improvements
  // Assuming feedback contains json fields for strengths and improvements if it existed.
  // For now, since we just have general feedback score metrics, we'll keep it empty unless data exists.
- if ($latestFeedback) {
- $latestS = $latestFeedback->session?->score;
- if ($latestS) {
+ if ($latestFeedbackScore?->score_id!== null) {
  $skillsList = [
- 'Clarity' => $latestS->clarity_score?? 0,
- 'Relevance' => $latestS->relevance_score?? 0,
- 'Grammar' => $latestS->grammar_score?? 0,
- 'Professionalism' => $latestS->professionalism_score?? 0,
+ 'Clarity' => $latestFeedbackScore->clarity_score?? 0,
+ 'Relevance' => $latestFeedbackScore->relevance_score?? 0,
+ 'Grammar' => $latestFeedbackScore->grammar_score?? 0,
+ 'Professionalism' => $latestFeedbackScore->professionalism_score?? 0,
  ];
  foreach ($skillsList as $sName => $sVal) {
  if ($sVal >= 80) {
@@ -232,10 +243,15 @@ class UserController extends Controller
  }
  }
  }
- }
 
- // Gamification Data from Profile
- $currentStreak = $profile->current_streak?? 0;
+ // Calculate the live streak without mutating profile state during a GET.
+ $dashboardPracticeDates = (clone $completedSessions)
+ ->selectRaw('DATE(created_at) as practice_date')
+ ->distinct()
+ ->orderBy('practice_date')
+ ->pluck('practice_date');
+ $currentStreak = app(PracticeStreakService::class)
+ ->calculate($dashboardPracticeDates)['current'];
  $experiencePoints = $profile->experience_points?? 0;
 
  $badgesEarned = [];
@@ -291,9 +307,12 @@ class UserController extends Controller
 
  // Get the latest scored sessions, then render them chronologically for the chart.
  $scoreTrend = (clone $completedSessions)
- ->with('score')
- ->whereHas('score')
- ->orderBy('created_at', 'desc')
+ ->join('scores', 'scores.interview_session_id', '=', 'interview_sessions.id')
+ ->select([
+ 'interview_sessions.created_at',
+ 'scores.overall_readiness_score',
+ ])
+ ->orderBy('interview_sessions.created_at', 'desc')
  ->take(10)
  ->get()
  ->sortBy('created_at')
@@ -302,25 +321,28 @@ class UserController extends Controller
  return [
  'date' => $session->created_at->format('M d'),
   'date_iso' => $session->created_at->toIso8601String(),
- 'score' => (int) round($session->score->overall_readiness_score?? 0),
+ 'score' => (int) round($session->overall_readiness_score?? 0),
  ];
  });
   // Keep a year of dated points available for the desktop trend range controls.
   $dashboardTrend = (clone $completedSessions)
-  ->with('score')
-  ->whereHas('score')
-  ->where('created_at', '>=', now()->subYear())
-  ->orderBy('created_at', 'asc')
+  ->join('scores', 'scores.interview_session_id', '=', 'interview_sessions.id')
+  ->select([
+  'interview_sessions.created_at',
+  'scores.overall_readiness_score',
+  ])
+  ->where('interview_sessions.created_at', '>=', now()->subYear())
+  ->orderBy('interview_sessions.created_at', 'asc')
   ->get()
   ->map(function ($session) {
   return [
   'date' => $session->created_at->format('M d'),
   'date_iso' => $session->created_at->toIso8601String(),
-  'score' => (int) round($session->score->overall_readiness_score?? 0),
+  'score' => (int) round($session->overall_readiness_score?? 0),
   ];
   })
   ->values();
- $dashboardScoreVal = max(0, min(100, (int) round($profile->readiness_score?? $avgScore?? 0)));
+ $dashboardScoreVal = max(0, min(100, (int) round($avgScore)));
  $dashboardScoreText = $dashboardScoreVal >= 80 ? 'Interview Ready' : ($dashboardScoreVal >= 60 ? 'Boost' : 'Practice Mode');
  $dashboardTrendScores = $scoreTrend->pluck('score')->filter(fn ($score) => is_numeric($score))->values();
  $dashboardTrendFirst = $dashboardTrendScores->first();
@@ -456,11 +478,29 @@ class UserController extends Controller
  {
  $sessions = InterviewSession::where('user_id', $userId)
  ->where('interview_sessions.status', 'completed')
+  ->select([
+  'interview_sessions.id',
+  'interview_sessions.category_id',
+  'interview_sessions.assessment_mode',
+  'interview_sessions.score_eligible',
+  'interview_sessions.created_at',
+  ])
  ->with([
- 'score',
- 'category',
- 'feedback',
- 'answers' => fn ($query) => $query->whereNull('retry_of_answer_id')->with('question')->orderBy('id'),
+  'score:id,interview_session_id,score_version,overall_readiness_score,clarity_score,relevance_score,grammar_score,professionalism_score,star_method_score,rubric',
+  'category:id,title',
+  'answers' => fn ($query) => $query
+  ->select([
+  'id',
+  'interview_session_id',
+  'question_id',
+  'answer_text',
+  'delivery_transcript',
+  'is_skipped',
+  'star_analysis',
+  ])
+  ->whereNull('retry_of_answer_id')
+  ->with('question:id,question_text,type,expected_guide,mapped_skills')
+  ->orderBy('id'),
  ])
  ->orderBy('created_at', 'asc')
  ->get();
@@ -475,6 +515,15 @@ class UserController extends Controller
  $jobInterviewPerformance = $this->jobInterviewPerformanceFor($scoredSessions);
  $latestScoredSession = $scoredSessions->last();
  $previousScoredSession = $scoredSessions->count() > 1? $scoredSessions[$scoredSessions->count() - 2]: null;
+  $latestScoredSession?->loadMissing([
+  'feedback' => fn ($query) => $query->select([
+  'id',
+  'interview_session_id',
+  'strengths',
+  'weaknesses',
+  'improvement_suggestions',
+  ]),
+  ]);
  $readinessMovement = $this->readinessMovementFor($latestScoredSession, $previousScoredSession);
  $readinessSummary = $this->readinessSummaryFor($latestScoredSession, $previousScoredSession);
  $skillComparison = $this->skillComparisonFor($scoredSessions);
@@ -569,45 +618,31 @@ class UserController extends Controller
  $baseQuery = InterviewSession::where('user_id', Auth::id())
  ->where('interview_sessions.status', 'completed');
 
- $allCompletedSessions = (clone $baseQuery)
- ->with('category')
- ->get();
-
- $feedbackCategories = $allCompletedSessions
- ->map(fn ($session) => $this->practiceScenarioLabel($session))
- ->filter()
- ->unique()
- ->sort()
- ->values();
-
  $selectedScenario = trim((string) $request->query('scenario', ''));
  $search = trim((string) $request->query('search', ''));
  $sort = $request->query('sort') === 'asc'? 'asc': 'desc';
-
- $matchingScenarioIds = collect();
- if ($selectedScenario!== '') {
- $matchingScenarioIds = $allCompletedSessions
- ->filter(fn ($session) => $this->practiceScenarioLabel($session) === $selectedScenario)
- ->pluck('id')
- ->values();
- }
-
- $matchingSearchScenarioIds = collect();
- if ($search!== '') {
- $needle = Str::lower($search);
- $matchingSearchScenarioIds = $allCompletedSessions
- ->filter(fn ($session) => Str::contains(Str::lower($this->practiceScenarioLabel($session)), $needle))
- ->pluck('id')
- ->values();
- }
+  $practiceScenario = 'Job Interviews';
+  $searchMatchesScenario = $search!== ''
+  && Str::contains(Str::lower($practiceScenario), Str::lower($search));
 
  $sessionsQuery = (clone $baseQuery)
- ->with(['category', 'score', 'feedback'])
- ->when($selectedScenario!== '', fn ($query) => $query->whereIn('id', $matchingScenarioIds))
- ->when($search!== '', function ($query) use ($search, $matchingSearchScenarioIds) {
+  ->select([
+  'interview_sessions.id',
+  'interview_sessions.category_id',
+  'interview_sessions.created_at',
+  ])
+  ->with([
+  'category:id,title',
+  'score:id,interview_session_id,overall_readiness_score',
+  ])
+  ->when(
+  $selectedScenario!== '' && $selectedScenario!== $practiceScenario,
+  fn ($query) => $query->whereRaw('1 = 0')
+  )
+  ->when($search!== '' &&! $searchMatchesScenario, function ($query) use ($search) {
  $like = $this->escapedFeedbackSearchPattern($search);
 
- $query->where(function ($query) use ($like, $matchingSearchScenarioIds) {
+  $query->where(function ($query) use ($like) {
  $this->whereEscapedFeedbackLike($query, 'target_position', $like);
  $this->whereEscapedFeedbackLike($query, 'interview_focus', $like, 'or');
  $this->whereEscapedFeedbackLike($query, 'difficulty', $like, 'or');
@@ -632,29 +667,26 @@ class UserController extends Controller
  $answerQuery->orWhereHas('question', fn ($questionQuery) => $this->whereEscapedFeedbackLike($questionQuery, 'question_text', $like));
  });
  });
-
- if ($matchingSearchScenarioIds->isNotEmpty()) {
- $query->orWhereIn('id', $matchingSearchScenarioIds);
- }
  });
  })
  ->orderBy('created_at', $sort);
 
- $sessions = (clone $sessionsQuery)
- ->paginate(6)
- ->withQueryString();
- $practiceHistorySessions = (clone $sessionsQuery)
+  $practiceHistorySessions = $sessionsQuery
  ->get()
  ->map(function ($session) {
  $session->practice_scenario = $this->practiceScenarioLabel($session);
 
  return $session;
  });
- $sessions->getCollection()->transform(function ($session) {
- $session->practice_scenario = $this->practiceScenarioLabel($session);
-
- return $session;
- });
+  $perPage = 6;
+  $currentPage = LengthAwarePaginator::resolveCurrentPage('page');
+  $sessions = (new LengthAwarePaginator(
+  $practiceHistorySessions->forPage($currentPage, $perPage)->values(),
+  $practiceHistorySessions->count(),
+  $perPage,
+  $currentPage,
+  ['path' => $request->url(), 'pageName' => 'page']
+  ))->withQueryString();
 
  $latestFeedbackSession = (clone $baseQuery)
  ->with([
@@ -675,6 +707,9 @@ class UserController extends Controller
  $latestFeedbackSession->practice_scenario = $this->practiceScenarioLabel($latestFeedbackSession);
  }
 
+  $hasFeedbackRecords = $latestFeedbackSession!== null;
+  $feedbackCategories = $hasFeedbackRecords? collect([$practiceScenario]): collect();
+
  $feedbackSummary = $this->feedbackCenterSummary($latestFeedbackSession);
  $feedbackEvidence = FeedbackEvidencePresenter::forSession($latestFeedbackSession);
 
@@ -683,7 +718,6 @@ class UserController extends Controller
  'search' => $search,
  'sort' => $sort,
  ];
- $hasFeedbackRecords = $allCompletedSessions->isNotEmpty();
 
  return $this->mobileView('user.feedback', compact(
  'sessions',
@@ -806,7 +840,11 @@ class UserController extends Controller
  $query->{$method}("{$wrappedColumn} LIKE? ESCAPE '!'", [$pattern]);
  }
 
- public function review($id)
+ public function review(
+ $id,
+ DetailedFeedbackReviewService $reviewService,
+ FeedbackCoachingRepair $coachingRepair
+ )
  {
  $sessionRecord = InterviewSession::where('user_id', Auth::id())
  ->where('id', $id)
@@ -822,38 +860,31 @@ class UserController extends Controller
  ])
  ->firstOrFail();
 
- $coachingRepaired = false;
- $providerRefreshed = false;
+ $feedbackRefreshQueued = false;
  $sessionEndedEarly = $sessionRecord->status === 'ended'
  || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false);
 
- if (! $sessionEndedEarly && $sessionRecord->status === 'completed') {
+ $refreshCooldownKey = 'feedback-review-refresh:'.$sessionRecord->id;
+ $reviewNeedsRefresh = ! $sessionEndedEarly
+  && $sessionRecord->status === 'completed'
+  && ($reviewService->shouldRefreshWithProvider($sessionRecord)
+   || $coachingRepair->sessionNeedsRepair($sessionRecord));
+
+ if ($reviewNeedsRefresh && Cache::add($refreshCooldownKey, true, now()->addMinutes(15))) {
  try {
- $providerRefreshed = app(DetailedFeedbackReviewService::class)->refreshWithProvidersIfNeeded($sessionRecord);
+ RefreshDetailedFeedbackReview::dispatch((int) $sessionRecord->id, (int) Auth::id());
+ $feedbackRefreshQueued = true;
  } catch (\Throwable $exception) {
- Log::warning('Detailed feedback API provider refresh failed; rendering saved report data.', [
+ Cache::forget($refreshCooldownKey);
+ Log::warning('Detailed feedback refresh could not be queued; rendering saved report data.', [
  'session_id' => $sessionRecord->id,
  'user_id' => Auth::id(),
  'error_type' => $exception::class,
- 'message' => $exception->getMessage(),
- ]);
- }
-
- if (! $providerRefreshed) {
- try {
- $coachingRepaired = app(FeedbackCoachingRepair::class)->repairSession($sessionRecord);
- } catch (\Throwable $exception) {
- Log::warning('Detailed feedback local repair failed; rendering saved report data.', [
- 'session_id' => $sessionRecord->id,
- 'user_id' => Auth::id(),
- 'error_type' => $exception::class,
- 'message' => $exception->getMessage(),
  ]);
  }
  }
- }
 
- if ($coachingRepaired || $providerRefreshed) {
+ if ($feedbackRefreshQueued) {
  $sessionRecord->refresh()->load([
  'category',
  'answers' => function ($query) {
@@ -869,7 +900,7 @@ class UserController extends Controller
  $comparisonRows = $this->comparisonRowsFor($sessionRecord);
  $reviewEvidence = FeedbackEvidencePresenter::forSession($sessionRecord);
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'feedbackRefreshQueued'));
  }
 
  public function exportSession(InterviewSession $session)
@@ -883,7 +914,7 @@ class UserController extends Controller
  abort(409, 'Session CSV export is no longer available from the user reports area.');
  }
 
- public function destroySession(Request $request, $id)
+ public function destroySession(Request $request, $id, \App\Services\VoiceRecordingCleanupService $recordingCleanup)
  {
  $user = Auth::user();
  $sessionRecord = InterviewSession::where('user_id', $user->id)
@@ -891,6 +922,7 @@ class UserController extends Controller
  ->findOrFail($id);
 
  $sessionDate = $sessionRecord->created_at? $sessionRecord->created_at->format('M d, Y'): 'selected date';
+ $recordings = $recordingCleanup->interviewRecordings([(int) $sessionRecord->id]);
 
  DB::transaction(function () use ($sessionRecord, $user) {
  if ((int) session('active_interview_id') === (int) $sessionRecord->id) {
@@ -901,6 +933,8 @@ class UserController extends Controller
  $sessionRecord->delete();
  $this->syncInterviewProfileStats($user->id);
  });
+
+ $recordingCleanup->delete($recordings, 'user_session_deleted');
 
  ActivityLogger::log(
  $user,
@@ -919,7 +953,7 @@ class UserController extends Controller
  return redirect()->back()->with('success', 'Interview session deleted successfully.');
  }
 
- public function clearSessions(Request $request)
+ public function clearSessions(Request $request, \App\Services\VoiceRecordingCleanupService $recordingCleanup)
  {
  $user = Auth::user();
  $sessionCount = InterviewSession::where('user_id', $user->id)
@@ -930,11 +964,14 @@ class UserController extends Controller
  return redirect()->back()->with('message', 'No completed sessions to clear.');
  }
 
- DB::transaction(function () use ($user) {
  $sessionIds = InterviewSession::where('user_id', $user->id)
  ->where('status', 'completed')
- ->pluck('id');
+ ->pluck('id')
+ ->map(fn ($id): int => (int) $id)
+ ->all();
+ $recordings = $recordingCleanup->interviewRecordings($sessionIds);
 
+ DB::transaction(function () use ($user, $sessionIds) {
  Question::whereIn('interview_session_id', $sessionIds)->delete();
 
  InterviewSession::whereIn('id', $sessionIds)
@@ -942,6 +979,8 @@ class UserController extends Controller
 
  $this->syncInterviewProfileStats($user->id);
  });
+
+ $recordingCleanup->delete($recordings, 'user_sessions_cleared');
 
  $label = $sessionCount === 1? 'session': 'sessions';
 
@@ -1537,40 +1576,12 @@ class UserController extends Controller
 
  private function practiceActivityStreaksFor($dateKeys): object
  {
- $dates = collect($dateKeys)
- ->map(fn ($date) => Carbon::parse($date)->toDateString())
- ->unique()
- ->sort()
- ->values();
+ $streaks = app(PracticeStreakService::class)->calculate($dateKeys);
 
- if ($dates->isEmpty()) {
- return (object) ['current' => 0, 'longest' => 0];
- }
-
- $longest = 0;
- $run = 0;
- $previous = null;
-
- foreach ($dates as $dateString) {
- $date = Carbon::parse($dateString);
- $run = $previous && $previous->diffInDays($date) === 1? $run + 1: 1;
- $longest = max($longest, $run);
- $previous = $date;
- }
-
- $dateSet = $dates->flip();
- $cursor = Carbon::today();
- if (! $dateSet->has($cursor->toDateString())) {
- $cursor->subDay();
- }
-
- $current = 0;
- while ($dateSet->has($cursor->toDateString())) {
- $current++;
- $cursor->subDay();
- }
-
- return (object) ['current' => $current, 'longest' => $longest];
+ return (object) [
+ 'current' => $streaks['current'],
+ 'longest' => $streaks['longest'],
+ ];
  }
 
  private function starProgressFor($sessions): object
@@ -2084,51 +2095,19 @@ class UserController extends Controller
  ->unique()
  ->values();
 
- if ($practiceDates->isEmpty()) {
+ $streaks = app(PracticeStreakService::class)->calculate($practiceDates);
+
+ if ($streaks['last_activity_date'] === null) {
  $profile->current_streak = 0;
  $profile->longest_streak = 0;
  $profile->last_activity_date = null;
  } else {
- $profile->current_streak = $this->currentPracticeStreak($practiceDates);
- $profile->longest_streak = $this->longestPracticeStreak($practiceDates);
- $profile->last_activity_date = $practiceDates->last();
+ $profile->current_streak = $streaks['current'];
+ $profile->longest_streak = $streaks['longest'];
+ $profile->last_activity_date = $streaks['last_activity_date'];
  }
 
  $profile->save();
- }
-
- private function currentPracticeStreak($practiceDates): int
- {
- $dateSet = array_fill_keys($practiceDates->all(), true);
- $cursor = Carbon::parse($practiceDates->last());
- $streak = 0;
-
- while (isset($dateSet[$cursor->toDateString()])) {
- $streak++;
- $cursor->subDay();
- }
-
- return $streak;
- }
-
- private function longestPracticeStreak($practiceDates): int
- {
- $longest = 0;
- $current = 0;
- $previousDate = null;
-
- foreach ($practiceDates as $date) {
- if ($previousDate && Carbon::parse($previousDate)->addDay()->toDateString() === $date) {
- $current++;
- } else {
- $current = 1;
- }
-
- $longest = max($longest, $current);
- $previousDate = $date;
- }
-
- return $longest;
  }
 
  public function coach()
@@ -3155,10 +3134,13 @@ class UserController extends Controller
  $centralDirectoryOffset = $this->readUnsignedLong($data, $eocdOffset + 16);
  $offset = $centralDirectoryOffset;
  $xmlEntries = [];
+ $decompressedBytes = 0;
+ $matchedEntries = 0;
 
  while ($offset > 0 && $offset + 46 <= strlen($data) && substr($data, $offset, 4) === "PK\x01\x02") {
  $compressionMethod = $this->readUnsignedShort($data, $offset + 10);
  $compressedSize = $this->readUnsignedLong($data, $offset + 20);
+ $uncompressedSize = $this->readUnsignedLong($data, $offset + 24);
  $fileNameLength = $this->readUnsignedShort($data, $offset + 28);
  $extraLength = $this->readUnsignedShort($data, $offset + 30);
  $commentLength = $this->readUnsignedShort($data, $offset + 32);
@@ -3170,17 +3152,30 @@ class UserController extends Controller
  );
 
  if ($isTarget && $localHeaderOffset + 30 <= strlen($data)) {
+ $matchedEntries++;
+ if ($matchedEntries > self::COACH_ATTACHMENT_MAX_ARCHIVE_ENTRIES
+  || $uncompressedSize > self::COACH_ATTACHMENT_MAX_DECOMPRESSED_BYTES
+  || $decompressedBytes + $uncompressedSize > self::COACH_ATTACHMENT_MAX_DECOMPRESSED_BYTES
+  || ($compressedSize === 0 && $uncompressedSize > 0)
+  || ($compressedSize > 0 && $uncompressedSize > $compressedSize * self::COACH_ATTACHMENT_MAX_COMPRESSION_RATIO)) {
+  return [];
+ }
+
  $localNameLength = $this->readUnsignedShort($data, $localHeaderOffset + 26);
  $localExtraLength = $this->readUnsignedShort($data, $localHeaderOffset + 28);
  $dataStart = $localHeaderOffset + 30 + $localNameLength + $localExtraLength;
+ if ($dataStart < 0 || $compressedSize < 0 || $dataStart + $compressedSize > strlen($data)) {
+  return [];
+ }
  $compressed = substr($data, $dataStart, $compressedSize);
  $xml = match ($compressionMethod) {
- 0 => $compressed,
- 8 => @gzinflate($compressed)?: '',
+ 0 => strlen($compressed) <= self::COACH_ATTACHMENT_MAX_DECOMPRESSED_BYTES ? $compressed : '',
+ 8 => $this->inflateWithLimit($compressed, self::COACH_ATTACHMENT_MAX_DECOMPRESSED_BYTES - $decompressedBytes, false),
  default => '',
  };
 
- if ($xml!== '') {
+ if ($xml!== '' && strlen($xml) <= $uncompressedSize + 1) {
+ $decompressedBytes += strlen($xml);
  $xmlEntries[] = $xml;
  }
  }
@@ -3285,11 +3280,18 @@ class UserController extends Controller
  return '';
  }
 
- $chunks = [$data];
+ $chunks = [substr($data, 0, self::COACH_ATTACHMENT_MAX_DECOMPRESSED_BYTES)];
+ $decompressedBytes = 0;
  if (preg_match_all('/<<[\s\S]{0,1500}?\/Filter\s*\/FlateDecode[\s\S]{0,1500}?>>\s*stream\r?\n([\s\S]*?)\r?\nendstream/', $data, $matches)) {
- foreach ($matches[1] as $stream) {
- $inflated = $this->inflatePdfStream($stream);
+ foreach (array_slice($matches[1], 0, self::COACH_ATTACHMENT_MAX_ARCHIVE_ENTRIES) as $stream) {
+ $remainingBytes = self::COACH_ATTACHMENT_MAX_DECOMPRESSED_BYTES - $decompressedBytes;
+ if ($remainingBytes <= 0 || strlen($stream) > self::COACH_ATTACHMENT_MAX_DECOMPRESSED_BYTES) {
+  break;
+ }
+
+ $inflated = $this->inflatePdfStream($stream, $remainingBytes);
  if ($inflated!== '') {
+ $decompressedBytes += strlen($inflated);
  $chunks[] = $inflated;
  }
  }
@@ -3301,11 +3303,45 @@ class UserController extends Controller
  ->implode("\n");
  }
 
- private function inflatePdfStream(string $stream): string
+ private function inflatePdfStream(string $stream, int $maxBytes): string
  {
  $stream = ltrim(rtrim($stream, "\r\n"), "\r\n");
 
- return @gzuncompress($stream)?: @gzinflate($stream)?: @gzdecode($stream)?: @gzinflate(substr($stream, 2))?: '';
+ return $this->inflateWithLimit($stream, $maxBytes, true);
+ }
+
+ private function inflateWithLimit(string $compressed, int $maxBytes, bool $tryMultipleFormats): string
+ {
+ if ($compressed === '' || $maxBytes <= 0) {
+  return '';
+ }
+
+ $attempts = [
+  fn () => @gzinflate($compressed, $maxBytes),
+ ];
+
+ if ($tryMultipleFormats) {
+  $attempts = [
+   fn () => @gzuncompress($compressed, $maxBytes),
+   fn () => @gzinflate($compressed, $maxBytes),
+   fn () => @gzdecode($compressed, $maxBytes),
+   fn () => strlen($compressed) > 2 ? @gzinflate(substr($compressed, 2), $maxBytes) : false,
+  ];
+ }
+
+ foreach ($attempts as $attempt) {
+  try {
+   $inflated = $attempt();
+  } catch (\Throwable) {
+   $inflated = false;
+  }
+
+  if (is_string($inflated) && $inflated !== '' && strlen($inflated) <= $maxBytes) {
+   return $inflated;
+  }
+ }
+
+ return '';
  }
 
  private function extractPdfTextOperators(string $content): string
@@ -3976,14 +4012,28 @@ class UserController extends Controller
  ->where('interview_sessions.status', 'completed');
 
  $sessions = (clone $completedSessions)
- ->with(['score', 'category'])
+  ->select([
+  'interview_sessions.id',
+  'interview_sessions.category_id',
+  'interview_sessions.difficulty',
+  'interview_sessions.target_position',
+  'interview_sessions.num_questions',
+  'interview_sessions.response_mode',
+  'interview_sessions.duration_seconds',
+  'interview_sessions.assessment_mode',
+  'interview_sessions.score_eligible',
+  'interview_sessions.created_at',
+  ])
+  ->with([
+  'score:id,interview_session_id,overall_readiness_score,clarity_score,relevance_score,grammar_score,professionalism_score',
+  'category:id,title',
+  ])
  ->orderBy('created_at', 'asc')
  ->get();
 
- $recentSessions = (clone $completedSessions)
- ->with(['category', 'score'])
- ->orderBy('created_at', 'desc')
- ->get();
+ // Reuse the already-loaded history instead of issuing the same eager-loaded
+ // query a second time solely to reverse its presentation order.
+ $recentSessions = $sessions->sortByDesc('created_at')->values();
 
  $scoredSessions = $this->scoredSessions($sessions);
 
@@ -4536,13 +4586,22 @@ class UserController extends Controller
   ->header('X-Content-Type-Options', 'nosniff');
  }
 
- public function updateProfile(Request $request, ProfilePhotoStorage $photoStorage, \App\Services\RecoveryEmailVerification $emailVerification)
+ public function updateProfile(
+ Request $request,
+ ProfilePhotoStorage $photoStorage,
+ \App\Services\RecoveryEmailVerification $emailVerification,
+ \App\Services\RecoveryEmailChangeNotifier $emailChangeNotifier
+ )
  {
  AccountNotificationSchema::ensure();
 
  $user = Auth::user();
 
  $isLocalAccount = $user->isLocalAccount();
+ $normalizedRequestedEmail = $isLocalAccount && filled($request->email)
+  ? Str::lower(trim((string) $request->email))
+  : ($isLocalAccount ? null : (string) $user->email);
+ $recoveryEmailChanged = $normalizedRequestedEmail !== Str::lower(trim((string) ($user->email ?? '')));
 
  $request->validate([
  'name' => 'required|string|max:255',
@@ -4555,6 +4614,7 @@ class UserController extends Controller
   Rule::unique('users', 'email')
    ->ignore($user->id)
    ->where(fn ($query) => $query->where('auth_method', User::AUTH_METHOD_LOCAL)),
+  Rule::unique('users', 'pending_recovery_email')->ignore($user->id),
  ] : [
  'required',
  'string',
@@ -4564,18 +4624,28 @@ class UserController extends Controller
  ],
  'target_position' => 'nullable|string|max:255',
  'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048|dimensions:max_width=2000,max_height=2000',
+ 'current_password' => $isLocalAccount && $recoveryEmailChanged
+  ? ['required', 'current_password']
+  : ['nullable', 'string'],
  ]);
 
  $user->name = $request->name;
- $normalizedRecoveryEmail = $isLocalAccount && filled($request->email)
-  ? Str::lower(trim((string) $request->email))
-  : ($isLocalAccount ? null : (string) $user->email);
+ $normalizedRecoveryEmail = $normalizedRequestedEmail;
  $emailChanged = $normalizedRecoveryEmail !== Str::lower(trim((string) ($user->email ?? '')));
- $user->email = $normalizedRecoveryEmail;
- if ($normalizedRecoveryEmail === null) {
-  $user->email_verified_at = null;
- } elseif ($emailChanged) {
-  $user->email_verified_at = null;
+ $oldVerifiedRecoveryEmail = $user->hasVerifiedEmail()
+  ? Str::lower(trim((string) $user->email))
+  : null;
+
+ if ($isLocalAccount && $emailChanged) {
+  if (filled($normalizedRecoveryEmail)) {
+   $user->pending_recovery_email = $normalizedRecoveryEmail;
+   $user->pending_recovery_email_requested_at = now();
+  } else {
+   $user->email = null;
+   $user->email_verified_at = null;
+   $user->pending_recovery_email = null;
+   $user->pending_recovery_email_requested_at = null;
+  }
  }
  $user->target_position = $request->target_position;
 
@@ -4584,7 +4654,13 @@ class UserController extends Controller
 
  if ($request->hasFile('profile_photo')) {
  $image = $request->file('profile_photo');
+ try {
  $newPhotoPath = $photoStorage->store($image);
+ } catch (\RuntimeException) {
+ throw ValidationException::withMessages([
+ 'profile_photo' => 'The profile photo could not be processed securely. Please choose another image.',
+ ]);
+ }
  $user->profile_photo_path = $newPhotoPath;
  }
 
@@ -4619,6 +4695,10 @@ class UserController extends Controller
   }
  }
 
+ if ($emailChanged && filled($normalizedRecoveryEmail) && filled($oldVerifiedRecoveryEmail)) {
+  $emailChangeNotifier->requested($oldVerifiedRecoveryEmail, $normalizedRecoveryEmail);
+ }
+
  ActivityLogger::log(
  $user,
  'profile_updated',
@@ -4642,7 +4722,7 @@ class UserController extends Controller
   : $response;
  }
 
- public function updatePassword(Request $request)
+ public function updatePassword(Request $request, \App\Services\UserSessionRevoker $sessionRevoker)
  {
  AccountNotificationSchema::ensure();
 
@@ -4660,8 +4740,18 @@ class UserController extends Controller
  'confirm_password' => 'required|same:new_password',
  ]);
 
- $user->password = Hash::make($request->new_password);
- $user->save();
+ $user->forceFill([
+  'password' => Hash::make($request->new_password),
+  'remember_token' => Str::random(60),
+  'password_recovery_code_hash' => null,
+  'password_recovery_code_generated_at' => null,
+  'password_recovery_code_expires_at' => null,
+  'pending_recovery_email' => null,
+  'pending_recovery_email_requested_at' => null,
+ ])->save();
+
+ $sessionRevoker->revoke($user, $request->session()->getId());
+ $request->session()->regenerate();
 
  ActivityLogger::log(
  $user,

@@ -1,0 +1,2359 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 3
+			path: app/Console/Commands/BuildQuestionEmbeddingIndex.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between 0\|1\|3\|5\|6\|7\|8\|9\|11 and false will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Console/Commands/BuildQuestionEmbeddingIndex.php
+
+		-
+			message: '#^Right side of \|\| is always true\.$#'
+			identifier: booleanOr.rightAlwaysTrue
+			count: 1
+			path: app/Console/Commands/CheckDatasetStorage.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Console/Commands/CheckDatasetStorage.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewAnswer\:\:\$interviewSession\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewAnswer\:\:\$question\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Relation ''interviewSession'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>difficulty" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>expected_guide" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>interview_focus" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>mapped_skills" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>professionalism_score" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>question_text" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>target_position" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>type" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/ExportFeedbackTrainingData.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/RepairFeedbackCoaching.php
+
+		-
+			message: '#^Relation ''answers'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Console/Commands/RepairFeedbackCoaching.php
+
+		-
+			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Console/Commands/RepairFeedbackCoaching.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>coaching_summary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/RepairFeedbackCoaching.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Console/Kernel.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 6
+			path: app/Helpers/ViewHelper.php
+
+		-
+			message: '#^Offset 0 on array\{non\-falsy\-string, non\-falsy\-string, non\-falsy\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Helpers/ViewHelper.php
+
+		-
+			message: '#^Offset 0 on array\{non\-falsy\-string, string, non\-falsy\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Helpers/ViewHelper.php
+
+		-
+			message: '#^Offset 1 on array\{non\-falsy\-string, non\-falsy\-string, non\-falsy\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Helpers/ViewHelper.php
+
+		-
+			message: '#^Offset 1 on array\{non\-falsy\-string, string, non\-falsy\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Helpers/ViewHelper.php
+
+		-
+			message: '#^Offset 2 on array\{non\-falsy\-string, non\-falsy\-string, non\-falsy\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Helpers/ViewHelper.php
+
+		-
+			message: '#^Offset 2 on array\{non\-falsy\-string, string, non\-falsy\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Helpers/ViewHelper.php
+
+		-
+			message: '#^Offset 2 on array\{string, non\-falsy\-string, non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Helpers/ViewHelper.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_fallback" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AdminAiController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_primary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ActivityLog\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AiProviderLog\:\:\$average_response_time_ms\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Category\:\:\$questions\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<numeric\-string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''activities'' is not found in App\\Models\\LearningModule model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''answers'' is not found in App\\Models\\Question model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\Question model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''chapters'' is not found in App\\Models\\LearningModule model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''questions'' is not found in App\\Models\\Category model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\ActivityLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_fallback" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_primary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''auditLogs'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminFeedbackController.php
+
+		-
+			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/AdminFeedbackController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\GameLevel\:\:\$avg_score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminGameController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\GameLevel\:\:\$pass_rate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminGameController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\GameLevel\:\:\$progress\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/AdminGameController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Http/Controllers/AdminGameController.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/AdminGameController.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\GameLevel model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminGameController.php
+
+		-
+			message: '#^Relation ''prerequisiteLevel'' is not found in App\\Models\\GameLevel model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminGameController.php
+
+		-
+			message: '#^Relation ''progress'' is not found in App\\Models\\GameLevel model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminGameController.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/AdminGameController.php
+
+		-
+			message: '#^Relation ''sender'' is not found in App\\Models\\Announcement model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminNotificationController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\ActivityLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminNotificationController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\Announcement model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminNotificationController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$feedback\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Property App\\Models\\Profile\:\:\$last_activity_date \(Carbon\\Carbon\|null\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Property App\\Models\\Profile\:\:\$readiness_score \(int\) does not accept float\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Relation ''answers'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Relation ''session'' is not found in App\\Models\\Score model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Http/Controllers/AdminSessionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ChatbotConversation\:\:\$messages_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$avg_score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$issue\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$issue_class\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$last_interview_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<numeric\-string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\GameCertificate model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Relation ''interviewSession'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Relation ''learningModule'' is not found in App\\Models\\LearningProgress model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Relation ''level'' is not found in App\\Models\\GameSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Relation ''messages'' is not found in App\\Models\\ChatbotConversation model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>question_text" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>unlocked_perks" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AdminUserController.php
+
+		-
+			message: '#^Call to an undefined method Laravel\\Socialite\\Contracts\\Provider\:\:stateless\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\GameAnswer\:\:\$session\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\GameLevel\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\GameLevel\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\GameLevel\>\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\GameSession\:\:\$level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\GameSession\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\GameSession\>\:\:\$level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Anonymous function has an unused use \$languageConfig\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 2
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Offset ''provider'' on array\{v\: int, issued_at\: int, user_id\: string, session_id\: string, question_id\: string, audio_sha256\: string, transcript_sha256\: string, provider\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Parameter \#1 \$attributes of method Illuminate\\Database\\Eloquent\\Model\:\:forceFill\(\) expects array\<model property of App\\Models\\GameAnswer, mixed\>, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Property App\\Models\\Profile\:\:\$last_activity_date \(Carbon\\Carbon\|null\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Relation ''answers'' is not found in App\\Models\\GameSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\GameLevel model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Relation ''level'' is not found in App\\Models\\GameSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Relation ''session'' is not found in App\\Models\\GameAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>answer_text" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>best_score" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>elapsed_seconds" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>filler_words_count" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>pause_count" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>response_mode" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>voice_duration" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>wpm" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GameController.php
+
+		-
+			message: '#^Comparison operation "\>\=" between int\<80200, 80699\> and 80200 is always true\.$#'
+			identifier: greaterOrEqual.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/HealthController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\GameLevel\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewAnswer\:\:\$interviewSession\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewAnswer\:\:\$question\.$#'
+			identifier: property.notFound
+			count: 17
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$country\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Support\\Collection\:\:fresh\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:builtInFallbackQuestionTexts\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:completedSessionHasLocalFallbackFeedback\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:deliveryTranscriptMatchesAnswer\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:localizedQuestionTexts\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:nextQuestionInSequence\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:refreshCompletedSessionFeedback\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:safeGroundedRevisionTemplate\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Offset ''provider'' on array\{v\: int, issued_at\: int, user_id\: string, session_id\: string, question_id\: string, audio_sha256\: string, transcript_sha256\: string, provider\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Offset ''voice_recording…'' on non\-empty\-array on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<mixed\>\) to function array_filter does not contain falsy values, the array will always stay the same\.$#'
+			identifier: arrayFilter.same
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Parameter \#1 \$attributes of static method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\InterviewAnswer\>\:\:create\(\) expects array\<model property of App\\Models\\InterviewAnswer, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Property App\\Models\\Profile\:\:\$last_activity_date \(Carbon\\Carbon\|null\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Relation ''gameLevel'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Relation ''interviewSession'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 7
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between int\<0, max\> and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 2
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>best_score" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>coaching_summary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>rubric" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Variable \$questions in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Feedback\:\:\$score_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$practice_scenario\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 9
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\LearningModule\:\:\$quizzes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\LearningModule\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\LearningModule\>\:\:\$quizzes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\LearningProgress\:\:\$learningModule\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Call to function in_array\(\) with arguments ''clarity_score''\|''grammar_score''\|''professionalism…''\|''relevance_score'', array\{''ats_match_score'', ''job_evidence_match…''\} and true will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<int, Illuminate\\Http\\UploadedFile\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Call to function is_array\(\) with non\-empty\-array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Call to function is_string\(\) with array will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<25, 99\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Instanceof between Illuminate\\Http\\UploadedFile and Illuminate\\Http\\UploadedFile will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Left side of && is always false\.$#'
+			identifier: booleanAnd.leftAlwaysFalse
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: mixed$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\UserController\:\:averageScoreColumn\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\UserController\:\:feedbackCenterAnswerPriorityText\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\UserController\:\:reportScoreColor\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Offset ''advanced'' on array\{label\: string, column\: string, icon\: string\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Offset ''audio'' on array\{audio\: string, mime_type\: string, source_key\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Offset ''mime_type'' on array\{audio\: string, mime_type\: string, source_key\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Offset 0\|1\|2 on array\{''Core code, mga…'', ''Teknikal na…'', ''Paghahanap ng mga…''\}\|array\{''Core code, mga…'', ''Teknikal nga…'', ''Pagpangita og mga…''\}\|array\{''Core code,…'', ''Technical writing,…'', ''Bug hunting, test…''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\<int, Illuminate\\Http\\UploadedFile\>\) to function array_filter does not contain falsy values, the array will always stay the same\.$#'
+			identifier: arrayFilter.same
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Parameter \#1 \$json of function json_decode expects string, null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Property App\\Models\\Profile\:\:\$last_activity_date \(Carbon\\Carbon\|null\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Property App\\Models\\Profile\:\:\$readiness_score \(int\) does not accept float\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''activities'' is not found in App\\Models\\LearningModule model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''answers'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 7
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''chapters'' is not found in App\\Models\\LearningModule model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''gameLevel'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''learningModule'' is not found in App\\Models\\LearningProgress model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''messages'' is not found in App\\Models\\ChatbotConversation model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''question'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''quizzes'' is not found in App\\Models\\LearningModule model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''resources'' is not found in App\\Models\\LearningModule model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 7
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Relation ''session'' is not found in App\\Models\\Score model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Ternary operator condition is always false\.$#'
+			identifier: ternary.alwaysFalse
+			count: 2
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 2
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>duration_seconds" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>expected_guide" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>overall_readiness_score" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>question_text" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>rating" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>rubric" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>score_version" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>target_position" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>type" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Http/Middleware/TrustProxies.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: app/Models/InterviewSession.php
+
+		-
+			message: '#^Call to function is_array\(\) with non\-empty\-array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Models/Profile.php
+
+		-
+			message: '#^Call to function is_string\(\) with array\|null will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Models/Profile.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\User\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\User\:\:\$hidden is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$hidden\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\UserOnboardingProgress\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/UserOnboardingProgress.php
+
+		-
+			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Models/UserOnboardingProgress.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 8
+			path: app/Providers/RouteServiceProvider.php
+
+		-
+			message: '#^Call to function in_array\(\) with arguments ''directly_addressed''\|''insufficient…''\|''not_addressed''\|''partially_addressed''\|''skipped'', array\{''directly_addressed'', ''partially_addressed'', ''not_addressed'', ''insufficient…'', ''skipped''\} and true will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Call to function is_resource\(\) with resource will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Call to function is_string\(\) with array will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 23
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Comparison operation "\<\=" between 0\.8999999999999999\|0\.9999999999999999 and 0 is always false\.$#'
+			identifier: smallerOrEqual.alwaysFalse
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Comparison operation "\>" between 10 and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Constant App\\Services\\AIService\:\:STAR_APPLICABLE_QUESTION_TYPES is unused\.$#'
+			identifier: classConstant.unused
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Method App\\Services\\AIService\:\:openAiTranscriptionPrompt\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Method App\\Services\\AIService\:\:recordSpeechTranscriptionAttempt\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Method Illuminate\\Http\\Client\\Response\:\:header\(\) invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 3
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset ''answer'' on array\{id\: string, answer\: mixed\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset ''id'' on array\{id\: non\-empty\-string, answer\: mixed\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset ''id'' on array\{id\: string, answer\: mixed\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset ''star_score'' on non\-empty\-array on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 0 on array\{list\<array\{string, int\<\-1, max\>\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 8
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 0 on array\{non\-falsy\-string, ''"''\|''\\'''', non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 0 on array\{non\-falsy\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 0 on array\{string, int\<\-1, max\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<non\-empty\-string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<non\-falsy\-string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 1 on array\{string, int\<\-1, max\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 2 on array\{non\-falsy\-string, ''"''\|''\\'''', non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 2 on array\{string, non\-falsy\-string, non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{0\?\: non\-empty\-string\}\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<array\{id\: string, answer\: mixed\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Static method App\\Services\\AIService\:\:fallbackEvidenceFeedback\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Static method App\\Services\\AIService\:\:feedbackIsGroundedInAnswer\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Static method App\\Services\\AIService\:\:feedbackResponseIsComplete\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between non\-empty\-list and array\{\} will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between non\-empty\-string and '''' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Client\\Response\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AiProviderEvaluationRun\:\:\$results\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewAnswer\:\:\$interviewSession\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewAnswer\:\:\$question\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Relation ''interviewSession'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Relation ''results'' is not found in App\\Models\\AiProviderEvaluationRun model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_fallback" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_primary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>question_text" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>results" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>status" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/AiProviderEvaluationService.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\AiProviderLog\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/AiProviderReliabilityService.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 3
+			path: app/Services/CoachReliabilityService.php
+
+		-
+			message: '#^Comparison operation "\>" between 13 and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: app/Services/CoachReliabilityService.php
+
+		-
+			message: '#^Offset ''value'' on array\{0\: string, label\: non\-falsy\-string, 1\: non\-falsy\-string, value\: numeric\-string, 2\: numeric\-string\}\|array\{0\: string, value\: numeric\-string, 1\: numeric\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/CoachReliabilityService.php
+
+		-
+			message: '#^Offset 0 on array\{list\<array\{string, int\<\-1, max\>\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/CoachReliabilityService.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 5
+			path: app/Services/CoachReliabilityService.php
+
+		-
+			message: '#^Offset 1 on array\{string, int\<\-1, max\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/CoachReliabilityService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between numeric\-string and '''' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Services/CoachReliabilityService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewAnswer\:\:\$question\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$feedback\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Offset ''complete'' on array\{complete\: false\}\|array\{complete\: true, provider_evidence_validated\: bool, all_safeguards_passed\: bool, score_handling_safe\: bool, visible_feedback_usable\: bool, possible_answer_usable\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Relation ''answers'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewAnswer\:\:\$question\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/EvidenceBasedCoachingService.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<8, 9\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: app/Services/EvidenceBasedCoachingService.php
+
+		-
+			message: '#^Match arm comparison between ''missing_criteria'' and ''missing_criteria'' is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 2
+			path: app/Services/EvidenceBasedCoachingService.php
+
+		-
+			message: '#^Match arm comparison between ''not_evaluated'' and ''not_evaluated'' is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 1
+			path: app/Services/EvidenceBasedCoachingService.php
+
+		-
+			message: '#^Offset ''status'' on non\-empty\-array on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Services/EvidenceBasedCoachingService.php
+
+		-
+			message: '#^Offset 0 on array\{\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Services/EvidenceBasedCoachingService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between non\-empty\-list\<float\> and array\{\} will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: app/Services/EvidenceBasedCoachingService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>question_text" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/EvidenceBasedCoachingService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/InterviewSessionScoreRefreshService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/InterviewSessionScoreRefreshService.php
+
+		-
+			message: '#^Relation ''answers'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/InterviewSessionScoreRefreshService.php
+
+		-
+			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/InterviewSessionScoreRefreshService.php
+
+		-
+			message: '#^Relation ''session'' is not found in App\\Models\\Score model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/InterviewSessionScoreRefreshService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>body_language_included" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/InterviewSessionScoreRefreshService.php
+
+		-
+			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Score\>\:\:where\(\) expects array\<int\|model property of App\\Models\\Score, mixed\>\|\(Closure\(Illuminate\\Database\\Query\\Builder\)\: mixed\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of App\\Models\\Score, ''latest_sessions…'' given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/KnnReadinessClassifier.php
+
+		-
+			message: '#^Relation ''session'' is not found in App\\Models\\Score model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Services/KnnReadinessClassifier.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 4
+			path: app/Services/LearningChallengeGenerationService.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, array\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/LearningGameCertificateService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>completed_at" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/LearningGameCertificateService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>updated_at" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/LearningGameCertificateService.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/LearningGameScoringService.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 4
+			path: app/Services/LearningModuleGenerationService.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: int\<\-9, \-1\>$#'
+			identifier: match.unhandled
+			count: 3
+			path: app/Services/LearningModuleGenerationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$feedback\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Call to function is_string\(\) with array will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>category" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>progress_percentage" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>qualified" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>reason" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>skill" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/LearningRecommendationService.php
+
+		-
+			message: '#^Offset ''confidence'' on non\-empty\-array\<mixed\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/LocalFeedbackModelService.php
+
+		-
+			message: '#^Offset ''fallback'' on non\-empty\-array\<mixed\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/LocalFeedbackModelService.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/LocalSpeechAssessmentService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between non\-empty\-list\<string\|null\> and array\{\} will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Services/QuestionDatasetProvider.php
+
+		-
+			message: '#^Constant App\\Services\\ReadinessAlgorithmSuite\:\:EPSILON is unused\.$#'
+			identifier: classConstant.unused
+			count: 1
+			path: app/Services/ReadinessAlgorithmSuite.php
+
+		-
+			message: '#^Offset ''core'' on array\{label\: ''Clarity'', weight\: 0\.25, terms\: array\{''clarity'', ''clear'', ''concise'', ''structure'', ''organized'', ''communication'', ''explain''\}, core\: true\}\|array\{label\: ''Confidence'', weight\: 0\.08, terms\: array\{''confidence'', ''delivery'', ''voice'', ''speaking'', ''pace'', ''filler'', ''rehearsal''\}, core\: false\}\|array\{label\: ''Delivery Stability'', weight\: 0\.06, terms\: array\{''delivery'', ''stability'', ''pace'', ''pause'', ''filler'', ''voice'', ''steady''\}, core\: false\}\|array\{label\: ''Grammar'', weight\: 0\.1, terms\: array\{''grammar'', ''sentence'', ''language'', ''fluency'', ''word'', ''english''\}, core\: true\}\|array\{label\: ''Professionalism'', weight\: 0\.2, terms\: array\{''professional'', ''professionalism'', ''tone'', ''confidence'', ''presence'', ''etiquette''\}, core\: true\}\|array\{label\: ''Relevance'', weight\: 0\.35, terms\: array\{''relevance'', ''relevant'', ''question'', ''alignment'', ''focus'', ''specific'', ''targeted''\}, core\: true\}\|array\{label\: ''STAR Method'', weight\: 0\.1, terms\: array\{''star'', ''situation'', ''task'', ''action'', ''result'', ''example'', ''evidence'', ''story''\}, core\: false\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/ReadinessAlgorithmSuite.php
+
+		-
+			message: '#^Offset ''core'' on array\{label\: string, weight\: float, terms\: list\{0\: string, 1\: string, 2\: string, 3\: string, 4\: string, 5\: string, 6\?\: string, 7\?\: string\}, core\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/ReadinessAlgorithmSuite.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/ReadinessAlgorithmSuite.php
+
+		-
+			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Score\>\:\:where\(\) expects array\<int\|model property of App\\Models\\Score, mixed\>\|\(Closure\(Illuminate\\Database\\Query\\Builder\)\: mixed\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of App\\Models\\Score, ''latest_algorithm…'' given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Services/ReadinessAlgorithmSuite.php
+
+		-
+			message: '#^Relation ''session'' is not found in App\\Models\\Score model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Services/ReadinessAlgorithmSuite.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Services/TranscriptService.php
+
+		-
+			message: '#^Offset 0 on array\{non\-falsy\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/TranscriptService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewAnswer\:\:\$question\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/TrustworthyAssessmentService.php
+
+		-
+			message: '#^Comparison operation "\<\=" between 0\.8\|0\.9\|1\.0 and 0 is always false\.$#'
+			identifier: smallerOrEqual.alwaysFalse
+			count: 1
+			path: app/Services/TrustworthyAssessmentService.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Services/TrustworthyAssessmentService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/UserContentUpdateNotificationService.php
+
+		-
+			message: '#^Method App\\Services\\WebPushNotificationService\:\:subject\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Services/WebPushNotificationService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:cascadeOnDelete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/AccountNotificationSchema.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:nullOnDelete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/AccountNotificationSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/AccountNotificationSchema.php
+
+		-
+			message: '#^Offset ''name'' on array\{name\: string, columns\: list\<string\>, type\: string, unique\: bool, primary\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Support/AccountNotificationSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/AiProviderEvaluationSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/AiProviderSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/ChatbotSchema.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\ConnectionInterface\:\:getDriverName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/DatabaseIdSequences.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\ConnectionInterface\:\:getSchemaBuilder\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/DatabaseIdSequences.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewAnswer\:\:\$question\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Support/FeedbackCoachingRepair.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Support/FeedbackCoachingRepair.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$feedback\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Support/FeedbackCoachingRepair.php
+
+		-
+			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Support/FeedbackCoachingRepair.php
+
+		-
+			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Support/FeedbackCoachingRepair.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Support/FeedbackEvidencePresenter.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Support/FeedbackEvidencePresenter.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),mixed\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Support/FeedbackEvidencePresenter.php
+
+		-
+			message: '#^Static method App\\Support\\FeedbackEvidencePresenter\:\:recurringFocus\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Support/FeedbackEvidencePresenter.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>coaching_summary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Support/FeedbackEvidencePresenter.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>score_version" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Support/FeedbackEvidencePresenter.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Support/FeedbackReportPresenter.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$feedback\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Support/FeedbackReportPresenter.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Support/FeedbackReportPresenter.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Support/FeedbackReportPresenter.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>coaching_summary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Support/FeedbackReportPresenter.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>overall_readiness_score" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Support/FeedbackReportPresenter.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:cascadeOnDelete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/FeedbackSchema.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:nullOnDelete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/FeedbackSchema.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''App\\\\Models\\\\Feedback'' and ''flushColumnCache'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Support/FeedbackSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/FeedbackSchema.php
+
+		-
+			message: '#^Right side of && is always false\.$#'
+			identifier: booleanAnd.rightAlwaysFalse
+			count: 1
+			path: app/Support/FeedbackSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/GameSchema.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:cascadeOnDelete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/InterviewAnswerSchema.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:nullOnDelete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/InterviewAnswerSchema.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''App\\\\Models\\\\InterviewAnswer'' and ''flushColumnCache'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Support/InterviewAnswerSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/InterviewAnswerSchema.php
+
+		-
+			message: '#^Right side of && is always false\.$#'
+			identifier: booleanAnd.rightAlwaysFalse
+			count: 1
+			path: app/Support/InterviewAnswerSchema.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:cascadeOnDelete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/InterviewSessionSchema.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:nullOnDelete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/InterviewSessionSchema.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''App\\\\Models\\\\InterviewSession'' and ''flushColumnCache'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Support/InterviewSessionSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/InterviewSessionSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/LearningModuleSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/QuestionSchema.php
+
+		-
+			message: '#^Right side of && is always false\.$#'
+			identifier: booleanAnd.rightAlwaysFalse
+			count: 1
+			path: app/Support/QuestionSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/RuntimeConfiguration.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:cascadeOnDelete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/ScoreSchema.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:nullOnDelete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/ScoreSchema.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''App\\\\Models\\\\Score'' and ''flushColumnCache'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Support/ScoreSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/ScoreSchema.php
+
+		-
+			message: '#^Right side of && is always false\.$#'
+			identifier: booleanAnd.rightAlwaysFalse
+			count: 1
+			path: app/Support/ScoreSchema.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Support/VoiceSessionSchema.php
+
+		-
+			message: '#^Right side of && is always false\.$#'
+			identifier: booleanAnd.rightAlwaysFalse
+			count: 1
+			path: app/Support/VoiceSessionSchema.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Database\\Factories\\UserFactory\:\:definition\(\) should be compatible with return type \(array\<model property of App\\Models\\User, mixed\>\) of method Illuminate\\Database\\Eloquent\\Factories\\Factory\<App\\Models\\User\>\:\:definition\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: database/factories/UserFactory.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 3
+			path: database/seeders/AdminAccountSeeder.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Console\\Command\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: database/seeders/AdminAccountSeeder.php
+
+		-
+			message: '#^Relation ''questions'' is not found in App\\Models\\Category model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: routes/web.php

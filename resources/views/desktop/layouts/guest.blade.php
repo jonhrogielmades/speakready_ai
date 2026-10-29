@@ -23,7 +23,7 @@
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=10') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=11') }}" />
       <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=20') }}" />
       <style>
          :root,

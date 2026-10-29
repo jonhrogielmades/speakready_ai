@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\GameLevel;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -63,6 +64,16 @@ class LearningChallengeGenerationService
 
  $challengePositions = app(ChallengePositionService::class);
  $position = $challengePositions->clean($position);
+
+ $lock = Cache::lock('learning-challenges:generate:'.sha1(Str::lower($position)), 300);
+
+ return $lock->block(90, function () use ($requestedCategory, $position): array {
+ return $this->ensureAiJourneyForPositionLocked($requestedCategory, $position);
+ });
+ }
+
+ private function ensureAiJourneyForPositionLocked(?Category $requestedCategory, string $position): array
+ {
 
  $category = $this->resolvePositionJourneyCategory($requestedCategory, $position);
  $createdCount = $this->generateMissingJourneyLevels($category, $position);

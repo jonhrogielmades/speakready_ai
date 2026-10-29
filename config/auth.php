@@ -113,4 +113,6 @@ return [
 
     'password_timeout' => 10800,
 
+    'generic_login_errors' => filter_var(env('AUTH_GENERIC_LOGIN_ERRORS', true), FILTER_VALIDATE_BOOLEAN),
+
 ];

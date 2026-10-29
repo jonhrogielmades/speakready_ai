@@ -81,6 +81,18 @@ class RouteServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('ai-translation', function (Request $request) {
+            $actor = $request->user()?->getAuthIdentifier() ?: $request->ip();
+            $perMinute = max(1, (int) env('AI_TRANSLATION_RATE_LIMIT_PER_MINUTE', 4));
+            $perDay = max($perMinute, (int) env('AI_TRANSLATION_RATE_LIMIT_PER_DAY', 80));
+
+            return [
+                Limit::perMinute($perMinute)->by('ai-translation-actor|'.$actor),
+                Limit::perMinute(min(30, $perMinute * 2))->by('ai-translation-ip|'.$request->ip()),
+                Limit::perDay($perDay)->by('ai-translation-daily|'.$actor),
+            ];
+        });
+
         RateLimiter::for('admin-ai', function (Request $request) {
             return Limit::perMinute((int) env('ADMIN_AI_RATE_LIMIT_PER_MINUTE', 5))
                 ->by('admin-ai|'.($request->user()?->getAuthIdentifier() ?: $request->ip()));

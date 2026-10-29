@@ -5109,6 +5109,10 @@ PROMPT;
 
  private static function safeProviderErrorMessage(\Throwable $error): string
  {
+ if ($error instanceof RequestException) {
+ return 'Provider request failed; '.self::safeProviderResponseBody($error->response);
+ }
+
  $message = $error->getMessage();
  $message = preg_replace('/([?&](?:key|api_key|token)=)[^&\s]+/i', '$1[redacted]', $message)?? $message;
  $message = preg_replace('/(Bearer\s+)[A-Za-z0-9._-]+/i', '$1[redacted]', $message)?? $message;
@@ -5119,7 +5123,17 @@ PROMPT;
 
  private static function safeProviderResponseBody($response): string
  {
- return mb_substr(self::redactProviderSecrets((string) $response->body()), 0, 1000);
+ $body = (string) $response->body();
+ $status = method_exists($response, 'status') ? (int) $response->status() : 0;
+
+ // Provider errors can echo prompts, transcripts, resumes, or attachment text.
+ // Keep diagnostic metadata without persisting that user content in logs.
+ return sprintf(
+  'HTTP %d; response_bytes=%d; response_sha256=%s',
+  $status,
+  strlen($body),
+  hash('sha256', $body)
+ );
  }
 
  private static function redactProviderSecrets(string $message): string

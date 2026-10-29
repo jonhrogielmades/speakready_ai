@@ -40,8 +40,10 @@ use App\Support\ScoreSchema;
 use App\Support\SystemSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -167,6 +169,51 @@ class InterviewController extends Controller
  }
  $assessmentMode = ($validated['live_feedback_mode']?? 'coaching') === 'real_interview'? 'assessment': 'coached';
 
+ $userId = (int) Auth::id();
+ $startFingerprint = hash('sha256', serialize([
+  'category_id' => (int) $category->id,
+  'validated' => $validated,
+  'position' => $position,
+  'question_types' => $questionTypes,
+  'accommodations' => $accommodationProfile,
+ ]));
+ $recentStartKey = "interview:start:recent:{$userId}:{$startFingerprint}";
+ $startLock = Cache::lock("interview:start:user:{$userId}", 600);
+
+ try {
+  $startLock->block(10);
+ } catch (LockTimeoutException) {
+  return back()
+   ->withErrors(['interview' => 'Your interview is still being prepared. Please wait a moment before trying again.'])
+   ->withInput();
+ }
+
+ try {
+ $recentSessionId = (int) Cache::get($recentStartKey, 0);
+ if ($recentSessionId > 0) {
+  $recentSession = InterviewSession::query()
+   ->whereKey($recentSessionId)
+   ->where('user_id', $userId)
+   ->where('status', 'in_progress')
+   ->first();
+
+  if ($recentSession) {
+   session()->forget([
+    'game_level_id',
+    'active_interview_provider',
+    'active_interview_feedback_provider',
+   ]);
+   session([
+    'active_interview_id' => $recentSession->id,
+    'active_interview_context' => 'interview',
+   ]);
+
+   return redirect()->route('interview.session');
+  }
+
+  Cache::forget($recentStartKey);
+ }
+
  $this->discardActiveInterviewSessions(Auth::id());
 
  $session = InterviewSession::create([
@@ -250,7 +297,12 @@ class InterviewController extends Controller
  ]
  );
 
+ Cache::put($recentStartKey, (int) $session->id, now()->addSeconds(30));
+
  return redirect()->route('interview.session');
+ } finally {
+  $startLock->release();
+ }
  }
 
  public function answer(Request $request)
@@ -1736,15 +1788,21 @@ return response()->json([
 
  $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
  $answerPayload = $this->answerPersistencePayload($session, $answer->question, $validated, $answerText);
+ $retry = DB::transaction(function () use ($answer, $session, $answerPayload): InterviewAnswer {
+ // Lock the original answer while allocating the next sequence number. The
+ // database uniqueness constraint remains the final guard against duplicates.
+ InterviewAnswer::whereKey($answer->id)->lockForUpdate()->firstOrFail();
+
  $nextAttempt = ((int) InterviewAnswer::where('retry_of_answer_id', $answer->id)->max('attempt_number')) + 1;
  $nextAttempt = max(2, $nextAttempt);
 
- $retry = InterviewAnswer::create(array_merge([
+ return InterviewAnswer::create(array_merge([
  'interview_session_id' => $session->id,
  'retry_of_answer_id' => $answer->id,
  'attempt_number' => $nextAttempt,
  'question_id' => $answer->question_id,
  ], $answerPayload));
+ });
 
  $provider = $this->bestEvaluatedInterviewProvider(
  'feedback_generation',
@@ -5102,6 +5160,9 @@ return response()->json([
 
  private function deleteInterviewSessionData(InterviewSession $session): void
  {
+ $recordingCleanup = app(\App\Services\VoiceRecordingCleanupService::class);
+ $recordings = $recordingCleanup->interviewRecordings([(int) $session->id]);
+
  DB::transaction(function () use ($session) {
  Feedback::where('interview_session_id', $session->id)->delete();
  Score::where('interview_session_id', $session->id)->delete();
@@ -5109,6 +5170,8 @@ return response()->json([
  Question::where('interview_session_id', $session->id)->delete();
  $session->delete();
  });
+
+ $recordingCleanup->delete($recordings, 'discarded_interview_session');
 
  if ((int) session('active_interview_id') === (int) $session->id) {
  $this->forgetActiveInterviewKeys();

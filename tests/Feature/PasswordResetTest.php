@@ -54,6 +54,8 @@ class PasswordResetTest extends TestCase
             'password' => Hash::make('old-password'),
             'password_recovery_code_hash' => PasswordRecovery::hash($recoveryCode),
             'password_recovery_code_generated_at' => now(),
+            'pending_recovery_email' => 'unverified-change@example.com',
+            'pending_recovery_email_requested_at' => now(),
         ]);
 
         $response = $this->post(route('password.recovery.reset'), [
@@ -69,6 +71,8 @@ class PasswordResetTest extends TestCase
 
         $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
         $this->assertNull($user->fresh()->password_recovery_code_hash);
+        $this->assertNull($user->fresh()->pending_recovery_email);
+        $this->assertNull($user->fresh()->pending_recovery_email_requested_at);
 
         $this->from(route('password.request'))->post(route('password.recovery.reset'), [
             'username' => 'local-recovery-user',
@@ -101,7 +105,7 @@ class PasswordResetTest extends TestCase
 
         $response
             ->assertRedirect(route('password.request'))
-            ->assertSessionHas('status', 'Recovery code sent to re******@example.com. Check your inbox and spam folder.')
+            ->assertSessionHas('status', 'If the username and verified recovery email match a local account, a recovery code will be sent shortly.')
             ->assertSessionHas('recovery_code_sent', true);
 
         Mail::assertSent(PasswordRecoveryCodeMail::class, function (PasswordRecoveryCodeMail $mail) use ($user): bool {
@@ -119,6 +123,24 @@ class PasswordResetTest extends TestCase
 
         $this->assertNotNull($user->password_recovery_code_expires_at);
         $this->assertTrue(PasswordRecovery::check($sentMail->recoveryCode, $user->password_recovery_code_hash));
+    }
+
+    public function test_recovery_code_request_does_not_reveal_whether_an_account_exists(): void
+    {
+        Mail::fake();
+
+        $this->post(route('password.recovery.send'), [
+            'username' => 'unknown-user',
+            'email' => 'unknown@example.com',
+        ])->assertRedirect(route('password.request'))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas(
+                'status',
+                'If the username and verified recovery email match a local account, a recovery code will be sent shortly.'
+            )
+            ->assertSessionHas('recovery_code_sent', true);
+
+        Mail::assertNothingSent();
     }
 
     public function test_recovery_code_email_renders_without_laravel_markdown_components(): void
@@ -214,7 +236,10 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.recovery.send'), [
             'username' => $user->username,
             'email' => $user->email,
-        ])->assertSessionHasErrors('email');
+        ])->assertSessionHas(
+            'status',
+            'If the username and verified recovery email match a local account, a recovery code will be sent shortly.'
+        )->assertSessionHas('recovery_code_sent', true);
 
         Mail::assertNothingSent();
     }
@@ -545,6 +570,8 @@ class PasswordResetTest extends TestCase
         $user = User::factory()->create([
             'auth_method' => User::AUTH_METHOD_LOCAL,
             'password' => Hash::make('old-password'),
+            'pending_recovery_email' => 'unverified-change@example.com',
+            'pending_recovery_email_requested_at' => now(),
         ]);
 
         $token = Password::broker()->createToken($user);
@@ -560,6 +587,8 @@ class PasswordResetTest extends TestCase
         $response->assertSessionHas('success', 'Your password has been reset.');
 
         $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
+        $this->assertNull($user->fresh()->pending_recovery_email);
+        $this->assertNull($user->fresh()->pending_recovery_email_requested_at);
     }
 
     public function test_reset_password_normalizes_email_and_consumes_token(): void

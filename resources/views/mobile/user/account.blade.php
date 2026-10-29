@@ -96,6 +96,12 @@
                             <input type="email" class="oinp" name="email" id="accountEmail" value="{{ old('email', Auth::user()->email) }}" autocomplete="email" @readonly($accountUser->isGoogleAccount())>
                         </div>
                     </div>
+                    @if($accountUser->isLocalAccount())
+                    <div class="account-field">
+                        <label class="account-field-label" for="profileCurrentPassword"><span class="account-label-icon"><i class="fa-solid fa-shield-halved"></i></span>Current Password <small>(required only to change recovery email)</small></label>
+                        <input type="password" class="oinp" name="current_password" id="profileCurrentPassword" autocomplete="current-password">
+                    </div>
+                    @endif
                     <div class="account-field">
                         <label class="account-field-label" for="accountTargetPosition"><span class="account-label-icon"><i class="fa-solid fa-briefcase"></i></span>Target Job Position</label>
                         <select class="oinp" name="target_position" id="accountTargetPosition" autocomplete="organization-title">
