@@ -1555,6 +1555,7 @@ class ReliabilityHardeningTest extends TestCase
  'AI_FEEDBACK_MAX_PROVIDERS' => '4',
  'AI_FEEDBACK_ATTEMPTS' => '1',
  'AI_FEEDBACK_HTTP_ATTEMPTS' => '1',
+ 'AI_FEEDBACK_FINALIZATION_HTTP_ATTEMPTS' => '1',
  'AI_FEEDBACK_DEADLINE_SECONDS' => '30',
  ] as $key => $value) {
  $this->setEnvValue($key, $value);
