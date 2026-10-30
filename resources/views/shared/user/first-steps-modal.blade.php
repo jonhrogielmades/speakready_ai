@@ -9,6 +9,7 @@
     $firstStepsEmailVerificationApplicable = (bool) ($firstStepsState['email_verification_applicable'] ?? true);
     $firstStepsEmailVerified = (bool) ($firstStepsState['email_verified'] ?? false);
     $firstStepsTourComplete = (bool) ($firstStepsState['dashboard_tour_completed'] ?? false);
+    $firstStepsTourSkipped = (bool) ($firstStepsState['dashboard_tour_skipped'] ?? false);
     $firstStepsCompletedCount = collect([
         $firstStepsRecoverySaved,
         $firstStepsProfileHandled,
@@ -40,7 +41,11 @@
     $firstStepsDashboardUrl = route('dashboard', $firstStepsLayoutQuery);
     $firstStepsToolsUrl = route('dashboard', array_merge($firstStepsLayoutQuery, ['onboarding' => 'tools']));
     $firstStepsTourUrl = route('dashboard', array_merge($firstStepsLayoutQuery, ['onboarding' => 'tour']));
-    $firstStepsAutoShow = request()->routeIs('dashboard') && ! $firstStepsComplete && ! in_array(request()->query('onboarding'), ['tools', 'tour'], true);
+    $firstStepsAutoShow = request()->routeIs('dashboard')
+        && session('onboarding_auto_start') === true
+        && ! $firstStepsComplete
+        && ! $firstStepsTourSkipped
+        && ! in_array(request()->query('onboarding'), ['tools', 'tour'], true);
 @endphp
 
 <div class="modal fade sr-first-steps-modal" id="firstStepsOnboardingModal" tabindex="-1" aria-labelledby="firstStepsOnboardingTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false"

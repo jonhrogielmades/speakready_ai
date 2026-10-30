@@ -81,6 +81,10 @@ class TermsAcceptanceController extends Controller
             // on the terms page, so do not repeat them on the dashboard.
             $request->session()->forget(['registration_success', 'success', 'recovery_code']);
 
+            if ($registrationSuccess) {
+                return $redirect->with('onboarding_auto_start', true);
+            }
+
             return $redirect;
         }
 

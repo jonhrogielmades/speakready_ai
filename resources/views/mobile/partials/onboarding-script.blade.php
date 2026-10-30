@@ -1530,7 +1530,7 @@
                 };
             }
 
-            if (config.autoStart !== false) {
+            if (config.autoStart === true) {
                 controller.startIfIncomplete(config.autoStartDelay);
             }
 

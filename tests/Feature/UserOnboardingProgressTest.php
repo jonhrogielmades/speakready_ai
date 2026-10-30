@@ -6,8 +6,8 @@ use App\Models\InterviewSession;
 use App\Models\Score;
 use App\Models\User;
 use App\Models\UserOnboardingProgress;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
@@ -148,7 +148,17 @@ class UserOnboardingProgressTest extends TestCase
             'recovery_code_saved' => '1',
         ])->assertRedirect(route('dashboard'))
             ->assertSessionMissing('registration_success')
-            ->assertSessionMissing('success');
+            ->assertSessionMissing('success')
+            ->assertSessionHas('onboarding_auto_start', true);
+
+        $this->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('data-sr-first-steps-auto-show="true"', false);
+
+        $this->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('data-sr-first-steps-auto-show="false"', false)
+            ->assertSessionMissing('onboarding_auto_start');
 
         $user = User::where('username', 'recovery-ack-user')->firstOrFail();
         $this->assertSame(User::AUTH_METHOD_LOCAL, $user->auth_method);
@@ -229,6 +239,7 @@ class UserOnboardingProgressTest extends TestCase
         $this->post(route('terms.acceptance.store'), [
             'terms_accepted' => '1',
         ])->assertRedirect(route('dashboard'))
+            ->assertSessionHas('onboarding_auto_start', true)
             ->assertSessionDoesntHaveErrors();
 
         $this->assertNotNull($user->fresh()->terms_accepted_at);
@@ -373,6 +384,52 @@ class UserOnboardingProgressTest extends TestCase
             '/<button\b(?=[^>]*\bdata-sr-start-dashboard-tour\b)(?=[^>]*\bdisabled\b)[^>]*>Finish Steps 1-4<\/button>/',
             $content
         );
+    }
+
+    public function test_existing_or_skipped_users_do_not_automatically_reopen_onboarding(): void
+    {
+        $existingUser = User::factory()->unverified()->create([
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
+
+        $this->actingAs($existingUser)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('data-sr-first-steps-auto-show="false"', false);
+
+        $this->get(route('dashboard', ['onboarding' => 'first-steps']))
+            ->assertOk()
+            ->assertSee('data-sr-first-steps-auto-show="false"', false);
+
+        $skippedUser = User::factory()->create();
+        UserOnboardingProgress::forUser($skippedUser)->forceFill([
+            'dashboard_tour_skipped_at' => now(),
+        ])->save();
+
+        $this->actingAs($skippedUser)
+            ->withSession(['onboarding_auto_start' => true])
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('data-sr-first-steps-auto-show="false"', false);
+    }
+
+    public function test_page_tours_require_an_explicit_auto_start_opt_in(): void
+    {
+        $user = User::factory()->create();
+
+        foreach ([null, 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1'] as $userAgent) {
+            $request = $this->actingAs($user);
+            if ($userAgent !== null) {
+                $request = $request->withHeader('User-Agent', $userAgent);
+            }
+
+            $request->get(route('dashboard'))
+                ->assertOk()
+                ->assertSee('if (config.autoStart === true)', false)
+                ->assertDontSee('if (config.autoStart !== false)', false)
+                ->assertSee('window.startOnboardingTour = controller.start', false);
+        }
     }
 
     public function test_five_step_onboarding_modal_is_available_outside_the_dashboard_on_both_shells(): void
