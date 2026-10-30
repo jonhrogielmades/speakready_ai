@@ -74,9 +74,9 @@ class PwaRememberedLoginTest extends TestCase
     {
         $worker = file_get_contents(public_path('sw.js'));
 
-        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v44';", $worker);
+        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v45';", $worker);
         $this->assertStringContainsString("const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';", $worker);
-        $this->assertStringContainsString("const CLIENT_REFRESH_VALUE = 'pwa-v44';", $worker);
+        $this->assertStringContainsString("const CLIENT_REFRESH_VALUE = 'pwa-v45';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';", $worker);
         $this->assertStringContainsString("const DEFAULT_NOTIFICATION_ACTIONS", $worker);

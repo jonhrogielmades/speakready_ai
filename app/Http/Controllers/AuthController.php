@@ -596,34 +596,45 @@ class AuthController extends Controller
     public function redirectToGoogleAccountDeletion(Request $request)
     {
         if (! SystemSettings::userCan('delete_own_account')) {
-            $this->clearGoogleAccountDeletionSession($request);
-
-            return redirect()->back()->withErrors([
-                'account_delete' => 'Account deletion is currently disabled by the administrator.',
-            ]);
+            return $this->googleAccountDeletionStartFailure(
+                $request,
+                'Account deletion is currently disabled by the administrator.',
+                403
+            );
         }
 
         $user = $request->user();
 
         if (! $user || ! $user->isGoogleAccount() || blank($user->google_id)) {
-            $this->clearGoogleAccountDeletionSession($request);
-
-            return redirect()->back()->withErrors([
-                'account_delete' => 'This account must be confirmed with its current password.',
-            ]);
+            return $this->googleAccountDeletionStartFailure(
+                $request,
+                'This account must be confirmed with its current password.'
+            );
         }
 
         if ($user->is_admin) {
-            $this->clearGoogleAccountDeletionSession($request);
-
-            return redirect()->back()->withErrors([
-                'account_delete' => 'Administrator accounts cannot be deleted from the user account page.',
-            ]);
+            return $this->googleAccountDeletionStartFailure(
+                $request,
+                'Administrator accounts cannot be deleted from the user account page.',
+                403
+            );
         }
 
         $request->session()->put(self::GOOGLE_ACCOUNT_DELETE_USER_SESSION_KEY, (int) $user->id);
 
-        return $this->redirectToGoogleWithIntent($request, self::GOOGLE_ACCOUNT_DELETE_INTENT);
+        try {
+            return $this->redirectToGoogleWithIntent($request, self::GOOGLE_ACCOUNT_DELETE_INTENT);
+        } catch (Throwable $e) {
+            Log::error('Google account deletion confirmation could not start.', [
+                'exception_type' => $e::class,
+            ]);
+
+            return $this->googleAccountDeletionStartFailure(
+                $request,
+                'Google confirmation could not start. Please try again.',
+                503
+            );
+        }
     }
 
     public function handleGoogleCallback(Request $request, AccountDeletionService $accountDeletionService)
@@ -861,6 +872,10 @@ class AuthController extends Controller
         if ($configurationError = $this->googleConfigurationErrorMessage()) {
             Log::warning('Google authentication is not configured correctly.');
 
+            if ($intent === self::GOOGLE_ACCOUNT_DELETE_INTENT && $request->expectsJson()) {
+                return $this->googleAccountDeletionStartFailure($request, $configurationError, 503);
+            }
+
             return $this->googleAuthFailureResponse($request, $configurationError, $intent);
         }
 
@@ -873,10 +888,16 @@ class AuthController extends Controller
             $parameters['max_age'] = 0;
         }
 
-        return Socialite::driver('google')
+        $redirect = Socialite::driver('google')
             ->stateless()
             ->with($parameters)
             ->redirect();
+
+        if ($intent === self::GOOGLE_ACCOUNT_DELETE_INTENT && $request->expectsJson()) {
+            return response()->json(['redirect_url' => $redirect->getTargetUrl()]);
+        }
+
+        return $redirect;
     }
 
     private function completeGoogleAccountDeletion(
@@ -1079,6 +1100,17 @@ class AuthController extends Controller
             self::GOOGLE_AUTH_INTENT_SESSION_KEY,
             self::GOOGLE_AUTH_NONCE_SESSION_KEY,
         ]);
+    }
+
+    private function googleAccountDeletionStartFailure(Request $request, string $message, int $status = 422)
+    {
+        $this->clearGoogleAccountDeletionSession($request);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message], $status);
+        }
+
+        return redirect()->back()->withErrors(['account_delete' => $message]);
     }
 
     private function googleAuthOldInput(Request $request, ?string $intent, array $input): array

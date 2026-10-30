@@ -80,6 +80,11 @@ class AccountDeletionTest extends TestCase
         $this->assertIsString($script);
         $this->assertStringContainsString("form.dataset.submitting === 'true'", $script);
         $this->assertStringContainsString('submitButton.disabled = busy', $script);
+        $this->assertStringContainsString('window.fetch(form.action', $script);
+        $this->assertStringContainsString('new AbortController()', $script);
+        $this->assertStringContainsString("redirect: 'error'", $script);
+        $this->assertStringContainsString('window.location.assign', $script);
+        $this->assertStringContainsString('controller.abort()', $script);
         $this->assertStringContainsString("modal.addEventListener('hidden.bs.modal', resetPasswordField)", $script);
         $this->assertStringContainsString("window.addEventListener('pageshow'", $script);
         foreach (['desktop', 'mobile'] as $layout) {
@@ -351,6 +356,113 @@ class AccountDeletionTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $user->id]);
     }
 
+    public function test_google_deletion_ajax_handoff_returns_immediately_with_a_google_confirmation_url(): void
+    {
+        $user = User::factory()->google()->create([
+            'google_id' => 'google-delete-ajax-id',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $this->configureGoogleOAuth();
+        $capturedState = null;
+
+        $provider = Mockery::mock();
+        $provider->shouldReceive('stateless')->once()->andReturnSelf();
+        $provider->shouldReceive('with')
+            ->once()
+            ->with(Mockery::on(function (array $parameters) use (&$capturedState): bool {
+                $capturedState = $parameters['state'] ?? null;
+
+                return $parameters['prompt'] === 'select_account'
+                    && $parameters['max_age'] === 0
+                    && is_string($capturedState)
+                    && str_starts_with($capturedState, 'sr.');
+            }))
+            ->andReturnSelf();
+        $provider->shouldReceive('redirect')
+            ->once()
+            ->andReturn(redirect()->away('https://accounts.google.com/o/oauth2/auth?client_id=test'));
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
+
+        $this->actingAs($user)
+            ->postJson(route('user.account.delete.google'))
+            ->assertOk()
+            ->assertExactJson([
+                'redirect_url' => 'https://accounts.google.com/o/oauth2/auth?client_id=test',
+            ])
+            ->assertSessionHas('google_account_delete_user_id', $user->id)
+            ->assertSessionHas('google_auth_intent', 'account_delete')
+            ->assertSessionHas('google_auth_nonce');
+
+        $this->assertIsString($capturedState);
+        $this->assertAuthenticatedAs($user);
+        $this->assertDatabaseHas('users', ['id' => $user->id]);
+    }
+
+    public function test_google_deletion_ajax_handoff_reports_configuration_errors_and_clears_state(): void
+    {
+        $user = User::factory()->google()->create([
+            'google_id' => 'google-delete-config-error-id',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        config([
+            'services.google.client_id' => null,
+            'services.google.client_secret' => null,
+            'services.google.redirect' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'google_account_delete_user_id' => $user->id,
+                'google_auth_intent' => 'account_delete',
+                'google_auth_nonce' => 'stale-nonce',
+            ])
+            ->postJson(route('user.account.delete.google'))
+            ->assertStatus(503)
+            ->assertExactJson([
+                'message' => 'Google sign-in is not configured correctly. Please contact the administrator.',
+            ])
+            ->assertSessionMissing('google_account_delete_user_id')
+            ->assertSessionMissing('google_auth_intent')
+            ->assertSessionMissing('google_auth_nonce');
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertDatabaseHas('users', ['id' => $user->id]);
+    }
+
+    public function test_google_deletion_ajax_handoff_recovers_when_the_provider_cannot_start(): void
+    {
+        $user = User::factory()->google()->create([
+            'google_id' => 'google-delete-provider-error-id',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $this->configureGoogleOAuth();
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andThrow(new \RuntimeException('Provider bootstrap failed.'));
+
+        $this->actingAs($user)
+            ->postJson(route('user.account.delete.google'))
+            ->assertStatus(503)
+            ->assertExactJson([
+                'message' => 'Google confirmation could not start. Please try again.',
+            ])
+            ->assertSessionMissing('google_account_delete_user_id')
+            ->assertSessionMissing('google_auth_intent')
+            ->assertSessionMissing('google_auth_nonce');
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertDatabaseHas('users', ['id' => $user->id]);
+    }
+
     public function test_matching_google_confirmation_permanently_deletes_the_account_and_logs_out(): void
     {
         $user = User::factory()->google()->create([
@@ -593,6 +705,34 @@ class AccountDeletionTest extends TestCase
             ->assertSessionHasErrors([
                 'account_delete' => 'Account deletion is currently disabled by the administrator.',
             ]);
+        $this->assertDatabaseHas('users', ['id' => $googleUser->id]);
+    }
+
+    public function test_disabled_account_deletion_permission_returns_a_fast_json_error_for_google_flow(): void
+    {
+        Setting::setVal('role_user_perm_2', false, 'roles', 'boolean');
+
+        $googleUser = User::factory()->google()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($googleUser)
+            ->withSession([
+                'google_account_delete_user_id' => $googleUser->id,
+                'google_auth_intent' => 'account_delete',
+                'google_auth_nonce' => 'stale-nonce',
+            ])
+            ->postJson(route('user.account.delete.google'))
+            ->assertForbidden()
+            ->assertExactJson([
+                'message' => 'Account deletion is currently disabled by the administrator.',
+            ])
+            ->assertSessionMissing('google_account_delete_user_id')
+            ->assertSessionMissing('google_auth_intent')
+            ->assertSessionMissing('google_auth_nonce');
+
+        $this->assertAuthenticatedAs($googleUser);
         $this->assertDatabaseHas('users', ['id' => $googleUser->id]);
     }
 

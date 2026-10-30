@@ -1236,7 +1236,7 @@
       <script>
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=24').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=25').then(function(registration) {
                   if (!registration) return;
                   console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
                }, function(err) {
