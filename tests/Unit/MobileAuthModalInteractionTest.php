@@ -16,6 +16,24 @@ class MobileAuthModalInteractionTest extends TestCase
         );
     }
 
+    public function test_registration_password_shows_a_valid_check_only_after_all_rules_pass(): void
+    {
+        $markup = $this->readProjectFile('resources/views/shared/auth-modal.blade.php');
+
+        $this->assertStringContainsString('placeholder="Password"', $markup);
+        $this->assertStringContainsString('data-strong-password=', $markup);
+        $this->assertStringContainsString('id="signupPasswordValid"', $markup);
+        $this->assertStringContainsString('Password is valid.', $markup);
+        $this->assertStringContainsString("input.addEventListener('input', updateSignupPasswordFeedback)", $markup);
+        $this->assertStringContainsString('Array.from(value).length >= 8', $markup);
+        $this->assertStringContainsString('/\p{Ll}/u.test(value)', $markup);
+        $this->assertStringContainsString('/\p{Lu}/u.test(value)', $markup);
+        $this->assertStringContainsString('/\p{N}/u.test(value)', $markup);
+        $this->assertStringContainsString('/[\p{Z}\p{S}\p{P}]/u.test(value)', $markup);
+        $this->assertStringContainsString('validStatus.hidden = !passwordIsValid', $markup);
+        $this->assertStringContainsString('input.setCustomValidity(requirementMessage)', $markup);
+    }
+
     public function test_checkbox_focus_does_not_enable_mobile_keyboard_layout(): void
     {
         $script = $this->authInteractionScript();

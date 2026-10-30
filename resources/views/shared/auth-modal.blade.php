@@ -135,12 +135,15 @@
                            <label class="olbl" for="signupPass"><i class="fa-solid fa-lock" aria-hidden="true"></i>Password</label>
                            <div class="auth-input-wrap password-field">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                              <input class="oinp" type="password" name="password" id="signupPass" placeholder="{{ $strongPasswordsRequired ? '8+ chars: upper, lower, number & symbol' : 'At least 8 characters' }}" required minlength="8" autocomplete="new-password" aria-describedby="signupPasswordHelp">
+                              <input class="oinp" type="password" name="password" id="signupPass" placeholder="Password" required minlength="8" autocomplete="new-password" aria-describedby="signupPasswordHelp" data-strong-password="{{ $strongPasswordsRequired ? 'true' : 'false' }}">
                               <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('signupPass', this)" aria-label="Show password">
                                  <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
                               </button>
                            </div>
-                           <small id="signupPasswordHelp" class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">{{ $strongPasswordsRequired ? 'Use at least 8 characters with uppercase, lowercase, a number, and a symbol.' : 'Use at least 8 characters.' }}</small>
+                           <small id="signupPasswordHelp" class="d-block mt-1" style="color:var(--tx3);font-size:.76rem" aria-live="polite">
+                              <span id="signupPasswordRequirements">{{ $strongPasswordsRequired ? 'Use at least 8 characters with uppercase, lowercase, a number, and a symbol.' : 'Use at least 8 characters.' }}</span>
+                              <span id="signupPasswordValid" class="text-success fw-semibold ms-1" role="status" hidden><i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>Password is valid.</span>
+                           </small>
                         </div>
                         <div class="auth-field auth-register-confirm-password">
                            <label class="olbl" for="signupPassConfirm"><i class="fa-solid fa-lock" aria-hidden="true"></i>Confirm password</label>
@@ -170,3 +173,57 @@
             </div>
          </div>
       </div>
+
+      <script>
+         (function () {
+            function setupSignupPasswordFeedback() {
+               const input = document.getElementById('signupPass');
+               const requirements = document.getElementById('signupPasswordRequirements');
+               const validStatus = document.getElementById('signupPasswordValid');
+
+               if (!input || !requirements || !validStatus || input.dataset.passwordFeedbackBound === 'true') {
+                  return;
+               }
+
+               input.dataset.passwordFeedbackBound = 'true';
+               const strongPasswordRequired = input.dataset.strongPassword === 'true';
+               const requirementMessage = requirements.textContent.trim();
+
+               function updateSignupPasswordFeedback() {
+                  const value = input.value || '';
+                  const meetsLength = Array.from(value).length >= 8;
+                  const meetsStrongRules = !strongPasswordRequired || (
+                     /\p{Ll}/u.test(value)
+                     && /\p{Lu}/u.test(value)
+                     && /\p{N}/u.test(value)
+                     && /[\p{Z}\p{S}\p{P}]/u.test(value)
+                  );
+                  const passwordIsValid = meetsLength && meetsStrongRules;
+
+                  validStatus.hidden = !passwordIsValid;
+
+                  if (value === '') {
+                     input.setCustomValidity('');
+                     input.removeAttribute('aria-invalid');
+                  } else if (passwordIsValid) {
+                     input.setCustomValidity('');
+                     input.setAttribute('aria-invalid', 'false');
+                  } else {
+                     input.setCustomValidity(requirementMessage);
+                     input.setAttribute('aria-invalid', 'true');
+                  }
+               }
+
+               input.addEventListener('input', updateSignupPasswordFeedback);
+               input.addEventListener('change', updateSignupPasswordFeedback);
+               window.addEventListener('pageshow', updateSignupPasswordFeedback);
+               updateSignupPasswordFeedback();
+            }
+
+            if (document.readyState === 'loading') {
+               document.addEventListener('DOMContentLoaded', setupSignupPasswordFeedback, { once: true });
+            } else {
+               setupSignupPasswordFeedback();
+            }
+         })();
+      </script>
