@@ -1534,7 +1534,7 @@ class UserSideHardeningTest extends TestCase
  ]);
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
  $expectedMarkup = [
- 'css/desktop/interview/session.css?v=66',
+ 'css/desktop/interview/session.css?v=67',
  'Coaching On',
  "classList.toggle('real-interview-mode', liveFeedbackMode === 'real_interview')",
  'const liveFeedbackMode = "coaching";',
@@ -1590,8 +1590,8 @@ class UserSideHardeningTest extends TestCase
  ->get(route('interview.session'))
  ->assertOk();
 
- foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=66']), [
- 'css/mobile/interview/session.css?v=75',
+ foreach (array_merge(array_diff($expectedMarkup, ['css/desktop/interview/session.css?v=67']), [
+ 'css/mobile/interview/session.css?v=76',
  ]) as $markup) {
  $mobileResponse->assertSee($markup, false);
  }
@@ -4177,7 +4177,7 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('let currentQIdx = 1;', false)
  ->assertSee('Saved answer about a customer escalation result.')
  ->assertSee('css/desktop/user/game-session-base.css?v=66', false)
- ->assertDontSee('css/desktop/interview/session.css?v=66', false)
+ ->assertDontSee('css/desktop/interview/session.css?v=67', false)
  ->assertSee('id="sec-interview-session"', false)
  ->assertSee('data-game-session-root', false)
  ->assertSee('learning-game-interview-layout', false)
@@ -4300,7 +4300,7 @@ class UserSideHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
  ->assertSee('css/mobile/user/game-session-base.css?v=73', false)
- ->assertDontSee('css/mobile/interview/session.css?v=75', false)
+ ->assertDontSee('css/mobile/interview/session.css?v=76', false)
  ->assertSee('css/mobile/user/game-session.css?v=2026102001', false)
  ->assertSee('data-page-style="user-game-session"', false)
  ->assertSee('id="sec-interview-session"', false)

@@ -1424,7 +1424,7 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'));
 
         $response->assertOk()
-            ->assertSee('css/desktop/interview/session.css?v=66', false)
+            ->assertSee('css/desktop/interview/session.css?v=67', false)
             ->assertSee('const cameraDetectionEnabled = true;', false)
             ->assertSee('interview-session-browser-fullscreen', false)
             ->assertSee('interview-ready-fullscreen', false)
@@ -1465,6 +1465,110 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen .desktop-response-column .response-panel', $desktopSessionCss);
         $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen .desktop-response-column #answerTextarea', $desktopSessionCss);
         $this->assertStringContainsString('max-height: none !important;', $desktopSessionCss);
+    }
+
+    public function test_timed_interview_displays_countdown_inside_panel_on_desktop_and_mobile(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $category = Category::create([
+            'title' => 'Behavioral',
+            'description' => 'Behavioral questions',
+            'status' => 'active',
+            'type' => 'core',
+        ]);
+        $session = InterviewSession::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'target_position' => 'Developer',
+            'num_questions' => 1,
+            'response_mode' => 'text',
+            'time_limit' => 1,
+            'status' => 'in_progress',
+        ]);
+        Question::create([
+            'category_id' => $category->id,
+            'interview_session_id' => $session->id,
+            'question_text' => 'Describe a time you solved a difficult issue.',
+            'difficulty' => 'medium',
+            'type' => 'Behavioral',
+            'status' => 'active',
+        ]);
+
+        $layouts = [
+            'desktop' => [
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36',
+                'stylesheet' => 'css/desktop/interview/session.css?v=67',
+            ],
+            'mobile' => [
+                'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+                'stylesheet' => 'css/mobile/interview/session.css?v=76',
+            ],
+        ];
+
+        foreach ($layouts as $layout => $configuration) {
+            $response = $this->actingAs($user)
+                ->withSession(['active_interview_id' => $session->id])
+                ->withHeader('User-Agent', $configuration['user_agent'])
+                ->get(route('interview.session'));
+
+            $response->assertOk()
+                ->assertSee($configuration['stylesheet'], false)
+                ->assertSee('class="question-timer-anchor"', false)
+                ->assertSee('id="questionTimerChip"', false)
+                ->assertSee('id="perQuestionTimer" role="timer" aria-live="off">01:00</span>', false)
+                ->assertSee('const perQuestionLimitSeconds = 60;', false)
+                ->assertSee('function updateQuestionTimerDisplay()', false)
+                ->assertSee('function startQuestionTimer()', false);
+
+            $content = $response->getContent();
+            $panelPosition = strpos($content, '<div class="panel p-0 ai-avatar-panel');
+            $timerPosition = strpos($content, 'class="question-timer-anchor"');
+            $avatarPosition = strpos($content, 'id="aiAvatarContainer"');
+
+            $this->assertNotFalse($panelPosition, "The {$layout} interviewer panel should render.");
+            $this->assertNotFalse($timerPosition, "The {$layout} countdown should render.");
+            $this->assertNotFalse($avatarPosition, "The {$layout} interviewer avatar should render.");
+            $this->assertLessThan($timerPosition, $panelPosition, "The {$layout} countdown should be inside the interviewer panel.");
+            $this->assertLessThan($avatarPosition, $timerPosition, "The {$layout} countdown should appear before the interviewer stage.");
+        }
+
+        $session->update([
+            'session_state' => json_encode([
+                'has_started' => true,
+                'currentQIdx' => 0,
+                'answersData' => [
+                    ['elapsed_seconds' => 20],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        ]);
+
+        foreach ($layouts as $configuration) {
+            $this->actingAs($user)
+                ->withSession(['active_interview_id' => $session->id])
+                ->withHeader('User-Agent', $configuration['user_agent'])
+                ->get(route('interview.session'))
+                ->assertOk()
+                ->assertSee('id="perQuestionTimer" role="timer" aria-live="off">00:40</span>', false);
+        }
+
+        foreach (['desktop', 'mobile'] as $layout) {
+            $css = file_get_contents(public_path("css/{$layout}/interview/session.css"));
+
+            $this->assertStringContainsString('Keep a selected per-question limit visible inside', $css);
+            $this->assertStringContainsString('.ai-avatar-panel .question-timer-anchor', $css);
+            $this->assertStringContainsString('display: block !important;', $css);
+            $this->assertStringContainsString('#questionTimerChip.warning', $css);
+            $this->assertStringContainsString('#questionTimerChip.danger', $css);
+            $this->assertDoesNotMatchRegularExpression(
+                '/\.question-timer-anchor\s*\{[^}]*display\s*:\s*none\b[^}]*\}/s',
+                $css,
+                "The {$layout} countdown must not be hidden by a responsive rule."
+            );
+        }
     }
 
     public function test_voice_and_hybrid_interview_sessions_offer_saved_audio_playback_with_their_respective_answer_fields(): void
@@ -1773,7 +1877,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=75', false)
+            ->assertSee('css/mobile/interview/session.css?v=76', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertSee('Camera OFF', false)

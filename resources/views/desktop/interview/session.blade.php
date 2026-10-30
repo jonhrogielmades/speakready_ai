@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=66') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=67') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -53,6 +53,15 @@
  $savedStateForUi = json_decode($sessionRecord->session_state?? '', true);
  $hasSavedInterviewState = is_array($savedStateForUi) &&!empty($savedStateForUi['has_started']);
  $initialQuestionCounter = $hasSavedInterviewState? 'Resume': 'Ready';
+ $questionTimeLimitSeconds = max(0, (int) ($sessionRecord->time_limit?? 0) * 60);
+ $initialQuestionTimerSeconds = $questionTimeLimitSeconds;
+ if ($questionTimeLimitSeconds > 0 && $hasSavedInterviewState) {
+ $savedQuestionIndex = max(0, (int) ($savedStateForUi['currentQIdx']?? $sessionRecord->current_question_index?? 0));
+ $savedAnswersForUi = is_array($savedStateForUi['answersData']?? null)? $savedStateForUi['answersData']: [];
+ $savedElapsedSeconds = max(0, (int) data_get($savedAnswersForUi, "{$savedQuestionIndex}.elapsed_seconds", 0));
+ $initialQuestionTimerSeconds = max(0, $questionTimeLimitSeconds - $savedElapsedSeconds);
+ }
+ $initialQuestionTimerLabel = sprintf('%02d:%02d', intdiv($initialQuestionTimerSeconds, 60), $initialQuestionTimerSeconds % 60);
   $responseModeKey = strtolower((string) ($sessionRecord->response_mode?? 'text'));
   $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
   $interviewerAvatarImages = [
@@ -89,6 +98,15 @@
  <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">{{ $initialQuestionCounter }}</span>
  </div>
  <span class="badge interviewer-panel-badge"><i class="fa-solid fa-bolt me-1"></i> interviewer</span>
+ @if($questionTimeLimitSeconds > 0)
+ <div class="question-timer-anchor" aria-label="Time remaining for this question">
+ <span class="session-chip" id="questionTimerChip" title="Time remaining for this question">
+ <i class="fa-regular fa-clock" aria-hidden="true"></i>
+ <span class="visually-hidden">Time remaining:</span>
+ <span id="perQuestionTimer" role="timer" aria-live="off">{{ $initialQuestionTimerLabel }}</span>
+ </span>
+ </div>
+ @endif
  <div id="aiAvatarContainer" class="interviewer-room-stage" style="--interviewer-panel-room-bg:url('{{ asset($interviewerPanelBackgroundImage) }}');width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
  <img class="interviewer-room-bg-image" src="{{ asset($interviewerPanelBackgroundImage) }}" alt="" aria-hidden="true" loading="eager" fetchpriority="high" decoding="async">
  <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;--avatar-ring-color:#8b5cf6;">
