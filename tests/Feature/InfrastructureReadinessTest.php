@@ -25,6 +25,35 @@ class InfrastructureReadinessTest extends TestCase
             '--header \"Host: $${app_host}\"',
             File::get(base_path('docker-compose.yml'))
         );
+
+        $startup = File::get(base_path('docker-start.sh'));
+        $nginx = File::get(base_path('nginx.conf'));
+        $compose = File::get(base_path('docker-compose.yml'));
+        $containerFlag = '/tmp/speakready/sr-maintenance.flag';
+
+        $this->assertStringContainsString('startup_state_directory="/tmp/speakready"', $startup);
+        $this->assertStringContainsString(
+            'startup_maintenance_flag="${startup_state_directory}/sr-maintenance.flag"',
+            $startup
+        );
+        $this->assertStringNotContainsString(
+            'startup_maintenance_flag="storage/framework',
+            $startup
+        );
+        $this->assertStringContainsString($containerFlag, $nginx);
+        $this->assertStringContainsString($containerFlag, $compose);
+        $this->assertStringNotContainsString(
+            '/var/www/storage/framework/sr-maintenance.flag',
+            $nginx
+        );
+        $this->assertStringContainsString(
+            'Host(`speakreadyai.online`) || Host(`www.speakreadyai.online`)',
+            $compose
+        );
+        $this->assertStringContainsString(
+            'speakreadyai-redirect-www.redirectregex.replacement=https://speakreadyai.online/$${1}',
+            $compose
+        );
     }
 
     public function test_container_supervises_queue_scheduler_and_backup_processes(): void
@@ -114,13 +143,18 @@ class InfrastructureReadinessTest extends TestCase
 
     public function test_readiness_endpoint_reports_failed_startup_maintenance(): void
     {
+        $flag = '/tmp/speakready/test-sr-maintenance.flag';
+        $failure = '/tmp/speakready/test-sr-maintenance.failed';
+        config()->set('operations.startup.maintenance_flag', $flag);
+        config()->set('operations.startup.maintenance_failure', $failure);
+
         File::shouldReceive('exists')
             ->once()
-            ->with(storage_path('framework/sr-maintenance.flag'))
+            ->with($flag)
             ->andReturn(false);
         File::shouldReceive('exists')
             ->once()
-            ->with(storage_path('framework/sr-maintenance.failed'))
+            ->with($failure)
             ->andReturn(true);
         DB::shouldReceive('selectOne')
             ->once()

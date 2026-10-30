@@ -761,7 +761,7 @@ REPAIR_FEEDBACK_LIMIT=250
 
 Use this only when older completed interviews need feedback coaching backfill during startup.
 
-### Dokploy GitHub Auto Deploy
+### Dokploy deployment
 
 Use Dokploy's Docker Compose service for this repository:
 
@@ -771,7 +771,7 @@ Repository: jonhrogielmades/speakready_ai
 Branch: main
 Compose Path: ./docker-compose.yml
 Compose Type: Docker Compose, not Stack
-Auto Deploy: disabled when the gated GitHub Actions trigger below is used
+Auto Deploy: enable this only when direct Dokploy deployments are desired
 ```
 
 In Dokploy, paste the values from `dokploy.env.example` into the Docker Compose environment editor, then replace every `CHANGE_ME_*` value with production secrets. Keep `APP_KEY`, `DB_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `APP_URL`, `SESSION_DOMAIN`, and any AI/mail/OAuth keys stable between deploys.
@@ -782,7 +782,9 @@ The `app` service sets `pull_policy: build`, so each Dokploy deploy rebuilds the
 compose -p speakready-ai -f docker-compose.yml up -d --build --remove-orphans
 ```
 
-For gated releases, disable Dokploy's direct auto deploy and use the included `.github/workflows/dokploy-deploy.yml`. It validates Composer metadata and PHP syntax, PHP and frontend dependency audits, frontend contract checks, every unit and feature test in isolated processes, a fresh MariaDB migration, and the production frontend build. Protect `main` with both `quality` and `schema-mariadb` as required checks. Configure either `DOKPLOY_WEBHOOK_URL`, or all three API secrets: `DOKPLOY_URL`, `DOKPLOY_API_KEY`, and `DOKPLOY_COMPOSE_ID`. Set `DEPLOY_HEALTHCHECK_URL` when the public readiness URL is not `https://speakreadyai.online/up`. The workflow waits for three consecutive healthy responses after triggering deployment. If direct Dokploy auto deploy remains enabled, GitHub Actions cannot prevent a broken commit from deploying.
+The workflow validates Composer metadata and PHP syntax, PHP and frontend dependency audits, frontend contract checks, every unit and feature test in isolated processes, a fresh MariaDB migration, and the production frontend build on every push. Its Dokploy trigger runs only through `workflow_dispatch`, so direct Dokploy auto deploy and GitHub Actions cannot start duplicate rollouts for the same push. For fully gated releases, disable direct Dokploy auto deploy, protect `main` with both `quality` and `schema-mariadb` as required checks, and run the workflow manually after those checks pass. Configure either `DOKPLOY_WEBHOOK_URL`, or all three API secrets: `DOKPLOY_URL`, `DOKPLOY_API_KEY`, and `DOKPLOY_COMPOSE_ID`. Set `DEPLOY_HEALTHCHECK_URL` when the public readiness URL is not `https://speakreadyai.online/up`. The manual deployment waits for three consecutive healthy responses after triggering Dokploy.
+
+Startup readiness files are deliberately stored under `/tmp/speakready` inside each app container. Never move them into the shared `speakready_storage` volume: a new container would otherwise put the still-serving container into maintenance during a rollout. Standard Docker Compose replacement can still have a brief stop/start cutover; true start-first zero-downtime deployment requires a Dokploy Application/Swarm health check and update policy (or an equivalent blue/green setup).
 
 If post-deploy verification fails, keep traffic on the last healthy container when the platform supports rolling updates. Otherwise, redeploy the previous known-good commit from Dokploy without selecting fresh volumes. Never use a volume reset as an application rollback. Verify `/up`, login, and one non-destructive interview page before considering recovery complete.
 

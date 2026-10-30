@@ -1,6 +1,19 @@
 <?php
 
 return [
+    'startup' => [
+        // Containers override these with paths under /tmp/speakready. Keep
+        // storage-based defaults for local PHP/Apache development and tests.
+        'maintenance_flag' => env(
+            'STARTUP_MAINTENANCE_FLAG_PATH',
+            storage_path('framework/sr-maintenance.flag')
+        ),
+        'maintenance_failure' => env(
+            'STARTUP_MAINTENANCE_FAILURE_PATH',
+            storage_path('framework/sr-maintenance.failed')
+        ),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Runtime process health

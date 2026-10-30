@@ -15,8 +15,7 @@ final class HealthController extends Controller
         $checks = [
             'php' => PHP_VERSION_ID >= 80200,
             'laravel' => app()->bound('router'),
-            'startup_maintenance' => ! File::exists(storage_path('framework/sr-maintenance.flag'))
-                && ! File::exists(storage_path('framework/sr-maintenance.failed')),
+            'startup_maintenance' => $this->startupMaintenanceCompleted(),
             'storage' => $this->storageIsWritable(),
             'queue_worker' => $this->heartbeatIsFresh('queue'),
             'scheduler' => $this->heartbeatIsFresh('scheduler'),
@@ -74,6 +73,18 @@ final class HealthController extends Controller
         }
 
         return true;
+    }
+
+    private function startupMaintenanceCompleted(): bool
+    {
+        $flag = trim((string) config('operations.startup.maintenance_flag', ''));
+        $failure = trim((string) config('operations.startup.maintenance_failure', ''));
+
+        if ($flag === '' || $failure === '') {
+            return false;
+        }
+
+        return ! File::exists($flag) && ! File::exists($failure);
     }
 
     private function heartbeatIsFresh(string $process): bool

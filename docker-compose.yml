@@ -59,6 +59,8 @@ services:
       RUN_SCHEMA_REPAIRS_ON_START: "${RUN_SCHEMA_REPAIRS_ON_START:-true}"
       RUN_SCHEDULER_ON_START: "${RUN_SCHEDULER_ON_START:-true}"
       STARTUP_MAINTENANCE_FAIL_OPEN: "${STARTUP_MAINTENANCE_FAIL_OPEN:-false}"
+      STARTUP_MAINTENANCE_FLAG_PATH: "/tmp/speakready/sr-maintenance.flag"
+      STARTUP_MAINTENANCE_FAILURE_PATH: "/tmp/speakready/sr-maintenance.failed"
       RUN_DATABASE_SEEDERS: "${RUN_DATABASE_SEEDERS:-false}"
       TRUSTED_PROXIES: "${TRUSTED_PROXIES:-REMOTE_ADDR}"
       AUTH_RATE_LIMIT_PER_MINUTE: "${AUTH_RATE_LIMIT_PER_MINUTE:-10}"
@@ -282,10 +284,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=dokploy-network"
-      - "traefik.http.routers.speakreadyai.rule=Host(`speakreadyai.online`)"
+      - "traefik.http.routers.speakreadyai.rule=Host(`speakreadyai.online`) || Host(`www.speakreadyai.online`)"
       - "traefik.http.routers.speakreadyai.entrypoints=websecure"
       - "traefik.http.routers.speakreadyai.tls.certresolver=letsencrypt"
       - "traefik.http.routers.speakreadyai.service=speakreadyai"
+      - "traefik.http.routers.speakreadyai.middlewares=speakreadyai-redirect-www"
+      - "traefik.http.middlewares.speakreadyai-redirect-www.redirectregex.regex=^https?://www[.]speakreadyai[.]online/(.*)"
+      - "traefik.http.middlewares.speakreadyai-redirect-www.redirectregex.replacement=https://speakreadyai.online/$${1}"
+      - "traefik.http.middlewares.speakreadyai-redirect-www.redirectregex.permanent=true"
       - "traefik.http.services.speakreadyai.loadbalancer.server.port=80"
     networks:
       - dokploy-network

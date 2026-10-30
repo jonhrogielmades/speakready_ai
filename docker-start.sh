@@ -93,11 +93,18 @@ mkdir -p \
 
 touch storage/logs/laravel.log || true
 
-startup_maintenance_flag="storage/framework/sr-maintenance.flag"
-startup_maintenance_failure="storage/framework/sr-maintenance.failed"
+startup_state_directory="/tmp/speakready"
+startup_maintenance_flag="${startup_state_directory}/sr-maintenance.flag"
+startup_maintenance_failure="${startup_state_directory}/sr-maintenance.failed"
 
-touch "$startup_maintenance_flag" || true
-rm -f "$startup_maintenance_failure" || true
+# Startup readiness is deliberately container-local. The storage directory is
+# a shared Dokploy volume; placing this gate there lets a new replica put the
+# still-healthy old replica into maintenance during a rolling deployment.
+mkdir -p "$startup_state_directory"
+chmod 0755 "$startup_state_directory"
+
+touch "$startup_maintenance_flag"
+rm -f "$startup_maintenance_failure"
 
 if command -v chown >/dev/null 2>&1; then
     chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
