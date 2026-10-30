@@ -106,8 +106,7 @@ class UserOnboardingProgress extends Model
         $firstStepsComplete = $recoveryCodeSaved
             && $profileHandled
             && (bool) $this->setup_tools_completed_at
-            && $emailVerified
-            && (bool) $this->dashboard_tour_completed_at;
+            && $emailVerified;
 
         return [
             'recovery_code_ack_required' => $this->requiresRecoveryCodeAcknowledgement($user),

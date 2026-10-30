@@ -129,15 +129,13 @@
         grid-template-areas:
             "recovery recovery"
             "personalization personalization"
-            "tools verification"
-            "tour tour";
+            "tools verification";
         gap: 11px;
     }
 
     .sr-first-steps-step[data-sr-onboarding-step="recovery_code_saved"] { grid-area: recovery; }
     .sr-first-steps-step[data-sr-onboarding-step="setup_tools_completed"] { grid-area: tools; }
     .sr-first-steps-step[data-sr-onboarding-step="email_verified"] { grid-area: verification; }
-    .sr-first-steps-step[data-sr-onboarding-step="dashboard_tour_completed"] { grid-area: tour; }
 
     .sr-first-steps-step {
         display: grid;
@@ -391,8 +389,7 @@
                 "recovery"
                 "personalization"
                 "tools"
-                "verification"
-                "tour";
+                "verification";
         }
 
         .sr-first-steps-field-wide { grid-column: auto; }

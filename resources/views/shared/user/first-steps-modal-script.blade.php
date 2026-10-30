@@ -8,7 +8,6 @@
 
         const userId = modalElement.dataset.srOnboardingUser || 'guest';
         const returnAfterSetupKey = `speakready.firstSteps.returnAfterSetup.${userId}`;
-        const returnAfterTourKey = `speakready.firstSteps.returnAfterTour.${userId}`;
         const proceedButton = modalElement.querySelector('[data-sr-first-steps-proceed]');
         const footerCopy = modalElement.querySelector('[data-sr-first-steps-footer-copy]');
         const personalizationForm = modalElement.querySelector('[data-sr-first-steps-personalization-form]');
@@ -101,20 +100,10 @@
                 proceedButton.disabled = !allStepsComplete;
                 proceedButton.setAttribute('aria-disabled', allStepsComplete ? 'false' : 'true');
             }
-            const tourStep = stepElement('dashboard_tour_completed');
-            const tourButton = tourStep?.querySelector('[data-sr-start-dashboard-tour]');
-            const tourComplete = Boolean(tourStep?.classList.contains('is-done'));
-            const priorStepsComplete = steps
-                .filter((step) => step !== tourStep)
-                .every((step) => step.classList.contains('is-done'));
-            if (tourButton) {
-                tourButton.disabled = !priorStepsComplete && !tourComplete;
-                tourButton.textContent = tourComplete ? 'Replay' : (priorStepsComplete ? 'Start tour' : 'Finish Steps 1-4');
-            }
             if (footerCopy) {
                 footerCopy.textContent = allStepsComplete
                     ? 'Setup complete. Your dashboard is ready.'
-                    : 'Complete all five steps to continue to your dashboard.';
+                    : 'Complete all four steps to continue to your dashboard.';
             }
         }
 
@@ -161,7 +150,6 @@
 
             if (state.setup_tools_completed) markStepComplete('setup_tools_completed');
             if (state.email_verified) markStepComplete('email_verified');
-            if (state.dashboard_tour_completed) markStepComplete('dashboard_tour_completed');
             updateProgress();
         }
 
@@ -177,6 +165,11 @@
 
                 removeOnboardingQuery();
                 const dashboardUrl = new URL(modalElement.dataset.srDashboardUrl, window.location.origin);
+                if (modalElement.dataset.srAutoStartDashboardTour === 'true') {
+                    window.location.assign(modalElement.dataset.srDashboardTourUrl);
+                    return;
+                }
+
                 const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
                 const dashboardPath = dashboardUrl.pathname.replace(/\/$/, '') || '/';
 
@@ -218,45 +211,6 @@
                 return;
             }
 
-            const tourButton = event.target.closest('[data-sr-start-dashboard-tour]');
-            if (tourButton && modalElement.contains(tourButton)) {
-                event.preventDefault();
-                if (tourButton.disabled) return;
-                const dashboardTourUrl = new URL(modalElement.dataset.srDashboardTourUrl, window.location.origin);
-                const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-                const dashboardPath = dashboardTourUrl.pathname.replace(/\/$/, '') || '/';
-
-                sessionSet(returnAfterTourKey, '1');
-                if (currentPath !== dashboardPath) {
-                    window.location.assign(modalElement.dataset.srDashboardTourUrl);
-                    return;
-                }
-
-                modalElement.addEventListener('hidden.bs.modal', () => {
-                    let attempts = 0;
-                    const startTour = () => {
-                        if (typeof window.startOnboardingTour === 'function') {
-                            window.startOnboardingTour();
-                            return;
-                        }
-                        attempts += 1;
-                        if (attempts < 20) {
-                            window.setTimeout(startTour, 100);
-                            return;
-                        }
-
-                        window.location.assign(modalElement.dataset.srDashboardTourUrl);
-                    };
-                    window.setTimeout(startTour, 120);
-                }, { once: true });
-                modalController()?.hide();
-            }
-        });
-
-        window.addEventListener('speakready:dashboard-tour-closed', () => {
-            if (sessionGet(returnAfterTourKey) !== '1') return;
-            sessionRemove(returnAfterTourKey);
-            window.setTimeout(openFirstSteps, 220);
         });
 
         function setFormStatus(message, type = 'info') {

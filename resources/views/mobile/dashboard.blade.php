@@ -951,7 +951,8 @@ document.addEventListener("DOMContentLoaded", function() {
         let dashboardTourSkipped = @json((bool) ($onboardingState['dashboard_tour_skipped'] ?? false));
         const onboardingProgressUrl = @json(route('user.onboarding.progress'));
         const serverDetectedMobile = true;
-        const dashboardTourRequested = new URLSearchParams(window.location.search).get('onboarding') === 'tour';
+        const dashboardTourQueryPresent = new URLSearchParams(window.location.search).get('onboarding') === 'tour';
+        const dashboardTourRequested = @json((bool) ($dashboardTourAutoStart ?? false));
 
         async function saveDashboardTourMilestone(milestone) {
             const response = await fetch(onboardingProgressUrl, {
@@ -1018,7 +1019,6 @@ document.addEventListener("DOMContentLoaded", function() {
             persistLocalCompletion: false,
             onCompleted: saveDashboardTourCompletion,
             onSkipped: saveDashboardTourSkipped,
-            onDestroyed: () => window.dispatchEvent(new CustomEvent('speakready:dashboard-tour-closed')),
         });
 
         const registrationAlertModal = document.getElementById('srFlashModal');
@@ -1029,6 +1029,12 @@ document.addEventListener("DOMContentLoaded", function() {
             element.classList.contains('show') ||
             element.getAttribute('aria-hidden') === 'false'
         ));
+
+        if (dashboardTourQueryPresent && !dashboardTourRequested) {
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete('onboarding');
+            window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+        }
 
         function startDashboardTourWhenReady() {
             if (!dashboardTourRequested || !dashboardTour || tourStartScheduled) return;

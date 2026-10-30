@@ -82,7 +82,7 @@ class TermsAcceptanceController extends Controller
             $request->session()->forget(['registration_success', 'success', 'recovery_code']);
 
             if ($registrationSuccess) {
-                return $redirect->with('onboarding_auto_start', true);
+                $request->session()->put('onboarding_auto_start', true);
             }
 
             return $redirect;

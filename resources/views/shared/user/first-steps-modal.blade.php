@@ -15,14 +15,9 @@
         $firstStepsProfileHandled,
         $firstStepsSetupComplete,
         $firstStepsEmailVerified,
-        $firstStepsTourComplete,
     ])->filter()->count();
-    $firstStepsComplete = $firstStepsCompletedCount === 5;
-    $firstStepsReadyForTour = $firstStepsRecoverySaved
-        && $firstStepsProfileHandled
-        && $firstStepsSetupComplete
-        && $firstStepsEmailVerified;
-    $firstStepsPercent = (int) round(($firstStepsCompletedCount / 5) * 100);
+    $firstStepsComplete = $firstStepsCompletedCount === 4;
+    $firstStepsPercent = (int) round(($firstStepsCompletedCount / 4) * 100);
     $firstStepsUser = Auth::user();
     $firstStepsPositions = collect(\App\Services\QuestionDatasetProvider::targetPositionOptionGroups())
         ->flatten()
@@ -41,10 +36,11 @@
     $firstStepsDashboardUrl = route('dashboard', $firstStepsLayoutQuery);
     $firstStepsToolsUrl = route('dashboard', array_merge($firstStepsLayoutQuery, ['onboarding' => 'tools']));
     $firstStepsTourUrl = route('dashboard', array_merge($firstStepsLayoutQuery, ['onboarding' => 'tour']));
+    $firstStepsTutorialPending = session('onboarding_auto_start') === true
+        && ! $firstStepsTourComplete
+        && ! $firstStepsTourSkipped;
     $firstStepsAutoShow = request()->routeIs('dashboard')
-        && session('onboarding_auto_start') === true
-        && ! $firstStepsComplete
-        && ! $firstStepsTourSkipped
+        && $firstStepsTutorialPending
         && ! in_array(request()->query('onboarding'), ['tools', 'tour'], true);
 @endphp
 
@@ -53,6 +49,7 @@
      data-sr-onboarding-user="{{ (int) Auth::id() }}"
      data-sr-first-steps-auto-show="{{ $firstStepsAutoShow ? 'true' : 'false' }}"
      data-sr-first-steps-complete="{{ $firstStepsComplete ? 'true' : 'false' }}"
+     data-sr-auto-start-dashboard-tour="{{ $firstStepsTutorialPending ? 'true' : 'false' }}"
      data-sr-dashboard-url="{{ $firstStepsDashboardUrl }}"
      data-sr-dashboard-tools-url="{{ $firstStepsToolsUrl }}"
      data-sr-dashboard-tour-url="{{ $firstStepsTourUrl }}">
@@ -64,17 +61,17 @@
                     <div>
                         <p class="sr-first-steps-kicker">First steps</p>
                         <h2 class="modal-title" id="firstStepsOnboardingTitle">Get interview-ready</h2>
-                        <p class="sr-first-steps-subtitle">Complete these five setup steps to unlock your dashboard. Progress follows your account on every device.</p>
+                        <p class="sr-first-steps-subtitle">Complete these four setup steps to unlock your dashboard. Progress follows your account on every device.</p>
                     </div>
                 </div>
             </div>
 
             <div class="modal-body">
-                <div class="sr-first-steps-progress" data-sr-onboarding-progress role="progressbar" aria-label="{{ $firstStepsCompletedCount }} of 5 onboarding steps complete" aria-valuemin="0" aria-valuemax="5" aria-valuenow="{{ $firstStepsCompletedCount }}">
+                <div class="sr-first-steps-progress" data-sr-onboarding-progress role="progressbar" aria-label="{{ $firstStepsCompletedCount }} of 4 onboarding steps complete" aria-valuemin="0" aria-valuemax="4" aria-valuenow="{{ $firstStepsCompletedCount }}">
                     <div class="sr-first-steps-progress-track" aria-hidden="true">
                         <span data-sr-onboarding-progress-bar style="--sr-first-progress:{{ $firstStepsPercent }}%"></span>
                     </div>
-                    <strong data-sr-onboarding-progress-label aria-live="polite" aria-atomic="true">{{ $firstStepsCompletedCount }} of 5 complete</strong>
+                    <strong data-sr-onboarding-progress-label aria-live="polite" aria-atomic="true">{{ $firstStepsCompletedCount }} of 4 complete</strong>
                 </div>
 
                 <div class="sr-first-steps-list">
@@ -188,22 +185,11 @@
                         </div>
                     </section>
 
-                    <section class="sr-first-steps-step {{ $firstStepsTourComplete ? 'is-done' : '' }}" data-sr-onboarding-step="dashboard_tour_completed">
-                        <span class="sr-first-steps-step-icon"><i class="fa-solid {{ $firstStepsTourComplete ? 'fa-check' : 'fa-compass' }}" aria-hidden="true"></i></span>
-                        <span class="sr-first-steps-step-copy">
-                            <strong>5. Learn your dashboard</strong>
-                            <small>Take the guided dashboard tour. Leaving early keeps this step open.</small>
-                        </span>
-                        <span class="sr-first-steps-step-actions" data-sr-step-status-actions>
-                            @if($firstStepsTourComplete)<span class="sr-first-steps-status">Complete</span>@endif
-                            <button class="sr-first-steps-action" type="button" data-sr-start-dashboard-tour @disabled(! $firstStepsReadyForTour && ! $firstStepsTourComplete)>{{ $firstStepsTourComplete ? 'Replay' : ($firstStepsReadyForTour ? 'Start tour' : 'Finish Steps 1-4') }}</button>
-                        </span>
-                    </section>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <p class="sr-first-steps-footer-copy" data-sr-first-steps-footer-copy>{{ $firstStepsComplete ? 'Setup complete. Your dashboard is ready.' : 'Complete all five steps to continue to your dashboard.' }}</p>
+                <p class="sr-first-steps-footer-copy" data-sr-first-steps-footer-copy>{{ $firstStepsComplete ? 'Setup complete. Your dashboard is ready.' : 'Complete all four steps to continue to your dashboard.' }}</p>
                 <button type="button" class="sr-first-steps-proceed" data-sr-first-steps-proceed @disabled(! $firstStepsComplete)>
                     <i class="fa-solid fa-arrow-right"></i> Proceed to Dashboard
                 </button>

@@ -163,7 +163,7 @@ class UserController extends Controller
  ],
  ];
 
- public function dashboard()
+ public function dashboard(Request $request)
  {
  $user_id = Auth::id();
   $userObj = Auth::user();
@@ -171,6 +171,13 @@ class UserController extends Controller
  $profile = Profile::forUser((int) $user_id);
   $onboardingProgress = UserOnboardingProgress::forUser($userObj);
   $onboardingState = $onboardingProgress->toStateArray($userObj);
+  if (($onboardingState['dashboard_tour_completed']?? false) || ($onboardingState['dashboard_tour_skipped']?? false)) {
+   $request->session()->forget('onboarding_auto_start');
+  }
+  $dashboardTourAutoStart = $request->query('onboarding') === 'tour'
+  && $request->session()->get('onboarding_auto_start') === true
+  && ! ($onboardingState['dashboard_tour_completed']?? false)
+  && ! ($onboardingState['dashboard_tour_skipped']?? false);
 
  // Base query for completed sessions
  $completedSessions = InterviewSession::where('user_id', $user_id)
@@ -368,7 +375,8 @@ class UserController extends Controller
   'profile', 'totalSessions', 'avgScore', 'scoreTrend', 'dashboardTrend',
  'radarData', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
  'learningLabProgress', 'recentNotifications', 'upcomingGoal',
-  'dashboardMockScenarios', 'dashboardBubbleMessages', 'onboardingProgress', 'onboardingState'
+   'dashboardMockScenarios', 'dashboardBubbleMessages', 'onboardingProgress', 'onboardingState',
+   'dashboardTourAutoStart'
  ));
  }
 
@@ -4293,6 +4301,10 @@ class UserController extends Controller
   };
 
   $progress->save();
+
+  if (in_array($validated['milestone'], ['dashboard_tour_completed', 'dashboard_tour_skipped'], true)) {
+   $request->session()->forget('onboarding_auto_start');
+  }
 
   return response()->json([
    'success' => true,

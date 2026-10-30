@@ -170,8 +170,9 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('Notification.requestPermission', false)
                 ->assertSee('Some selected tools still need browser permission.', false)
                 ->assertSee('speakready.firstSteps.returnAfterSetup.', false)
-                ->assertSee('speakready.firstSteps.returnAfterTour.', false)
-                ->assertSee("speakready:dashboard-tour-closed", false);
+                ->assertDontSee('speakready.firstSteps.returnAfterTour.', false)
+                ->assertDontSee("speakready:dashboard-tour-closed", false)
+                ->assertSee('data-sr-auto-start-dashboard-tour="false"', false);
 
             $html = $response->getContent();
             $supportScriptPosition = strpos($html, 'js/media-permission-support.js?v=1');

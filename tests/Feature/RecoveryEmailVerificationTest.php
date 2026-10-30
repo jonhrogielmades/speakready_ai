@@ -105,10 +105,56 @@ class RecoveryEmailVerificationTest extends TestCase
 
         $response = $this->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('1 of 5 complete')
+            ->assertSee('1 of 4 complete')
             ->assertSee('4. Verify your recovery email');
         $this->assertMatchesRegularExpression(
             '/<section\b(?=[^>]*\bis-done\b)(?=[^>]*\bdata-sr-onboarding-step="email_verified")[^>]*>/',
+            $response->getContent()
+        );
+    }
+
+    public function test_new_registration_returns_to_completed_first_steps_before_starting_dashboard_tour(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'username' => 'new-registration-verification-user',
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
+        UserOnboardingProgress::forUser($user)->forceFill([
+            'recovery_code_ack_required_at' => now(),
+            'recovery_code_saved_at' => now(),
+            'profile_personalized_at' => now(),
+            'setup_tools_completed_at' => now(),
+        ])->save();
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'id' => $user->getKey(),
+                'hash' => sha1($user->email),
+            ]
+        );
+
+        $this->actingAs($user)
+            ->withSession(['onboarding_auto_start' => true])
+            ->get($verificationUrl)
+            ->assertRedirect(route('dashboard', ['onboarding' => 'first-steps']))
+            ->assertSessionHas('onboarding_auto_start', true);
+
+        $user->refresh();
+        $this->assertTrue(UserOnboardingProgress::forUser($user)->toStateArray($user)['first_steps_complete']);
+
+        $response = $this->actingAs($user)
+            ->get(route('dashboard', ['onboarding' => 'first-steps']))
+            ->assertOk()
+            ->assertSee('4 of 4 complete')
+            ->assertSee('data-sr-first-steps-auto-show="true"', false)
+            ->assertSee('data-sr-auto-start-dashboard-tour="true"', false)
+            ->assertSessionHas('onboarding_auto_start', true);
+
+        $this->assertMatchesRegularExpression(
+            '/<button\b(?=[^>]*\bdata-sr-first-steps-proceed\b)(?![^>]*\bdisabled\b)[^>]*>/',
             $response->getContent()
         );
     }

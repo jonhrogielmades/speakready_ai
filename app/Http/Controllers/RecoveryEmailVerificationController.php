@@ -99,8 +99,9 @@ class RecoveryEmailVerificationController extends Controller
             }
 
             $onboardingState = UserOnboardingProgress::forUser($user)->toStateArray($user);
+            $onboardingAutoStartPending = $request->session()->get('onboarding_auto_start') === true;
 
-            if (! ($onboardingState['first_steps_complete'] ?? false)) {
+            if ($onboardingAutoStartPending || ! ($onboardingState['first_steps_complete'] ?? false)) {
                 return redirect()->route('dashboard', array_merge(
                     sr_layout_query($request),
                     ['onboarding' => 'first-steps']
