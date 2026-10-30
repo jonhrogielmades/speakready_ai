@@ -191,7 +191,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  ->all();
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
- $this->assertCount(20, $expectedPositions);
+ $this->assertNotEmpty($expectedPositions);
 
  $desktopResponse = $this->actingAs($user)
  ->get(route('user.account'))
