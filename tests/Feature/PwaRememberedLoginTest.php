@@ -425,6 +425,8 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('Use at least 8 characters with uppercase, lowercase, a number, and a symbol.')
             ->assertSee('id="signupPasswordValid"', false)
             ->assertSee('Password is valid.')
+            ->assertSee('id="signupPasswordInvalid"', false)
+            ->assertSee('Password is invalid.')
             ->assertSee('name="username"', false)
             ->assertSee('id="loginUsername"', false)
             ->assertSee('id="signupUsername"', false)

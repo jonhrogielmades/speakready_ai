@@ -16,7 +16,7 @@ class MobileAuthModalInteractionTest extends TestCase
         );
     }
 
-    public function test_registration_password_shows_a_valid_check_only_after_all_rules_pass(): void
+    public function test_registration_password_shows_live_valid_and_invalid_feedback(): void
     {
         $markup = $this->readProjectFile('resources/views/shared/auth-modal.blade.php');
 
@@ -24,6 +24,11 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('data-strong-password=', $markup);
         $this->assertStringContainsString('id="signupPasswordValid"', $markup);
         $this->assertStringContainsString('Password is valid.', $markup);
+        $this->assertStringContainsString('id="signupPasswordInvalid"', $markup);
+        $this->assertStringContainsString('class="text-danger fw-semibold ms-1"', $markup);
+        $this->assertStringContainsString('fa-circle-xmark', $markup);
+        $this->assertStringContainsString('role="status" hidden', $markup);
+        $this->assertStringContainsString('Password is invalid.', $markup);
         $this->assertStringContainsString("input.addEventListener('input', updateSignupPasswordFeedback)", $markup);
         $this->assertStringContainsString('Array.from(value).length >= 8', $markup);
         $this->assertStringContainsString('/\p{Ll}/u.test(value)', $markup);
@@ -31,6 +36,7 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('/\p{N}/u.test(value)', $markup);
         $this->assertStringContainsString('/[\p{Z}\p{S}\p{P}]/u.test(value)', $markup);
         $this->assertStringContainsString('validStatus.hidden = !passwordIsValid', $markup);
+        $this->assertStringContainsString("invalidStatus.hidden = value === '' || passwordIsValid", $markup);
         $this->assertStringContainsString('input.setCustomValidity(requirementMessage)', $markup);
     }
 

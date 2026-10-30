@@ -140,9 +140,10 @@
                                  <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
                               </button>
                            </div>
-                           <small id="signupPasswordHelp" class="d-block mt-1" style="color:var(--tx3);font-size:.76rem" aria-live="polite">
+                           <small id="signupPasswordHelp" class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">
                               <span id="signupPasswordRequirements">{{ $strongPasswordsRequired ? 'Use at least 8 characters with uppercase, lowercase, a number, and a symbol.' : 'Use at least 8 characters.' }}</span>
                               <span id="signupPasswordValid" class="text-success fw-semibold ms-1" role="status" hidden><i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>Password is valid.</span>
+                              <span id="signupPasswordInvalid" class="text-danger fw-semibold ms-1" role="status" hidden><i class="fa-solid fa-circle-xmark me-1" aria-hidden="true"></i>Password is invalid.</span>
                            </small>
                         </div>
                         <div class="auth-field auth-register-confirm-password">
@@ -180,8 +181,9 @@
                const input = document.getElementById('signupPass');
                const requirements = document.getElementById('signupPasswordRequirements');
                const validStatus = document.getElementById('signupPasswordValid');
+               const invalidStatus = document.getElementById('signupPasswordInvalid');
 
-               if (!input || !requirements || !validStatus || input.dataset.passwordFeedbackBound === 'true') {
+               if (!input || !requirements || !validStatus || !invalidStatus || input.dataset.passwordFeedbackBound === 'true') {
                   return;
                }
 
@@ -201,6 +203,7 @@
                   const passwordIsValid = meetsLength && meetsStrongRules;
 
                   validStatus.hidden = !passwordIsValid;
+                  invalidStatus.hidden = value === '' || passwordIsValid;
 
                   if (value === '') {
                      input.setCustomValidity('');
