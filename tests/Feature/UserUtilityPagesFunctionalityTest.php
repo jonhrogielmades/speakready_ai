@@ -56,13 +56,13 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->actingAs($user->fresh())
  ->post(route('user.account.password'), [
  'current_password' => 'current-password',
- 'new_password' => 'new-password',
- 'confirm_password' => 'new-password',
+ 'new_password' => 'NewPassword1!',
+ 'confirm_password' => 'NewPassword1!',
  ])
  ->assertRedirect()
  ->assertSessionHas('success', 'Password updated successfully.');
 
- $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
+ $this->assertTrue(Hash::check('NewPassword1!', $user->fresh()->password));
  $this->assertNull($user->fresh()->pending_recovery_email);
  $this->assertNull($user->fresh()->pending_recovery_email_requested_at);
  }
@@ -315,8 +315,8 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $this->actingAs($user->fresh())
  ->post(route('user.account.password'), [
  'current_password' => 'current-password',
- 'new_password' => 'new-password',
- 'confirm_password' => 'new-password',
+ 'new_password' => 'NewPassword1!',
+ 'confirm_password' => 'NewPassword1!',
  ])
  ->assertRedirect()
  ->assertSessionHas('success', 'Password updated successfully.');
@@ -325,7 +325,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  'user_id' => $user->id,
  'action' => 'password_changed',
  ]);
- $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
+ $this->assertTrue(Hash::check('NewPassword1!', $user->fresh()->password));
  $this->assertTrue(
  $user->fresh()->notifications()->get()->contains(
  fn ($notification): bool => ($notification->data['title']?? null) === 'Password Changed'

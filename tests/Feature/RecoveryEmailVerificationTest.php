@@ -31,8 +31,8 @@ class RecoveryEmailVerificationTest extends TestCase
             'name' => 'Verification Candidate',
             'username' => 'verification-candidate',
             'email' => 'verification.candidate@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'StrongPass1!',
+            'password_confirmation' => 'StrongPass1!',
         ])->assertRedirect(route('terms.acceptance.show'))
             ->assertSessionHas('registration_success', true)
             ->assertSessionHas('recovery_code');

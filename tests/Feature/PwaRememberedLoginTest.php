@@ -19,7 +19,7 @@ class PwaRememberedLoginTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_password_login_does_not_remember_the_device_by_default(): void
+    public function test_existing_weak_password_can_still_log_in_without_remembering_the_device_by_default(): void
     {
         $user = User::factory()->create([
             'username' => 'pwa-user',
@@ -263,8 +263,8 @@ class PwaRememberedLoginTest extends TestCase
             'name' => 'New Interview User',
             'username' => 'new-interview-user',
             'email' => 'new-interview-user@outlook.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'StrongPass1!',
+            'password_confirmation' => 'StrongPass1!',
         ];
 
         $response = $this->post(route('register'), $registration);
@@ -286,7 +286,7 @@ class PwaRememberedLoginTest extends TestCase
         ]);
         $user = User::where('username', 'new-interview-user')->firstOrFail();
         $this->assertNull($user->email_verified_at);
-        $this->assertTrue(Hash::check('password123', $user->password));
+        $this->assertTrue(Hash::check('StrongPass1!', $user->password));
         $this->assertNotNull($user->password_recovery_code_hash);
         $this->assertDatabaseHas('profiles', [
             'user_id' => $user->id,
@@ -333,8 +333,8 @@ class PwaRememberedLoginTest extends TestCase
                     'name' => 'Recovery Email Candidate',
                     'username' => $username,
                     'email' => $email,
-                    'password' => 'password123',
-                    'password_confirmation' => 'password123',
+                    'password' => 'StrongPass1!',
+                    'password_confirmation' => 'StrongPass1!',
                 ])
                 ->assertSessionHasErrors([
                     'email' => 'Enter a valid recovery email address.',
@@ -349,8 +349,8 @@ class PwaRememberedLoginTest extends TestCase
             'name' => 'Valid Recovery Candidate',
             'username' => 'valid-recovery-email-user',
             'email' => '  Valid.Recovery@OUTLOOK.COM  ',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'StrongPass1!',
+            'password_confirmation' => 'StrongPass1!',
         ])
             ->assertRedirect(route('terms.acceptance.show'));
 
@@ -363,6 +363,55 @@ class PwaRememberedLoginTest extends TestCase
         Notification::assertSentTo($user, VerifyEmail::class);
     }
 
+    public function test_local_registration_rejects_weak_passwords_by_default(): void
+    {
+        $weakPasswords = [
+            ['too-short', 'Ab1!xyz'],
+            ['no-uppercase', 'lowercase1!'],
+            ['no-lowercase', 'UPPERCASE1!'],
+            ['no-number', 'StrongPass!'],
+            ['no-symbol', 'StrongPass1'],
+        ];
+
+        foreach ($weakPasswords as [$case, $password]) {
+            $username = 'weak-password-'.$case;
+
+            $this->from('/')
+                ->post(route('register'), [
+                    'name' => 'Weak Password Candidate',
+                    'username' => $username,
+                    'email' => $username.'@example.com',
+                    'password' => $password,
+                    'password_confirmation' => $password,
+                ])
+                ->assertRedirect('/')
+                ->assertSessionHasErrors('password');
+
+            $this->assertDatabaseMissing('users', [
+                'username' => $username,
+            ]);
+        }
+    }
+
+    public function test_local_registration_accepts_a_strong_password_by_default(): void
+    {
+        config(['services.brevo.api_key' => null]);
+        Notification::fake();
+
+        $this->post(route('register'), [
+            'name' => 'Strong Password Candidate',
+            'username' => 'strong-password-candidate',
+            'email' => 'strong-password-candidate@example.com',
+            'password' => 'StrongPass1!',
+            'password_confirmation' => 'StrongPass1!',
+        ])->assertRedirect(route('terms.acceptance.show'))
+            ->assertSessionHasNoErrors();
+
+        $user = User::where('username', 'strong-password-candidate')->firstOrFail();
+
+        $this->assertTrue(Hash::check('StrongPass1!', $user->password));
+    }
+
     public function test_guest_auth_modal_uses_loading_overlay_for_registration(): void
     {
         $response = $this->get('/');
@@ -370,6 +419,9 @@ class PwaRememberedLoginTest extends TestCase
         $response->assertOk()
             ->assertSee('id="loginForm"', false)
             ->assertSee('id="signupForm"', false)
+            ->assertSee('placeholder="Enter your password"', false)
+            ->assertSee('placeholder="8+ chars: upper, lower, number &amp; symbol"', false)
+            ->assertSee('Use at least 8 characters with uppercase, lowercase, a number, and a symbol.')
             ->assertSee('name="username"', false)
             ->assertSee('id="loginUsername"', false)
             ->assertSee('id="signupUsername"', false)
@@ -403,8 +455,8 @@ class PwaRememberedLoginTest extends TestCase
             'auth_tab' => 'signup',
             'name' => '',
             'username' => 'missing-name-user',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'StrongPass1!',
+            'password_confirmation' => 'StrongPass1!',
         ])->assertSessionHasErrors('name')
             ->assertSessionHas('_old_input.auth_tab', 'signup');
 
@@ -742,8 +794,8 @@ class PwaRememberedLoginTest extends TestCase
             'name' => 'Local Collision Candidate',
             'username' => 'local-collision-candidate',
             'email' => $googleUser->email,
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'StrongPass1!',
+            'password_confirmation' => 'StrongPass1!',
         ])->assertRedirect(route('terms.acceptance.show'));
 
         $localUser = User::where('username', 'local-collision-candidate')->firstOrFail();

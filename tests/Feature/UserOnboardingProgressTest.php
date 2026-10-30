@@ -700,8 +700,8 @@ class UserOnboardingProgressTest extends TestCase
             'name' => $name,
             'username' => $username,
             'email' => $email,
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'StrongPass1!',
+            'password_confirmation' => 'StrongPass1!',
         ]);
     }
 

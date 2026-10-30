@@ -61,15 +61,15 @@ class PasswordResetTest extends TestCase
         $response = $this->post(route('password.recovery.reset'), [
             'username' => ' LOCAL-RECOVERY-USER ',
             'recovery_code' => 'abcdefghijklmnop',
-            'password' => 'new-password-123',
-            'password_confirmation' => 'new-password-123',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ]);
 
         $response
             ->assertRedirect('/')
             ->assertSessionHas('success', 'Your password has been reset. You can now sign in with your username.');
 
-        $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
+        $this->assertTrue(Hash::check('NewPassword123!', $user->fresh()->password));
         $this->assertNull($user->fresh()->password_recovery_code_hash);
         $this->assertNull($user->fresh()->pending_recovery_email);
         $this->assertNull($user->fresh()->pending_recovery_email_requested_at);
@@ -77,8 +77,8 @@ class PasswordResetTest extends TestCase
         $this->from(route('password.request'))->post(route('password.recovery.reset'), [
             'username' => 'local-recovery-user',
             'recovery_code' => $recoveryCode,
-            'password' => 'another-password-123',
-            'password_confirmation' => 'another-password-123',
+            'password' => 'AnotherPassword123!',
+            'password_confirmation' => 'AnotherPassword123!',
         ])->assertRedirect(route('password.request'))
             ->assertSessionHasErrors('recovery_code');
     }
@@ -258,8 +258,8 @@ class PasswordResetTest extends TestCase
         $this->from(route('password.request'))->post(route('password.recovery.reset'), [
             'username' => $user->username,
             'recovery_code' => 'ABCD-EFGH-IJKL-MNOP',
-            'password' => 'new-password-123',
-            'password_confirmation' => 'new-password-123',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ])->assertRedirect(route('password.request'))
             ->assertSessionHasErrors('recovery_code');
 
@@ -338,8 +338,8 @@ class PasswordResetTest extends TestCase
         $this->actingAs($user)
             ->post(route('user.account.password'), [
                 'current_password' => 'unchanged-google-password',
-                'new_password' => 'new-local-password',
-                'confirm_password' => 'new-local-password',
+                'new_password' => 'NewLocalPassword1!',
+                'confirm_password' => 'NewLocalPassword1!',
             ])
             ->assertSessionHasErrors([
                 'current_password' => 'Google Login accounts do not have a local password.',
@@ -417,8 +417,8 @@ class PasswordResetTest extends TestCase
         $this->from(route('password.request'))->post(route('password.recovery.reset'), [
             'username' => $user->username,
             'recovery_code' => $recoveryCode,
-            'password' => 'new-local-password-123',
-            'password_confirmation' => 'new-local-password-123',
+            'password' => 'NewLocalPassword123!',
+            'password_confirmation' => 'NewLocalPassword123!',
         ])->assertRedirect(route('password.request'))
             ->assertSessionHasErrors('recovery_code');
 
@@ -448,8 +448,8 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.update'), [
             'token' => $token,
             'email' => $user->email,
-            'password' => 'new-local-password',
-            'password_confirmation' => 'new-local-password',
+            'password' => 'NewLocalPassword1!',
+            'password_confirmation' => 'NewLocalPassword1!',
         ])->assertSessionHasErrors('email');
 
         $this->assertTrue(Hash::check('unchanged-google-password', $user->fresh()->password));
@@ -579,14 +579,14 @@ class PasswordResetTest extends TestCase
         $response = $this->post(route('password.update'), [
             'token' => $token,
             'email' => $user->email,
-            'password' => 'new-password-123',
-            'password_confirmation' => 'new-password-123',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ]);
 
         $response->assertRedirect('/');
         $response->assertSessionHas('success', 'Your password has been reset.');
 
-        $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
+        $this->assertTrue(Hash::check('NewPassword123!', $user->fresh()->password));
         $this->assertNull($user->fresh()->pending_recovery_email);
         $this->assertNull($user->fresh()->pending_recovery_email_requested_at);
     }
@@ -604,11 +604,11 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.update'), [
             'token' => $token,
             'email' => '  PERSON@EXAMPLE.COM  ',
-            'password' => 'new-password-123',
-            'password_confirmation' => 'new-password-123',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ])->assertRedirect('/');
 
-        $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
+        $this->assertTrue(Hash::check('NewPassword123!', $user->fresh()->password));
 
         $response = $this->from(route('password.reset', [
             'token' => $token,
@@ -616,8 +616,8 @@ class PasswordResetTest extends TestCase
         ]))->post(route('password.update'), [
             'token' => $token,
             'email' => $user->email,
-            'password' => 'another-password-123',
-            'password_confirmation' => 'another-password-123',
+            'password' => 'AnotherPassword123!',
+            'password_confirmation' => 'AnotherPassword123!',
         ]);
 
         $response->assertRedirect(route('password.reset', [
@@ -626,6 +626,6 @@ class PasswordResetTest extends TestCase
         ]));
         $response->assertSessionHasErrors('email');
 
-        $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
+        $this->assertTrue(Hash::check('NewPassword123!', $user->fresh()->password));
     }
 }

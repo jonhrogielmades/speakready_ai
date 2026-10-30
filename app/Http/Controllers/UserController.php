@@ -4875,7 +4875,7 @@ class UserController extends Controller
  {
  $rule = PasswordRule::min(8);
 
- if (SystemSettings::enabled('sec_strong_pass', false)) {
+ if (SystemSettings::enabled('sec_strong_pass')) {
  $rule = $rule->mixedCase()->numbers()->symbols();
  }
 

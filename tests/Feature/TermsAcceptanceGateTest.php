@@ -139,8 +139,8 @@ class TermsAcceptanceGateTest extends TestCase
             'name' => 'New Terms User',
             'username' => 'new-terms-user',
             'email' => 'new-terms-user@gmail.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'StrongPass1!',
+            'password_confirmation' => 'StrongPass1!',
         ])
             ->assertRedirect(route('terms.acceptance.show'))
             ->assertSessionHas('registration_success', true)
@@ -157,7 +157,7 @@ class TermsAcceptanceGateTest extends TestCase
         $this->assertSame(User::AUTH_METHOD_LOCAL, $user->auth_method);
         $this->assertNull($user->google_id);
         $this->assertNull($user->email_verified_at);
-        $this->assertTrue(Hash::check('password123', $user->password));
+        $this->assertTrue(Hash::check('StrongPass1!', $user->password));
         $this->assertNull($user->terms_accepted_at);
         $this->assertNull($user->terms_version);
 

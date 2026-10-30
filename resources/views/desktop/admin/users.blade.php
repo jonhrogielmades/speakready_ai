@@ -9,6 +9,7 @@
 @php
     $showTrashed = $showTrashed ?? false;
     $trashedUsersCount = $trashedUsersCount ?? 0;
+    $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);
 
     $formatLastActiveShort = function ($lastActiveAt) {
         if (!$lastActiveAt) {
@@ -630,11 +631,12 @@
                     <div class="mb-3" id="editUserPasswordField">
                         <label class="form-label text-muted">Password (Leave blank to keep current)</label>
                         <div class="password-field">
-                            <input type="password" name="password" id="editUserPassword" class="form-control" minlength="8">
+                            <input type="password" name="password" id="editUserPassword" class="form-control" placeholder="{{ $strongPasswordsRequired ? '8+ chars: upper, lower, number & symbol' : 'At least 8 characters' }}" minlength="8" autocomplete="new-password" aria-describedby="editUserPasswordHelp">
                             <button class="password-toggle toggle-password" type="button" onclick="togglePasswordVisibility('editUserPassword', this)" aria-label="Show password">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
                         </div>
+                        <div class="form-text text-muted" id="editUserPasswordHelp">{{ $strongPasswordsRequired ? 'If changing it, use at least 8 characters with uppercase, lowercase, a number, and a symbol.' : 'If changing it, use at least 8 characters.' }}</div>
                     </div>
                     <div class="row">
                         <div class="col-6 mb-3">

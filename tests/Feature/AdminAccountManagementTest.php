@@ -74,13 +74,13 @@ class AdminAccountManagementTest extends TestCase
         $this->actingAs($admin)
             ->post(route('admin.account.password'), [
                 'current_password' => 'old-password',
-                'new_password' => 'new-password-123',
-                'confirm_password' => 'new-password-123',
+                'new_password' => 'NewAdminPass123!',
+                'confirm_password' => 'NewAdminPass123!',
             ])
             ->assertRedirect(route('admin.account'))
             ->assertSessionHas('success', 'Admin password updated successfully.');
 
-        $this->assertTrue(Hash::check('new-password-123', $admin->refresh()->password));
+        $this->assertTrue(Hash::check('NewAdminPass123!', $admin->refresh()->password));
         $this->assertDatabaseHas(ActivityLog::class, [
             'user_id' => $admin->id,
             'action' => 'admin_password_changed',
@@ -135,8 +135,8 @@ class AdminAccountManagementTest extends TestCase
 
         $this->post(route('admin.account.password'), [
             'current_password' => 'unchanged-google-password',
-            'new_password' => 'new-local-password',
-            'confirm_password' => 'new-local-password',
+            'new_password' => 'NewLocalPassword1!',
+            'confirm_password' => 'NewLocalPassword1!',
         ])->assertSessionHasErrors('current_password');
 
         $this->post(route('admin.account.recovery-code'), [

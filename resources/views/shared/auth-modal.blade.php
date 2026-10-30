@@ -9,6 +9,7 @@
    $loginAuthAlert = ! $showSignupAuthTab
       ? ($errors->first() ?: $authQueryAlert)
       : null;
+   $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);
 @endphp
 
       <!-- ======================== LOGIN MODAL ======================== -->
@@ -76,7 +77,7 @@
                            <label class="olbl" for="loginPass"><i class="fa-solid fa-lock" aria-hidden="true"></i>Password</label>
                            <div class="auth-input-wrap password-field">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                              <input class="oinp" type="password" name="password" id="loginPass" placeholder="********" required autocomplete="current-password">
+                              <input class="oinp" type="password" name="password" id="loginPass" placeholder="Enter your password" required autocomplete="current-password">
                               <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('loginPass', this)" aria-label="Show password">
                                  <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
                               </button>
@@ -134,17 +135,18 @@
                            <label class="olbl" for="signupPass"><i class="fa-solid fa-lock" aria-hidden="true"></i>Password</label>
                            <div class="auth-input-wrap password-field">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                              <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required autocomplete="new-password">
+                              <input class="oinp" type="password" name="password" id="signupPass" placeholder="{{ $strongPasswordsRequired ? '8+ chars: upper, lower, number & symbol' : 'At least 8 characters' }}" required minlength="8" autocomplete="new-password" aria-describedby="signupPasswordHelp">
                               <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('signupPass', this)" aria-label="Show password">
                                  <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
                               </button>
                            </div>
+                           <small id="signupPasswordHelp" class="d-block mt-1" style="color:var(--tx3);font-size:.76rem">{{ $strongPasswordsRequired ? 'Use at least 8 characters with uppercase, lowercase, a number, and a symbol.' : 'Use at least 8 characters.' }}</small>
                         </div>
                         <div class="auth-field auth-register-confirm-password">
                            <label class="olbl" for="signupPassConfirm"><i class="fa-solid fa-lock" aria-hidden="true"></i>Confirm password</label>
                            <div class="auth-input-wrap password-field">
                               <span class="auth-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                              <input class="oinp" type="password" name="password_confirmation" id="signupPassConfirm" placeholder="Confirm your password" required autocomplete="new-password">
+                              <input class="oinp" type="password" name="password_confirmation" id="signupPassConfirm" placeholder="Confirm your password" required minlength="8" autocomplete="new-password">
                               <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('signupPassConfirm', this)" aria-label="Show password">
                                  <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
                               </button>

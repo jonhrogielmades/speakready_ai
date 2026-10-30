@@ -13,6 +13,7 @@
     $accountPhotoUrl = $accountUser?->profile_photo_url;
     $accountTargetPosition = old('target_position', $accountUser?->target_position);
     $accountRecoveryCodeSaved = (bool) ($onboardingState['recovery_code_saved'] ?? false);
+    $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);
     $accountJobPositionOptions = collect(\App\Services\QuestionDatasetProvider::targetPositionOptionGroups())
         ->flatten()
         ->map(fn ($position) => trim((string) $position))
@@ -141,17 +142,18 @@
                         <label class="account-field-label" for="newPassword">New Password</label>
                         <div class="password-field">
                            <span class="password-prefix-icon"><i class="fa-solid fa-lock"></i></span>
-                           <input type="password" class="oinp" name="new_password" id="newPassword" placeholder="********" autocomplete="new-password" required minlength="8">
+                           <input type="password" class="oinp" name="new_password" id="newPassword" placeholder="{{ $strongPasswordsRequired ? '8+ chars: upper, lower, number & symbol' : 'At least 8 characters' }}" autocomplete="new-password" required minlength="8" aria-describedby="newPasswordHelp">
                            <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('newPassword', this)" aria-label="Show password">
                               <i class="fa-solid fa-eye-slash"></i>
                            </button>
                         </div>
+                        <small id="newPasswordHelp" class="d-block mt-2 text-muted">{{ $strongPasswordsRequired ? 'Use at least 8 characters with uppercase, lowercase, a number, and a symbol.' : 'Use at least 8 characters.' }}</small>
                     </div>
                     <div class="account-field">
                         <label class="account-field-label" for="confirmPassword">Confirm New Password</label>
                         <div class="password-field">
                            <span class="password-prefix-icon"><i class="fa-solid fa-lock"></i></span>
-                           <input type="password" class="oinp" name="confirm_password" id="confirmPassword" placeholder="********" autocomplete="new-password" required minlength="8">
+                           <input type="password" class="oinp" name="confirm_password" id="confirmPassword" placeholder="Confirm your new password" autocomplete="new-password" required minlength="8">
                            <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('confirmPassword', this)" aria-label="Show password">
                               <i class="fa-solid fa-eye-slash"></i>
                            </button>

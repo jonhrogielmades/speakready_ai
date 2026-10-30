@@ -6,6 +6,7 @@
     $addUserEmail = $addUserHadErrors ? old('email', '') : '';
     $addUserRole = $addUserHadErrors ? old('role', 'user') : 'user';
     $addUserStatus = $addUserHadErrors ? old('status', 'active') : 'active';
+    $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);
 @endphp
 
 <div
@@ -103,15 +104,17 @@
                                     name="password"
                                     id="createUserPassword"
                                     class="form-control {{ $addUserErrors->has('password') ? 'is-invalid' : '' }}"
+                                    placeholder="{{ $strongPasswordsRequired ? '8+ chars: upper, lower, number & symbol' : 'At least 8 characters' }}"
                                     minlength="8"
                                     autocomplete="new-password"
+                                    aria-describedby="createUserPasswordHelp"
                                     required
                                 >
                                 <button class="password-toggle toggle-password" type="button" onclick="togglePasswordVisibility('createUserPassword', this)" aria-label="Show password">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
                             </div>
-                            <div class="form-text text-muted">At least 8 characters; enhanced rules apply when enabled in Security settings.</div>
+                            <div class="form-text text-muted" id="createUserPasswordHelp">{{ $strongPasswordsRequired ? 'Use at least 8 characters with uppercase, lowercase, a number, and a symbol.' : 'Use at least 8 characters.' }}</div>
                             @if($addUserErrors->has('password'))
                                 <div class="invalid-feedback d-block">{{ $addUserErrors->first('password') }}</div>
                             @endif
@@ -125,6 +128,7 @@
                                     name="password_confirmation"
                                     id="createUserPasswordConfirmation"
                                     class="form-control {{ $addUserErrors->has('password_confirmation') ? 'is-invalid' : '' }}"
+                                    placeholder="Confirm the temporary password"
                                     minlength="8"
                                     autocomplete="new-password"
                                     required

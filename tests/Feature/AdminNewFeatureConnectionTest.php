@@ -90,8 +90,8 @@ class AdminNewFeatureConnectionTest extends TestCase
         $this->post(route('register'), [
             'name' => 'Blocked User',
             'username' => 'blocked-user',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'StrongPass1!',
+            'password_confirmation' => 'StrongPass1!',
         ])->assertSessionHasErrors('username');
 
         $this->assertDatabaseMissing('users', ['username' => 'blocked-user']);

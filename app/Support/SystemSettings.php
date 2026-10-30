@@ -56,7 +56,7 @@ class SystemSettings
         'mail_user' => ['value' => '', 'group' => 'email', 'type' => 'string'],
         'mail_pass' => ['value' => '', 'group' => 'email', 'type' => 'string'],
 
-        'sec_strong_pass' => ['value' => false, 'group' => 'security', 'type' => 'boolean'],
+        'sec_strong_pass' => ['value' => true, 'group' => 'security', 'type' => 'boolean'],
         'sec_login_limit' => ['value' => 5, 'group' => 'security', 'type' => 'integer'],
         'sec_lockout' => ['value' => 15, 'group' => 'security', 'type' => 'integer'],
 
