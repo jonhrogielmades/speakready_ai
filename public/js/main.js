@@ -9,6 +9,8 @@ let ovChartInst = null,
 (function setupSpeakReadyViewportMetrics() {
     const root = document.documentElement;
     let frame = null;
+    let lastWidth = null;
+    let lastHeight = null;
 
     function viewportSize() {
         const visualViewport = window.visualViewport;
@@ -25,21 +27,24 @@ let ovChartInst = null,
         frame = null;
         const size = viewportSize();
 
-        if (size.height > 0) {
-            root.style.setProperty('--sr-visual-vh', `${size.height.toFixed(2)}px`);
+        const nextHeight = size.height > 0 ? size.height.toFixed(2) : null;
+        const nextWidth = size.width > 0 ? size.width.toFixed(2) : null;
+
+        if (nextHeight !== null && nextHeight !== lastHeight) {
+            lastHeight = nextHeight;
+            root.style.setProperty('--sr-visual-vh', `${nextHeight}px`);
         }
 
-        if (size.width > 0) {
-            root.style.setProperty('--sr-layout-vw', `${size.width.toFixed(2)}px`);
+        if (nextWidth !== null && nextWidth !== lastWidth) {
+            lastWidth = nextWidth;
+            root.style.setProperty('--sr-layout-vw', `${nextWidth}px`);
         }
 
         document.body?.classList.toggle('sr-browser-fullscreen', Boolean(document.fullscreenElement));
     }
 
     function queueViewportMetricsRefresh() {
-        if (frame !== null) {
-            window.cancelAnimationFrame(frame);
-        }
+        if (frame !== null) return;
 
         frame = window.requestAnimationFrame(applyViewportMetrics);
     }
@@ -61,7 +66,6 @@ let ovChartInst = null,
 
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', queueViewportMetricsRefresh, { passive: true });
-        window.visualViewport.addEventListener('scroll', queueViewportMetricsRefresh, { passive: true });
     }
 })();
 
@@ -300,8 +304,11 @@ guestAuthPanel?.addEventListener('hidden.bs.modal', () => {
 });
 
 const authModalMobileViewport = window.matchMedia('(max-width: 767.98px)');
-const authModalInputSelector = 'input, textarea, select';
-let authModalFocusTimer = 0;
+const authModalInputSelector = [
+    'input:not([type]):not([disabled]):not([readonly])',
+    'input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):not([type="range"]):not([type="color"]):not([disabled]):not([readonly])',
+    'textarea:not([disabled]):not([readonly])'
+].join(', ');
 let authModalFocusRaf = 0;
 
 function isMobileAuthModalViewport() {
@@ -310,51 +317,61 @@ function isMobileAuthModalViewport() {
         document.body.classList.contains('auth-mobile-shell');
 }
 
-function syncAuthModalViewportHeight() {
-    const height = Math.round(
-        (window.visualViewport && window.visualViewport.height) ||
-        window.innerHeight ||
-        document.documentElement.clientHeight ||
-        0
-    );
+function queueFocusedAuthFieldScroll() {
+    if (authModalFocusRaf) return;
 
-    if (height > 0) {
-        document.documentElement.style.setProperty('--sr-js-vh', `${height}px`);
-        document.documentElement.style.setProperty('--sr-visual-vh', `${height}px`);
-    }
+    authModalFocusRaf = window.requestAnimationFrame(() => {
+        authModalFocusRaf = 0;
+        if (!guestAuthPanel || !document.body.classList.contains('auth-modal-field-focused')) return;
+
+        const activeField = document.activeElement;
+        if (!activeField || !guestAuthPanel.contains(activeField) || !activeField.matches(authModalInputSelector)) return;
+
+        const modalBody = activeField.closest('.auth-modal-body');
+        const scrollTarget = activeField.closest('.auth-field') || activeField;
+        if (!modalBody || modalBody.scrollHeight <= modalBody.clientHeight) return;
+
+        const bodyRect = modalBody.getBoundingClientRect();
+        const targetRect = scrollTarget.getBoundingClientRect();
+        const topEdge = bodyRect.top + 12;
+        const bottomEdge = bodyRect.bottom - 20;
+        let scrollDelta = 0;
+
+        if (targetRect.top < topEdge) {
+            scrollDelta = targetRect.top - topEdge;
+        } else if (targetRect.bottom > bottomEdge) {
+            scrollDelta = targetRect.bottom - bottomEdge;
+        }
+
+        if (Math.abs(scrollDelta) > 1) {
+            modalBody.scrollTop += scrollDelta;
+        }
+    });
 }
 
-function queueFocusedAuthFieldScroll(delay = 0) {
-    window.clearTimeout(authModalFocusTimer);
-    authModalFocusTimer = window.setTimeout(() => {
-        if (authModalFocusRaf) window.cancelAnimationFrame(authModalFocusRaf);
+function resetAuthModalInteractionState(resetScroll = false) {
+    document.body.classList.remove('auth-modal-field-focused');
 
-        authModalFocusRaf = window.requestAnimationFrame(() => {
-            authModalFocusRaf = 0;
-            if (!guestAuthPanel || !document.body.classList.contains('auth-modal-field-focused')) return;
+    if (authModalFocusRaf) {
+        window.cancelAnimationFrame(authModalFocusRaf);
+        authModalFocusRaf = 0;
+    }
 
-            const activeField = document.activeElement;
-            if (!activeField || !guestAuthPanel.contains(activeField) || !activeField.matches(authModalInputSelector)) return;
-
-            const scrollTarget = activeField.closest('.auth-field, .auth-check') || activeField;
-            scrollTarget.scrollIntoView({
-                block: 'center',
-                inline: 'nearest',
-                behavior: 'auto'
-            });
-        });
-    }, delay);
+    if (resetScroll) {
+        const modalBody = guestAuthPanel?.querySelector('.auth-modal-body');
+        if (modalBody) modalBody.scrollTop = 0;
+    }
 }
 
 function setAuthModalFieldFocused(active) {
     if (!active) {
-        document.body.classList.remove('auth-modal-field-focused');
+        resetAuthModalInteractionState();
         return;
     }
 
     if (!isMobileAuthModalViewport()) return;
 
-    syncAuthModalViewportHeight();
+    window.SpeakReadyViewport?.refresh();
     document.body.classList.add('auth-modal-field-focused');
     queueFocusedAuthFieldScroll();
 }
@@ -379,22 +396,21 @@ if (guestAuthPanel) {
         }, 0);
     });
 
-    guestAuthPanel.addEventListener('shown.bs.modal', syncAuthModalViewportHeight);
-    guestAuthPanel.addEventListener('hidden.bs.modal', () => setAuthModalFieldFocused(false));
+    guestAuthPanel.addEventListener('shown.bs.modal', () => {
+        window.SpeakReadyViewport?.refreshNow();
+    });
+    guestAuthPanel.addEventListener('hidden.bs.modal', () => resetAuthModalInteractionState(true));
 }
 
 function syncFocusedAuthModalViewport() {
     if (!document.body.classList.contains('auth-modal-field-focused')) return;
 
-    syncAuthModalViewportHeight();
     queueFocusedAuthFieldScroll();
 }
 
 window.addEventListener('resize', syncFocusedAuthModalViewport, { passive: true });
-window.addEventListener('orientationchange', syncFocusedAuthModalViewport, { passive: true });
 if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', syncFocusedAuthModalViewport, { passive: true });
-    window.visualViewport.addEventListener('scroll', syncFocusedAuthModalViewport, { passive: true });
 }
 
 const guestSectionIds = ['hero', 'features', 'how', 'benefits', 'developers', 'faq', 'contact'];
@@ -520,6 +536,8 @@ if (ptog) {
 
 /*  AUTH TAB UI  */
 function swTab(t) {
+    resetAuthModalInteractionState(true);
+
     const isL = t === 'login' || t === 'signin';
     const loginPanel = document.getElementById('fLogin');
     const signupPanel = document.getElementById('fSignup');

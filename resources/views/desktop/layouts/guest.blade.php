@@ -1161,7 +1161,7 @@
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       @include('desktop.partials.flash-modal', ['includeValidationErrors' => false])
-      <script src="{{ asset('js/main.js?v=9') }}"></script>
+      <script src="{{ asset('js/main.js?v=10') }}"></script>
       @php
          $authModalRequest = request('auth_modal');
          $shouldShowAuthModal = $errors->any()

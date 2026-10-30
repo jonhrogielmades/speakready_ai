@@ -10064,7 +10064,7 @@ body.user-mobile-shell .mob-notif-link-btn:disabled {
 
   body.auth-modal-field-focused #lofc.auth-modal .modal-dialog {
     display: flex !important;
-    align-items: flex-start !important;
+    align-items: center !important;
     width: min(390px, calc(100vw - 20px));
     max-width: min(390px, calc(100vw - 20px));
     height: var(--sr-visual-vh, 100dvh) !important;
@@ -10187,6 +10187,10 @@ body.user-mobile-shell .mob-notif-link-btn:disabled {
 
   body.auth-modal-field-focused #lofc.auth-modal .auth-wave {
     display: none;
+  }
+
+  #lofc.auth-modal .auth-input-wrap .oinp {
+    font-size: 1rem !important;
   }
 }
 

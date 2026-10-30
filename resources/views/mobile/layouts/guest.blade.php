@@ -24,7 +24,7 @@
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=37') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=38') }}" />
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=34') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
@@ -746,7 +746,7 @@
       <!-- Swiper -->
       <script src="{{ asset('js/swiper-bundle.min.js') }}"></script>
 
-      <script src="{{ asset('js/main.js?v=9') }}"></script>
+      <script src="{{ asset('js/main.js?v=10') }}"></script>
       @php
          $authModalRequest = request('auth_modal');
          $shouldShowAuthModal = $errors->any()

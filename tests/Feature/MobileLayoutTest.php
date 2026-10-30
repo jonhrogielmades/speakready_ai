@@ -39,7 +39,7 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('data-guest-layout="mobile"', false)
                 ->assertDontSee('id="srLaunchScreen"', false)
                 ->assertDontSee('guest-splash-pending', false)
-                ->assertSee('css/mobile/style.css?v=37', false)
+                ->assertSee('css/mobile/style.css?v=38', false)
                 ->assertSee('css/mobile/guest.css?v=34', false)
                 ->assertSee('mobile-hero-preview-row', false)
                 ->assertSee('mobile-hero-image-frame', false)
@@ -73,7 +73,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=37', false)
+            ->assertSee('css/mobile/style.css?v=38', false)
             ->assertSee('css/mobile/guest.css?v=34', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=11', false);
@@ -88,7 +88,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=37', false)
+            ->assertSee('css/mobile/style.css?v=38', false)
             ->assertSee('css/mobile/guest.css?v=34', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=11', false);
@@ -122,7 +122,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
             ->assertSee('css/desktop/style.css?v=11', false)
-            ->assertDontSee('css/mobile/style.css?v=37', false);
+            ->assertDontSee('css/mobile/style.css?v=38', false);
     }
 
     public function test_mobile_user_agent_cannot_force_desktop_shell_with_desktop_query_hint(): void
@@ -134,7 +134,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=37', false)
+            ->assertSee('css/mobile/style.css?v=38', false)
             ->assertDontSee('guest-shell guest-desktop-shell', false)
             ->assertDontSee('css/desktop/style.css?v=11', false);
     }
