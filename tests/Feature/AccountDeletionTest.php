@@ -13,6 +13,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserOnboardingProgress;
 use App\Services\ProfilePhotoStorage;
+use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,7 @@ class AccountDeletionTest extends TestCase
             ->assertSee('data-account-delete-kind="local"', false)
             ->assertSee('data-account-delete-form', false)
             ->assertSee('data-account-delete-submit', false)
+            ->assertDontSee('data-account-delete-kind="local" data-sr-transition="off"', false)
             ->assertSee('data-account-delete-status', false)
             ->assertSee('action="'.route('user.account.delete').'"', false)
             ->assertSee('name="delete_password"', false)
@@ -63,6 +65,7 @@ class AccountDeletionTest extends TestCase
             ->get(route('user.account', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
             ->assertOk()
             ->assertSee('data-account-delete-kind="google"', false)
+            ->assertSee('data-account-delete-kind="google" data-account-delete-busy-status="Opening Google securely. Please wait." data-sr-transition="off"', false)
             ->assertSee('data-account-delete-form', false)
             ->assertSee('data-account-delete-submit', false)
             ->assertSee('delete-google-ui@example.com')
@@ -79,6 +82,11 @@ class AccountDeletionTest extends TestCase
         $this->assertStringContainsString('submitButton.disabled = busy', $script);
         $this->assertStringContainsString("modal.addEventListener('hidden.bs.modal', resetPasswordField)", $script);
         $this->assertStringContainsString("window.addEventListener('pageshow'", $script);
+        foreach (['desktop', 'mobile'] as $layout) {
+            $transition = file_get_contents(resource_path("views/{$layout}/partials/page-transition.blade.php"));
+            $this->assertIsString($transition);
+            $this->assertStringContainsString("form.dataset.srTransition === 'off'", $transition);
+        }
     }
 
     public function test_local_deletion_rejects_missing_and_incorrect_passwords_without_logging_out(): void
@@ -493,6 +501,57 @@ class AccountDeletionTest extends TestCase
             ->assertSessionMissing('google_auth_intent')
             ->assertSessionMissing('google_auth_nonce');
 
+        $this->assertAuthenticatedAs($user);
+        $this->assertDatabaseHas('users', ['id' => $user->id]);
+    }
+
+    public function test_google_deletion_honors_short_http_timeouts_and_recovers_from_network_timeout(): void
+    {
+        $user = User::factory()->google()->create([
+            'google_id' => 'google-delete-timeout-id',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $this->configureGoogleOAuth();
+        config([
+            'services.google.connect_timeout' => 3,
+            'services.google.timeout' => 8,
+        ]);
+        $capturedClient = null;
+
+        $provider = Mockery::mock();
+        $provider->shouldReceive('stateless')->once()->andReturnSelf();
+        $provider->shouldReceive('setHttpClient')
+            ->once()
+            ->with(Mockery::on(function ($client) use (&$capturedClient): bool {
+                $capturedClient = $client;
+
+                return $client instanceof GuzzleClient;
+            }))
+            ->andReturnSelf();
+        $provider->shouldReceive('user')
+            ->once()
+            ->andThrow(new \RuntimeException('cURL error 28: Operation timed out'));
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
+
+        $this->actingAs($user)
+            ->withSession($this->googleDeletionSession($user))
+            ->get(route('auth.google.callback', ['code' => 'delete-code']))
+            ->assertRedirect(route('user.account'))
+            ->assertSessionHasErrors([
+                'account_delete' => 'Google sign-in could not reach Google in time. Please check your connection and try again.',
+            ])
+            ->assertSessionMissing('google_account_delete_user_id')
+            ->assertSessionMissing('google_auth_intent');
+
+        $this->assertInstanceOf(GuzzleClient::class, $capturedClient);
+        $this->assertSame(3.0, $capturedClient->getConfig('connect_timeout'));
+        $this->assertSame(8.0, $capturedClient->getConfig('timeout'));
+        $this->assertSame(8.0, $capturedClient->getConfig('read_timeout'));
         $this->assertAuthenticatedAs($user);
         $this->assertDatabaseHas('users', ['id' => $user->id]);
     }

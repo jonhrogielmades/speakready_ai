@@ -1208,12 +1208,12 @@ class AuthController extends Controller
     {
         $driver = Socialite::driver('google')->stateless();
 
-        $connectTimeout = (float) config('services.google.connect_timeout', 5);
-        $timeout = (float) config('services.google.timeout', 20);
+        $connectTimeout = max(1, (float) config('services.google.connect_timeout', 5));
+        $timeout = max(5, $connectTimeout, (float) config('services.google.timeout', 20));
         $guzzleOptions = [
-            'connect_timeout' => max(5, $connectTimeout),
-            'timeout' => max(20, $timeout),
-            'read_timeout' => max(20, $timeout),
+            'connect_timeout' => $connectTimeout,
+            'timeout' => $timeout,
+            'read_timeout' => $timeout,
         ];
 
         $curlOptions = [];

@@ -33,7 +33,7 @@
                     </div>
                     <p class="account-delete-confirmation-help">Google will open an account chooser. Select the connected account shown above to confirm the deletion.</p>
 
-                    <form action="{{ route('user.account.delete.google', sr_layout_query(request())) }}" method="POST" class="account-delete-confirm-form" data-account-delete-form data-account-delete-kind="google" data-account-delete-busy-status="Opening Google securely. Please wait.">
+                    <form action="{{ route('user.account.delete.google', sr_layout_query(request())) }}" method="POST" class="account-delete-confirm-form" data-account-delete-form data-account-delete-kind="google" data-account-delete-busy-status="Opening Google securely. Please wait." data-sr-transition="off">
                         @csrf
                         <button type="button" class="btn account-delete-cancel-btn" data-bs-dismiss="modal" data-account-delete-cancel>Keep Account</button>
                         <button type="submit" class="btn account-delete-google-btn" data-account-delete-submit data-busy-label="Opening Google…">
