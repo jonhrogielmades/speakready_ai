@@ -4884,8 +4884,6 @@ class UserController extends Controller
 
  public function deleteAccount(Request $request, AccountDeletionService $accountDeletionService)
  {
- AccountNotificationSchema::ensure();
-
  if (! SystemSettings::userCan('delete_own_account')) {
  return redirect()->back()->withErrors([
   'account_delete' => 'Account deletion is currently disabled by the administrator.',
@@ -4913,6 +4911,8 @@ class UserController extends Controller
   'delete_password.current_password' => 'The password you entered is incorrect.',
  ]);
 
+ $wasRemembered = Auth::viaRemember()
+  || filled($request->cookie(Auth::guard()->getRecallerName()));
  Auth::logout();
 
  try {
@@ -4925,7 +4925,7 @@ class UserController extends Controller
 
   $remainingUser = User::query()->find($user->id);
   if ($remainingUser) {
-   Auth::login($remainingUser, true);
+   Auth::login($remainingUser, $wasRemembered);
   }
 
   return redirect()->route('user.account', sr_layout_query($request))->withErrors([

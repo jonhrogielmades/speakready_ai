@@ -596,6 +596,8 @@ class AuthController extends Controller
     public function redirectToGoogleAccountDeletion(Request $request)
     {
         if (! SystemSettings::userCan('delete_own_account')) {
+            $this->clearGoogleAccountDeletionSession($request);
+
             return redirect()->back()->withErrors([
                 'account_delete' => 'Account deletion is currently disabled by the administrator.',
             ]);
@@ -604,8 +606,18 @@ class AuthController extends Controller
         $user = $request->user();
 
         if (! $user || ! $user->isGoogleAccount() || blank($user->google_id)) {
+            $this->clearGoogleAccountDeletionSession($request);
+
             return redirect()->back()->withErrors([
                 'account_delete' => 'This account must be confirmed with its current password.',
+            ]);
+        }
+
+        if ($user->is_admin) {
+            $this->clearGoogleAccountDeletionSession($request);
+
+            return redirect()->back()->withErrors([
+                'account_delete' => 'Administrator accounts cannot be deleted from the user account page.',
             ]);
         }
 
@@ -620,8 +632,11 @@ class AuthController extends Controller
 
         $expectedNonce = (string) $request->session()->pull(self::GOOGLE_AUTH_NONCE_SESSION_KEY, '');
         $returnedNonce = (string) ($stateContext['nonce'] ?? '');
+        $shouldValidateState = ! app()->runningUnitTests()
+            || $expectedNonce !== ''
+            || $request->filled('state');
 
-        if (! app()->runningUnitTests()
+        if ($shouldValidateState
             && ($expectedNonce === '' || $returnedNonce === '' || ! hash_equals($expectedNonce, $returnedNonce))) {
             $failedIntent = $this->googleAuthIntent($request, $stateContext['intent'] ?? null);
 
@@ -668,7 +683,9 @@ class AuthController extends Controller
         }
 
         try {
-            AccountNotificationSchema::ensureUserColumns();
+            if ($intent !== self::GOOGLE_ACCOUNT_DELETE_INTENT) {
+                AccountNotificationSchema::ensureUserColumns();
+            }
 
             $request->session()->forget(self::GOOGLE_AUTH_INTENT_SESSION_KEY);
             $driver = $this->googleDriver();
@@ -830,6 +847,10 @@ class AuthController extends Controller
         $intent = in_array($intent, self::GOOGLE_AUTH_INTENTS, true) ? $intent : 'login';
         $layout = $this->requestLayoutPreference($request) ?? 'desktop';
 
+        if ($intent !== self::GOOGLE_ACCOUNT_DELETE_INTENT) {
+            $request->session()->forget(self::GOOGLE_ACCOUNT_DELETE_USER_SESSION_KEY);
+        }
+
         $nonce = Str::random(40);
 
         $request->session()->put(self::GOOGLE_AUTH_INTENT_SESSION_KEY, $intent);
@@ -906,6 +927,8 @@ class AuthController extends Controller
             );
         }
 
+        $wasRemembered = Auth::viaRemember()
+            || filled($request->cookie(Auth::guard()->getRecallerName()));
         Auth::logout();
 
         try {
@@ -918,7 +941,7 @@ class AuthController extends Controller
 
             $remainingUser = User::query()->find($expectedUserId);
             if ($remainingUser) {
-                Auth::login($remainingUser, true);
+                Auth::login($remainingUser, $wasRemembered);
             }
 
             return $this->googleAuthFailureResponse(
@@ -1035,7 +1058,7 @@ class AuthController extends Controller
         $intent = $this->googleAuthIntent($request, $intent);
 
         if ($intent === self::GOOGLE_ACCOUNT_DELETE_INTENT) {
-            $request->session()->forget(self::GOOGLE_ACCOUNT_DELETE_USER_SESSION_KEY);
+            $this->clearGoogleAccountDeletionSession($request);
 
             $redirect = Auth::check()
                 ? $this->redirectToRouteWithGoogleLayout($request, 'user.account')
@@ -1047,6 +1070,15 @@ class AuthController extends Controller
         return $this->redirectToHomeWithGoogleLayout($request, $homeQuery)
             ->withErrors([$field => $message])
             ->withInput($this->googleAuthOldInput($request, $intent, $input));
+    }
+
+    private function clearGoogleAccountDeletionSession(Request $request): void
+    {
+        $request->session()->forget([
+            self::GOOGLE_ACCOUNT_DELETE_USER_SESSION_KEY,
+            self::GOOGLE_AUTH_INTENT_SESSION_KEY,
+            self::GOOGLE_AUTH_NONCE_SESSION_KEY,
+        ]);
     }
 
     private function googleAuthOldInput(Request $request, ?string $intent, array $input): array

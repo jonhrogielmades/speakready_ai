@@ -85,10 +85,23 @@ final class ProfilePhotoStorage
 
     public function delete(?string $path): void
     {
+        $target = $this->deletionTarget($path);
+        if ($target === null) {
+            return;
+        }
+
+        if (! Storage::disk($target['disk'])->delete($target['path'])) {
+            throw new RuntimeException('The profile photo could not be deleted.');
+        }
+    }
+
+    /** @return array{disk: string, path: string}|null */
+    public function deletionTarget(?string $path): ?array
+    {
         $path = trim((string) $path);
 
         if ($path === '' || Str::startsWith($path, ['http://', 'https://', '//', 'data:'])) {
-            return;
+            return null;
         }
 
         if (Str::startsWith($path, '/storage/')) {
@@ -99,8 +112,10 @@ final class ProfilePhotoStorage
             $path = ltrim($path, '/');
         }
 
-        if ($path !== '' && ! Str::contains($path, ['..', '\\'])) {
-            Storage::disk(self::DISK)->delete($path);
+        if ($path === '' || Str::contains($path, ['..', '\\'])) {
+            return null;
         }
+
+        return ['disk' => self::DISK, 'path' => $path];
     }
 }

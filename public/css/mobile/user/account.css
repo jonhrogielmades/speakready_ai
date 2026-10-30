@@ -1003,6 +1003,27 @@
         border: 1px solid var(--acct-field-border) !important;
         box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
     }
+    .account-delete-modal [data-account-delete-form][aria-busy="true"] {
+        cursor: wait;
+    }
+    .account-delete-modal button:disabled {
+        cursor: wait !important;
+        opacity: 0.68;
+        pointer-events: none;
+    }
+    .account-delete-status {
+        min-height: 18px;
+        margin: 9px 0 0;
+        color: var(--acct-muted);
+        font-size: 0.76rem;
+        font-weight: 750;
+        line-height: 1.4;
+        text-align: center;
+    }
+    .account-delete-confirm-form > .account-delete-status {
+        grid-column: 1 / -1;
+        margin-top: 0;
+    }
     @media (max-width: 575px) {
         .account-delete-modal .modal-dialog {
             margin: 14px;

@@ -15,6 +15,7 @@ final class AccountDeletionService
         'practice_plan_items',
         'activity_logs',
         'push_subscriptions',
+        'user_onboarding_progress',
         'mission_attempts',
         'arena_progress',
         'game_progress',
@@ -33,18 +34,18 @@ final class AccountDeletionService
     public function __construct(
         private readonly ProfilePhotoStorage $profilePhotoStorage,
         private readonly VoiceRecordingCleanupService $recordingCleanup
-    ) {
-    }
+    ) {}
 
     public function permanentlyDelete(User $user): void
     {
         $userId = (int) $user->getKey();
         $email = trim((string) $user->email);
+        $deletePasswordResetToken = $user->isLocalAccount();
         $profilePhotoPath = $user->profile_photo_path;
         $morphClass = $user->getMorphClass();
         $storedRecordings = $this->storedRecordingsFor($userId);
 
-        DB::transaction(function () use ($user, $userId, $email, $morphClass): void {
+        DB::transaction(function () use ($user, $userId, $email, $deletePasswordResetToken, $morphClass): void {
             $this->deletePolymorphicRecords('notifications', 'notifiable', $morphClass, $userId);
             $this->deletePolymorphicRecords('personal_access_tokens', 'tokenable', $morphClass, $userId);
 
@@ -59,7 +60,10 @@ final class AccountDeletionService
                 DB::table($sessionTable)->where('user_id', $userId)->delete();
             }
 
-            if ($email !== '' && Schema::hasTable('password_reset_tokens')) {
+            // Google and local accounts may intentionally share the same email.
+            // Only local accounts own password-reset tokens, so deleting a Google
+            // account must not invalidate the local account's pending reset.
+            if ($deletePasswordResetToken && $email !== '' && Schema::hasTable('password_reset_tokens')) {
                 DB::table('password_reset_tokens')->where('email', $email)->delete();
             }
 
@@ -72,7 +76,7 @@ final class AccountDeletionService
             if (User::withTrashed()->whereKey($userId)->exists()) {
                 throw new RuntimeException('The user account could not be permanently deleted.');
             }
-        });
+        }, 3);
 
         try {
             $this->profilePhotoStorage->delete($profilePhotoPath);
@@ -81,6 +85,11 @@ final class AccountDeletionService
                 'user_id' => $userId,
                 'exception_type' => $error::class,
             ]);
+
+            $profilePhotoTarget = $this->profilePhotoStorage->deletionTarget($profilePhotoPath);
+            if ($profilePhotoTarget !== null) {
+                $this->recordingCleanup->delete([$profilePhotoTarget], 'account_profile_photo_deletion');
+            }
         }
 
         $this->recordingCleanup->delete($storedRecordings, 'account_deletion');
@@ -185,5 +194,4 @@ final class AccountDeletionService
             && Schema::hasColumn($table, 'voice_recording_disk')
             && Schema::hasColumn($table, 'voice_recording_path');
     }
-
 }
