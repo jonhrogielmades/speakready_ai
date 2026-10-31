@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\AiFeedbackProviderFailureException;
+use App\Exceptions\InterviewFeedbackLeaseLostException;
 use App\Helpers\ActivityLogger;
 use App\Models\Category;
 use App\Models\Feedback;
@@ -53,6 +54,8 @@ use Illuminate\Validation\Rule;
 
 class InterviewController extends Controller
 {
+ private const FEEDBACK_PROCESSING_LEASE_GRACE_SECONDS = 60;
+
  private const ACCEPTED_RESPONSE_MODES = ['text', 'voice', 'hybrid', 'voice_and_text'];
 
  private const VOICE_RESPONSE_MODES = ['voice', 'hybrid'];
@@ -1115,12 +1118,37 @@ return response()->json([
  return $request->expectsJson()? response()->json(['redirect_url' => $redirect->getTargetUrl()]): $redirect;
  }
 
- if ($session->status === 'processing' && $session->updated_at?->lte(now()->subMinutes(2))) {
- InterviewSession::whereKey($session->id)
+ $processingToken = null;
+ if ($session->status === 'processing') {
+ $leaseCutoff = now()->subSeconds($this->feedbackProcessingLeaseSeconds());
+ $processingStartedAt = $session->feedback_processing_started_at?? $session->updated_at;
+
+ if ($processingStartedAt?->lte($leaseCutoff)) {
+ $staleToken = $session->feedback_processing_token;
+ $released = InterviewSession::whereKey($session->id)
  ->where('status', 'processing')
- ->where('updated_at', '<=', now()->subMinutes(2))
- ->update(['status' => 'in_progress']);
+ ->when(
+ $staleToken!== null,
+ fn ($query) => $query->where('feedback_processing_token', $staleToken),
+ fn ($query) => $query->whereNull('feedback_processing_token')
+ )
+ ->where(function ($query) use ($leaseCutoff): void {
+ $query->where('feedback_processing_started_at', '<=', $leaseCutoff)
+ ->orWhere(function ($legacyQuery) use ($leaseCutoff): void {
+ $legacyQuery->whereNull('feedback_processing_started_at')
+ ->where('updated_at', '<=', $leaseCutoff);
+ });
+ })
+ ->update([
+ 'status' => 'in_progress',
+ 'feedback_processing_token' => null,
+ 'feedback_processing_started_at' => null,
+ ]);
+
+ if ($released === 1) {
  $session->refresh();
+ }
+ }
  }
 
  if ($session->status === 'processing') {
@@ -1134,10 +1162,13 @@ return response()->json([
  abort(403);
  }
 
+ $processingToken = (string) Str::uuid();
  $claimed = InterviewSession::whereKey($session->id)
  ->where('status', 'in_progress')
  ->update([
  'status' => 'processing',
+ 'feedback_processing_token' => $processingToken,
+ 'feedback_processing_started_at' => now(),
  'duration_seconds' => $validated['duration_seconds']?? $session->duration_seconds,
  'notes' => $validated['notes']?? $session->notes,
  ]);
@@ -1211,6 +1242,14 @@ return response()->json([
  $assessment = app(TrustworthyAssessmentService::class);
  DB::beginTransaction();
  $reportTransactionStarted = true;
+
+ $lockedSession = InterviewSession::whereKey($session->id)->lockForUpdate()->first();
+ if (! $lockedSession
+ || $lockedSession->status!== 'processing'
+ || ! hash_equals($processingToken, (string) $lockedSession->feedback_processing_token)) {
+ throw new InterviewFeedbackLeaseLostException;
+ }
+ $session = $lockedSession;
 
  $totalClarity = 0;
  $totalRelevance = 0;
@@ -1366,6 +1405,8 @@ return response()->json([
 
  $session->update([
  'status' => 'completed',
+ 'feedback_processing_token' => null,
+ 'feedback_processing_started_at' => null,
  'action_plan' => $actionPlan,
  'current_question_index' => max(0, $answers->count() - 1),
  'session_state' => null,
@@ -1524,10 +1565,16 @@ return response()->json([
 
  InterviewSession::whereKey($session->id)
  ->where('status', 'processing')
- ->update(['status' => 'in_progress']);
+ ->where('feedback_processing_token', $processingToken)
+ ->update([
+ 'status' => 'in_progress',
+ 'feedback_processing_token' => null,
+ 'feedback_processing_started_at' => null,
+ ]);
 
+ $leaseLost = $error instanceof InterviewFeedbackLeaseLostException;
  $providerFailure = $error instanceof AiFeedbackProviderFailureException;
- Log::error('Interview feedback finalization failed.', [
+ Log::log($leaseLost? 'warning': 'error', 'Interview feedback finalization failed.', [
  'session_id' => $session->id,
  'error_type' => $error::class,
  'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
@@ -1535,16 +1582,30 @@ return response()->json([
  'providers_attempted' => $providerFailure? $error->attemptedProviders(): null,
  ]);
 
- $message = $providerFailure? $error->userMessage(): 'Your answers were saved, but the feedback report could not be finalized. Please retry the report generation in a moment.';
+ $message = $leaseLost
+ ? 'Feedback analysis is already in progress in a newer request.'
+ : ($providerFailure? $error->userMessage(): 'Your answers were saved, but the feedback report could not be finalized. Please retry the report generation in a moment.');
 
  return $request->expectsJson()? response()->json(array_filter([
  'message' => $message,
- 'error_code' => $providerFailure? 'ai_feedback_providers_failed': null,
+ 'error_code' => $leaseLost? 'feedback_processing_lease_lost': ($providerFailure? 'ai_feedback_providers_failed': null),
  'provider_count' => $providerFailure? $error->providerCount(): null,
  'providers_attempted' => $providerFailure? $error->attemptedProviders(): null,
  'retry_after_ms' => 1500,
- ], fn ($value) => $value!== null), 503): back()->with('error', $message);
+ ], fn ($value) => $value!== null), $leaseLost? 409: 503): back()->with('error', $message);
  }
+ }
+
+ private function feedbackProcessingLeaseSeconds(): int
+ {
+ $configuredDeadline = (int) RuntimeConfiguration::get(
+ 'services.ai_feedback_finalization.deadline_seconds',
+ 'AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS',
+ 90
+ );
+ $maximumFinalizationDeadline = max(3, $configuredDeadline);
+
+ return $maximumFinalizationDeadline + self::FEEDBACK_PROCESSING_LEASE_GRACE_SECONDS;
  }
 
  private function syncScoredInterviewOnboarding(Request $request, InterviewSession $session): void
@@ -3305,7 +3366,8 @@ return response()->json([
  $languageScoring? ($metrics['grammar']?? 0): 0,
  $metrics['professionalism']?? 0,
  $starScore,
- $starApplicable
+ $starApplicable,
+ $languageScoring
  );
  $answerConfidences = $answers
  ->pluck('scoring_confidence')

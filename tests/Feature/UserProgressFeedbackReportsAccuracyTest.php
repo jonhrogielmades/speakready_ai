@@ -806,6 +806,25 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  $category = $this->category('BPO / Customer Support');
  $session = $this->completedSessionFor($user, $category, 74, now(), [
  'target_position' => 'Customer Support Representative',
+ 'action_plan' => [
+ 'headline' => 'Next focus: Answer Match',
+ 'target_score' => 84,
+ 'summary' => 'Practice the lowest-scoring answer, then check that the result is easy to find.',
+ 'next_session' => [
+ 'difficulty' => 'hard',
+ 'assistance_level' => 'challenge',
+ 'question_types' => ['Behavioral', 'Situational'],
+ ],
+ 'priorities' => [[
+ 'skill' => 'Answer Match',
+ 'score' => 72,
+ 'task' => 'Open with a direct answer, then connect the example to the customer need.',
+ ]],
+ 'recommended_paths' => [
+ ['label' => 'Interview Modules', 'url' => route('user.modules.index')],
+ ['label' => 'Mock Interview', 'url' => route('interview.setup')],
+ ],
+ ],
  ]);
  $this->markAsGameReview($session);
 
@@ -840,6 +859,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  'area' => 'Answer structure',
  'observation' => '1 of 1 questions need a clearer opening and result.',
  'action' => 'Use STAR structure and add one measurable result.',
+ 'success_check' => 'The retry opens directly and ends with a checkable customer result.',
  ],
  ],
  ],
@@ -859,11 +879,33 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  'answer_text' => 'I improved improved improved the customer process and explained the action clearly.',
  'ai_feedback' => 'The answer gives an action but needs a result.',
  'better_sample_answer' => 'Explain a time you helped a customer.',
+ 'rubric_level' => 'Developing',
+ 'scoring_confidence' => 96,
  'coaching_feedback' => [
+ 'feedback_quality' => [
+ 'completeness_percent' => 94,
+ 'reliability_percent' => 96,
+ 'reliability_basis' => 'internal_evidence_and_score_safeguards',
+ 'calibration_status' => 'cross_checked_clean',
+ 'calibration_checked' => true,
+ ],
  'content_alignment' => [
+ 'status' => 'partially_answered',
+ 'status_label' => 'Partially answered',
+ 'scoring_confidence' => 96,
+ 'evaluation_source' => 'local_evidence',
+ 'evidence_quotes' => ['I improved the customer process and explained the action clearly.'],
+ 'missing_points' => ['The saved answer does not state the customer result.'],
  'what_worked' => 'The saved answer explains the customer process action clearly with enough context about what the user personally did, why the customer needed support, and how the process moved forward for the service team.',
  'improvement_focus' => 'Add the final customer result or lesson so the review can show the outcome, the value of the action, and why this example proves the user can help similar customers again.',
+ 'impact' => 'A concrete result makes the example easier for an interviewer to verify.',
  'action' => 'Use STAR structure and add one measurable result.',
+ 'next_attempt_steps' => [
+ 'State the customer need in one sentence.',
+ 'Finish with the true result or lesson.',
+ ],
+ 'success_check' => 'A reviewer can underline the action and the customer result.',
+ 'limitation' => 'This check uses only the saved answer and question; it cannot verify facts not stated by the user.',
  ],
  ],
  'score' => 68,
@@ -887,6 +929,24 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('Score Breakdown')
  ->assertSee('Strengths')
  ->assertSee('Weaknesses')
+ ->assertSee('Evidence safeguard score')
+ ->assertSee('not an independently measured accuracy rate')
+ ->assertSee('Cross-check coverage:')
+ ->assertSee('Deterministic cross-check completed')
+ ->assertSee('Why this focus')
+ ->assertSee('1 of 1 answers need a clearer opening and result')
+ ->assertSee('The retry opens directly and ends with a checkable customer result.')
+ ->assertSee('Your Practice Plan')
+ ->assertSee('Next practice target')
+ ->assertSee('84%')
+ ->assertSee('Goal, not a prediction')
+ ->assertSee('Open with a direct answer, then connect the example to the customer need.')
+ ->assertSee('Suggested next session')
+ ->assertSee('Hard difficulty')
+ ->assertSee('Behavioral, Situational questions')
+ ->assertSee('Recommended paths:')
+ ->assertSee('Interview Modules')
+ ->assertSee('Mock Interview')
  ->assertDontSee('What You Did Well')
  ->assertSee('Feedback')
  ->assertSee('Your Answer')
@@ -915,6 +975,28 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('Better Example')
  ->assertDontSee('Why It Matters')
  ->assertDontSee('<span>Next Practice</span>', false)
+ ->assertSee('Evidence-based answer check')
+ ->assertSee('Answered partly')
+ ->assertSee('Score: 68%')
+ ->assertSee('Evidence confidence: 96%')
+ ->assertSee('High safeguard coverage')
+ ->assertSee('Evidence from your answer')
+ ->assertSee('I improved the customer process and explained the action clearly.')
+ ->assertSee('What worked')
+ ->assertSee('Improvement focus')
+ ->assertSee('The saved answer does not state the customer result.')
+ ->assertSee('Why it matters')
+ ->assertSee('A concrete result makes the example easier for an interviewer to verify.')
+ ->assertSee('Next attempt')
+ ->assertSee('State the customer need in one sentence.')
+ ->assertSee('Finish with the true result or lesson.')
+ ->assertSee('Success check')
+ ->assertSee('A reviewer can underline the action and the customer result.')
+ ->assertSee('Review source:')
+ ->assertSee('Local evidence check')
+ ->assertSee('Source limitation:')
+ ->assertSee('This check uses only the saved answer and question; it cannot verify facts not stated by the user.')
+ ->assertSee('aria-controls="collapse0"', false)
  ->assertSee('Question 1')
  ->assertSee('Explain a time you helped a customer')
  ->assertSee('The reviewed answers explain the customer process action clearly')
@@ -937,6 +1019,15 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertDontSee('Feedback checks', false)
  ->assertDontSee('Answer Check Notes', false)
  ->assertDontSee('AI Feedback', false);
+
+ $this->actingAs($user)
+ ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+ ->get(route('user.review', $session))
+ ->assertOk()
+ ->assertSee('Evidence safeguard score')
+ ->assertSee('Your Practice Plan')
+ ->assertSee('Evidence-based answer check')
+ ->assertSee('Source limitation:');
  }
 
  public function test_detailed_review_cleans_overall_review_feedback_but_shows_answer_review_question(): void

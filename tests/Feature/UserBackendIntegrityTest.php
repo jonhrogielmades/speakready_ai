@@ -109,10 +109,14 @@ class UserBackendIntegrityTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('user.review', $session))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Background review refresh is pending.')
+            ->assertSee('Your saved report is available now.')
+            ->assertSee('You do not need to keep this page open.');
 
         $this->get(route('user.review', $session))
-            ->assertOk();
+            ->assertOk()
+            ->assertDontSee('Background review refresh is pending.');
 
         Queue::assertPushed(
             RefreshDetailedFeedbackReview::class,

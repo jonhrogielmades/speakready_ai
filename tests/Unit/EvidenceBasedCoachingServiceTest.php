@@ -1092,6 +1092,47 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertStringContainsString('missing point', data_get($summary, 'priority_actions.0.action'));
     }
 
+    public function test_internal_score_safeguard_metadata_survives_coaching_persistence(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+        $answer = 'I reproduced the failure, checked the trace, fixed the query, and verified the same load test before release.';
+
+        $coaching = $service->forAnswer(
+            $answer,
+            new Question([
+                'type' => 'Technical',
+                'question_text' => 'How did you verify a production performance fix?',
+            ]),
+            [
+                'response_mode' => 'text',
+                'scoring_confidence' => 92,
+                'relevance_score' => 88,
+                'answer_alignment' => 'directly_addressed',
+                'evidence_quotes' => [$answer],
+                'missing_evidence' => [],
+                'evaluation_source' => 'ai_evidence_validated',
+                'feedback_quality' => [
+                    'status' => 'verified',
+                    'completeness_percent' => 100,
+                    'reliability_percent' => 98,
+                    'reliability_band' => 'High',
+                    'reliability_basis' => 'internal_evidence_and_score_safeguards',
+                    'calibration_status' => 'cross_checked_clean',
+                    'calibration_checked' => true,
+                ],
+            ]
+        );
+
+        $this->assertSame(98, data_get($coaching, 'feedback_quality.reliability_percent'));
+        $this->assertSame('High', data_get($coaching, 'feedback_quality.reliability_band'));
+        $this->assertSame(
+            'internal_evidence_and_score_safeguards',
+            data_get($coaching, 'feedback_quality.reliability_basis')
+        );
+        $this->assertSame('cross_checked_clean', data_get($coaching, 'feedback_quality.calibration_status'));
+        $this->assertTrue(data_get($coaching, 'feedback_quality.calibration_checked'));
+    }
+
     private function voiceAnswer(string $answerText, string $questionText): InterviewAnswer
     {
         $answer = new InterviewAnswer;

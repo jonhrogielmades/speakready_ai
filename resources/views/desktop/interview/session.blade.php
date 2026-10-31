@@ -337,7 +337,7 @@
  <h4 id="finishTransitionTitle" class="finish-review-title">Analyzing Your <span>Response...</span></h4>
  <p id="finishTransitionMessage" class="finish-review-subtitle">Please wait while we finalize your interview report.</p>
  </div>
-<div class="finish-review-progress" aria-label="Detailed review progress">
+<div class="finish-review-progress" aria-label="Detailed review preparation estimate">
 <div class="finish-review-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
 <span id="finishReviewProgressBar" class="finish-review-progress-bar"></span>
 </div>
@@ -347,7 +347,7 @@
  <div class="finish-review-check-row" data-feedback-step="responses">
  <span class="finish-review-row-icon"><i class="fa-solid fa-file-lines"></i></span>
  <span class="finish-review-row-copy">
- <strong>Responses reviewed</strong>
+ <strong>Saved responses</strong>
  <small data-feedback-detail>Saved answers and transcripts ready</small>
  </span>
  <span class="finish-review-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
@@ -355,7 +355,7 @@
  <div class="finish-review-check-row" data-feedback-step="alignment">
  <span class="finish-review-row-icon"><i class="fa-solid fa-bullseye"></i></span>
  <span class="finish-review-row-copy">
- <strong>Role match checked</strong>
+ <strong>Role alignment</strong>
  <small data-feedback-detail>Matching answers to the target role</small>
  </span>
  <span class="finish-review-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
@@ -363,7 +363,7 @@
  <div class="finish-review-check-row" data-feedback-step="delivery">
  <span class="finish-review-row-icon"><i class="fa-solid fa-microphone-lines"></i></span>
  <span class="finish-review-row-copy">
- <strong>Delivery evidence checked</strong>
+ <strong>Delivery evidence</strong>
  <small data-feedback-detail>Voice, text, and camera signals prepared</small>
  </span>
  <span class="finish-review-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
@@ -371,7 +371,7 @@
  <div class="finish-review-check-row" data-feedback-step="coaching">
  <span class="finish-review-row-icon"><i class="fa-solid fa-comments"></i></span>
  <span class="finish-review-row-copy">
- <strong>Feedback coaching built</strong>
+ <strong>Feedback coaching</strong>
  <small data-feedback-detail>Strengths, gaps, and better-answer notes</small>
  </span>
  <span class="finish-review-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
@@ -379,7 +379,7 @@
  <div class="finish-review-check-row" data-feedback-step="review">
  <span class="finish-review-row-icon"><i class="fa-solid fa-chart-line"></i></span>
  <span class="finish-review-row-copy">
- <strong>Detailed review prepared</strong>
+ <strong>Detailed review</strong>
  <small data-feedback-detail>Scores, coaching notes, and next steps</small>
  </span>
  <span class="finish-review-row-check" aria-label="Pending"><i class="fa-solid fa-check"></i></span>
@@ -6484,10 +6484,15 @@ showSessionNotice('The microphone stopped unexpectedly. Your captured audio was 
  abortInterviewSession();
  }
 
- function waitForFeedbackRetry(delayMs) {
- return new Promise(resolve => setTimeout(resolve, Math.max(250, Math.min(2500, delayMs || 1000))));
+ function waitForFeedbackRetry(delayMs, attempt = 0) {
+ const requestedDelay = Number(delayMs);
+ const retryBackoff = Math.min(8000, 1200 + (Math.max(0, attempt) * 800));
+ const resolvedDelay = Number.isFinite(requestedDelay)? requestedDelay: 1200;
+ return new Promise(resolve => setTimeout(resolve, Math.max(1000, Math.min(8000, Math.max(resolvedDelay, retryBackoff)))));
  }
 
+const finishReviewRequestTimeoutMs = 195000;
+const finishReviewProcessingRetryWindowMs = 180000;
 let finishReviewChecklistTimers = [];
 let finishReviewProgressTimer = null;
 let finishReviewProgressValue = 0;
@@ -6560,7 +6565,10 @@ const percent = document.getElementById('finishReviewProgressPercent');
 const track = document.querySelector('#finishTransitionOverlay .finish-review-progress-track');
 if (bar) bar.style.width = `${finishReviewProgressValue}%`;
 if (percent) percent.textContent = `${finishReviewProgressValue}%`;
-if (track) track.setAttribute('aria-valuenow', String(finishReviewProgressValue));
+if (track) {
+track.setAttribute('aria-valuenow', String(finishReviewProgressValue));
+track.setAttribute('aria-valuetext', finishReviewProgressValue >= 100? 'Report ready': 'Preparing report');
+}
 }
 
 function setFinishViewReviewReady(ready, redirectUrl = '') {
@@ -6594,12 +6602,12 @@ function startFinishReviewProgress() {
 resetFinishReviewLoading();
 setFinishReviewProgress(8);
 finishReviewProgressTimer = window.setInterval(() => {
-const step = finishReviewProgressValue < 44? 7: (finishReviewProgressValue < 78? 4: 1);
-setFinishReviewProgress(Math.min(94, finishReviewProgressValue + step));
-if (finishReviewProgressValue >= 94) {
+const step = finishReviewProgressValue < 44? 4: (finishReviewProgressValue < 72? 2: 1);
+setFinishReviewProgress(Math.min(88, finishReviewProgressValue + step));
+if (finishReviewProgressValue >= 88) {
 clearFinishReviewProgressTimer();
 }
-}, 260);
+}, 1000);
 }
 
  function finishReviewResponseModeLabel() {
@@ -6617,17 +6625,25 @@ clearFinishReviewProgressTimer();
  if (detailElement) detailElement.textContent = detail;
  }
 
- function updateFinishReviewChecklistDetails() {
+ function updateFinishReviewChecklistDetails(complete = false) {
  const questionLabel = `${targetQuestionCount} ${targetQuestionCount === 1? 'answer': 'answers'}`;
  const responseLabel = finishReviewResponseModeLabel();
  const feedbackModeLabel = liveFeedbackMode === 'real_interview'? 'Real Interview Mode': 'Coaching On';
  const cameraLabel = cameraDetectionEnabled? 'camera evidence included': 'camera off';
 
  setFinishReviewDetail('responses', `${questionLabel} captured in ${responseLabel} mode`);
- setFinishReviewDetail('alignment', `${sessionTargetPosition || 'Target role'} relevance and question alignment`);
- setFinishReviewDetail('delivery', `${responseLabel} delivery signals checked; ${cameraLabel}`);
- setFinishReviewDetail('coaching', `${feedbackModeLabel} notes, strengths, and better-answer guidance`);
- setFinishReviewDetail('review', 'Detailed scores, coaching notes, and next steps ready');
+ setFinishReviewDetail('alignment', complete
+ ? `${sessionTargetPosition || 'Target role'} relevance and question alignment checked`
+ : `Checking relevance and alignment for ${sessionTargetPosition || 'the target role'}`);
+ setFinishReviewDetail('delivery', complete
+ ? `${responseLabel} delivery signals checked; ${cameraLabel}`
+ : `Checking ${responseLabel.toLowerCase()} delivery signals; ${cameraLabel}`);
+ setFinishReviewDetail('coaching', complete
+ ? `${feedbackModeLabel} strengths, gaps, and guidance prepared`
+ : `Preparing ${feedbackModeLabel} strengths, gaps, and guidance`);
+ setFinishReviewDetail('review', complete
+ ? 'Detailed scores, coaching notes, and next steps ready'
+ : 'Assembling scores, coaching notes, and next steps');
  }
 
  function resetFinishReviewChecklist() {
@@ -6640,6 +6656,7 @@ clearFinishReviewProgressTimer();
 
 function completeFinishReviewChecklist() {
 clearFinishReviewChecklistTimers();
+updateFinishReviewChecklistDetails(true);
 document.querySelectorAll('.finish-review-check-row').forEach(row => {
 row.classList.remove('is-checking');
 row.classList.add('is-complete');
@@ -6654,15 +6671,7 @@ row.querySelector('.finish-review-row-check')?.setAttribute('aria-label', 'Compl
  rows.forEach((row, index) => {
  const checkingTimer = window.setTimeout(() => {
  row.classList.add('is-checking');
- row.querySelector('.finish-review-row-check')?.setAttribute('aria-label', 'Checking');
-
- const completeTimer = window.setTimeout(() => {
- row.classList.remove('is-checking');
- row.classList.add('is-complete');
- row.querySelector('.finish-review-row-check')?.setAttribute('aria-label', 'Complete');
- }, 280);
-
- finishReviewChecklistTimers.push(completeTimer);
+ row.querySelector('.finish-review-row-check')?.setAttribute('aria-label', 'In progress');
  }, 220 + (index * 520));
 
  finishReviewChecklistTimers.push(checkingTimer);
@@ -6745,7 +6754,9 @@ startFinishReviewProgress();
  const formData = new FormData(form);
 
  try {
- for (let attempt = 0; attempt < 4; attempt++) {
+ let processingRetryDeadline = 0;
+ let processingRetryCount = 0;
+ while (true) {
  const response = await managedFetch(form.action, {
  method: 'POST',
  body: formData,
@@ -6753,13 +6764,21 @@ startFinishReviewProgress();
  'X-Requested-With': 'XMLHttpRequest',
  'Accept': 'application/json'
  },
- timeoutMs: 45000
+ timeoutMs: finishReviewRequestTimeoutMs
  });
  const payload = await parseResponsePayload(response);
  const data = payload.data || {};
 
  if (response.status === 409) {
- await waitForFeedbackRetry(data.retry_after_ms);
+ if (!processingRetryDeadline) {
+ processingRetryDeadline = Date.now() + finishReviewProcessingRetryWindowMs;
+ }
+ if (Date.now() >= processingRetryDeadline) break;
+ if (transitionMessage) {
+ transitionMessage.textContent = 'Your answers are saved. The report analysis is still running; we will keep checking for it.';
+ }
+ await waitForFeedbackRetry(data.retry_after_ms, processingRetryCount);
+ processingRetryCount += 1;
  continue;
  }
 
@@ -6778,14 +6797,16 @@ await completeFinishReviewLoading(data.redirect_url);
  } catch (error) {
  console.error('Interview feedback analysis failed:', error);
  feedbackSubmissionInFlight = false;
- const alertMessage = error.message || 'We could not finish the report. Your final answer is saved.';
+ const alertMessage = error?.name === 'AbortError'
+ ? 'The report is taking longer than expected. Your answers are saved. Retry to continue finalizing it.'
+ : (error.message || 'We could not finish the report. Your final answer is saved.');
  const title = document.getElementById('finishTransitionTitle');
  const message = document.getElementById('finishTransitionMessage');
  const failureAlert = document.getElementById('finishFailureAlert');
  const retryButton = document.getElementById('finishRetryButton');
  const backButton = document.getElementById('finishBackButton');
  const overlay = document.getElementById('finishTransitionOverlay');
- clearFinishReviewChecklistTimers();
+ resetFinishReviewChecklist();
 clearFinishReviewProgressTimer();
 setFinishViewReviewReady(false);
  overlay?.classList.add('finish-transition-error');
@@ -6800,6 +6821,7 @@ setFinishViewReviewReady(false);
  if (retryButton) retryButton.style.display = 'inline-flex';
  if (backButton) backButton.style.display = 'inline-flex';
  setFinishTransitionVisible(true);
+ window.requestAnimationFrame(() => retryButton?.focus());
  showSessionNotice(alertMessage, 'error', true);
  return false;
  }

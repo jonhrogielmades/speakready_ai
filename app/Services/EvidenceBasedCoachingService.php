@@ -1341,6 +1341,15 @@ final class EvidenceBasedCoachingService
  if (is_scalar($normalizedQuality['reliability_band']?? null)) {
  $quality['reliability_band'] = trim((string) $normalizedQuality['reliability_band']);
  }
+ if (is_scalar($normalizedQuality['reliability_basis']?? null)) {
+ $quality['reliability_basis'] = trim((string) $normalizedQuality['reliability_basis']);
+ }
+ if (is_scalar($normalizedQuality['calibration_status']?? null)) {
+ $quality['calibration_status'] = trim((string) $normalizedQuality['calibration_status']);
+ }
+ if (array_key_exists('calibration_checked', $normalizedQuality)) {
+ $quality['calibration_checked'] = (bool) $normalizedQuality['calibration_checked'];
+ }
 
  return $quality;
  }

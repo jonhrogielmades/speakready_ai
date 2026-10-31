@@ -2,8 +2,11 @@
 
 namespace Tests\Unit;
 
+use App\Http\Controllers\InterviewController;
+use App\Models\InterviewSession;
 use App\Services\AIService;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use ReflectionMethod;
 
 class WeightedReadinessScoringTest extends TestCase
@@ -46,6 +49,107 @@ class WeightedReadinessScoringTest extends TestCase
         );
 
         $this->assertSame(80, $score);
+    }
+
+    public function test_separate_language_scoring_excludes_grammar_from_answer_and_session_totals(): void
+    {
+        $combinedScore = AIService::calculateWeightedReadinessScore(
+            clarityScore: 100,
+            relevanceScore: 100,
+            grammarScore: 0,
+            professionalismScore: 100,
+            starMethodScore: 0,
+            starApplicable: false,
+            languageScoringEnabled: true
+        );
+        $separateScore = AIService::calculateWeightedReadinessScore(
+            clarityScore: 100,
+            relevanceScore: 100,
+            grammarScore: 0,
+            professionalismScore: 100,
+            starMethodScore: 0,
+            starApplicable: false,
+            languageScoringEnabled: false
+        );
+
+        $this->assertSame(89, $combinedScore);
+        $this->assertSame(100, $separateScore);
+
+        $answer = [
+            'id' => 10,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose and verify a slow database query?',
+            'answer' => 'I inspect the query plan, compare row estimates with actual rows, check indexes and locks, reproduce the same workload, change one thing at a time, and verify execution time and resource use after every change.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 100, 'directly_addressed');
+        $feedback['clarity_score'] = 100;
+        $feedback['relevance_score'] = 100;
+        $feedback['grammar_score'] = 0;
+        $feedback['professionalism_score'] = 100;
+        $sessionData = [
+            'accommodation_profile' => [
+                'separate_language_scoring' => true,
+            ],
+        ];
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, $sessionData]);
+        $expectedSeparate = AIService::calculateWeightedReadinessScore(
+            $normalized['clarity_score'],
+            $normalized['relevance_score'],
+            $normalized['grammar_score'],
+            $normalized['professionalism_score'],
+            $normalized['star_method_score'],
+            $normalized['star_applicable'],
+            false
+        );
+        $expectedCombined = AIService::calculateWeightedReadinessScore(
+            $normalized['clarity_score'],
+            $normalized['relevance_score'],
+            $normalized['grammar_score'],
+            $normalized['professionalism_score'],
+            $normalized['star_method_score'],
+            $normalized['star_applicable'],
+            true
+        );
+
+        $this->assertFalse($normalized['score_calibration']['language_scoring_enabled']);
+        $this->assertSame($expectedSeparate, $normalized['score']);
+        $this->assertGreaterThan($expectedCombined, $expectedSeparate);
+        $this->assertTrue($normalized['feedback_quality']['checks']['scores_bounded_and_recomputed']);
+
+        $separateSession = $this->invokePrivate('normalizeSessionFeedback', [[], [$normalized], false, [], $sessionData]);
+        $combinedSession = $this->invokePrivate('normalizeSessionFeedback', [[], [$normalized]]);
+
+        $this->assertSame($expectedSeparate, $separateSession['overall_readiness_score']);
+        $this->assertSame($expectedCombined, $combinedSession['overall_readiness_score']);
+    }
+
+    public function test_fallback_session_metadata_removes_the_language_weight_for_accommodated_sessions(): void
+    {
+        $session = new InterviewSession;
+        $session->setRawAttributes([
+            'accommodation_profile' => json_encode([
+                'separate_language_scoring' => true,
+            ], JSON_THROW_ON_ERROR),
+        ], true);
+        $controller = (new ReflectionClass(InterviewController::class))->newInstanceWithoutConstructor();
+        $method = new ReflectionMethod(InterviewController::class, 'fallbackSessionMetadata');
+        $method->setAccessible(true);
+
+        $metadata = $method->invoke(
+            $controller,
+            $session,
+            collect(),
+            [
+                'clarity' => 100,
+                'relevance' => 100,
+                'grammar' => 0,
+                'professionalism' => 100,
+            ],
+            0
+        );
+
+        $this->assertSame(100, $metadata['overall']);
     }
 
     public function test_review_feedback_removes_prompt_and_answer_text_scaffold_from_short_answer_feedback(): void
@@ -432,6 +536,67 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame(40, $normalized['session_feedback']['star_method_score']);
         $this->assertSame('ai_evidence_validated', $normalized['per_question_feedback'][0]['evaluation_source']);
         $this->assertStringContainsString($answers[0]['answer'], $normalized['per_question_feedback'][0]['ai_feedback']);
+    }
+
+    public function test_session_score_cannot_exceed_the_versioned_aggregate_rubric(): void
+    {
+        $feedback = [
+            [
+                'score' => 90,
+                'clarity_score' => 100,
+                'relevance_score' => 100,
+                'grammar_score' => 100,
+                'professionalism_score' => 100,
+                'star_applicable' => true,
+                'star_method_score' => 0,
+                'question_focus' => 'Tell me about a difficult incident.',
+                'answer_alignment' => 'directly_addressed',
+                'evidence_quotes' => ['I owned the incident response.'],
+                'ai_feedback' => 'The response shows incident ownership but does not include a result.',
+            ],
+            [
+                'score' => 100,
+                'clarity_score' => 100,
+                'relevance_score' => 100,
+                'grammar_score' => 100,
+                'professionalism_score' => 100,
+                'star_applicable' => false,
+                'star_method_score' => 0,
+                'question_focus' => 'Explain an indexing tradeoff.',
+                'answer_alignment' => 'directly_addressed',
+                'evidence_quotes' => ['Indexes improve reads but add write cost.'],
+                'ai_feedback' => 'The response clearly explains the indexing tradeoff.',
+            ],
+        ];
+
+        $normalized = $this->invokePrivate('normalizeSessionFeedback', [[], $feedback]);
+
+        $this->assertSame(90, $normalized['overall_readiness_score']);
+        $this->assertSame(0, $normalized['star_method_score']);
+    }
+
+    public function test_session_safeguard_score_uses_the_weakest_answer_instead_of_an_average(): void
+    {
+        $quality = $this->invokePrivate('aggregateFeedbackQuality', [[
+            [
+                'feedback_quality' => [
+                    'checks_passed' => 9,
+                    'checks_total' => 9,
+                    'reliability_percent' => 98,
+                ],
+            ],
+            [
+                'feedback_quality' => [
+                    'checks_passed' => 9,
+                    'checks_total' => 9,
+                    'reliability_percent' => 94,
+                ],
+            ],
+        ]]);
+
+        $this->assertSame(100, $quality['completeness_percent']);
+        $this->assertSame(94, $quality['reliability_percent']);
+        $this->assertSame('Medium', $quality['reliability_band']);
     }
 
     public function test_it_rejects_duplicate_extra_and_out_of_range_provider_scores(): void
@@ -1079,6 +1244,10 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame('directly_addressed', $normalized['answer_alignment']);
         $this->assertSame([], $normalized['missing_evidence']);
         $this->assertSame(82, $normalized['scoring_confidence']);
+        $this->assertSame(94, $normalized['feedback_quality']['reliability_percent']);
+        $this->assertSame('Medium', $normalized['feedback_quality']['reliability_band']);
+        $this->assertSame('provider_only', $normalized['feedback_quality']['calibration_status']);
+        $this->assertFalse($normalized['feedback_quality']['calibration_checked']);
     }
 
     public function test_role_fit_question_is_not_forced_into_star_by_a_coarse_behavioral_label(): void
@@ -1179,6 +1348,8 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertFalse($normalized['score_calibration']['adjustment_applied']);
         $this->assertGreaterThanOrEqual(95, $normalized['feedback_quality']['reliability_percent']);
         $this->assertSame('High', $normalized['feedback_quality']['reliability_band']);
+        $this->assertSame('cross_checked_clean', $normalized['feedback_quality']['calibration_status']);
+        $this->assertSame('internal_evidence_and_score_safeguards', $normalized['feedback_quality']['reliability_basis']);
     }
 
     public function test_provider_scores_are_symmetrically_calibrated_without_erasing_moderate_uncertainty(): void

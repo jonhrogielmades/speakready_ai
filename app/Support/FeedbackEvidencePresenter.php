@@ -40,11 +40,12 @@ final class FeedbackEvidencePresenter
         $questionText = trim((string) ($answer->question->question_text ?? data_get($alignment, 'question', '')));
         $status = self::alignmentStatus($answer, $alignment);
         $statusLabel = self::statusLabel($status, data_get($alignment, 'status_label'));
-        $scoringConfidence = self::scoreValue(data_get($alignment, 'scoring_confidence'))
-            ?? self::scoreValue($answer->scoring_confidence);
         $qualityPercent = self::scoreValue(data_get($coaching, 'feedback_quality.completeness_percent'));
         $qualityReliability = self::scoreValue(data_get($coaching, 'feedback_quality.reliability_percent'));
-        $confidence = $qualityReliability ?? $scoringConfidence;
+        $reliabilityBasis = trim((string) data_get($coaching, 'feedback_quality.reliability_basis', ''));
+        $calibrationStatus = Str::lower(trim((string) data_get($coaching, 'feedback_quality.calibration_status', '')));
+        $calibrationChecked = filter_var(data_get($coaching, 'feedback_quality.calibration_checked', false), FILTER_VALIDATE_BOOLEAN);
+        $confidence = $qualityReliability;
         if (in_array($status, ['skipped', 'insufficient_evidence', 'not_evaluated'], true)) {
             $confidence = null;
         }
@@ -80,11 +81,14 @@ final class FeedbackEvidencePresenter
             && $typedAnswerText === '';
 
         return (object) [
+            'answer_id' => (int) $answer->id,
             'number' => $index + 1,
             'label' => 'Answer '.($index + 1),
             'question' => $questionText !== '' ? $questionText : 'Interview question '.($index + 1),
             'answer' => self::answerDisplay($answer, $answerText, $hasVoiceRecording, $isVoiceOnlyAnswer),
-            'score' => self::scoreValue($answer->score),
+            'score' => in_array($status, ['skipped', 'insufficient_evidence', 'not_evaluated'], true)
+                ? null
+                : self::scoreValue($answer->score),
             'score_label' => self::scoreLabel($answer, $status),
             'status' => $status,
             'status_label' => $statusLabel,
@@ -96,6 +100,10 @@ final class FeedbackEvidencePresenter
             'feedback_quality' => $qualityPercent,
             'feedback_reliability' => $qualityReliability,
             'quality_label' => self::qualityLabel($qualityPercent, $qualityReliability),
+            'reliability_basis' => $reliabilityBasis,
+            'calibration_status' => $calibrationStatus,
+            'calibration_checked' => $calibrationChecked,
+            'calibration_label' => self::calibrationLabel($calibrationStatus, $calibrationChecked),
             'rubric_level' => trim((string) ($answer->rubric_level ?? '')),
             'evaluation_source' => self::evaluationSource(data_get($alignment, 'evaluation_source')),
             'evidence_quotes' => $evidenceQuotes,
@@ -121,24 +129,24 @@ final class FeedbackEvidencePresenter
     {
         $coverage = is_array($session->feedback?->coaching_summary ?? null) ? $session->feedback->coaching_summary : [];
         $reviewContext = is_array(data_get($coverage, 'review_context')) ? data_get($coverage, 'review_context') : [];
-        $scoreConfidence = self::scoreValue($session->score?->scoring_confidence);
         $answerConfidence = $answerCards
             ->pluck('confidence')
             ->filter(fn ($value): bool => is_numeric($value))
             ->values();
-        $answerAverage = $answerConfidence->isNotEmpty() ? (int) round($answerConfidence->avg()) : null;
+        $answerFloor = $answerConfidence->isNotEmpty() ? (int) $answerConfidence->min() : null;
         $reviewReliability = self::scoreValue(data_get($reviewContext, 'feedback_quality.reliability_percent'));
         $validatedReliability = data_get($reviewContext, 'detailed_review_validation.status') === 'verified'
             ? self::scoreValue(data_get($reviewContext, 'detailed_review_validation.minimum_scoreable_reliability_percent'))
             : null;
         $confidence = self::conservativeScore([
-            $answerAverage,
+            $answerFloor,
             $reviewReliability,
             $validatedReliability,
-        ]) ?? $scoreConfidence;
+        ]);
         $lowCount = $answerCards->filter(fn (object $answer): bool => $answer->confidence === null || $answer->confidence < 80)->count();
         $answerCount = $answerCards->count();
         $quality = self::scoreValue(data_get($reviewContext, 'feedback_quality.completeness_percent', data_get($coverage, 'feedback_quality.completeness_percent')));
+        $calibrationStatus = self::sessionCalibrationStatus($answerCards);
 
         return (object) [
             'score' => $confidence,
@@ -148,6 +156,8 @@ final class FeedbackEvidencePresenter
             'context_label' => self::reviewContextLabel($reviewContext),
             'low_confidence_count' => $lowCount,
             'quality_label' => self::qualityLabel($quality, $reviewReliability),
+            'coverage_status' => $calibrationStatus,
+            'coverage_label' => self::calibrationLabel($calibrationStatus, $calibrationStatus !== '' && $calibrationStatus !== 'provider_only'),
             'version_label' => 'Rubric v'.(int) ($session->score?->score_version ?? 0),
         ];
     }
@@ -330,11 +340,11 @@ final class FeedbackEvidencePresenter
         }
 
         return match (true) {
-            $confidence === null => 'Confidence pending',
-            $confidence >= 95 => 'High evidence reliability',
-            $confidence >= 80 => 'Moderate evidence reliability',
-            $confidence >= 55 => 'Limited evidence reliability',
-            default => 'Low confidence',
+            $confidence === null => 'Coverage pending',
+            $confidence >= 95 => 'High safeguard coverage',
+            $confidence >= 80 => 'Moderate safeguard coverage',
+            $confidence >= 55 => 'Limited safeguard coverage',
+            default => 'Low safeguard coverage',
         };
     }
 
@@ -360,9 +370,9 @@ final class FeedbackEvidencePresenter
         }
 
         return match (true) {
-            $confidence === null => 'The app did not store a confidence value for this answer.',
-            $confidence >= 95 => 'The answer passed the required evidence and score safeguards.',
-            $confidence >= 80 => 'The review is usable, but it did not meet the 95% evidence-reliability threshold.',
+            $confidence === null => 'No internal safeguard coverage was stored for this answer.',
+            $confidence >= 95 => 'The answer passed the required internal evidence and score safeguards.',
+            $confidence >= 80 => 'The review is usable, but it did not meet the 95% internal safeguard threshold.',
             $confidence >= 55 => 'Several safeguards passed, but the review still has meaningful uncertainty.',
             default => 'Treat this as a coaching hint and retry with more complete detail.',
         };
@@ -375,9 +385,9 @@ final class FeedbackEvidencePresenter
         }
 
         $prefix = match (true) {
-            $confidence === null => 'Confidence is not stored for this session.',
-            $confidence >= 95 => 'The review passed the high-reliability evidence threshold.',
-            $confidence >= 80 => 'The review is usable, but it remains below the high-reliability threshold.',
+            $confidence === null => 'Internal safeguard coverage is not stored for this session.',
+            $confidence >= 95 => 'The review passed the high internal safeguard-coverage threshold.',
+            $confidence >= 80 => 'The review is usable, but it remains below the high internal safeguard-coverage threshold.',
             $confidence >= 55 => 'The review has meaningful uncertainty and should be checked carefully.',
             default => 'The session feedback should be treated as a coaching draft.',
         };
@@ -436,10 +446,66 @@ final class FeedbackEvidencePresenter
         return implode(' - ', $parts);
     }
 
+    private static function sessionCalibrationStatus(Collection $answerCards): string
+    {
+        $statuses = $answerCards
+            ->pluck('calibration_status')
+            ->filter(fn ($status): bool => is_string($status) && $status !== '')
+            ->unique()
+            ->values();
+
+        if ($statuses->isEmpty()) {
+            return '';
+        }
+        if ($statuses->contains('cross_checked_with_concerns')) {
+            return 'cross_checked_with_concerns';
+        }
+        if ($statuses->contains('cross_checked_with_limited_coverage')) {
+            return 'cross_checked_with_limited_coverage';
+        }
+        $hasUnscoredAnswers = $statuses->contains(fn (string $status): bool => in_array($status, ['insufficient_evidence', 'not_scored'], true));
+        $hasScoredAnswers = $statuses->contains(fn (string $status): bool => ! in_array($status, ['insufficient_evidence', 'not_scored'], true));
+        if ($hasUnscoredAnswers && $hasScoredAnswers) {
+            return 'mixed_scored_and_unscored';
+        }
+        if ($statuses->contains('provider_only')) {
+            return 'provider_only';
+        }
+        if ($statuses->every(fn (string $status): bool => $status === 'cross_checked_clean')) {
+            return 'cross_checked_clean';
+        }
+        if ($statuses->contains('insufficient_evidence')) {
+            return 'insufficient_evidence';
+        }
+        if ($statuses->contains('not_scored')) {
+            return 'not_scored';
+        }
+
+        return $statuses->first();
+    }
+
+    private static function calibrationLabel(string $status, bool $checked): string
+    {
+        return match ($status) {
+            'cross_checked_clean' => 'Deterministic cross-check completed',
+            'cross_checked_with_concerns' => 'Cross-check found scoring concerns',
+            'cross_checked_with_limited_coverage' => 'Cross-checked with limited coverage',
+            'mixed_scored_and_unscored' => 'Some answers were not scored',
+            'provider_only' => 'Provider-only coverage; deterministic cross-check unavailable',
+            'insufficient_evidence' => 'Insufficient evidence for a dependable cross-check',
+            'not_scored' => 'Not scored',
+            '' => '',
+            default => $checked ? 'Internal cross-check completed' : 'Cross-check coverage is limited',
+        };
+    }
+
     private static function scoreLabel(InterviewAnswer $answer, string $status): string
     {
         if ((bool) ($answer->is_skipped ?? false) || $status === 'skipped') {
             return 'Skipped';
+        }
+        if (in_array($status, ['insufficient_evidence', 'not_evaluated'], true)) {
+            return 'Not scored';
         }
 
         $score = self::scoreValue($answer->score);

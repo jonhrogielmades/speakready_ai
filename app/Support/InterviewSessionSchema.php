@@ -79,6 +79,8 @@ class InterviewSessionSchema
             $table->json('accommodation_profile')->nullable();
             $table->boolean('score_eligible')->default(false);
             $table->string('status')->default('pending');
+            $table->string('feedback_processing_token', 64)->nullable();
+            $table->timestamp('feedback_processing_started_at')->nullable();
             $table->text('notes')->nullable();
             $table->integer('duration_seconds')->default(0);
             $table->integer('current_question_index')->default(0);
@@ -154,6 +156,12 @@ class InterviewSessionSchema
         }
         if (self::isMissing($missing, 'status')) {
             $table->string('status')->default('pending');
+        }
+        if (self::isMissing($missing, 'feedback_processing_token')) {
+            $table->string('feedback_processing_token', 64)->nullable();
+        }
+        if (self::isMissing($missing, 'feedback_processing_started_at')) {
+            $table->timestamp('feedback_processing_started_at')->nullable();
         }
         if (self::isMissing($missing, 'notes')) {
             $table->text('notes')->nullable();
@@ -241,6 +249,8 @@ class InterviewSessionSchema
             'accommodation_profile',
             'score_eligible',
             'status',
+            'feedback_processing_token',
+            'feedback_processing_started_at',
             'notes',
             'duration_seconds',
             'current_question_index',

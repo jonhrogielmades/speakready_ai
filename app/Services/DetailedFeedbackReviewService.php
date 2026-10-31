@@ -271,7 +271,10 @@ class DetailedFeedbackReviewService
  ? $this->scoreValue($totals['star_method_score'] / $totals['star_applicable_count'])
  : 0;
  $metadata = $this->assessment->sessionMetadata($session, $evaluatedAnswers, $metrics, $starScore);
- $overall = $this->scoreValue($totals['score'] / $count);
+ $answerAverage = $this->scoreValue($totals['score'] / $count);
+ // A provider refresh must not make the stored total more generous than
+ // either the evidence-capped answer average or the versioned rubric total.
+ $overall = min($answerAverage, $this->scoreValue($metadata['overall']?? $answerAverage));
  $metadata['overall'] = $overall;
  $metadata['readiness_band'] = $this->assessment->readinessBand($overall);
 

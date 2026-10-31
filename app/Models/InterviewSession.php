@@ -31,6 +31,8 @@ class InterviewSession extends Model
         'accommodation_profile',
         'score_eligible',
         'status',
+        'feedback_processing_token',
+        'feedback_processing_started_at',
         'notes',
         'duration_seconds',
         'current_question_index',
@@ -50,6 +52,7 @@ class InterviewSession extends Model
         'accommodation_profile' => 'array',
         'score_eligible' => 'boolean',
         'pressure_mode' => 'boolean',
+        'feedback_processing_started_at' => 'datetime',
     ];
 
     public static function hasColumn(string $column): bool

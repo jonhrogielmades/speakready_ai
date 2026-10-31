@@ -6307,7 +6307,8 @@ PROMPT;
  $response['session_feedback']?? [],
  $normalizedItems,
  $requireAiGenerated,
- $answersData
+ $answersData,
+ $sessionData
  ),
  'review_context' => self::normalizeReviewContext(
  $response['review_context']?? [],
@@ -6492,7 +6493,7 @@ PROMPT;
  return mb_strlen($flag) > 80? mb_substr($flag, 0, 80): $flag;
  }
 
- public static function calculateWeightedReadinessScore($clarityScore, $relevanceScore, $grammarScore, $professionalismScore, $starMethodScore, bool $starApplicable = true): int
+ public static function calculateWeightedReadinessScore($clarityScore, $relevanceScore, $grammarScore, $professionalismScore, $starMethodScore, bool $starApplicable = true, bool $languageScoringEnabled = true): int
  {
  $scores = [
  'clarity_score' => self::normalizeScore($clarityScore),
@@ -6505,6 +6506,9 @@ PROMPT;
  $weights = self::READINESS_SCORE_WEIGHTS;
  if (! $starApplicable) {
  unset($weights['star_method_score']);
+ }
+ if (! $languageScoringEnabled) {
+ unset($weights['grammar_score']);
  }
 
  $totalWeight = array_sum($weights);
@@ -6670,6 +6674,7 @@ PROMPT;
  $questionFocus = self::validatedQuestionFocus($feedback, $answer)
  ?? (self::normalizeEvidenceText($questionText)?: null);
  $providerMissingCriteria = self::validatedMissingCriteria($feedback, $answer);
+ $languageScoringEnabled =! (bool) data_get($sessionData, 'accommodation_profile.separate_language_scoring', false);
  $evidenceProfile = self::answerEvidenceProfile($answerText, $questionText, $starApplicable, $answer);
  $localScores = self::localEvidenceScores($answerText, $questionText, $starApplicable, $evidenceProfile);
  $validAlignments = [
@@ -6769,14 +6774,15 @@ PROMPT;
  $starApplicable,
  $answerText,
  $questionText,
- $providerMissingCriteria
+ $providerMissingCriteria,
+ $languageScoringEnabled
  );
  if (self::normalizeProviderKey($feedbackSource) === 'localmodel') {
  $scoreCalibration['source'] = 'local_trained_model_with_deterministic_cross_check';
  $scoreCalibration['limitation'] = 'Trained local model scores were checked against local answer-detail checks. This helps recovery when API providers are unavailable, but it is not a human review.';
  }
  } else {
- $scoreCalibration = self::localScoreCalibration($localScores, $starMethodScore, $starApplicable, $evidenceProfile);
+ $scoreCalibration = self::localScoreCalibration($localScores, $starMethodScore, $starApplicable, $evidenceProfile, $languageScoringEnabled);
  }
 
  if ($hasProviderScores) {
@@ -6802,7 +6808,8 @@ PROMPT;
  $scores['grammar_score'],
  $scores['professionalism_score'],
  $starMethodScore,
- $starApplicable
+ $starApplicable,
+ $languageScoringEnabled
  );
  if (! $isSkipped &&! $isTooShort) {
  $scores['score'] = min($scores['score'], self::overallEvidenceCap($evidenceProfile, $starApplicable, $hasProviderScores));
@@ -7054,13 +7061,15 @@ PROMPT;
  fn (string $field): bool => self::isValidScoreValue($feedback[$field]?? null)
  );
  if ($scoresGuarded) {
+ $languageScoringEnabled = (bool) data_get($feedback, 'score_calibration.language_scoring_enabled', true);
  $weightedReadiness = self::calculateWeightedReadinessScore(
  $feedback['clarity_score'],
  $feedback['relevance_score'],
  $feedback['grammar_score'],
  $feedback['professionalism_score'],
  $feedback['star_method_score'],
- (bool) ($feedback['star_applicable']?? false)
+ (bool) ($feedback['star_applicable']?? false),
+ $languageScoringEnabled
  );
  $scoresGuarded = self::normalizeScore($feedback['score']) <= $weightedReadiness;
  }
@@ -7096,6 +7105,33 @@ PROMPT;
  $total = count($checks);
  $percent = $total > 0? (int) round(($passed / $total) * 100): 0;
  $reliabilityPercent = self::feedbackReliabilityPercent($percent, self::normalizeScore($feedback['scoring_confidence']?? 0));
+ $scoreCalibration = is_array($feedback['score_calibration']?? null)? $feedback['score_calibration']: [];
+ $calibrationChecked = (bool) ($scoreCalibration['checked']?? false);
+ $calibrationAdjusted = (bool) ($scoreCalibration['adjustment_applied']?? false);
+ $calibrationRiskFlags = array_values(array_filter((array) ($scoreCalibration['risk_flags']?? [])));
+ $calibrationCoverageFlags = array_values(array_filter((array) ($scoreCalibration['coverage_flags']?? [])));
+
+ // This percentage is an internal evidence/safeguard score, not measured
+ // agreement with human interviewers. Only a clean deterministic cross-check
+ // can enter the high (95%+) band. Provider-only scores, incomplete coverage,
+ // and material calibration disagreements remain visibly below that gate.
+ if (! $isSkipped && ! (bool) ($feedback['is_too_short']?? false)) {
+ if (! $calibrationChecked || $calibrationCoverageFlags!== []) {
+ $reliabilityPercent = min($reliabilityPercent, 94);
+ }
+ if ($calibrationAdjusted || $calibrationRiskFlags!== []) {
+ $reliabilityPercent = min($reliabilityPercent, 89);
+ }
+ }
+
+ $calibrationStatus = match (true) {
+ $isSkipped => 'not_scored',
+ (bool) ($feedback['is_too_short']?? false) => 'insufficient_evidence',
+ ! $calibrationChecked => 'provider_only',
+ $calibrationAdjusted || $calibrationRiskFlags!== [] => 'cross_checked_with_concerns',
+ $calibrationCoverageFlags!== [] => 'cross_checked_with_limited_coverage',
+ default => 'cross_checked_clean',
+ };
 
  return [
  'status' => $percent === 100? 'verified': 'limited',
@@ -7104,6 +7140,9 @@ PROMPT;
  'completeness_percent' => $percent,
  'reliability_percent' => $reliabilityPercent,
  'reliability_band' => self::feedbackReliabilityBand($reliabilityPercent),
+ 'reliability_basis' => 'internal_evidence_and_score_safeguards',
+ 'calibration_status' => $calibrationStatus,
+ 'calibration_checked' => $calibrationChecked,
  'checks' => $checks,
  'scope' => 'Checks for answer proof, safe scoring, and useful next steps.',
  'limitation' => '100% checks passed means the required checks passed. It does not mean the review is perfect.',
@@ -7152,7 +7191,10 @@ PROMPT;
  }
 
  $percent = $total > 0? (int) round(($passed / $total) * 100): 0;
- $reliabilityPercent = $reliabilityScores!== []? self::normalizeScore(array_sum($reliabilityScores) / count($reliabilityScores)): 0;
+ // A session-level safeguard score represents the weakest reviewed answer,
+ // not an average that can hide one provider-only or otherwise uncertain
+ // result behind stronger answers.
+ $reliabilityPercent = $reliabilityScores!== []? min($reliabilityScores): 0;
 
  return [
  'status' => $total === 0? 'not_available': ($percent === 100? 'verified': 'limited'),
@@ -7636,7 +7678,8 @@ PROMPT;
  bool $starApplicable,
  string $answerText,
  string $questionText,
- array $providerMissingCriteria
+ array $providerMissingCriteria,
+ bool $languageScoringEnabled = true
  ): array {
  $localStarScore = $starApplicable? self::normalizeScore($localScores['star_method_score']?? 0): 0;
  $providerReadiness = self::calculateWeightedReadinessScore(
@@ -7645,7 +7688,8 @@ PROMPT;
  $scores['grammar_score']?? 0,
  $scores['professionalism_score']?? 0,
  $starMethodScore,
- $starApplicable
+ $starApplicable,
+ $languageScoringEnabled
  );
  $localReadiness = self::calculateWeightedReadinessScore(
  $localScores['clarity_score']?? 0,
@@ -7653,7 +7697,8 @@ PROMPT;
  $localScores['grammar_score']?? 0,
  $localScores['professionalism_score']?? 0,
  $localStarScore,
- $starApplicable
+ $starApplicable,
+ $languageScoringEnabled
  );
  $checked = self::englishCalibrationEligible($answerText, $questionText);
  $adjustmentApplied = false;
@@ -7731,7 +7776,8 @@ PROMPT;
  $scores['grammar_score']?? 0,
  $scores['professionalism_score']?? 0,
  $starMethodScore,
- $starApplicable
+ $starApplicable,
+ $languageScoringEnabled
  );
 
  return [$scores, $starMethodScore, [
@@ -7744,13 +7790,14 @@ PROMPT;
  'adjustment_applied' => $adjustmentApplied,
  'risk_flags' => array_values(array_unique($riskFlags)),
  'coverage_flags' => array_values(array_unique($coverageFlags)),
+ 'language_scoring_enabled' => $languageScoringEnabled,
  'uses_asr_transcript' => (bool) ($profile['uses_asr_transcript']?? false),
  'formatting_treatment' => ($profile['uses_asr_transcript']?? false)? 'neutral_midpoint': 'typed_observable',
  'limitation' => $checked? 'Provider scores were checked against local answer-detail checks. This helps, but it is not a human review.': 'Provider feedback was checked with answer quotes, but English-only local score checks were not used for this answer language.',
  ]];
  }
 
- private static function localScoreCalibration(array $localScores, int $starMethodScore, bool $starApplicable, array $profile = []): array
+ private static function localScoreCalibration(array $localScores, int $starMethodScore, bool $starApplicable, array $profile = [], bool $languageScoringEnabled = true): array
  {
  $localReadiness = self::calculateWeightedReadinessScore(
  $localScores['clarity_score']?? 0,
@@ -7758,7 +7805,8 @@ PROMPT;
  $localScores['grammar_score']?? 0,
  $localScores['professionalism_score']?? 0,
  $starApplicable? $starMethodScore: 0,
- $starApplicable
+ $starApplicable,
+ $languageScoringEnabled
  );
 
  return [
@@ -7771,6 +7819,7 @@ PROMPT;
  'adjustment_applied' => false,
  'risk_flags' => [],
  'coverage_flags' => ['provider_unavailable_or_rejected'],
+ 'language_scoring_enabled' => $languageScoringEnabled,
  'uses_asr_transcript' => (bool) ($profile['uses_asr_transcript']?? false),
  'formatting_treatment' => ($profile['uses_asr_transcript']?? false)? 'neutral_midpoint': 'typed_observable',
  'limitation' => 'Local backup scoring uses only answer details and helps recovery, but it is less detailed than full AI feedback.',
@@ -8377,7 +8426,7 @@ PROMPT;
  return array_values(array_unique($keywords));
  }
 
- private static function normalizeSessionFeedback(array $sessionFeedback, array $questionFeedback, bool $requireAiGenerated = false, array $answersData = []): array
+ private static function normalizeSessionFeedback(array $sessionFeedback, array $questionFeedback, bool $requireAiGenerated = false, array $answersData = [], array $sessionData = []): array
  {
  $clarityScore = self::averageQuestionMetric($questionFeedback, 'clarity_score');
  $relevanceScore = self::averageQuestionMetric($questionFeedback, 'relevance_score');
@@ -8389,10 +8438,22 @@ PROMPT;
  ));
  $starApplicable = count($starScores) > 0;
  $starMethodScore = $starApplicable? self::normalizeScore(array_sum($starScores) / count($starScores)): 0;
- // Average the already evidence-capped per-answer totals. Recomputing
- // from uncapped component averages can produce a session score higher
- // than every individual answer.
- $readinessScore = self::averageQuestionMetric($questionFeedback, 'score');
+ $languageScoringEnabled =! (bool) data_get($sessionData, 'accommodation_profile.separate_language_scoring', false);
+ // Keep the session total inside both independent safeguards: the mean of
+ // evidence-capped answer scores and the versioned aggregate rubric. This
+ // prevents mixed STAR/non-STAR sessions from overstating readiness while
+ // preserving a stricter per-answer evidence cap.
+ $evidenceCappedScore = self::averageQuestionMetric($questionFeedback, 'score');
+ $weightedAggregateScore = self::calculateWeightedReadinessScore(
+ $clarityScore,
+ $relevanceScore,
+ $grammarScore,
+ $professionalismScore,
+ $starMethodScore,
+ $starApplicable,
+ $languageScoringEnabled
+ );
+ $readinessScore = min($evidenceCappedScore, $weightedAggregateScore);
  $providerOverallSummary = self::providerSessionFeedbackText($sessionFeedback['overall_summary']?? null, $questionFeedback, 2, $answersData);
  $providerStrengths = self::providerSessionFeedbackText($sessionFeedback['strengths']?? null, $questionFeedback, 1, $answersData);
  $providerWeaknesses = self::providerSessionFeedbackText($sessionFeedback['weaknesses']?? null, $questionFeedback, 1, $answersData);

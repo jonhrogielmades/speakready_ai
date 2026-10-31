@@ -883,7 +883,10 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('Ended Session Review')
  ->assertSee('No feedback is available for this session.')
- ->assertSee('Final draft answer saved before ending.');
+ ->assertSee('Final draft answer saved before ending.')
+ ->assertSee('This answer was saved, but it was not assessed because the interview ended early.')
+ ->assertDontSee('Evidence safeguard score')
+ ->assertDontSee('Possible Answer');
  }
 
  public function test_finish_cannot_reclaim_an_abort_owned_session_status(): void
@@ -1455,8 +1458,86 @@ class ReliabilityHardeningTest extends TestCase
  ->assertJsonPath('redirect_url', route('user.review', $session));
 
  $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+ $this->assertNull($session->fresh()->feedback_processing_token);
  $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
  $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+ }
+
+ public function test_feedback_processing_lease_does_not_expire_before_configured_finalization_deadline(): void
+ {
+ config()->set('services.ai_feedback_finalization.deadline_seconds', 180);
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, [
+ 'status' => 'processing',
+ 'feedback_processing_token' => 'active-feedback-lease',
+ 'feedback_processing_started_at' => now()->subMinutes(3),
+ ]);
+ $session->timestamps = false;
+ $session->updated_at = now()->subMinutes(10);
+ $session->save();
+
+ $this->actingAs($user)
+ ->postJson(route('interview.finish'), ['session_id' => $session->id])
+ ->assertStatus(409)
+ ->assertJsonPath('message', 'Feedback analysis is already in progress.')
+ ->assertJsonPath('retry_after_ms', 1200);
+
+ $session->refresh();
+ $this->assertSame('processing', $session->status);
+ $this->assertSame('active-feedback-lease', $session->feedback_processing_token);
+ $this->assertNotNull($session->feedback_processing_started_at);
+ $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
+ }
+
+ public function test_superseded_feedback_claim_cannot_commit_report_or_rewards(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category);
+ $question = $this->question($category, ['interview_session_id' => $session->id]);
+ $answer = InterviewAnswer::create([
+ 'interview_session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'answer_text' => 'I owned the handoff checklist, coordinated the approval, and confirmed the final deployment result.',
+ 'response_mode' => 'text',
+ ]);
+ $profile = Profile::forUser((int) $user->id);
+ $sessionsBefore = (int) $profile->total_sessions;
+ $experienceBefore = (int) $profile->experience_points;
+
+ $this->app->instance(InterviewController::class, new class extends InterviewController
+ {
+ protected function generateInterviewFeedbackForSession(
+ InterviewSession $session,?GameLevel $gameLevel,
+ array $sessionData,
+ array $answersData,?string $feedbackProvider = null
+ ): array {
+ InterviewSession::whereKey($session->id)->update([
+ 'feedback_processing_token' => 'replacement-feedback-lease',
+ 'feedback_processing_started_at' => now(),
+ ]);
+
+ return AIService::generateLocalFeedback($sessionData, $answersData);
+ }
+ });
+
+ $this->actingAs($user)
+ ->postJson(route('interview.finish'), ['session_id' => $session->id])
+ ->assertStatus(409)
+ ->assertJsonPath('error_code', 'feedback_processing_lease_lost')
+ ->assertJsonPath('message', 'Feedback analysis is already in progress in a newer request.');
+
+ $session->refresh();
+ $profile->refresh();
+ $this->assertSame('processing', $session->status);
+ $this->assertSame('replacement-feedback-lease', $session->feedback_processing_token);
+ $this->assertSame($sessionsBefore, (int) $profile->total_sessions);
+ $this->assertSame($experienceBefore, (int) $profile->experience_points);
+ $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
+ $this->assertEmpty($answer->fresh()->ai_feedback);
  }
 
  public function test_interview_finish_repairs_missing_optional_session_columns_before_processing(): void
@@ -1473,7 +1554,7 @@ class ReliabilityHardeningTest extends TestCase
  'response_mode' => 'text',
  ]);
 
- foreach (['action_plan', 'session_state', 'current_question_index', 'duration_seconds', 'notes'] as $column) {
+ foreach (['action_plan', 'session_state', 'current_question_index', 'duration_seconds', 'notes', 'feedback_processing_token', 'feedback_processing_started_at'] as $column) {
  if (Schema::hasColumn('interview_sessions', $column)) {
  Schema::table('interview_sessions', function (Blueprint $table) use ($column): void {
  $table->dropColumn($column);
@@ -1493,7 +1574,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertJsonPath('redirect_url', route('user.review', $session));
 
- foreach (['action_plan', 'session_state', 'current_question_index', 'duration_seconds', 'notes'] as $column) {
+ foreach (['action_plan', 'session_state', 'current_question_index', 'duration_seconds', 'notes', 'feedback_processing_token', 'feedback_processing_started_at'] as $column) {
  $this->assertTrue(Schema::hasColumn('interview_sessions', $column), "Expected {$column} to be repaired.");
  }
 
@@ -1537,7 +1618,12 @@ class ReliabilityHardeningTest extends TestCase
  ->assertJsonPath('message', 'Your answers were saved, but the feedback report could not be finalized. Please retry the report generation in a moment.')
  ->assertJsonPath('retry_after_ms', 1500);
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
+ $this->assertDatabaseHas('interview_sessions', [
+ 'id' => $session->id,
+ 'status' => 'in_progress',
+ 'feedback_processing_token' => null,
+ 'feedback_processing_started_at' => null,
+ ]);
  $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
  $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
@@ -1732,13 +1818,18 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Feedback')
  ->assertSee('Your Answer')
  ->assertDontSee('What To Improve')
- ->assertDontSee('What Worked')
- ->assertDontSee('Why It Matters')
- ->assertDontSee('Success check')
- ->assertDontSee('This note checks only')
+ ->assertSee('Evidence-based answer check')
+ ->assertSee('Evidence from your answer')
+ ->assertSee('What worked')
+ ->assertSee('Improvement focus')
+ ->assertSee('Why it matters')
+ ->assertSee('Next attempt')
+ ->assertSee('Success check')
+ ->assertSee('Source limitation:')
  ->assertSee('Possible Answer')
- ->assertSee('High evidence reliability')
- ->assertSee('not a guarantee of perfect accuracy');
+ ->assertSee('High internal coverage')
+ ->assertSee('High safeguard coverage')
+ ->assertSee('not an independently measured accuracy rate');
 
  $savedAnswer = $answer->fresh();
  $savedFeedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
@@ -1763,7 +1854,7 @@ class ReliabilityHardeningTest extends TestCase
  $presentedReview = FeedbackEvidencePresenter::forSession($session->fresh(['answers.question', 'score', 'feedback']));
  $this->assertNotNull($presentedReview);
  $this->assertGreaterThanOrEqual(95, (int) $presentedReview->reliability->score);
- $this->assertSame('High evidence reliability', $presentedReview->reliability->label);
+ $this->assertSame('High safeguard coverage', $presentedReview->reliability->label);
  $this->assertStringContainsString('evidence reliability', $presentedReview->reliability->quality_label);
  $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider(
  $session->fresh(['answers.question', 'score', 'feedback'])
@@ -1856,7 +1947,7 @@ class ReliabilityHardeningTest extends TestCase
  $presentedReview = FeedbackEvidencePresenter::forSession($session->fresh(['answers.question', 'score', 'feedback']));
  $this->assertNotNull($presentedReview);
  $this->assertLessThan(95, (int) $presentedReview->reliability->score);
- $this->assertSame('Limited evidence reliability', $presentedReview->reliability->label);
+ $this->assertSame('Limited safeguard coverage', $presentedReview->reliability->label);
  $this->assertSame('Not enough evidence', $presentedReview->answers->first()->confidence_label);
  Http::assertSentCount(1);
  }
@@ -2759,8 +2850,8 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Feedback')
  ->assertSee('Your Answer')
  ->assertSee('Possible Answer')
- ->assertDontSee('Not enough detail')
- ->assertDontSee('Not scored')
+ ->assertSee('Not enough detail')
+ ->assertSee('Score: Not scored')
  ->assertDontSee('Score: 0')
  ->assertDontSee('0% relevance');
  }

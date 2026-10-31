@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Schema;
 
 class AiProviderEvaluationService
 {
-    public const BENCHMARK_VERSION = 'panelist-evidence-v1';
+    public const BENCHMARK_VERSION = 'panelist-evidence-v2';
     public const USER_REQUEST_COMPARISON_VERSION = 'user-request-provider-comparison-v1';
     public const PANELIST_MIN_PROVIDER_COUNT = 3;
 
@@ -1017,54 +1017,190 @@ class AiProviderEvaluationService
         $items = collect($feedback['per_question_feedback'] ?? []);
         $sessionFeedback = $feedback['session_feedback'] ?? [];
         $expectedAnswers = collect($case['answers_data']);
-        $schemaScore = ($items->count() === $expectedAnswers->count() && is_array($sessionFeedback) && $sessionFeedback !== [])
+        $requiredItemFields = [
+            'id', 'score', 'clarity_score', 'relevance_score', 'grammar_score',
+            'professionalism_score', 'star_applicable', 'star_method_score',
+            'question_focus', 'answer_alignment', 'insufficient_data',
+            'evidence_quotes', 'ai_feedback',
+        ];
+        $schemaItemsValid = $items->count() === $expectedAnswers->count()
+            && $items->filter(fn ($item): bool => is_array($item))->count() === $items->count()
+            && $items->pluck('id')->filter(fn ($id): bool => is_scalar($id))->unique()->count() === $expectedAnswers->count()
+            && $items->every(fn ($item): bool => is_array($item)
+                && collect($requiredItemFields)->every(fn (string $field): bool => array_key_exists($field, $item)));
+        $sessionSchemaValid = is_array($sessionFeedback)
+            && is_numeric($sessionFeedback['overall_readiness_score'] ?? null)
+            && is_numeric($sessionFeedback['star_method_score'] ?? null);
+        $schemaScore = ($schemaItemsValid && $sessionSchemaValid)
             ? 100
             : 40;
 
         $accuracyPoints = 0;
         $checks = 0;
         $warnings = [];
+        $recordCheck = static function (bool $passed, string $warning) use (&$accuracyPoints, &$checks, &$warnings): void {
+            $checks++;
+            if ($passed) {
+                $accuracyPoints++;
+
+                return;
+            }
+
+            $warnings[] = $warning;
+        };
 
         foreach ($expectedAnswers as $answer) {
-            $checks += 4;
             $item = $items->firstWhere('id', $answer['id']);
             if (! is_array($item)) {
                 $warnings[] = 'Missing feedback item for answer '.$answer['id'].'.';
+                // Four grounding checks plus score consistency are universal.
+                // Fixed benchmark cases add explicit score/STAR/data targets;
+                // real-user comparison cases intentionally do not invent them.
+                $checks += 5 + collect([
+                    'expected_score_ranges',
+                    'expected_star_applicable',
+                    'expected_star_score_ranges',
+                    'expected_insufficient_data',
+                ])->filter(fn (string $key): bool => array_key_exists($answer['id'], (array) ($case[$key] ?? [])))->count();
 
                 continue;
             }
 
-            if (($item['question_focus'] ?? null) === ($answer['question'] ?? null)) {
-                $accuracyPoints++;
-            } else {
-                $warnings[] = 'question_focus did not match the exact question for answer '.$answer['id'].'.';
-            }
+            $answerId = $answer['id'];
+            $recordCheck(
+                ($item['question_focus'] ?? null) === ($answer['question'] ?? null),
+                'question_focus did not match the exact question for answer '.$answerId.'.'
+            );
 
             $quotes = array_values(array_filter((array) ($item['evidence_quotes'] ?? [])));
             $answerText = (string) ($answer['answer'] ?? '');
-            $validQuote = collect($quotes)->contains(
-                fn ($quote): bool => is_string($quote) && $quote !== '' && str_contains($answerText, $quote)
+            $evidenceRequired = (bool) ($case['expected_evidence_required'][$answerId] ?? true);
+            $validQuote = $evidenceRequired
+                ? collect($quotes)->contains(
+                    fn ($quote): bool => is_string($quote) && $quote !== '' && str_contains($answerText, $quote)
+                )
+                : $quotes === [];
+            $recordCheck(
+                $validQuote,
+                $evidenceRequired
+                    ? 'No exact answer evidence quote was found for answer '.$answerId.'.'
+                    : 'Skipped answer '.$answerId.' should not contain an evidence quote.'
             );
-            if ($validQuote) {
-                $accuracyPoints++;
-            } else {
-                $warnings[] = 'No exact answer evidence quote was found for answer '.$answer['id'].'.';
-            }
 
             $feedbackText = (string) ($item['ai_feedback'] ?? '');
-            if ($validQuote && collect($quotes)->contains(fn ($quote): bool => str_contains($feedbackText, (string) $quote))) {
-                $accuracyPoints++;
-            } else {
-                $warnings[] = 'Feedback text did not cite its own evidence quote for answer '.$answer['id'].'.';
-            }
+            $feedbackUsesEvidence = $evidenceRequired
+                ? $validQuote && collect($quotes)->contains(fn ($quote): bool => str_contains($feedbackText, (string) $quote))
+                : $validQuote && trim($feedbackText) !== '';
+            $recordCheck(
+                $feedbackUsesEvidence,
+                $evidenceRequired
+                    ? 'Feedback text did not cite its own evidence quote for answer '.$answerId.'.'
+                    : 'Skipped answer '.$answerId.' did not include an explanatory feedback message.'
+            );
 
             $alignment = (string) ($item['answer_alignment'] ?? '');
-            if ($alignment === ($case['expected_alignment'][$answer['id']] ?? $alignment)) {
-                $accuracyPoints++;
-            } else {
-                $warnings[] = 'Answer alignment differed from the benchmark expectation for answer '.$answer['id'].'.';
+            $recordCheck(
+                $alignment === ($case['expected_alignment'][$answerId] ?? $alignment),
+                'Answer alignment differed from the benchmark expectation for answer '.$answerId.'.'
+            );
+
+            $scoreRange = $case['expected_score_ranges'][$answerId] ?? null;
+            $score = $item['score'] ?? null;
+            if (array_key_exists($answerId, (array) ($case['expected_score_ranges'] ?? []))) {
+                $recordCheck(
+                    is_array($scoreRange)
+                        && count($scoreRange) === 2
+                        && is_numeric($score)
+                        && (float) $score >= (float) $scoreRange[0]
+                        && (float) $score <= (float) $scoreRange[1],
+                    'Overall score was outside the benchmark range for answer '.$answerId.'.'
+                );
+            }
+
+            $metricFields = [
+                'score', 'clarity_score', 'relevance_score', 'grammar_score',
+                'professionalism_score', 'star_method_score',
+            ];
+            $boundedMetrics = collect($metricFields)->every(fn (string $field): bool => is_numeric($item[$field] ?? null)
+                && (float) $item[$field] >= 0
+                && (float) $item[$field] <= 100);
+            $weightedScore = $boundedMetrics
+                ? AIService::calculateWeightedReadinessScore(
+                    $item['clarity_score'],
+                    $item['relevance_score'],
+                    $item['grammar_score'],
+                    $item['professionalism_score'],
+                    $item['star_method_score'],
+                    (bool) ($item['star_applicable'] ?? false)
+                )
+                : -1;
+            $recordCheck(
+                $boundedMetrics && (int) round((float) $score) <= $weightedScore,
+                'Scores were unbounded or the total exceeded the weighted rubric for answer '.$answerId.'.'
+            );
+
+            $expectedStarApplicable = $case['expected_star_applicable'][$answerId] ?? null;
+            if (array_key_exists($answerId, (array) ($case['expected_star_applicable'] ?? []))) {
+                $recordCheck(
+                    is_bool($expectedStarApplicable) && (bool) ($item['star_applicable'] ?? false) === $expectedStarApplicable,
+                    'STAR applicability differed from the benchmark expectation for answer '.$answerId.'.'
+                );
+            }
+
+            $starRange = $case['expected_star_score_ranges'][$answerId] ?? null;
+            $starScore = $item['star_method_score'] ?? null;
+            if (array_key_exists($answerId, (array) ($case['expected_star_score_ranges'] ?? []))) {
+                $recordCheck(
+                    is_array($starRange)
+                        && count($starRange) === 2
+                        && is_numeric($starScore)
+                        && (float) $starScore >= (float) $starRange[0]
+                        && (float) $starScore <= (float) $starRange[1],
+                    'STAR score was outside the benchmark range for answer '.$answerId.'.'
+                );
+            }
+
+            $expectedInsufficient = $case['expected_insufficient_data'][$answerId] ?? null;
+            if (array_key_exists($answerId, (array) ($case['expected_insufficient_data'] ?? []))) {
+                $recordCheck(
+                    is_bool($expectedInsufficient) && (bool) ($item['insufficient_data'] ?? false) === $expectedInsufficient,
+                    'Insufficient-data handling differed from the benchmark expectation for answer '.$answerId.'.'
+                );
             }
         }
+
+        $numericItems = $items
+            ->filter(fn ($item): bool => is_array($item))
+            ->values();
+        $sessionOverallIsConsistent = false;
+        if ($numericItems->count() === $expectedAnswers->count() && $numericItems->isNotEmpty()) {
+            $componentAverage = static fn (string $field): int => (int) round($numericItems
+                ->map(fn (array $item): float => (float) ($item[$field] ?? 0))
+                ->average());
+            $starItems = $numericItems->filter(fn (array $item): bool => (bool) ($item['star_applicable'] ?? false));
+            $starApplicable = $starItems->isNotEmpty();
+            $starAverage = $starApplicable
+                ? (int) round($starItems->map(fn (array $item): float => (float) ($item['star_method_score'] ?? 0))->average())
+                : 0;
+            $expectedSessionOverall = min(
+                $componentAverage('score'),
+                AIService::calculateWeightedReadinessScore(
+                    $componentAverage('clarity_score'),
+                    $componentAverage('relevance_score'),
+                    $componentAverage('grammar_score'),
+                    $componentAverage('professionalism_score'),
+                    $starAverage,
+                    $starApplicable
+                )
+            );
+            $sessionOverall = $sessionFeedback['overall_readiness_score'] ?? null;
+            $sessionOverallIsConsistent = is_numeric($sessionOverall)
+                && (int) round((float) $sessionOverall) === $expectedSessionOverall;
+        }
+        $recordCheck(
+            $sessionOverallIsConsistent,
+            'Session readiness score did not match the evidence-capped aggregate rubric.'
+        );
 
         $accuracyScore = $checks > 0 ? $this->scoreValue(($accuracyPoints / $checks) * 100) : 0;
         $safetyScore = $this->safetyScore(json_encode($feedback, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
@@ -1087,6 +1223,8 @@ class AiProviderEvaluationService
                         'id' => $item['id'] ?? null,
                         'question_focus' => (string) ($item['question_focus'] ?? ''),
                         'answer_alignment' => (string) ($item['answer_alignment'] ?? ''),
+                        'insufficient_data' => (bool) ($item['insufficient_data'] ?? false),
+                        'star_applicable' => (bool) ($item['star_applicable'] ?? false),
                         'score' => $item['score'] ?? null,
                         'clarity_score' => $item['clarity_score'] ?? null,
                         'relevance_score' => $item['relevance_score'] ?? null,
@@ -1748,6 +1886,167 @@ class AiProviderEvaluationService
                 'expected_alignment' => [
                     1 => 'directly_addressed',
                 ],
+                'expected_score_ranges' => [
+                    1 => [60, 100],
+                ],
+                'expected_star_applicable' => [
+                    1 => true,
+                ],
+                'expected_star_score_ranges' => [
+                    1 => [50, 100],
+                ],
+                'expected_insufficient_data' => [
+                    1 => false,
+                ],
+                'expected_evidence_required' => [
+                    1 => true,
+                ],
+            ],
+            [
+                'case_key' => 'feedback_short_answer_guardrail',
+                'task_type' => 'feedback_generation',
+                'title' => 'Short-answer evidence and score guardrail',
+                'evidence_focus' => 'Provider must flag a one-word answer as insufficient and keep every score at ten or below.',
+                'session_data' => [
+                    'target_position' => 'Customer Service Representative',
+                    'difficulty' => 'Medium',
+                    'interview_focus' => 'shift readiness and communication',
+                    'country' => 'local',
+                    'target_language' => 'en',
+                ],
+                'answers_data' => [
+                    [
+                        'id' => 2,
+                        'question_type' => 'Screening',
+                        'question' => 'Are you comfortable working rotating night shifts?',
+                        'expected_guide' => 'Give a direct answer and briefly explain your availability.',
+                        'mapped_skills' => ['Availability', 'Communication'],
+                        'answer' => 'Yes.',
+                    ],
+                ],
+                'expected_alignment' => [2 => 'insufficient_evidence'],
+                'expected_score_ranges' => [2 => [0, 10]],
+                'expected_star_applicable' => [2 => false],
+                'expected_star_score_ranges' => [2 => [0, 10]],
+                'expected_insufficient_data' => [2 => true],
+                'expected_evidence_required' => [2 => true],
+            ],
+            [
+                'case_key' => 'feedback_irrelevant_answer_guardrail',
+                'task_type' => 'feedback_generation',
+                'title' => 'Irrelevant-answer alignment and score guardrail',
+                'evidence_focus' => 'Provider must identify an answer that does not address the question and avoid awarding a passing score.',
+                'session_data' => [
+                    'target_position' => 'Customer Service Representative',
+                    'difficulty' => 'Medium',
+                    'interview_focus' => 'customer complaints and answer relevance',
+                    'country' => 'local',
+                    'target_language' => 'en',
+                ],
+                'answers_data' => [
+                    [
+                        'id' => 3,
+                        'question_type' => 'Situational',
+                        'question' => 'How would you calm an angry customer whose order arrived late?',
+                        'expected_guide' => 'Explain the steps you would take to listen, investigate, resolve, and follow up.',
+                        'mapped_skills' => ['Customer Service', 'De-escalation', 'Problem Solving'],
+                        'answer' => 'My favorite weekend activity is painting landscapes because I enjoy mixing colors and visiting quiet parks with my friends.',
+                    ],
+                ],
+                'expected_alignment' => [3 => 'not_addressed'],
+                'expected_score_ranges' => [3 => [0, 49]],
+                'expected_star_applicable' => [3 => false],
+                'expected_star_score_ranges' => [3 => [0, 0]],
+                'expected_insufficient_data' => [3 => false],
+                'expected_evidence_required' => [3 => true],
+            ],
+            [
+                'case_key' => 'feedback_technical_non_star',
+                'task_type' => 'feedback_generation',
+                'title' => 'Strong technical answer without STAR',
+                'evidence_focus' => 'Provider must reward grounded technical reasoning without incorrectly applying the STAR rubric.',
+                'session_data' => [
+                    'target_position' => 'Backend Developer',
+                    'difficulty' => 'Hard',
+                    'interview_focus' => 'technical diagnosis and verification',
+                    'country' => 'local',
+                    'target_language' => 'en',
+                ],
+                'answers_data' => [
+                    [
+                        'id' => 4,
+                        'question_type' => 'Technical',
+                        'question' => 'How would you investigate a slow API endpoint?',
+                        'expected_guide' => 'Explain diagnosis order, evidence sources, tradeoffs, and verification.',
+                        'mapped_skills' => ['API Development', 'Debugging', 'Performance'],
+                        'answer' => 'I first reproduce the request and inspect latency traces, logs, database query plans, and dependency timings. I change one bottleneck at a time, then compare the same load test before deployment.',
+                    ],
+                ],
+                'expected_alignment' => [4 => 'directly_addressed'],
+                'expected_score_ranges' => [4 => [60, 100]],
+                'expected_star_applicable' => [4 => false],
+                'expected_star_score_ranges' => [4 => [0, 0]],
+                'expected_insufficient_data' => [4 => false],
+                'expected_evidence_required' => [4 => true],
+            ],
+            [
+                'case_key' => 'feedback_cebuano_direct_answer',
+                'task_type' => 'feedback_generation',
+                'title' => 'Cebuano answer evidence and alignment',
+                'evidence_focus' => 'Provider must preserve exact Cebuano evidence and evaluate the answer without relying on English-only wording.',
+                'session_data' => [
+                    'target_position' => 'Customer Service Representative',
+                    'difficulty' => 'Medium',
+                    'interview_focus' => 'customer support process',
+                    'country' => 'Philippines',
+                    'target_language' => 'ceb',
+                ],
+                'answers_data' => [
+                    [
+                        'id' => 5,
+                        'question_type' => 'Situational',
+                        'question' => 'Unsaon nimo pagdumala ang reklamo sa kustomer bahin sa nalangan nga order?',
+                        'expected_guide' => 'Ipasabot ang imong mga lakang sa pagpaminaw, pagsusi, paghatag og solusyon, ug pag-follow up.',
+                        'mapped_skills' => ['Customer Service', 'Communication', 'Problem Solving'],
+                        'answer' => 'Paminawon nako una ang kustomer ug kumpirmahon ang detalye sa order. Susihon nako ang status, ipasabot ang tinuod nga hinungdan sa kalangan, ihatag ang klarong bag-ong iskedyul, ug mag-follow up hangtod madawat ang order.',
+                    ],
+                ],
+                'expected_alignment' => [5 => 'directly_addressed'],
+                'expected_score_ranges' => [5 => [50, 100]],
+                'expected_star_applicable' => [5 => false],
+                'expected_star_score_ranges' => [5 => [0, 0]],
+                'expected_insufficient_data' => [5 => false],
+                'expected_evidence_required' => [5 => true],
+            ],
+            [
+                'case_key' => 'feedback_skipped_answer_guardrail',
+                'task_type' => 'feedback_generation',
+                'title' => 'Skipped-answer zero-score guardrail',
+                'evidence_focus' => 'Provider must assign no evidence and zero points when the candidate skipped the question.',
+                'session_data' => [
+                    'target_position' => 'Administrative Assistant',
+                    'difficulty' => 'Easy',
+                    'interview_focus' => 'organization and prioritization',
+                    'country' => 'local',
+                    'target_language' => 'en',
+                ],
+                'answers_data' => [
+                    [
+                        'id' => 6,
+                        'question_type' => 'Behavioral',
+                        'question' => 'Tell me about a time you had to prioritize several urgent tasks.',
+                        'expected_guide' => 'Use a real example and explain your priorities, actions, and result.',
+                        'mapped_skills' => ['Organization', 'Prioritization', 'STAR Method'],
+                        'answer' => '(Skipped or no answer)',
+                        'is_skipped' => true,
+                    ],
+                ],
+                'expected_alignment' => [6 => 'skipped'],
+                'expected_score_ranges' => [6 => [0, 0]],
+                'expected_star_applicable' => [6 => true],
+                'expected_star_score_ranges' => [6 => [0, 0]],
+                'expected_insufficient_data' => [6 => true],
+                'expected_evidence_required' => [6 => false],
             ],
         ];
     }
