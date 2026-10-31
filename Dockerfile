@@ -15,6 +15,7 @@ ENV PATH="/opt/speakready-python/bin:${PATH}"
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
+    gosu \
     curl \
     ca-certificates \
     ffmpeg \

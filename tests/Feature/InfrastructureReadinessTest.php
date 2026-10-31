@@ -74,6 +74,37 @@ class InfrastructureReadinessTest extends TestCase
         $this->assertStringContainsString('RESTORE_ALLOW_NONEMPTY_STORAGE', $restore);
     }
 
+    public function test_laravel_background_processes_share_php_fpm_storage_permissions(): void
+    {
+        $dockerfile = File::get(base_path('Dockerfile'));
+        $startup = File::get(base_path('docker-start.sh'));
+
+        $this->assertMatchesRegularExpression('/^\s+gosu \\\\$/m', $dockerfile);
+        $this->assertStringContainsString('umask 0002', $startup);
+        $this->assertStringContainsString(
+            'find storage bootstrap/cache -type d -exec chmod g+s {} +',
+            $startup
+        );
+        $this->assertStringContainsString('run_as_app_user()', $startup);
+        $this->assertStringContainsString('gosu www-data:www-data "$@"', $startup);
+        $this->assertStringContainsString(
+            'run_as_app_user php artisan queue:work "$connection"',
+            $startup
+        );
+        $this->assertStringContainsString(
+            'run_as_app_user php artisan schedule:run --no-interaction',
+            $startup
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/^\s*if\s+php artisan queue:work/m',
+            $startup
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/^\s*if\s+!\s+php artisan schedule:run/m',
+            $startup
+        );
+    }
+
     public function test_web_servers_allow_first_party_camera_and_microphone_permissions(): void
     {
         $policy = 'camera=(self), microphone=(self), geolocation=(), payment=(), usb=()';

@@ -112,6 +112,20 @@ fi
 
 chmod -R ug+rwX storage bootstrap/cache 2>/dev/null || true
 
+# Laravel's PHP-FPM workers run as www-data, while this supervisor must remain
+# root so it can launch PHP-FPM and Nginx. Keep every persistent runtime path
+# group-inheritable and group-writable so root-run startup maintenance cannot
+# leave files that a later web request is unable to update.
+umask 0002
+if command -v find >/dev/null 2>&1; then
+    find storage bootstrap/cache -type d -exec chmod g+s {} + 2>/dev/null || true
+fi
+
+if [ "$(id -u)" -eq 0 ] && ! command -v gosu >/dev/null 2>&1; then
+    echo "gosu is required to run Laravel background processes as www-data." >&2
+    exit 1
+fi
+
 clear_laravel_cache_files() {
     echo "Removing stale Laravel cache files before serving traffic." >&2
 
@@ -185,6 +199,14 @@ write_process_heartbeat() {
     mv -f "$heartbeat_tmp" "$heartbeat_file"
 }
 
+run_as_app_user() {
+    if [ "$(id -u)" -eq 0 ]; then
+        gosu www-data:www-data "$@"
+    else
+        "$@"
+    fi
+}
+
 start_supervised_queue_worker() {
     connection="${QUEUE_CONNECTION:-database}"
     heartbeat_file="storage/${QUEUE_HEARTBEAT_FILE:-framework/operations/queue-worker.heartbeat}"
@@ -197,7 +219,7 @@ start_supervised_queue_worker() {
         while true; do
             write_process_heartbeat "$heartbeat_file"
 
-            if php artisan queue:work "$connection" \
+            if run_as_app_user php artisan queue:work "$connection" \
                 --sleep=3 \
                 --tries=3 \
                 --timeout="$timeout" \
@@ -224,7 +246,7 @@ start_supervised_scheduler() {
         while true; do
             write_process_heartbeat "$heartbeat_file"
 
-            if ! php artisan schedule:run --no-interaction >> /proc/1/fd/2 2>&1; then
+            if ! run_as_app_user php artisan schedule:run --no-interaction >> /proc/1/fd/2 2>&1; then
                 echo "Laravel scheduler invocation failed; retrying after ${interval}s." >&2
             fi
 
