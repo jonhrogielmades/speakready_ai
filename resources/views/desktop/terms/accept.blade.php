@@ -6,6 +6,7 @@
       <meta name="theme-color" content="#f7fbff">
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>Terms and Conditions - SpeakReady AI</title>
+      @include('shared.early-layout-shell-guard', ['serverLayout' => 'desktop'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
@@ -15,8 +16,7 @@
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
-      <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-      <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
+      <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=36') }}">
       <style>
          body.terms-accept-shell {

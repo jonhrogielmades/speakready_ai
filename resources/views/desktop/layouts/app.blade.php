@@ -18,7 +18,6 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
-      @include('desktop.partials.early-mobile-shell-repair')
       @stack('styles')
    </head>
    <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user" data-partial-navigation-response="true">
@@ -39,7 +38,8 @@
       <meta name="theme-color" content="#f1f6fb">
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
-      @include('desktop.partials.early-mobile-shell-repair')
+      @include('shared.early-layout-shell-guard', ['serverLayout' => 'desktop'])
+      @include('shared.user.initial-render-guard-head')
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
@@ -51,8 +51,7 @@
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <!-- all min css -->
-      <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-      <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
+      <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Shared app CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=42') }}" />
       <style>
@@ -148,7 +147,8 @@
       @include('shared.user.first-steps-modal-styles')
       @stack('styles')
    </head>
-   <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user">
+   <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user" aria-busy="true">
+      @include('shared.user.initial-render-guard')
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar">
@@ -355,12 +355,12 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=25')),
+            serviceWorkerUrl: @json(asset('sw.js?v=46')),
             csrfToken: @json(csrf_token())
          };
       </script>
       <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=27&build=20261029" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
       @include('desktop.partials.language-translation')
       @include('shared.user.first-steps-modal-script')
       <!-- PWA Service Worker Registration -->
@@ -553,7 +553,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=25').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=46').then(function(registration) {
                   if (!registration) return;
                   window.SpeakReadyServiceWorkerRegistration = registration;
                   console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');

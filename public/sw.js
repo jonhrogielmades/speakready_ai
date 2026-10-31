@@ -1,6 +1,6 @@
-const CACHE_NAME = 'speakready-pwa-v45';
+const CACHE_NAME = 'speakready-pwa-v46';
 const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';
-const CLIENT_REFRESH_VALUE = 'pwa-v45';
+const CLIENT_REFRESH_VALUE = 'pwa-v46';
 const OFFLINE_PAGE = '/offline.html';
 const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';
 const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';
@@ -8,7 +8,8 @@ const DEFAULT_NOTIFICATION_ACTIONS = [
   { action: 'open', title: 'Open' },
   { action: 'view-notifications', title: 'View all' },
 ];
-const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
+const CODE_ASSET_PATTERN = /\.(?:css|js|mjs)$/i;
+const STATIC_ASSET_PATTERN = /\.(?:css|js|mjs|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
 
 function isSameOrigin(requestUrl) {
   return new URL(requestUrl).origin === self.location.origin;
@@ -22,6 +23,12 @@ function isCacheableStaticAsset(request) {
   if (!isSameOrigin(request.url)) return false;
 
   return STATIC_ASSET_PATTERN.test(new URL(request.url).pathname);
+}
+
+function isCodeAsset(request) {
+  if (!isSameOrigin(request.url)) return false;
+
+  return CODE_ASSET_PATTERN.test(new URL(request.url).pathname);
 }
 
 function refreshedClientUrl(clientUrl) {
@@ -111,23 +118,29 @@ self.addEventListener('fetch', event => {
 
   event.respondWith(
     caches.open(CACHE_NAME).then(cache => {
-      const freshResponse = fetch(event.request, { cache: 'no-cache' }).then(response => {
+      const freshResponse = () => fetch(event.request, { cache: 'no-cache' }).then(response => {
         if (response && response.ok) {
-          cache.put(event.request, response.clone());
+          return cache.put(event.request, response.clone())
+            .catch(() => undefined)
+            .then(() => response);
         }
 
         return response;
       });
 
+      if (isCodeAsset(event.request)) {
+        // CSS and JavaScript must come from the current deployment whenever the
+        // network is available. The cache is only an offline/error fallback.
+        return freshResponse().catch(() => cache.match(event.request));
+      }
+
       return cache.match(event.request).then(cachedResponse => {
         if (cachedResponse) {
-          // Versioned asset URLs invalidate deploys. Serve a cached asset
-          // immediately on repeat visits and refresh it in the background.
-          event.waitUntil(freshResponse.catch(() => undefined));
+          event.waitUntil(freshResponse().catch(() => undefined));
           return cachedResponse;
         }
 
-        return freshResponse.catch(() => caches.match(event.request));
+        return freshResponse().catch(() => cache.match(event.request));
       });
     })
   );

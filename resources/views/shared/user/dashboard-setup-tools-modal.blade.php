@@ -11,7 +11,7 @@
 
 @once
 @push('styles')
-<style data-sr-dashboard-setup-styles>
+<style data-page-style="dashboard-setup-tools-modal" data-sr-dashboard-setup-styles>
     .modal.sr-dashboard-setup-modal {
         --sr-setup-bg: #ffffff;
         --sr-setup-surface: #f8fafc;

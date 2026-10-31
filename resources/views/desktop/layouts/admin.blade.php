@@ -5,6 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#f1f6fb">
       <title>{{ $systemName ?? 'SpeakReady AI' }} Interview Admin Portal</title>
+      @include('shared.early-layout-shell-guard', ['serverLayout' => 'desktop'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
@@ -360,7 +361,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=25').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=46').then(function(registration) {
                   if (!registration) return;
                   console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
                }, function(err) {

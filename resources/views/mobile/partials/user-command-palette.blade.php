@@ -312,6 +312,4 @@
             .ucp-result-arrow { transition: none; }
         }
     </style>
-
-    <script src="{{ asset('js/user-ui.js') }}?v=27&build=20261029" defer></script>
 @endonce

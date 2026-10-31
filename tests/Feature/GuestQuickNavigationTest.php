@@ -47,6 +47,7 @@ class GuestQuickNavigationTest extends TestCase
         $this->assertSame(1, substr_count($markup, 'data-ucp-open'));
         $this->assertSame(4, substr_count($markup, 'data-ucp-item'));
         $this->assertSame(2, substr_count($markup, 'data-ucp-action'));
+        $this->assertSame(1, substr_count($markup, 'js/user-ui.js'));
         $this->assertMatchesRegularExpression(
             '/id="mbtog".*?data-ucp-open.*?aria-controls="userCommandPalette".*?<i class="fa-solid fa-bars"/s',
             $markup

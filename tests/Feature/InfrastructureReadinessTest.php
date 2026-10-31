@@ -126,6 +126,35 @@ class InfrastructureReadinessTest extends TestCase
         }
     }
 
+    public function test_web_servers_revalidate_stable_styles_and_scripts_between_deployments(): void
+    {
+        $nginx = File::get(base_path('nginx.conf'));
+        $apache = File::get(public_path('.htaccess'));
+        $revalidationPolicy = 'public, max-age=0, must-revalidate';
+
+        $this->assertStringContainsString(
+            'location ~* \\.(?:css|js|mjs)$',
+            $nginx
+        );
+        $this->assertStringContainsString(
+            'add_header Cache-Control "'.$revalidationPolicy.'";',
+            $nginx
+        );
+        $this->assertStringContainsString(
+            'Header set Cache-Control "'.$revalidationPolicy.'"',
+            $apache
+        );
+        $this->assertStringContainsString('location ^~ /build/assets/', $nginx);
+        $this->assertStringContainsString(
+            'add_header Cache-Control "public, max-age=31536000, immutable";',
+            $nginx
+        );
+        $this->assertStringNotContainsString(
+            'location ~* \\.(?:css|js|mjs|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot)$',
+            $nginx
+        );
+    }
+
     public function test_readiness_endpoint_checks_laravel_php_and_database(): void
     {
         DB::shouldReceive('selectOne')

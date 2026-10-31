@@ -5,12 +5,13 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#0f172a">
       <title>Admin Desktop Only | SpeakReady AI</title>
+      @include('shared.early-layout-shell-guard', ['serverLayout' => 'mobile'])
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/admin/mobile-locked.css?v=1') }}" data-page-style="admin-mobile-locked">
    </head>
-   <body>
+   <body class="mobile-shell" data-layout-shell="mobile">
       <main class="admin-mobile-lock" role="main" aria-labelledby="adminMobileLockTitle">
          <div class="brand">
             <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">

@@ -70,13 +70,13 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertSame('/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1', $manifest['start_url'] ?? null);
     }
 
-    public function test_pwa_service_worker_cache_version_is_bumped_for_notification_icon_refresh(): void
+    public function test_pwa_service_worker_cache_version_is_bumped_and_code_assets_are_network_first(): void
     {
         $worker = file_get_contents(public_path('sw.js'));
 
-        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v45';", $worker);
+        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v46';", $worker);
         $this->assertStringContainsString("const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';", $worker);
-        $this->assertStringContainsString("const CLIENT_REFRESH_VALUE = 'pwa-v45';", $worker);
+        $this->assertStringContainsString("const CLIENT_REFRESH_VALUE = 'pwa-v46';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';", $worker);
         $this->assertStringContainsString("const DEFAULT_NOTIFICATION_ACTIONS", $worker);
@@ -87,6 +87,8 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertStringContainsString("self.clients.matchAll({ type: 'window', includeUncontrolled: true })", $worker);
         $this->assertStringContainsString('client.navigate(nextUrl)', $worker);
         $this->assertStringContainsString('refreshControlledClients()', $worker);
+        $this->assertStringContainsString('if (isCodeAsset(event.request))', $worker);
+        $this->assertStringContainsString('return freshResponse().catch(() => cache.match(event.request));', $worker);
     }
 
     public function test_pwa_notification_badge_uses_transparent_logo_mask(): void

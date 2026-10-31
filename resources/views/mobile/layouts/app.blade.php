@@ -35,6 +35,8 @@
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
+      @include('shared.early-layout-shell-guard', ['serverLayout' => 'mobile'])
+      @include('shared.user.initial-render-guard-head')
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
@@ -44,8 +46,7 @@
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
-      <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-      <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
+      <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=35') }}" />
       @include('mobile.partials.onboarding-styles')
       <style>
@@ -4534,7 +4535,8 @@
       @stack('styles')
       @include('mobile.partials.user-mobile-side-gutter')
    </head>
-   <body class="user-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="user">
+   <body class="user-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="user" aria-busy="true">
+      @include('shared.user.initial-render-guard')
 
       @php
          $mobileHeaderPageTitle = trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview');
@@ -4754,7 +4756,7 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=25')),
+            serviceWorkerUrl: @json(asset('sw.js?v=46')),
             csrfToken: @json(csrf_token())
          };
       </script>
@@ -4763,7 +4765,7 @@
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
       @include('shared.user.first-steps-modal-script')
-      <script src="{{ asset('js/user-ui.js') }}?v=27&build=20261029" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {
@@ -4854,7 +4856,7 @@
          // PWA Service Worker
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=25').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=46').then(function(registration) {
                   if (!registration) return;
                   window.SpeakReadyServiceWorkerRegistration = registration;
                   console.log('ServiceWorker registration successful');

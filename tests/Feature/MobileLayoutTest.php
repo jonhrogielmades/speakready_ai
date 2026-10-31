@@ -150,7 +150,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('data-layout-shell="desktop"', false)
             ->assertDontSee('id="srLaunchScreen"', false)
             ->assertDontSee('guest-splash-pending', false)
-            ->assertSee('sr_desktop_shell_mobile_repair_v3', false)
+            ->assertSee('sr_layout_shell_guard_v4', false)
             ->assertDontSee('sr_desktop_site_mobile_alert_v1', false)
             ->assertDontSee('Desktop site is not available on mobile. Loading the mobile layout.', false)
             ->assertSee("body.getAttribute('data-layout-shell')", false)
@@ -161,6 +161,61 @@ class MobileLayoutTest extends TestCase
             ->assertSee("url.searchParams.set('sr_mobile_desktop_blocked', '1')", false)
             ->assertSee('window.location.replace(url.toString())', false)
             ->assertSee('css/desktop/style.css?v=12', false);
+    }
+
+    public function test_top_level_shells_use_the_shared_early_guard_and_blocking_icon_css(): void
+    {
+        $shells = [
+            'desktop/layouts/app.blade.php' => 'desktop',
+            'desktop/layouts/admin.blade.php' => 'desktop',
+            'desktop/layouts/auth.blade.php' => 'desktop',
+            'desktop/layouts/guest.blade.php' => 'desktop',
+            'desktop/terms/accept.blade.php' => 'desktop',
+            'desktop/admin/mobile-locked.blade.php' => 'desktop',
+            'mobile/layouts/app.blade.php' => 'mobile',
+            'mobile/layouts/admin.blade.php' => 'mobile',
+            'mobile/layouts/auth.blade.php' => 'mobile',
+            'mobile/layouts/guest.blade.php' => 'mobile',
+            'mobile/terms/accept.blade.php' => 'mobile',
+            'mobile/admin/mobile-locked.blade.php' => 'mobile',
+        ];
+
+        foreach ($shells as $relativePath => $serverLayout) {
+            $source = file_get_contents(resource_path('views/'.$relativePath));
+            $this->assertIsString($source);
+
+            $guard = "@include('shared.early-layout-shell-guard', ['serverLayout' => '{$serverLayout}'])";
+            $guardPosition = strpos($source, $guard);
+            $this->assertNotFalse($guardPosition, "Expected {$relativePath} to include the shared early layout guard.");
+
+            $headClosePosition = strpos($source, '</head>', $guardPosition);
+            $bodyPosition = strpos($source, '<body', $guardPosition);
+            $this->assertNotFalse($headClosePosition, "Expected {$relativePath} to close its head after the layout guard.");
+            $this->assertNotFalse($bodyPosition, "Expected {$relativePath} to render a body after the layout guard.");
+            $this->assertLessThan($headClosePosition, $guardPosition, "Expected {$relativePath} layout correction to run before the head closes.");
+            $this->assertLessThan($bodyPosition, $guardPosition, "Expected {$relativePath} layout correction to run before body paint.");
+
+            $this->assertStringContainsString(
+                '<link rel="stylesheet" href="{{ asset(\'css/all.min.css\') }}"',
+                $source,
+                "Expected {$relativePath} to load Font Awesome as render-blocking CSS."
+            );
+            $this->assertDoesNotMatchRegularExpression(
+                '/<link[^>]+rel=["\']preload["\'][^>]+all\.min\.css/i',
+                $source,
+                "Expected {$relativePath} not to reveal the UI before its icon CSS is ready."
+            );
+        }
+
+        $guardSource = file_get_contents(resource_path('views/shared/early-layout-shell-guard.blade.php'));
+        $this->assertIsString($guardSource);
+        $this->assertStringContainsString("var repairKey = 'sr_layout_shell_guard_v4';", $guardSource);
+        $this->assertStringContainsString('var maxRepairAttempts = 2;', $guardSource);
+        $this->assertStringContainsString("document.cookie = 'sr_is_mobile='", $guardSource);
+        $this->assertStringContainsString("url.searchParams.set('sr_layout', targetLayout);", $guardSource);
+        $this->assertStringContainsString("url.searchParams.delete('sr_mobile_desktop_blocked');", $guardSource);
+        $this->assertStringContainsString("document.documentElement.classList.add('sr-layout-shell-redirecting');", $guardSource);
+        $this->assertStringContainsString('window.location.replace(url.toString());', $guardSource);
     }
 
     public function test_user_dashboard_uses_mobile_shell_for_mobile_user_agent(): void
@@ -247,8 +302,8 @@ class MobileLayoutTest extends TestCase
             ->assertSee('css/mobile/admin/dashboard.css?v=6', false)
             ->assertSee('id="mobFullscreenBtn"', false)
             ->assertSee('data-user-fullscreen-toggle', false)
-            ->assertSee('js/user-ui.js?v=27', false)
-            ->assertSee('sw.js?v=25', false)
+            ->assertSee('js/user-ui.js?v=28', false)
+            ->assertSee('sw.js?v=46', false)
             ->assertDontSee('SpeakReadyPushConfig', false)
             ->assertDontSee('\\/admin\\/notifications\\/push\\/key', false)
             ->assertDontSee('push-notifications.js?v=7', false)
@@ -343,7 +398,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
             ->assertSee('css/desktop/admin/dashboard.css?v=4', false)
-            ->assertSee('sw.js?v=25', false)
+            ->assertSee('sw.js?v=46', false)
             ->assertDontSee('SpeakReadyPushConfig', false)
             ->assertDontSee('\\/admin\\/notifications\\/push\\/key', false)
             ->assertDontSee('push-notifications.js?v=7', false)
@@ -1194,7 +1249,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('user-desktop-shell desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
-            ->assertSee('sr_desktop_shell_mobile_repair_v3', false)
+            ->assertSee('sr_layout_shell_guard_v4', false)
             ->assertSee('class="db-sidebar"', false)
             ->assertDontSee('id="mob-bottom-nav"', false)
             ->assertDontSee('html body #progressModulesLikeHero.progress-hero', false);
@@ -1351,7 +1406,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('height: var(--sr-visual-vh) !important', false)
             ->assertSee('css/mobile/style.css?v=35', false)
             ->assertSee('js/main.js?v=7', false)
-            ->assertSee('js/user-ui.js?v=27', false)
+            ->assertSee('js/user-ui.js?v=28', false)
             ->assertDontSee('body.user-mobile-shell #mob-header #mobFullscreenBtn', false);
 
         $fullscreenScript = file_get_contents(public_path('js/user-ui.js'));

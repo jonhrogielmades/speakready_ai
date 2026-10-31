@@ -20,24 +20,24 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
-# Keep static user-side assets fast on Apache/Laragon as well as on the
-# container Nginx deployment. Versioned query strings in Blade views provide
-# safe cache invalidation when an asset changes.
+# Match the deployment cache policy when Apache/Laragon serves the app. CSS
+# and JavaScript use stable filenames in several layouts, so they must
+# revalidate instead of remaining stale across releases.
 <IfModule mod_expires.c>
     ExpiresActive On
-    ExpiresByType text/css "access plus 30 days"
-    ExpiresByType application/javascript "access plus 30 days"
-    ExpiresByType text/javascript "access plus 30 days"
-    ExpiresByType image/avif "access plus 30 days"
-    ExpiresByType image/gif "access plus 30 days"
-    ExpiresByType image/jpeg "access plus 30 days"
-    ExpiresByType image/png "access plus 30 days"
-    ExpiresByType image/svg+xml "access plus 30 days"
-    ExpiresByType image/webp "access plus 30 days"
-    ExpiresByType font/otf "access plus 30 days"
-    ExpiresByType font/ttf "access plus 30 days"
-    ExpiresByType font/woff "access plus 30 days"
-    ExpiresByType font/woff2 "access plus 30 days"
+    ExpiresByType text/css "access plus 0 seconds"
+    ExpiresByType application/javascript "access plus 0 seconds"
+    ExpiresByType text/javascript "access plus 0 seconds"
+    ExpiresByType image/avif "access plus 7 days"
+    ExpiresByType image/gif "access plus 7 days"
+    ExpiresByType image/jpeg "access plus 7 days"
+    ExpiresByType image/png "access plus 7 days"
+    ExpiresByType image/svg+xml "access plus 7 days"
+    ExpiresByType image/webp "access plus 7 days"
+    ExpiresByType font/otf "access plus 7 days"
+    ExpiresByType font/ttf "access plus 7 days"
+    ExpiresByType font/woff "access plus 7 days"
+    ExpiresByType font/woff2 "access plus 7 days"
 </IfModule>
 
 <IfModule mod_headers.c>
@@ -45,8 +45,11 @@
     # Apache/Laragon. User consent is still required by every browser.
     Header always set Permissions-Policy "camera=(self), microphone=(self), geolocation=(), payment=(), usb=()"
 
-    <FilesMatch "\.(?:css|js|mjs|avif|gif|jpe?g|png|svg|webp|ico|otf|ttf|woff2?)$">
-        Header set Cache-Control "public, max-age=2592000"
+    <FilesMatch "\.(?:css|js|mjs)$">
+        Header set Cache-Control "public, max-age=0, must-revalidate"
+    </FilesMatch>
+    <FilesMatch "\.(?:avif|gif|jpe?g|png|svg|webp|ico|otf|ttf|woff2?)$">
+        Header set Cache-Control "public, max-age=604800"
     </FilesMatch>
     <Files "sw.js">
         Header set Cache-Control "no-cache, no-store, must-revalidate"

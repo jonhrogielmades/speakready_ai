@@ -5,6 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#f1f6fb">
       <title>@yield('title', 'SpeakReady AI')</title>
+      @include('shared.early-layout-shell-guard', ['serverLayout' => 'mobile'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,8 +13,7 @@
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
-      <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-      <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
+      <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=2') }}" data-page-style="auth-mobile">
       <style data-mobile-side-gutter="10px">

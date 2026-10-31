@@ -70,6 +70,51 @@ const cacheVersion = worker.match(/const CACHE_NAME = 'speakready-pwa-v(\d+)'/u)
 const refreshVersion = worker.match(/const CLIENT_REFRESH_VALUE = 'pwa-v(\d+)'/u)?.[1];
 assert(cacheVersion && cacheVersion === refreshVersion, 'Service-worker cache and client refresh versions do not match.');
 
+const userUi = read('public/js/user-ui.js');
+const dashboardSetupModal = read('resources/views/shared/user/dashboard-setup-tools-modal.blade.php');
+const cleanupRuntimeStart = userUi.indexOf('function cleanupUserPageRuntime(options)');
+const cleanupRuntimeEnd = userUi.indexOf('function cleanupDetachedUserPageArtifacts()', cleanupRuntimeStart);
+const cleanupRuntimeSource = cleanupRuntimeStart !== -1 && cleanupRuntimeEnd !== -1
+    ? userUi.slice(cleanupRuntimeStart, cleanupRuntimeEnd)
+    : '';
+assert(
+    /<style\b[^>]*\bdata-page-style="dashboard-setup-tools-modal"[^>]*>/u.test(dashboardSetupModal),
+    'Dashboard setup modal styles must expose a stable data-page-style key for partial navigation.'
+);
+assert(
+    cleanupRuntimeSource !== '' && !/userApp\.pageRuntimeCleanups\s*=\s*\[\];\s*return;/u.test(cleanupRuntimeSource),
+    'User page cleanup must not return before detached artifacts and transient page state are cleared.'
+);
+for (const transientClass of [
+    'mobile-answer-focused',
+    'mobile-answer-keyboard-open',
+    'game-match-auto-fullscreen',
+    'coach-mobile-page-active',
+    'coach-input-focused',
+    'coach-keyboard-open',
+    'coach-fullscreen-active',
+    'interview-session-fullscreen-root',
+]) {
+    assert(userUi.includes(`'${transientClass}'`), `Transient user page class is not cleaned up: ${transientClass}`);
+}
+const navigationStyleWait = userUi.indexOf('await waitForNavigationStylePaint(stylePromise)');
+const navigationContentSwap = userUi.indexOf('replaceUserContent(content, nextContent)');
+const navigationScriptRun = userUi.indexOf('await runPageScripts(html, contentScripts, { skipStyles: true })');
+const navigationRevealWait = userUi.indexOf('await waitForUserNavigationPaint()');
+const navigationReveal = userUi.indexOf('hideUserNavigationTransition()');
+assert(
+    navigationStyleWait !== -1 && navigationContentSwap !== -1 && navigationStyleWait < navigationContentSwap,
+    'User navigation must wait for destination styles before swapping page HTML.'
+);
+assert(
+    userUi.includes('function waitForNavigationStylePaint(stylePromise)') && userUi.includes('return stylePromise;'),
+    'Destination stylesheet failures must propagate to the full-page navigation fallback.'
+);
+assert(
+    navigationScriptRun !== -1 && navigationRevealWait > navigationScriptRun && navigationReveal > navigationRevealWait,
+    'User navigation must keep its transition mask until page scripts finish and the initialized UI has painted.'
+);
+
 for (const relativePath of [
     'public/js/main.js',
     'public/js/media-permission-support.js',

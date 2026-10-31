@@ -7,6 +7,7 @@
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
       <title>{{ $systemName ?? 'SpeakReady AI' }} Interview Admin Portal</title>
+      @include('shared.early-layout-shell-guard', ['serverLayout' => 'mobile'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
@@ -3282,7 +3283,7 @@
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <script src="{{ asset('js/main.js?v=7') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=27&build=20261029" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
 
       <script>
          function getMobileProfileDropdown(mode = 'pages') {
@@ -3527,7 +3528,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=25')
+               navigator.serviceWorker.register('/sw.js?v=46')
                   .then(r => { if (r) console.log('SW:', r.scope || '/'); })
                   .catch(e => console.log('SW fail:', e));
             });

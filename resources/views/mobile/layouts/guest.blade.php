@@ -5,6 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#f1f6fb">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - Practice Smarter. Interview Better.')</title>
+      @include('shared.early-layout-shell-guard', ['serverLayout' => 'mobile'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
@@ -21,8 +22,7 @@
       <!-- Swiper CSS -->
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <!-- all min css -->
-      <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-      <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
+      <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=34') }}" />
@@ -747,6 +747,7 @@
       <script src="{{ asset('js/swiper-bundle.min.js') }}"></script>
 
       <script src="{{ asset('js/main.js?v=10') }}"></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
       @php
          $authModalRequest = request('auth_modal');
          $shouldShowAuthModal = $errors->any()
@@ -885,7 +886,7 @@
       <script>
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=25').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=46').then(function(registration) {
                   if (!registration) return;
                   console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
                }, function(err) {

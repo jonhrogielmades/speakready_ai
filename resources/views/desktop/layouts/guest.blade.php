@@ -5,7 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#f1f6fb">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - Practice Smarter. Interview Better.')</title>
-      @include('desktop.partials.early-mobile-shell-repair')
+      @include('shared.early-layout-shell-guard', ['serverLayout' => 'desktop'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
@@ -20,8 +20,7 @@
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <!-- all min css -->
-      <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-      <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
+      <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
       <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=20') }}" />
@@ -1162,6 +1161,7 @@
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       @include('desktop.partials.flash-modal', ['includeValidationErrors' => false])
       <script src="{{ asset('js/main.js?v=10') }}"></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
       @php
          $authModalRequest = request('auth_modal');
          $shouldShowAuthModal = $errors->any()
@@ -1236,7 +1236,7 @@
       <script>
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=25').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=46').then(function(registration) {
                   if (!registration) return;
                   console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
                }, function(err) {

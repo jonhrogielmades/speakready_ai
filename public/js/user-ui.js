@@ -12,7 +12,7 @@
     var NAVIGATION_PREFETCH_DELAY_MS = 0;
     var NAVIGATION_PREFETCH_LIMIT = 8;
     var NAVIGATION_PREFETCH_TIMEOUT_MS = 1800;
-    var NAVIGATION_STYLESHEET_TIMEOUT_MS = 900;
+    var NAVIGATION_STYLESHEET_TIMEOUT_MS = 10000;
     var NAVIGATION_SCRIPT_TIMEOUT_MS = 2400;
     var TRANSIENT_USER_PAGE_BODY_CLASSES = [
         'interview-setup-page',
@@ -21,12 +21,21 @@
         'interview-ready-fullscreen',
         'interview-session-browser-fullscreen',
         'mobile-interview-fullscreen',
+        'mobile-answer-focused',
+        'mobile-answer-keyboard-open',
+        'game-match-auto-fullscreen',
+        'coach-mobile-page-active',
+        'coach-input-focused',
+        'coach-keyboard-open',
+        'coach-fullscreen-active',
         'finish-transition-active',
         'sr-page-transition-active',
         'modal-open'
     ];
     var TRANSIENT_USER_PAGE_HTML_CLASSES = [
-        'interview-setup-page-root'
+        'interview-setup-page-root',
+        'interview-session-fullscreen-root',
+        'finish-transition-active'
     ];
     var DETACHED_USER_PAGE_ARTIFACT_IDS = [
         'setupTransitionOverlay',
@@ -1138,6 +1147,7 @@
         var controller = new AbortController();
         userApp.navigationController = controller;
         content.setAttribute('aria-busy', 'true');
+        showUserNavigationTransition();
         showSafeNavigationStatus('Loading page...', { delayMs: NAVIGATION_STATUS_DELAY_MS });
 
         try {
@@ -1155,24 +1165,26 @@
             var contentScripts = Array.from(nextContent.querySelectorAll('script'));
             var nextPageStyles = collectPageStyles(doc, html);
             var stylePromise = appendRuntimePageStyles(nextPageStyles, token);
-            // Attach page CSS before swapping content, but do not make the
-            // user wait for a stylesheet network round trip. Remove old page
-            // styles when the new set settles in the background.
-            stylePromise.then(function () {
-                if (token === userApp.navigationToken) {
-                    pruneRuntimePageStyles(nextPageStyles.map(getPageStyleKey));
-                } else {
-                    discardRuntimePageStylesForToken(token);
-                }
-            });
+            await waitForNavigationStylePaint(stylePromise);
+            if (token !== userApp.navigationToken) {
+                discardRuntimePageStylesForToken(token);
+                return;
+            }
 
             cleanupUserPageRuntime({ preserveStyles: true });
+            pruneRuntimePageStyles(nextPageStyles.map(getPageStyleKey));
             replaceUserContent(content, nextContent);
             refreshUserSharedLayout(content);
             updateDocumentMetadata(doc, nextContent, destinationUrl.href, options);
             await runPageScripts(html, contentScripts, { skipStyles: true });
+            if (token !== userApp.navigationToken) return;
+
             refreshCommonEnhancements();
             restoreUserPageScroll(destinationUrl);
+            await waitForUserNavigationPaint();
+            if (token !== userApp.navigationToken) return;
+
+            hideUserNavigationTransition();
             hideSafeNavigationStatus();
         } catch (error) {
             if (error.name === 'AbortError') return;
@@ -1499,24 +1511,32 @@
             return Promise.resolve();
         }
 
-        return new Promise(function (resolve) {
+        return new Promise(function (resolve, reject) {
             var settled = false;
             var fallbackTimer = 0;
 
-            function finish() {
+            function finish(error) {
                 if (settled) return;
                 settled = true;
                 if (fallbackTimer) window.clearTimeout(fallbackTimer);
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
                 resolve();
             }
 
-            style.addEventListener('load', finish, { once: true });
-            style.addEventListener('error', function () {
-                console.warn('User Side page stylesheet failed to load:', style.href || '[inline style]');
+            style.addEventListener('load', function () {
                 finish();
             }, { once: true });
+            style.addEventListener('error', function () {
+                finish(new Error('User Side page stylesheet failed to load: ' + (style.href || '[inline style]')));
+            }, { once: true });
 
-            fallbackTimer = window.setTimeout(finish, NAVIGATION_STYLESHEET_TIMEOUT_MS);
+            fallbackTimer = window.setTimeout(function () {
+                finish(new Error('User Side page stylesheet timed out: ' + (style.href || '[inline style]')));
+            }, NAVIGATION_STYLESHEET_TIMEOUT_MS);
         });
     }
 
@@ -1525,9 +1545,39 @@
             return Promise.resolve();
         }
 
-        // The stylesheet loader already resolves on load/error (or its safety
-        // timeout). Do not add another paint-delay after it has settled.
-        return stylePromise.then(function () {}, function () {});
+        // The stylesheet loader resolves only after every destination style is
+        // ready. Propagate failures so navigation can fall back to a normal,
+        // render-blocking page load instead of exposing unstyled HTML.
+        return stylePromise;
+    }
+
+    function waitForUserNavigationPaint() {
+        return new Promise(function (resolve) {
+            var scheduleFrame = window.requestAnimationFrame || function (callback) {
+                return window.setTimeout(callback, 16);
+            };
+
+            scheduleFrame(function () {
+                scheduleFrame(resolve);
+            });
+        });
+    }
+
+    function showUserNavigationTransition() {
+        if (!window.SpeakReadyPageTransition || typeof window.SpeakReadyPageTransition.show !== 'function') return;
+
+        window.SpeakReadyPageTransition.show({
+            title: 'Opening page...',
+            copy: 'Please wait while SpeakReady AI prepares the page.',
+            delayMs: 0,
+            longLoadMs: 10000
+        });
+    }
+
+    function hideUserNavigationTransition() {
+        if (!window.SpeakReadyPageTransition || typeof window.SpeakReadyPageTransition.hide !== 'function') return;
+
+        window.SpeakReadyPageTransition.hide();
     }
 
     function discardRuntimePageStylesForToken(navigationToken) {
@@ -1823,7 +1873,6 @@
 
         if (!Array.isArray(userApp.pageRuntimeCleanups)) {
             userApp.pageRuntimeCleanups = [];
-            return;
         }
 
         while (userApp.pageRuntimeCleanups.length) {
