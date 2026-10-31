@@ -1424,10 +1424,19 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'));
 
         $response->assertOk()
-            ->assertSee('css/desktop/interview/session.css?v=67', false)
+            ->assertSee('css/desktop/interview/session.css?v=68', false)
             ->assertSee('const cameraDetectionEnabled = true;', false)
             ->assertSee('interview-session-browser-fullscreen', false)
             ->assertSee('interview-ready-fullscreen', false)
+            ->assertSee('data-fullscreen-entry="user-gesture"', false)
+            ->assertSee('Select Begin Interview to enter fullscreen and start your customized session.', false)
+            ->assertSee('function requestInterviewBrowserFullscreen()', false)
+            ->assertSee('let interviewFullscreenBusy = false;', false)
+            ->assertSee('armInterviewFullscreenRetry();', false)
+            ->assertSee('enterInterviewFullscreen({ auto: true });', false)
+            ->assertSee('startInterviewSession({ requestBrowserFullscreen: false });', false)
+            ->assertSee('const setupRequestedFullscreen = consumeSetupAutoFullscreenPreference();', false)
+            ->assertSee('setInterviewStartModalVisible(true);', false)
             ->assertSee('Camera ON', false)
             ->assertDontSee('<i class="fa-regular fa-clock"></i>Self-paced', false)
             ->assertSee('function handleInterviewEscapeKey(event)', false)
@@ -1448,6 +1457,8 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('id="cameraDetectionStatus"', false);
 
         $desktopSessionCss = file_get_contents(public_path('css/desktop/interview/session.css'));
+        $this->assertStringContainsString('html.interview-session-fullscreen-root', $desktopSessionCss);
+        $this->assertStringContainsString('max-height: 100dvh;', $desktopSessionCss);
         $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen #sec-interview-session', $desktopSessionCss);
         $this->assertStringContainsString('height: calc(100dvh - clamp(32px, 4vw, 60px)) !important;', $desktopSessionCss);
         $this->assertStringContainsString('body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen #workspaceRow > [class*="col-"]', $desktopSessionCss);
@@ -1501,7 +1512,7 @@ class MobileLayoutTest extends TestCase
         $layouts = [
             'desktop' => [
                 'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36',
-                'stylesheet' => 'css/desktop/interview/session.css?v=67',
+                'stylesheet' => 'css/desktop/interview/session.css?v=68',
             ],
             'mobile' => [
                 'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',

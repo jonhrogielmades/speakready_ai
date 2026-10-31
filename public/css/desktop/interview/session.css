@@ -4360,9 +4360,25 @@
     }
 
     @media (min-width: 992px) {
+        html.interview-session-fullscreen-root {
+            width: 100%;
+            height: 100%;
+            overflow: hidden !important;
+            overscroll-behavior: none;
+        }
+
         body.user-desktop-shell.interview-session-shell {
             min-height: 100dvh;
             overflow-x: hidden;
+        }
+
+        html.interview-session-fullscreen-root body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen {
+            width: 100%;
+            height: 100dvh;
+            min-height: 100dvh;
+            max-height: 100dvh;
+            overflow: hidden !important;
+            overscroll-behavior: none;
         }
 
         body.user-desktop-shell.interview-session-shell.interview-ready-fullscreen #dashboard {
@@ -4407,7 +4423,10 @@
         }
 
         body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen #dashboard {
+            height: 100dvh;
             min-height: 100dvh;
+            max-height: 100dvh;
+            overflow: hidden !important;
             background: var(--bg);
         }
 
@@ -4420,7 +4439,10 @@
         body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen #dashboard .db-main {
             margin-left: 0 !important;
             padding-top: 0 !important;
+            height: 100dvh !important;
             min-height: 100dvh !important;
+            max-height: 100dvh !important;
+            overflow: hidden !important;
         }
 
         body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen #dashboard .db-content {
@@ -4431,7 +4453,7 @@
             height: 100dvh !important;
             min-height: 0 !important;
             box-sizing: border-box !important;
-            overflow-y: auto !important;
+            overflow: hidden !important;
             display: flex !important;
             align-items: center !important;
         }
@@ -4445,6 +4467,7 @@
             align-items: center !important;
             justify-content: center !important;
             width: 100% !important;
+            overflow: hidden !important;
         }
 
         body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen #workspaceWrapper {
@@ -4459,6 +4482,7 @@
             height: 100% !important;
             min-height: 0 !important;
             align-items: stretch !important;
+            margin: 0 !important;
         }
 
         body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen #workspaceRow > [class*="col-"] {
@@ -4466,6 +4490,7 @@
             min-height: 0 !important;
             display: flex !important;
             flex-direction: column !important;
+            padding: 0 !important;
         }
 
         body.user-desktop-shell.interview-session-shell.interview-session-browser-fullscreen .desktop-session-two-column {

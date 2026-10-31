@@ -2,7 +2,7 @@
 @section('title', 'Interview Workspace')
 @section('body-class', 'interview-session-shell')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=67') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/session.css?v=68') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -182,8 +182,8 @@
  <span class="ai-coach-head-label">AI Coach</span>
  </button>
  @endif
- <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleMobileFullscreen()" aria-label="Exit fullscreen" title="Exit fullscreen">
- <i class="fa-solid fa-compress"></i>
+ <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleMobileFullscreen()" aria-label="Enter browser fullscreen" title="Enter browser fullscreen">
+ <i class="fa-solid fa-expand"></i>
  </button>
  <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()" disabled aria-disabled="true" title="Start the interview to answer">
  Send Answer <i class="fa-solid fa-paper-plane"></i>
@@ -408,7 +408,7 @@
  <i class="fa-solid fa-robot"></i>
  </div>
  <h4 id="interviewStartTitle">Interview Ready</h4>
- <p id="interviewStartDescription">{{ $hasSavedInterviewState? 'Your saved interview is ready to resume.': 'Your customized interview session is ready to begin.' }}</p>
+ <p id="interviewStartDescription">{{ $hasSavedInterviewState? 'Your saved interview is ready to resume in fullscreen.': 'Select Begin Interview to enter fullscreen and start your customized session.' }}</p>
  <div class="interview-start-meta interview-meta-line">
  <span class="session-chip"><i class="fa-solid fa-flag"></i>{{ $scenarioLabel }}</span>
  <span class="session-chip"><i class="fa-solid fa-microphone"></i>{{ ['text' => 'Text', 'voice' => 'Voice', 'hybrid' => 'Hybrid', 'voice_and_text' => 'Hybrid'][strtolower((string) $sessionRecord->response_mode)]?? 'Text' }} Mode</span>
@@ -420,7 +420,7 @@
  <button type="button" class="interview-start-button cancel" onclick="cancelInterviewStart()">
  <i class="fa-solid fa-xmark"></i> Cancel
  </button>
- <button type="button" id="confirmInterviewStartButton" class="interview-start-button begin" onclick="confirmInterviewStart()">
+ <button type="button" id="confirmInterviewStartButton" class="interview-start-button begin" data-fullscreen-entry="user-gesture" onclick="confirmInterviewStart()">
  {{ $hasSavedInterviewState? 'Resume Interview': 'Begin Interview' }} <i class="fa-solid fa-play"></i>
  </button>
  </div>
@@ -4955,7 +4955,11 @@ return fallbackText;
 
  let interviewAutoFullscreenRequested = false;
  let interviewSessionBrowserFullscreenRequested = false;
+ let interviewFullscreenRetryQueued = false;
+ let interviewFullscreenBusy = false;
+ let interviewFullscreenRequestGeneration = 0;
  const setupAutoFullscreenPreferenceKey = 'speakready.interview.autoFullscreen';
+ const interviewFullscreenRetryEvents = ['pointerdown', 'keydown', 'touchstart', 'click'];
 
  function consumeSetupAutoFullscreenPreference() {
  try {
@@ -4980,54 +4984,150 @@ return fallbackText;
  return window.matchMedia('(max-width: 768px)').matches;
  }
 
- function enterInterviewFullscreen(options = {}) {
- const shouldUseMobileLayout = isMobileInterviewViewport();
- if (shouldUseMobileLayout) {
- document.body.classList.add('mobile-interview-fullscreen');
+ function interviewBrowserFullscreenElement() {
+ return document.fullscreenElement || document.webkitFullscreenElement || null;
  }
- document.body.classList.add('interview-session-browser-fullscreen');
- interviewAutoFullscreenRequested = options.auto === true;
- interviewSessionBrowserFullscreenRequested = true;
- updateMobileFullscreenToggle();
- refreshInterviewFullscreenLayout();
 
- if (options.requestBrowser === false) return;
-
+ function canRequestInterviewBrowserFullscreen() {
  const root = document.documentElement;
- if (!document.fullscreenElement && root.requestFullscreen) {
- interviewSessionBrowserFullscreenRequested = true;
- root.requestFullscreen({ navigationUI: 'hide' }).then(() => {
- interviewAutoFullscreenRequested = options.auto === true;
- interviewSessionBrowserFullscreenRequested = true;
+ if (!root) return false;
+
+ const standardAvailable = typeof root.requestFullscreen === 'function' && document.fullscreenEnabled!== false;
+ const webkitAvailable = typeof root.webkitRequestFullscreen === 'function' && document.webkitFullscreenEnabled!== false;
+ return standardAvailable || webkitAvailable;
+ }
+
+ function requestInterviewBrowserFullscreen() {
+ const root = document.documentElement;
+
+ try {
+ if (typeof root.requestFullscreen === 'function' && document.fullscreenEnabled!== false) {
+ return Promise.resolve(root.requestFullscreen());
+ }
+ if (typeof root.webkitRequestFullscreen === 'function' && document.webkitFullscreenEnabled!== false) {
+ return Promise.resolve(root.webkitRequestFullscreen());
+ }
+ } catch (error) {
+ return Promise.reject(error);
+ }
+
+ return Promise.resolve(false);
+ }
+
+ function exitInterviewBrowserFullscreen() {
+ try {
+ if (typeof document.exitFullscreen === 'function') {
+ return Promise.resolve(document.exitFullscreen()).catch(() => {});
+ }
+ if (typeof document.webkitExitFullscreen === 'function') {
+ return Promise.resolve(document.webkitExitFullscreen()).catch(() => {});
+ }
+ } catch (error) {
+ return Promise.resolve();
+ }
+
+ return Promise.resolve();
+ }
+
+ function setInterviewFullscreenShell(active) {
+ const shouldUseMobileLayout = isMobileInterviewViewport();
+ document.documentElement.classList.toggle('interview-session-fullscreen-root', active);
+ document.body.classList.toggle('interview-session-browser-fullscreen', active);
+ document.body.classList.toggle('mobile-interview-fullscreen', active && shouldUseMobileLayout);
  updateMobileFullscreenToggle();
  refreshInterviewFullscreenLayout();
- }).catch(() => {
- interviewAutoFullscreenRequested = options.auto === true;
- interviewSessionBrowserFullscreenRequested = true;
- updateMobileFullscreenToggle();
- refreshInterviewFullscreenLayout();
+ }
+
+ function removeInterviewFullscreenRetry() {
+ if (!interviewFullscreenRetryQueued) return;
+
+ interviewFullscreenRetryQueued = false;
+ interviewFullscreenRetryEvents.forEach(eventName => {
+ document.removeEventListener(eventName, retryInterviewFullscreenFromGesture, true);
  });
  }
+
+ function retryInterviewFullscreenFromGesture(event) {
+ if (event?.type === 'keydown' && event.key === 'Escape') return;
+ removeInterviewFullscreenRetry();
+ enterInterviewFullscreen({ auto: interviewAutoFullscreenRequested, retry: true });
+ }
+
+ function armInterviewFullscreenRetry() {
+ if (interviewFullscreenRetryQueued || interviewBrowserFullscreenElement() || !canRequestInterviewBrowserFullscreen()) return;
+
+ interviewFullscreenRetryQueued = true;
+ interviewFullscreenRetryEvents.forEach(eventName => {
+ document.addEventListener(eventName, retryInterviewFullscreenFromGesture, {
+ capture: true,
+ once: true
+ });
+ });
+ }
+
+ function enterInterviewFullscreen(options = {}) {
+ interviewAutoFullscreenRequested = options.auto === true;
+ interviewSessionBrowserFullscreenRequested = true;
+ setInterviewFullscreenShell(true);
+
+ if (options.requestBrowser === false) return Promise.resolve(false);
+ if (interviewBrowserFullscreenElement()) {
+ removeInterviewFullscreenRetry();
+ return Promise.resolve(true);
+ }
+ if (!canRequestInterviewBrowserFullscreen() || interviewFullscreenBusy) {
+ return Promise.resolve(false);
+ }
+
+ interviewFullscreenBusy = true;
+ const requestGeneration = ++interviewFullscreenRequestGeneration;
+ return requestInterviewBrowserFullscreen().then(() => {
+ if (requestGeneration!== interviewFullscreenRequestGeneration) {
+ if (!interviewSessionBrowserFullscreenRequested) {
+ return exitInterviewBrowserFullscreen().then(() => false);
+ }
+ return false;
+ }
+ removeInterviewFullscreenRetry();
+ interviewSessionBrowserFullscreenRequested = true;
+ setInterviewFullscreenShell(true);
+ return true;
+ }).catch(error => {
+ if (requestGeneration!== interviewFullscreenRequestGeneration || !interviewSessionBrowserFullscreenRequested) {
+ return false;
+ }
+ console.warn('Interview browser fullscreen request was blocked:', error);
+ armInterviewFullscreenRetry();
+ setInterviewFullscreenShell(true);
+ return false;
+ }).finally(() => {
+ if (requestGeneration!== interviewFullscreenRequestGeneration) return;
+ interviewFullscreenBusy = false;
+ updateMobileFullscreenToggle();
+ });
  }
 
  function exitInterviewFullscreen(options = {}) {
- const shouldExitBrowser = options.exitBrowser!== false;
- const exitPromise = shouldExitBrowser && document.fullscreenElement && document.exitFullscreen? document.exitFullscreen().catch(() => {}): Promise.resolve();
-
- return exitPromise.finally(() => {
+ removeInterviewFullscreenRetry();
+ interviewFullscreenRequestGeneration += 1;
+ interviewFullscreenBusy = false;
  interviewAutoFullscreenRequested = false;
  interviewSessionBrowserFullscreenRequested = false;
- document.body.classList.remove('mobile-interview-fullscreen', 'interview-session-browser-fullscreen');
- updateMobileFullscreenToggle();
- refreshInterviewFullscreenLayout();
- });
+ setInterviewFullscreenShell(false);
+
+ const shouldExitBrowser = options.exitBrowser!== false;
+ const browserFullscreenElement = interviewBrowserFullscreenElement();
+ if (shouldExitBrowser && browserFullscreenElement) {
+ return exitInterviewBrowserFullscreen();
+ }
+
+ return Promise.resolve();
  }
 
  function exitAutoInterviewFullscreen() {
  if (!interviewAutoFullscreenRequested &&!interviewSessionBrowserFullscreenRequested) {
- document.body.classList.remove('mobile-interview-fullscreen', 'interview-session-browser-fullscreen');
- updateMobileFullscreenToggle();
- refreshInterviewFullscreenLayout();
+ removeInterviewFullscreenRetry();
+ setInterviewFullscreenShell(false);
  return Promise.resolve();
  }
 
@@ -5044,45 +5144,83 @@ return fallbackText;
  }
 
  function toggleMobileFullscreen() {
- if (document.body.classList.contains('mobile-interview-fullscreen') || document.body.classList.contains('interview-session-browser-fullscreen') || document.fullscreenElement) {
- exitInterviewFullscreen();
- } else {
- enterInterviewFullscreen();
+ if (interviewFullscreenBusy) return Promise.resolve(false);
+ if (interviewBrowserFullscreenElement()) {
+ return exitInterviewFullscreen();
  }
+
+ const shellActive = document.body.classList.contains('mobile-interview-fullscreen')
+ || document.body.classList.contains('interview-session-browser-fullscreen');
+ if (shellActive &&!canRequestInterviewBrowserFullscreen()) {
+ return exitInterviewFullscreen();
+ }
+
+ return enterInterviewFullscreen({ retry: true });
  }
 
  function updateMobileFullscreenToggle() {
  const toggle = document.getElementById('responseFullscreenToggle');
  if (!toggle) return;
 
- const fullscreenOn = document.body.classList.contains('mobile-interview-fullscreen')
- || document.body.classList.contains('interview-session-browser-fullscreen')
- || Boolean(document.fullscreenElement);
- toggle.title = fullscreenOn? 'Exit fullscreen': 'Enter fullscreen';
+ const browserFullscreenOn = Boolean(interviewBrowserFullscreenElement());
+ const shellActive = document.body.classList.contains('mobile-interview-fullscreen')
+ || document.body.classList.contains('interview-session-browser-fullscreen');
+ const canRequestBrowser = canRequestInterviewBrowserFullscreen();
+ const toggleLabel = browserFullscreenOn
+ ? 'Exit fullscreen'
+ : (shellActive && canRequestBrowser? 'Enter browser fullscreen': (shellActive? 'Exit fullscreen layout': 'Enter fullscreen'));
+ toggle.title = toggleLabel;
  toggle.setAttribute('aria-label', toggle.title);
- toggle.innerHTML = fullscreenOn? '<i class="fa-solid fa-compress"></i>': '<i class="fa-solid fa-expand"></i>';
+ toggle.setAttribute('aria-busy', interviewFullscreenBusy? 'true': 'false');
+ toggle.innerHTML = browserFullscreenOn || (shellActive &&!canRequestBrowser)
+ ? '<i class="fa-solid fa-compress"></i>'
+ : '<i class="fa-solid fa-expand"></i>';
  }
 
  function handleBrowserFullscreenChange() {
- if (!document.fullscreenElement && interviewStarted) {
+ if (interviewBrowserFullscreenElement()) {
+ if (!interviewSessionBrowserFullscreenRequested) {
+ exitInterviewBrowserFullscreen();
+ updateMobileFullscreenToggle();
+ return;
+ }
+ removeInterviewFullscreenRetry();
+ interviewSessionBrowserFullscreenRequested = true;
+ setInterviewFullscreenShell(true);
+ return;
+ }
+
+ if (interviewSessionBrowserFullscreenRequested && interviewStarted) {
  interviewAutoFullscreenRequested = false;
  interviewSessionBrowserFullscreenRequested = false;
- document.body.classList.remove('mobile-interview-fullscreen', 'interview-session-browser-fullscreen');
+ removeInterviewFullscreenRetry();
+ setInterviewFullscreenShell(false);
+ return;
  }
 
  updateMobileFullscreenToggle();
  refreshInterviewFullscreenLayout();
  }
 
+ function handleBrowserFullscreenError() {
+ if (interviewSessionBrowserFullscreenRequested && interviewStarted) {
+ armInterviewFullscreenRetry();
+ setInterviewFullscreenShell(true);
+ }
+ }
+
  window.exitMobileFullscreen = exitMobileFullscreen;
  window.toggleMobileFullscreen = toggleMobileFullscreen;
  window.enterInterviewFullscreen = enterInterviewFullscreen;
+ window.addEventListener('pagehide', removeInterviewFullscreenRetry);
 
- function startInterviewSession() {
+ function startInterviewSession(options = {}) {
  if (interviewStarted || interviewTerminated) return;
  
  interviewStarted = true;
+ if (options.requestBrowserFullscreen!== false) {
  enterInterviewFullscreen({ auto: true });
+ }
  document.getElementById('workspaceWrapper').style.display = 'block';
  document.getElementById('workspaceWrapper').classList.toggle('real-interview-mode', liveFeedbackMode === 'real_interview');
  document.getElementById('interviewControls').style.opacity = '1';
@@ -6887,15 +7025,7 @@ setFinishViewReviewReady(false);
  function exitReadyFullscreenShell() {
  document.body.classList.remove('interview-ready-fullscreen');
  if (!interviewStarted) {
- interviewAutoFullscreenRequested = false;
- interviewSessionBrowserFullscreenRequested = false;
- document.body.classList.remove('mobile-interview-fullscreen', 'interview-session-browser-fullscreen');
- }
- if (document.fullscreenElement && document.exitFullscreen) {
- return document.exitFullscreen().catch(() => {}).finally(() => {
- updateMobileFullscreenToggle();
- refreshInterviewFullscreenLayout();
- });
+ return exitInterviewFullscreen();
  }
 
  updateMobileFullscreenToggle();
@@ -6904,8 +7034,9 @@ setFinishViewReviewReady(false);
  }
 
  function confirmInterviewStart() {
+ enterInterviewFullscreen({ auto: true });
  setInterviewStartModalVisible(false);
- startInterviewSession();
+ startInterviewSession({ requestBrowserFullscreen: false });
  }
 
  function cancelInterviewStart() {
@@ -6924,7 +7055,7 @@ setFinishViewReviewReady(false);
  const readyFullscreenActive = document.body.classList.contains('interview-ready-fullscreen');
  const sessionFullscreenActive = document.body.classList.contains('mobile-interview-fullscreen')
  || document.body.classList.contains('interview-session-browser-fullscreen')
- || Boolean(document.fullscreenElement);
+ || Boolean(interviewBrowserFullscreenElement());
 
  if (modal?.id === 'endSessionModal') {
  event.preventDefault();
@@ -6960,11 +7091,14 @@ setFinishViewReviewReady(false);
  }
 
  document.addEventListener('DOMContentLoaded', () => {
- consumeSetupAutoFullscreenPreference();
- enterInterviewFullscreen({ auto: true, requestBrowser: false });
+ const setupRequestedFullscreen = consumeSetupAutoFullscreenPreference();
+ enterInterviewFullscreen({ auto: setupRequestedFullscreen || !interviewTerminated, requestBrowser: false });
 
  updateMobileFullscreenToggle();
  document.addEventListener('fullscreenchange', handleBrowserFullscreenChange);
+ document.addEventListener('webkitfullscreenchange', handleBrowserFullscreenChange);
+ document.addEventListener('fullscreenerror', handleBrowserFullscreenError);
+ document.addEventListener('webkitfullscreenerror', handleBrowserFullscreenError);
  protectAiCoachPossibleAnswer();
  document.addEventListener('keydown', event => {
  if (handleInterviewEscapeKey(event)) return;
@@ -6976,8 +7110,7 @@ setFinishViewReviewReady(false);
  }
  });
  if (!interviewStarted &&!interviewTerminated) {
- setInterviewStartModalVisible(false);
- startInterviewSession();
+ setInterviewStartModalVisible(true);
  }
  });
  </script>
