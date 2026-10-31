@@ -39,7 +39,7 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('data-guest-layout="mobile"', false)
                 ->assertDontSee('id="srLaunchScreen"', false)
                 ->assertDontSee('guest-splash-pending', false)
-                ->assertSee('css/mobile/style.css?v=38', false)
+                ->assertSee('css/mobile/style.css?v=39', false)
                 ->assertSee('css/mobile/guest.css?v=34', false)
                 ->assertSee('mobile-hero-preview-row', false)
                 ->assertSee('mobile-hero-image-frame', false)
@@ -58,7 +58,7 @@ class MobileLayoutTest extends TestCase
                 ->assertDontSee('id="mbmenu"', false)
                 ->assertDontSee('id="barIcon"', false)
                 ->assertDontSee('id="xIcon"', false)
-                ->assertDontSee('css/desktop/style.css?v=11', false);
+                ->assertDontSee('css/desktop/style.css?v=12', false);
         }
     }
 
@@ -73,10 +73,10 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=38', false)
+            ->assertSee('css/mobile/style.css?v=39', false)
             ->assertSee('css/mobile/guest.css?v=34', false)
             ->assertSee('mobile-hero-preview-row', false)
-            ->assertDontSee('css/desktop/style.css?v=11', false);
+            ->assertDontSee('css/desktop/style.css?v=12', false);
     }
 
     public function test_guest_landing_uses_mobile_guest_layout_from_viewport_query_hint(): void
@@ -88,10 +88,10 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=38', false)
+            ->assertSee('css/mobile/style.css?v=39', false)
             ->assertSee('css/mobile/guest.css?v=34', false)
             ->assertSee('mobile-hero-preview-row', false)
-            ->assertDontSee('css/desktop/style.css?v=11', false);
+            ->assertDontSee('css/desktop/style.css?v=12', false);
     }
 
     public function test_desktop_guest_google_auth_links_are_hardened_for_mobile_viewports(): void
@@ -121,8 +121,8 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
-            ->assertSee('css/desktop/style.css?v=11', false)
-            ->assertDontSee('css/mobile/style.css?v=38', false);
+            ->assertSee('css/desktop/style.css?v=12', false)
+            ->assertDontSee('css/mobile/style.css?v=39', false);
     }
 
     public function test_mobile_user_agent_cannot_force_desktop_shell_with_desktop_query_hint(): void
@@ -134,9 +134,9 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=38', false)
+            ->assertSee('css/mobile/style.css?v=39', false)
             ->assertDontSee('guest-shell guest-desktop-shell', false)
-            ->assertDontSee('css/desktop/style.css?v=11', false);
+            ->assertDontSee('css/desktop/style.css?v=12', false);
     }
 
     public function test_guest_landing_exposes_shell_marker_for_viewport_repair(): void
@@ -160,7 +160,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee("url.searchParams.set('sr_layout', targetLayout)", false)
             ->assertSee("url.searchParams.set('sr_mobile_desktop_blocked', '1')", false)
             ->assertSee('window.location.replace(url.toString())', false)
-            ->assertSee('css/desktop/style.css?v=11', false);
+            ->assertSee('css/desktop/style.css?v=12', false);
     }
 
     public function test_user_dashboard_uses_mobile_shell_for_mobile_user_agent(): void
@@ -1349,7 +1349,7 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('data-user-fullscreen-toggle', false)
             ->assertSee('body.mobile-shell.user-app-fullscreen #mob-content', false)
             ->assertSee('height: var(--sr-visual-vh) !important', false)
-            ->assertSee('css/mobile/style.css?v=34', false)
+            ->assertSee('css/mobile/style.css?v=35', false)
             ->assertSee('js/main.js?v=7', false)
             ->assertSee('js/user-ui.js?v=27', false)
             ->assertDontSee('body.user-mobile-shell #mob-header #mobFullscreenBtn', false);

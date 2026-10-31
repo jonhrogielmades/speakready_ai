@@ -15,7 +15,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=7') }}">
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=8') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/auth/auth.css?v=1') }}" data-page-style="auth-desktop">
    </head>
    <body class="auth-desktop-shell desktop-shell" data-layout-shell="desktop" data-auth-layout="desktop">

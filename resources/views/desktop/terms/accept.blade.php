@@ -17,7 +17,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=35') }}">
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=36') }}">
       <style>
          body.terms-accept-shell {
             --terms-primary: #60a5fa;

@@ -14,7 +14,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}">
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=2') }}" data-page-style="auth-mobile">
       <style data-mobile-side-gutter="10px">
          body.auth-mobile-shell {

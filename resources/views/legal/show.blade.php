@@ -11,7 +11,7 @@
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=7') }}">
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=8') }}">
       <style>
          .legal-shell { min-height: 100vh; background: var(--bg); color: var(--tx); }
          .legal-nav { border-bottom: 1px solid var(--bd); background: color-mix(in srgb, var(--sf) 94%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }

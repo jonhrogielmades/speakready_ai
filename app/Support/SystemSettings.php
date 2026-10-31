@@ -7,6 +7,10 @@ use Illuminate\Validation\Rule;
 
 class SystemSettings
 {
+    public const BRAND_PRIMARY = '#2563eb';
+
+    public const BRAND_SECONDARY = '#06b6d4';
+
     public const USER_PERMISSION_KEYS = [
         'view_interview_content' => 'role_user_perm_0',
         'take_interview' => 'role_user_perm_1',
@@ -65,8 +69,8 @@ class SystemSettings
 
         'system_logo' => ['value' => 'img/logo.png', 'group' => 'appearance', 'type' => 'string'],
         'system_favicon' => ['value' => 'favicon.ico', 'group' => 'appearance', 'type' => 'string'],
-        'color_primary' => ['value' => '#d97706', 'group' => 'appearance', 'type' => 'string'],
-        'color_secondary' => ['value' => '#a35405', 'group' => 'appearance', 'type' => 'string'],
+        'color_primary' => ['value' => self::BRAND_PRIMARY, 'group' => 'appearance', 'type' => 'string'],
+        'color_secondary' => ['value' => self::BRAND_SECONDARY, 'group' => 'appearance', 'type' => 'string'],
 
         'retention_interview' => ['value' => 365, 'group' => 'retention', 'type' => 'integer'],
         'retention_feedback' => ['value' => 365, 'group' => 'retention', 'type' => 'integer'],

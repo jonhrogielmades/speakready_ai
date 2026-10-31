@@ -18,13 +18,13 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}" />
       <style>
          :root,
          .lm {
-            --pur: {{ $systemPrimaryColor ?? '#d97706' }};
-            --blu: {{ $systemPrimaryColor ?? '#d97706' }};
-            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#d97706' }}, {{ $systemSecondaryColor ?? '#a35405' }});
+            --pur: {{ $systemPrimaryColor ?? '#2563eb' }};
+            --blu: {{ $systemSecondaryColor ?? '#06b6d4' }};
+            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#2563eb' }}, {{ $systemSecondaryColor ?? '#06b6d4' }});
          }
          /* ===== ADMIN MOBILE LAYOUT SHELL ===== */
          html, body {

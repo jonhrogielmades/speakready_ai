@@ -24,15 +24,15 @@
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=38') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=34') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
             --sr-visual-vh: var(--sr-js-vh, 100dvh);
-            --pur: {{ $systemPrimaryColor ?? '#d97706' }};
-            --blu: {{ $systemPrimaryColor ?? '#d97706' }};
-            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#d97706' }}, {{ $systemSecondaryColor ?? '#a35405' }});
+            --pur: {{ $systemPrimaryColor ?? '#2563eb' }};
+            --blu: {{ $systemSecondaryColor ?? '#06b6d4' }};
+            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#2563eb' }}, {{ $systemSecondaryColor ?? '#06b6d4' }});
          }
 
          @media (max-width: 767.98px) {

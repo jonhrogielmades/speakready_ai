@@ -23,15 +23,15 @@
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=11') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
       <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=20') }}" />
       <style>
          :root,
          .lm,
          body.guest-desktop-shell {
-            --pur: {{ $systemPrimaryColor ?? '#d97706' }};
-            --blu: {{ $systemPrimaryColor ?? '#d97706' }};
-            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#d97706' }}, {{ $systemSecondaryColor ?? '#a35405' }});
+            --pur: {{ $systemPrimaryColor ?? '#2563eb' }};
+            --blu: {{ $systemSecondaryColor ?? '#06b6d4' }};
+            --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#2563eb' }}, {{ $systemSecondaryColor ?? '#06b6d4' }});
          }
       </style>
    </head>

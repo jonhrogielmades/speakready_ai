@@ -46,14 +46,14 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <link rel="preload" href="{{ asset('css/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link rel="stylesheet" href="{{ asset('css/all.min.css') }}"></noscript>
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=34') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=35') }}" />
       @include('mobile.partials.onboarding-styles')
       <style>
          :root,
          .lm {
-             --pur: {{ $systemPrimaryColor ?? '#d97706' }};
-             --blu: {{ $systemPrimaryColor ?? '#d97706' }};
-             --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#d97706' }}, {{ $systemSecondaryColor ?? '#a35405' }});
+             --pur: {{ $systemPrimaryColor ?? '#2563eb' }};
+             --blu: {{ $systemSecondaryColor ?? '#06b6d4' }};
+             --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#2563eb' }}, {{ $systemSecondaryColor ?? '#06b6d4' }});
          }
          /* Global Mobile Responsiveness for Premium UI Updates */
          .premium-panel:not(.p-0):not(.accordion-item),

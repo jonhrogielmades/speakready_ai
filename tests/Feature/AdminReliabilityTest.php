@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Support\SystemSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -456,6 +457,34 @@ class AdminReliabilityTest extends TestCase
             ->assertOk()
             ->assertSee('Custom Ready Official Report')
             ->assertSee('Custom Ready Interview Report');
+    }
+
+    public function test_legacy_orange_brand_settings_migrate_to_blue_cyan_without_overwriting_custom_colors(): void
+    {
+        Setting::setVal('color_primary', '#d97706', 'appearance');
+        Setting::setVal('color_secondary', '#a35405', 'appearance');
+        $migration = require database_path('migrations/2026_10_31_010000_replace_legacy_orange_brand_palette.php');
+
+        $migration->up();
+
+        $this->assertSame(SystemSettings::BRAND_PRIMARY, DB::table('settings')->where('key', 'color_primary')->value('value'));
+        $this->assertSame(SystemSettings::BRAND_SECONDARY, DB::table('settings')->where('key', 'color_secondary')->value('value'));
+
+        DB::table('settings')->where('key', 'color_primary')->update(['value' => '#123456']);
+        DB::table('settings')->where('key', 'color_secondary')->update(['value' => '#abcdef']);
+
+        $migration->up();
+
+        $this->assertSame('#123456', DB::table('settings')->where('key', 'color_primary')->value('value'));
+        $this->assertSame('#abcdef', DB::table('settings')->where('key', 'color_secondary')->value('value'));
+
+        DB::table('settings')->where('key', 'color_primary')->update(['value' => SystemSettings::BRAND_PRIMARY]);
+        DB::table('settings')->where('key', 'color_secondary')->update(['value' => SystemSettings::BRAND_SECONDARY]);
+
+        $migration->down();
+
+        $this->assertSame(SystemSettings::BRAND_PRIMARY, DB::table('settings')->where('key', 'color_primary')->value('value'));
+        $this->assertSame(SystemSettings::BRAND_SECONDARY, DB::table('settings')->where('key', 'color_secondary')->value('value'));
     }
 
     public function test_admin_dashboard_online_today_uses_current_online_sessions(): void
