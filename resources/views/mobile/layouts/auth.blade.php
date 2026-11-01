@@ -16,15 +16,15 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=3') }}" data-page-style="auth-mobile">
-      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=1') }}" data-page-style="auth-page-shared">
-      <script src="{{ asset('js/auth-page.js?v=1') }}" defer></script>
+      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=2') }}" data-page-style="auth-page-shared">
+      <script src="{{ asset('js/auth-page.js?v=2') }}" defer></script>
       <style data-mobile-side-gutter="10px">
          :root, .lm, body.auth-mobile-shell {
             --pur: {{ $systemPrimaryColor ?? '#2563eb' }};
             --blu: {{ $systemSecondaryColor ?? '#06b6d4' }};
             --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#2563eb' }}, {{ $systemSecondaryColor ?? '#06b6d4' }});
          }
-         body.auth-mobile-shell {
+         body.auth-mobile-shell:not(.auth-page-body) {
             padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
             padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
          }

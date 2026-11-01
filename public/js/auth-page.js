@@ -8,6 +8,7 @@
       var overlay = document.getElementById('authTransitionOverlay');
       var transitionTitle = document.getElementById('authTransitionTitle');
       var transitionCopy = document.getElementById('authTransitionCopy');
+      var themeToggle = document.getElementById('authPageThemeToggle');
 
       var transitionMessages = {
          login: ['Logging you in...', 'Opening your interview workspace securely.'],
@@ -32,6 +33,32 @@
          if (!overlay) return;
          overlay.classList.remove('is-active');
          overlay.hidden = true;
+      }
+
+      function syncThemeToggle() {
+         if (!themeToggle) return;
+
+         var isDark = window.SpeakReadyTheme
+            ? window.SpeakReadyTheme.get() === 'dark'
+            : document.documentElement.dataset.theme === 'dark';
+         var sunIcon = themeToggle.querySelector('[data-auth-theme-icon="sun"]');
+         var moonIcon = themeToggle.querySelector('[data-auth-theme-icon="moon"]');
+
+         if (sunIcon) sunIcon.hidden = !isDark;
+         if (moonIcon) moonIcon.hidden = isDark;
+         themeToggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+         themeToggle.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
+         themeToggle.title = isDark ? 'Switch to light theme' : 'Switch to dark theme';
+      }
+
+      if (themeToggle) {
+         syncThemeToggle();
+         themeToggle.addEventListener('click', function () {
+            if (window.SpeakReadyTheme && typeof window.SpeakReadyTheme.toggle === 'function') {
+               window.SpeakReadyTheme.toggle();
+            }
+            syncThemeToggle();
+         });
       }
 
       window.showAuthTransition = showAuthTransition;
@@ -172,6 +199,7 @@
 
       window.addEventListener('pageshow', function () {
          hideAuthTransition();
+         syncThemeToggle();
          document.querySelectorAll('[data-auth-submit]').forEach(function (form) {
             form.dataset.submitting = 'false';
             var submitButton = form.querySelector('button[type="submit"]');

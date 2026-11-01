@@ -24,10 +24,16 @@
          <span class="auth-page-brand-mark"><img src="{{ asset($brandLogo) }}" alt=""></span>
          <span>{{ $brandName }}</span>
       </a>
-      <a class="auth-page-back" href="{{ url('/') }}">
-         <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-         <span>Back to home</span>
-      </a>
+      <div class="auth-page-topbar-actions">
+         <button type="button" class="auth-page-theme-toggle" id="authPageThemeToggle" aria-label="Switch color theme" title="Switch color theme">
+            <i class="fa-regular fa-sun" data-auth-theme-icon="sun" aria-hidden="true"></i>
+            <i class="fa-regular fa-moon" data-auth-theme-icon="moon" aria-hidden="true"></i>
+         </button>
+         <a class="auth-page-back" href="{{ url('/') }}">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            <span>Back to home</span>
+         </a>
+      </div>
    </header>
 
    <section class="auth-page-card" aria-labelledby="authPageTitle">
@@ -35,9 +41,9 @@
          <div class="auth-page-orb auth-page-orb-one" aria-hidden="true"></div>
          <div class="auth-page-orb auth-page-orb-two" aria-hidden="true"></div>
          <div class="auth-page-promo-content">
-            <span class="auth-page-promo-kicker"><i class="fa-solid fa-sparkles" aria-hidden="true"></i> Interview practice that moves you forward</span>
-            <h2>{{ $isRegister ? 'Build confidence before the interview.' : 'Welcome back. Your next answer starts here.' }}</h2>
-            <p>{{ $isRegister ? 'Create your free workspace and turn every practice session into clear, measurable progress.' : 'Pick up where you left off and keep sharpening the stories, delivery, and skills that make you memorable.' }}</p>
+            <span class="auth-page-promo-kicker"><i class="fa-solid fa-sparkles" aria-hidden="true"></i> Practice with purpose</span>
+            <h2>{{ $isRegister ? 'Build confidence before interview day.' : 'Welcome back. Keep moving forward.' }}</h2>
+            <p>{{ $isRegister ? 'Create your workspace and turn each practice session into measurable progress.' : 'Continue your practice, refine your delivery, and prepare with confidence.' }}</p>
             <ul class="auth-page-benefits">
                <li><span><i class="fa-solid fa-bullseye" aria-hidden="true"></i></span><div><strong>Practice with purpose</strong><small>Role-focused questions and realistic interview scenarios.</small></div></li>
                <li><span><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span><div><strong>Get useful feedback</strong><small>See what worked and what to improve in your next answer.</small></div></li>
@@ -64,7 +70,7 @@
                   <h1 id="authPageTitle">{{ $isRegister ? 'Create your account' : 'Log in to your account' }}</h1>
                </div>
             </div>
-            <p class="auth-page-intro">{{ $isRegister ? 'A few details now, then you can begin practicing.' : 'Enter your username and password to continue your interview preparation.' }}</p>
+            <p class="auth-page-intro">{{ $isRegister ? 'Set up your free practice workspace in a few steps.' : 'Use your username and password to continue.' }}</p>
 
             @if(session('success'))
                <div class="auth-page-alert auth-page-alert-success" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>{{ session('success') }}</span></div>

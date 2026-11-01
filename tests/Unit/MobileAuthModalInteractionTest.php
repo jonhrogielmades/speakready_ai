@@ -118,6 +118,32 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringNotContainsString('overflow-y: hidden', $css);
     }
 
+    public function test_auth_pages_isolate_theme_contrast_and_fit_the_desktop_viewport(): void
+    {
+        $markup = $this->readProjectFile('resources/views/shared/auth-page.blade.php');
+        $script = $this->readProjectFile('public/js/auth-page.js');
+        $css = $this->readProjectFile('public/css/shared/auth-page.css');
+        $mobileLayout = $this->readProjectFile('resources/views/mobile/layouts/auth.blade.php');
+
+        foreach (['--auth-canvas:', '--auth-panel:', '--auth-text:', '--auth-control:', '--auth-control-text:', '--auth-link:'] as $token) {
+            $this->assertStringContainsString($token, $css);
+        }
+
+        $this->assertStringContainsString('html[data-theme="light"] body.auth-page-body', $css);
+        $this->assertStringContainsString('body.auth-page-body.auth-desktop-shell { height: 100vh; height: 100dvh; overflow: hidden; }', $css);
+        $this->assertStringContainsString('grid-template-rows: auto minmax(0, 1fr) auto;', $css);
+        $this->assertStringContainsString('.auth-page-card { width: min(1180px, 100%); height: 100%; min-height: 0; flex: none; }', $css);
+        $this->assertStringContainsString('overflow-y: auto;', $css);
+        $this->assertStringContainsString('.auth-page-input:-webkit-autofill', $css);
+        $this->assertStringContainsString('-webkit-text-fill-color: var(--auth-control-text) !important;', $css);
+        $this->assertStringNotContainsString('background: var(--bg2, #f7fafc);', $css);
+
+        $this->assertStringContainsString('id="authPageThemeToggle"', $markup);
+        $this->assertStringContainsString('window.SpeakReadyTheme.toggle()', $script);
+        $this->assertStringContainsString("themeToggle.setAttribute('aria-label'", $script);
+        $this->assertStringContainsString('body.auth-mobile-shell:not(.auth-page-body)', $mobileLayout);
+    }
+
     public function test_submit_transition_prevents_double_submission_and_recovers_from_history(): void
     {
         $markup = $this->readProjectFile('resources/views/shared/auth-page.blade.php');
