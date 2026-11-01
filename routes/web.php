@@ -46,16 +46,29 @@ Route::get('/', function (LandingStatsService $landingStatsService) {
         }
     }
 
+    $legacyAuthPage = request()->query('auth_modal');
+    if (in_array($legacyAuthPage, ['login', 'signup', 'register'], true)) {
+        $authPageQuery = sr_layout_query(request());
+
+        if (request()->filled('auth_alert')) {
+            $authPageQuery['auth_alert'] = request()->query('auth_alert');
+        }
+
+        return redirect()->route(
+            in_array($legacyAuthPage, ['signup', 'register'], true) ? 'register.form' : 'login.form',
+            $authPageQuery
+        );
+    }
+
     return mobile_view('welcome', [
         'landingStats' => $landingStatsService->summary(),
     ]);
 });
 
 // Auth Routes
+Route::get('/login', [AuthController::class, 'showLoginForm'])->middleware('guest')->name('login.form');
+Route::get('/register', [AuthController::class, 'showRegisterForm'])->middleware('guest')->name('register.form');
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth')->name('register');
-Route::get('/login', function () {
-    return redirect('/');
-});
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth')->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:auth')->name('logout');
 Route::post('/request-reactivation', [AuthController::class, 'requestReactivation'])->middleware('throttle:auth')->name('request.reactivation');

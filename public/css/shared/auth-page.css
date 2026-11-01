@@ -1,0 +1,125 @@
+/* Standalone login and registration pages reuse the established auth-modal card. */
+.auth-shell.auth-page-shell {
+   width: min(100%, 650px);
+   max-width: 650px;
+}
+
+#lofc.auth-page {
+   position: relative;
+   display: block;
+   width: 100%;
+}
+
+#lofc.auth-page .modal-dialog {
+   width: 100%;
+   max-width: 650px;
+   margin: 0 auto;
+}
+
+#lofc.auth-page .auth-modal-content {
+   max-height: calc(100dvh - 48px);
+}
+
+#lofc.auth-page .auth-close-button,
+#lofc.auth-page .auth-tab-switch .tab-sw-btn {
+   text-decoration: none;
+}
+
+#lofc.auth-page .auth-tab-switch .tab-sw-btn {
+   flex: 1 1 0;
+}
+
+.auth-page-transition-overlay {
+   position: fixed;
+   inset: 0;
+   z-index: 2147483000;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   flex-direction: column;
+   gap: 12px;
+   padding: 24px;
+   visibility: hidden;
+   opacity: 0;
+   pointer-events: none;
+   background: rgba(241, 246, 251, 0.94);
+   background: color-mix(in srgb, var(--bg, #f1f6fb) 94%, transparent);
+   backdrop-filter: blur(10px);
+   transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+
+.auth-page-transition-overlay.active {
+   visibility: visible;
+   opacity: 1;
+   pointer-events: auto;
+}
+
+.auth-page-transition-overlay .logo-loading-wrapper {
+   position: relative;
+   display: grid;
+   width: 84px;
+   height: 84px;
+   place-items: center;
+}
+
+.auth-page-transition-overlay .logo-loading-circle {
+   position: absolute;
+   inset: 0;
+   border: 4px solid rgba(37, 99, 235, 0.18);
+   border-top-color: #2563eb;
+   border-right-color: rgba(14, 165, 233, 0.78);
+   border-radius: 50%;
+   animation: authPageSpin 0.72s linear infinite;
+}
+
+.auth-page-transition-overlay img {
+   width: 58px;
+   height: 58px;
+   object-fit: cover;
+   border-radius: 14px;
+   background: #ffffff;
+   box-shadow: 0 10px 28px rgba(37, 99, 235, 0.2);
+}
+
+.auth-page-transition-overlay h4 {
+   margin: 8px 0 0;
+   color: var(--tx, #111827);
+   font-size: 1.2rem;
+   font-weight: 700;
+   letter-spacing: 0.01em;
+}
+
+.auth-page-transition-overlay p {
+   margin: 0;
+   color: var(--tx3, #64748b);
+   font-size: 0.9rem;
+   text-align: center;
+}
+
+@keyframes authPageSpin {
+   to { transform: rotate(360deg); }
+}
+
+@media (max-width: 575.98px) {
+   .auth-shell.auth-page-shell {
+      max-width: 430px;
+   }
+
+   #lofc.auth-page .modal-dialog {
+      width: min(390px, calc(100vw - 20px));
+      max-width: min(390px, calc(100vw - 20px));
+      margin: 0 auto;
+   }
+
+   #lofc.auth-page .auth-modal-content {
+      max-height: calc(100dvh - 32px);
+   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+   .auth-page-transition-overlay,
+   .auth-page-transition-overlay .logo-loading-circle {
+      transition: none;
+      animation: none;
+   }
+}

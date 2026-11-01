@@ -66,8 +66,12 @@ class PasswordResetTest extends TestCase
         ]);
 
         $response
-            ->assertRedirect('/')
+            ->assertRedirect(route('login.form'))
             ->assertSessionHas('success', 'Your password has been reset. You can now sign in with your username.');
+
+        $this->get(route('login.form'))
+            ->assertOk()
+            ->assertSee('Your password has been reset. You can now sign in with your username.');
 
         $this->assertTrue(Hash::check('NewPassword123!', $user->fresh()->password));
         $this->assertNull($user->fresh()->password_recovery_code_hash);
@@ -583,8 +587,12 @@ class PasswordResetTest extends TestCase
             'password_confirmation' => 'NewPassword123!',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('login.form'));
         $response->assertSessionHas('success', 'Your password has been reset.');
+
+        $this->get(route('login.form'))
+            ->assertOk()
+            ->assertSee('Your password has been reset.');
 
         $this->assertTrue(Hash::check('NewPassword123!', $user->fresh()->password));
         $this->assertNull($user->fresh()->pending_recovery_email);

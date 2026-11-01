@@ -69,6 +69,16 @@ class AuthController extends Controller
 
     private const MOBILE_VIEWPORT_MAX = 820;
 
+    public function showLoginForm()
+    {
+        return $this->mobileView('auth.login');
+    }
+
+    public function showRegisterForm()
+    {
+        return $this->mobileView('auth.register');
+    }
+
     public function register(Request $request, RecoveryEmailVerification $emailVerification)
     {
         if (! Setting::enabled('acc_registration')) {
@@ -514,7 +524,8 @@ class AuthController extends Controller
         $sessionRevoker->revoke($user);
         event(new PasswordReset($user));
 
-        return redirect('/')->with('success', 'Your password has been reset. You can now sign in with your username.');
+        return redirect()->route('login.form', sr_layout_query($request))
+            ->with('success', 'Your password has been reset. You can now sign in with your username.');
     }
 
     public function showResetPasswordForm(Request $request, string $token)
@@ -565,7 +576,8 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect('/')->with('success', __($status));
+        return redirect()->route('login.form', sr_layout_query($request))
+            ->with('success', __($status));
     }
 
     public function logout(Request $request)
@@ -754,7 +766,6 @@ class AuthController extends Controller
                 return $this->googleAuthFailureResponse($request, self::GOOGLE_LOGIN_UNREGISTERED_ACCOUNT_MESSAGE, $intent, [
                     'email' => $googleEmail,
                 ], 'email', [
-                    'auth_modal' => 'login',
                     'auth_alert' => self::GOOGLE_LOGIN_UNREGISTERED_ALERT_KEY,
                 ]);
             }
@@ -1088,7 +1099,13 @@ class AuthController extends Controller
             return $redirect->withErrors(['account_delete' => $message]);
         }
 
-        return $this->redirectToHomeWithGoogleLayout($request, $homeQuery)
+        unset($homeQuery['auth_modal']);
+
+        return $this->redirectToRouteWithGoogleLayout(
+            $request,
+            $intent === 'register' ? 'register.form' : 'login.form',
+            $homeQuery
+        )
             ->withErrors([$field => $message])
             ->withInput($this->googleAuthOldInput($request, $intent, $input));
     }

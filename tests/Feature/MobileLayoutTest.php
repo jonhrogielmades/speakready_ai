@@ -39,26 +39,37 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('data-guest-layout="mobile"', false)
                 ->assertDontSee('id="srLaunchScreen"', false)
                 ->assertDontSee('guest-splash-pending', false)
-                ->assertSee('css/mobile/style.css?v=39', false)
-                ->assertSee('css/mobile/guest.css?v=34', false)
-                ->assertSee('mobile-hero-preview-row', false)
-                ->assertSee('mobile-hero-image-frame', false)
-                ->assertSee('Register for Free', false)
-                ->assertDontSee('Get Started Free', false)
-                ->assertSee('data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab(\'signup\')"', false)
+                ->assertSee('css/shared/landing-page.css?v=1', false)
+                ->assertSee('js/landing-page.js?v=1', false)
+                ->assertSee('class="sr-skip-link" href="#main-content"', false)
+                ->assertSee('<main id="main-content" tabindex="-1">', false)
+                ->assertSee('Practice your next interview.')
+                ->assertSee('Start practicing free')
+                ->assertSee('id="sample-feedback"', false)
+                ->assertSee('id="trust"', false)
+                ->assertSee('id="faq"', false)
+                ->assertSee(route('login.form', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
+                ->assertSee(route('register.form', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
+                ->assertDontSee('data-bs-target="#lofc"', false)
+                ->assertDontSee('id="loginForm"', false)
+                ->assertDontSee('id="signupForm"', false)
                 ->assertDontSee('Login for Free', false)
-                ->assertSee(route('auth.google.login', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
-                ->assertSee(route('auth.google.register', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
-                ->assertSee('id="mbtog"', false)
-                ->assertSee('aria-controls="userCommandPalette"', false)
-                ->assertSee('id="userCommandPalette"', false)
-                ->assertSee('data-ucp-open', false)
-                ->assertSee('id="guestHeaderClock"', false)
-                ->assertDontSee('aria-controls="mbmenu"', false)
-                ->assertDontSee('id="mbmenu"', false)
-                ->assertDontSee('id="barIcon"', false)
-                ->assertDontSee('id="xIcon"', false)
-                ->assertDontSee('css/desktop/style.css?v=12', false);
+                ->assertDontSee(route('auth.google.login', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
+                ->assertDontSee(route('auth.google.register', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
+                ->assertSee('id="guestNavToggle"', false)
+                ->assertSee('aria-controls="guestNavPanel"', false)
+                ->assertSee('id="guestNavPanel"', false)
+                ->assertDontSee('id="userCommandPalette"', false)
+                ->assertDontSee('css/bootstrap.min.css', false)
+                ->assertDontSee('css/all.min.css', false)
+                ->assertDontSee('css/swiper-bundle.min.css', false)
+                ->assertDontSee('js/bootstrap.bundle.min.js', false)
+                ->assertDontSee('js/swiper-bundle.min.js', false)
+                ->assertDontSee('js/main.js', false)
+                ->assertDontSee('js/user-ui.js', false)
+                ->assertDontSee('css/desktop/style.css?v=12', false)
+                ->assertDontSee('css/mobile/style.css?v=39', false)
+                ->assertDontSee('css/mobile/guest.css?v=34', false);
         }
     }
 
@@ -73,9 +84,9 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=39', false)
-            ->assertSee('css/mobile/guest.css?v=34', false)
-            ->assertSee('mobile-hero-preview-row', false)
+            ->assertSee('css/shared/landing-page.css?v=1', false)
+            ->assertSee('Practice your next interview.')
+            ->assertSee('Start practicing free')
             ->assertDontSee('css/desktop/style.css?v=12', false);
     }
 
@@ -88,26 +99,26 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=39', false)
-            ->assertSee('css/mobile/guest.css?v=34', false)
-            ->assertSee('mobile-hero-preview-row', false)
+            ->assertSee('css/shared/landing-page.css?v=1', false)
+            ->assertSee('Practice your next interview.')
+            ->assertSee('Start practicing free')
             ->assertDontSee('css/desktop/style.css?v=12', false);
     }
 
-    public function test_desktop_guest_google_auth_links_are_hardened_for_mobile_viewports(): void
+    public function test_desktop_login_page_google_auth_link_is_hardened_for_mobile_viewports(): void
     {
         $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
 
         $this->withHeader('User-Agent', $desktopUserAgent)
-            ->get('/?sr_layout=desktop&sr_viewport_width=1280')
+            ->get(route('login.form', ['sr_layout' => 'desktop', 'sr_viewport_width' => 1280]))
             ->assertOk()
-            ->assertSee('guest-shell guest-desktop-shell', false)
+            ->assertSee('auth-desktop-shell', false)
+            ->assertSee('data-auth-transition="google"', false)
             ->assertSee('window.SpeakReadyGoogleMobileLayout', false)
             ->assertSee('shouldUseMobileLayout', false)
             ->assertSee("url.searchParams.set('sr_layout', 'mobile')", false)
             ->assertSee("url.searchParams.set('sr_is_mobile', '1')", false)
-            ->assertSee("url.searchParams.set('sr_viewport_width', String(width))", false)
-            ->assertSee('window.location.href = destination;', false);
+            ->assertSee("url.searchParams.set('sr_viewport_width', String(width))", false);
     }
 
     public function test_guest_landing_desktop_query_hint_can_override_stale_mobile_cookie(): void
@@ -121,7 +132,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
-            ->assertSee('css/desktop/style.css?v=12', false)
+            ->assertSee('css/shared/landing-page.css?v=1', false)
             ->assertDontSee('css/mobile/style.css?v=39', false);
     }
 
@@ -134,7 +145,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=39', false)
+            ->assertSee('css/shared/landing-page.css?v=1', false)
             ->assertDontSee('guest-shell guest-desktop-shell', false)
             ->assertDontSee('css/desktop/style.css?v=12', false);
     }
@@ -160,10 +171,10 @@ class MobileLayoutTest extends TestCase
             ->assertSee("url.searchParams.set('sr_layout', targetLayout)", false)
             ->assertSee("url.searchParams.set('sr_mobile_desktop_blocked', '1')", false)
             ->assertSee('window.location.replace(url.toString())', false)
-            ->assertSee('css/desktop/style.css?v=12', false);
+            ->assertSee('css/shared/landing-page.css?v=1', false);
     }
 
-    public function test_top_level_shells_use_the_shared_early_guard_and_blocking_icon_css(): void
+    public function test_top_level_shells_use_the_shared_early_guard_and_expected_icon_strategy(): void
     {
         $shells = [
             'desktop/layouts/app.blade.php' => 'desktop',
@@ -195,16 +206,31 @@ class MobileLayoutTest extends TestCase
             $this->assertLessThan($headClosePosition, $guardPosition, "Expected {$relativePath} layout correction to run before the head closes.");
             $this->assertLessThan($bodyPosition, $guardPosition, "Expected {$relativePath} layout correction to run before body paint.");
 
-            $this->assertStringContainsString(
-                '<link rel="stylesheet" href="{{ asset(\'css/all.min.css\') }}"',
-                $source,
-                "Expected {$relativePath} to load Font Awesome as render-blocking CSS."
-            );
-            $this->assertDoesNotMatchRegularExpression(
-                '/<link[^>]+rel=["\']preload["\'][^>]+all\.min\.css/i',
-                $source,
-                "Expected {$relativePath} not to reveal the UI before its icon CSS is ready."
-            );
+            $isGuestShell = str_ends_with($relativePath, '/layouts/guest.blade.php');
+
+            if ($isGuestShell) {
+                $this->assertStringContainsString(
+                    '<link rel="stylesheet" href="{{ asset(\'css/shared/landing-page.css?v=1\') }}">',
+                    $source,
+                    "Expected {$relativePath} to load the shared landing stylesheet."
+                );
+                $this->assertStringNotContainsString(
+                    "css/all.min.css",
+                    $source,
+                    "Expected {$relativePath} to use the shared inline SVG icon system instead of Font Awesome."
+                );
+            } else {
+                $this->assertStringContainsString(
+                    '<link rel="stylesheet" href="{{ asset(\'css/all.min.css\') }}"',
+                    $source,
+                    "Expected {$relativePath} to load Font Awesome as render-blocking CSS."
+                );
+                $this->assertDoesNotMatchRegularExpression(
+                    '/<link[^>]+rel=["\']preload["\'][^>]+all\.min\.css/i',
+                    $source,
+                    "Expected {$relativePath} not to reveal the UI before its icon CSS is ready."
+                );
+            }
         }
 
         $guardSource = file_get_contents(resource_path('views/shared/early-layout-shell-guard.blade.php'));
