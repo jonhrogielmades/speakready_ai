@@ -14,7 +14,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=8') }}">
-      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=19') }}" data-page-style="auth-page-shared">
+      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=20') }}" data-page-style="auth-page-shared">
       <link rel="stylesheet" href="{{ asset('css/shared/legal-page.css?v=1') }}" data-page-style="legal-page">
       <script src="{{ asset('js/auth-page.js?v=2') }}" defer></script>
    </head>

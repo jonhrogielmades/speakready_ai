@@ -48,9 +48,9 @@
             <h2>{{ $isRegister ? 'Build confidence before interview day.' : 'Welcome back. Keep moving forward.' }}</h2>
             <p>{{ $isRegister ? 'Create your workspace and turn each practice session into measurable progress.' : 'Continue your practice, refine your delivery, and prepare with confidence.' }}</p>
             <ul class="auth-page-benefits">
-               <li><span><i class="fa-solid fa-bullseye" aria-hidden="true"></i></span><div><strong>Practice with purpose</strong><small>Role-focused questions and realistic interview scenarios.</small></div></li>
-               <li><span><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span><div><strong>Get useful feedback</strong><small>See what worked and what to improve in your next answer.</small></div></li>
-               <li><span><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span><div><strong>Track real progress</strong><small>Follow your readiness as your practice adds up.</small></div></li>
+               <li class="auth-page-benefit auth-page-benefit-focus"><span class="auth-page-benefit-icon"><i class="fa-solid fa-bullseye" aria-hidden="true"></i></span><div><strong>Practice with purpose</strong><small>Role-focused questions and realistic interview scenarios.</small></div></li>
+               <li class="auth-page-benefit auth-page-benefit-feedback"><span class="auth-page-benefit-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span><div><strong>Get useful feedback</strong><small>See what worked and what to improve in your next answer.</small></div></li>
+               <li class="auth-page-benefit auth-page-benefit-progress"><span class="auth-page-benefit-icon"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span><div><strong>Track real progress</strong><small>Follow your readiness as your practice adds up.</small></div></li>
             </ul>
          </div>
          <div class="auth-page-promo-footer">

@@ -36,9 +36,9 @@
             <h2>{{ $isReset ? 'Set a password you can trust.' : 'Get back to your practice.' }}</h2>
             <p>{{ $isReset ? 'Choose a strong password and return to interview practice with confidence.' : 'Recover your local account securely, then keep building the skills that make you memorable.' }}</p>
             <ul class="auth-page-benefits">
-               <li><span><i class="fa-solid fa-lock" aria-hidden="true"></i></span><div><strong>Private by design</strong><small>Your recovery details are used only to restore account access.</small></div></li>
-               <li><span><i class="fa-solid fa-key" aria-hidden="true"></i></span><div><strong>One-time recovery</strong><small>Recovery codes expire and can only be used once.</small></div></li>
-               <li><span><i class="fa-solid fa-arrow-rotate-right" aria-hidden="true"></i></span><div><strong>Back to progress</strong><small>Return to your practice workspace when you are ready.</small></div></li>
+               <li class="auth-page-benefit auth-page-benefit-private"><span class="auth-page-benefit-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></span><div><strong>Private by design</strong><small>Your recovery details are used only to restore account access.</small></div></li>
+               <li class="auth-page-benefit auth-page-benefit-recovery"><span class="auth-page-benefit-icon"><i class="fa-solid fa-key" aria-hidden="true"></i></span><div><strong>One-time recovery</strong><small>Recovery codes expire and can only be used once.</small></div></li>
+               <li class="auth-page-benefit auth-page-benefit-progress"><span class="auth-page-benefit-icon"><i class="fa-solid fa-arrow-rotate-right" aria-hidden="true"></i></span><div><strong>Back to progress</strong><small>Return to your practice workspace when you are ready.</small></div></li>
             </ul>
          </div>
          <div class="auth-page-promo-footer">
