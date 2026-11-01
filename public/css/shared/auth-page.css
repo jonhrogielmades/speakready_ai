@@ -552,7 +552,7 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
 
 @media (max-width: 640px) {
    body.auth-page-body.auth-desktop-shell,
-   body.auth-page-body.auth-mobile-shell { background: var(--auth-mobile-promo-background); }
+   body.auth-page-body.auth-mobile-shell { background: var(--auth-page-background); }
    .auth-page-shell {
       min-height: 100dvh;
       padding: max(8px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));

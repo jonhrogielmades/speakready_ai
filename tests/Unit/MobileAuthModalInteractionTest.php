@@ -147,7 +147,7 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('linear-gradient(120deg, #f8fcff 0%, #edfaff 46%, #dff5ff 100%)', $css);
         $this->assertStringContainsString('--auth-form-surface: #ffffff;', $css);
         $this->assertStringContainsString('--auth-mobile-promo-background:', $css);
-        $this->assertStringContainsString('background: var(--auth-mobile-promo-background);', $css);
+        $this->assertStringContainsString('background: var(--auth-page-background);', $css);
         $this->assertStringContainsString('background: var(--auth-form-surface);', $css);
         $this->assertStringContainsString('border: 1px solid var(--auth-form-border);', $css);
         $this->assertStringContainsString('--tx: #153b63;', $css);
