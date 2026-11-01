@@ -816,11 +816,10 @@
         }
 
         async function confirmCoachAction(options) {
-            if (window.SpeakReadyMobileConfirm?.show) {
-                return window.SpeakReadyMobileConfirm.show(options);
-            }
+            const show = window.SpeakReadyConfirm?.show || window.SpeakReadyMobileConfirm?.show;
+            if (show) return show(options);
 
-            return confirm(options?.message || 'Are you sure you want to continue?');
+            return window.confirm(options?.message || 'Are you sure you want to continue?');
         }
 
         function coachHistoryButtonMarkup(id, title, iconClass) {

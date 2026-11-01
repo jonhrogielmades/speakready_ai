@@ -124,7 +124,7 @@
             <a href="{{ route('admin.ai.evaluation.export', $exportQuery) }}" class="btn btn-success">
                 <i class="fa-solid fa-file-excel me-2"></i>Excel CSV
             </a>
-            <form action="{{ route('admin.ai.evaluation.clear') }}" method="POST" onsubmit="return confirm('Clear all AI provider evaluation evidence from this admin view? User sessions, answers, and question text will stay saved.');">
+            <form action="{{ route('admin.ai.evaluation.clear') }}" method="POST" onsubmit="return window.SpeakReadyAdminConfirm ? window.SpeakReadyAdminConfirm(event, this, 'Clear all AI provider evaluation evidence from this admin view? User sessions, answers, and question text will stay saved.') : true;">
                 @csrf
                 <button type="submit" class="btn ai-eval-clear-btn">
                     <i class="fa-solid fa-trash-can me-2"></i>Clear All

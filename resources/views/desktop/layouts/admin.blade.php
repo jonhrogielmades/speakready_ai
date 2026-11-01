@@ -24,6 +24,7 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=37') }}" />
+      <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
       <style>
           :root,
           .lm {
@@ -285,7 +286,7 @@
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       <script src="{{ asset('js/admin-ui.js?v=1') }}"></script>
-      @include('desktop.partials.flash-modal')
+      @include('shared.partials.flash-modal')
       <!-- AOS -->
       <script src="{{ asset('js/aos.js') }}"></script>
       <!-- Swiper -->
@@ -729,7 +730,7 @@
       @stack('late-styles')
       @include('desktop.partials.desktop-theme-contrast')
       @stack('scripts')
-      @include('desktop.partials.page-transition')
-      @include('desktop.layouts.logout-transition')
+      @include('shared.partials.page-transition')
+      @include('shared.partials.logout-transition')
    </body>
 </html>

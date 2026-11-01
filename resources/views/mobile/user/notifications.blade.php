@@ -164,15 +164,22 @@ function markAllReadPage() {
     });
 }
 
+function requestNotificationConfirmation(title, message, action) {
+    const show = window.SpeakReadyConfirm?.show || window.SpeakReadyMobileConfirm?.show;
+    return show
+        ? show({ title, message, action, variant: 'danger' })
+        : Promise.resolve(window.confirm(message));
+}
+
 function clearAllNotificationsPage() {
-    if(confirm('Are you sure you want to clear all notifications?')) {
-        notificationJsonRequest(notificationPageActionUrl('data-clear-all-url', @json(route('user.notifications.clearAll'))), 'DELETE')
-        .then(data => {
-            if(data.success) {
-                window.location.reload();
-            }
-        });
-    }
+    requestNotificationConfirmation('Clear notifications?', 'All notifications will be removed from your inbox.', 'Clear all')
+    .then(confirmed => {
+        if (!confirmed) return;
+        return notificationJsonRequest(notificationPageActionUrl('data-clear-all-url', @json(route('user.notifications.clearAll'))), 'DELETE');
+    })
+    .then(data => {
+        if(data?.success) window.location.reload();
+    });
 }
 
 function markRead(id) {
@@ -185,14 +192,14 @@ function markRead(id) {
 }
 
 function deleteNotification(id) {
-    if(confirm('Are you sure you want to delete this notification?')) {
-        notificationJsonRequest(notificationRowActionUrl(id, 'data-delete-url', ''), 'DELETE')
-        .then(data => {
-            if(data.success) {
-                window.location.reload();
-            }
-        });
-    }
+    requestNotificationConfirmation('Delete notification?', 'This notification will be removed from your inbox.', 'Delete')
+    .then(confirmed => {
+        if (!confirmed) return null;
+        return notificationJsonRequest(notificationRowActionUrl(id, 'data-delete-url', ''), 'DELETE');
+    })
+    .then(data => {
+        if(data?.success) window.location.reload();
+    });
 }
 
 

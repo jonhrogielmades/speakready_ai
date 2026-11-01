@@ -48,6 +48,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=35') }}" />
+      <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
       @include('mobile.partials.onboarding-styles')
       <style>
          :root,
@@ -4670,7 +4671,7 @@
 
       <div id="mobMoreBackdrop" class="mob-more-backdrop" aria-hidden="true" onclick="closeMobileProfile()"></div>
 
-      <div class="modal fade sr-mobile-confirm-modal" id="srMobileConfirmModal" tabindex="-1" aria-labelledby="srMobileConfirmModalTitle" aria-hidden="true">
+      <div class="modal fade sr-feedback-modal sr-mobile-confirm-modal" id="srMobileConfirmModal" tabindex="-1" aria-labelledby="srMobileConfirmModalTitle" aria-hidden="true" data-feedback-tone="danger">
          <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                <div class="modal-header">
@@ -4748,7 +4749,7 @@
       <!-- ======================== SCRIPTS ======================== -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
-      @include('mobile.partials.flash-modal')
+      @include('shared.partials.flash-modal')
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       <script>
          window.SpeakReadyPushConfig = {
@@ -5942,8 +5943,8 @@
       @stack('scripts')
       @include('mobile.partials.onboarding-fallback-init')
       <!-- USER_PAGE_SCRIPTS_END -->
-      @include('mobile.partials.page-transition')
-      @include('mobile.layouts.logout-transition')
+      @include('shared.partials.page-transition')
+      @include('shared.partials.logout-transition')
    </body>
 </html>
 @endif

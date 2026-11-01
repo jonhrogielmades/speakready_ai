@@ -11,22 +11,25 @@
 
         modal = document.createElement('div');
         modal.id = modalId;
-        modal.className = 'modal fade';
+        modal.className = 'modal fade sr-feedback-modal sr-admin-confirm-modal';
         modal.tabIndex = -1;
         modal.setAttribute('aria-labelledby', 'srAdminConfirmTitle');
         modal.setAttribute('aria-describedby', 'srAdminConfirmMessage');
         modal.setAttribute('aria-hidden', 'true');
         modal.innerHTML = [
             '<div class="modal-dialog modal-dialog-centered">',
-            '<div class="modal-content" style="background:var(--sf,#fff);color:var(--tx,#0f172a);border:1px solid var(--bd,#dbe4f0);border-radius:16px;box-shadow:0 24px 70px rgba(15,23,42,.28);">',
-            '<div class="modal-header" style="border-bottom:1px solid var(--bd,#dbe4f0);">',
+            '<div class="modal-content">',
+            '<div class="modal-header">',
+            '<div class="sr-feedback-heading">',
+            '<span class="sr-feedback-icon sr-confirm-icon" id="srAdminConfirmIcon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span>',
             '<h5 class="modal-title" id="srAdminConfirmTitle">Confirm action</h5>',
+            '</div>',
             '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>',
             '</div>',
             '<div class="modal-body"><p class="mb-0" id="srAdminConfirmMessage"></p></div>',
-            '<div class="modal-footer" style="border-top:1px solid var(--bd,#dbe4f0);">',
-            '<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>',
-            '<button type="button" class="btn btn-danger" id="srAdminConfirmContinue">Continue</button>',
+            '<div class="modal-footer">',
+            '<button type="button" class="btn sr-confirm-cancel" data-bs-dismiss="modal">Cancel</button>',
+            '<button type="button" class="btn sr-confirm-action danger" id="srAdminConfirmContinue">Continue</button>',
             '</div>',
             '</div>',
             '</div>'
@@ -67,6 +70,7 @@
         var messageElement = modal.querySelector('#srAdminConfirmMessage');
         if (titleElement) titleElement.textContent = title || 'Confirm action';
         if (messageElement) messageElement.textContent = String(message || 'Are you sure you want to continue?');
+        modal.setAttribute('data-feedback-tone', 'danger');
 
         return new Promise(function (resolve) {
             pendingResolve = resolve;

@@ -329,15 +329,22 @@ html[data-theme="light"] body.auth-page-body {
 .auth-page-footer a:hover { color: var(--auth-link); }
 
 .auth-page-transition[hidden] { display: none !important; }
-.auth-page-transition { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 20px; background: rgba(8, 18, 38, .64); backdrop-filter: blur(10px); opacity: 0; transition: opacity .18s ease; }
+.auth-page-transition { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: rgba(23, 39, 58, .64); backdrop-filter: blur(9px); opacity: 0; transition: opacity .18s ease; }
 .auth-page-transition.is-active { opacity: 1; }
-.auth-page-transition-card { width: min(340px, 100%); padding: 30px 24px; color: var(--tx, #102033); text-align: center; background: var(--sf, #fff); border: 1px solid var(--bd, #d8e1eb); border-radius: 22px; box-shadow: 0 28px 80px rgba(0, 0, 0, .25); transform: translateY(8px) scale(.98); transition: transform .18s ease; }
+.auth-page-transition-card { width: min(560px, calc(100vw - 32px)); padding: clamp(34px, 5vw, 52px) clamp(22px, 5vw, 48px) clamp(30px, 4vw, 42px); color: var(--tx, #102033); text-align: center; background: var(--sf, #fff); border: 1px solid rgba(255, 255, 255, .82); border-radius: 30px; box-shadow: 0 28px 80px rgba(15, 23, 42, .30); transform: translateY(8px) scale(.985); transition: transform .18s ease; }
 .auth-page-transition.is-active .auth-page-transition-card { transform: none; }
-.auth-page-transition-logo { position: relative; width: 64px; height: 64px; display: grid; place-items: center; margin: 0 auto 18px; }
-.auth-page-transition-logo > span { position: absolute; inset: 0; border: 3px solid rgba(37, 99, 235, .14); border-top-color: #2563eb; border-right-color: #06b6d4; border-radius: 50%; animation: auth-page-spin .8s linear infinite; }
-.auth-page-transition-logo img { width: 42px; height: 42px; object-fit: contain; }
-.auth-page-transition h2 { margin: 0; color: var(--tx, #102033); font-size: 1rem; font-weight: 750; }
-.auth-page-transition p { margin: 7px 0 0; color: var(--tx3, #64748b); font-size: .72rem; }
+.auth-page-transition-logo { position: relative; width: 86px; height: 86px; display: grid; place-items: center; margin: 0 auto 23px; }
+.auth-page-transition-logo > span { position: absolute; inset: 0; border: 4px solid rgba(37, 99, 235, .15); border-top-color: #2563eb; border-right-color: #06b6d4; border-radius: 50%; animation: auth-page-spin .8s linear infinite; }
+.auth-page-transition-logo img { width: 60px; height: 60px; object-fit: contain; border-radius: 18px; filter: drop-shadow(0 10px 18px rgba(37, 99, 235, .18)); }
+.auth-page-transition h2 { margin: 0; color: var(--tx, #102033); font-size: clamp(1.05rem, 2vw, 1.42rem); font-weight: 800; line-height: 1.25; letter-spacing: -.015em; }
+.auth-page-transition p { max-width: 32rem; margin: 9px auto 0; color: var(--tx3, #64748b); font-size: clamp(.86rem, 1.5vw, 1rem); line-height: 1.5; }
+
+@media (max-width: 575.98px) {
+   .auth-page-transition-card { width: min(100%, 430px); padding: 31px 20px 28px; border-radius: 24px; }
+   .auth-page-transition-logo { width: 72px; height: 72px; margin-bottom: 18px; }
+   .auth-page-transition-logo > span { border-width: 3px; }
+   .auth-page-transition-logo img { width: 50px; height: 50px; border-radius: 15px; }
+}
 @keyframes auth-page-spin { to { transform: rotate(360deg); } }
 
 .auth-page-brand:focus-visible,

@@ -1,93 +1,115 @@
 (function (window, document) {
     'use strict';
 
-    var noticeId = 'srUiNotice';
-    var hideTimer = 0;
+    var modalId = 'srUiNoticeModal';
+    var modalInstance = null;
+    var pendingResolve = null;
 
-    function getNotice() {
-        var notice = document.getElementById(noticeId);
-        if (notice) return notice;
+    var tones = {
+        success: { title: 'Success', icon: 'fa-circle-check' },
+        danger: { title: 'Action needed', icon: 'fa-circle-exclamation' },
+        error: { title: 'Action needed', icon: 'fa-circle-exclamation' },
+        warning: { title: 'Please check', icon: 'fa-triangle-exclamation' },
+        info: { title: 'Notice', icon: 'fa-circle-info' }
+    };
 
-        notice = document.createElement('div');
-        notice.id = noticeId;
-        notice.setAttribute('role', 'status');
-        notice.setAttribute('aria-live', 'polite');
-        notice.setAttribute('aria-atomic', 'true');
-        notice.hidden = true;
-        notice.style.cssText = [
-            'position:fixed',
-            'inset:auto max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))',
-            'z-index:14000',
-            'display:flex',
-            'align-items:flex-start',
-            'gap:12px',
-            'width:min(420px, calc(100vw - 32px))',
-            'margin:0 auto',
-            'padding:14px 16px',
-            'border:1px solid rgba(148,163,184,.28)',
-            'border-radius:14px',
-            'background:rgba(15,23,42,.96)',
-            'color:#fff',
-            'box-shadow:0 18px 44px rgba(15,23,42,.28)',
-            'font:600 14px/1.45 Poppins,Arial,sans-serif',
-            'opacity:0',
-            'transform:translateY(12px)',
-            'pointer-events:none',
-            'transition:opacity .18s ease,transform .18s ease'
-        ].join(';');
-
-        var message = document.createElement('span');
-        message.dataset.srUiNoticeMessage = 'true';
-        message.style.flex = '1 1 auto';
-
-        var close = document.createElement('button');
-        close.type = 'button';
-        close.setAttribute('aria-label', 'Dismiss notification');
-        close.textContent = 'x';
-        close.style.cssText = 'flex:0 0 auto;margin:-3px -4px 0 0;padding:0;border:0;background:transparent;color:inherit;font:700 22px/1 Arial,sans-serif;cursor:pointer;opacity:.8';
-        close.addEventListener('click', hideNotice);
-
-        notice.appendChild(message);
-        notice.appendChild(close);
-        (document.body || document.documentElement).appendChild(notice);
-        return notice;
+    function normalizeTone(options) {
+        var requested = String(options && (options.tone || options.icon) || 'info').toLowerCase();
+        return tones[requested] ? requested : 'info';
     }
 
-    function hideNotice() {
-        window.clearTimeout(hideTimer);
-        var notice = document.getElementById(noticeId);
-        if (!notice) return;
+    function settle(value) {
+        if (typeof pendingResolve !== 'function') return;
+        var resolve = pendingResolve;
+        pendingResolve = null;
+        resolve(Boolean(value));
+    }
 
-        notice.style.opacity = '0';
-        notice.style.transform = 'translateY(12px)';
-        notice.style.pointerEvents = 'none';
-        window.setTimeout(function () {
-            if (notice.style.opacity === '0') notice.hidden = true;
-        }, 180);
+    function ensureModal() {
+        var modal = document.getElementById(modalId);
+        if (modal) return modal;
+
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal fade sr-feedback-modal';
+        modal.tabIndex = -1;
+        modal.setAttribute('aria-labelledby', 'srUiNoticeTitle');
+        modal.setAttribute('aria-describedby', 'srUiNoticeMessage');
+        modal.setAttribute('aria-hidden', 'true');
+        modal.innerHTML = [
+            '<div class="modal-dialog modal-dialog-centered">',
+            '<div class="modal-content">',
+            '<div class="modal-header">',
+            '<div class="sr-feedback-heading">',
+            '<span class="sr-feedback-icon" id="srUiNoticeIcon" aria-hidden="true"><i class="fa-solid fa-circle-info"></i></span>',
+            '<h5 class="modal-title" id="srUiNoticeTitle">Notice</h5>',
+            '</div>',
+            '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>',
+            '</div>',
+            '<div class="modal-body"><div class="sr-feedback-message-list"><div class="sr-feedback-message" id="srUiNoticeMessage"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span></span></div></div></div>',
+            '<div class="modal-footer"><button type="button" class="btn sr-feedback-action" data-bs-dismiss="modal">OK</button></div>',
+            '</div>',
+            '</div>'
+        ].join('');
+
+        document.body.appendChild(modal);
+        modal.addEventListener('hidden.bs.modal', function () { settle(false); });
+        modal.querySelector('.sr-feedback-action')?.addEventListener('click', function () { settle(true); });
+        return modal;
+    }
+
+    function setContent(modal, message, options) {
+        var tone = normalizeTone(options);
+        var config = tones[tone];
+        modal.setAttribute('data-feedback-tone', tone === 'error' ? 'danger' : tone);
+        var title = modal.querySelector('#srUiNoticeTitle');
+        var icon = modal.querySelector('#srUiNoticeIcon');
+        var bodyIcon = modal.querySelector('#srUiNoticeMessage > i');
+        var body = modal.querySelector('#srUiNoticeMessage > span');
+        var action = modal.querySelector('.sr-feedback-action');
+        if (title) title.textContent = String(options && options.title || config.title);
+        if (body) body.textContent = String(message || options?.text || options?.message || 'Please try again.');
+        if (icon) icon.innerHTML = '<i class="fa-solid ' + config.icon + '"></i>';
+        if (bodyIcon) bodyIcon.className = 'fa-solid ' + config.icon;
+        if (action) action.textContent = String(options && (options.action || options.actionText) || 'OK');
     }
 
     function showNotice(message, options) {
-        if (!message) return;
+        options = options || {};
+        var modal = ensureModal();
+        setContent(modal, message || options.text || options.message, options);
 
-        var notice = getNotice();
-        var messageElement = notice.querySelector('[data-sr-ui-notice-message]');
-        if (!messageElement) return;
+        return new Promise(function (resolve) {
+            settle(false);
+            pendingResolve = resolve;
 
-        var tone = options && options.tone === 'success' ? 'success' : 'error';
-        notice.style.borderColor = tone === 'success' ? 'rgba(74,222,128,.42)' : 'rgba(248,113,113,.42)';
-        notice.style.background = tone === 'success' ? 'rgba(20,83,45,.96)' : 'rgba(127,29,29,.96)';
-        messageElement.textContent = String(message);
-        notice.hidden = false;
-        window.requestAnimationFrame(function () {
-            notice.style.opacity = '1';
-            notice.style.transform = 'translateY(0)';
-            notice.style.pointerEvents = 'auto';
+            if (window.bootstrap?.Modal) {
+                modalInstance = window.bootstrap.Modal.getOrCreateInstance(modal, { backdrop: true, keyboard: true, focus: true });
+                modalInstance.show();
+                return;
+            }
+
+            modal.style.display = 'block';
+            modal.classList.add('show', 'active');
+            modal.setAttribute('aria-hidden', 'false');
         });
+    }
 
-        window.clearTimeout(hideTimer);
-        hideTimer = window.setTimeout(hideNotice, Math.max(3200, Number(options && options.duration) || 5200));
+    function hideNotice() {
+        var modal = document.getElementById(modalId);
+        if (!modal) return;
+        if (modalInstance) {
+            modalInstance.hide();
+        } else {
+            modal.classList.remove('show', 'active');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+            settle(false);
+        }
     }
 
     window.SpeakReadyUiNotice = showNotice;
     window.SpeakReadyUiNotice.hide = hideNotice;
+    window.SpeakReadyAlert = showNotice;
+    window.SpeakReadyAlert.hide = hideNotice;
 }(window, document));

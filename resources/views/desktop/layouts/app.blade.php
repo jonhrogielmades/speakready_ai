@@ -54,6 +54,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Shared app CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=42') }}" />
+      <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
       <style>
           :root,
           .lm {
@@ -322,7 +323,7 @@
       @include('shared.user.first-steps-modal')
       @include('desktop.partials.user-command-palette')
       @include('desktop.partials.viewport-mobile-cookie')
-      <div class="modal fade sr-confirm-modal" id="srConfirmModal" tabindex="-1" aria-labelledby="srConfirmModalTitle" aria-hidden="true">
+      <div class="modal fade sr-feedback-modal sr-confirm-modal" id="srConfirmModal" tabindex="-1" aria-labelledby="srConfirmModalTitle" aria-hidden="true" data-feedback-tone="danger">
          <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                <div class="modal-header">
@@ -346,7 +347,7 @@
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
-      @include('desktop.partials.flash-modal')
+      @include('shared.partials.flash-modal')
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=8') }}"></script>
       <script>
@@ -1292,8 +1293,8 @@
       @stack('scripts')
       @include('desktop.partials.onboarding-fallback-init')
       <!-- USER_PAGE_SCRIPTS_END -->
-      @include('desktop.partials.page-transition')
-      @include('desktop.layouts.logout-transition')
+      @include('shared.partials.page-transition')
+      @include('shared.partials.logout-transition')
    </body>
 </html>
 @endif

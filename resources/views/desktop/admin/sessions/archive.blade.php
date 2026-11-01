@@ -79,7 +79,7 @@
     </div>
 </div>
 
-<div class="modal fade archive-confirm-modal" id="archiveRestoreConfirmModal" tabindex="-1" aria-labelledby="archiveRestoreConfirmTitle" aria-hidden="true">
+<div class="modal fade sr-feedback-modal archive-confirm-modal" id="archiveRestoreConfirmModal" tabindex="-1" aria-labelledby="archiveRestoreConfirmTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -103,7 +103,7 @@
     </div>
 </div>
 
-<div class="modal fade archive-confirm-modal" id="archiveDeleteConfirmModal" tabindex="-1" aria-labelledby="archiveDeleteConfirmTitle" aria-hidden="true">
+<div class="modal fade sr-feedback-modal archive-confirm-modal" id="archiveDeleteConfirmModal" tabindex="-1" aria-labelledby="archiveDeleteConfirmTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">

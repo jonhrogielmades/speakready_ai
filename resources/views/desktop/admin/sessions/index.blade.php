@@ -249,7 +249,7 @@
     </div>
 </div>
 
-<div class="modal fade session-confirm-modal" id="sessionDeleteConfirmModal" tabindex="-1" aria-labelledby="sessionDeleteConfirmTitle" aria-hidden="true">
+<div class="modal fade sr-feedback-modal session-confirm-modal" id="sessionDeleteConfirmModal" tabindex="-1" aria-labelledby="sessionDeleteConfirmTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -273,7 +273,7 @@
     </div>
 </div>
 
-<div class="modal fade session-confirm-modal" id="sessionArchiveConfirmModal" tabindex="-1" aria-labelledby="sessionArchiveConfirmTitle" aria-hidden="true">
+<div class="modal fade sr-feedback-modal session-confirm-modal" id="sessionArchiveConfirmModal" tabindex="-1" aria-labelledby="sessionArchiveConfirmTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">

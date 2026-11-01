@@ -20,6 +20,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}" />
+      <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
       <style>
          :root,
          .lm {
@@ -3249,14 +3250,14 @@
       </div>
 
       <!-- ===== EXIT APP CONFIRMATION MODAL ===== -->
-      <div id="exitAppModal" style="display:none; position:fixed; inset:0; z-index:1060; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); align-items:center; justify-content:center; animation: mobFadeIn 0.2s ease;">
-         <div style="background:var(--bg2); width:85%; max-width:320px; border-radius:20px; padding:24px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.5); border:1px solid var(--bd);">
-            <i class="fa-solid fa-person-walking-arrow-right mb-3" style="font-size:2.5rem; color:#f87171;"></i>
-            <h4 style="color:var(--tx); font-weight:700; margin-bottom:10px; font-size:1.25rem;">Exit App?</h4>
-            <p style="color:var(--tx3); font-size:0.9rem; margin-bottom:24px;">Are you sure you want to exit SpeakReady AI?</p>
+      <div id="exitAppModal" class="sr-feedback-modal sr-exit-app-modal" role="dialog" aria-modal="true" aria-labelledby="exitAppModalTitle" aria-describedby="exitAppModalCopy" aria-hidden="true">
+         <div class="sr-exit-app-card">
+            <span class="sr-feedback-icon" aria-hidden="true"><i class="fa-solid fa-person-walking-arrow-right"></i></span>
+            <h4 id="exitAppModalTitle" class="modal-title">Exit app?</h4>
+            <p id="exitAppModalCopy">Are you sure you want to exit SpeakReady AI?</p>
             <div class="d-flex gap-3">
-               <button type="button" class="btn w-100" style="border-radius:12px; font-weight:600; background:transparent; border:1px solid var(--bd2); color:var(--tx2);" onclick="confirmExitApp('no')">No</button>
-               <button type="button" class="btn btn-danger w-100" style="border-radius:12px; font-weight:600; background:#f87171; border:none; color:#fff;" onclick="confirmExitApp('yes')">Yes, Exit</button>
+               <button type="button" class="btn sr-confirm-cancel w-100" onclick="confirmExitApp('no')">No</button>
+               <button type="button" class="btn sr-confirm-action danger w-100" onclick="confirmExitApp('yes')">Yes, exit</button>
             </div>
          </div>
       </div>
@@ -3278,7 +3279,7 @@
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       <script src="{{ asset('js/admin-ui.js?v=1') }}"></script>
-      @include('mobile.partials.flash-modal')
+      @include('shared.partials.flash-modal')
       <script src="{{ asset('js/aos.js') }}"></script>
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
@@ -3506,7 +3507,8 @@
                   
                   const exitModal = document.getElementById('exitAppModal');
                   if (exitModal) {
-                     exitModal.style.display = 'flex';
+                     exitModal.classList.add('is-visible');
+                     exitModal.setAttribute('aria-hidden', 'false');
                   }
                   
                   // Trap the user again
@@ -3517,7 +3519,10 @@
 
          function confirmExitApp(choice) {
             const exitModal = document.getElementById('exitAppModal');
-            if (exitModal) exitModal.style.display = 'none';
+            if (exitModal) {
+               exitModal.classList.remove('is-visible');
+               exitModal.setAttribute('aria-hidden', 'true');
+            }
             
             if (choice === 'yes') {
                allowAppExit = true;
@@ -3679,7 +3684,7 @@
 
       @stack('late-styles')
       @stack('scripts')
-      @include('mobile.partials.page-transition')
-      @include('mobile.layouts.logout-transition')
+      @include('shared.partials.page-transition')
+      @include('shared.partials.logout-transition')
    </body>
 </html>
