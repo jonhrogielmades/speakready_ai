@@ -24,7 +24,7 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertNotFalse($forgotLinkPosition);
         $this->assertNotFalse($passwordInputPosition);
         $this->assertGreaterThan($passwordInputPosition, $forgotLinkPosition, 'The forgot-password link should sit below the password input.');
-        $this->assertStringContainsString('.auth-page-forgot-link { display: flex; justify-content: flex-end;', $css);
+        $this->assertStringContainsString('.auth-page-forgot-link { display: flex; justify-content: flex-end; margin-top: 8px;', $css);
         $this->assertStringNotContainsString('class="modal', $markup);
         $this->assertStringNotContainsString('data-bs-toggle="modal"', $markup);
 
@@ -149,6 +149,8 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('background: var(--auth-form-surface);', $css);
         $this->assertStringContainsString('border: 1px solid var(--auth-form-border);', $css);
         $this->assertStringContainsString('--tx: #153b63;', $css);
+        $this->assertStringContainsString('.auth-page-shell[data-auth-mode="login"] .auth-page-card { height: auto; align-self: center; }', $css);
+        $this->assertStringContainsString('.auth-page-shell[data-auth-mode="login"] .auth-page-card { flex: 0 0 auto; height: auto; align-self: center; margin-top: auto; margin-bottom: auto; }', $css);
         $this->assertStringContainsString('background: #dc2626;', $css);
         $this->assertStringNotContainsString('background: var(--bg2, #f7fafc);', $css);
 
