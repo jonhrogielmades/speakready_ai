@@ -472,6 +472,8 @@ html.dm .auth-page-brand-mark,
 html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184, .2); box-shadow: 0 8px 24px rgba(0, 0, 0, .22); }
 
 .auth-page-shell[data-auth-mode="register"] .auth-page-switch { margin-top: 13px; }
+.auth-page-shell[data-auth-mode="login"] .auth-page-intro { text-align: center; }
+.auth-page-shell[data-auth-mode="register"] .auth-page-intro { text-align: center; }
 .auth-page-shell[data-auth-mode="register"] .auth-page-heading { gap: 12px; }
 .auth-page-shell[data-auth-mode="register"] .auth-page-heading-icon { width: 44px; height: 44px; flex-basis: 44px; border-radius: 13px; }
 .auth-page-shell[data-auth-mode="register"] .auth-page-heading h1 { font-size: clamp(1.42rem, 2vw, 1.75rem); }

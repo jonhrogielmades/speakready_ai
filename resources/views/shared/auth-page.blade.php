@@ -68,7 +68,7 @@
                   <h1 id="authPageTitle">{{ $isRegister ? 'Create your account' : 'Log in to your account' }}</h1>
                </div>
             </div>
-            <p class="auth-page-intro">{{ $isRegister ? 'Set up your free practice workspace in a few steps.' : 'Use your username and password to continue.' }}</p>
+            <p class="auth-page-intro">{{ $isRegister ? 'Set up your free practice workspace in a few steps.' : 'Use your Google account.' }}</p>
 
             @if(session('success'))
                <div class="auth-page-alert auth-page-alert-success" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>{{ session('success') }}</span></div>
@@ -100,7 +100,7 @@
                <i class="fa-solid fa-arrow-right auth-page-google-arrow" aria-hidden="true"></i>
             </a>
 
-            <div class="auth-page-divider"><span>{{ $isRegister ? 'or create an account with your details' : 'or log in with your username' }}</span></div>
+            <div class="auth-page-divider"><span>{{ $isRegister ? 'or create an account with your details' : 'or log in with your local account' }}</span></div>
 
             @if($isRegister)
                <form id="signupForm" class="auth-page-form" action="{{ route('register.submit') }}" method="POST" autocomplete="on" data-auth-submit="register" @if($isMobile) data-register-steps data-register-step="{{ $registerInitialStep }}" @endif>
