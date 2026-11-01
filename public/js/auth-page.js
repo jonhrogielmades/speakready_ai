@@ -176,9 +176,25 @@
       if (registerStepsForm) {
          var registerPanels = Array.from(registerStepsForm.querySelectorAll('[data-register-step-panel]'));
          var registerIndicators = Array.from(registerStepsForm.querySelectorAll('[data-register-step-indicator]'));
+         var registerTriggers = Array.from(registerStepsForm.querySelectorAll('[data-register-step-target]'));
          var registerStatus = registerStepsForm.querySelector('[data-register-step-status]');
          var registerStep = Number.parseInt(registerStepsForm.dataset.registerStep || '1', 10);
          registerStep = Math.min(3, Math.max(1, Number.isFinite(registerStep) ? registerStep : 1));
+
+         function isRegisterStepComplete(step) {
+            var panel = registerStepsForm.querySelector('[data-register-step-panel="' + step + '"]');
+            if (!panel) return true;
+
+            return Array.from(panel.querySelectorAll('input, select, textarea')).every(function (field) {
+               return field.checkValidity();
+            });
+         }
+
+         function highestUnlockedRegisterStep() {
+            if (!isRegisterStepComplete(1)) return 1;
+            if (!isRegisterStepComplete(2)) return 2;
+            return 3;
+         }
 
          function validateRegisterStep(step) {
             var panel = registerStepsForm.querySelector('[data-register-step-panel="' + step + '"]');
@@ -196,6 +212,7 @@
 
          function syncRegisterStep(step, shouldFocus) {
             registerStep = Math.min(3, Math.max(1, step));
+            registerStep = Math.min(registerStep, highestUnlockedRegisterStep());
             registerStepsForm.dataset.registerStep = String(registerStep);
 
             registerPanels.forEach(function (panel) {
@@ -207,12 +224,21 @@
                var isComplete = indicatorStep < registerStep;
                indicator.classList.toggle('is-active', indicatorStep === registerStep);
                indicator.classList.toggle('is-complete', isComplete);
+               indicator.setAttribute('aria-disabled', indicatorStep > highestUnlockedRegisterStep() ? 'true' : 'false');
                indicator.setAttribute('aria-current', indicatorStep === registerStep ? 'step' : 'false');
 
                var number = indicator.querySelector('[data-register-step-number]');
                var check = indicator.querySelector('[data-register-step-check]');
                if (number) number.hidden = isComplete;
                if (check) check.hidden = !isComplete;
+            });
+
+            registerTriggers.forEach(function (trigger) {
+               var targetStep = Number(trigger.dataset.registerStepTarget);
+               var isUnlocked = targetStep <= highestUnlockedRegisterStep();
+               trigger.disabled = !isUnlocked;
+               trigger.setAttribute('aria-disabled', isUnlocked ? 'false' : 'true');
+               trigger.setAttribute('aria-current', targetStep === registerStep ? 'step' : 'false');
             });
 
             if (registerStatus) registerStatus.textContent = 'Step ' + registerStep + ' of 3';
@@ -229,6 +255,18 @@
                var nextStep = Number.parseInt(button.dataset.registerNext, 10) + 1;
                if (validateRegisterStep(registerStep)) syncRegisterStep(nextStep, true);
             });
+         });
+
+         registerTriggers.forEach(function (trigger) {
+            trigger.addEventListener('click', function () {
+               var targetStep = Number.parseInt(trigger.dataset.registerStepTarget, 10);
+               if (targetStep <= highestUnlockedRegisterStep()) syncRegisterStep(targetStep, true);
+            });
+         });
+
+         registerStepsForm.querySelectorAll('input, select, textarea').forEach(function (field) {
+            field.addEventListener('input', function () { syncRegisterStep(registerStep, false); });
+            field.addEventListener('change', function () { syncRegisterStep(registerStep, false); });
          });
 
          registerStepsForm.addEventListener('submit', function (event) {

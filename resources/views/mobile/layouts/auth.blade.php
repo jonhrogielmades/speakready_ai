@@ -16,8 +16,8 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=3') }}" data-page-style="auth-mobile">
-      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=20') }}" data-page-style="auth-page-shared">
-      <script src="{{ asset('js/auth-page.js?v=2') }}" defer></script>
+      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=21') }}" data-page-style="auth-page-shared">
+      <script src="{{ asset('js/auth-page.js?v=3') }}" defer></script>
       <style data-mobile-side-gutter="10px">
          :root, .lm, body.auth-mobile-shell {
             --pur: {{ $systemPrimaryColor ?? '#2563eb' }};

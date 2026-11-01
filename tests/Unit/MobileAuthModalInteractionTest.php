@@ -54,6 +54,8 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('data-register-step-panel="2"', $markup);
         $this->assertStringContainsString('data-register-step-panel="3"', $markup);
         $this->assertStringContainsString('data-register-step-check', $markup);
+        $this->assertStringContainsString('data-register-step-target="2"', $markup);
+        $this->assertStringContainsString('aria-disabled="true" disabled', $markup);
         $this->assertStringContainsString('data-register-next="1"', $markup);
         $this->assertStringContainsString('data-register-next="2"', $markup);
 
@@ -68,6 +70,9 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString("confirmInput.setCustomValidity('Passwords do not match.')", $script);
         $this->assertStringContainsString("confirmStatus.textContent = 'Passwords match.'", $script);
         $this->assertStringContainsString('validateRegisterStep', $script);
+        $this->assertStringContainsString('highestUnlockedRegisterStep', $script);
+        $this->assertStringContainsString('trigger.addEventListener(\'click\'', $script);
+        $this->assertStringContainsString('trigger.disabled = !isUnlocked', $script);
         $this->assertStringContainsString("indicator.classList.toggle('is-complete', isComplete)", $script);
         $this->assertStringContainsString("check.hidden = !isComplete", $script);
     }
@@ -162,6 +167,7 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('border: 1px solid var(--auth-form-border);', $css);
         $this->assertStringContainsString('--tx: #153b63;', $css);
         $this->assertStringContainsString('.auth-page-shell[data-auth-mode="login"] .auth-page-card { height: auto; align-self: center; }', $css);
+        $this->assertStringContainsString('.auth-page-shell[data-auth-mode="register"] .auth-page-form-side { align-items: center; }', $css);
         $this->assertStringContainsString('.auth-page-shell[data-auth-mode="login"] .auth-page-card,', $css);
         $this->assertStringContainsString('.auth-page-shell.auth-support-page .auth-page-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }', $css);
         $this->assertStringContainsString('.auth-page-shell[data-auth-mode="login"] .auth-page-card { flex: 0 0 auto; height: auto; align-self: center; margin-top: auto; margin-bottom: auto; }', $css);

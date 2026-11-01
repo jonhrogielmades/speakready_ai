@@ -606,9 +606,11 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
    .auth-page-back span { display: none; }
    .auth-page-card { flex: 1; overflow: visible; border: 0; border-radius: 20px; box-shadow: none; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-card { min-height: 0; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-card { min-height: 0; }
    .auth-page-shell.auth-support-page .auth-page-card { min-height: 0; }
    .auth-page-form-side { min-height: 0; align-items: flex-start; padding: 18px 14px 22px; border-radius: 20px; overflow: visible; scrollbar-gutter: auto; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-form-side { align-items: center; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-form-side { align-items: center; }
    .auth-page-form-wrap, .auth-page-shell[data-auth-mode="login"] .auth-page-form-wrap { max-width: 520px; margin: 0 auto; }
    .auth-page-switch { justify-content: center; margin: 14px 0 0; font-size: .74rem; text-align: center; }
    .auth-page-heading { gap: 12px; }
@@ -646,7 +648,11 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
    .auth-register-stepper li { position: relative; z-index: 0; display: grid; justify-items: center; gap: 6px; color: var(--auth-subtle); font-size: .62rem; font-weight: 700; line-height: 1.2; text-align: center; }
    .auth-register-stepper li:not(:last-child)::after { content: ""; position: absolute; z-index: -1; top: 17px; left: calc(50% + 18px); width: calc(100% - 36px); height: 2px; background: var(--auth-divider); }
    .auth-register-stepper li.is-complete:not(:last-child)::after { background: #86efac; }
-   .auth-register-step-marker { width: 36px; height: 36px; display: grid; place-items: center; color: var(--auth-muted); font-size: .82rem; font-weight: 800; background: var(--auth-control); border: 2px solid var(--auth-control-border); border-radius: 50%; }
+   .auth-register-step-trigger { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; color: inherit; background: transparent; border: 0; border-radius: 50%; cursor: pointer; }
+   .auth-register-step-trigger:disabled { cursor: not-allowed; opacity: .58; }
+   .auth-register-step-trigger:not(:disabled):hover .auth-register-step-marker { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, .11); }
+   .auth-register-step-trigger:focus-visible { outline: 3px solid rgba(37, 99, 235, .32); outline-offset: 3px; }
+   .auth-register-step-marker { width: 36px; height: 36px; display: grid; place-items: center; color: var(--auth-muted); font-size: .82rem; font-weight: 800; background: var(--auth-control); border: 2px solid var(--auth-control-border); border-radius: 50%; transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease, color .16s ease; }
    .auth-register-stepper li.is-active .auth-register-step-marker { color: #fff; background: #2563eb; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, .14); }
    .auth-register-stepper li.is-complete .auth-register-step-marker { color: #fff; background: #059669; border-color: #059669; }
    .auth-register-step-marker i { font-size: .75rem; }
@@ -673,6 +679,32 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
    .auth-page-shell[data-auth-mode="login"] .auth-page-divider { margin: 13px 0; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-form { gap: 11px; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-security-note { margin-top: 9px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-form-side { padding-top: 12px; padding-bottom: 16px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-heading { gap: 9px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-heading-icon { width: 40px; height: 40px; flex-basis: 40px; border-radius: 11px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-heading h1 { font-size: 1.34rem; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-intro { margin: 5px 0 10px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-google { min-height: 46px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-divider { margin: 10px 0; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-form { gap: 8px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-register-stepper { margin-bottom: 8px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-register-stepper li { gap: 3px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-register-stepper p { margin-top: 5px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-mobile-register-step.is-active { gap: 8px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-field > label { margin-bottom: 3px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-input-wrap { min-height: 46px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-input { height: 44px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-field-help,
+   .auth-page-shell[data-auth-mode="register"] .auth-page-field-error,
+   .auth-page-shell[data-auth-mode="register"] .auth-page-password-status { margin-top: 2px; font-size: .64rem; line-height: 1.25; }
+   .auth-page-shell[data-auth-mode="register"] #signupPasswordHelp { display: none; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-password-rules { flex-wrap: nowrap; gap: 2px 4px; margin-top: 2px; font-size: .58rem; line-height: 1.2; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-password-rules li { white-space: nowrap; }
+   .auth-page-shell[data-auth-mode="register"] .auth-mobile-register-final { gap: 8px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-step-next,
+   .auth-page-shell[data-auth-mode="register"] .auth-page-submit { min-height: 46px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-switch { margin-top: 9px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-security-note { display: none; }
    .auth-page-footer { min-height: 26px; }
 }
 

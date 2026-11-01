@@ -110,15 +110,21 @@
                      <nav class="auth-register-stepper auth-mobile-register-only" aria-label="Registration progress" data-register-stepper>
                         <ol>
                            <li data-register-step-indicator="1" class="is-active">
-                              <span class="auth-register-step-marker"><span data-register-step-number>1</span><i class="fa-solid fa-check" data-register-step-check aria-hidden="true" hidden></i></span>
+                              <button type="button" class="auth-register-step-trigger" data-register-step-target="1" aria-label="Go to full name step" aria-controls="signupStep1" aria-current="step">
+                                 <span class="auth-register-step-marker"><span data-register-step-number>1</span><i class="fa-solid fa-check" data-register-step-check aria-hidden="true" hidden></i></span>
+                              </button>
                               <span>Full name</span>
                            </li>
-                           <li data-register-step-indicator="2">
-                              <span class="auth-register-step-marker"><span data-register-step-number>2</span><i class="fa-solid fa-check" data-register-step-check aria-hidden="true" hidden></i></span>
+                           <li data-register-step-indicator="2" aria-disabled="true">
+                              <button type="button" class="auth-register-step-trigger" data-register-step-target="2" aria-label="Go to account step" aria-controls="signupStep2" aria-disabled="true" disabled>
+                                 <span class="auth-register-step-marker"><span data-register-step-number>2</span><i class="fa-solid fa-check" data-register-step-check aria-hidden="true" hidden></i></span>
+                              </button>
                               <span>Account</span>
                            </li>
-                           <li data-register-step-indicator="3">
-                              <span class="auth-register-step-marker"><span data-register-step-number>3</span><i class="fa-solid fa-check" data-register-step-check aria-hidden="true" hidden></i></span>
+                           <li data-register-step-indicator="3" aria-disabled="true">
+                              <button type="button" class="auth-register-step-trigger" data-register-step-target="3" aria-label="Go to password step" aria-controls="signupStep3" aria-disabled="true" disabled>
+                                 <span class="auth-register-step-marker"><span data-register-step-number>3</span><i class="fa-solid fa-check" data-register-step-check aria-hidden="true" hidden></i></span>
+                              </button>
                               <span>Password</span>
                            </li>
                         </ol>
@@ -126,7 +132,7 @@
                      </nav>
                   @endif
                   <div class="auth-page-fields{{ $isMobile ? ' auth-mobile-register-fields' : '' }}">
-                     <div class="auth-mobile-register-step" data-register-step-panel="1">
+                     <div id="signupStep1" class="auth-mobile-register-step" data-register-step-panel="1">
                      <div class="auth-page-field">
                         <label for="signupName">Full name</label>
                         <div class="auth-page-input-wrap">
@@ -140,7 +146,7 @@
                         @endif
                      </div>
 
-                     <div class="auth-mobile-register-step" data-register-step-panel="2">
+                     <div id="signupStep2" class="auth-mobile-register-step" data-register-step-panel="2">
                      <div class="auth-page-field">
                         <label for="signupUsername">Username</label>
                         <div class="auth-page-input-wrap">
@@ -165,7 +171,7 @@
                         @endif
                      </div>
 
-                     <div class="auth-mobile-register-step" data-register-step-panel="3">
+                     <div id="signupStep3" class="auth-mobile-register-step" data-register-step-panel="3">
                      <div class="auth-page-field">
                         <label for="signupPass">Password</label>
                         <div class="auth-page-input-wrap auth-page-password-wrap">
