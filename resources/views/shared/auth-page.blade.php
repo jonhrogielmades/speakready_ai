@@ -50,7 +50,7 @@
          </div>
       </aside>
 
-      <div class="auth-page-form-side" id="authFormPanel">
+      <div class="auth-page-form-side" id="authFormPanel" tabindex="-1">
          <div class="auth-page-form-wrap">
             <div class="auth-page-switch">
                <span>{{ $isRegister ? 'Already have an account?' : 'New to '.$brandName.'?' }}</span>

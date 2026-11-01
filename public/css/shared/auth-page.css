@@ -149,7 +149,7 @@ body.auth-page-body.auth-mobile-shell {
 .auth-page-switch a { display: inline-flex; align-items: center; gap: 6px; color: var(--pur, #2563eb); font-weight: 750; text-decoration: none; }
 .auth-page-switch a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .auth-page-heading { display: flex; align-items: center; gap: 14px; }
-.auth-page-heading-icon { width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #2563eb, #06b6d4); border-radius: 15px; box-shadow: 0 12px 28px rgba(37, 99, 235, .23); }
+.auth-page-heading-icon { width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center; color: #fff; background: var(--grad, linear-gradient(135deg, #2563eb, #06b6d4)); border-radius: 15px; box-shadow: 0 12px 28px rgba(37, 99, 235, .23); }
 .auth-page-eyebrow { margin: 0 0 3px; color: var(--pur, #2563eb); font-size: .66rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .auth-page-heading h1 { margin: 0; color: var(--tx, #102033); font-size: clamp(1.52rem, 2.5vw, 2rem); font-weight: 780; letter-spacing: -.035em; line-height: 1.15; }
 .auth-page-intro { margin: 15px 0 24px; color: var(--tx2, #526277); font-size: .84rem; line-height: 1.65; }
@@ -230,7 +230,7 @@ body.auth-page-body.auth-mobile-shell {
 .auth-page-terms { margin-top: 1px; }
 .auth-page-terms-error { margin-top: -11px; }
 
-.auth-page-submit { min-height: 51px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 20px; color: #fff; font-family: inherit; font-size: .84rem; font-weight: 750; background: linear-gradient(135deg, #2563eb, #0891b2); border: 0; border-radius: 13px; box-shadow: 0 12px 25px rgba(37, 99, 235, .2); cursor: pointer; transition: box-shadow .16s ease, transform .16s ease, filter .16s ease; }
+.auth-page-submit { min-height: 51px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 20px; color: #fff; font-family: inherit; font-size: .84rem; font-weight: 750; background: var(--grad, linear-gradient(135deg, #2563eb, #0891b2)); border: 0; border-radius: 13px; box-shadow: 0 12px 25px rgba(37, 99, 235, .2); cursor: pointer; transition: box-shadow .16s ease, transform .16s ease, filter .16s ease; }
 .auth-page-submit:hover { filter: saturate(1.12); box-shadow: 0 15px 30px rgba(37, 99, 235, .27); transform: translateY(-1px); }
 .auth-page-submit:disabled { opacity: .72; cursor: wait; transform: none; }
 .auth-page-security-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 20px 0 0; color: var(--tx3, #64748b); font-size: .64rem; text-align: center; }
