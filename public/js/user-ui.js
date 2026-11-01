@@ -8,7 +8,6 @@
     var NAVIGATION_CACHE_TTL_MS = 120000;
     // User navigation should feel immediate. Network and stylesheet timeouts
     // below are still safety nets, but they must not add a deliberate pause.
-    var NAVIGATION_STATUS_DELAY_MS = 0;
     var NAVIGATION_PREFETCH_DELAY_MS = 0;
     var NAVIGATION_PREFETCH_LIMIT = 8;
     var NAVIGATION_PREFETCH_TIMEOUT_MS = 1800;
@@ -1147,8 +1146,6 @@
         var controller = new AbortController();
         userApp.navigationController = controller;
         content.setAttribute('aria-busy', 'true');
-        showUserNavigationTransition();
-        showSafeNavigationStatus('Loading page...', { delayMs: NAVIGATION_STATUS_DELAY_MS });
 
         try {
             if (token !== userApp.navigationToken) return;
@@ -1560,17 +1557,6 @@
             scheduleFrame(function () {
                 scheduleFrame(resolve);
             });
-        });
-    }
-
-    function showUserNavigationTransition() {
-        if (!window.SpeakReadyPageTransition || typeof window.SpeakReadyPageTransition.show !== 'function') return;
-
-        window.SpeakReadyPageTransition.show({
-            title: 'Opening page...',
-            copy: 'Please wait while SpeakReady AI prepares the page.',
-            delayMs: 0,
-            longLoadMs: 10000
         });
     }
 

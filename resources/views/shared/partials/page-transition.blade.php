@@ -15,7 +15,6 @@
         var activeClass = 'sr-page-transition-active';
         var showTimer = null;
         var longLoadTimer = null;
-        var defaultDelayMs = 0;
         var formDelayMs = 0;
         var longLoadMs = 8000;
 
@@ -25,12 +24,6 @@
 
         function cleanLabel(value) {
             return String(value || '').replace(/\s+/g, ' ').trim().replace(/[.…]+$/, '');
-        }
-
-        function titleCase(value) {
-            return cleanLabel(value).replace(/[-_]+/g, ' ').replace(/\b\w/g, function (character) {
-                return character.toUpperCase();
-            });
         }
 
         function setText(title, copy) {
@@ -50,27 +43,6 @@
             return {
                 title: title || 'Working...',
                 copy: copy || 'Please wait while SpeakReady AI completes this request.'
-            };
-        }
-
-        function linkCopy(link) {
-            var explicit = explicitCopy(link);
-            if (explicit) return explicit;
-
-            var label = cleanLabel(link.getAttribute('aria-label') || link.title || link.textContent);
-            var href = link.getAttribute('href') || '';
-            if (!label || label.length > 72) {
-                try {
-                    var url = new URL(href, window.location.href);
-                    label = titleCase(url.pathname.split('/').filter(Boolean).pop() || 'page');
-                } catch (error) {
-                    label = 'page';
-                }
-            }
-
-            return {
-                title: 'Opening ' + label + '...',
-                copy: 'Please wait while we load ' + label.toLowerCase() + '.'
             };
         }
 
@@ -138,7 +110,7 @@
                 }, Math.max(1000, Number(options.longLoadMs) || longLoadMs));
             };
 
-            var delayMs = Math.max(0, Number(options && options.delayMs) || defaultDelayMs);
+            var delayMs = Math.max(0, Number(options && options.delayMs) || 0);
             if (delayMs === 0) activate();
             else showTimer = window.setTimeout(activate, delayMs);
         }
@@ -154,19 +126,6 @@
             var reloadButton = document.getElementById('pageTransitionReload');
             if (reloadButton) reloadButton.hidden = true;
             document.body.classList.remove(activeClass, 'sr-generic-loader-active');
-        }
-
-        function hasModifierKey(event) {
-            return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
-        }
-
-        function isBootstrapToggle(link) {
-            return Boolean(
-                link.closest('[data-bs-toggle]') ||
-                link.closest('[data-bs-dismiss]') ||
-                link.closest('[data-bs-target]') ||
-                link.classList.contains('dropdown-toggle')
-            );
         }
 
         function isFileOrDownloadPath(pathname) {
@@ -185,52 +144,6 @@
             ));
         }
 
-        function isUserShellPartialNavigationCandidate(link) {
-            if (!link || document.body?.dataset?.appSurface !== 'user') return false;
-            if (!document.querySelector('[data-user-ajax-content]')) return false;
-            if (link.dataset.fullReload === 'true' || link.dataset.noAjax === 'true') return false;
-
-            var target = (link.getAttribute('target') || '').toLowerCase();
-            if (target && target !== '_self') return false;
-
-            var href = link.getAttribute('href') || '';
-            if (!href || href === '#' || href.charAt(0) === '#') return false;
-            if (/^(?:javascript:|mailto:|tel:|sms:)/i.test(href)) return false;
-
-            var url;
-            try { url = new URL(link.href, window.location.href); } catch (error) { return false; }
-            if (url.origin !== window.location.origin) return false;
-            if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return false;
-            if (isFileOrDownloadPath(url.pathname)) return false;
-
-            var reloadPrefixes = ['/logout', '/login', '/register', '/auth/', '/admin'];
-            if (reloadPrefixes.some(function (prefix) { return url.pathname === prefix || url.pathname.startsWith(prefix); })) return false;
-
-            var userPrefixes = ['/dashboard', '/interview/setup', '/interview/session', '/interview/', '/account', '/notifications', '/feedback', '/coach', '/learning', '/skills', '/missions', '/modules', '/game/match', '/progress', '/practice-activity-calendar', '/session/', '/reports'];
-            return userPrefixes.some(function (prefix) { return url.pathname === prefix || url.pathname.startsWith(prefix); });
-        }
-
-        function isEligibleLink(link, event) {
-            if (!link || event.defaultPrevented || event.button !== 0 || hasModifierKey(event)) return false;
-            if (isPrepFlow(link)) return false;
-            if (link.dataset.srNoTransition === 'true' || link.dataset.srTransition === 'off') return false;
-            if (link.hasAttribute('download') || isBootstrapToggle(link)) return false;
-            if (isUserShellPartialNavigationCandidate(link)) return false;
-
-            var target = (link.getAttribute('target') || '').toLowerCase();
-            if (target && target !== '_self') return false;
-            var href = link.getAttribute('href');
-            if (!href || href === '#' || href.charAt(0) === '#') return false;
-            if (/^(?:javascript:|mailto:|tel:|sms:)/i.test(href)) return false;
-
-            var url;
-            try { url = new URL(link.href, window.location.href); } catch (error) { return false; }
-            if (url.origin !== window.location.origin) return false;
-            if (url.pathname === window.location.pathname && url.search === window.location.search) return false;
-            if (url.pathname === '/auth/google' || url.pathname === '/auth/google/login' || url.pathname === '/auth/google/register' || url.pathname === '/auth/google/callback') return false;
-            return !isFileOrDownloadPath(url.pathname);
-        }
-
         function isEligibleForm(form) {
             if (!form || isPrepFlow(form)) return false;
             if (form.dataset.srNoTransition === 'true' || form.dataset.srTransition === 'off') return false;
@@ -238,7 +151,7 @@
             var target = (form.getAttribute('target') || '').toLowerCase();
             if (target && target !== '_self') return false;
             var method = (form.getAttribute('method') || 'get').toLowerCase();
-            if (method === 'dialog') return false;
+            if (method === 'dialog' || method === 'get') return false;
 
             var action;
             try { action = new URL(form.getAttribute('action') || window.location.href, window.location.href); } catch (error) { return false; }
@@ -249,15 +162,10 @@
         var reloadButton = document.getElementById('pageTransitionReload');
         if (reloadButton) reloadButton.addEventListener('click', function () { window.location.reload(); });
 
-        document.addEventListener('click', function (event) {
-            var rawTarget = event.target;
-            var target = rawTarget && rawTarget.nodeType === 1 ? rawTarget : (rawTarget ? rawTarget.parentElement : null);
-            var link = target && target.closest ? target.closest('a[href]') : null;
-            if (!isEligibleLink(link, event)) return;
-            var copy = linkCopy(link);
-            showPageTransition({ title: copy.title, copy: copy.copy, event: event, delayMs: defaultDelayMs });
-        });
-
+        // Ordinary page links intentionally do not open this overlay. Showing a
+        // full-screen loader for every navigation made normal clicks look like
+        // failed or repeated submissions. Keep the transition available for
+        // explicit/form-driven work only.
         document.addEventListener('submit', function (event) {
             var form = event.target;
             window.setTimeout(function () {

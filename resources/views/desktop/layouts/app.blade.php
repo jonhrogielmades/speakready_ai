@@ -39,7 +39,6 @@
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', ($systemName ?? 'SpeakReady AI').' - AI-Based Interview Practice System')</title>
       @include('shared.early-layout-shell-guard', ['serverLayout' => 'desktop'])
-      @include('shared.user.initial-render-guard-head')
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
@@ -148,8 +147,7 @@
       @include('shared.user.first-steps-modal-styles')
       @stack('styles')
    </head>
-   <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user" aria-busy="true">
-      @include('shared.user.initial-render-guard')
+   <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user">
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar">
