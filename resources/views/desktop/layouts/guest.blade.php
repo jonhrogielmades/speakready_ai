@@ -12,8 +12,6 @@
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link rel="preconnect" href="https://accounts.google.com">
-      <link rel="dns-prefetch" href="//accounts.google.com">
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
       <link rel="preload" href="{{ asset('img/desktop-preview/01_Overview_Desktop_Preview_4K.webp') }}?v=20261020" as="image" type="image/webp" fetchpriority="high">
@@ -23,7 +21,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=20') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=21') }}" />
       <style>
          :root,
          .lm,
@@ -67,12 +65,12 @@
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
                      </button>
-                     <button type="button" class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">
+                     <a href="{{ route('login', sr_layout_query()) }}" class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1">
                      <i class="fa-regular fa-user fa-sm"></i> Login
-                     </button>
-                     <button type="button" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
+                     </a>
+                     <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
-                     </button>
+                     </a>
                      <button class="boc d-xl-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
                      <i class="fa-solid fa-bars" aria-hidden="true"></i>
                      </button>
@@ -88,12 +86,6 @@
             <div class="aur aur-b" style="top:180px;right:-180px"></div>
             <div class="aur aur-a" style="bottom:-80px;left:45%;transform:translateX(-50%);opacity:.4"></div>
              <div class="container hero-home-container position-relative" style="z-index:2">
-                @php
-                   $previewReadiness = 85;
-                   $previewInterviews = 6;
-                   $previewClarity = 92;
-                   $previewGrammar = 95;
-                @endphp
                 <div class="row hero-home-layout align-items-center g-4">
                   <div class="col-xl-5 col-lg-5 col-md-10 hero-home-copy text-center">
                      <div class="hero-badge-wrap afu" style="animation-delay:.05s">
@@ -104,7 +96,7 @@
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="hero-home-copy-text afu" style="font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI helps you practice role-focused job interviews with scenario setup, Coaching On or Real Interview Mode, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <button type="button" class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Get Started Free</button>
+                        <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6">Get Started Free</a>
                         <button type="button" class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                      </div>
@@ -182,469 +174,6 @@
                   </div>
                </div>
 
-                 <div class="row justify-content-center mt-3 mb-3 d-none" aria-hidden="true">
-                  <div class="col-lg-12 adi">
-                     <div class="ui-showcase">
-                        <div class="ui-device ui-device-mobile" aria-label="Mobile UI preview">
-                           <div class="ui-device-bar">
-                              <span class="ui-device-dot" style="background:#ff5f57"></span>
-                              <span class="ui-device-dot" style="background:#ffbd2e"></span>
-                              <span class="ui-device-dot" style="background:#28c840"></span>
-                              <span class="ui-device-title">SpeakReady AI Mobile Dashboard</span>
-                           </div>
-                            <div class="ui-dashboard ui-dashboard-preview ui-mobile-wire" aria-label="SpeakReady AI mobile dashboard wireframe preview">
-                               <div class="ui-mobile-wire-topbar">
-                                  <div class="ui-mobile-wire-brand">
-                                     <span class="ui-mobile-wire-logo" aria-hidden="true"></span>
-                                     <span>SpeakReady AI</span>
-                                  </div>
-                                  <div class="ui-mobile-wire-actions" aria-hidden="true">
-                                     <span class="ui-mobile-wire-action"><i class="fa-solid fa-play"></i></span>
-                                     <span class="ui-mobile-wire-action"><i class="fa-solid fa-expand"></i></span>
-                                     <span class="ui-mobile-wire-action"><i class="fa-solid fa-gear"></i></span>
-                                     <span class="ui-mobile-wire-action"><i class="fa-regular fa-bell"></i></span>
-                                     <span class="ui-mobile-wire-avatar">U</span>
-                                  </div>
-                               </div>
-
-                               <div class="ui-mobile-wire-body">
-                                  <section class="ui-mobile-wire-hero">
-                                     <h3 class="ui-mobile-wire-hero-title">Practice Smarter.<span>Interview Better.</span></h3>
-                                     <ul class="ui-mobile-wire-keywords" aria-hidden="true">
-                                        <li><span class="ui-mobile-wire-line" style="width:36px"></span></li>
-                                        <li><span class="ui-mobile-wire-line" style="width:34px"></span></li>
-                                        <li><span class="ui-mobile-wire-line" style="width:42px"></span></li>
-                                        <li><span class="ui-mobile-wire-line" style="width:28px"></span></li>
-                                        <li><span class="ui-mobile-wire-line" style="width:38px"></span></li>
-                                        <li><span class="ui-mobile-wire-line" style="width:44px"></span></li>
-                                     </ul>
-                                     <div class="ui-mobile-wire-chips" aria-hidden="true">
-                                        <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>Job</span>
-                                        <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>Role Fit</span>
-                                     </div>
-                                     <div class="ui-mobile-wire-speech" aria-hidden="true">
-                                        <span class="ui-mobile-wire-line" style="width:44px"></span>
-                                        <span class="ui-mobile-wire-line" style="width:58px"></span>
-                                        <span class="ui-mobile-wire-line" style="width:50px"></span>
-                                     </div>
-                                    <img class="ui-mobile-wire-robot" src="{{ asset('img/dashboard-welcome-robot-transparent.webp') }}?v=20261020" alt="" aria-hidden="true" width="1536" height="1024" loading="lazy" decoding="async">
-                                  </section>
-
-                                  <div class="ui-mobile-wire-progress" aria-hidden="true"><span></span></div>
-
-                                  <div class="ui-mobile-wire-summary">
-                                     <section class="ui-mobile-wire-card ui-mobile-wire-score">
-                                        <div class="ui-mobile-wire-score-layout">
-                                           <div class="ui-mobile-wire-score-main">
-                                              <div class="ui-mobile-wire-card-title"><i class="fa-solid fa-arrow-trend-up"></i> Boost</div>
-                                              <div class="ui-mobile-wire-ring">
-                                                 <div>
-                                                    <strong>0%</strong>
-                                                    <span>Overall Readiness</span>
-                                                 </div>
-                                              </div>
-                                           </div>
-                                           <div class="ui-mobile-wire-mini-list">
-                                              <div class="ui-mobile-wire-mini">
-                                                 <div>
-                                                    <span>Average Rating</span>
-                                                    <strong>0/5</strong>
-                                                 </div>
-                                                 <i class="fa-regular fa-star"></i>
-                                              </div>
-                                              <div class="ui-mobile-wire-mini">
-                                                 <div>
-                                                    <span>Next Goal</span>
-                                                    <strong>50%</strong>
-                                                 </div>
-                                                 <i class="fa-solid fa-bullseye"></i>
-                                              </div>
-                                           </div>
-                                        </div>
-                                     </section>
-
-                                     <section class="ui-mobile-wire-card ui-mobile-wire-stat">
-                                        <div class="ui-mobile-wire-stat-head">
-                                           <span class="ui-mobile-wire-icon"><i class="fa-solid fa-microphone"></i></span>
-                                           <span class="ui-mobile-wire-pill">Practice</span>
-                                        </div>
-                                        <div class="ui-mobile-wire-stat-mark"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                                        <div>
-                                           <div class="ui-mobile-wire-stat-value">0</div>
-                                           <div class="ui-mobile-wire-stat-label">Completed sessions</div>
-                                        </div>
-                                        <div class="ui-mobile-wire-underbar"></div>
-                                     </section>
-
-                                     <section class="ui-mobile-wire-card ui-mobile-wire-stat">
-                                        <div class="ui-mobile-wire-stat-head">
-                                           <span class="ui-mobile-wire-icon"><i class="fa-regular fa-star"></i></span>
-                                           <span class="ui-mobile-wire-pill">Quality</span>
-                                        </div>
-                                        <div class="ui-mobile-wire-stat-mark">0</div>
-                                        <div>
-                                           <div class="ui-mobile-wire-stat-value">0/5</div>
-                                           <div class="ui-mobile-wire-stat-label">Average rating</div>
-                                        </div>
-                                        <div class="ui-mobile-wire-underbar"></div>
-                                     </section>
-
-                                     <section class="ui-mobile-wire-card ui-mobile-wire-stat">
-                                        <div class="ui-mobile-wire-stat-head">
-                                           <span class="ui-mobile-wire-icon"><i class="fa-solid fa-bolt"></i></span>
-                                           <span class="ui-mobile-wire-pill">Growth</span>
-                                        </div>
-                                        <div class="ui-mobile-wire-stat-mark">Lv. 1</div>
-                                        <div>
-                                           <div class="ui-mobile-wire-stat-value">0</div>
-                                           <div class="ui-mobile-wire-stat-label">Experience points</div>
-                                        </div>
-                                        <div class="ui-mobile-wire-underbar"></div>
-                                     </section>
-
-                                     <section class="ui-mobile-wire-card ui-mobile-wire-stat">
-                                        <div class="ui-mobile-wire-stat-head">
-                                           <span class="ui-mobile-wire-icon"><i class="fa-solid fa-fire"></i></span>
-                                           <span class="ui-mobile-wire-pill">Streak</span>
-                                        </div>
-                                        <div class="ui-mobile-wire-stat-mark"><i class="fa-regular fa-calendar-days"></i></div>
-                                        <div>
-                                           <div class="ui-mobile-wire-stat-value">0</div>
-                                           <div class="ui-mobile-wire-stat-label">Active practice days</div>
-                                        </div>
-                                        <div class="ui-mobile-wire-underbar"></div>
-                                     </section>
-                                  </div>
-
-                                  <section class="ui-mobile-wire-trend">
-                                     <div class="ui-mobile-wire-trend-head">
-                                        <span class="ui-mobile-wire-icon"><i class="fa-solid fa-chart-line"></i></span>
-                                        <h3 class="ui-mobile-wire-trend-title">Readiness Trend</h3>
-                                     </div>
-                                     <p class="ui-mobile-wire-trend-copy">Recent completed interview sessions, scored from 0 to 100.</p>
-                                     <div class="ui-mobile-wire-trend-actions">
-                                        <span class="ui-mobile-wire-button">View Details <i class="fa-solid fa-chevron-right"></i></span>
-                                        <span class="ui-mobile-wire-button">Recent 5 Sessions</span>
-                                     </div>
-                                     <div class="ui-mobile-wire-trend-metrics">
-                                        <div class="ui-mobile-wire-metric">
-                                           <i class="fa-solid fa-award"></i>
-                                           <div>Average Score<strong>0/100</strong></div>
-                                        </div>
-                                        <div class="ui-mobile-wire-metric">
-                                           <i class="fa-solid fa-arrow-up"></i>
-                                           <div>Improvement<strong>+0%</strong></div>
-                                        </div>
-                                     </div>
-                                     <div class="ui-mobile-wire-chart" aria-hidden="true"></div>
-                                  </section>
-                               </div>
-
-                               <div class="ui-mobile-wire-nav" aria-hidden="true">
-                                  <span class="ui-mobile-wire-nav-item active"><i class="fa-solid fa-house"></i>Home</span>
-                                  <span class="ui-mobile-wire-nav-item"><i class="fa-solid fa-chart-line"></i>Progress</span>
-                                  <span class="ui-mobile-wire-nav-item"><i class="fa-solid fa-microphone"></i>Interview</span>
-                                  <span class="ui-mobile-wire-nav-item"><i class="fa-solid fa-clipboard-check"></i>Feedback</span>
-                                  <span class="ui-mobile-wire-nav-item"><i class="fa-solid fa-table-cells-large"></i>More</span>
-                               </div>
-                            </div>
-                         </div>
-
-                        <div class="ui-device ui-device-desktop ui-desktop-shell" aria-label="Desktop UI preview">
-                           <div class="ui-device-bar">
-                              <span class="ui-device-dot" style="background:#ff5f57"></span>
-                              <span class="ui-device-dot" style="background:#ffbd2e"></span>
-                              <span class="ui-device-dot" style="background:#28c840"></span>
-                              <span class="ui-device-title">SpeakReady AI Desktop Dashboard</span>
-                           </div>
-                           <div class="ui-dashboard ui-desktop-wire" aria-label="SpeakReady AI desktop dashboard wireframe preview">
-                              <aside class="ui-desktop-wire-sidebar" aria-hidden="true">
-                                 <div class="ui-desktop-wire-brand">
-                                    <span class="ui-desktop-wire-mark"><i class="fa-solid fa-microphone-lines"></i></span>
-                                    <div>
-                                       <strong>SpeakReady AI</strong>
-                                       <span>Interview Hub</span>
-                                    </div>
-                                 </div>
-
-                                 <nav class="ui-desktop-wire-nav">
-                                    <span class="ui-desktop-wire-nav-section">Home</span>
-                                    <span class="ui-desktop-wire-nav-item active"><i class="fa-solid fa-gauge-high"></i>Overview</span>
-                                    <span class="ui-desktop-wire-nav-section">Practice</span>
-                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-microphone-lines"></i>Mock Interview</span>
-                                    <span class="ui-desktop-wire-nav-section">Training</span>
-                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-book-open-reader"></i>Modules</span>
-                                    <span class="ui-desktop-wire-nav-section">Growth</span>
-                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-chart-line"></i>Progress</span>
-                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-clipboard-check"></i>Feedback</span>
-                                 </nav>
-
-                                 <div class="ui-desktop-wire-sidebar-card">
-                                    <span class="ui-desktop-wire-avatar"><i class="fa-regular fa-user"></i></span>
-                                    <span class="ui-desktop-wire-line" style="width:72%"></span>
-                                    <span class="ui-desktop-wire-line" style="width:92%"></span>
-                                    <span class="ui-desktop-wire-line" style="width:56%"></span>
-                                 </div>
-                              </aside>
-
-                              <main class="ui-desktop-wire-main">
-                                 <div class="ui-desktop-wire-top" aria-hidden="true">
-                                    <span class="ui-desktop-wire-tool"><i class="fa-solid fa-bars"></i></span>
-                                    <div class="ui-desktop-wire-tools" aria-hidden="true">
-                                       <span class="ui-desktop-wire-tool"><i class="fa-solid fa-expand"></i></span>
-                                       <span class="ui-desktop-wire-tool"><i class="fa-solid fa-circle-play"></i></span>
-                                       <span class="ui-desktop-wire-tool"><i class="fa-solid fa-sun"></i></span>
-                                       <span class="ui-desktop-wire-tool"><i class="fa-regular fa-bell"></i></span>
-                                       <span class="ui-desktop-wire-user-pill">
-                                          <span class="ui-desktop-wire-avatar">U</span>
-                                          <span>User</span>
-                                          <i class="fa-solid fa-chevron-down fa-xs"></i>
-                                       </span>
-                                    </div>
-                                 </div>
-
-                                 <div class="ui-desktop-wire-dashboard-preview">
-                                    <section class="ui-desktop-wire-summary-grid">
-                                       <div class="ui-desktop-wire-welcome-stack">
-                                          <section class="ui-desktop-wire-panel ui-desktop-wire-welcome">
-                                             <div class="ui-desktop-wire-welcome-copy">
-                                                <h3 class="ui-desktop-wire-welcome-title">Practice Smarter.<span>Interview Better.</span></h3>
-                                                <ul class="ui-desktop-wire-bullets" aria-hidden="true">
-                                                   <li><span class="ui-desktop-wire-line" style="width:92px"></span></li>
-                                                   <li><span class="ui-desktop-wire-line" style="width:84px"></span></li>
-                                                   <li><span class="ui-desktop-wire-line" style="width:104px"></span></li>
-                                                   <li><span class="ui-desktop-wire-line" style="width:74px"></span></li>
-                                                   <li><span class="ui-desktop-wire-line" style="width:88px"></span></li>
-                                                   <li><span class="ui-desktop-wire-line" style="width:108px"></span></li>
-                                                </ul>
-                                                <div class="ui-desktop-wire-chips">
-                                                   <span class="ui-desktop-wire-chip">Job</span>
-                                                   <span class="ui-desktop-wire-chip">Role Fit</span>
-                                                </div>
-                                             </div>
-                                             <div class="ui-desktop-wire-welcome-visual" aria-hidden="true">
-                                                <div class="ui-desktop-wire-speech">
-                                                   <span class="ui-desktop-wire-line" style="width:62%"></span>
-                                                   <span class="ui-desktop-wire-line" style="width:86%"></span>
-                                                   <span class="ui-desktop-wire-line" style="width:72%"></span>
-                                                </div>
-                                                <img class="ui-desktop-wire-robot" src="{{ asset('img/dashboard-welcome-robot-transparent.webp') }}?v=20261020" alt="" width="1536" height="1024" loading="lazy" decoding="async">
-                                             </div>
-                                          </section>
-
-                                          <div class="ui-desktop-wire-stats">
-                                             <section class="ui-desktop-wire-panel ui-desktop-wire-stat">
-                                                <div class="ui-desktop-wire-stat-head">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-microphone"></i></span>
-                                                   <span class="ui-desktop-wire-pill">Practice</span>
-                                                </div>
-                                                <div class="ui-desktop-wire-stat-mark"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                                                <div>
-                                                   <div class="ui-desktop-wire-stat-value">{{ $previewInterviews }}</div>
-                                                   <div class="ui-desktop-wire-stat-label">Completed sessions</div>
-                                                </div>
-                                                <div class="ui-desktop-wire-underbar"></div>
-                                             </section>
-
-                                             <section class="ui-desktop-wire-panel ui-desktop-wire-stat">
-                                                <div class="ui-desktop-wire-stat-head">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-regular fa-star"></i></span>
-                                                   <span class="ui-desktop-wire-pill">Quality</span>
-                                                </div>
-                                                <div class="ui-desktop-wire-stat-mark"><i class="fa-solid fa-award"></i></div>
-                                                <div>
-                                                   <div class="ui-desktop-wire-stat-value">4<span style="font-size:.72rem">/5</span></div>
-                                                   <div class="ui-desktop-wire-stat-label">Average rating</div>
-                                                </div>
-                                                <div class="ui-desktop-wire-underbar"></div>
-                                             </section>
-
-                                             <section class="ui-desktop-wire-panel ui-desktop-wire-stat">
-                                                <div class="ui-desktop-wire-stat-head">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-bolt"></i></span>
-                                                   <span class="ui-desktop-wire-pill">Growth</span>
-                                                </div>
-                                                <div class="ui-desktop-wire-stat-mark">Lv. 1</div>
-                                                <div>
-                                                   <div class="ui-desktop-wire-stat-value">320</div>
-                                                   <div class="ui-desktop-wire-stat-label">Experience points</div>
-                                                </div>
-                                                <div class="ui-desktop-wire-underbar"></div>
-                                             </section>
-
-                                             <section class="ui-desktop-wire-panel ui-desktop-wire-stat">
-                                                <div class="ui-desktop-wire-stat-head">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-fire"></i></span>
-                                                   <span class="ui-desktop-wire-pill">Streak</span>
-                                                </div>
-                                                <div class="ui-desktop-wire-stat-mark"><i class="fa-regular fa-calendar-days"></i></div>
-                                                <div>
-                                                   <div class="ui-desktop-wire-stat-value">5</div>
-                                                   <div class="ui-desktop-wire-stat-label">Active practice days</div>
-                                                </div>
-                                                <div class="ui-desktop-wire-underbar"></div>
-                                             </section>
-                                          </div>
-                                       </div>
-
-                                       <section class="ui-desktop-wire-panel ui-desktop-wire-score-panel">
-                                          <div class="ui-desktop-wire-score-top">
-                                             <span class="ui-desktop-wire-status"><i class="fa-solid fa-circle-check"></i> Interview Ready</span>
-                                             <span class="ui-desktop-wire-pill"><i class="fa-solid fa-location-dot"></i> Interview Focus</span>
-                                          </div>
-                                          <div class="ui-desktop-wire-score-layout">
-                                             <div class="ui-desktop-wire-ring">
-                                                <div>
-                                                   <strong>{{ $previewReadiness }}%</strong>
-                                                   <span>Overall Readiness</span>
-                                                </div>
-                                             </div>
-                                             <div class="ui-desktop-wire-score-meta">
-                                                <div class="ui-desktop-wire-goal"><span>Average Rating</span><strong>4/5</strong></div>
-                                                <div class="ui-desktop-wire-goal"><span>Next Goal</span><strong>90%</strong></div>
-                                             </div>
-                                          </div>
-                                          <div class="ui-desktop-wire-note"><i class="fa-regular fa-star"></i> Keep practicing. You're on your way!</div>
-                                       </section>
-                                    </section>
-
-                                    <section class="ui-desktop-wire-dashboard-shell">
-                                       <div class="ui-desktop-wire-main-stack">
-                                          <section class="ui-desktop-wire-panel ui-desktop-wire-chart-panel">
-                                             <div class="ui-desktop-wire-card-head">
-                                                <div>
-                                                   <div class="ui-desktop-wire-card-head">
-                                                      <span class="ui-desktop-wire-icon"><i class="fa-solid fa-chart-line"></i></span>
-                                                      <h3 class="ui-desktop-wire-card-title">Readiness Trend</h3>
-                                                   </div>
-                                                   <p class="ui-desktop-wire-card-subtitle">Recent completed interview sessions, scored from 0 to 100.</p>
-                                                </div>
-                                                <span class="ui-desktop-wire-pill">Recent 10 Sessions</span>
-                                             </div>
-                                             <div class="ui-desktop-wire-goals" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px;">
-                                                <div class="ui-desktop-wire-goal"><span>Average Score</span><strong>{{ $previewReadiness }}/100</strong></div>
-                                                <div class="ui-desktop-wire-goal"><span>Improvement</span><strong>+18%</strong></div>
-                                             </div>
-                                             <div class="ui-desktop-wire-chart" aria-hidden="true">
-                                                <span style="height:44%"></span>
-                                                <span style="height:52%"></span>
-                                                <span style="height:58%"></span>
-                                                <span style="height:68%"></span>
-                                                <span style="height:72%"></span>
-                                                <span style="height:84%"></span>
-                                                <span style="height:92%"></span>
-                                             </div>
-                                          </section>
-
-                                          <section class="ui-desktop-wire-panel ui-desktop-wire-plan">
-                                             <div class="ui-desktop-wire-plan-head">
-                                                <span class="ui-desktop-wire-icon"><i class="fa-solid fa-calendar-check"></i></span>
-                                                <div>
-                                                   <h3 class="ui-desktop-wire-card-title">Practice Focus</h3>
-                                                   <p class="ui-desktop-wire-card-subtitle">Next actions built from latest scores, voice work, and learning progress.</p>
-                                                </div>
-                                             </div>
-                                             <div class="ui-desktop-wire-plan-list">
-                                                <div class="ui-desktop-wire-plan-row">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-microphone"></i></span>
-                                                   <div><strong>Day 1</strong><span>Practice STAR answer structure</span></div>
-                                                   <span class="ui-desktop-wire-pill">12 min</span>
-                                                </div>
-                                                <div class="ui-desktop-wire-plan-row">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-ear-listen"></i></span>
-                                                   <div><strong>Day 2</strong><span>Voice rehearsal and pacing</span></div>
-                                                   <span class="ui-desktop-wire-pill">8 min</span>
-                                                </div>
-                                             </div>
-                                          </section>
-
-                                          <div class="ui-desktop-wire-two-col">
-                                             <section class="ui-desktop-wire-panel ui-desktop-wire-polished">
-                                                <div class="ui-desktop-wire-polished-head">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-layer-group"></i></span>
-                                                   <div>
-                                                      <h3 class="ui-desktop-wire-card-title">Category Performance</h3>
-                                                      <p class="ui-desktop-wire-card-subtitle">Where interview scores are strongest.</p>
-                                                   </div>
-                                                </div>
-                                                <div class="ui-desktop-wire-progress-list">
-                                                   <div class="ui-desktop-wire-progress-row"><span>Job Interview</span><strong>88%</strong><div class="ui-desktop-wire-progress-track"><span style="width:88%"></span></div></div>
-                                                   <div class="ui-desktop-wire-progress-row"><span>Role Fit</span><strong>82%</strong><div class="ui-desktop-wire-progress-track"><span style="width:82%"></span></div></div>
-                                                </div>
-                                             </section>
-
-                                             <section class="ui-desktop-wire-panel ui-desktop-wire-polished">
-                                                <div class="ui-desktop-wire-polished-head">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-book-open-reader"></i></span>
-                                                   <div>
-                                                      <h3 class="ui-desktop-wire-card-title">Learning Progress</h3>
-                                                      <p class="ui-desktop-wire-card-subtitle">Latest modules in progress.</p>
-                                                   </div>
-                                                </div>
-                                                <div class="ui-desktop-wire-progress-list">
-                                                   <div class="ui-desktop-wire-progress-row"><span>Interview Basics</span><strong>72%</strong><div class="ui-desktop-wire-progress-track"><span style="width:72%"></span></div></div>
-                                                   <div class="ui-desktop-wire-progress-row"><span>Professional Tone</span><strong>64%</strong><div class="ui-desktop-wire-progress-track"><span style="width:64%"></span></div></div>
-                                                </div>
-                                             </section>
-                                          </div>
-                                       </div>
-
-                                       <aside class="ui-desktop-wire-side-stack">
-                                          <section class="ui-desktop-wire-panel ui-desktop-wire-feedback">
-                                             <div class="ui-desktop-wire-card-head">
-                                                <h3 class="ui-desktop-wire-card-title">AI Feedback Summary</h3>
-                                                <span class="ui-desktop-wire-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-                                             </div>
-                                             <div class="ui-desktop-wire-bubble ai"><strong>Top Strengths</strong><br>Clear examples, good structure, and calm delivery.</div>
-                                             <div class="ui-desktop-wire-bubble"><strong>Improve Next</strong><br>Add measurable results and tighter closing lines.</div>
-                                          </section>
-
-                                          <section class="ui-desktop-wire-panel ui-desktop-wire-recommendations">
-                                             <div class="ui-desktop-wire-card-head">
-                                                <h3 class="ui-desktop-wire-card-title">AI Recommendations</h3>
-                                                <span class="ui-desktop-wire-pill">Personalized</span>
-                                             </div>
-                                             <div class="ui-desktop-wire-rec-list" style="margin-top:12px;">
-                                                <div class="ui-desktop-wire-rec-row">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-lightbulb"></i></span>
-                                                   <div><strong>Practice answer drills</strong><span>Use guided prompts.</span></div>
-                                                   <i class="fa-solid fa-chevron-right"></i>
-                                                </div>
-                                                <div class="ui-desktop-wire-rec-row">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-robot"></i></span>
-                                                   <div><strong>Ask AI Coach</strong><span>Refine one weak answer.</span></div>
-                                                   <i class="fa-solid fa-chevron-right"></i>
-                                                </div>
-                                             </div>
-                                          </section>
-
-                                          <section class="ui-desktop-wire-panel ui-desktop-wire-table-panel">
-                                             <div class="ui-desktop-wire-card-head">
-                                                <h3 class="ui-desktop-wire-card-title">Recent Sessions</h3>
-                                                <span class="ui-desktop-wire-pill">View Reports</span>
-                                             </div>
-                                             <div class="ui-desktop-wire-table-list" style="margin-top:12px;">
-                                                <div class="ui-desktop-wire-table-row">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-briefcase"></i></span>
-                                                   <div><strong>Job Interview</strong><span>Behavioral practice</span></div>
-                                                   <span class="ui-desktop-wire-score">92</span>
-                                                </div>
-                                                <div class="ui-desktop-wire-table-row">
-                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-headset"></i></span>
-                                                   <div><strong>Role Fit</strong><span>Hiring-fit scenario</span></div>
-                                                   <span class="ui-desktop-wire-score">84</span>
-                                                </div>
-                                             </div>
-                                          </section>
-                                       </aside>
-                                    </section>
-                                 </div>
-                              </main>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
             </div>
          </section>
 
@@ -1084,8 +613,8 @@
                      <div>
                         <h5 class="footer-heading">Platform</h5>
                         <ul class="list-unstyled footer-links">
-                           <li><a href="#lofc" role="button" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">Log In</a></li>
-                           <li><a href="#lofc" role="button" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Register</a></li>
+                           <li><a href="{{ route('login', sr_layout_query()) }}">Log In</a></li>
+                           <li><a href="{{ route('register', sr_layout_query()) }}">Register</a></li>
                            <li><a href="#faq">FAQ</a></li>
                            <li><a href="#contact">Contact</a></li>
                            <li><a href="{{ route('legal.privacy') }}">Privacy Policy</a></li>
@@ -1136,8 +665,6 @@
 
 
 
-      @include('shared.auth-modal')
-
       <!-- ===== PWA INSTALL PROMPT ===== -->
       <div id="pwa-install-prompt" role="dialog" aria-labelledby="pwaPromptTitle" aria-describedby="pwaPromptCopy">
          <div class="pwa-install-dialog">
@@ -1160,30 +687,7 @@
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       @include('desktop.partials.flash-modal', ['includeValidationErrors' => false])
-      <script src="{{ asset('js/main.js?v=10') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
-      @php
-         $authModalRequest = request('auth_modal');
-         $shouldShowAuthModal = $errors->any()
-            || in_array($authModalRequest, ['login', 'signup', 'register'], true)
-            || request('auth_alert') === 'google_login_unregistered';
-         $shouldShowSignupAuthTab = in_array(old('auth_tab', $authModalRequest), ['signup', 'register'], true) || filled(old('name'));
-      @endphp
-      @if($shouldShowAuthModal)
-      <script>
-         document.addEventListener('DOMContentLoaded', function() {
-            var authModal = document.getElementById('lofc');
-            var bsModal = new bootstrap.Modal(authModal);
-            bsModal.show();
-            @if($shouldShowSignupAuthTab)
-               swTab('signup');
-            @else
-               swTab('login');
-            @endif
-         });
-      </script>
-      @endif
-
+      <script src="{{ asset('js/guest.js?v=1') }}"></script>
       <script>
          // Initialize CounterUp when document is ready
          document.addEventListener('DOMContentLoaded', function() {
@@ -1534,126 +1038,6 @@
          });
       </script>
 
-      @include('shared.google-auth-mobile-layout-guard')
-
-      <!-- LOGIN TRANSITION OVERLAY -->
-
-      <div id="loginTransitionOverlay">
-          <div class="logo-loading-wrapper">
-              <div class="logo-loading-circle"></div>
-              <img src="{{ asset('img/logo.png') }}" alt="Loading...">
-          </div>
-          <h4 id="authTransitionTitle" style="color:var(--tx); font-weight:600; font-size:1.2rem; letter-spacing:0.5px;">Authenticating...</h4>
-          <p id="authTransitionCopy" style="color:var(--tx3); font-size:0.9rem;">Please wait while we log you in</p>
-      </div>
-
-      <script>
-          function showLoginTransition(mode) {
-              const overlay = document.getElementById('loginTransitionOverlay');
-              const title = document.getElementById('authTransitionTitle');
-              const copy = document.getElementById('authTransitionCopy');
-
-              if (mode === 'register') {
-                  if (title) title.textContent = 'Creating your account...';
-                  if (copy) copy.textContent = 'Please wait while we set up your dashboard';
-              } else if (mode === 'google-register') {
-                  if (title) title.textContent = 'Signing up with Google...';
-                  if (copy) copy.textContent = 'Opening secure Google registration';
-              } else if (mode === 'google' || mode === 'google-login') {
-                  if (title) title.textContent = 'Connecting to Google...';
-                  if (copy) copy.textContent = 'Opening secure Google sign-in';
-              } else {
-                  if (title) title.textContent = 'Authenticating...';
-                  if (copy) copy.textContent = 'Please wait while we log you in';
-              }
-
-              if (overlay) overlay.classList.add('active');
-          }
-
-          document.addEventListener('DOMContentLoaded', function() {
-              const loginForm = document.getElementById('loginForm');
-              if (loginForm) {
-                  loginForm.addEventListener('submit', function(e) {
-                      if (this.checkValidity()) {
-                          showLoginTransition();
-                      }
-                  });
-              }
-
-              const signupForm = document.getElementById('signupForm');
-              if (signupForm) {
-                  signupForm.addEventListener('submit', function() {
-                      if (this.checkValidity()) {
-                          showLoginTransition('register');
-                      }
-                  });
-              }
-
-              const googleAuthLinks = document.querySelectorAll('a[data-auth-transition^="google"]');
-              const resetGoogleAuthLinks = function() {
-                  googleAuthLinks.forEach(function(link) {
-                      link.style.pointerEvents = '';
-                      link.removeAttribute('aria-disabled');
-                      const spinner = link.querySelector('.google-auth-spinner');
-                      if (spinner) spinner.remove();
-                      const googleMark = link.querySelector('.google-auth-mark');
-                      if (googleMark) googleMark.hidden = false;
-                  });
-              };
-
-              googleAuthLinks.forEach(function(link) {
-                  link.addEventListener('click', function(event) {
-                      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-                          return;
-                      }
-
-                      event.preventDefault();
-                      showLoginTransition(link.dataset.authTransition || 'google-login');
-                      link.setAttribute('aria-disabled', 'true');
-                      link.style.pointerEvents = 'none';
-
-                      const googleMark = link.querySelector('.google-auth-mark');
-                      if (googleMark) {
-                          googleMark.hidden = true;
-                          const spinner = document.createElement('i');
-                          spinner.className = 'fa-solid fa-spinner fa-spin google-auth-spinner';
-                          spinner.setAttribute('aria-hidden', 'true');
-                          link.insertBefore(spinner, googleMark);
-                      }
-
-                      var destination = link.href;
-                      if (window.SpeakReadyGoogleMobileLayout && typeof window.SpeakReadyGoogleMobileLayout.apply === 'function') {
-                          destination = window.SpeakReadyGoogleMobileLayout.apply(link);
-                      }
-
-                      window.location.href = destination;
-                  });
-              });
-
-              window.addEventListener('pageshow', function() {
-                  const overlay = document.getElementById('loginTransitionOverlay');
-                  if (overlay) overlay.classList.remove('active');
-                  resetGoogleAuthLinks();
-              });
-          });
-
-          function togglePasswordVisibility(inputId, btn) {
-             const input = document.getElementById(inputId);
-             const icon = btn.querySelector('i');
-             if (!input || !icon) return;
-             if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-                btn.setAttribute('aria-label', 'Hide password');
-             } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-                btn.setAttribute('aria-label', 'Show password');
-             }
-          }
-      </script>
       @include('desktop.partials.page-transition')
    </body>
 </html>

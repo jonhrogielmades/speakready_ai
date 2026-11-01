@@ -14,6 +14,32 @@ class GoogleMobileLayoutTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_mobile_auth_pages_preserve_mobile_layout_for_google_and_cross_page_links(): void
+    {
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+        $mobileLayoutQuery = ['sr_layout' => 'mobile', 'sr_is_mobile' => '1'];
+
+        $this->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('login', $mobileLayoutQuery))
+            ->assertOk()
+            ->assertSee('data-auth-layout="mobile"', false)
+            ->assertSee('data-auth-mode="login"', false)
+            ->assertSee(route('auth.google.login', $mobileLayoutQuery))
+            ->assertSee(route('register', $mobileLayoutQuery))
+            ->assertDontSee('href="'.route('auth.google.login').'"', false)
+            ->assertDontSee('href="'.route('register').'"', false);
+
+        $this->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('register', $mobileLayoutQuery))
+            ->assertOk()
+            ->assertSee('data-auth-layout="mobile"', false)
+            ->assertSee('data-auth-mode="register"', false)
+            ->assertSee(route('auth.google.register', $mobileLayoutQuery))
+            ->assertSee(route('login', $mobileLayoutQuery))
+            ->assertDontSee('href="'.route('auth.google.register').'"', false)
+            ->assertDontSee('href="'.route('login').'"', false);
+    }
+
     public function test_google_login_uses_mobile_viewport_hint_when_desktop_site_mode_starts_oauth(): void
     {
         $user = User::factory()->create([

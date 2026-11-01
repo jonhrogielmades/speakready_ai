@@ -31,8 +31,16 @@ class GuestQuickNavigationTest extends TestCase
             ->assertSee('id="guestHeaderDate"', false)
             ->assertSee('id="guestHeaderTime"', false)
             ->assertSee('Start Practicing', false)
-            ->assertSee('onclick="swTab(\'login\')"', false)
-            ->assertDontSee('swTab(\'signin\')', false)
+            ->assertSee('href="'.route('login').'"', false)
+            ->assertSee('href="'.route('register').'"', false)
+            ->assertSee('css/desktop/guest.css?v=21', false)
+            ->assertSee('js/guest.js?v=1', false)
+            ->assertDontSee('js/main.js', false)
+            ->assertDontSee('js/user-ui.js', false)
+            ->assertDontSee('id="lofc"', false)
+            ->assertDontSee('data-bs-target="#lofc"', false)
+            ->assertDontSee('swTab(', false)
+            ->assertDontSee('ui-mobile-wire', false)
             ->assertDontSee('data-ucp-search', false)
             ->assertDontSee('class="ucp-mobile-launcher"', false)
             ->assertDontSee('data-ucp-context="guest"', false)
@@ -47,28 +55,36 @@ class GuestQuickNavigationTest extends TestCase
         $this->assertSame(1, substr_count($markup, 'data-ucp-open'));
         $this->assertSame(4, substr_count($markup, 'data-ucp-item'));
         $this->assertSame(2, substr_count($markup, 'data-ucp-action'));
-        $this->assertSame(1, substr_count($markup, 'js/user-ui.js'));
+        $this->assertSame(0, substr_count($markup, 'js/user-ui.js'));
+        $this->assertSame(1, substr_count($markup, 'js/guest.js'));
+        $this->assertSame(0, substr_count($markup, 'js/main.js'));
+        $this->assertStringContainsString(
+            'class="ucp-guest-action ucp-guest-login" href="'.route('login').'" data-ucp-action',
+            $markup
+        );
+        $this->assertStringContainsString(
+            'class="ucp-guest-action ucp-guest-register" href="'.route('register').'" data-ucp-action',
+            $markup
+        );
         $this->assertMatchesRegularExpression(
             '/id="mbtog".*?data-ucp-open.*?aria-controls="userCommandPalette".*?<i class="fa-solid fa-bars"/s',
             $markup
         );
 
-        $paletteScript = file_get_contents(public_path('js/user-ui.js'));
+        $guestScript = file_get_contents(public_path('js/guest.js'));
 
-        $this->assertIsString($paletteScript);
-        $this->assertStringContainsString('setTriggerExpanded', $paletteScript);
-        $this->assertStringContainsString('destination.focus({ preventScroll: true })', $paletteScript);
-        $this->assertStringContainsString("addEventListener('hidden.bs.offcanvas'", $paletteScript);
-        $this->assertStringContainsString('focusReturn.focus({ preventScroll: true })', $paletteScript);
-
-        $mainScript = file_get_contents(public_path('js/main.js'));
-
-        $this->assertIsString($mainScript);
-        $this->assertStringContainsString('setupGuestHeaderClock', $mainScript);
-        $this->assertStringContainsString('new Intl.DateTimeFormat', $mainScript);
-        $this->assertStringContainsString('millisecondsUntilNextMinute', $mainScript);
-        $this->assertStringContainsString('clock.dateTime = now.toISOString()', $mainScript);
-        $this->assertStringContainsString("t === 'login' || t === 'signin'", $mainScript);
-        $this->assertStringContainsString('loginTab?.classList.toggle', $mainScript);
+        $this->assertIsString($guestScript);
+        $this->assertStringContainsString('setupGuestCommandPalette', $guestScript);
+        $this->assertStringContainsString('setTriggerExpanded', $guestScript);
+        $this->assertStringContainsString('destination.focus({ preventScroll: true })', $guestScript);
+        $this->assertStringContainsString('lastFocusedElement.focus({ preventScroll: true })', $guestScript);
+        $this->assertStringContainsString('setupGuestHeaderClock', $guestScript);
+        $this->assertStringContainsString('new Intl.DateTimeFormat', $guestScript);
+        $this->assertStringContainsString('millisecondsUntilNextMinute', $guestScript);
+        $this->assertStringContainsString('clock.dateTime = now.toISOString()', $guestScript);
+        $this->assertStringNotContainsString('setupViewportMetrics', $guestScript);
+        $this->assertStringNotContainsString('SpeakReadyViewport', $guestScript);
+        $this->assertStringNotContainsString('swTab(', $guestScript);
+        $this->assertStringNotContainsString('#lofc', $guestScript);
     }
 }

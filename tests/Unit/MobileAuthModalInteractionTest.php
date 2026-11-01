@@ -6,124 +6,179 @@ use PHPUnit\Framework\TestCase;
 
 class MobileAuthModalInteractionTest extends TestCase
 {
-    public function test_auth_modal_keeps_its_centered_dialog_contract(): void
+    public function test_login_and_registration_use_a_dedicated_full_page_contract(): void
     {
-        $markup = $this->readProjectFile('resources/views/shared/auth-modal.blade.php');
+        $markup = $this->readProjectFile('resources/views/shared/auth-page.blade.php');
+        $script = $this->readProjectFile('public/js/auth-page.js');
+        $css = $this->readProjectFile('public/css/shared/auth-page.css');
 
-        $this->assertStringContainsString(
-            'class="modal-dialog modal-dialog-centered auth-modal-dialog"',
-            $markup
-        );
+        $this->assertStringContainsString('id="authPage" class="auth-page-shell"', $markup);
+        $this->assertStringContainsString('class="auth-page-card"', $markup);
+        $this->assertStringContainsString('id="authFormPanel"', $markup);
+        $this->assertStringContainsString("action=\"{{ route('login.submit') }}\"", $markup);
+        $this->assertStringContainsString("action=\"{{ route('register.submit') }}\"", $markup);
+        $this->assertStringContainsString('data-auth-submit="login"', $markup);
+        $this->assertStringContainsString('data-auth-submit="register"', $markup);
+        $this->assertStringNotContainsString('class="modal', $markup);
+        $this->assertStringNotContainsString('data-bs-toggle="modal"', $markup);
+
+        $this->assertStringContainsString("document.getElementById('authPage')", $script);
+        $this->assertStringContainsString('body.auth-page-body.auth-desktop-shell', $css);
+        $this->assertStringContainsString('body.auth-page-body.auth-mobile-shell', $css);
+        $this->assertStringContainsString('min-height: 100dvh;', $css);
     }
 
-    public function test_registration_password_shows_live_valid_and_invalid_feedback(): void
+    public function test_registration_password_has_live_strength_and_confirmation_feedback(): void
     {
-        $markup = $this->readProjectFile('resources/views/shared/auth-modal.blade.php');
+        $markup = $this->readProjectFile('resources/views/shared/auth-page.blade.php');
+        $script = $this->readProjectFile('public/js/auth-page.js');
 
-        $this->assertStringContainsString('placeholder="Password"', $markup);
         $this->assertStringContainsString('data-strong-password=', $markup);
+        $this->assertStringContainsString('data-password-rule="length"', $markup);
+        $this->assertStringContainsString('data-password-rule="lower"', $markup);
+        $this->assertStringContainsString('data-password-rule="upper"', $markup);
+        $this->assertStringContainsString('data-password-rule="number"', $markup);
+        $this->assertStringContainsString('data-password-rule="symbol"', $markup);
         $this->assertStringContainsString('id="signupPasswordValid"', $markup);
-        $this->assertStringContainsString('Password is valid.', $markup);
         $this->assertStringContainsString('id="signupPasswordInvalid"', $markup);
-        $this->assertStringContainsString('class="text-danger fw-semibold ms-1"', $markup);
-        $this->assertStringContainsString('fa-circle-xmark', $markup);
+        $this->assertStringContainsString('data-confirm-password-status', $markup);
         $this->assertStringContainsString('role="status" hidden', $markup);
-        $this->assertStringContainsString('Password is invalid.', $markup);
-        $this->assertStringContainsString("input.addEventListener('input', updateSignupPasswordFeedback)", $markup);
-        $this->assertStringContainsString('Array.from(value).length >= 8', $markup);
-        $this->assertStringContainsString('/\p{Ll}/u.test(value)', $markup);
-        $this->assertStringContainsString('/\p{Lu}/u.test(value)', $markup);
-        $this->assertStringContainsString('/\p{N}/u.test(value)', $markup);
-        $this->assertStringContainsString('/[\p{Z}\p{S}\p{P}]/u.test(value)', $markup);
-        $this->assertStringContainsString('validStatus.hidden = !passwordIsValid', $markup);
-        $this->assertStringContainsString("invalidStatus.hidden = value === '' || passwordIsValid", $markup);
-        $this->assertStringContainsString('input.setCustomValidity(requirementMessage)', $markup);
+
+        $this->assertStringContainsString('Array.from(value).length >= 8', $script);
+        $this->assertStringContainsString('/\p{Ll}/u.test(value)', $script);
+        $this->assertStringContainsString('/\p{Lu}/u.test(value)', $script);
+        $this->assertStringContainsString('/\p{N}/u.test(value)', $script);
+        $this->assertStringContainsString('/[\p{Z}\p{S}\p{P}]/u.test(value)', $script);
+        $this->assertStringContainsString("passwordInput.addEventListener('input', updatePasswordFeedback)", $script);
+        $this->assertStringContainsString("confirmInput.addEventListener('input', updateConfirmPasswordFeedback)", $script);
+        $this->assertStringContainsString("passwordInput.setCustomValidity('')", $script);
+        $this->assertStringContainsString("confirmInput.setCustomValidity('Passwords do not match.')", $script);
+        $this->assertStringContainsString("confirmStatus.textContent = 'Passwords match.'", $script);
     }
 
-    public function test_checkbox_focus_does_not_enable_mobile_keyboard_layout(): void
+    public function test_mobile_inputs_and_password_toggles_are_zoom_and_touch_safe(): void
     {
-        $script = $this->authInteractionScript();
-
-        $this->assertStringNotContainsString(
-            "const authModalInputSelector = 'input, textarea, select';",
-            $script,
-            'Checkboxes must not be treated as text-entry fields because their retained focus shifts the mobile dialog.'
+        $markup = $this->readProjectFile('resources/views/shared/auth-page.blade.php');
+        $script = $this->readProjectFile('public/js/auth-page.js');
+        $css = $this->readProjectFile('public/css/shared/auth-page.css');
+        $mobileCss = $this->sectionBetween(
+            $css,
+            '@media (max-width: 640px)',
+            '@media (max-width: 380px)'
         );
-
-        $excludesCheckboxes = str_contains($script, ':not([type="checkbox"])')
-            || str_contains($script, ":not([type='checkbox'])")
-            || preg_match('/(?:type|inputType)\s*!={1,2}\s*[\'\"]checkbox[\'\"]/i', $script) === 1
-            || preg_match('/[\'\"]checkbox[\'\"]\s*[,\]]/i', $script) === 1;
-
-        $this->assertTrue(
-            $excludesCheckboxes,
-            'The mobile auth focus handler must explicitly exclude checkbox inputs.'
-        );
-    }
-
-    public function test_focused_mobile_fields_do_not_top_align_the_dialog(): void
-    {
-        $css = $this->readProjectFile('public/css/mobile/style.css');
-        $focusRuleStart = strpos($css, 'body.auth-modal-field-focused #lofc.auth-modal .modal-dialog');
-
-        $this->assertNotFalse($focusRuleStart, 'The focused mobile auth dialog rule is missing.');
-
-        $focusRuleEnd = strpos($css, '}', $focusRuleStart);
-        $this->assertNotFalse($focusRuleEnd, 'The focused mobile auth dialog rule is malformed.');
-
-        $focusRule = substr($css, $focusRuleStart, $focusRuleEnd - $focusRuleStart + 1);
-
-        $this->assertStringNotContainsString(
-            'align-items: flex-start',
-            $focusRule,
-            'Typing or tapping a checkbox must not pin the auth dialog to the top of the viewport.'
-        );
-        $this->assertStringContainsString('align-items: center', $focusRule);
-    }
-
-    public function test_keyboard_scrolling_is_bounded_to_the_modal_body(): void
-    {
-        $script = $this->authInteractionScript();
-
-        $this->assertStringNotContainsString(
-            'scrollIntoView(',
-            $script,
-            'Field visibility adjustments must not scroll the page or outer modal.'
-        );
-        $this->assertStringContainsString('modalBody.scrollTop += scrollDelta', $script);
-        $this->assertStringNotContainsString(
-            "window.visualViewport.addEventListener('scroll', syncFocusedAuthModalViewport",
-            $script,
-            'Visual viewport scrolling must not create a scroll/reflow feedback loop.'
-        );
-        $this->assertStringNotContainsString(
-            '--sr-js-vh',
-            $script,
-            'Auth interactions must reuse the shared viewport metric instead of mutating a global page-height variable.'
-        );
-    }
-
-    public function test_mobile_auth_inputs_use_a_zoom_safe_font_size(): void
-    {
-        $css = $this->readProjectFile('public/css/mobile/style.css');
 
         $this->assertMatchesRegularExpression(
-            '/#lofc\.auth-modal \.auth-input-wrap \.oinp\s*\{\s*font-size:\s*1rem\s*!important;\s*\}/',
-            $css,
-            'Mobile auth controls must use at least 16px text to prevent automatic iOS input zoom.'
+            '/\.auth-page-input\s*\{[^}]*font-size:\s*1rem\s*;[^}]*\}/s',
+            $mobileCss,
+            'Mobile auth inputs must use at least 16px text to avoid automatic iOS zoom.'
         );
+
+        $toggleRule = $this->cssRule($css, '.auth-page-password-toggle');
+        $toggleWidth = $this->pixelProperty($toggleRule, 'width');
+        $toggleHeight = $this->pixelProperty($toggleRule, 'height');
+        $this->assertGreaterThanOrEqual(42.0, $toggleWidth, 'Password toggles must be at least 42px wide.');
+        $this->assertGreaterThanOrEqual(42.0, $toggleHeight, 'Password toggles must be at least 42px tall.');
+
+        $this->assertStringContainsString('data-password-toggle', $markup);
+        $this->assertStringContainsString('aria-controls="signupPass"', $markup);
+        $this->assertStringContainsString('aria-controls="loginPass"', $markup);
+        $this->assertStringContainsString("button.setAttribute('aria-pressed'", $script);
+        $this->assertStringContainsString("input.focus({ preventScroll: true })", $script);
     }
 
-    private function authInteractionScript(): string
+    public function test_mobile_auth_page_scrolls_naturally_without_modal_keyboard_workarounds(): void
     {
-        $script = $this->readProjectFile('public/js/main.js');
-        $start = strpos($script, 'const guestAuthPanel');
-        $end = strpos($script, 'const guestSectionIds', $start ?: 0);
+        $markup = $this->readProjectFile('resources/views/shared/auth-page.blade.php');
+        $script = $this->readProjectFile('public/js/auth-page.js');
+        $css = $this->readProjectFile('public/css/shared/auth-page.css');
+        $mobileCss = $this->sectionBetween(
+            $css,
+            '@media (max-width: 640px)',
+            '@media (max-width: 380px)'
+        );
 
-        $this->assertNotFalse($start, 'The auth modal interaction block is missing.');
-        $this->assertNotFalse($end, 'The auth modal interaction block boundary is missing.');
+        $this->assertMatchesRegularExpression(
+            '/\.auth-page-card\s*\{[^}]*overflow:\s*visible\s*;[^}]*\}/s',
+            $mobileCss,
+            'The mobile auth card must allow natural document scrolling.'
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.auth-page-form-side\s*\{[^}]*align-items:\s*flex-start\s*;[^}]*\}/s',
+            $mobileCss
+        );
 
-        return substr($script, $start, $end - $start);
+        $combined = $markup."\n".$script."\n".$css;
+        foreach (['#lofc', '.modal-dialog', 'auth-modal-field-focused', 'visualViewport', 'scrollIntoView(', 'modalBody.scrollTop', '--sr-js-vh'] as $modalArtifact) {
+            $this->assertStringNotContainsString(
+                $modalArtifact,
+                $combined,
+                "Dedicated auth page still contains modal keyboard artifact: {$modalArtifact}"
+            );
+        }
+        $this->assertStringNotContainsString('overflow-y: hidden', $css);
+    }
+
+    public function test_submit_transition_prevents_double_submission_and_recovers_from_history(): void
+    {
+        $markup = $this->readProjectFile('resources/views/shared/auth-page.blade.php');
+        $script = $this->readProjectFile('public/js/auth-page.js');
+
+        $this->assertStringContainsString(
+            'id="authTransitionOverlay" class="auth-page-transition" role="status" aria-live="polite" aria-busy="true" hidden',
+            $markup
+        );
+        $this->assertStringContainsString('[data-auth-submit]', $script);
+        $this->assertStringContainsString("if (form.dataset.submitting === 'true')", $script);
+        $this->assertStringContainsString('event.preventDefault();', $script);
+        $this->assertStringContainsString('if (!form.checkValidity()) return;', $script);
+        $this->assertStringContainsString("form.dataset.submitting = 'true'", $script);
+        $this->assertStringContainsString('submitButton.disabled = true;', $script);
+        $this->assertStringContainsString("submitButton.setAttribute('aria-disabled', 'true')", $script);
+        $this->assertStringContainsString("showAuthTransition(form.dataset.authSubmit || 'login')", $script);
+
+        $validityCheck = strpos($script, 'if (!form.checkValidity()) return;');
+        $transitionCall = strpos($script, "showAuthTransition(form.dataset.authSubmit || 'login')");
+        $this->assertNotFalse($validityCheck);
+        $this->assertNotFalse($transitionCall);
+        $this->assertGreaterThan($validityCheck, $transitionCall, 'The transition must start only after native validation passes.');
+
+        $this->assertStringContainsString("window.addEventListener('pageshow'", $script);
+        $this->assertStringContainsString("form.dataset.submitting = 'false'", $script);
+        $this->assertStringContainsString('submitButton.disabled = false;', $script);
+        $this->assertStringContainsString("submitButton.removeAttribute('aria-disabled')", $script);
+        $this->assertStringContainsString('[data-auth-transition]', $script);
+        $this->assertStringContainsString("link.classList.add('is-loading')", $script);
+        $this->assertStringContainsString("showAuthTransition(link.dataset.authTransition || 'google-login')", $script);
+    }
+
+    private function cssRule(string $css, string $selector): string
+    {
+        $pattern = '/'.preg_quote($selector, '/').'\s*\{(?<rule>[^}]*)\}/s';
+        $matched = preg_match($pattern, $css, $matches);
+
+        $this->assertSame(1, $matched, "Missing CSS rule for {$selector}.");
+
+        return $matches['rule'];
+    }
+
+    private function pixelProperty(string $rule, string $property): float
+    {
+        $matched = preg_match('/'.preg_quote($property, '/').'\s*:\s*(?<value>\d+(?:\.\d+)?)px\s*;/', $rule, $matches);
+
+        $this->assertSame(1, $matched, "Missing pixel value for {$property}.");
+
+        return (float) $matches['value'];
+    }
+
+    private function sectionBetween(string $contents, string $startMarker, string $endMarker): string
+    {
+        $start = strpos($contents, $startMarker);
+        $this->assertNotFalse($start, "Missing section marker: {$startMarker}");
+
+        $end = strpos($contents, $endMarker, $start + strlen($startMarker));
+        $this->assertNotFalse($end, "Missing section marker: {$endMarker}");
+
+        return substr($contents, $start, $end - $start);
     }
 
     private function readProjectFile(string $relativePath): string

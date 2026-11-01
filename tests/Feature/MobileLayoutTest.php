@@ -40,15 +40,20 @@ class MobileLayoutTest extends TestCase
                 ->assertDontSee('id="srLaunchScreen"', false)
                 ->assertDontSee('guest-splash-pending', false)
                 ->assertSee('css/mobile/style.css?v=39', false)
-                ->assertSee('css/mobile/guest.css?v=34', false)
+                ->assertSee('css/mobile/guest.css?v=35', false)
+                ->assertSee('js/guest.js?v=1', false)
+                ->assertDontSee('js/main.js', false)
+                ->assertDontSee('js/user-ui.js', false)
                 ->assertSee('mobile-hero-preview-row', false)
                 ->assertSee('mobile-hero-image-frame', false)
                 ->assertSee('Register for Free', false)
                 ->assertDontSee('Get Started Free', false)
-                ->assertSee('data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab(\'signup\')"', false)
+                ->assertSee(route('login', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
+                ->assertSee(route('register', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
                 ->assertDontSee('Login for Free', false)
-                ->assertSee(route('auth.google.login', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
-                ->assertSee(route('auth.google.register', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
+                ->assertDontSee('id="lofc"', false)
+                ->assertDontSee('data-bs-target="#lofc"', false)
+                ->assertDontSee('swTab(', false)
                 ->assertSee('id="mbtog"', false)
                 ->assertSee('aria-controls="userCommandPalette"', false)
                 ->assertSee('id="userCommandPalette"', false)
@@ -60,6 +65,37 @@ class MobileLayoutTest extends TestCase
                 ->assertDontSee('id="xIcon"', false)
                 ->assertDontSee('css/desktop/style.css?v=12', false);
         }
+    }
+
+    public function test_login_and_register_render_as_dedicated_mobile_pages(): void
+    {
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $this->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('login'))
+            ->assertOk()
+            ->assertSee('class="auth-mobile-shell mobile-shell auth-page-body"', false)
+            ->assertSee('data-auth-layout="mobile"', false)
+            ->assertSee('data-auth-mode="login"', false)
+            ->assertSee('css/shared/auth-page.css?v=1', false)
+            ->assertSee('js/auth-page.js?v=1', false)
+            ->assertSee('action="'.route('login.submit').'"', false)
+            ->assertDontSee('id="lofc"', false)
+            ->assertDontSee('data-bs-target="#lofc"', false)
+            ->assertDontSee('swTab(', false);
+
+        $this->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('register'))
+            ->assertOk()
+            ->assertSee('class="auth-mobile-shell mobile-shell auth-page-body"', false)
+            ->assertSee('data-auth-layout="mobile"', false)
+            ->assertSee('data-auth-mode="register"', false)
+            ->assertSee('css/shared/auth-page.css?v=1', false)
+            ->assertSee('js/auth-page.js?v=1', false)
+            ->assertSee('action="'.route('register.submit').'"', false)
+            ->assertDontSee('id="lofc"', false)
+            ->assertDontSee('data-bs-target="#lofc"', false)
+            ->assertDontSee('swTab(', false);
     }
 
     public function test_guest_landing_uses_mobile_guest_layout_from_viewport_cookie(): void
@@ -74,7 +110,8 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=39', false)
-            ->assertSee('css/mobile/guest.css?v=34', false)
+            ->assertSee('css/mobile/guest.css?v=35', false)
+            ->assertSee('js/guest.js?v=1', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=12', false);
     }
@@ -89,12 +126,13 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=39', false)
-            ->assertSee('css/mobile/guest.css?v=34', false)
+            ->assertSee('css/mobile/guest.css?v=35', false)
+            ->assertSee('js/guest.js?v=1', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=12', false);
     }
 
-    public function test_desktop_guest_google_auth_links_are_hardened_for_mobile_viewports(): void
+    public function test_desktop_guest_links_to_dedicated_auth_pages(): void
     {
         $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
 
@@ -102,12 +140,13 @@ class MobileLayoutTest extends TestCase
             ->get('/?sr_layout=desktop&sr_viewport_width=1280')
             ->assertOk()
             ->assertSee('guest-shell guest-desktop-shell', false)
-            ->assertSee('window.SpeakReadyGoogleMobileLayout', false)
-            ->assertSee('shouldUseMobileLayout', false)
-            ->assertSee("url.searchParams.set('sr_layout', 'mobile')", false)
-            ->assertSee("url.searchParams.set('sr_is_mobile', '1')", false)
-            ->assertSee("url.searchParams.set('sr_viewport_width', String(width))", false)
-            ->assertSee('window.location.href = destination;', false);
+            ->assertSee(route('login'))
+            ->assertSee(route('register'))
+            ->assertSee('css/desktop/guest.css?v=21', false)
+            ->assertSee('js/guest.js?v=1', false)
+            ->assertDontSee('window.SpeakReadyGoogleMobileLayout', false)
+            ->assertDontSee('id="lofc"', false)
+            ->assertDontSee('swTab(', false);
     }
 
     public function test_guest_landing_desktop_query_hint_can_override_stale_mobile_cookie(): void

@@ -29,6 +29,16 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 
 Route::get('/', function (LandingStatsService $landingStatsService) {
+    $legacyAuthMode = request('auth_modal');
+    if (in_array($legacyAuthMode, ['login', 'signup', 'register'], true)) {
+        $routeName = in_array($legacyAuthMode, ['signup', 'register'], true) ? 'register' : 'login';
+        $query = array_merge(sr_layout_query(request()), array_filter([
+            'auth_alert' => request('auth_alert'),
+        ]));
+
+        return redirect()->route($routeName, $query);
+    }
+
     try {
         if (Auth::check()) {
             if (Auth::user()->is_admin) {
@@ -52,11 +62,12 @@ Route::get('/', function (LandingStatsService $landingStatsService) {
 });
 
 // Auth Routes
-Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth')->name('register');
-Route::get('/login', function () {
-    return redirect('/');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', fn () => mobile_view('auth.login'))->name('login');
+    Route::get('/register', fn () => mobile_view('auth.register'))->name('register');
 });
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth')->name('login');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth')->name('register.submit');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth')->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:auth')->name('logout');
 Route::post('/request-reactivation', [AuthController::class, 'requestReactivation'])->middleware('throttle:auth')->name('request.reactivation');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->middleware('guest')->name('password.request');

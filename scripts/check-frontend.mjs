@@ -61,6 +61,10 @@ const userUiVersions = [...viewSource.matchAll(/user-ui\.js[\s\S]{0,80}?v=(\d+)/
 assert(userUiVersions.length > 0, 'No user-ui.js asset reference was found.');
 assert(new Set(userUiVersions).size === 1, `user-ui.js cache versions are inconsistent: ${[...new Set(userUiVersions)].join(', ')}`);
 
+const guestScriptVersions = [...viewSource.matchAll(/guest\.js[\s\S]{0,80}?v=(\d+)/g)].map(match => match[1]);
+assert(guestScriptVersions.length > 0, 'No guest.js asset reference was found.');
+assert(new Set(guestScriptVersions).size === 1, `guest.js cache versions are inconsistent: ${[...new Set(guestScriptVersions)].join(', ')}`);
+
 const serviceWorkerVersions = [...viewSource.matchAll(/sw\.js\?v=(\d+)/g)].map(match => match[1]);
 assert(serviceWorkerVersions.length > 0, 'No service-worker asset reference was found in the views.');
 assert(new Set(serviceWorkerVersions).size === 1, `Service-worker asset versions are inconsistent: ${[...new Set(serviceWorkerVersions)].join(', ')}`);
@@ -116,6 +120,7 @@ assert(
 );
 
 for (const relativePath of [
+    'public/js/guest.js',
     'public/js/main.js',
     'public/js/media-permission-support.js',
     'public/js/onboarding-voiceover.js',

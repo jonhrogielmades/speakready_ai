@@ -191,7 +191,6 @@ const barIcon = document.getElementById('barIcon');
 const xIcon = document.getElementById('xIcon');
 const mobileMenuToggles = [mobileToggle, guestQuickNavToggle].filter(Boolean);
 let lastMobileMenuTrigger = null;
-let restoreMobileMenuFocusAfterAuth = false;
 
 function setMobileMenuState(open, focusFirstLink = false) {
     if (!mobileMenu) return;
@@ -248,8 +247,6 @@ if (mobileMenu && mobileMenuToggles.length) {
 
     document.querySelectorAll('#mbmenu a, #mbmenu button').forEach(el =>
         el.addEventListener('click', () => {
-            const opensAuthPanel = el.matches('[data-bs-target="#lofc"]');
-            restoreMobileMenuFocusAfterAuth = opensAuthPanel;
             setMobileMenuState(false);
 
             if (el.matches('a[href^="#"]')) {
@@ -291,126 +288,6 @@ if (typeof desktopMenuBreakpoint.addEventListener === 'function') {
     desktopMenuBreakpoint.addEventListener('change', closeMobileMenuAtDesktop);
 } else if (typeof desktopMenuBreakpoint.addListener === 'function') {
     desktopMenuBreakpoint.addListener(closeMobileMenuAtDesktop);
-}
-
-const guestAuthPanel = document.getElementById('lofc');
-guestAuthPanel?.addEventListener('hidden.bs.modal', () => {
-    if (!restoreMobileMenuFocusAfterAuth) return;
-
-    restoreMobileMenuFocusAfterAuth = false;
-    window.requestAnimationFrame(() => {
-        lastMobileMenuTrigger?.focus({ preventScroll: true });
-    });
-});
-
-const authModalMobileViewport = window.matchMedia('(max-width: 767.98px)');
-const authModalInputSelector = [
-    'input:not([type]):not([disabled]):not([readonly])',
-    'input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):not([type="range"]):not([type="color"]):not([disabled]):not([readonly])',
-    'textarea:not([disabled]):not([readonly])'
-].join(', ');
-let authModalFocusRaf = 0;
-
-function isMobileAuthModalViewport() {
-    return authModalMobileViewport.matches ||
-        document.body.classList.contains('guest-mobile-shell') ||
-        document.body.classList.contains('auth-mobile-shell');
-}
-
-function queueFocusedAuthFieldScroll() {
-    if (authModalFocusRaf) return;
-
-    authModalFocusRaf = window.requestAnimationFrame(() => {
-        authModalFocusRaf = 0;
-        if (!guestAuthPanel || !document.body.classList.contains('auth-modal-field-focused')) return;
-
-        const activeField = document.activeElement;
-        if (!activeField || !guestAuthPanel.contains(activeField) || !activeField.matches(authModalInputSelector)) return;
-
-        const modalBody = activeField.closest('.auth-modal-body');
-        const scrollTarget = activeField.closest('.auth-field') || activeField;
-        if (!modalBody || modalBody.scrollHeight <= modalBody.clientHeight) return;
-
-        const bodyRect = modalBody.getBoundingClientRect();
-        const targetRect = scrollTarget.getBoundingClientRect();
-        const topEdge = bodyRect.top + 12;
-        const bottomEdge = bodyRect.bottom - 20;
-        let scrollDelta = 0;
-
-        if (targetRect.top < topEdge) {
-            scrollDelta = targetRect.top - topEdge;
-        } else if (targetRect.bottom > bottomEdge) {
-            scrollDelta = targetRect.bottom - bottomEdge;
-        }
-
-        if (Math.abs(scrollDelta) > 1) {
-            modalBody.scrollTop += scrollDelta;
-        }
-    });
-}
-
-function resetAuthModalInteractionState(resetScroll = false) {
-    document.body.classList.remove('auth-modal-field-focused');
-
-    if (authModalFocusRaf) {
-        window.cancelAnimationFrame(authModalFocusRaf);
-        authModalFocusRaf = 0;
-    }
-
-    if (resetScroll) {
-        const modalBody = guestAuthPanel?.querySelector('.auth-modal-body');
-        if (modalBody) modalBody.scrollTop = 0;
-    }
-}
-
-function setAuthModalFieldFocused(active) {
-    if (!active) {
-        resetAuthModalInteractionState();
-        return;
-    }
-
-    if (!isMobileAuthModalViewport()) return;
-
-    window.SpeakReadyViewport?.refresh();
-    document.body.classList.add('auth-modal-field-focused');
-    queueFocusedAuthFieldScroll();
-}
-
-if (guestAuthPanel) {
-    guestAuthPanel.addEventListener('focusin', event => {
-        if (!event.target.matches(authModalInputSelector)) return;
-
-        setAuthModalFieldFocused(true);
-    });
-
-    guestAuthPanel.addEventListener('focusout', () => {
-        window.setTimeout(() => {
-            const activeField = document.activeElement;
-            const stillFocused = activeField &&
-                guestAuthPanel.contains(activeField) &&
-                activeField.matches(authModalInputSelector);
-
-            if (!stillFocused) {
-                setAuthModalFieldFocused(false);
-            }
-        }, 0);
-    });
-
-    guestAuthPanel.addEventListener('shown.bs.modal', () => {
-        window.SpeakReadyViewport?.refreshNow();
-    });
-    guestAuthPanel.addEventListener('hidden.bs.modal', () => resetAuthModalInteractionState(true));
-}
-
-function syncFocusedAuthModalViewport() {
-    if (!document.body.classList.contains('auth-modal-field-focused')) return;
-
-    queueFocusedAuthFieldScroll();
-}
-
-window.addEventListener('resize', syncFocusedAuthModalViewport, { passive: true });
-if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', syncFocusedAuthModalViewport, { passive: true });
 }
 
 const guestSectionIds = ['hero', 'features', 'how', 'benefits', 'developers', 'faq', 'contact'];

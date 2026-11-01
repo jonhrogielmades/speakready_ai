@@ -12,8 +12,6 @@
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link rel="preconnect" href="https://accounts.google.com">
-      <link rel="dns-prefetch" href="//accounts.google.com">
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
       <link rel="preload" href="{{ asset('img/mobile-preview/01-home-dashboard-hd.webp') }}?v=20261020" as="image" type="image/webp" fetchpriority="high">
@@ -25,11 +23,10 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=34') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=35') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
-            --sr-visual-vh: var(--sr-js-vh, 100dvh);
             --pur: {{ $systemPrimaryColor ?? '#2563eb' }};
             --blu: {{ $systemSecondaryColor ?? '#06b6d4' }};
             --grad: linear-gradient(135deg, {{ $systemPrimaryColor ?? '#2563eb' }}, {{ $systemSecondaryColor ?? '#06b6d4' }});
@@ -41,11 +38,6 @@
             }
 
             body.guest-mobile-shell :is(.container, .container-fluid) {
-               padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
-               padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
-            }
-
-            body.guest-mobile-shell #lofc {
                padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
                padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
             }
@@ -81,16 +73,16 @@
                      <a href="#developers" class="nav-link">Developers</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                     <button type="button" class="boc mobile-topbar-login d-flex align-items-center justify-content-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')" aria-label="Log in">
+                     <a href="{{ route('login', sr_layout_query()) }}" class="boc mobile-topbar-login d-flex align-items-center justify-content-center gap-1" aria-label="Log in">
                      <i class="fa-regular fa-user fa-sm" aria-hidden="true"></i><span>Login</span>
-                     </button>
+                     </a>
                      <button type="button" class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
                      </button>
-                     <button type="button" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
+                     <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
-                     </button>
+                     </a>
                      <button class="boc d-xl-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
                      <i class="fa-solid fa-bars" aria-hidden="true"></i>
                      </button>
@@ -111,18 +103,12 @@
                  AI-Based Interview Practice System
                     </span>
                 </div>
-                @php
-                   $previewReadiness = 85;
-                   $previewInterviews = 6;
-                   $previewClarity = 92;
-                   $previewGrammar = 95;
-                @endphp
                 <div class="row align-items-center justify-content-center mt-4">
                   <div class="col-lg-7 col-md-10 text-center">
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI helps you practice role-focused job interviews with scenario setup, Coaching On or Real Interview Mode, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <button type="button" class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Register for Free</button>
+                        <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6">Register for Free</a>
                         <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn" id="heroInstallBtn"><i class="fa-solid fa-download me-2"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6 hero-learn-btn">Learn More</a>
                      </div>
@@ -667,8 +653,8 @@
                      <div>
                         <h5 class="footer-heading">Platform</h5>
                         <ul class="list-unstyled footer-links">
-                           <li><a href="#lofc" role="button" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">Log In</a></li>
-                           <li><a href="#lofc" role="button" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Register</a></li>
+                           <li><a href="{{ route('login', sr_layout_query()) }}">Log In</a></li>
+                           <li><a href="{{ route('register', sr_layout_query()) }}">Register</a></li>
                            <li><a href="#faq">FAQ</a></li>
                            <li><a href="#contact">Contact</a></li>
                            <li><a href="{{ route('legal.privacy') }}">Privacy Policy</a></li>
@@ -719,8 +705,6 @@
 
 
 
-      @include('shared.auth-modal')
-
       <!-- ===== PWA INSTALL PROMPT ===== -->
       <div id="pwa-install-prompt" role="dialog" aria-labelledby="pwaPromptTitle" aria-describedby="pwaPromptCopy">
          <div class="pwa-install-dialog">
@@ -746,30 +730,7 @@
       <!-- Swiper -->
       <script src="{{ asset('js/swiper-bundle.min.js') }}"></script>
 
-      <script src="{{ asset('js/main.js?v=10') }}"></script>
-      <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
-      @php
-         $authModalRequest = request('auth_modal');
-         $shouldShowAuthModal = $errors->any()
-            || in_array($authModalRequest, ['login', 'signup', 'register'], true)
-            || request('auth_alert') === 'google_login_unregistered';
-         $shouldShowSignupAuthTab = in_array(old('auth_tab', $authModalRequest), ['signup', 'register'], true) || filled(old('name'));
-      @endphp
-      @if($shouldShowAuthModal)
-      <script>
-         document.addEventListener('DOMContentLoaded', function() {
-            var authModal = document.getElementById('lofc');
-            var bsModal = new bootstrap.Modal(authModal);
-            bsModal.show();
-            @if($shouldShowSignupAuthTab)
-               swTab('signup');
-            @else
-               swTab('login');
-            @endif
-         });
-      </script>
-      @endif
-
+      <script src="{{ asset('js/guest.js?v=1') }}"></script>
       <script>
          // Initialize CounterUp and Swiper when document is ready
          document.addEventListener('DOMContentLoaded', function() {
@@ -1193,126 +1154,6 @@
          });
       </script>
 
-      @include('shared.google-auth-mobile-layout-guard')
-
-      <!-- LOGIN TRANSITION OVERLAY -->
-
-      <div id="loginTransitionOverlay">
-          <div class="logo-loading-wrapper">
-              <div class="logo-loading-circle"></div>
-              <img src="{{ asset('img/logo.png') }}" alt="Loading...">
-          </div>
-          <h4 id="authTransitionTitle" style="color:var(--tx); font-weight:600; font-size:1.2rem; letter-spacing:0.5px;">Authenticating...</h4>
-          <p id="authTransitionCopy" style="color:var(--tx3); font-size:0.9rem;">Please wait while we log you in</p>
-      </div>
-
-      <script>
-          function showLoginTransition(mode) {
-              const overlay = document.getElementById('loginTransitionOverlay');
-              const title = document.getElementById('authTransitionTitle');
-              const copy = document.getElementById('authTransitionCopy');
-
-              if (mode === 'register') {
-                  if (title) title.textContent = 'Creating your account...';
-                  if (copy) copy.textContent = 'Please wait while we set up your dashboard';
-              } else if (mode === 'google-register') {
-                  if (title) title.textContent = 'Signing up with Google...';
-                  if (copy) copy.textContent = 'Opening secure Google registration';
-              } else if (mode === 'google' || mode === 'google-login') {
-                  if (title) title.textContent = 'Connecting to Google...';
-                  if (copy) copy.textContent = 'Opening secure Google sign-in';
-              } else {
-                  if (title) title.textContent = 'Authenticating...';
-                  if (copy) copy.textContent = 'Please wait while we log you in';
-              }
-
-              if (overlay) overlay.classList.add('active');
-          }
-
-          document.addEventListener('DOMContentLoaded', function() {
-              const loginForm = document.getElementById('loginForm');
-              if (loginForm) {
-                  loginForm.addEventListener('submit', function(e) {
-                      if (this.checkValidity()) {
-                          showLoginTransition();
-                      }
-                  });
-              }
-
-              const signupForm = document.getElementById('signupForm');
-              if (signupForm) {
-                  signupForm.addEventListener('submit', function() {
-                      if (this.checkValidity()) {
-                          showLoginTransition('register');
-                      }
-                  });
-              }
-
-              const googleAuthLinks = document.querySelectorAll('a[data-auth-transition^="google"]');
-              const resetGoogleAuthLinks = function() {
-                  googleAuthLinks.forEach(function(link) {
-                      link.style.pointerEvents = '';
-                      link.removeAttribute('aria-disabled');
-                      const spinner = link.querySelector('.google-auth-spinner');
-                      if (spinner) spinner.remove();
-                      const googleMark = link.querySelector('.google-auth-mark');
-                      if (googleMark) googleMark.hidden = false;
-                  });
-              };
-
-              googleAuthLinks.forEach(function(link) {
-                  link.addEventListener('click', function(event) {
-                      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-                          return;
-                      }
-
-                      event.preventDefault();
-                      showLoginTransition(link.dataset.authTransition || 'google-login');
-                      link.setAttribute('aria-disabled', 'true');
-                      link.style.pointerEvents = 'none';
-
-                      const googleMark = link.querySelector('.google-auth-mark');
-                      if (googleMark) {
-                          googleMark.hidden = true;
-                          const spinner = document.createElement('i');
-                          spinner.className = 'fa-solid fa-spinner fa-spin google-auth-spinner';
-                          spinner.setAttribute('aria-hidden', 'true');
-                          link.insertBefore(spinner, googleMark);
-                      }
-
-                      var destination = link.href;
-                      if (window.SpeakReadyGoogleMobileLayout && typeof window.SpeakReadyGoogleMobileLayout.apply === 'function') {
-                          destination = window.SpeakReadyGoogleMobileLayout.apply(link);
-                      }
-
-                      window.location.href = destination;
-                  });
-              });
-
-              window.addEventListener('pageshow', function() {
-                  const overlay = document.getElementById('loginTransitionOverlay');
-                  if (overlay) overlay.classList.remove('active');
-                  resetGoogleAuthLinks();
-              });
-          });
-
-          function togglePasswordVisibility(inputId, btn) {
-             const input = document.getElementById(inputId);
-             const icon = btn.querySelector('i');
-             if (!input || !icon) return;
-             if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-                btn.setAttribute('aria-label', 'Hide password');
-             } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-                btn.setAttribute('aria-label', 'Show password');
-             }
-          }
-      </script>
       @include('mobile.partials.page-transition')
    </body>
 </html>

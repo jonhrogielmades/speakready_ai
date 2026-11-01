@@ -754,7 +754,6 @@ class AuthController extends Controller
                 return $this->googleAuthFailureResponse($request, self::GOOGLE_LOGIN_UNREGISTERED_ACCOUNT_MESSAGE, $intent, [
                     'email' => $googleEmail,
                 ], 'email', [
-                    'auth_modal' => 'login',
                     'auth_alert' => self::GOOGLE_LOGIN_UNREGISTERED_ALERT_KEY,
                 ]);
             }
@@ -1051,13 +1050,12 @@ class AuthController extends Controller
             : [];
     }
 
-    private function redirectToHomeWithGoogleLayout(Request $request, array $extraQuery = [])
+    private function redirectToAuthPageWithGoogleLayout(Request $request, string $intent, array $extraQuery = [])
     {
         $query = array_merge($this->googleLayoutQuery($request), $extraQuery);
+        $routeName = $intent === 'register' ? 'register' : 'login';
 
-        return empty($query)
-            ? redirect('/')
-            : redirect('/?'.http_build_query($query));
+        return redirect()->route($routeName, $query);
     }
 
     private function redirectToRouteWithGoogleLayout(Request $request, string $routeName, array $parameters = [])
@@ -1083,12 +1081,12 @@ class AuthController extends Controller
 
             $redirect = Auth::check()
                 ? $this->redirectToRouteWithGoogleLayout($request, 'user.account')
-                : $this->redirectToHomeWithGoogleLayout($request, $homeQuery);
+                : $this->redirectToAuthPageWithGoogleLayout($request, 'login', $homeQuery);
 
             return $redirect->withErrors(['account_delete' => $message]);
         }
 
-        return $this->redirectToHomeWithGoogleLayout($request, $homeQuery)
+        return $this->redirectToAuthPageWithGoogleLayout($request, $intent, $homeQuery)
             ->withErrors([$field => $message])
             ->withInput($this->googleAuthOldInput($request, $intent, $input));
     }
