@@ -513,6 +513,9 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
    .auth-page-card { width: min(1180px, 100%); height: 100%; min-height: 0; flex: none; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-card { height: auto; align-self: center; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-promo { min-height: 0; }
+   .auth-page-shell.auth-support-page .auth-page-card { height: auto; align-self: center; }
+   .auth-page-shell.auth-support-page .auth-page-promo { min-height: 0; }
+   .auth-page-shell.auth-support-page .auth-page-form-wrap { max-width: 470px; }
    .auth-page-form-side { min-height: 0; }
 }
 
@@ -538,11 +541,12 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
 
 @media (max-width: 980px) {
    .auth-page-shell { padding-right: max(18px, env(safe-area-inset-right, 0px)); padding-left: max(18px, env(safe-area-inset-left, 0px)); }
-   .auth-page-topbar, .auth-page-card { width: min(720px, 100%); }
+   .auth-page-topbar, .auth-page-card { width: min(680px, 100%); }
    .auth-page-card { grid-template-columns: minmax(0, 1fr); background: transparent; border: 0; box-shadow: none; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-card { flex: 0 0 auto; height: auto; align-self: center; margin-top: auto; margin-bottom: auto; }
+   .auth-page-shell.auth-support-page .auth-page-card { flex: 0 0 auto; height: auto; align-self: center; margin-top: auto; margin-bottom: auto; }
    .auth-page-promo { display: none; }
-   .auth-page-form-side { min-height: 0; padding: clamp(28px, 6vw, 52px); background: var(--auth-form-surface); border: 1px solid var(--auth-form-border); box-shadow: 0 18px 48px rgba(15, 23, 42, .16); }
+   .auth-page-form-side { min-height: 0; padding: 24px clamp(28px, 5vw, 44px); background: var(--auth-form-surface); border: 1px solid var(--auth-form-border); box-shadow: 0 18px 48px rgba(15, 23, 42, .16); }
 }
 
 @media (max-width: 640px) {
@@ -561,6 +565,7 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
    .auth-page-back span { display: none; }
    .auth-page-card { flex: 1; overflow: visible; border: 0; border-radius: 20px; box-shadow: none; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-card { min-height: 0; }
+   .auth-page-shell.auth-support-page .auth-page-card { min-height: 0; }
    .auth-page-form-side { min-height: 0; align-items: flex-start; padding: 18px 14px 22px; border-radius: 20px; overflow: visible; scrollbar-gutter: auto; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-form-side { align-items: center; }
    .auth-page-form-wrap, .auth-page-shell[data-auth-mode="login"] .auth-page-form-wrap { max-width: 520px; margin: 0 auto; }

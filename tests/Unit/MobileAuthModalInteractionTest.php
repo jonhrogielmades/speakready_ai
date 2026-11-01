@@ -153,6 +153,11 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('--tx: #153b63;', $css);
         $this->assertStringContainsString('.auth-page-shell[data-auth-mode="login"] .auth-page-card { height: auto; align-self: center; }', $css);
         $this->assertStringContainsString('.auth-page-shell[data-auth-mode="login"] .auth-page-card { flex: 0 0 auto; height: auto; align-self: center; margin-top: auto; margin-bottom: auto; }', $css);
+        $this->assertStringContainsString('.auth-page-shell.auth-support-page .auth-page-card { height: auto; align-self: center; }', $css);
+        $this->assertStringContainsString('.auth-page-shell.auth-support-page .auth-page-card { flex: 0 0 auto; height: auto; align-self: center; margin-top: auto; margin-bottom: auto; }', $css);
+        $this->assertStringContainsString('.auth-page-shell.auth-support-page .auth-page-form-wrap { max-width: 470px; }', $css);
+        $this->assertStringContainsString('.auth-page-topbar, .auth-page-card { width: min(680px, 100%); }', $css);
+        $this->assertStringContainsString('.auth-page-form-side { min-height: 0; padding: 24px clamp(28px, 5vw, 44px);', $css);
         $this->assertStringContainsString('background: #dc2626;', $css);
         $this->assertStringNotContainsString('background: var(--bg2, #f7fafc);', $css);
 
