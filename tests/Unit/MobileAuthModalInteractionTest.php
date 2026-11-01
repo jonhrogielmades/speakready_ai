@@ -136,12 +136,19 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('overflow-y: auto;', $css);
         $this->assertStringContainsString('.auth-page-input:-webkit-autofill', $css);
         $this->assertStringContainsString('-webkit-text-fill-color: var(--auth-control-text) !important;', $css);
+        $this->assertStringContainsString('.auth-page-input:focus-visible { outline: 0 !important;', $css);
         $this->assertStringNotContainsString('background: var(--bg2, #f7fafc);', $css);
 
         $this->assertStringContainsString('id="authPageThemeToggle"', $markup);
         $this->assertStringContainsString('window.SpeakReadyTheme.toggle()', $script);
         $this->assertStringContainsString("themeToggle.setAttribute('aria-label'", $script);
         $this->assertStringContainsString('body.auth-mobile-shell:not(.auth-page-body)', $mobileLayout);
+
+        $switchPosition = strpos($markup, 'class="auth-page-switch"');
+        $loginSubmitPosition = strpos($markup, 'id="loginBtn"');
+        $this->assertNotFalse($switchPosition);
+        $this->assertNotFalse($loginSubmitPosition);
+        $this->assertGreaterThan($loginSubmitPosition, $switchPosition, 'The account switch should sit below the primary login/register action.');
     }
 
     public function test_submit_transition_prevents_double_submission_and_recovers_from_history(): void

@@ -211,7 +211,7 @@ html[data-theme="light"] body.auth-page-body {
 .auth-page-form-side { min-height: 0; display: flex; align-items: center; padding: clamp(22px, 2.7vw, 40px); background: var(--auth-panel); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
 .auth-page-form-wrap { width: 100%; max-width: 610px; margin: auto; }
 .auth-page-shell[data-auth-mode="login"] .auth-page-form-wrap { max-width: 470px; }
-.auth-page-switch { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 20px; color: var(--auth-subtle); font-size: .74rem; }
+.auth-page-switch { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 15px 0 0; color: var(--auth-subtle); font-size: .74rem; text-align: center; }
 .auth-page-switch a { display: inline-flex; align-items: center; gap: 6px; color: var(--auth-link); font-weight: 750; text-decoration: none; }
 .auth-page-switch a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .auth-page-heading { display: flex; align-items: center; gap: 14px; }
@@ -268,7 +268,9 @@ html[data-theme="light"] body.auth-page-body {
 .auth-page-input-wrap { min-height: 48px; display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 9px; padding: 0 14px; color: var(--auth-control-icon); background: var(--auth-control); border: 1px solid var(--auth-control-border); border-radius: 12px; transition: color .16s ease, border-color .16s ease, background-color .16s ease, box-shadow .16s ease; }
 .auth-page-input-wrap:focus-within { color: var(--pur, #2563eb); background: var(--auth-control-focus); border-color: var(--pur, #2563eb); box-shadow: 0 0 0 4px rgba(37, 99, 235, .16); }
 .auth-page-password-wrap { grid-template-columns: 20px minmax(0, 1fr) 42px; padding-right: 4px; }
-.auth-page-input { width: 100%; min-width: 0; height: 46px; padding: 0; color: var(--auth-control-text); -webkit-text-fill-color: var(--auth-control-text); caret-color: var(--auth-control-text); font-family: inherit; font-size: .82rem; line-height: 1.2; background: transparent; border: 0; outline: 0; }
+.auth-page-input { width: 100%; min-width: 0; height: 46px; padding: 0; color: var(--auth-control-text); -webkit-text-fill-color: var(--auth-control-text); caret-color: var(--auth-control-text); font-family: inherit; font-size: .82rem; line-height: 1.2; background: transparent !important; border: 0; outline: 0 !important; box-shadow: none !important; }
+.auth-page-input:focus,
+.auth-page-input:focus-visible { outline: 0 !important; outline-offset: 0 !important; box-shadow: none !important; }
 .auth-page-input::placeholder { color: var(--auth-control-placeholder); -webkit-text-fill-color: var(--auth-control-placeholder); opacity: 1; }
 .auth-page-input[aria-invalid="true"] { color: var(--auth-control-text); }
 .auth-page-input:-webkit-autofill,
@@ -349,7 +351,7 @@ html[data-theme="dark"] .auth-page-alert-success { color: #a7f3d0; background: r
 html.dm .auth-page-brand-mark,
 html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184, .2); box-shadow: 0 8px 24px rgba(0, 0, 0, .22); }
 
-.auth-page-shell[data-auth-mode="register"] .auth-page-switch { margin-bottom: 12px; }
+.auth-page-shell[data-auth-mode="register"] .auth-page-switch { margin-top: 13px; }
 .auth-page-shell[data-auth-mode="register"] .auth-page-heading { gap: 12px; }
 .auth-page-shell[data-auth-mode="register"] .auth-page-heading-icon { width: 44px; height: 44px; flex-basis: 44px; border-radius: 13px; }
 .auth-page-shell[data-auth-mode="register"] .auth-page-heading h1 { font-size: clamp(1.42rem, 2vw, 1.75rem); }
@@ -438,8 +440,9 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
    .auth-page-card { flex: 1; overflow: visible; border: 0; border-radius: 20px; box-shadow: none; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-card { min-height: 0; }
    .auth-page-form-side { min-height: 0; align-items: flex-start; padding: 18px 14px 22px; border-radius: 20px; overflow: visible; scrollbar-gutter: auto; }
+   .auth-page-shell[data-auth-mode="login"] .auth-page-form-side { align-items: center; }
    .auth-page-form-wrap, .auth-page-shell[data-auth-mode="login"] .auth-page-form-wrap { max-width: 520px; margin: 0 auto; }
-   .auth-page-switch { justify-content: flex-start; flex-wrap: wrap; margin-bottom: 18px; font-size: .74rem; }
+   .auth-page-switch { justify-content: center; margin: 14px 0 0; font-size: .74rem; text-align: center; }
    .auth-page-heading { gap: 12px; }
    .auth-page-heading-icon { width: 42px; height: 42px; flex-basis: 42px; border-radius: 12px; }
    .auth-page-heading h1 { font-size: 1.4rem; }
@@ -456,7 +459,7 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
    .auth-page-password-rules { font-size: .66rem; }
    .auth-page-check { font-size: .73rem; }
    .auth-page-submit { min-height: 50px; font-size: .86rem; }
-   .auth-page-shell[data-auth-mode="register"] .auth-page-switch { margin-bottom: 16px; }
+   .auth-page-shell[data-auth-mode="register"] .auth-page-switch { margin-top: 13px; }
    .auth-page-shell[data-auth-mode="register"] .auth-page-intro { margin: 7px 0 14px; }
    .auth-page-shell[data-auth-mode="register"] .auth-page-google { min-height: 50px; }
    .auth-page-shell[data-auth-mode="register"] .auth-page-divider { margin: 15px 0; }
@@ -478,8 +481,9 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
 }
 
 @media (max-width: 640px) and (max-height: 760px) {
+   .auth-page-shell[data-auth-mode="login"] .auth-page-form-side { align-items: flex-start; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-form-side { padding-top: 12px; padding-bottom: 16px; }
-   .auth-page-shell[data-auth-mode="login"] .auth-page-switch { margin-bottom: 14px; }
+   .auth-page-shell[data-auth-mode="login"] .auth-page-switch { margin-top: 10px; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-intro { margin: 7px 0 13px; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-divider { margin: 13px 0; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-form { gap: 11px; }

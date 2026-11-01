@@ -58,11 +58,6 @@
 
       <div class="auth-page-form-side" id="authFormPanel" tabindex="-1">
          <div class="auth-page-form-wrap">
-            <div class="auth-page-switch">
-               <span>{{ $isRegister ? 'Already have an account?' : 'New to '.$brandName.'?' }}</span>
-               <a href="{{ $isRegister ? $loginPageUrl : $registerPageUrl }}">{{ $isRegister ? 'Log in' : 'Create an account' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
-            </div>
-
             <div class="auth-page-heading">
                <span class="auth-page-heading-icon" aria-hidden="true"><i class="fa-solid {{ $isRegister ? 'fa-user-plus' : 'fa-lock' }}"></i></span>
                <div>
@@ -214,6 +209,11 @@
                   <button type="submit" class="auth-page-submit" id="loginBtn"><span>Log in securely</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
                </form>
             @endif
+
+            <div class="auth-page-switch">
+               <span>{{ $isRegister ? 'Already have an account?' : 'New to '.$brandName.'?' }}</span>
+               <a href="{{ $isRegister ? $loginPageUrl : $registerPageUrl }}">{{ $isRegister ? 'Log in' : 'Create an account' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
 
             <p class="auth-page-security-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>Your information is encrypted and handled securely.</p>
          </div>
