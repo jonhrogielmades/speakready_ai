@@ -189,7 +189,6 @@
                   <div class="auth-page-field">
                      <div class="auth-page-label-row">
                         <label for="loginPass">Password</label>
-                        <a href="{{ route('password.request') }}">Forgot password?</a>
                      </div>
                      <div class="auth-page-input-wrap auth-page-password-wrap">
                         <i class="fa-solid fa-lock" aria-hidden="true"></i>
@@ -197,6 +196,7 @@
                         <button type="button" class="auth-page-password-toggle" data-password-toggle aria-controls="loginPass" aria-label="Show password"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
                      </div>
                      @error('password')<small class="auth-page-field-error" id="loginPasswordError"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ $message }}</small>@enderror
+                     <div class="auth-page-forgot-link"><a href="{{ route('password.request') }}">Forgot password?</a></div>
                   </div>
 
                   <div class="auth-page-options">

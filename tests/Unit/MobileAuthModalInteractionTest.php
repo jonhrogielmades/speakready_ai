@@ -19,6 +19,12 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString("action=\"{{ route('register.submit') }}\"", $markup);
         $this->assertStringContainsString('data-auth-submit="login"', $markup);
         $this->assertStringContainsString('data-auth-submit="register"', $markup);
+        $forgotLinkPosition = strpos($markup, 'class="auth-page-forgot-link"');
+        $passwordInputPosition = strpos($markup, 'id="loginPass"');
+        $this->assertNotFalse($forgotLinkPosition);
+        $this->assertNotFalse($passwordInputPosition);
+        $this->assertGreaterThan($passwordInputPosition, $forgotLinkPosition, 'The forgot-password link should sit below the password input.');
+        $this->assertStringContainsString('.auth-page-forgot-link { display: flex; justify-content: flex-end;', $css);
         $this->assertStringNotContainsString('class="modal', $markup);
         $this->assertStringNotContainsString('data-bs-toggle="modal"', $markup);
 

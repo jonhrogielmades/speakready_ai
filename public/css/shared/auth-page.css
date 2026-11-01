@@ -360,8 +360,9 @@ body.auth-page-body .auth-page-form-side .auth-page-password-status.is-invalid {
 .auth-page-field { min-width: 0; }
 .auth-page-field > label, .auth-page-label-row label { display: block; margin-bottom: 5px; color: var(--auth-text); font-size: .7rem; font-weight: 720; }
 .auth-page-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.auth-page-label-row a { color: var(--auth-link); font-size: .69rem; font-weight: 700; text-decoration: none; }
-.auth-page-label-row a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.auth-page-label-row a, .auth-page-forgot-link a { color: var(--auth-link); font-size: .69rem; font-weight: 700; text-decoration: none; }
+.auth-page-label-row a:hover, .auth-page-forgot-link a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.auth-page-forgot-link { display: flex; justify-content: flex-end; margin-top: -5px; }
 
 .auth-page-input-wrap { min-height: 48px; display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 9px; padding: 0 14px; color: var(--auth-control-icon); background: var(--auth-control); border: 1px solid var(--auth-control-border); border-radius: 12px; transition: color .16s ease, border-color .16s ease, background-color .16s ease, box-shadow .16s ease; }
 .auth-page-input-wrap:focus-within { color: var(--pur, #2563eb); background: var(--auth-control-focus); border-color: var(--pur, #2563eb); box-shadow: 0 0 0 4px rgba(37, 99, 235, .16); }
