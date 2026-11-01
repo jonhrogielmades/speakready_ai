@@ -14,7 +14,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=8') }}">
-      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=3') }}" data-page-style="auth-page-shared">
+      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=4') }}" data-page-style="auth-page-shared">
       <link rel="stylesheet" href="{{ asset('css/shared/legal-page.css?v=1') }}" data-page-style="legal-page">
       <script src="{{ asset('js/auth-page.js?v=2') }}" defer></script>
    </head>
@@ -30,7 +30,7 @@
                   <i class="fa-regular fa-sun" data-auth-theme-icon="sun" aria-hidden="true"></i>
                   <i class="fa-regular fa-moon" data-auth-theme-icon="moon" aria-hidden="true"></i>
                </button>
-               <a class="auth-page-back" href="{{ url('/') }}">
+               <a class="auth-page-back" href="{{ url('/') }}" aria-label="Exit to home" title="Exit to home">
                   <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
                   <span>Back to home</span>
                </a>

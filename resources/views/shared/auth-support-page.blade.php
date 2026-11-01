@@ -20,7 +20,7 @@
             <i class="fa-regular fa-sun" data-auth-theme-icon="sun" aria-hidden="true"></i>
             <i class="fa-regular fa-moon" data-auth-theme-icon="moon" aria-hidden="true"></i>
          </button>
-         <a class="auth-page-back" href="{{ url('/') }}">
+         <a class="auth-page-back" href="{{ url('/') }}" aria-label="Exit to home" title="Exit to home">
             <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
             <span>Back to home</span>
          </a>

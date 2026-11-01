@@ -137,6 +137,9 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('.auth-page-input:-webkit-autofill', $css);
         $this->assertStringContainsString('-webkit-text-fill-color: var(--auth-control-text) !important;', $css);
         $this->assertStringContainsString('.auth-page-input:focus-visible { outline: 0 !important;', $css);
+        $this->assertStringContainsString('linear-gradient(120deg, #020617 0%, #071b2f 48%, #063044 100%)', $css);
+        $this->assertStringContainsString('linear-gradient(120deg, #f8fcff 0%, #edfaff 46%, #dff5ff 100%)', $css);
+        $this->assertStringContainsString('background: #dc2626;', $css);
         $this->assertStringNotContainsString('background: var(--bg2, #f7fafc);', $css);
 
         $this->assertStringContainsString('id="authPageThemeToggle"', $markup);

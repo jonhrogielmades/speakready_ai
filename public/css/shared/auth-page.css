@@ -17,6 +17,12 @@ body.auth-page-body.auth-mobile-shell {
    --auth-link: #7cc4ff;
    --auth-divider: rgba(220, 234, 245, .24);
    --auth-shadow: 0 28px 90px rgba(2, 12, 27, .32), 0 2px 8px rgba(2, 12, 27, .18);
+   --auth-page-background:
+      radial-gradient(circle at 14% 20%, rgba(34, 211, 238, .16), transparent 34%),
+      radial-gradient(circle at 84% 18%, rgba(37, 99, 235, .22), transparent 36%),
+      linear-gradient(rgba(56, 189, 248, .08) 1px, transparent 1px) 0 0 / 100% 42px,
+      linear-gradient(90deg, rgba(56, 189, 248, .08) 1px, transparent 1px) 0 0 / 48px 100%,
+      linear-gradient(120deg, #020617 0%, #071b2f 48%, #063044 100%);
    --bg: var(--auth-canvas);
    --bg2: var(--auth-control);
    --sf: var(--auth-panel);
@@ -31,10 +37,7 @@ body.auth-page-body.auth-mobile-shell {
    padding: 0 !important;
    color: var(--auth-text);
    color-scheme: dark;
-   background:
-      radial-gradient(circle at 8% 4%, rgba(14, 165, 233, .13), transparent 27rem),
-      radial-gradient(circle at 92% 12%, rgba(99, 102, 241, .12), transparent 30rem),
-      var(--auth-canvas);
+   background: var(--auth-page-background);
    overflow-x: hidden;
 }
 
@@ -56,6 +59,12 @@ html[data-theme="light"] body.auth-page-body {
    --auth-link: #1d4ed8;
    --auth-divider: #d7e1eb;
    --auth-shadow: 0 28px 90px rgba(15, 23, 42, .14), 0 2px 8px rgba(15, 23, 42, .05);
+   --auth-page-background:
+      radial-gradient(circle at 14% 22%, rgba(6, 182, 212, .16), transparent 34%),
+      radial-gradient(circle at 86% 18%, rgba(37, 99, 235, .18), transparent 36%),
+      linear-gradient(rgba(14, 165, 233, .075) 1px, transparent 1px) 0 0 / 100% 42px,
+      linear-gradient(90deg, rgba(14, 165, 233, .075) 1px, transparent 1px) 0 0 / 48px 100%,
+      linear-gradient(120deg, #f8fcff 0%, #edfaff 46%, #dff5ff 100%);
    color-scheme: light;
 }
 
@@ -112,14 +121,17 @@ html[data-theme="light"] body.auth-page-body {
    min-height: 42px;
    gap: 8px;
    padding: 0 13px;
-   color: var(--auth-muted);
+   color: #fff;
    font-size: .82rem;
    font-weight: 650;
-   border: 1px solid transparent;
+   background: #dc2626;
+   border: 1px solid #dc2626;
    border-radius: 11px;
-   transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease;
+   box-shadow: 0 8px 18px rgba(220, 38, 38, .2);
+   transition: color .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
-.auth-page-back:hover { color: var(--auth-link); background: var(--auth-panel-raised); border-color: var(--auth-border); transform: translateX(-2px); }
+.auth-page-back:hover,
+.auth-page-back:focus-visible { color: #fff; background: #b91c1c; border-color: #b91c1c; box-shadow: 0 10px 22px rgba(185, 28, 28, .28); transform: translateX(-2px); }
 .auth-page-topbar-actions { display: flex; align-items: center; gap: 6px; }
 .auth-page-theme-toggle {
    width: 42px;
@@ -341,6 +353,7 @@ html[data-theme="light"] body.auth-page-body {
    outline: 3px solid rgba(37, 99, 235, .36);
    outline-offset: 3px;
 }
+.auth-page-back:focus-visible { outline-color: rgba(248, 113, 113, .62); }
 
 html.dm .auth-page-alert-error,
 html[data-theme="dark"] .auth-page-alert-error { color: #fecaca; background: rgba(127, 29, 29, .24); border-color: rgba(248, 113, 113, .35); }
@@ -418,14 +431,14 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
 @media (max-width: 980px) {
    .auth-page-shell { padding-right: max(18px, env(safe-area-inset-right, 0px)); padding-left: max(18px, env(safe-area-inset-left, 0px)); }
    .auth-page-topbar, .auth-page-card { width: min(720px, 100%); }
-   .auth-page-card { grid-template-columns: minmax(0, 1fr); }
+   .auth-page-card { grid-template-columns: minmax(0, 1fr); background: transparent; }
    .auth-page-promo { display: none; }
-   .auth-page-form-side { min-height: 0; padding: clamp(28px, 6vw, 52px); }
+   .auth-page-form-side { min-height: 0; padding: clamp(28px, 6vw, 52px); background: transparent; }
 }
 
 @media (max-width: 640px) {
    body.auth-page-body.auth-desktop-shell,
-   body.auth-page-body.auth-mobile-shell { background: var(--auth-panel); }
+   body.auth-page-body.auth-mobile-shell { background: var(--auth-page-background); }
    .auth-page-shell {
       min-height: 100dvh;
       padding: max(8px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));

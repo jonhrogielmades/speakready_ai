@@ -69,6 +69,10 @@ const authPageScriptVersions = [...viewSource.matchAll(/auth-page\.js[\s\S]{0,80
 assert(authPageScriptVersions.length > 0, 'No auth-page.js asset reference was found.');
 assert(new Set(authPageScriptVersions).size === 1, `auth-page.js cache versions are inconsistent: ${[...new Set(authPageScriptVersions)].join(', ')}`);
 
+const authPageStyleVersions = [...viewSource.matchAll(/auth-page\.css[\s\S]{0,80}?v=(\d+)/g)].map(match => match[1]);
+assert(authPageStyleVersions.length > 0, 'No auth-page.css asset reference was found.');
+assert(new Set(authPageStyleVersions).size === 1, `auth-page.css cache versions are inconsistent: ${[...new Set(authPageStyleVersions)].join(', ')}`);
+
 const legalPageStyleVersions = [...viewSource.matchAll(/legal-page\.css[\s\S]{0,80}?v=(\d+)/g)].map(match => match[1]);
 assert(legalPageStyleVersions.length > 0, 'No legal-page.css asset reference was found.');
 assert(new Set(legalPageStyleVersions).size === 1, `legal-page.css cache versions are inconsistent: ${[...new Set(legalPageStyleVersions)].join(', ')}`);
