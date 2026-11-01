@@ -103,7 +103,7 @@
         document.getElementById('thbtn')?.addEventListener('click', toggleTheme);
     });
 
-    const guestSectionIds = ['hero', 'features', 'how', 'benefits', 'developers', 'faq', 'contact'];
+    const guestSectionIds = ['hero', 'about', 'how', 'developers', 'faq', 'contact'];
     const guestSections = guestSectionIds.map(function (id) { return document.getElementById(id); }).filter(Boolean);
     const guestNavigationLinks = Array.from(document.querySelectorAll([
         '#nbar .nav-link[href^="#"]',

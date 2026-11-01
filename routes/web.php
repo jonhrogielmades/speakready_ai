@@ -15,7 +15,6 @@ use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserMissionController;
 use App\Models\Category;
-use App\Services\LandingStatsService;
 use App\Services\QuestionDatasetProvider;
 use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
@@ -28,7 +27,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 
-Route::get('/', function (LandingStatsService $landingStatsService) {
+Route::get('/', function () {
     $legacyAuthMode = request('auth_modal');
     if (in_array($legacyAuthMode, ['login', 'signup', 'register'], true)) {
         $routeName = in_array($legacyAuthMode, ['signup', 'register'], true) ? 'register' : 'login';
@@ -56,9 +55,7 @@ Route::get('/', function (LandingStatsService $landingStatsService) {
         }
     }
 
-    return mobile_view('welcome', [
-        'landingStats' => $landingStatsService->summary(),
-    ]);
+    return mobile_view('welcome');
 });
 
 // Auth Routes

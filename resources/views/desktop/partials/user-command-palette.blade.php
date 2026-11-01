@@ -38,16 +38,16 @@
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
-                <a id="gqn-destination-features" class="ucp-result" href="#features" data-ucp-item>
-                    <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Features</strong><small>Explore AI-powered interview tools</small></span>
+                <a id="gqn-destination-about" class="ucp-result" href="#about" data-ucp-item>
+                    <span class="ucp-result-icon ucp-cyan"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>About the System</strong><small>Learn how SpeakReady supports interview practice</small></span>
                     <span class="ucp-result-group">Explore</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
-                <a id="gqn-destination-benefits" class="ucp-result" href="#benefits" data-ucp-item>
-                    <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-award" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Interview Categories</strong><small>Explore practice paths by interview type</small></span>
+                <a id="gqn-destination-how" class="ucp-result" href="#how" data-ucp-item>
+                    <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-list-ol" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>How It Works</strong><small>See the practice flow from setup to feedback</small></span>
                     <span class="ucp-result-group">Explore</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>

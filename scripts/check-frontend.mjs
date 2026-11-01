@@ -65,6 +65,14 @@ const guestScriptVersions = [...viewSource.matchAll(/guest\.js[\s\S]{0,80}?v=(\d
 assert(guestScriptVersions.length > 0, 'No guest.js asset reference was found.');
 assert(new Set(guestScriptVersions).size === 1, `guest.js cache versions are inconsistent: ${[...new Set(guestScriptVersions)].join(', ')}`);
 
+const authPageScriptVersions = [...viewSource.matchAll(/auth-page\.js[\s\S]{0,80}?v=(\d+)/g)].map(match => match[1]);
+assert(authPageScriptVersions.length > 0, 'No auth-page.js asset reference was found.');
+assert(new Set(authPageScriptVersions).size === 1, `auth-page.js cache versions are inconsistent: ${[...new Set(authPageScriptVersions)].join(', ')}`);
+
+const legalPageStyleVersions = [...viewSource.matchAll(/legal-page\.css[\s\S]{0,80}?v=(\d+)/g)].map(match => match[1]);
+assert(legalPageStyleVersions.length > 0, 'No legal-page.css asset reference was found.');
+assert(new Set(legalPageStyleVersions).size === 1, `legal-page.css cache versions are inconsistent: ${[...new Set(legalPageStyleVersions)].join(', ')}`);
+
 const serviceWorkerVersions = [...viewSource.matchAll(/sw\.js\?v=(\d+)/g)].map(match => match[1]);
 assert(serviceWorkerVersions.length > 0, 'No service-worker asset reference was found in the views.');
 assert(new Set(serviceWorkerVersions).size === 1, `Service-worker asset versions are inconsistent: ${[...new Set(serviceWorkerVersions)].join(', ')}`);
@@ -120,6 +128,7 @@ assert(
 );
 
 for (const relativePath of [
+    'public/js/auth-page.js',
     'public/js/guest.js',
     'public/js/main.js',
     'public/js/media-permission-support.js',

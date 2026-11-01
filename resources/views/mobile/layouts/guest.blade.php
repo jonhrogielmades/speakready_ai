@@ -23,7 +23,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=35') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=37') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
@@ -68,8 +68,6 @@
                   </a>
                   <div class="d-none d-xl-flex align-items-center gap-1 mx-auto">
                      <a href="#hero" class="nav-link">Home</a>
-                     <a href="#features" class="nav-link">Features</a>
-                     <a href="#benefits" class="nav-link">Interview Categories</a>
                      <a href="#developers" class="nav-link">Developers</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
@@ -110,7 +108,7 @@
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                         <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6">Register for Free</a>
                         <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn" id="heroInstallBtn"><i class="fa-solid fa-download me-2"></i>Install App</button>
-                        <a href="#features" class="boc btn px-4 py-3 fs-6 hero-learn-btn">Learn More</a>
+                        <a href="#about" class="boc btn px-4 py-3 fs-6 hero-learn-btn">Learn More</a>
                      </div>
                     </div>
                  </div>
@@ -185,15 +183,15 @@
                 </div>
              </div>
          </section>
-         <!-- ABOUT THE SYSTEM & SYSTEM STATS -->
+         <!-- ABOUT THE SYSTEM -->
          <section id="about" class="sp position-relative" style="background:var(--bg2)">
             <div class="container position-relative" style="z-index:1">
                <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">About the System</span>
                   <h2 class="stitle">Built for focused <span class="gt">job interview practice</span></h2>
                </div>
-               <div class="row align-items-center g-5">
-                  <div class="col-lg-6 rv">
+               <div class="row justify-content-center g-5">
+                  <div class="col-12 mx-auto rv about-system-content">
                      <div class="about-system-panel">
                         <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI guides users through a complete job-interview practice flow: choose the Job Interviews scenario, select a target position, set the interview structure, choose support controls, answer by text, voice, or hybrid mode, and review evidence-based feedback. Coaching On and optional Camera Detection support practice, while Real Interview Mode keeps the session quieter and readiness scoring focused on answer quality.</p>
 
@@ -207,128 +205,7 @@
                         </div>
                      </div>
                   </div>
-                  <div class="col-lg-6 rv" style="transition-delay:.1s">
-                     <!-- STATISTICS -->
-                      <div class="row g-3 text-center landing-stats-row">
-                         <div class="col-3" data-landing-stat="registered-users">
-                            <div class="gc p-4 h-100">
-                               <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">{{ data_get($landingStats ?? [], 'registered_users.display', '0') }}</div>
-                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Registered Users</div>
-                            </div>
-                         </div>
-                         <div class="col-3" data-landing-stat="interview-sessions">
-                            <div class="gc p-4 h-100">
-                               <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">{{ data_get($landingStats ?? [], 'interview_sessions.display', '0') }}</div>
-                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Interview Sessions</div>
-                            </div>
-                         </div>
-                         <div class="col-3" data-landing-stat="questions-available">
-                            <div class="gc p-4 h-100">
-                               <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">{{ data_get($landingStats ?? [], 'questions_available.display', '0') }}</div>
-                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Questions Available</div>
-                            </div>
-                         </div>
-                         <div class="col-3" data-landing-stat="feedback-generated">
-                            <div class="gc p-4 h-100">
-                               <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">{{ data_get($landingStats ?? [], 'feedback_generated.display', '0') }}</div>
-                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">AI Feedback Generated</div>
-                            </div>
-                         </div>
-                         <div class="col-12 mt-3" data-landing-stat="success-rate">
-                            <div class="gc p-4">
-                               <div class="d-flex justify-content-center align-items-center gap-2">
-                                 <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">{{ data_get($landingStats ?? [], 'success_rate.display', '0') }}</span>%</div>
-                                 <div class="text-start plbl text-uppercase" style="font-size:0.9rem; letter-spacing:1px;">Success<br>Rate</div>
-                               </div>
-                            </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </section>
 
-         <!-- CORE FEATURES -->
-         <section id="features" class="sp">
-            <div class="container">
-               <div class="text-center mb-5 rv">
-                  <span class="slbl">Core Features</span>
-                  <h2 class="stitle">Built around the <span class="gt">latest practice flow</span></h2>
-               </div>
-               <div class="swiper landingFeatureSwiper landing-auto-carousel features-auto-carousel" aria-label="Core features carousel">
-                  <div class="row g-4 swiper-wrapper">
-                  <div class="col-md-3 col-sm-6 rv swiper-slide">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#2563eb;--feature-icon-bg:rgba(37,99,235,.14);--feature-icon-border:rgba(37,99,235,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-clipboard-list fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Scenario Setup</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Start with the Job Interviews scenario, then anchor practice to a specific target position.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.05s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#10b981;--feature-icon-bg:rgba(16,185,129,.14);--feature-icon-border:rgba(16,185,129,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-layer-group fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Interview Structure</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Set difficulty, question count, timer, and question types before the session starts.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.2s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#f59e0b;--feature-icon-bg:rgba(245,158,11,.14);--feature-icon-border:rgba(245,158,11,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-video fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Camera Detection</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Turn camera detection on for local body-language coaching notes, or keep the session answer-focused with camera off.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.25s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ef4444;--feature-icon-bg:rgba(239,68,68,.14);--feature-icon-border:rgba(239,68,68,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-keyboard fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Response Modes</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Practice with text, voice, or hybrid speech-to-text responses with room for manual edits.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.3s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#06b6d4;--feature-icon-bg:rgba(6,182,212,.14);--feature-icon-border:rgba(6,182,212,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-robot fa-lg"></i></div>
-                         <h3 class="fs-6 fw-bold mb-2">Coaching Or Real Mode</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Choose Coaching On for live help, or Real Interview Mode for a quieter practice run.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.35s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ec4899;--feature-icon-bg:rgba(236,72,153,.14);--feature-icon-border:rgba(236,72,153,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-trophy fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Modules And Challenges</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Build skill through lessons, quizzes, challenge journeys, XP, streaks, and score goals.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.4s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#3b82f6;--feature-icon-bg:rgba(59,130,246,.14);--feature-icon-border:rgba(59,130,246,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-chart-line fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Progress Tracking</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Review readiness trends, scenario history, practice streaks, STAR coverage, and completed interview activity.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.45s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#22c55e;--feature-icon-bg:rgba(34,197,94,.14);--feature-icon-border:rgba(34,197,94,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Evidence Feedback</h3>
-                         <p style="font-size:.85rem;color:var(--tx2)">Review answer match, evidence quotes, priority actions, coaching summaries, and searchable history.</p>
-                     </div>
-                  </div>
-                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.5s">
-                     <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#6366f1;--feature-icon-bg:rgba(99,102,241,.14);--feature-icon-border:rgba(99,102,241,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-file-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Reports And History</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Open session records with scenario, difficulty, question count, scores, and exportable results.</p>
-                     </div>
-                  </div>
-                  </div>
-                  <div class="landing-carousel-control-bar">
-                     <div class="swiper-pagination landing-carousel-pagination landing-features-pagination"></div>
-                     <button type="button" class="landing-carousel-autoplay-toggle landing-features-autoplay-toggle" aria-label="Pause core features carousel" data-pause-label="Pause core features carousel" data-play-label="Play core features carousel">
-                        <i class="fa-solid fa-pause" aria-hidden="true"></i>
-                     </button>
-                  </div>
-                  <button type="button" class="swiper-button-next landing-carousel-next landing-features-next" aria-label="Next feature"></button>
-                  <button type="button" class="swiper-button-prev landing-carousel-prev landing-features-prev" aria-label="Previous feature"></button>
                </div>
             </div>
          </section>
@@ -394,61 +271,6 @@
                   </div>
                   <button type="button" class="swiper-button-next landing-carousel-next landing-how-next" aria-label="Next how it works step"></button>
                   <button type="button" class="swiper-button-prev landing-carousel-prev landing-how-prev" aria-label="Previous how it works step"></button>
-               </div>
-            </div>
-         </section>
-
-         <!-- INTERVIEW CATEGORIES -->
-         <section id="benefits" class="sp position-relative">
-            <div class="aur aur-b" style="top:50%;right:-200px;transform:translateY(-50%)"></div>
-            <div class="container position-relative" style="z-index:1">
-               <div class="row justify-content-center">
-                  <div class="col-lg-10 rv">
-                     <div class="landing-section-heading mb-4">
-                        <span class="slbl">Interview Categories</span>
-                        <h2 class="stitle">One scenario with <span class="gt">flexible practice paths</span></h2>
-                     </div>
-                     <div class="swiper landingCategorySwiper landing-auto-carousel category-auto-carousel" aria-label="Interview categories carousel">
-                        <div class="row g-3 swiper-wrapper">
-                           <div class="col-sm-6 swiper-slide">
-                              <div class="gc p-4 h-100 text-center" style="border-top: 4px solid var(--pur);">
-                                 <div style="font-size:2rem; margin-bottom:15px; color:var(--pur)"><i class="fa-solid fa-briefcase"></i></div>
-                                 <h4 class="fs-5 fw-bold">Job Interviews</h4>
-                                 <p style="font-size:.85rem;color:var(--tx2)">Practice HR screening, behavioral, situational, role-fit, and salary expectation questions.</p>
-                              </div>
-                           </div>
-                           <div class="col-sm-6 swiper-slide">
-                              <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #f59e0b;">
-                                 <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-bullseye"></i></div>
-                                 <h4 class="fs-5 fw-bold">Target Roles</h4>
-                                 <p style="font-size:.85rem;color:var(--tx2)">Choose your target position so prompts match the role, difficulty, and hiring context.</p>
-                              </div>
-                           </div>
-                           <div class="col-sm-6 swiper-slide">
-                              <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #10b981;">
-                                 <div style="font-size:2rem; margin-bottom:15px; color:#10b981"><i class="fa-solid fa-comments"></i></div>
-                                 <h4 class="fs-5 fw-bold">Coaching On</h4>
-                                 <p style="font-size:.85rem;color:var(--tx2)">Get live guidance during practice while coaching-only delivery notes stay out of readiness scores.</p>
-                              </div>
-                           </div>
-                           <div class="col-sm-6 swiper-slide">
-                              <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
-                                 <div style="font-size:2rem; margin-bottom:15px; color:#3b82f6"><i class="fa-solid fa-user-tie"></i></div>
-                                 <h4 class="fs-5 fw-bold">Real Interview Mode</h4>
-                                 <p style="font-size:.85rem;color:var(--tx2)">Run a quieter practice session for a closer interview feel and scoring after completion.</p>
-                              </div>
-                           </div>
-                        </div>
-                        <div class="landing-carousel-control-bar">
-                           <div class="swiper-pagination landing-carousel-pagination landing-category-pagination"></div>
-                           <button type="button" class="landing-carousel-autoplay-toggle landing-category-autoplay-toggle" aria-label="Pause interview categories carousel" data-pause-label="Pause interview categories carousel" data-play-label="Play interview categories carousel">
-                              <i class="fa-solid fa-pause" aria-hidden="true"></i>
-                           </button>
-                        </div>
-                        <button type="button" class="swiper-button-next landing-carousel-next landing-category-next" aria-label="Next interview category"></button>
-                        <button type="button" class="swiper-button-prev landing-carousel-prev landing-category-prev" aria-label="Previous interview category"></button>
-                     </div>
-                  </div>
                </div>
             </div>
          </section>
@@ -644,9 +466,7 @@
                         <h5 class="footer-heading">Company</h5>
                         <ul class="list-unstyled footer-links">
                            <li><a href="#hero">Home</a></li>
-                           <li><a href="#features">Features</a></li>
                            <li><a href="#about">About</a></li>
-                           <li><a href="#benefits">Interview Categories</a></li>
                            <li><a href="#developers">Developers</a></li>
                         </ul>
                      </div>
@@ -730,57 +550,13 @@
       <!-- Swiper -->
       <script src="{{ asset('js/swiper-bundle.min.js') }}"></script>
 
-      <script src="{{ asset('js/guest.js?v=1') }}"></script>
+      <script src="{{ asset('js/guest.js?v=3') }}"></script>
       <script>
-         // Initialize CounterUp and Swiper when document is ready
          document.addEventListener('DOMContentLoaded', function() {
-             const animateCounter = function(counter) {
-                 if (counter.dataset.counterReady === "true") return;
-                 counter.dataset.counterReady = "true";
-                 const originalText = counter.textContent.trim();
-                 const numericText = originalText.replace(/,/g, "");
-                 const target = Number.parseFloat(numericText);
-                 if (!Number.isFinite(target)) return;
-                 const decimals = (numericText.split(".")[1] || "").length;
-                 const useGrouping = originalText.includes(",");
-                 const formatter = new Intl.NumberFormat(undefined, {
-                     minimumFractionDigits: decimals,
-                     maximumFractionDigits: decimals
-                 });
-                 const startTime = performance.now();
-                 const duration = 320;
-                 const step = function(now) {
-                     const progress = Math.min(1, (now - startTime) / duration);
-                     const eased = 1 - Math.pow(1 - progress, 3);
-                     const value = target * eased;
-                     counter.textContent = useGrouping ? formatter.format(value) : value.toFixed(decimals);
-                     if (progress < 1) {
-                         requestAnimationFrame(step);
-                     } else {
-                         counter.textContent = originalText;
-                     }
-                 };
-                 requestAnimationFrame(step);
-             };
-
-             const counters = Array.from(document.querySelectorAll(".counter"));
-             if ("IntersectionObserver" in window) {
-                 const counterObserver = new IntersectionObserver(function(entries, observer) {
-                     entries.forEach(function(entry) {
-                         if (!entry.isIntersecting) return;
-                         animateCounter(entry.target);
-                         observer.unobserve(entry.target);
-                     });
-                 }, { threshold: 0.45 });
-                 counters.forEach(function(counter) { counterObserver.observe(counter); });
-             } else {
-                 counters.forEach(animateCounter);
-             }
-
              if(typeof Swiper !== 'undefined') {
                  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-                 document.querySelectorAll(".landingFeatureSwiper, .landingHowSwiper, .landingCategorySwiper").forEach(function(carouselEl) {
+                 document.querySelectorAll(".landingHowSwiper").forEach(function(carouselEl) {
                      const landingSwiper = new Swiper(carouselEl, {
                          slidesPerView: "auto",
                          centeredSlides: true,

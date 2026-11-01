@@ -13,6 +13,8 @@
       var transitionMessages = {
          login: ['Logging you in...', 'Opening your interview workspace securely.'],
          register: ['Creating your account...', 'Setting up your interview practice workspace.'],
+         recovery: ['Sending recovery details...', 'Opening a secure path back to your account.'],
+         reset: ['Updating your password...', 'Securing your account with the new password.'],
          'google-login': ['Connecting to Google...', 'Opening secure Google sign-in.'],
          'google-register': ['Signing up with Google...', 'Opening secure Google registration.']
       };
@@ -83,10 +85,10 @@
          });
       });
 
-      var passwordInput = document.getElementById('signupPass');
-      var confirmInput = document.getElementById('signupPassConfirm');
-      var validStatus = document.getElementById('signupPasswordValid');
-      var invalidStatus = document.getElementById('signupPasswordInvalid');
+      var passwordInput = document.querySelector('[data-password-strength]') || document.getElementById('signupPass');
+      var confirmInput = document.querySelector('[data-password-confirm]') || document.getElementById('signupPassConfirm');
+      var validStatus = document.querySelector('[data-password-valid]') || document.getElementById('signupPasswordValid');
+      var invalidStatus = document.querySelector('[data-password-invalid]') || document.getElementById('signupPasswordInvalid');
       var confirmStatus = document.querySelector('[data-confirm-password-status]');
 
       function passwordRules(value) {

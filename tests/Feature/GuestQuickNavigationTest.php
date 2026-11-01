@@ -18,10 +18,11 @@ class GuestQuickNavigationTest extends TestCase
             ->assertSee('id="userCommandPalette"', false)
             ->assertSee('id="userCommandList"', false)
             ->assertSee('id="gqn-destination-home"', false)
-            ->assertSee('id="gqn-destination-features"', false)
-            ->assertSee('id="gqn-destination-benefits"', false)
+            ->assertDontSee('id="gqn-destination-features"', false)
+            ->assertDontSee('id="gqn-destination-benefits"', false)
+            ->assertSee('id="gqn-destination-about"', false)
+            ->assertSee('id="gqn-destination-how"', false)
             ->assertSee('id="gqn-destination-developers"', false)
-            ->assertDontSee('id="gqn-destination-how"', false)
             ->assertDontSee('id="gqn-destination-faq"', false)
             ->assertDontSee('id="gqn-destination-contact"', false)
             ->assertSee('class="ucp-guest-actions"', false)
@@ -33,14 +34,19 @@ class GuestQuickNavigationTest extends TestCase
             ->assertSee('Start Practicing', false)
             ->assertSee('href="'.route('login').'"', false)
             ->assertSee('href="'.route('register').'"', false)
-            ->assertSee('css/desktop/guest.css?v=21', false)
-            ->assertSee('js/guest.js?v=1', false)
+            ->assertSee('css/desktop/guest.css?v=23', false)
+            ->assertSee('js/guest.js?v=3', false)
             ->assertDontSee('js/main.js', false)
             ->assertDontSee('js/user-ui.js', false)
             ->assertDontSee('id="lofc"', false)
             ->assertDontSee('data-bs-target="#lofc"', false)
             ->assertDontSee('swTab(', false)
             ->assertDontSee('ui-mobile-wire', false)
+            ->assertDontSee('id="features"', false)
+            ->assertDontSee('id="benefits"', false)
+            ->assertDontSee('landing-stats-row', false)
+            ->assertDontSee('data-landing-stat=', false)
+            ->assertSee('href="#about" class="boc btn', false)
             ->assertDontSee('data-ucp-search', false)
             ->assertDontSee('class="ucp-mobile-launcher"', false)
             ->assertDontSee('data-ucp-context="guest"', false)
@@ -84,6 +90,8 @@ class GuestQuickNavigationTest extends TestCase
         $this->assertStringContainsString('clock.dateTime = now.toISOString()', $guestScript);
         $this->assertStringNotContainsString('setupViewportMetrics', $guestScript);
         $this->assertStringNotContainsString('SpeakReadyViewport', $guestScript);
+        $this->assertStringNotContainsString("'features'", $guestScript);
+        $this->assertStringNotContainsString("'benefits'", $guestScript);
         $this->assertStringNotContainsString('swTab(', $guestScript);
         $this->assertStringNotContainsString('#lofc', $guestScript);
     }

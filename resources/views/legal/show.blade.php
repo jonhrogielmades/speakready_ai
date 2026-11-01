@@ -3,74 +3,61 @@
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-      <meta name="theme-color" content="#f7fbff">
+      <meta name="theme-color" content="#f1f6fb">
       <title>{{ $title }} - SpeakReady AI</title>
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+      <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=8') }}">
-      <style>
-         .legal-shell { min-height: 100vh; background: var(--bg); color: var(--tx); }
-         .legal-nav { border-bottom: 1px solid var(--bd); background: color-mix(in srgb, var(--sf) 94%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
-         .legal-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--tx); font-weight: 800; text-decoration: none; }
-         .legal-brand img { width: 38px; height: 38px; object-fit: contain; background: #fff; border-radius: 8px; }
-         .legal-card { width: min(100%, 860px); margin: 0 auto; background: var(--sf); border: 1px solid var(--bd); border-radius: 8px; box-shadow: 0 18px 46px rgba(15, 23, 42, 0.12); }
-         .legal-kicker { color: var(--pur); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
-         .legal-title { color: var(--tx); font-weight: 900; letter-spacing: 0; }
-         .legal-intro, .legal-section p, .legal-updated { color: var(--tx2); }
-         .legal-section { border-top: 1px solid var(--bd); }
-         .legal-section h2 { color: var(--tx); font-size: 1rem; font-weight: 800; }
-         .legal-shell .container { max-width: 1120px; }
-         @media (max-width: 767.98px) {
-            .legal-nav .container { padding-inline: 16px; }
-            .legal-brand { gap: 8px; font-size: 0.95rem; }
-            .legal-brand img { width: 34px; height: 34px; }
-            .legal-nav .boc { padding: 8px 12px !important; font-size: 0.82rem; }
-            .legal-shell main.container { padding: 24px 12px !important; }
-            .legal-card { border-radius: 16px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.10); }
-            .legal-title { font-size: clamp(1.55rem, 7vw, 2rem); line-height: 1.16; }
-            .legal-intro, .legal-section p { font-size: 0.95rem; line-height: 1.7; }
-         }
-         @media (max-width: 380px) {
-            .legal-nav .container { gap: 10px !important; }
-            .legal-brand { font-size: 0.88rem; }
-            .legal-nav .boc { padding-inline: 10px !important; font-size: 0.78rem; }
-            .legal-card { padding: 20px !important; }
-         }
-         @supports not (background: color-mix(in srgb, #fff 50%, transparent)) {
-            .legal-nav { background: var(--sf); }
-         }
-      </style>
+      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=2') }}" data-page-style="auth-page-shared">
+      <link rel="stylesheet" href="{{ asset('css/shared/legal-page.css?v=1') }}" data-page-style="legal-page">
+      <script src="{{ asset('js/auth-page.js?v=2') }}" defer></script>
    </head>
-   <body class="legal-shell">
-      <nav class="legal-nav py-3">
-         <div class="container d-flex align-items-center justify-content-between gap-3">
-            <a class="legal-brand" href="{{ url('/') }}">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+   <body class="auth-page-body auth-desktop-shell legal-page-body" data-layout-shell="desktop" data-auth-layout="desktop">
+      <main id="authPage" class="auth-page-shell legal-page-shell" data-auth-mode="legal">
+         <header class="auth-page-topbar">
+            <a class="auth-page-brand" href="{{ url('/') }}" aria-label="SpeakReady AI home">
+               <span class="auth-page-brand-mark"><img src="{{ asset('img/logo.png') }}" alt=""></span>
                <span>SpeakReady AI</span>
             </a>
-            <a class="boc btn px-3 py-2" href="{{ url('/') }}">Back Home</a>
-         </div>
-      </nav>
+            <div class="auth-page-topbar-actions">
+               <button type="button" class="auth-page-theme-toggle" id="authPageThemeToggle" aria-label="Switch color theme" title="Switch color theme">
+                  <i class="fa-regular fa-sun" data-auth-theme-icon="sun" aria-hidden="true"></i>
+                  <i class="fa-regular fa-moon" data-auth-theme-icon="moon" aria-hidden="true"></i>
+               </button>
+               <a class="auth-page-back" href="{{ url('/') }}">
+                  <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                  <span>Back to home</span>
+               </a>
+            </div>
+         </header>
 
-      <main class="container py-5">
-         <article class="legal-card p-4 p-md-5">
-            <p class="legal-kicker mb-2">{{ $kicker }}</p>
-            <h1 class="legal-title h2 mb-3">{{ $title }}</h1>
-            <p class="legal-intro mb-4">{{ $intro }}</p>
+         <article class="legal-page-card" aria-labelledby="legalPageTitle">
+            <header class="legal-page-header">
+               <p class="legal-page-kicker">{{ $kicker }}</p>
+               <h1 class="legal-page-title" id="legalPageTitle">{{ $title }}</h1>
+               <p class="legal-page-intro">{{ $intro }}</p>
+            </header>
 
             @foreach($sections as $section)
-               <section class="legal-section pt-4 mt-4">
-                  <h2 class="mb-2">{{ $section['heading'] }}</h2>
-                  <p class="mb-0">{{ $section['body'] }}</p>
+               <section class="legal-page-section">
+                  <h2>{{ $section['heading'] }}</h2>
+                  <p>{{ $section['body'] }}</p>
                </section>
             @endforeach
 
-            <p class="legal-updated mt-4 mb-0 small">Last updated: {{ now()->format('F j, Y') }}</p>
+            <p class="legal-page-updated">Last updated: {{ now()->format('F j, Y') }}</p>
          </article>
+
+         <footer class="auth-page-footer legal-page-footer">
+            <span>&copy; {{ date('Y') }} SpeakReady AI</span><span aria-hidden="true">&bull;</span>
+            <a href="{{ route('legal.privacy') }}">Privacy</a><a href="{{ route('legal.terms') }}">Terms</a>
+         </footer>
       </main>
    </body>
 </html>

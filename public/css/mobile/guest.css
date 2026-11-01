@@ -6,13 +6,8 @@ html, body {
          html {
             scroll-padding-top: calc(var(--nav, 64px) + env(safe-area-inset-top, 0px) + 14px);
          }
-         #landing :is(#hero, #features, #how, #benefits, #developers, #faq, #contact) {
+         #landing :is(#hero, #about, #how, #developers, #faq, #contact) {
             scroll-margin-top: calc(var(--nav, 64px) + env(safe-area-inset-top, 0px) + 14px);
-         }
-         .feature-card:hover {
-            transform: translateY(-5px);
-            transition: transform 0.3s ease;
-            border-color: var(--pur);
          }
          .hnum {
             width: 40px; height: 40px; border-radius: 50%;
@@ -806,22 +801,6 @@ html, body {
                text-align: center;
             }
 
-            #benefits .landing-section-heading {
-               align-items: center;
-               text-align: center;
-            }
-
-            #benefits .landing-section-heading .slbl {
-               justify-content: center;
-            }
-
-            #benefits .landing-section-heading .stitle {
-               max-width: 340px;
-               margin-left: auto;
-               margin-right: auto;
-               text-align: center;
-            }
-
             #contact .landing-section-heading {
                align-items: center;
                text-align: center;
@@ -884,26 +863,6 @@ html, body {
 
             .gc.p-4 {
                padding: 17px !important;
-            }
-
-            .landing-stats-row {
-               --bs-gutter-x: 0.5rem;
-               --bs-gutter-y: 0.5rem;
-            }
-
-            .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .gc.p-4 {
-               padding: 10px 4px !important;
-            }
-
-            .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .pnum {
-               font-size: 1.55rem !important;
-            }
-
-            .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .plbl {
-               margin-top: 6px !important;
-               font-size: 0.52rem !important;
-               letter-spacing: 0.02em !important;
-               line-height: 1.2;
             }
          }
 
@@ -999,16 +958,6 @@ html, body {
             }
          }
 
-
-         .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) {
-            flex: 0 0 25%;
-            max-width: 25%;
-         }
-
-         .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .gc {
-            min-height: 100%;
-         }
-
          @media (max-width: 575.98px) {
             #about {
                overflow-x: hidden !important;
@@ -1041,65 +990,6 @@ html, body {
                margin-left: 0 !important;
                margin-right: 0 !important;
                box-sizing: border-box !important;
-            }
-
-            #about .landing-stats-row {
-               display: grid !important;
-               grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-               gap: 8px !important;
-               width: 100% !important;
-               max-width: 100% !important;
-               margin: 0 !important;
-               --bs-gutter-x: 0 !important;
-               --bs-gutter-y: 0 !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat] {
-               width: 100% !important;
-               max-width: none !important;
-               flex: none !important;
-               padding: 0 !important;
-               margin: 0 !important;
-               min-width: 0 !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat="success-rate"] {
-               grid-column: 1 / -1 !important;
-               margin-top: 6px !important;
-            }
-
-            #about .landing-stats-row .gc {
-               width: 100% !important;
-               max-width: 100% !important;
-               margin: 0 !important;
-               box-sizing: border-box !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .gc.p-4 {
-               min-height: 68px !important;
-               padding: 9px 4px !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .pnum {
-               font-size: 1.34rem !important;
-               line-height: 1 !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .plbl {
-               margin-top: 5px !important;
-               font-size: 0.48rem !important;
-               letter-spacing: 0 !important;
-               line-height: 1.15 !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat="success-rate"] .gc.p-4 {
-               min-height: 66px !important;
-               padding: 12px !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat="success-rate"] .gc > .d-flex {
-               width: 100% !important;
-               justify-content: center !important;
             }
          }
 
@@ -1476,10 +1366,6 @@ html, body {
 
          #landing .landing-auto-carousel .swiper-slide > .gc::after {
             content: none;
-         }
-
-         #landing .features-auto-carousel .feature-card {
-            min-height: 270px;
          }
 
          #landing .how-auto-carousel .gc {
@@ -2163,7 +2049,7 @@ html, body {
             -webkit-text-fill-color: var(--tx) !important;
          }
 
-         #landing :where(p, .ssub, .plbl, .footer-links a),
+         #landing :where(p, .ssub, .footer-links a),
          #landing :where([style*="color:var(--tx2)"], [style*="color: var(--tx2)"]) {
             color: var(--tx2) !important;
             -webkit-text-fill-color: var(--tx2) !important;
@@ -2178,7 +2064,6 @@ html, body {
          #landing .slbl,
          #landing .slbl *,
          #landing .hbadge,
-         #landing .pnum,
          #landing :where(.ftico, .ftico i, .tech-icons a:hover) {
             -webkit-text-fill-color: initial !important;
          }
@@ -2195,19 +2080,19 @@ html, body {
             -webkit-text-fill-color: transparent !important;
          }
 
-         #landing :where(.gc, .feature-card, .accordion-item) {
+         #landing :where(.gc, .accordion-item) {
             background: var(--sf) !important;
             border-color: var(--bd) !important;
             box-shadow: 0 14px 34px rgba(2, 6, 23, 0.12);
          }
 
-         html:not(.lm) #landing :where(.gc, .feature-card, .accordion-item) {
+         html:not(.lm) #landing :where(.gc, .accordion-item) {
             background: rgba(18, 18, 31, 0.96) !important;
             border-color: rgba(148, 163, 184, 0.18) !important;
             box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
          }
 
-         html.lm #landing :where(.gc, .feature-card, .accordion-item) {
+         html.lm #landing :where(.gc, .accordion-item) {
             background: #ffffff !important;
             border-color: rgba(37, 99, 235, 0.14) !important;
          }
@@ -2277,17 +2162,6 @@ html, body {
             -webkit-text-fill-color: var(--footer-link) !important;
          }
 
-         #landing .feature-card .ftico {
-            background: var(--feature-icon-bg) !important;
-            border-color: var(--feature-icon-border) !important;
-            color: var(--feature-icon-color) !important;
-         }
-
-         #landing .feature-card .ftico i {
-            color: var(--feature-icon-color) !important;
-            -webkit-text-fill-color: var(--feature-icon-color) !important;
-         }
-
          #landing :where(.boc, #thbtn, #mbtog, .nav-link),
          #pwa-install-prompt .pwa-btn-no {
             color: var(--tx) !important;
@@ -2304,23 +2178,22 @@ html, body {
          }
 
          @media (max-width: 575.98px) {
-            #landing :is(#about, #features, #how, #benefits) {
+            #landing :is(#about, #how) {
                padding-block: 54px !important;
             }
 
-            #landing :is(#about, #features, #how, #benefits) > .container {
+            #landing :is(#about, #how) > .container {
                padding-inline: 14px !important;
             }
 
-            #landing :is(#about, #features, #how, #benefits) .landing-section-heading,
-            #landing :is(#features) .text-center.mb-5 {
+            #landing :is(#about, #how) .landing-section-heading {
                width: min(100%, 356px);
                margin-inline: auto;
                margin-bottom: 22px !important;
                text-align: center;
             }
 
-            #landing :is(#about, #features, #how, #benefits) .slbl {
+            #landing :is(#about, #how) .slbl {
                min-height: 28px;
                padding: 6px 11px;
                justify-content: center;
@@ -2332,13 +2205,13 @@ html, body {
                line-height: 1;
             }
 
-            html:not(.lm) #landing :is(#about, #features, #how, #benefits) .slbl {
+            html:not(.lm) #landing :is(#about, #how) .slbl {
                background: rgba(15, 23, 42, 0.7);
                border-color: rgba(147, 197, 253, 0.2);
                box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
             }
 
-            #landing :is(#about, #features, #how, #benefits) .stitle {
+            #landing :is(#about, #how) .stitle {
                max-width: 350px !important;
                margin: 10px auto 0 !important;
                font-size: clamp(1.55rem, 8vw, 1.9rem) !important;
@@ -2435,55 +2308,6 @@ html, body {
                margin-right: 0 !important;
             }
 
-            #about .landing-stats-row {
-               display: grid !important;
-               grid-template-columns: repeat(2, minmax(0, 1fr));
-               gap: 8px !important;
-               margin: 2px 0 0 !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat] {
-               width: 100% !important;
-               max-width: none !important;
-               flex: none !important;
-               padding: 0 !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat="success-rate"] {
-               grid-column: 1 / -1;
-               margin-top: 0 !important;
-            }
-
-            #about .landing-stats-row .gc {
-               min-height: 96px !important;
-               padding: 12px 10px !important;
-               border-radius: 14px !important;
-               display: flex;
-               flex-direction: column;
-               align-items: center;
-               justify-content: center;
-            }
-
-            #about .landing-stats-row .pnum {
-               font-size: 1.55rem !important;
-               line-height: 1 !important;
-            }
-
-            #about .landing-stats-row .plbl {
-               margin-top: 7px !important;
-               font-size: 0.6rem !important;
-               line-height: 1.2 !important;
-               letter-spacing: 0.04em !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat="success-rate"] .gc {
-               min-height: 82px !important;
-            }
-
-            #about .landing-stats-row > [data-landing-stat="success-rate"] .pnum {
-               font-size: 2rem !important;
-            }
-
             #landing .landing-auto-carousel {
                --landing-carousel-card-width: min(calc(100vw - 44px), 332px);
                width: min(100%, 390px) !important;
@@ -2499,30 +2323,13 @@ html, body {
                text-align: center !important;
             }
 
-            #landing .features-auto-carousel .feature-card {
-               min-height: 238px !important;
-            }
-
-            #landing .how-auto-carousel .gc,
-            #landing .category-auto-carousel .gc {
+            #landing .how-auto-carousel .gc {
                min-height: 206px !important;
             }
 
             #landing .landing-auto-carousel .swiper-slide > .gc::before {
                padding: 1px !important;
                opacity: 0.72;
-            }
-
-            #landing .feature-card .ftico,
-            #landing .category-auto-carousel .gc > div:first-child {
-               width: 46px !important;
-               height: 46px !important;
-               margin: 0 auto 14px !important;
-               border-radius: 14px !important;
-               display: inline-flex !important;
-               align-items: center !important;
-               justify-content: center !important;
-               font-size: 1.1rem !important;
             }
 
             #landing .landing-auto-carousel h3,
@@ -2551,15 +2358,6 @@ html, body {
                color: #ffffff !important;
                box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
                font-size: 1rem !important;
-            }
-
-            #landing .category-auto-carousel .gc {
-               border-top-width: 0 !important;
-            }
-
-            #landing .category-auto-carousel .gc > div:first-child {
-               background: color-mix(in srgb, currentColor 14%, transparent);
-               border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
             }
 
             #landing .landing-carousel-pagination {
