@@ -546,7 +546,8 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
    .auth-page-shell[data-auth-mode="login"] .auth-page-card { flex: 0 0 auto; height: auto; align-self: center; margin-top: auto; margin-bottom: auto; }
    .auth-page-shell.auth-support-page .auth-page-card { flex: 0 0 auto; height: auto; align-self: center; margin-top: auto; margin-bottom: auto; }
    .auth-page-promo { display: none; }
-   .auth-page-form-side { min-height: 0; padding: 24px clamp(28px, 5vw, 44px); background: var(--auth-form-surface); border: 1px solid var(--auth-form-border); box-shadow: 0 18px 48px rgba(15, 23, 42, .16); }
+   .auth-page-form-side { min-height: 0; padding: 24px clamp(18px, 3vw, 28px); background: var(--auth-form-surface); border: 1px solid var(--auth-form-border); box-shadow: 0 18px 48px rgba(15, 23, 42, .16); }
+   .auth-page-form-wrap, .auth-page-shell[data-auth-mode="login"] .auth-page-form-wrap { max-width: 560px; }
 }
 
 @media (max-width: 640px) {

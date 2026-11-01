@@ -49,11 +49,6 @@
 
       <div class="auth-page-form-side" id="authFormPanel" tabindex="-1">
          <div class="auth-page-form-wrap">
-            <div class="auth-page-switch">
-               <span>{{ $isReset ? 'Remember your password?' : 'Ready to sign in?' }}</span>
-               <a href="{{ route('login', $layoutQuery) }}">Log in <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
-            </div>
-
             <div class="auth-page-heading">
                <span class="auth-page-heading-icon" aria-hidden="true"><i class="fa-solid {{ $isReset ? 'fa-lock' : 'fa-key' }}"></i></span>
                <div>
@@ -122,6 +117,10 @@
 
                   <button type="submit" class="auth-page-submit"><span>Update password</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
                </form>
+               <div class="auth-page-switch">
+                  <span>Remember your password?</span>
+                  <a href="{{ route('login', $layoutQuery) }}">Log in <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+               </div>
             @else
                <form action="{{ route('password.recovery.send') }}" method="POST" class="auth-page-form auth-page-support-form" data-auth-submit="recovery">
                   @csrf
@@ -144,6 +143,10 @@
 
                   <button type="submit" class="auth-page-submit"><span>Send Recovery Code</span><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
                </form>
+               <div class="auth-page-switch">
+                  <span>Ready to sign in?</span>
+                  <a href="{{ route('login', $layoutQuery) }}">Log in <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+               </div>
 
                @if (session('recovery_code_sent'))
                   <div class="auth-page-divider auth-page-support-divider"><span>Enter the one-time code</span></div>
