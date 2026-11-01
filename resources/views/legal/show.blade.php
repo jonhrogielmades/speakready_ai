@@ -14,9 +14,9 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=8') }}">
-      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=21') }}" data-page-style="auth-page-shared">
+      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=22') }}" data-page-style="auth-page-shared">
       <link rel="stylesheet" href="{{ asset('css/shared/legal-page.css?v=1') }}" data-page-style="legal-page">
-      <script src="{{ asset('js/auth-page.js?v=3') }}" defer></script>
+      <script src="{{ asset('js/auth-page.js?v=4') }}" defer></script>
    </head>
    <body class="auth-page-body auth-desktop-shell legal-page-body" data-layout-shell="desktop" data-auth-layout="desktop">
       <main id="authPage" class="auth-page-shell legal-page-shell" data-auth-mode="legal">

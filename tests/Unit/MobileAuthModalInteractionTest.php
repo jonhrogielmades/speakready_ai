@@ -9,6 +9,7 @@ class MobileAuthModalInteractionTest extends TestCase
     public function test_login_and_registration_use_a_dedicated_full_page_contract(): void
     {
         $markup = $this->readProjectFile('resources/views/shared/auth-page.blade.php');
+        $mobileLayout = $this->readProjectFile('resources/views/mobile/layouts/auth.blade.php');
         $script = $this->readProjectFile('public/js/auth-page.js');
         $css = $this->readProjectFile('public/css/shared/auth-page.css');
 
@@ -32,6 +33,13 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('body.auth-page-body.auth-desktop-shell', $css);
         $this->assertStringContainsString('body.auth-page-body.auth-mobile-shell', $css);
         $this->assertStringContainsString('min-height: 100dvh;', $css);
+        $this->assertStringContainsString('min-height: 100svh;', $css);
+        $this->assertStringContainsString('overflow-anchor: none;', $css);
+        $this->assertStringContainsString('class="auth-mobile-document"', $mobileLayout);
+        $this->assertStringContainsString('html.auth-mobile-document { overflow-y: clip; }', $css);
+        $this->assertStringContainsString('@media (max-width: 390px) and (max-height: 700px)', $css);
+        $this->assertStringContainsString('var pageScrollTop = window.scrollY;', $script);
+        $this->assertStringContainsString('authFormPanel.scrollTop = formScrollTop;', $script);
     }
 
     public function test_registration_password_has_live_strength_and_confirmation_feedback(): void

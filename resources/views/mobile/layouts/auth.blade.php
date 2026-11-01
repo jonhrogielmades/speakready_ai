@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ $systemHtmlLocale ?? str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ $systemHtmlLocale ?? str_replace('_', '-', app()->getLocale()) }}" class="auth-mobile-document">
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -16,8 +16,8 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=3') }}" data-page-style="auth-mobile">
-      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=21') }}" data-page-style="auth-page-shared">
-      <script src="{{ asset('js/auth-page.js?v=3') }}" defer></script>
+      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=22') }}" data-page-style="auth-page-shared">
+      <script src="{{ asset('js/auth-page.js?v=4') }}" defer></script>
       <style data-mobile-side-gutter="10px">
          :root, .lm, body.auth-mobile-shell {
             --pur: {{ $systemPrimaryColor ?? '#2563eb' }};

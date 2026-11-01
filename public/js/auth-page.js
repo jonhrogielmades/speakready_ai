@@ -56,10 +56,17 @@
       if (themeToggle) {
          syncThemeToggle();
          themeToggle.addEventListener('click', function () {
+            var authFormPanel = document.getElementById('authFormPanel');
+            var pageScrollTop = window.scrollY;
+            var formScrollTop = authFormPanel ? authFormPanel.scrollTop : 0;
             if (window.SpeakReadyTheme && typeof window.SpeakReadyTheme.toggle === 'function') {
                window.SpeakReadyTheme.toggle();
             }
             syncThemeToggle();
+            window.requestAnimationFrame(function () {
+               window.scrollTo(0, pageScrollTop);
+               if (authFormPanel) authFormPanel.scrollTop = formScrollTop;
+            });
          });
       }
 
