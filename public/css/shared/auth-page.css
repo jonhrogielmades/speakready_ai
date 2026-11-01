@@ -320,7 +320,7 @@ body.auth-page-body .auth-page-form-side .auth-page-password-status.is-invalid {
    -webkit-text-fill-color: #dc2626 !important;
 }
 .auth-page-form-wrap { width: 100%; max-width: 610px; margin: auto; }
-.auth-page-shell[data-auth-mode="login"] .auth-page-form-wrap { max-width: 470px; }
+.auth-page-shell[data-auth-mode="login"] .auth-page-form-wrap { max-width: 610px; }
 .auth-page-switch { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 15px 0 0; color: var(--auth-subtle); font-size: .74rem; text-align: center; }
 .auth-page-switch a { display: inline-flex; align-items: center; gap: 6px; color: var(--auth-link); font-weight: 750; text-decoration: none; }
 .auth-page-switch a:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -515,7 +515,7 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
    .auth-page-shell[data-auth-mode="login"] .auth-page-promo { min-height: 0; }
    .auth-page-shell.auth-support-page .auth-page-card { height: auto; align-self: center; }
    .auth-page-shell.auth-support-page .auth-page-promo { min-height: 0; }
-   .auth-page-shell.auth-support-page .auth-page-form-wrap { max-width: 470px; }
+   .auth-page-shell.auth-support-page .auth-page-form-wrap { max-width: 610px; }
    .auth-page-form-side { min-height: 0; }
 }
 
