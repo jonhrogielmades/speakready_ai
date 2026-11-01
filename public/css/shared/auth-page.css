@@ -25,6 +25,12 @@ body.auth-page-body.auth-mobile-shell {
       linear-gradient(rgba(56, 189, 248, .08) 1px, transparent 1px) 0 0 / 100% 42px,
       linear-gradient(90deg, rgba(56, 189, 248, .08) 1px, transparent 1px) 0 0 / 48px 100%,
       linear-gradient(120deg, #020617 0%, #071b2f 48%, #063044 100%);
+   --auth-mobile-promo-background:
+      radial-gradient(circle at 92% 7%, transparent 0 142px, rgba(255, 255, 255, .16) 143px 144px, transparent 145px),
+      radial-gradient(circle at 4% 93%, transparent 0 112px, rgba(255, 255, 255, .14) 113px 114px, transparent 115px),
+      linear-gradient(rgba(255, 255, 255, .09) 1px, transparent 1px) 0 0 / 18px 18px,
+      linear-gradient(145deg, rgba(255, 255, 255, .08), transparent 35%),
+      linear-gradient(155deg, #172a5d 0%, #2149a0 48%, #0786b8 100%);
    --bg: var(--auth-canvas);
    --bg2: var(--auth-control);
    --sf: var(--auth-panel);
@@ -69,6 +75,12 @@ html[data-theme="light"] body.auth-page-body {
       linear-gradient(rgba(14, 165, 233, .075) 1px, transparent 1px) 0 0 / 100% 42px,
       linear-gradient(90deg, rgba(14, 165, 233, .075) 1px, transparent 1px) 0 0 / 48px 100%,
       linear-gradient(120deg, #f8fcff 0%, #edfaff 46%, #dff5ff 100%);
+   --auth-mobile-promo-background:
+      radial-gradient(circle at 92% 7%, transparent 0 142px, rgba(37, 99, 235, .24) 143px 144px, transparent 145px),
+      radial-gradient(circle at 4% 93%, transparent 0 112px, rgba(14, 165, 233, .22) 113px 114px, transparent 115px),
+      linear-gradient(rgba(37, 99, 235, .11) 1px, transparent 1px) 0 0 / 18px 18px,
+      linear-gradient(145deg, rgba(255, 255, 255, .52), transparent 35%),
+      linear-gradient(155deg, #d8e8ff 0%, #b9d8ff 48%, #72d5e8 100%);
    color-scheme: light;
 }
 
@@ -535,7 +547,7 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
 
 @media (max-width: 640px) {
    body.auth-page-body.auth-desktop-shell,
-   body.auth-page-body.auth-mobile-shell { background: var(--auth-page-background); }
+   body.auth-page-body.auth-mobile-shell { background: var(--auth-mobile-promo-background); }
    .auth-page-shell {
       min-height: 100dvh;
       padding: max(8px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
