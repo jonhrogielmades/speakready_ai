@@ -49,6 +49,13 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('id="signupPasswordInvalid"', $markup);
         $this->assertStringContainsString('data-confirm-password-status', $markup);
         $this->assertStringContainsString('role="status" hidden', $markup);
+        $this->assertStringContainsString('data-register-steps', $markup);
+        $this->assertStringContainsString('data-register-step-panel="1"', $markup);
+        $this->assertStringContainsString('data-register-step-panel="2"', $markup);
+        $this->assertStringContainsString('data-register-step-panel="3"', $markup);
+        $this->assertStringContainsString('data-register-step-check', $markup);
+        $this->assertStringContainsString('data-register-next="1"', $markup);
+        $this->assertStringContainsString('data-register-next="2"', $markup);
 
         $this->assertStringContainsString('Array.from(value).length >= 8', $script);
         $this->assertStringContainsString('/\p{Ll}/u.test(value)', $script);
@@ -60,6 +67,9 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString("passwordInput.setCustomValidity('')", $script);
         $this->assertStringContainsString("confirmInput.setCustomValidity('Passwords do not match.')", $script);
         $this->assertStringContainsString("confirmStatus.textContent = 'Passwords match.'", $script);
+        $this->assertStringContainsString('validateRegisterStep', $script);
+        $this->assertStringContainsString("indicator.classList.toggle('is-complete', isComplete)", $script);
+        $this->assertStringContainsString("check.hidden = !isComplete", $script);
     }
 
     public function test_mobile_inputs_and_password_toggles_are_zoom_and_touch_safe(): void

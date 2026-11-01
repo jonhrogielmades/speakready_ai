@@ -172,6 +172,74 @@
          updateConfirmPasswordFeedback();
       }
 
+      var registerStepsForm = document.querySelector('[data-register-steps]');
+      if (registerStepsForm) {
+         var registerPanels = Array.from(registerStepsForm.querySelectorAll('[data-register-step-panel]'));
+         var registerIndicators = Array.from(registerStepsForm.querySelectorAll('[data-register-step-indicator]'));
+         var registerStatus = registerStepsForm.querySelector('[data-register-step-status]');
+         var registerStep = Number.parseInt(registerStepsForm.dataset.registerStep || '1', 10);
+         registerStep = Math.min(3, Math.max(1, Number.isFinite(registerStep) ? registerStep : 1));
+
+         function validateRegisterStep(step) {
+            var panel = registerStepsForm.querySelector('[data-register-step-panel="' + step + '"]');
+            if (!panel) return true;
+
+            var fields = Array.from(panel.querySelectorAll('input, select, textarea'));
+            for (var index = 0; index < fields.length; index += 1) {
+               if (!fields[index].checkValidity()) {
+                  fields[index].reportValidity();
+                  return false;
+               }
+            }
+            return true;
+         }
+
+         function syncRegisterStep(step, shouldFocus) {
+            registerStep = Math.min(3, Math.max(1, step));
+            registerStepsForm.dataset.registerStep = String(registerStep);
+
+            registerPanels.forEach(function (panel) {
+               panel.classList.toggle('is-active', Number(panel.dataset.registerStepPanel) === registerStep);
+            });
+
+            registerIndicators.forEach(function (indicator) {
+               var indicatorStep = Number(indicator.dataset.registerStepIndicator);
+               var isComplete = indicatorStep < registerStep;
+               indicator.classList.toggle('is-active', indicatorStep === registerStep);
+               indicator.classList.toggle('is-complete', isComplete);
+               indicator.setAttribute('aria-current', indicatorStep === registerStep ? 'step' : 'false');
+
+               var number = indicator.querySelector('[data-register-step-number]');
+               var check = indicator.querySelector('[data-register-step-check]');
+               if (number) number.hidden = isComplete;
+               if (check) check.hidden = !isComplete;
+            });
+
+            if (registerStatus) registerStatus.textContent = 'Step ' + registerStep + ' of 3';
+
+            if (shouldFocus) {
+               var activePanel = registerStepsForm.querySelector('[data-register-step-panel="' + registerStep + '"]');
+               var firstField = activePanel ? activePanel.querySelector('input, select, textarea') : null;
+               if (firstField) firstField.focus({ preventScroll: true });
+            }
+         }
+
+         registerStepsForm.querySelectorAll('[data-register-next]').forEach(function (button) {
+            button.addEventListener('click', function () {
+               var nextStep = Number.parseInt(button.dataset.registerNext, 10) + 1;
+               if (validateRegisterStep(registerStep)) syncRegisterStep(nextStep, true);
+            });
+         });
+
+         registerStepsForm.addEventListener('submit', function (event) {
+            if (registerStep >= 3) return;
+            event.preventDefault();
+            if (validateRegisterStep(registerStep)) syncRegisterStep(registerStep + 1, true);
+         });
+
+         syncRegisterStep(registerStep, false);
+      }
+
       document.querySelectorAll('[data-auth-submit]').forEach(function (form) {
          form.addEventListener('submit', function (event) {
             if (form.dataset.submitting === 'true') {

@@ -12,6 +12,9 @@
       : null;
    $pageError = $errors->first() ?: $authQueryAlert;
    $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);
+   $registerInitialStep = ($errors->has('password') || $errors->has('password_confirmation'))
+      ? 3
+      : (($errors->has('username') || $errors->has('email')) ? 2 : 1);
    $brandName = $systemName ?? 'SpeakReady AI';
    $brandLogo = $systemLogo ?? 'img/logo.png';
 @endphp
@@ -100,10 +103,30 @@
             <div class="auth-page-divider"><span>{{ $isRegister ? 'or create an account with your details' : 'or log in with your username' }}</span></div>
 
             @if($isRegister)
-               <form id="signupForm" class="auth-page-form" action="{{ route('register.submit') }}" method="POST" autocomplete="on" data-auth-submit="register">
+               <form id="signupForm" class="auth-page-form" action="{{ route('register.submit') }}" method="POST" autocomplete="on" data-auth-submit="register" @if($isMobile) data-register-steps data-register-step="{{ $registerInitialStep }}" @endif>
                   @csrf
                   <input type="hidden" name="auth_tab" value="signup">
-                  <div class="auth-page-fields">
+                  @if($isMobile)
+                     <nav class="auth-register-stepper auth-mobile-register-only" aria-label="Registration progress" data-register-stepper>
+                        <ol>
+                           <li data-register-step-indicator="1" class="is-active">
+                              <span class="auth-register-step-marker"><span data-register-step-number>1</span><i class="fa-solid fa-check" data-register-step-check aria-hidden="true" hidden></i></span>
+                              <span>Full name</span>
+                           </li>
+                           <li data-register-step-indicator="2">
+                              <span class="auth-register-step-marker"><span data-register-step-number>2</span><i class="fa-solid fa-check" data-register-step-check aria-hidden="true" hidden></i></span>
+                              <span>Account</span>
+                           </li>
+                           <li data-register-step-indicator="3">
+                              <span class="auth-register-step-marker"><span data-register-step-number>3</span><i class="fa-solid fa-check" data-register-step-check aria-hidden="true" hidden></i></span>
+                              <span>Password</span>
+                           </li>
+                        </ol>
+                        <p data-register-step-status aria-live="polite">Step {{ $registerInitialStep }} of 3</p>
+                     </nav>
+                  @endif
+                  <div class="auth-page-fields{{ $isMobile ? ' auth-mobile-register-fields' : '' }}">
+                     <div class="auth-mobile-register-step" data-register-step-panel="1">
                      <div class="auth-page-field">
                         <label for="signupName">Full name</label>
                         <div class="auth-page-input-wrap">
@@ -112,7 +135,12 @@
                         </div>
                         @error('name')<small class="auth-page-field-error" id="signupNameError"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ $message }}</small>@enderror
                      </div>
+                        @if($isMobile)
+                           <button type="button" class="auth-page-step-next" data-register-next="1"><span>Continue to account</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+                        @endif
+                     </div>
 
+                     <div class="auth-mobile-register-step" data-register-step-panel="2">
                      <div class="auth-page-field">
                         <label for="signupUsername">Username</label>
                         <div class="auth-page-input-wrap">
@@ -132,7 +160,12 @@
                         <small class="auth-page-field-help" id="signupEmailHelp">Used only for password recovery. We will send a link to verify it.</small>
                         @error('email')<small class="auth-page-field-error" id="signupEmailError"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ $message }}</small>@enderror
                      </div>
+                        @if($isMobile)
+                           <button type="button" class="auth-page-step-next" data-register-next="2"><span>Continue to password</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+                        @endif
+                     </div>
 
+                     <div class="auth-mobile-register-step" data-register-step-panel="3">
                      <div class="auth-page-field">
                         <label for="signupPass">Password</label>
                         <div class="auth-page-input-wrap auth-page-password-wrap">
@@ -164,14 +197,17 @@
                         </div>
                         <small class="auth-page-field-help" id="signupConfirmHelp" data-confirm-password-status>Re-enter your password to confirm it.</small>
                      </div>
+                     </div>
                   </div>
 
-                  <div class="auth-page-check auth-page-terms">
-                     <input type="checkbox" name="terms_accepted" value="1" id="signupTerms" required @checked(old('terms_accepted'))>
-                     <label for="signupTerms">I understand that I will review and accept the <a href="{{ route('legal.terms') }}">Terms of Service</a> and <a href="{{ route('legal.privacy') }}">Privacy Policy</a> before entering my dashboard.</label>
+                  <div class="auth-mobile-register-final">
+                     <div class="auth-page-check auth-page-terms">
+                        <input type="checkbox" name="terms_accepted" value="1" id="signupTerms" required @checked(old('terms_accepted'))>
+                        <label for="signupTerms">I understand that I will review and accept the <a href="{{ route('legal.terms') }}">Terms of Service</a> and <a href="{{ route('legal.privacy') }}">Privacy Policy</a> before entering my dashboard.</label>
+                     </div>
+                     @error('terms_accepted')<small class="auth-page-field-error auth-page-terms-error"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ $message }}</small>@enderror
+                     <button type="submit" class="auth-page-submit" id="signupBtn"><span>Create free account</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
                   </div>
-                  @error('terms_accepted')<small class="auth-page-field-error auth-page-terms-error"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ $message }}</small>@enderror
-                  <button type="submit" class="auth-page-submit" id="signupBtn"><span>Create free account</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
                </form>
             @else
                <form id="loginForm" class="auth-page-form" action="{{ route('login.submit') }}" method="POST" autocomplete="on" data-auth-submit="login">
