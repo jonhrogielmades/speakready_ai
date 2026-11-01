@@ -9599,9 +9599,9 @@ PROMPT;
 
  private static function chatTemperature(): float
  {
- $temperature = (float) config('services.ai_chat.temperature', 0.2);
+ $temperature = (float) config('services.ai_chat.temperature', 0.1);
 
- return max(0.0, min(0.4, $temperature));
+ return max(0.0, min(0.2, $temperature));
  }
 
  private static function chatMaxTokens(): int

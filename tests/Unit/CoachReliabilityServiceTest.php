@@ -37,6 +37,13 @@ class CoachReliabilityServiceTest extends TestCase
         );
         $this->assertSame('blocked', $file['status']);
         $this->assertContains('unsupported_attachment_claim', $file['risk_flags']);
+
+        $unsafeAfterDisclaimer = $service->evaluate(
+            'No answer can guarantee an outcome. You will definitely get hired.',
+            'Help me prepare for an interview.',
+        );
+        $this->assertSame('blocked', $unsafeAfterDisclaimer['status']);
+        $this->assertContains('unsupported_hiring_or_accuracy_guarantee', $unsafeAfterDisclaimer['risk_flags']);
     }
 
     public function test_allows_grounded_scores_and_explicit_uncertainty(): void
@@ -274,6 +281,82 @@ class CoachReliabilityServiceTest extends TestCase
             'The provided job description prioritizes customer service.',
         );
         $this->assertSame('passed', $providedSource['status']);
+    }
+
+    public function test_known_unsupported_coach_claims_are_rejected(): void
+    {
+        $service = new CoachReliabilityService;
+
+        foreach ([
+            ['You spent three years at Acme Corp.', 'unsupported_personal_fact'],
+            ['A Harvard study found this is the best interview answer.', 'unsupported_external_source_claim'],
+            ['Recruiters prefer this answer.', 'unsupported_external_source_claim'],
+            ['You have excellent communication skills.', 'unsupported_personal_fact'],
+            ['Your communication skills are excellent.', 'unsupported_personal_fact'],
+        ] as [$response, $expectedRisk]) {
+            $result = $service->evaluate($response, 'Help me prepare for an interview.');
+
+            $this->assertSame('blocked', $result['status'], $response);
+            $this->assertContains($expectedRisk, $result['risk_flags'], $response);
+            $this->assertTrue($result['requires_local_fallback'], $response);
+        }
+    }
+
+    public function test_external_and_skill_claims_pass_only_when_grounded_by_user_evidence(): void
+    {
+        $service = new CoachReliabilityService;
+
+        foreach ([
+            [
+                'You spent three years at Acme Corp.',
+                'I spent three years at Acme Corp.',
+            ],
+            [
+                'A Harvard study found that concise examples are easier to follow.',
+                'The Harvard study I am using found that concise examples are easier to follow.',
+            ],
+            [
+                'Recruiters prefer concise examples.',
+                'My source says recruiters prefer concise examples.',
+            ],
+            [
+                'You have excellent communication skills.',
+                'I have excellent communication skills.',
+            ],
+            [
+                'Your communication skills are excellent.',
+                'My communication skills are excellent.',
+            ],
+            [
+                'You earned the certificate in 2025.',
+                'I earned the certificate in 2025.',
+            ],
+        ] as [$response, $userEvidence]) {
+            $result = $service->evaluate($response, $userEvidence);
+
+            $this->assertSame('passed', $result['status'], $response);
+            $this->assertSame([], $result['risk_flags'], $response);
+        }
+    }
+
+    public function test_questions_uncertainty_and_coaching_observations_are_not_misclassified_as_claims(): void
+    {
+        $service = new CoachReliabilityService;
+
+        foreach ([
+            'Recruiters may find a specific example easier to follow.',
+            'I cannot verify recruiter preferences without a source.',
+            'No answer can guarantee that you will be hired.',
+            'Do recruiters prefer this answer?',
+            'Did you work at Acme Corp?',
+            'Can you verify whether you earned the certificate?',
+            'A specific example can make your answer easier to follow.',
+        ] as $response) {
+            $result = $service->evaluate($response, 'Help me prepare for an interview.');
+
+            $this->assertSame('passed', $result['status'], $response);
+            $this->assertSame([], $result['risk_flags'], $response);
+        }
     }
 
     public function test_explanation_question_can_supply_a_score_but_confirmation_question_cannot(): void

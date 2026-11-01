@@ -11,7 +11,7 @@ namespace App\Services;
  */
 final class CoachReliabilityService
 {
-    public const VERSION = 'coach_reliability_v2';
+    public const VERSION = 'coach_reliability_v3';
 
     private const DEFAULT_MINIMUM_RELIABILITY_PERCENT = 95;
 
@@ -41,7 +41,7 @@ final class CoachReliabilityService
             'personal_claims_grounded' => ! $this->containsUnsupportedPersonalClaim($response, $evidence),
             'personal_numbers_grounded' => ! $this->containsUnsupportedPersonalNumber($response, $evidence),
             'high_risk_numbers_grounded' => ! $this->containsUnsupportedHighRiskNumber($response, $evidence),
-            'external_source_claims_grounded' => ! $this->containsUnsupportedExternalSourceClaim($response),
+            'external_source_claims_grounded' => ! $this->containsUnsupportedExternalSourceClaim($response, $evidence),
             'response_scope_preserved' => ! $this->containsOutOfScopeContent($response),
             'attachment_claims_grounded' => ! $this->containsUnsupportedAttachmentClaim($response, $attachmentContexts),
             'attachment_access_truthful' => ! $this->containsIncorrectAttachmentAccessClaim($response, $attachmentContexts),
@@ -193,7 +193,8 @@ final class CoachReliabilityService
 
             foreach ($matches[0] ?? [] as $match) {
                 $offset = (int) ($match[1] ?? 0);
-                $prefix = mb_strcut($response, max(0, $offset - 24), min(24, $offset));
+                $prefix = mb_strcut($response, max(0, $offset - 80), min(80, $offset));
+                $prefix = preg_replace('/^.*(?:[.!?]\s+|\R+)/us', '', $prefix) ?? $prefix;
                 if (! preg_match('/\b(?:no|not|never|cannot|can\'t|do\s+not|don\'t|nobody|no\s+one|without|hindi|walang|dili|walay)\b/iu', $prefix)) {
                     return true;
                 }
@@ -252,7 +253,9 @@ final class CoachReliabilityService
     private function containsUnsupportedPersonalClaim(string $response, array $evidence): bool
     {
         foreach ($this->sentences($response) as $sentence) {
-            if (! $this->isPersonalFactSentence($sentence) || $this->isClearlyHypothetical($sentence)) {
+            if (! $this->isPersonalFactSentence($sentence)
+                || $this->isClearlyHypothetical($sentence)
+                || $this->isClarificationQuestion($sentence)) {
                 continue;
             }
 
@@ -268,7 +271,9 @@ final class CoachReliabilityService
     private function containsUnsupportedPersonalNumber(string $response, array $evidence): bool
     {
         foreach ($this->sentences($response) as $sentence) {
-            if (! $this->isPersonalFactSentence($sentence) || $this->isClearlyHypothetical($sentence)) {
+            if (! $this->isPersonalFactSentence($sentence)
+                || $this->isClearlyHypothetical($sentence)
+                || $this->isClarificationQuestion($sentence)) {
                 continue;
             }
 
@@ -297,9 +302,40 @@ final class CoachReliabilityService
         return false;
     }
 
-    private function containsUnsupportedExternalSourceClaim(string $response): bool
+    /** @param array{normalized: string, summary: array<string, int>} $evidence */
+    private function containsUnsupportedExternalSourceClaim(string $response, array $evidence): bool
     {
-        return preg_match('/\b(?:research|studies|statistics|industry\s+data|experts)\s+(?:shows?|proves?|confirms?|indicates?|suggests?)\b|\baccording\s+to\s+(?!your\b|the\s+(?:provided|uploaded|job\s+description|resume|cv|file|attachment)\b)|https?:\/\/|\bwww\./iu', $response) === 1;
+        // URLs must never be invented by the provider. Attachment and user
+        // evidence are plain text, not an independently verified URL source.
+        if (preg_match('/https?:\/\/|\bwww\./iu', $response) === 1) {
+            return true;
+        }
+
+        $patterns = [
+            '/\b(?:research|stud(?:y|ies)|surveys?|reports?|statistics|industry\s+data|experts?)\s+(?:shows?|proves?|confirms?|indicates?|suggests?|finds?|found|concludes?|claims?|says?|recommends?)\b/iu',
+            '/\b(?:recruiters?|hiring\s+managers?|employers?|interviewers?)\s+(?:(?:generally|typically|usually|always|often|commonly)\s+)?(?:prefer|expect|want|favor|favour|reject|dislike|look\s+for)\b/iu',
+            '/\baccording\s+to\s+(?!your\b|the\s+(?:provided|uploaded|job\s+description|resume|cv|file|attachment)\b)/iu',
+        ];
+
+        foreach ($this->sentences($response) as $sentence) {
+            if ($this->isClearlyHypothetical($sentence)
+                || $this->isClarificationQuestion($sentence)
+                || preg_match('/\b(?:cannot|can\'t|could\s+not|couldn\'t|unable\s+to|do\s+not|don\'t)\s+(?:verify|confirm|support|substantiate)\b|\b(?:unverified|no\s+reliable\s+source)\b/iu', $sentence) === 1) {
+                continue;
+            }
+
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, $sentence) !== 1) {
+                    continue;
+                }
+
+                if (! $this->claimHasEvidenceOverlap($sentence, $evidence['normalized'])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function containsOutOfScopeContent(string $response): bool
@@ -341,10 +377,12 @@ final class CoachReliabilityService
     private function isPersonalFactSentence(string $sentence): bool
     {
         $patterns = [
-            '/\b(?:you(?:(?:\'|’)?ve)?|i|we|the\s+candidate|the\s+applicant)\s+(?:have\s+|has\s+)?(?:work|worked|earned|hold|completed|graduated|achieved|increased|reduced|managed|led|supervised|handled|served|resolved|created|built|delivered|received|won|studied|trained)\b/iu',
+            '/\b(?:you(?:(?:\'|’)?ve)?|i|we|the\s+candidate|the\s+applicant)\s+(?:have\s+|has\s+)?(?:work|worked|spent|earned|hold|completed|graduated|achieved|increased|reduced|managed|led|supervised|handled|served|resolved|created|built|delivered|received|won|studied|trained)\b/iu',
             '/\b(?:you|you(?:\'|’)?re|the\s+candidate|the\s+applicant)\s+(?:are\s+|were\s+|is\s+)?(?:certified|licensed|employed|a\s+graduate|an?\s+employee)\b/iu',
             '/\byou\s+have\s+(?:an?\s+|the\s+)?(?:[\pL\pN+#.-]+\s+){0,4}(?:years?\b|degree\b|certificate\b|certification\b|license\b|experience\b|background\b)/iu',
             '/\byou\s+(?:possess|hold)\s+(?:an?\s+|the\s+)?(?:[\pL\pN+#.-]+\s+){0,4}(?:degree|certificate|certification|license)\b/iu',
+            '/\b(?:you|i|we|the\s+candidate|the\s+applicant)\s+(?:have|has|possess(?:es)?)\s+(?:(?:excellent|strong|advanced|proven|outstanding|exceptional|solid|good)\s+)?(?:[\pL\pN+#.-]+\s+){0,3}(?:skills?|abilities|competenc(?:y|ies)|expertise)\b/iu',
+            '/\byour\s+(?:[\pL\pN+#.-]+\s+){0,3}(?:skills?|abilities|competenc(?:y|ies)|expertise)\s+(?:are|seem|appear)\s+(?:excellent|strong|advanced|proven|outstanding|exceptional|solid|good)\b/iu',
             '/\byour\s+(?:employer|company|school|degree|certificate|certification|license|experience|salary|tenure|achievement|result)\s+(?:is|was|shows|proves|confirms|includes)\b/iu',
             '/\baccording\s+to\s+your\s+(?:profile|resume|cv|certificate|answer)\b/iu',
             '/\b(?:nagtrabaho|nakatrabaho)\s+ka\b|\b(?:mayroon|meron)\s+kang?\b.{0,45}\b(?:karanasan|sertipiko|lisensya)\b/iu',
@@ -449,6 +487,12 @@ final class CoachReliabilityService
             || str_contains($sentence, '{');
     }
 
+    private function isClarificationQuestion(string $sentence): bool
+    {
+        return str_contains($sentence, '?')
+            && preg_match('/^\s*(?:did|do|does|can|could|would|will|are|were|have|has|is|was|may|might|should)\b/iu', $sentence) === 1;
+    }
+
     /**
      * Questions, negated statements, and uncertainty are not affirmative proof
      * of a personal fact. A factual first-person clause remains usable when it
@@ -486,8 +530,8 @@ final class CoachReliabilityService
         preg_match_all('/[\pL\pN][\pL\pN\'-]{2,}/u', $this->normalize($text), $matches);
         $stopWords = array_fill_keys([
             'the', 'and', 'that', 'this', 'with', 'from', 'your', 'you', 'have', 'has', 'had', 'were', 'was', 'are', 'for', 'into', 'according',
-            'resume', 'certificate', 'certification', 'file', 'attachment', 'document', 'portfolio', 'profile', 'answer', 'shows', 'show', 'proves',
-            'confirms', 'states', 'contains', 'demonstrates', 'lists', 'mentions', 'indicates', 'says', 'worked', 'earned', 'completed', 'achieved',
+            'resume', 'certification', 'file', 'attachment', 'document', 'portfolio', 'profile', 'answer', 'shows', 'show', 'proves',
+            'confirms', 'states', 'contains', 'demonstrates', 'lists', 'mentions', 'indicates', 'says', 'worked', 'completed', 'achieved',
             'managed', 'handled', 'served', 'created', 'built', 'delivered', 'received', 'trained', 'experience', 'background', 'years', 'year',
             'strong', 'good', 'great', 'reliable', 'clearly', 'also', 'their', 'there', 'about', 'only', 'what', 'when', 'where', 'which', 'who',
             'employer', 'company', 'school', 'degree', 'license', 'salary', 'tenure', 'achievement', 'result',

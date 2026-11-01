@@ -250,7 +250,7 @@ return [
  ],
 
  'ai_chat' => [
- 'temperature' => env('AI_CHAT_TEMPERATURE', 0.2),
+ 'temperature' => env('AI_CHAT_TEMPERATURE', 0.1),
  'max_tokens' => env('AI_CHAT_MAX_TOKENS', 1000),
  ],
 

@@ -457,7 +457,7 @@ class AiCoachDeveloperCreditsTest extends TestCase
             ->assertJsonPath('response_quality.provider_response_replaced', false);
 
         $savedQuality = ChatbotMessage::where('role', 'ai')->latest('id')->firstOrFail()->quality_metadata;
-        $this->assertSame('coach_reliability_v2', $savedQuality['version'] ?? null);
+        $this->assertSame('coach_reliability_v3', $savedQuality['version'] ?? null);
         $this->assertSame(100, $savedQuality['reliability_percent'] ?? null);
         $this->assertSame('deterministic_safeguards_not_statistical_accuracy', $savedQuality['score_basis'] ?? null);
 
@@ -467,16 +467,18 @@ class AiCoachDeveloperCreditsTest extends TestCase
             $system = (string) data_get($messages, '0.content');
             $latest = (string) data_get($messages, '1.content');
 
-            $usesLegacySampling = ($payload['temperature'] ?? null) === 0.2
+            $usesLegacySampling = ($payload['temperature'] ?? null) === 0.1
                 && is_int($payload['max_tokens'] ?? null)
                 && ($payload['max_tokens'] ?? 0) >= 256;
             $usesReasoningModel = in_array(($payload['reasoning_effort'] ?? null), ['low', 'medium', 'high', 'xhigh', 'max'], true)
                 && is_int($payload['max_completion_tokens'] ?? null)
                 && ($payload['max_completion_tokens'] ?? 0) >= 256
-                && !array_key_exists('temperature', $payload);
+                && ! array_key_exists('temperature', $payload);
 
             return ($usesLegacySampling || $usesReasoningModel)
                 && str_contains($system, 'Reliability contract')
+                && str_contains($system, 'recruiter preferences')
+                && str_contains($system, 'personal verdicts')
                 && str_contains($latest, 'SPEAKREADY USER PROFILE CONTEXT JSON')
                 && str_contains($latest, 'Customer Service Representative');
         });
@@ -536,6 +538,62 @@ class AiCoachDeveloperCreditsTest extends TestCase
             'unsupported_hiring_or_accuracy_guarantee',
             (array) data_get($saved->quality_metadata, 'rejected_risk_flags', [])
         );
+    }
+
+    public function test_ai_coach_replaces_unsupported_semantic_claims_before_saving_them(): void
+    {
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+
+        $unsupportedClaims = [
+            'You spent three years at Acme Corp.',
+            'A Harvard study found this is the best interview answer.',
+            'Recruiters prefer this answer.',
+            'You have excellent communication skills.',
+        ];
+
+        foreach ($unsupportedClaims as $unsupportedClaim) {
+            Http::fake([
+                'api.openai.com/*' => Http::response([
+                    'choices' => [[
+                        'message' => ['content' => $unsupportedClaim],
+                    ]],
+                ], 200),
+            ]);
+
+            $response = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+                'message' => 'Help me prepare for a job interview.',
+                'history' => [],
+            ]);
+
+            $response
+                ->assertOk()
+                ->assertJsonPath('response_quality.status', 'repaired')
+                ->assertJsonPath('response_quality.response_source', 'local_reliability_fallback')
+                ->assertJsonPath('response_quality.provider_response_replaced', true)
+                ->assertJsonMissing(['response' => $unsupportedClaim]);
+
+            $saved = ChatbotMessage::where('role', 'ai')->latest('id')->firstOrFail();
+            $this->assertNotSame($unsupportedClaim, $saved->content);
+            $this->assertNotEmpty(
+                (array) data_get($saved->quality_metadata, 'rejected_risk_flags', []),
+                "Expected the reliability gate to record why it rejected: {$unsupportedClaim}"
+            );
+            $this->assertDatabaseMissing('chatbot_messages', [
+                'role' => 'ai',
+                'content' => $unsupportedClaim,
+            ]);
+        }
     }
 
     public function test_ai_coach_does_not_treat_a_prior_ai_hallucination_as_user_evidence(): void
