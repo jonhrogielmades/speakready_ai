@@ -14,9 +14,8 @@
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}">
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/auth/auth.css?v=2') }}" data-page-style="auth-mobile">
-      @stack('styles')
       <style data-mobile-side-gutter="10px">
          body.auth-mobile-shell {
             padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
@@ -26,20 +25,15 @@
    </head>
    <body class="auth-mobile-shell mobile-shell" data-layout-shell="mobile" data-auth-layout="mobile">
       @include('mobile.partials.viewport-mobile-cookie')
-      <main class="auth-shell @yield('auth-shell-class')">
-         @hasSection('auth-page-content')
-            @yield('auth-page-content')
-         @else
-            <section class="auth-card">
-               <a class="auth-brand" href="{{ url('/') }}">
-                  <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
-                  <span>SpeakReady AI</span>
-               </a>
+      <main class="auth-shell">
+         <section class="auth-card">
+            <a class="auth-brand" href="{{ url('/') }}">
+               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+               <span>SpeakReady AI</span>
+            </a>
 
-               @yield('content')
-            </section>
-         @endif
+            @yield('content')
+         </section>
       </main>
-      @stack('scripts')
    </body>
 </html>

@@ -6,22 +6,14 @@ use PHPUnit\Framework\TestCase;
 
 class MobileAuthModalInteractionTest extends TestCase
 {
-    public function test_auth_page_reuses_the_centered_auth_card_without_a_bootstrap_modal_root(): void
+    public function test_auth_modal_keeps_its_centered_dialog_contract(): void
     {
         $markup = $this->readProjectFile('resources/views/shared/auth-modal.blade.php');
-        $pageCss = $this->readProjectFile('public/css/shared/auth-page.css');
 
         $this->assertStringContainsString(
             'class="modal-dialog modal-dialog-centered auth-modal-dialog"',
             $markup
         );
-        $this->assertStringContainsString("'auth-modal auth-page' : 'modal auth-modal'", $markup);
-        $this->assertStringContainsString('data-auth-page=', $markup);
-        $this->assertStringContainsString("route('login.form'", $markup);
-        $this->assertStringContainsString("route('register.form'", $markup);
-        $this->assertStringContainsString('#lofc.auth-page {', $pageCss);
-        $this->assertStringContainsString('position: relative;', $pageCss);
-        $this->assertStringContainsString('display: block;', $pageCss);
     }
 
     public function test_registration_password_shows_live_valid_and_invalid_feedback(): void
@@ -50,7 +42,7 @@ class MobileAuthModalInteractionTest extends TestCase
 
     public function test_checkbox_focus_does_not_enable_mobile_keyboard_layout(): void
     {
-        $script = $this->authPageScript();
+        $script = $this->authInteractionScript();
 
         $this->assertStringNotContainsString(
             "const authModalInputSelector = 'input, textarea, select';",
@@ -91,16 +83,16 @@ class MobileAuthModalInteractionTest extends TestCase
 
     public function test_keyboard_scrolling_is_bounded_to_the_modal_body(): void
     {
-        $script = $this->authPageScript();
+        $script = $this->authInteractionScript();
 
         $this->assertStringNotContainsString(
             'scrollIntoView(',
             $script,
             'Field visibility adjustments must not scroll the page or outer modal.'
         );
-        $this->assertStringContainsString('scrollingBody.scrollTop += scrollDelta', $script);
+        $this->assertStringContainsString('modalBody.scrollTop += scrollDelta', $script);
         $this->assertStringNotContainsString(
-            "window.visualViewport.addEventListener('scroll'",
+            "window.visualViewport.addEventListener('scroll', syncFocusedAuthModalViewport",
             $script,
             'Visual viewport scrolling must not create a scroll/reflow feedback loop.'
         );
@@ -122,9 +114,16 @@ class MobileAuthModalInteractionTest extends TestCase
         );
     }
 
-    private function authPageScript(): string
+    private function authInteractionScript(): string
     {
-        return $this->readProjectFile('public/js/auth-page.js');
+        $script = $this->readProjectFile('public/js/main.js');
+        $start = strpos($script, 'const guestAuthPanel');
+        $end = strpos($script, 'const guestSectionIds', $start ?: 0);
+
+        $this->assertNotFalse($start, 'The auth modal interaction block is missing.');
+        $this->assertNotFalse($end, 'The auth modal interaction block boundary is missing.');
+
+        return substr($script, $start, $end - $start);
     }
 
     private function readProjectFile(string $relativePath): string

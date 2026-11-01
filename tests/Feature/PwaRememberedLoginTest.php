@@ -198,7 +198,7 @@ class PwaRememberedLoginTest extends TestCase
             'username' => 'The provided credentials do not match our records.',
         ]);
 
-        $this->get(route('login.form'))
+        $this->get('/')
             ->assertOk()
             ->assertSee('The provided credentials do not match our records.')
             ->assertSee('id="fLogin"', false);
@@ -414,37 +414,14 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertTrue(Hash::check('StrongPass1!', $user->password));
     }
 
-    public function test_guest_authentication_uses_dedicated_login_and_register_pages(): void
+    public function test_guest_auth_modal_uses_loading_overlay_for_registration(): void
     {
-        $this->get('/')
-            ->assertOk()
-            ->assertSee('href="'.route('login.form').'"', false)
-            ->assertSee('href="'.route('register.form').'"', false)
-            ->assertDontSee('id="loginForm"', false)
-            ->assertDontSee('id="signupForm"', false)
-            ->assertDontSee('data-bs-target="#lofc"', false);
+        $response = $this->get('/');
 
-        $this->get(route('login.form'))
-            ->assertOk()
-            ->assertSee('id="lofc"', false)
-            ->assertSee('auth-page', false)
+        $response->assertOk()
             ->assertSee('id="loginForm"', false)
-            ->assertSee('placeholder="Enter your password"', false)
-            ->assertSee('name="username"', false)
-            ->assertSee('id="loginUsername"', false)
-            ->assertSee('Username', false)
-            ->assertDontSee('id="loginEmail"', false)
-            ->assertSee('action="'.route('login').'"', false)
-            ->assertSee(route('auth.google.login'), false)
-            ->assertSee('data-auth-transition="google"', false)
-            ->assertDontSee('name="identifier"', false)
-            ->assertDontSee('id="loginIdentifier"', false);
-
-        $this->get(route('register.form'))
-            ->assertOk()
-            ->assertSee('id="lofc"', false)
-            ->assertSee('auth-page', false)
             ->assertSee('id="signupForm"', false)
+            ->assertSee('placeholder="Enter your password"', false)
             ->assertSee('placeholder="Password"', false)
             ->assertSee('data-strong-password="true"', false)
             ->assertSee('Use at least 8 characters with uppercase, lowercase, a number, and a symbol.')
@@ -452,8 +429,11 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('Password is valid.')
             ->assertSee('id="signupPasswordInvalid"', false)
             ->assertSee('Password is invalid.')
+            ->assertSee('name="username"', false)
+            ->assertSee('id="loginUsername"', false)
             ->assertSee('id="signupUsername"', false)
             ->assertSee('Username', false)
+            ->assertDontSee('id="loginEmail"', false)
             ->assertSee('id="signupEmail"', false)
             ->assertSee('pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"', false)
             ->assertSee('Enter a valid recovery email address.')
@@ -463,25 +443,31 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('action="'.route('register').'"', false)
             ->assertSee(route('auth.google.register'), false)
             ->assertDontSee('name="identifier"', false)
+            ->assertDontSee('id="loginIdentifier"', false)
             ->assertDontSee('id="signupIdentifier"', false)
             ->assertSee('id="loginTransitionOverlay"', false)
             ->assertSee('id="authTransitionTitle"', false)
-            ->assertSee('data-auth-transition="google-register"', false);
+            ->assertSee('Creating your account...', false)
+            ->assertSee("showLoginTransition('register')", false)
+            ->assertSee('id="pageTransitionOverlay"', false)
+            ->assertSee('window.SpeakReadyPageTransition', false)
+            ->assertSee('data-auth-transition="google"', false)
+            ->assertSee('Connecting to Google...', false)
+            ->assertSee('border-right-color: rgba(14, 165, 233, 0.78);', false);
     }
 
     public function test_registration_validation_alert_stays_on_register_tab_when_name_is_missing(): void
     {
-        $this->from(route('register.form'))->post(route('register'), [
+        $this->post(route('register'), [
             'auth_tab' => 'signup',
             'name' => '',
             'username' => 'missing-name-user',
             'password' => 'StrongPass1!',
             'password_confirmation' => 'StrongPass1!',
-        ])->assertRedirect(route('register.form'))
-            ->assertSessionHasErrors('name')
+        ])->assertSessionHasErrors('name')
             ->assertSessionHas('_old_input.auth_tab', 'signup');
 
-        $this->get(route('register.form'))
+        $this->get('/')
             ->assertOk()
             ->assertSee('id="tabSignup" role="tab" aria-selected="true"', false)
             ->assertSee('The name field is required.');
@@ -496,7 +482,7 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $this->get(route('auth.google.login'))
-            ->assertRedirect(route('login.form'))
+            ->assertRedirect('/')
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in is not configured correctly. Please contact the administrator.',
             ]);
@@ -511,13 +497,13 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $this->get(route('auth.google.register'))
-            ->assertRedirect(route('register.form'))
+            ->assertRedirect('/')
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in is not configured correctly. Please contact the administrator.',
             ])
             ->assertSessionHas('_old_input.auth_tab', 'signup');
 
-        $this->get(route('register.form'))
+        $this->get('/')
             ->assertOk()
             ->assertSee('id="tabSignup" role="tab" aria-selected="true"', false)
             ->assertSee('Google sign-in is not configured correctly. Please contact the administrator.');
@@ -526,7 +512,7 @@ class PwaRememberedLoginTest extends TestCase
     public function test_google_callback_reports_cancelled_authorization(): void
     {
         $this->get(route('auth.google.callback', ['error' => 'access_denied']))
-            ->assertRedirect(route('login.form'))
+            ->assertRedirect('/')
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in was cancelled. Please choose a Google account and allow access to continue.',
             ]);
@@ -536,13 +522,13 @@ class PwaRememberedLoginTest extends TestCase
     {
         $this->withSession(['google_auth_intent' => 'register'])
             ->get(route('auth.google.callback', ['error' => 'access_denied']))
-            ->assertRedirect(route('register.form'))
+            ->assertRedirect('/')
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in was cancelled. Please choose a Google account and allow access to continue.',
             ])
             ->assertSessionHas('_old_input.auth_tab', 'signup');
 
-        $this->get(route('register.form'))
+        $this->get('/')
             ->assertOk()
             ->assertSee('id="tabSignup" role="tab" aria-selected="true"', false)
             ->assertSee('Google sign-in was cancelled. Please choose a Google account and allow access to continue.');
@@ -553,7 +539,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->configureGoogleOAuth();
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('login.form'))
+            ->assertRedirect('/')
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in expired. Please start Google login again.',
             ]);
@@ -565,7 +551,7 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_layout' => 'mobile'])
             ->get(route('auth.google.callback'))
-            ->assertRedirect(route('login.form', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
+            ->assertRedirect('/?sr_layout=mobile&sr_is_mobile=1')
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in expired. Please start Google login again.',
             ]);
@@ -579,7 +565,7 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect(route('login.form'))
+            ->assertRedirect('/')
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in could not reach Google in time. Please check your connection and try again.',
             ]);
@@ -594,28 +580,28 @@ class PwaRememberedLoginTest extends TestCase
             'avatar' => null,
         ]);
 
-        $response = $this->withSession(['google_auth_intent' => 'login'])
+        $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect('/?auth_modal=login&auth_alert=google_login_unregistered')
             ->assertSessionHasErrors([
                 'email' => 'This Google account is not registered. Please register first.',
             ])
             ->assertSessionHas('_old_input.auth_tab', 'login')
             ->assertSessionHas('_old_input.email', 'missing-google-login@example.com');
 
-        $response->assertRedirect();
-        $this->assertStringStartsWith(route('login.form'), $response->headers->get('Location'));
-
-        $this->get(route('login.form', ['auth_alert' => 'google_login_unregistered']))
+        $this->get('/?auth_modal=login&auth_alert=google_login_unregistered')
             ->assertOk()
             ->assertSee('id="tabLogin" role="tab" aria-selected="true"', false)
+            ->assertSee("swTab('login')", false)
             ->assertSee('This Google account is not registered. Please register first.');
     }
 
-    public function test_google_unregistered_query_fallback_opens_login_page_without_flashed_errors(): void
+    public function test_google_unregistered_query_fallback_opens_login_modal_without_flashed_errors(): void
     {
-        $this->get(route('login.form', ['auth_alert' => 'google_login_unregistered']))
+        $this->get('/?auth_modal=login&auth_alert=google_login_unregistered')
             ->assertOk()
             ->assertSee('id="tabLogin" role="tab" aria-selected="true"', false)
+            ->assertSee("swTab('login')", false)
             ->assertSee('This Google account is not registered. Please register first.');
     }
 
@@ -697,14 +683,12 @@ class PwaRememberedLoginTest extends TestCase
             'avatar' => null,
         ]);
 
-        $response = $this->withSession(['google_auth_intent' => 'login'])
+        $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect('/?auth_modal=login&auth_alert=google_login_unregistered')
             ->assertSessionHasErrors([
                 'email' => 'This Google account is not registered. Please register first.',
             ]);
-
-        $response->assertRedirect();
-        $this->assertStringStartsWith(route('login.form'), $response->headers->get('Location'));
 
         $updatedUser = $user->fresh();
         $this->assertNull($updatedUser->google_id);
@@ -736,12 +720,10 @@ class PwaRememberedLoginTest extends TestCase
             'avatar' => null,
         ]);
 
-        $response = $this->withSession(['google_auth_intent' => 'login'])
+        $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect('/?auth_modal=login&auth_alert=google_login_unregistered')
             ->assertSessionHasErrors('email');
-
-        $response->assertRedirect();
-        $this->assertStringStartsWith(route('login.form'), $response->headers->get('Location'));
         $this->assertGuest();
 
         $this->post(route('login'), [

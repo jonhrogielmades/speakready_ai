@@ -1,11 +1,6 @@
 @php
-   $authPageMode = (bool) ($authPageMode ?? false);
-   $requestedAuthPage = $authPage ?? 'login';
-   $authPage = in_array($requestedAuthPage, ['login', 'register'], true) ? $requestedAuthPage : 'login';
    $googleAuthLayoutQuery = ($isMobile ?? false) ? ['sr_layout' => 'mobile', 'sr_is_mobile' => '1'] : [];
-   $authModalRequest = $authPageMode
-      ? ($authPage === 'register' ? 'signup' : 'login')
-      : request('auth_modal');
+   $authModalRequest = request('auth_modal');
    $authTab = old('auth_tab') ?: (in_array($authModalRequest, ['login', 'signup', 'register'], true) ? $authModalRequest : null);
    $showSignupAuthTab = in_array($authTab, ['signup', 'register'], true) || ($authTab === null && filled(old('name')));
    $authQueryAlert = request('auth_alert') === 'google_login_unregistered'
@@ -17,8 +12,8 @@
    $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);
 @endphp
 
-      <!-- ==================== AUTHENTICATION CARD ==================== -->
-      <div class="{{ $authPageMode ? 'auth-modal auth-page' : 'modal auth-modal' }}" @unless($authPageMode) tabindex="-1" aria-hidden="true" @endunless id="lofc" aria-labelledby="authModalTitle" @if($authPageMode) data-auth-page="{{ $authPage }}" @endif>
+      <!-- ======================== LOGIN MODAL ======================== -->
+      <div class="modal auth-modal" tabindex="-1" id="lofc" aria-labelledby="authModalTitle" aria-hidden="true">
          <div class="modal-dialog modal-dialog-centered auth-modal-dialog">
             <div class="modal-content auth-modal-content">
                <div class="auth-modal-header">
@@ -31,37 +26,20 @@
                         <span class="auth-brand-subtitle">Practice Smarter. Interview Better.</span>
                      </div>
                   </div>
-                  @if($authPageMode)
-                     <a href="{{ url('/') }}" class="auth-close-button" aria-label="Return to the home page" title="Back to home">
-                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                     </a>
-                  @else
-                     <button type="button" class="auth-close-button" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                     </button>
-                  @endif
+                  <button type="button" class="auth-close-button" data-bs-dismiss="modal" aria-label="Close">
+                     <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
                </div>
                <div class="modal-body auth-modal-body">
                   <div class="tab-switch auth-tab-switch" role="tablist" aria-label="Authentication options">
-                     @if($authPageMode)
-                        <a href="{{ route('login.form', sr_layout_query(request())) }}" class="tab-sw-btn @unless($showSignupAuthTab) on @endunless" id="tabLogin" role="tab" aria-selected="{{ $showSignupAuthTab ? 'false' : 'true' }}" aria-controls="fLogin">
-                           <i class="fa-solid fa-lock" aria-hidden="true"></i>
-                           <span>Log In</span>
-                        </a>
-                        <a href="{{ route('register.form', sr_layout_query(request())) }}" class="tab-sw-btn @if($showSignupAuthTab) on @endif" id="tabSignup" role="tab" aria-selected="{{ $showSignupAuthTab ? 'true' : 'false' }}" aria-controls="fSignup">
-                           <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
-                           <span>Register</span>
-                        </a>
-                     @else
-                        <button type="button" class="tab-sw-btn @unless($showSignupAuthTab) on @endunless" id="tabLogin" role="tab" aria-selected="{{ $showSignupAuthTab ? 'false' : 'true' }}" aria-controls="fLogin" onclick="swTab('login')">
-                           <i class="fa-solid fa-lock" aria-hidden="true"></i>
-                           <span>Log In</span>
-                        </button>
-                        <button type="button" class="tab-sw-btn @if($showSignupAuthTab) on @endif" id="tabSignup" role="tab" aria-selected="{{ $showSignupAuthTab ? 'true' : 'false' }}" aria-controls="fSignup" onclick="swTab('signup')">
-                           <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
-                           <span>Register</span>
-                        </button>
-                     @endif
+                     <button type="button" class="tab-sw-btn @unless($showSignupAuthTab) on @endunless" id="tabLogin" role="tab" aria-selected="{{ $showSignupAuthTab ? 'false' : 'true' }}" aria-controls="fLogin" onclick="swTab('login')">
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        <span>Log In</span>
+                     </button>
+                     <button type="button" class="tab-sw-btn @if($showSignupAuthTab) on @endif" id="tabSignup" role="tab" aria-selected="{{ $showSignupAuthTab ? 'true' : 'false' }}" aria-controls="fSignup" onclick="swTab('signup')">
+                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                        <span>Register</span>
+                     </button>
                   </div>
 
                   <!-- Login -->
@@ -196,17 +174,6 @@
             </div>
          </div>
       </div>
-
-      @if($authPageMode)
-         <div id="loginTransitionOverlay" class="auth-page-transition-overlay" role="status" aria-live="polite" aria-hidden="true">
-            <div class="logo-loading-wrapper" aria-hidden="true">
-               <div class="logo-loading-circle"></div>
-               <img src="{{ asset('img/logo.png') }}" alt="">
-            </div>
-            <h4 id="authTransitionTitle">Authenticating...</h4>
-            <p id="authTransitionCopy">Please wait while we log you in</p>
-         </div>
-      @endif
 
       <script>
          (function () {
