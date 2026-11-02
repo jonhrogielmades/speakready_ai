@@ -87,9 +87,6 @@ html:not(.lm) #landing #hero .hbadge i {
    align-items: center;
    gap: 6px;
    min-width: 0;
-   color: #000000 !important;
-   -webkit-text-fill-color: #000000 !important;
-   font-weight: 800;
 }
 
 #landing #hero .hero-trust-row i {
@@ -129,11 +126,6 @@ html:not(.lm) #landing #hero .hero-video-caption .hero-caption-blue {
 
 html:not(.lm) #landing #hero .hero-trust-row {
    border-top-color: rgba(148, 163, 184, 0.22);
-}
-
-html:not(.lm) #landing #hero .hero-trust-row span {
-   color: #f8fafc !important;
-   -webkit-text-fill-color: #f8fafc !important;
 }
 
 #landing #hero .hero-video-chrome-label {
