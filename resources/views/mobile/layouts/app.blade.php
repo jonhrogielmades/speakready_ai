@@ -4830,9 +4830,33 @@
                 color: #bfdbfe !important;
              }
 
-             /* Keep the raised Interview label on the same baseline as Feedback. */
-             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary > span:last-child {
-                transform: translateY(2px) !important;
+             /* Lock every dock label to one baseline, including the raised Interview action. */
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-item {
+                justify-content: flex-start !important;
+                align-self: flex-end !important;
+             }
+
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-item > span:last-child {
+                position: absolute !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 7px !important;
+                width: 100% !important;
+                max-width: none !important;
+                min-height: 12px !important;
+                margin: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                line-height: 1 !important;
+                text-align: center !important;
+                transform: none !important;
+            }
+
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary {
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+                gap: 0 !important;
              }
           }
 
