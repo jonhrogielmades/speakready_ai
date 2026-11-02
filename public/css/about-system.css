@@ -1,7 +1,7 @@
 /* ======================== ABOUT SYSTEM PROFESSIONAL POLISH ======================== */
 #about .about-system-content {
    width: 100%;
-   max-width: 1180px;
+   max-width: none;
 }
 
 #about .about-system-panel {
@@ -330,8 +330,10 @@ html:not(.lm) #about .target-users-grid .ftag i {
       margin-bottom: 17px !important;
       font-size: 0.88rem !important;
       line-height: 1.62;
-      text-align: left !important;
+      text-align: justify !important;
       text-align-last: left;
+      text-justify: inter-word;
+      hyphens: auto;
    }
 
    #about .about-system-proof-row {
@@ -424,6 +426,17 @@ html:not(.lm) #about .target-users-grid .ftag i {
 }
 
 @media (min-width: 992px) {
+   #about > .container {
+      width: min(100%, 1600px);
+      max-width: min(1600px, calc(100vw - 64px));
+   }
+
+   #about .about-system-content,
+   #about .about-system-panel {
+      width: 100%;
+      max-width: none;
+   }
+
    #about .about-system-panel {
       padding: clamp(30px, 3.4vw, 52px);
    }
