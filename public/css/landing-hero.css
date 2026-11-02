@@ -106,7 +106,9 @@ html:not(.lm) #landing #hero .hero-trust-row {
 
 @media (min-width: 992px) {
    body.guest-desktop-shell #landing #hero .hero-home-layout {
-      column-gap: clamp(20px, 3vw, 54px);
+      /* Bootstrap's col-lg-5 + col-lg-7 already fill the row. An extra flex
+         gap would push the video column onto a second line. */
+      column-gap: 0;
    }
 
    body.guest-desktop-shell #landing #hero .hero-home-copy {

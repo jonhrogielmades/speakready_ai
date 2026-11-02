@@ -22,8 +22,8 @@
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
       <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=26') }}" />
-      <link rel="stylesheet" href="{{ asset('css/about-system.css?v=1') }}" />
-      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=1') }}" />
+      <link rel="stylesheet" href="{{ asset('css/about-system.css?v=2') }}" />
+      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=2') }}" />
       <style>
          :root,
          .lm,
@@ -176,12 +176,6 @@
                                  <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Text, voice, or hybrid</span>
                                  <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Review after every session</span>
                               </div>
-                           </div>
-                           <div class="about-system-highlight" aria-label="SpeakReady AI practice goal">
-                              <span class="about-system-highlight-icon" aria-hidden="true"><i class="fa-solid fa-bullseye"></i></span>
-                              <span class="about-system-highlight-label">Your practice goal</span>
-                              <strong>More confident, job-ready answers</strong>
-                              <span class="about-system-highlight-note">One focused session at a time.</span>
                            </div>
                         </div>
 
