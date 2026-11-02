@@ -229,10 +229,11 @@ html:not(.lm) #landing #how .how-step-card:hover {
    }
 
    #landing #how .how-auto-carousel .swiper-slide > .how-step-card {
-      min-height: 276px !important;
+      height: auto !important;
+      min-height: 232px !important;
       padding: 22px 22px 24px !important;
       align-items: center !important;
-      justify-content: flex-start !important;
+      justify-content: center !important;
       border-radius: 18px !important;
       text-align: center !important;
    }
