@@ -59,6 +59,13 @@
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
+                <a id="gqn-destination-contact" class="ucp-result" href="#contact" data-ucp-item>
+                    <span class="ucp-result-icon ucp-rose"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Contact Us</strong><small>Send a question or request support</small></span>
+                    <span class="ucp-result-group">Support</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
                 @else
                 <a id="ucp-destination-dashboard" class="ucp-result" href="{{ route('dashboard') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-blue"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i></span>

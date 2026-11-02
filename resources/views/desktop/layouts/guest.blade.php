@@ -61,6 +61,7 @@
                      <a href="#about" class="nav-link">About the System</a>
                      <a href="#how" class="nav-link">How It Works</a>
                      <a href="#developers" class="nav-link">Developers</a>
+                     <a href="#contact" class="nav-link">Contact Us</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
                      <button type="button" class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">

@@ -310,13 +310,19 @@ html:not(.lm) #landing #hero .hero-trust-row {
 
 @media (max-width: 767.98px) {
    body.guest-mobile-shell #landing #hero .hbadge {
-      max-width: min(100%, 310px);
+      width: fit-content;
+      max-width: min(calc(100% - 20px), 310px);
       min-height: 32px;
       padding: 7px 11px;
       font-size: 0.62rem;
       letter-spacing: 0.02em;
       line-height: 1.25;
       white-space: normal;
+   }
+
+   body.guest-mobile-shell #landing #hero .hbadge::before {
+      content: none !important;
+      display: none !important;
    }
 
    body.guest-mobile-shell #landing #hero .hero-home-copy-text {
@@ -388,8 +394,12 @@ html:not(.lm) #landing #hero .hero-trust-row {
    }
 
    body.guest-mobile-shell #landing .mobile-hero-image-frame {
-      padding-top: 8px;
-      padding-bottom: 30px;
+      padding-top: 6px;
+      padding-bottom: 8px;
+   }
+
+   body.guest-mobile-shell #landing .hero-video-showcase {
+      gap: 4px;
    }
 
    body.guest-mobile-shell #landing .hero-video-shell {
