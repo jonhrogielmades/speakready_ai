@@ -1349,6 +1349,7 @@
              --hero-preview-max-width: clamp(660px, 47vw, 900px);
              --hero-preview-side-gap: clamp(12px, 1vw, 22px);
              --hero-context-card-width: clamp(148px, 10.5vw, 188px);
+             --hero-context-card-gap: clamp(14px, 1.4vw, 28px);
              overflow: visible;
           }
 
@@ -1365,7 +1366,7 @@
              position: relative;
              box-sizing: border-box;
              width: 100%;
-             padding: clamp(42px, 4vw, 66px) clamp(64px, 5vw, 96px);
+             padding: clamp(42px, 4vw, 66px) calc(var(--hero-context-card-width) + var(--hero-context-card-gap));
              line-height: 0;
           }
 
@@ -1483,7 +1484,7 @@
 
           #landing #hero .hero-context-card--top-left {
              top: clamp(26px, 3vw, 44px);
-             left: clamp(42px, 4.6vw, 78px);
+             left: 0;
              color: #0284c7;
              --hero-card-float-x: 3px;
              --hero-card-float-y: -7px;
@@ -1494,7 +1495,7 @@
 
           #landing #hero .hero-context-card--middle-left {
              top: 50%;
-             left: clamp(20px, 3.2vw, 56px);
+             left: 0;
              color: #06b6d4;
              --hero-card-anchor-y: -50%;
              --hero-card-float-x: -3px;
@@ -1505,7 +1506,7 @@
           }
 
           #landing #hero .hero-context-card--bottom-left {
-             left: clamp(52px, 5vw, 84px);
+             left: 0;
              bottom: clamp(20px, 2.4vw, 34px);
              color: #34d399;
              --hero-card-float-x: 2px;
@@ -1517,7 +1518,7 @@
 
           #landing #hero .hero-context-card--top-right {
              top: clamp(26px, 3vw, 44px);
-             right: clamp(42px, 4.6vw, 78px);
+             right: 0;
              color: #34d399;
              --hero-card-float-x: -3px;
              --hero-card-float-y: -7px;
@@ -1528,7 +1529,7 @@
 
           #landing #hero .hero-context-card--middle-right {
              top: 50%;
-             right: clamp(20px, 3.2vw, 56px);
+             right: 0;
              color: #0ea5e9;
              --hero-card-anchor-y: -50%;
              --hero-card-float-x: 3px;
@@ -1539,7 +1540,7 @@
           }
 
           #landing #hero .hero-context-card--bottom-right {
-             right: clamp(52px, 5vw, 84px);
+             right: 0;
              bottom: clamp(20px, 2.4vw, 34px);
              color: #06b6d4;
              --hero-card-float-x: -2px;
@@ -1593,6 +1594,7 @@
                 --hero-preview-max-width: clamp(600px, 53vw, 680px);
                 --hero-preview-side-gap: clamp(8px, 1vw, 12px);
                 --hero-context-card-width: clamp(150px, 14vw, 176px);
+                --hero-context-card-gap: clamp(12px, 1.4vw, 18px);
              }
 
              #hero .hero-home-container {
@@ -1616,7 +1618,7 @@
              }
 
              #landing #hero .desktop-hero-image-frame {
-                padding: 48px 52px;
+                padding: 48px calc(var(--hero-context-card-width) + var(--hero-context-card-gap));
              }
 
              #landing #hero .hero-context-card {
