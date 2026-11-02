@@ -430,9 +430,19 @@ html:not(.lm) #about .target-users-grid .ftag i {
 
    #about .about-feature-card h4,
    #about .about-feature-card p {
-      text-align: left;
+      text-align: left !important;
       text-align-last: left;
-      text-justify: initial;
+   }
+
+   #about .about-feature-card h4 {
+      justify-content: flex-start !important;
+   }
+
+   #about .about-feature-card p {
+      text-align: justify !important;
+      text-align-last: left;
+      text-justify: inter-word;
+      hyphens: auto;
    }
 }
 
