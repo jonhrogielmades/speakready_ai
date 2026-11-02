@@ -628,9 +628,6 @@ html[data-theme="dark"] .auth-page-form-side,
 .auth-support-page .auth-page-submit { min-height: 48px; }
 .auth-page-support-divider { margin-top: 20px; margin-bottom: 12px; }
 .auth-page-support-copy { margin: 0 0 12px; color: var(--auth-muted); font-size: .72rem; line-height: 1.5; }
-.auth-page-support-footer { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 7px 11px; margin-top: 15px; color: var(--auth-subtle); font-size: .64rem; }
-.auth-page-support-footer a { color: var(--auth-link); font-weight: 700; text-decoration: none; }
-.auth-page-support-footer a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .auth-mobile-register-only,
 .auth-register-stepper { display: none; }
 .auth-mobile-register-step { display: contents; }
@@ -675,7 +672,6 @@ html[data-theme="dark"] .auth-page-form-side,
    .auth-page-benefits { gap: 8px; margin-top: 15px; }
    .auth-page-benefits small { display: none; }
    .auth-page-shell[data-auth-mode="register"] .auth-page-security-note { display: none; }
-   .auth-support-page .auth-page-support-footer { margin-top: 10px; }
 }
 
 @media (max-width: 980px) {
@@ -769,7 +765,6 @@ html[data-theme="dark"] .auth-page-form-side,
    .auth-page-shell[data-auth-mode="register"] form[data-register-step="3"] .auth-mobile-register-final { display: grid; gap: 13px; }
    .auth-support-page .auth-page-submit { min-height: 50px; }
    .auth-page-support-divider { margin-top: 17px; margin-bottom: 10px; }
-   .auth-page-support-footer { margin-top: 12px; }
    .auth-page-security-note { font-size: .67rem; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-security-note { margin-top: 12px; }
    .auth-page-footer { min-height: 30px; padding: 2px 8px 0; }

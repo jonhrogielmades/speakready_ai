@@ -10,18 +10,20 @@ class AuthSupportPresentationTest extends TestCase
     {
         $supportMarkup = file_get_contents(base_path('resources/views/shared/auth-support-page.blade.php'));
         $recoverySubmit = strpos($supportMarkup, 'Send Recovery Code');
-        $supportSwitch = strpos($supportMarkup, '<span>Ready to sign in?</span>');
+        $supportSwitch = strrpos($supportMarkup, '<span>Return to login?</span>');
 
         $this->assertNotFalse($recoverySubmit);
         $this->assertNotFalse($supportSwitch);
         $this->assertGreaterThan($recoverySubmit, $supportSwitch, 'The recovery sign-in switch should sit below the recovery action.');
 
-        $this->get(route('password.request'))
+        $recoveryMarkup = $this->get(route('password.request'))
             ->assertOk()
             ->assertSee('auth-support-page', false)
-            ->assertSee('css/shared/auth-page.css?v=30', false)
+            ->assertSee('css/shared/auth-page.css?v=31', false)
             ->assertSee('authPageThemeToggle', false)
             ->assertSee('Send Recovery Code');
+
+        $this->assertStringNotContainsString('auth-page-support-footer', $recoveryMarkup->getContent());
 
         $resetMarkup = $this->get(route('password.reset', [
             'token' => 'test-token',
@@ -70,7 +72,7 @@ class AuthSupportPresentationTest extends TestCase
             $this->get($url)
                 ->assertOk()
                 ->assertSee('legal-page-shell', false)
-                ->assertSee('css/shared/auth-page.css?v=30', false)
+            ->assertSee('css/shared/auth-page.css?v=31', false)
                 ->assertSee('css/shared/legal-page.css?v=1', false)
                 ->assertSee('authPageThemeToggle', false);
         }

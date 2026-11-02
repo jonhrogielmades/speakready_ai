@@ -118,7 +118,7 @@
                   <button type="submit" class="auth-page-submit"><span>Update password</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
                </form>
                <div class="auth-page-switch">
-                  <span>Remember your password?</span>
+                  <span>Return to login?</span>
                   <a href="{{ route('login', $layoutQuery) }}">Log in <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                </div>
             @else
@@ -144,7 +144,7 @@
                   <button type="submit" class="auth-page-submit"><span>Send Recovery Code</span><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
                </form>
                <div class="auth-page-switch">
-                  <span>Ready to sign in?</span>
+                  <span>Return to login?</span>
                   <a href="{{ route('login', $layoutQuery) }}">Log in <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                </div>
 
@@ -188,9 +188,6 @@
             @endif
 
             <p class="auth-page-security-note"><i class="fa-solid fa-shield-check" aria-hidden="true"></i><span>Your information is encrypted and handled securely.</span></p>
-            @if (!$isReset)
-               <div class="auth-page-support-footer"><a href="{{ route('login', $layoutQuery) }}">Return to login</a><span aria-hidden="true">&bull;</span><a href="{{ route('legal.privacy') }}">Privacy</a><a href="{{ route('legal.terms') }}">Terms</a></div>
-            @endif
          </div>
       </div>
    </section>
