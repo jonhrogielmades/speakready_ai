@@ -14,7 +14,7 @@
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
-      <link rel="preload" href="{{ asset('img/desktop-preview/01_Overview_Desktop_Preview_4K.webp') }}?v=20261020" as="image" type="image/webp" fetchpriority="high">
+      <link rel="preload" href="{{ asset('videos/speakready-ai-15s-product-ad.mp4') }}?v=20261102" as="video" type="video/mp4" fetchpriority="high">
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <!-- all min css -->
@@ -121,24 +121,33 @@
 
                   <div class="col-xl-7 col-lg-7 col-md-11 hero-image-col">
                      @php
-                        $desktopHeroImage = asset('img/desktop-preview/01_Overview_Desktop_Preview_4K.png').'?v=20261012';
-                        $desktopHeroWebp = asset('img/desktop-preview/01_Overview_Desktop_Preview_4K.webp').'?v=20261020';
+                        $heroVideo = asset('videos/speakready-ai-15s-product-ad.mp4').'?v=20261102';
+                        $desktopHeroPoster = asset('img/desktop-preview/01_Overview_Desktop_Preview_4K.webp').'?v=20261020';
                      @endphp
                      <div class="desktop-hero-image-row mt-3 mb-1 afu" style="animation-delay:.48s">
-                        <figure class="desktop-hero-image-frame mb-0" aria-label="SpeakReady AI desktop dashboard hero image">
-                           <picture>
-                              <source srcset="{{ $desktopHeroWebp }}" type="image/webp">
+                        <figure class="desktop-hero-image-frame mb-0" aria-label="SpeakReady AI desktop product overview video">
+                           <video
+                              class="desktop-hero-image desktop-hero-video"
+                              width="1920"
+                              height="1080"
+                              autoplay
+                              muted
+                              loop
+                              playsinline
+                              preload="metadata"
+                              poster="{{ $desktopHeroPoster }}"
+                              aria-label="SpeakReady AI desktop product overview"
+                           >
+                              <source src="{{ $heroVideo }}" type="video/mp4">
                               <img
-                                 class="desktop-hero-image"
-                                 src="{{ $desktopHeroImage }}"
+                                 src="{{ $desktopHeroPoster }}"
                                  alt="SpeakReady AI desktop dashboard overview"
                                  width="3840"
                                  height="2516"
                                  loading="eager"
-                                 fetchpriority="high"
                                  decoding="async"
                               >
-                           </picture>
+                           </video>
                            <div class="hero-context-card hero-context-card--top-left">
                               <span class="hero-context-kicker"><i class="fa-solid fa-briefcase"></i> Practice</span>
                               <strong>Role-ready drills</strong>

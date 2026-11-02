@@ -14,7 +14,7 @@
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
-      <link rel="preload" href="{{ asset('img/mobile-preview/01-home-dashboard-hd.webp') }}?v=20261020" as="image" type="image/webp" fetchpriority="high">
+      <link rel="preload" href="{{ asset('videos/speakready-ai-15s-product-ad.mp4') }}?v=20261102" as="video" type="video/mp4" fetchpriority="high">
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <!-- Swiper CSS -->
@@ -131,24 +131,33 @@
                 </div>
 
                 @php
-                   $mobileHeroImage = asset('img/mobile-preview/01-home-dashboard-hd.png').'?v=20261012';
-                   $mobileHeroWebp = asset('img/mobile-preview/01-home-dashboard-hd.webp').'?v=20261020';
+                   $heroVideo = asset('videos/speakready-ai-15s-product-ad.mp4').'?v=20261102';
+                   $mobileHeroPoster = asset('img/mobile-preview/01-home-dashboard-hd.webp').'?v=20261020';
                 @endphp
                 <div id="demo-preview" class="mobile-hero-preview-row mt-4 mb-3 afu" style="animation-delay:.48s">
-                  <figure class="mobile-hero-image-frame mb-0" aria-label="SpeakReady AI mobile dashboard hero image">
-                     <picture>
-                        <source srcset="{{ $mobileHeroWebp }}" type="image/webp">
+                  <figure class="mobile-hero-image-frame mb-0" aria-label="SpeakReady AI mobile product overview video">
+                     <video
+                        class="mobile-hero-image mobile-hero-video"
+                        width="1920"
+                        height="1080"
+                        autoplay
+                        muted
+                        loop
+                        playsinline
+                        preload="metadata"
+                        poster="{{ $mobileHeroPoster }}"
+                        aria-label="SpeakReady AI mobile product overview"
+                     >
+                        <source src="{{ $heroVideo }}" type="video/mp4">
                         <img
-                           class="mobile-hero-image"
-                           src="{{ $mobileHeroImage }}"
+                           src="{{ $mobileHeroPoster }}"
                            alt="SpeakReady AI mobile dashboard overview"
                            width="1260"
                            height="2520"
                            loading="eager"
-                           fetchpriority="high"
                            decoding="async"
                         >
-                     </picture>
+                     </video>
                      <div class="mobile-hero-context-card mobile-hero-context-card--top-left">
                         <span class="mobile-hero-context-kicker"><i class="fa-solid fa-briefcase mobile-hero-context-kicker-icon" aria-hidden="true"></i> Practice</span>
                         <strong>Role-ready drills</strong>
