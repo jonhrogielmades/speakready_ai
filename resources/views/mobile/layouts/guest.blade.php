@@ -23,7 +23,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=40') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=41') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=7') }}" />
       <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=10') }}" />
       <style data-mobile-side-gutter="10px">
