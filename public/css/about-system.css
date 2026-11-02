@@ -332,27 +332,33 @@ html:not(.lm) #about .target-users-grid .ftag i {
    }
 
    #about .about-feature-card {
-      gap: 11px;
+      display: block;
+      gap: 0;
       padding: 14px;
       border-radius: 13px;
    }
 
    #about .about-feature-icon {
-      flex-basis: 34px;
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      font-size: 0.78rem;
+      display: none !important;
+   }
+
+   #about .about-feature-card > div {
+      width: 100%;
    }
 
    #about .about-feature-card h4 {
-      margin-top: 0;
+      margin: 0 0 7px;
       font-size: 0.84rem;
+      text-align: center;
    }
 
    #about .about-feature-card p {
       font-size: 0.73rem;
       line-height: 1.48;
+      text-align: justify;
+      text-align-last: left;
+      text-justify: inter-word;
+      hyphens: auto;
    }
 
    #about .about-system-audience {
