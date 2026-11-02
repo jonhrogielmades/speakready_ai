@@ -131,9 +131,16 @@ html:not(.lm) #landing #hero .hero-trust-row {
       /* Bootstrap's col-lg-6 + col-lg-6 already fill the row. An extra flex
          gap would push the video column onto a second line. */
       column-gap: 0;
+      align-items: center;
+      padding-top: clamp(10px, 1.5vh, 22px);
+      padding-bottom: clamp(10px, 1.5vh, 22px);
    }
 
    body.guest-desktop-shell #landing #hero .hero-home-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
       text-align: left !important;
    }
 
@@ -146,6 +153,7 @@ html:not(.lm) #landing #hero .hero-trust-row {
       line-height: 1.01;
       text-align: left !important;
       text-wrap: balance;
+      margin-bottom: 18px;
    }
 
    body.guest-desktop-shell #landing #hero .hero-title-line {
@@ -159,9 +167,11 @@ html:not(.lm) #landing #hero .hero-trust-row {
    }
 
    body.guest-desktop-shell #landing #hero .hero-home-copy-text {
+      max-width: 560px;
       margin-left: 0;
       margin-right: 0;
-      text-align: left;
+      margin-bottom: 22px !important;
+      text-align: left !important;
    }
 
    body.guest-desktop-shell #landing #hero .hero-cta-row {
@@ -176,24 +186,39 @@ html:not(.lm) #landing #hero .hero-trust-row {
       justify-content: flex-start;
       margin-left: 0;
       margin-right: 0;
+      margin-top: 16px;
    }
 
    body.guest-desktop-shell #landing #hero .desktop-hero-image-row {
       width: min(100%, calc(var(--hero-preview-max-width) + 128px));
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
       margin-right: 0;
    }
 
    body.guest-desktop-shell #landing #hero .desktop-hero-image-frame {
-      padding: clamp(24px, 2.8vw, 46px) clamp(28px, 3.5vw, 64px) 16px;
+      padding: 10px clamp(18px, 2.2vw, 34px) 6px;
    }
 
    body.guest-desktop-shell #landing #hero .hero-video-shell {
+      padding: 8px 8px 10px;
       border-radius: 20px;
       box-shadow: 0 22px 46px rgba(15, 23, 42, 0.18), 0 1px 0 rgba(255, 255, 255, 0.82) inset;
    }
 
    body.guest-desktop-shell #landing #hero .desktop-hero-image {
+      max-height: clamp(300px, 42vh, 430px);
       border-radius: 14px;
+   }
+
+   body.guest-desktop-shell #landing #hero .hero-video-showcase {
+      max-width: 860px;
+      gap: 10px;
+   }
+
+   body.guest-desktop-shell #landing #hero .hero-video-caption {
+      max-width: 540px;
+      font-size: 0.72rem;
    }
 
    body.guest-desktop-shell #landing #hero .hero-benefit-row {
@@ -201,13 +226,13 @@ html:not(.lm) #landing #hero .hero-trust-row {
    }
 
    body.guest-desktop-shell #landing #hero .hero-benefit-item {
-      min-height: 48px;
+      min-height: 44px;
       flex-direction: row;
       justify-content: flex-start;
       gap: 8px;
-      padding: 8px 10px;
+      padding: 7px 9px;
       border-radius: 12px;
-      font-size: 0.62rem;
+      font-size: 0.59rem;
       text-align: left;
    }
 
