@@ -4819,6 +4819,20 @@
                 padding-bottom: 0 !important;
                 gap: 0 !important;
              }
+
+             /* Keep the Interview action to one clean white ring with no halo layers. */
+             body.user-mobile-shell #mob-bottom-nav::before {
+                content: none !important;
+                display: none !important;
+                background: none !important;
+                box-shadow: none !important;
+             }
+
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary-icon,
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary.active .mob-nav-primary-icon {
+                border-color: #ffffff !important;
+                box-shadow: none !important;
+             }
           }
 
       </style>
