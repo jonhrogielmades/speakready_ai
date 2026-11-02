@@ -164,6 +164,9 @@ class MobileAuthModalInteractionTest extends TestCase
         }
 
         $this->assertStringContainsString('html[data-theme="light"] body.auth-page-body', $css);
+        $this->assertStringContainsString('--auth-action-gradient: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);', $css);
+        $this->assertStringContainsString('background: var(--auth-action-gradient, linear-gradient(135deg, #2563eb, #0ea5e9));', $css);
+        $this->assertStringContainsString('color: var(--auth-action-start, #2563eb);', $css);
         $this->assertStringContainsString('body.auth-page-body.auth-desktop-shell { height: 100vh; height: 100dvh; overflow: hidden; }', $css);
         $this->assertStringContainsString('grid-template-rows: auto minmax(0, 1fr) auto;', $css);
         $this->assertStringContainsString('.auth-page-card { width: min(1180px, 100%); height: 100%; min-height: 0; flex: none; }', $css);
@@ -178,7 +181,7 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('background: var(--auth-security-surface);', $css);
         $this->assertStringContainsString('--auth-security-text: #9a3412;', $css);
         $this->assertStringContainsString('--auth-security-text: #fcd34d;', $css);
-        $this->assertStringContainsString('background: var(--auth-security-icon);', $css);
+        $this->assertStringContainsString('background: var(--auth-action-start, var(--auth-security-icon));', $css);
         $this->assertStringContainsString('fa-shield-check', $markup);
         $this->assertStringNotContainsString('fa-shield-halved', $markup);
         $this->assertStringNotContainsString('fa-regular fa-copyright', $markup);

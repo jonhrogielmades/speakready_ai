@@ -19,7 +19,7 @@ class AuthSupportPresentationTest extends TestCase
         $this->get(route('password.request'))
             ->assertOk()
             ->assertSee('auth-support-page', false)
-            ->assertSee('css/shared/auth-page.css?v=29', false)
+            ->assertSee('css/shared/auth-page.css?v=30', false)
             ->assertSee('authPageThemeToggle', false)
             ->assertSee('Send Recovery Code');
 
@@ -70,7 +70,7 @@ class AuthSupportPresentationTest extends TestCase
             $this->get($url)
                 ->assertOk()
                 ->assertSee('legal-page-shell', false)
-                ->assertSee('css/shared/auth-page.css?v=29', false)
+                ->assertSee('css/shared/auth-page.css?v=30', false)
                 ->assertSee('css/shared/legal-page.css?v=1', false)
                 ->assertSee('authPageThemeToggle', false);
         }
