@@ -24,7 +24,7 @@
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=39') }}" />
-      <link rel="stylesheet" href="{{ asset('css/about-system.css?v=5') }}" />
+      <link rel="stylesheet" href="{{ asset('css/about-system.css?v=6') }}" />
       <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=7') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
@@ -184,23 +184,20 @@
 
                         <div class="about-system-capabilities" role="list" aria-label="Core system capabilities">
                            <article class="about-feature-card" role="listitem">
-                              <span class="about-feature-icon" aria-hidden="true"><i class="fa-solid fa-briefcase"></i></span>
                               <div>
-                                 <h4>Role-focused setup</h4>
+                                 <h4 style="text-align:left">Role-focused setup</h4>
                                  <p>Choose a target position and interview structure before practice begins.</p>
                               </div>
                            </article>
                            <article class="about-feature-card" role="listitem">
-                              <span class="about-feature-icon" aria-hidden="true"><i class="fa-solid fa-sliders"></i></span>
                               <div>
-                                 <h4>Flexible response modes</h4>
+                                 <h4 style="text-align:left">Flexible response modes</h4>
                                  <p>Practice by text, voice, or hybrid mode with support controls that fit your goal.</p>
                               </div>
                            </article>
                            <article class="about-feature-card" role="listitem">
-                              <span class="about-feature-icon" aria-hidden="true"><i class="fa-solid fa-chart-line"></i></span>
                               <div>
-                                 <h4>Evidence-based review</h4>
+                                 <h4 style="text-align:left">Evidence-based review</h4>
                                  <p>Use readiness signals and feedback to choose a clear focus for your next session.</p>
                               </div>
                            </article>
