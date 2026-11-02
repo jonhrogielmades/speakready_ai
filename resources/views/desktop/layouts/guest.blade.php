@@ -23,7 +23,7 @@
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
       <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=26') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=5') }}" />
-      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=8') }}" />
+      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=9') }}" />
       <style>
          :root,
          .lm,
