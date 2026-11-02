@@ -84,17 +84,6 @@ html:not(.lm) #about .about-system-kicker {
    font-size: 0.7rem;
 }
 
-#about .about-system-panel-title {
-   max-width: 720px;
-   margin: 0 0 16px;
-   color: var(--tx) !important;
-   -webkit-text-fill-color: var(--tx) !important;
-   font-size: clamp(1.65rem, 2.5vw, 2.55rem);
-   font-weight: 850;
-   letter-spacing: -0.035em;
-   line-height: 1.08;
-}
-
 #about .about-system-copy {
    max-width: 760px;
    margin: 0 0 22px !important;
@@ -320,12 +309,6 @@ html:not(.lm) #about .target-users-grid .ftag i {
       font-size: 0.62rem;
    }
 
-   #about .about-system-panel-title {
-      margin-bottom: 13px;
-      font-size: clamp(1.45rem, 7.3vw, 1.78rem);
-      line-height: 1.1;
-   }
-
    #about .about-system-copy {
       margin-bottom: 17px !important;
       font-size: 0.88rem !important;
@@ -443,12 +426,6 @@ html:not(.lm) #about .target-users-grid .ftag i {
 
    #about .about-system-panel-head {
       gap: 0;
-   }
-
-   #about .about-system-panel-title {
-      max-width: none;
-      font-size: clamp(2.2rem, 3.2vw, 3.35rem);
-      line-height: 1.04;
    }
 
    #about .about-system-copy {

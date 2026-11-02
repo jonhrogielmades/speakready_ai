@@ -22,7 +22,7 @@
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
       <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=26') }}" />
-      <link rel="stylesheet" href="{{ asset('css/about-system.css?v=3') }}" />
+      <link rel="stylesheet" href="{{ asset('css/about-system.css?v=4') }}" />
       <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=5') }}" />
       <style>
          :root,
@@ -169,7 +169,6 @@
                         <div class="about-system-panel-head">
                            <div class="about-system-intro">
                               <div class="about-system-kicker"><span class="about-system-kicker-icon" aria-hidden="true"><i class="fa-solid fa-sparkles"></i></span><span>Structured practice. Clear next steps.</span></div>
-                              <h3 class="about-system-panel-title">Practice with a plan. Improve with evidence.</h3>
                               <p class="about-system-copy">SpeakReady AI guides users through a complete job-interview practice flow: choose the Job Interviews scenario, select a target position, set the interview structure, choose support controls, answer by text, voice, or hybrid mode, and review evidence-based feedback. Coaching On and optional Camera Detection support practice, while Real Interview Mode keeps the session quieter and readiness scoring focused on answer quality.</p>
                               <div class="about-system-proof-row" role="list" aria-label="Practice options">
                                  <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Role-specific prompts</span>
