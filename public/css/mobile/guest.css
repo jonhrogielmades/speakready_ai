@@ -1012,7 +1012,7 @@ html, body {
             margin-left: auto;
             margin-right: auto;
             padding: 26px 0 66px;
-            line-height: 0;
+            line-height: normal;
             overflow: visible;
          }
 
@@ -1023,15 +1023,138 @@ html, body {
             height: auto;
             margin: 0 auto;
             object-fit: contain;
+            border-radius: 8px;
+            background: #0b172a;
             filter: drop-shadow(0 22px 34px rgba(15, 23, 42, 0.28));
             user-select: none;
+            animation: none;
+            will-change: auto;
+         }
+
+         html:not(.lm) #landing .mobile-hero-image {
+            filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.5));
+         }
+
+         #landing .hero-video-showcase {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            width: min(100%, 520px);
+            margin: 0 auto;
+            isolation: isolate;
+         }
+
+         #landing .hero-video-kicker {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 0 2px;
+            color: var(--tx2);
+            font-size: 0.55rem;
+            font-weight: 800;
+            letter-spacing: 0.07em;
+            line-height: 1.2;
+            text-transform: uppercase;
+         }
+
+         #landing .hero-video-kicker-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+         }
+
+         #landing .hero-video-kicker-title i {
+            color: var(--pur, #2563eb);
+            font-size: 0.56rem;
+         }
+
+         #landing .hero-video-kicker-meta {
+            color: var(--tx3);
+            font-size: 0.49rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            white-space: nowrap;
+         }
+
+         #landing .hero-video-shell {
+            position: relative;
+            padding: 7px 7px 8px;
+            border: 1px solid rgba(37, 99, 235, 0.18);
+            border-radius: 14px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 246, 255, 0.92));
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.17), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
             transform-origin: 50% 54%;
             animation: srMobileHeroImageFloat 7.2s ease-in-out infinite;
             will-change: transform;
          }
 
-         html:not(.lm) #landing .mobile-hero-image {
-            filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.5));
+         #landing .hero-video-shell::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            inset: 12% -10% -12%;
+            border-radius: 40%;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.2), rgba(6, 182, 212, 0.07) 42%, transparent 72%);
+            filter: blur(18px);
+            opacity: 0.88;
+            pointer-events: none;
+         }
+
+         html:not(.lm) #landing .hero-video-shell {
+            border-color: rgba(96, 165, 250, 0.3);
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(8, 47, 73, 0.92));
+            box-shadow: 0 22px 44px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(148, 163, 184, 0.16) inset;
+         }
+
+         #landing .hero-video-chrome {
+            position: relative;
+            display: flex;
+            align-items: center;
+            height: 18px;
+            padding: 0 3px 6px;
+            color: var(--tx3);
+         }
+
+         #landing .hero-video-chrome-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+         }
+
+         #landing .hero-video-chrome-dots i {
+            display: block;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #f87171;
+         }
+
+         #landing .hero-video-chrome-dots i:nth-child(2) { background: #fbbf24; }
+         #landing .hero-video-chrome-dots i:nth-child(3) { background: #34d399; }
+
+         #landing .hero-video-chrome-label {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--tx3);
+            font-size: 0.5rem;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            white-space: nowrap;
+         }
+
+         #landing .hero-video-caption {
+            max-width: 330px;
+            margin: 0 auto;
+            color: var(--tx3);
+            font-size: 0.58rem;
+            font-weight: 600;
+            line-height: 1.35;
+            text-align: center;
          }
 
          #landing .mobile-hero-context-card {
@@ -1238,17 +1361,13 @@ html, body {
 
          @media (prefers-reduced-motion: reduce) {
             #landing .mobile-hero-image,
-            #landing .mobile-hero-context-card,
-            #landing .mobile-hero-context-card::after {
+            #landing .hero-video-shell {
                animation: none !important;
             }
 
-            #landing .mobile-hero-image {
+            #landing .mobile-hero-image,
+            #landing .hero-video-shell {
                transform: none !important;
-            }
-
-            #landing .mobile-hero-context-card {
-               transform: translate3d(0, var(--mobile-hero-card-anchor-y), 0) rotate(var(--mobile-hero-card-rotate-start)) !important;
             }
          }
 

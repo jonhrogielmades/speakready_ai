@@ -125,19 +125,32 @@
                      @endphp
                      <div class="desktop-hero-image-row mt-3 mb-1 afu" style="animation-delay:.48s">
                         <figure class="desktop-hero-image-frame mb-0" aria-label="SpeakReady AI desktop product overview video">
-                           <video
-                              class="desktop-hero-image desktop-hero-video"
-                              width="1920"
-                              height="1080"
-                              autoplay
-                              muted
-                              loop
-                              playsinline
-                              preload="metadata"
-                              aria-label="SpeakReady AI desktop product overview"
-                           >
-                              <source src="{{ $heroVideo }}" type="video/mp4">
-                           </video>
+                           <div class="hero-video-showcase">
+                              <div class="hero-video-kicker">
+                                 <span class="hero-video-kicker-title"><i class="fa-solid fa-play" aria-hidden="true"></i> See SpeakReady AI in action</span>
+                                 <span class="hero-video-kicker-meta">15-second product tour</span>
+                              </div>
+                              <div class="hero-video-shell">
+                                 <div class="hero-video-chrome" aria-hidden="true">
+                                    <span class="hero-video-chrome-dots"><i></i><i></i><i></i></span>
+                                    <span class="hero-video-chrome-label">speakready.ai</span>
+                                 </div>
+                                 <video
+                                    class="desktop-hero-image desktop-hero-video"
+                                    width="1920"
+                                    height="1080"
+                                    autoplay
+                                    muted
+                                    loop
+                                    playsinline
+                                    preload="metadata"
+                                    aria-label="SpeakReady AI desktop product overview"
+                                 >
+                                    <source src="{{ $heroVideo }}" type="video/mp4">
+                                 </video>
+                              </div>
+                              <p class="hero-video-caption">Practice interviews. Get real-time coaching. Improve with every session.</p>
+                           </div>
                         </figure>
                      </div>
                   </div>

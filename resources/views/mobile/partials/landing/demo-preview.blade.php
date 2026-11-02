@@ -7,19 +7,32 @@
                @endphp
                <div class="mobile-hero-preview-row rv">
                   <figure class="mobile-hero-image-frame mb-0" aria-label="SpeakReady AI mobile product overview video">
-                     <video
-                        class="mobile-hero-image mobile-hero-video"
-                        width="1920"
-                        height="1080"
-                        autoplay
-                        muted
-                        loop
-                        playsinline
-                        preload="metadata"
-                        aria-label="SpeakReady AI mobile product overview"
-                     >
-                        <source src="{{ $heroVideo }}" type="video/mp4">
-                     </video>
+                     <div class="hero-video-showcase">
+                        <div class="hero-video-kicker">
+                           <span class="hero-video-kicker-title"><i class="fa-solid fa-play" aria-hidden="true"></i> See it in action</span>
+                           <span class="hero-video-kicker-meta">15-sec tour</span>
+                        </div>
+                        <div class="hero-video-shell">
+                           <div class="hero-video-chrome" aria-hidden="true">
+                              <span class="hero-video-chrome-dots"><i></i><i></i><i></i></span>
+                              <span class="hero-video-chrome-label">speakready.ai</span>
+                           </div>
+                           <video
+                              class="mobile-hero-image mobile-hero-video"
+                              width="1920"
+                              height="1080"
+                              autoplay
+                              muted
+                              loop
+                              playsinline
+                              preload="metadata"
+                              aria-label="SpeakReady AI mobile product overview"
+                           >
+                              <source src="{{ $heroVideo }}" type="video/mp4">
+                           </video>
+                        </div>
+                        <p class="hero-video-caption">Practice interviews. Get real-time coaching. Improve with every session.</p>
+                     </div>
                   </figure>
                </div>
             </div>
