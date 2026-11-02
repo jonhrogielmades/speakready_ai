@@ -287,6 +287,7 @@ html[data-theme="light"] body.auth-page-body {
    --tx3: #6f849a;
    --pur: #1d4ed8;
    --blu: #06b6d4;
+   color-scheme: light;
    min-height: 0;
    display: flex;
    align-items: center;
@@ -504,6 +505,53 @@ html.dm .auth-page-alert-success,
 html[data-theme="dark"] .auth-page-alert-success { color: #a7f3d0; background: rgba(6, 78, 59, .25); border-color: rgba(52, 211, 153, .3); }
 html.dm .auth-page-brand-mark,
 html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184, .2); box-shadow: 0 8px 24px rgba(0, 0, 0, .22); }
+
+/* Keep every auth form readable when the outer page changes theme. The form
+   remains a bright, high-contrast surface in dark mode while its surrounding
+   canvas and navigation use the dark palette. */
+html.lm .auth-page-form-side,
+html[data-theme="light"] .auth-page-form-side,
+.auth-page-shell[data-auth-theme="light"] .auth-page-form-side {
+   --auth-form-surface: #ffffff;
+   --auth-form-border: rgba(35, 77, 119, .2);
+   --auth-text: #153b63;
+   --auth-muted: #536f8b;
+   --auth-subtle: #6f849a;
+   --auth-control: #f5f9fd;
+   --auth-control-focus: #ffffff;
+   --auth-control-text: #102f4e;
+   --auth-control-placeholder: #6c8299;
+   --auth-control-icon: #7890a8;
+   --auth-control-border: #c8d6e4;
+   --auth-link: #1d4ed8;
+   --auth-divider: #d7e1eb;
+   color-scheme: light;
+   color: var(--auth-text);
+   background: var(--auth-form-surface);
+   border-left-color: var(--auth-form-border);
+}
+
+html.dm .auth-page-form-side,
+html[data-theme="dark"] .auth-page-form-side,
+.auth-page-shell[data-auth-theme="dark"] .auth-page-form-side {
+   --auth-form-surface: #ffffff;
+   --auth-form-border: rgba(109, 145, 178, .46);
+   --auth-text: #123b63;
+   --auth-muted: #466985;
+   --auth-subtle: #617d96;
+   --auth-control: #f1f6fb;
+   --auth-control-focus: #ffffff;
+   --auth-control-text: #102f4e;
+   --auth-control-placeholder: #607b95;
+   --auth-control-icon: #6f8da7;
+   --auth-control-border: #b9cedf;
+   --auth-link: #1d4ed8;
+   --auth-divider: #c6d8e6;
+   color-scheme: light;
+   color: var(--auth-text);
+   background: var(--auth-form-surface);
+   border-left-color: var(--auth-form-border);
+}
 
 .auth-page-shell[data-auth-mode="register"] .auth-page-switch { margin-top: 13px; }
 .auth-page-shell[data-auth-mode="login"] .auth-page-intro { text-align: center; }

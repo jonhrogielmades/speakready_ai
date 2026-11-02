@@ -41,6 +41,9 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('@media (max-width: 390px) and (max-height: 700px)', $css);
         $this->assertStringContainsString('var pageScrollTop = window.scrollY;', $script);
         $this->assertStringContainsString('authFormPanel.scrollTop = formScrollTop;', $script);
+        $this->assertStringContainsString('function syncAuthFormTheme()', $script);
+        $this->assertStringContainsString('page.dataset.authTheme = theme;', $script);
+        $this->assertStringContainsString("panel.dataset.authTheme = theme;", $script);
     }
 
     public function test_registration_password_has_live_strength_and_confirmation_feedback(): void
@@ -171,6 +174,9 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('linear-gradient(120deg, #020617 0%, #071b2f 48%, #063044 100%)', $css);
         $this->assertStringContainsString('linear-gradient(120deg, #f8fcff 0%, #edfaff 46%, #dff5ff 100%)', $css);
         $this->assertStringContainsString('--auth-form-surface: #ffffff;', $css);
+        $this->assertStringContainsString('color-scheme: light;', $css);
+        $this->assertStringContainsString('html[data-theme="dark"] .auth-page-form-side', $css);
+        $this->assertStringContainsString('.auth-page-shell[data-auth-theme="dark"] .auth-page-form-side', $css);
         $this->assertStringContainsString('--auth-mobile-promo-background:', $css);
         $this->assertStringContainsString('background: var(--auth-page-background);', $css);
         $this->assertStringContainsString('background: var(--auth-form-surface);', $css);

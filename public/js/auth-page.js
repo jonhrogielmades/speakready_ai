@@ -37,12 +37,24 @@
          overlay.hidden = true;
       }
 
+      function syncAuthFormTheme() {
+         var theme = window.SpeakReadyTheme
+            ? window.SpeakReadyTheme.get()
+            : (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+
+         page.dataset.authTheme = theme;
+         page.querySelectorAll('.auth-page-form-side').forEach(function (panel) {
+            panel.dataset.authTheme = theme;
+         });
+
+         return theme;
+      }
+
       function syncThemeToggle() {
+         var theme = syncAuthFormTheme();
          if (!themeToggle) return;
 
-         var isDark = window.SpeakReadyTheme
-            ? window.SpeakReadyTheme.get() === 'dark'
-            : document.documentElement.dataset.theme === 'dark';
+         var isDark = theme === 'dark';
          var sunIcon = themeToggle.querySelector('[data-auth-theme-icon="sun"]');
          var moonIcon = themeToggle.querySelector('[data-auth-theme-icon="moon"]');
 
@@ -53,8 +65,8 @@
          themeToggle.title = isDark ? 'Switch to light theme' : 'Switch to dark theme';
       }
 
+      syncThemeToggle();
       if (themeToggle) {
-         syncThemeToggle();
          themeToggle.addEventListener('click', function () {
             var authFormPanel = document.getElementById('authFormPanel');
             var pageScrollTop = window.scrollY;
