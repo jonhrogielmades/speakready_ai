@@ -91,13 +91,14 @@ html:not(.lm) #landing #how .how-step-card:hover {
    width: 50px;
    height: 50px;
    margin: 0;
-   border: 1px solid color-mix(in srgb, var(--how-accent) 24%, transparent);
+   border: 1px solid rgba(37, 99, 235, 0.18);
    border-radius: 16px;
-   background: linear-gradient(135deg, color-mix(in srgb, var(--how-accent) 17%, transparent), color-mix(in srgb, var(--how-accent-2) 19%, transparent));
-   color: var(--how-heading);
+   background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%) !important;
+   color: #ffffff !important;
+   -webkit-text-fill-color: #ffffff !important;
    font-size: 1rem;
    font-weight: 950;
-   box-shadow: 0 14px 28px color-mix(in srgb, var(--how-accent) 14%, transparent);
+   box-shadow: 0 14px 28px rgba(37, 99, 235, 0.22);
 }
 
 #landing #how .how-step-card h3 {
@@ -230,10 +231,10 @@ html:not(.lm) #landing #how .how-step-card:hover {
    #landing #how .how-auto-carousel .swiper-slide > .how-step-card {
       min-height: 276px !important;
       padding: 22px 22px 24px !important;
-      align-items: flex-start !important;
+      align-items: center !important;
       justify-content: flex-start !important;
       border-radius: 18px !important;
-      text-align: left !important;
+      text-align: center !important;
    }
 
    #landing #how .how-step-meta {
@@ -249,19 +250,21 @@ html:not(.lm) #landing #how .how-step-card:hover {
 
    #landing #how .how-step-card h3 {
       width: 100%;
+      margin-left: auto;
+      margin-right: auto;
       margin-bottom: 9px !important;
       font-size: 1.05rem !important;
       line-height: 1.25;
-      text-align: left !important;
+      text-align: center !important;
    }
 
    #landing #how .how-step-card p {
       width: 100%;
       max-width: 100%;
-      margin: 0;
+      margin: 0 auto;
       font-size: 0.86rem !important;
       line-height: 1.55;
-      text-align: left !important;
+      text-align: center !important;
    }
 
    #landing #how .landing-carousel-control-bar {
