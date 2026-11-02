@@ -4633,6 +4633,10 @@
              body.user-mobile-shell #mob-bottom-nav .mob-nav-primary-icon {
                 width: var(--mob-dock-fab-size) !important;
                 height: var(--mob-dock-fab-size) !important;
+                position: relative !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
                 border-width: 4px !important;
                 box-shadow:
                    0 8px 18px rgba(37, 99, 235, 0.24),
@@ -4640,6 +4644,18 @@
              }
 
              body.user-mobile-shell #mob-bottom-nav .mob-nav-primary-icon i {
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                width: 1em !important;
+                height: 1em !important;
+                margin: 0 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                line-height: 1 !important;
+                text-align: center !important;
+                transform: translate(-50%, -50%) !important;
                 font-size: clamp(1.28rem, 5.2vw, 1.65rem) !important;
              }
 
