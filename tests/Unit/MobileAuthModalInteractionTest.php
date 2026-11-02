@@ -193,6 +193,8 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('fa-file-lines', $markup);
         $this->assertStringContainsString('linear-gradient(120deg, #020617 0%, #071b2f 48%, #063044 100%)', $css);
         $this->assertStringContainsString('linear-gradient(120deg, #f8fcff 0%, #edfaff 46%, #dff5ff 100%)', $css);
+        $this->assertStringContainsString('--auth-grid-size: 32px 32px;', $css);
+        $this->assertStringContainsString('--auth-grid-line: rgba(14, 165, 233, .1);', $css);
         $this->assertStringContainsString('--auth-form-surface: #ffffff;', $css);
         $this->assertStringContainsString('color-scheme: light;', $css);
         $this->assertStringContainsString('html[data-theme="dark"] .auth-page-form-side', $css);

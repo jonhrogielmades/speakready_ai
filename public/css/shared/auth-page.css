@@ -26,11 +26,13 @@ body.auth-page-body.auth-mobile-shell {
    --auth-form-surface: #ffffff;
    --auth-form-border: rgba(35, 77, 119, .24);
    --auth-shadow: 0 28px 90px rgba(2, 12, 27, .32), 0 2px 8px rgba(2, 12, 27, .18);
+   --auth-grid-size: 32px 32px;
+   --auth-grid-line: rgba(56, 189, 248, .1);
    --auth-page-background:
       radial-gradient(circle at 14% 20%, rgba(34, 211, 238, .16), transparent 34%),
       radial-gradient(circle at 84% 18%, rgba(37, 99, 235, .22), transparent 36%),
-      linear-gradient(rgba(56, 189, 248, .08) 1px, transparent 1px) 0 0 / 100% 42px,
-      linear-gradient(90deg, rgba(56, 189, 248, .08) 1px, transparent 1px) 0 0 / 48px 100%,
+      linear-gradient(var(--auth-grid-line) 1px, transparent 1px) 0 0 / var(--auth-grid-size),
+      linear-gradient(90deg, var(--auth-grid-line) 1px, transparent 1px) 0 0 / var(--auth-grid-size),
       linear-gradient(120deg, #020617 0%, #071b2f 48%, #063044 100%);
    --auth-mobile-promo-background:
       radial-gradient(circle at 92% 7%, transparent 0 142px, rgba(255, 255, 255, .16) 143px 144px, transparent 145px),
@@ -78,11 +80,13 @@ html[data-theme="light"] body.auth-page-body {
    --auth-form-surface: #ffffff;
    --auth-form-border: rgba(35, 77, 119, .2);
    --auth-shadow: 0 28px 90px rgba(15, 23, 42, .14), 0 2px 8px rgba(15, 23, 42, .05);
+   --auth-grid-size: 32px 32px;
+   --auth-grid-line: rgba(14, 165, 233, .1);
    --auth-page-background:
       radial-gradient(circle at 14% 22%, rgba(6, 182, 212, .16), transparent 34%),
       radial-gradient(circle at 86% 18%, rgba(37, 99, 235, .18), transparent 36%),
-      linear-gradient(rgba(14, 165, 233, .075) 1px, transparent 1px) 0 0 / 100% 42px,
-      linear-gradient(90deg, rgba(14, 165, 233, .075) 1px, transparent 1px) 0 0 / 48px 100%,
+      linear-gradient(var(--auth-grid-line) 1px, transparent 1px) 0 0 / var(--auth-grid-size),
+      linear-gradient(90deg, var(--auth-grid-line) 1px, transparent 1px) 0 0 / var(--auth-grid-size),
       linear-gradient(120deg, #f8fcff 0%, #edfaff 46%, #dff5ff 100%);
    --auth-mobile-promo-background:
       radial-gradient(circle at 92% 7%, transparent 0 142px, rgba(37, 99, 235, .24) 143px 144px, transparent 145px),
@@ -117,6 +121,7 @@ html[data-theme="light"] body.auth-page-body {
    display: flex;
    flex-direction: column;
    padding: max(12px, env(safe-area-inset-top, 0px)) max(22px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(22px, env(safe-area-inset-left, 0px));
+   background: var(--auth-page-background);
 }
 .auth-page-topbar {
    width: min(1180px, 100%);
