@@ -23,7 +23,7 @@
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
       <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=26') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=4') }}" />
-      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=5') }}" />
+      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=6') }}" />
       <style>
          :root,
          .lm,
@@ -102,7 +102,7 @@
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                         <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6 hero-primary-cta">Start Practicing Free</a>
                         <button type="button" class="boc btn px-4 py-3 fs-6 hero-secondary-cta" id="heroInstallBtn"><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install App</button>
-                        <a href="#about" class="boc btn px-4 py-3 fs-6 hero-secondary-cta">Explore Features</a>
+                        <a href="#about" class="boc btn px-4 py-3 fs-6 hero-secondary-cta hero-how-it-works-cta">How It Works?</a>
                      </div>
                      <div class="hero-trust-row" role="list" aria-label="What you can do with SpeakReady AI">
                         <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Guided setup</span>

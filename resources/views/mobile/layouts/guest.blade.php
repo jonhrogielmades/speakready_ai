@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=39') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=4') }}" />
-      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=5') }}" />
+      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=6') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
@@ -110,7 +110,7 @@
                      <p class="hero-home-copy-text mx-auto afu" style="animation-delay:.2s">Practice realistic job interviews with AI-powered coaching, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                         <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn hero-secondary-cta" id="heroInstallBtn"><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install App</button>
-                        <a href="#about" class="boc btn px-4 py-3 fs-6 hero-learn-btn hero-secondary-cta">Explore Features</a>
+                        <a href="#about" class="boc btn px-4 py-3 fs-6 hero-learn-btn hero-secondary-cta hero-how-it-works-cta">How It Works?</a>
                      </div>
                      <div class="hero-trust-row" role="list" aria-label="What you can do with SpeakReady AI">
                         <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Guided setup</span>
