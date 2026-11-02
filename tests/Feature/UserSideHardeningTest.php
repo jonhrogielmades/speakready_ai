@@ -888,7 +888,7 @@ class UserSideHardeningTest extends TestCase
  }
 
  $mobileResponse
- ->assertSee('css/mobile/interview/setup.css?v=24', false)
+ ->assertSee('css/mobile/interview/setup.css?v=25', false)
  ->assertSee('css/mobile/interview/setup-2.css?v=11', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
@@ -954,6 +954,12 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('.camera-mode-list.setup-field-invalid', $mobileSetupCss);
  $this->assertStringContainsString('.live-feedback-mode-list.setup-field-invalid', $desktopSetupCss);
  $this->assertStringContainsString('#panel-content .assistance-feedback-field', $desktopSetupCss);
+ $this->assertStringContainsString('#sec-interview-setup.setup-page-booting', $desktopSetupCss);
+ $this->assertStringContainsString('#sec-interview-setup.setup-page-booting', $mobileSetupCss);
+ $this->assertStringContainsString('data-setup-ready="false"', $desktopResponse->getContent());
+ $this->assertStringContainsString('data-setup-ready="false"', $mobileResponse->getContent());
+ $this->assertStringContainsString('function revealInterviewSetupPage()', $desktopResponse->getContent());
+ $this->assertStringContainsString('function revealInterviewSetupPage()', $mobileResponse->getContent());
  }
 
  public function test_interview_setup_shows_added_question_count_options_on_desktop_and_mobile(): void

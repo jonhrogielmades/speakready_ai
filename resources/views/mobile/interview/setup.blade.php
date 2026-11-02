@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=24') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=11') }}" data-page-style="interview-setup-2">
 @endpush
 
@@ -91,7 +91,7 @@
  $interviewSetupDraftKey = 'speakready.interview.setupDraft.'.auth()->id();
 @endphp
 
-<div class="db-section active setup-step-mode" id="sec-interview-setup">
+<div class="db-section active setup-step-mode setup-page-booting" id="sec-interview-setup" aria-busy="true" data-setup-ready="false">
  <div class="setup-hero">
  <div class="setup-hero-inner">
  <span class="setup-hero-icon" aria-hidden="true">
@@ -1540,7 +1540,25 @@ Begin Interview <i class="fa-solid fa-play"></i>
  showSetupStep(initialSetupStepIndex);
  }
 
+ function revealInterviewSetupPage() {
+ const section = document.getElementById('sec-interview-setup');
+ if (!section) return;
+
+ const reveal = () => {
+ section.classList.remove('setup-page-booting');
+ section.setAttribute('aria-busy', 'false');
+ section.dataset.setupReady = 'true';
+ };
+
+ if (typeof window.requestAnimationFrame === 'function') {
+ window.requestAnimationFrame(() => window.requestAnimationFrame(reveal));
+ } else {
+ window.setTimeout(reveal, 0);
+ }
+ }
+
  initializeInterviewSetupPage();
+ revealInterviewSetupPage();
  window.addEventListener('load', initializeInterviewSetupPage, { once: true });
 
  const setupForm = document.getElementById('setupForm');

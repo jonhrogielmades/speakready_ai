@@ -1,4 +1,10 @@
 /* Page styles extracted from resources/views/interview/setup.blade.php (block 1 of 2). */
+#sec-interview-setup.setup-page-booting {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 .text-gradient-primary {
         background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
         -webkit-background-clip: text;
