@@ -1,0 +1,430 @@
+/* How It Works: a clear journey on desktop and a focused step-by-step control on mobile. */
+
+#landing #how.sp {
+   --how-heading: var(--tx, #0f172a);
+   --how-muted: var(--tx2, #475569);
+   --how-card-bg: color-mix(in srgb, var(--sf, #ffffff) 94%, transparent);
+   --how-card-border: color-mix(in srgb, var(--pur, #2563eb) 18%, transparent);
+   --how-accent: var(--pur, #2563eb);
+   --how-accent-2: #06b6d4;
+}
+
+html:not(.lm) #landing #how.sp {
+   --how-heading: #f8fafc;
+   --how-muted: #cbd5e1;
+   --how-card-bg: color-mix(in srgb, var(--sf, #171d2d) 90%, transparent);
+   --how-card-border: rgba(148, 163, 184, 0.28);
+   --how-accent: #93c5fd;
+   --how-accent-2: #67e8f9;
+}
+
+#landing #how .how-step-card {
+   position: relative;
+   isolation: isolate;
+   overflow: hidden;
+   width: 100%;
+   border: 1px solid var(--how-card-border) !important;
+   background: var(--how-card-bg) !important;
+   color: var(--how-heading);
+   box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+html:not(.lm) #landing #how .how-step-card {
+   box-shadow: 0 20px 42px rgba(0, 0, 0, 0.26);
+}
+
+#landing #how .how-step-card > * {
+   position: relative;
+   z-index: 3;
+}
+
+#landing #how .how-step-card:hover {
+   transform: translateY(-4px);
+   border-color: color-mix(in srgb, var(--how-accent) 48%, transparent) !important;
+   box-shadow: 0 26px 52px rgba(15, 23, 42, 0.13);
+}
+
+html:not(.lm) #landing #how .how-step-card:hover {
+   box-shadow: 0 28px 58px rgba(0, 0, 0, 0.38);
+}
+
+#landing #how .how-step-meta {
+   width: 100%;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+}
+
+#landing #how .how-step-phase,
+#landing #how .how-step-count {
+   display: inline-flex;
+   align-items: center;
+   min-height: 24px;
+   border-radius: 999px;
+   line-height: 1;
+   white-space: nowrap;
+}
+
+#landing #how .how-step-phase {
+   padding: 6px 9px;
+   border: 1px solid color-mix(in srgb, var(--how-accent) 24%, transparent);
+   background: color-mix(in srgb, var(--how-accent) 9%, transparent);
+   color: var(--how-accent);
+   font-size: 0.66rem;
+   font-weight: 850;
+   letter-spacing: 0.1em;
+   text-transform: uppercase;
+}
+
+#landing #how .how-step-count {
+   color: color-mix(in srgb, var(--how-muted) 86%, transparent);
+   font-size: 0.68rem;
+   font-weight: 750;
+}
+
+#landing #how .how-step-card .hnum {
+   display: grid;
+   place-items: center;
+   flex: 0 0 auto;
+   width: 50px;
+   height: 50px;
+   margin: 0;
+   border: 1px solid color-mix(in srgb, var(--how-accent) 24%, transparent);
+   border-radius: 16px;
+   background: linear-gradient(135deg, color-mix(in srgb, var(--how-accent) 17%, transparent), color-mix(in srgb, var(--how-accent-2) 19%, transparent));
+   color: var(--how-heading);
+   font-size: 1rem;
+   font-weight: 950;
+   box-shadow: 0 14px 28px color-mix(in srgb, var(--how-accent) 14%, transparent);
+}
+
+#landing #how .how-step-card h3 {
+   color: var(--how-heading) !important;
+   -webkit-text-fill-color: var(--how-heading) !important;
+   font-weight: 900 !important;
+}
+
+#landing #how .how-step-card p {
+   color: var(--how-muted) !important;
+   -webkit-text-fill-color: var(--how-muted) !important;
+}
+
+@media (min-width: 992px) {
+   #landing #how.sp {
+      padding-top: 78px;
+      padding-bottom: 88px;
+   }
+
+   #landing #how .landing-section-heading {
+      margin-bottom: 42px !important;
+   }
+
+   #landing #how .how-step-grid {
+      --bs-gutter-x: 0;
+      --bs-gutter-y: 0;
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      margin-left: 0;
+      margin-right: 0;
+   }
+
+   #landing #how .how-step-grid > [class*="col-"] {
+      position: relative;
+      width: auto;
+      max-width: none;
+      padding-left: 0;
+      padding-right: 0;
+      z-index: 1;
+   }
+
+   #landing #how .how-step-grid > [class*="col-"]:not(:nth-child(3n))::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -22px;
+      width: 22px;
+      border-top: 1px dashed color-mix(in srgb, var(--how-accent) 35%, transparent);
+      z-index: 0;
+   }
+
+   #landing #how .how-step-grid > [class*="col-"]:nth-child(3)::before {
+      content: "";
+      position: absolute;
+      top: calc(100% + 1px);
+      left: 50%;
+      height: 20px;
+      border-left: 1px dashed color-mix(in srgb, var(--how-accent) 35%, transparent);
+      z-index: 0;
+   }
+
+   #landing #how .how-step-card {
+      min-height: 264px;
+      padding: 28px 28px 30px !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 18px;
+   }
+
+   #landing #how .how-step-meta {
+      margin-bottom: 16px;
+   }
+
+   #landing #how .how-step-card .hnum {
+      margin-bottom: 16px;
+   }
+
+   #landing #how .how-step-card h3 {
+      max-width: 100%;
+      margin-bottom: 10px !important;
+      font-size: 1.08rem !important;
+      line-height: 1.22;
+      letter-spacing: 0;
+      text-align: center;
+   }
+
+   #landing #how .how-step-card p {
+      max-width: 360px;
+      margin: 0 auto;
+      font-size: 0.9rem !important;
+      line-height: 1.55;
+      text-align: center;
+   }
+}
+
+@media (max-width: 991.98px) {
+   #landing #how.sp {
+      padding-top: 62px;
+      padding-bottom: 72px;
+   }
+
+   #landing #how .landing-section-heading {
+      margin-bottom: 28px !important;
+   }
+
+   #landing #how .how-auto-carousel {
+      width: min(100%, 420px) !important;
+      max-width: 420px;
+      padding: 0 !important;
+      overflow: visible;
+      perspective: none;
+   }
+
+   #landing #how .how-auto-carousel .swiper-wrapper {
+      align-items: stretch;
+   }
+
+   #landing #how .how-auto-carousel .swiper-slide {
+      width: 100% !important;
+      max-width: 100% !important;
+      opacity: 1 !important;
+      filter: none !important;
+      transform: none !important;
+      pointer-events: auto;
+   }
+
+   #landing #how .how-auto-carousel .swiper-slide > .how-step-card {
+      min-height: 276px !important;
+      padding: 22px 22px 24px !important;
+      align-items: flex-start !important;
+      justify-content: flex-start !important;
+      border-radius: 18px !important;
+      text-align: left !important;
+   }
+
+   #landing #how .how-step-meta {
+      margin-bottom: 0;
+   }
+
+   #landing #how .how-step-card .hnum {
+      width: 44px;
+      height: 44px;
+      margin: 18px 0 15px;
+      border-radius: 14px;
+   }
+
+   #landing #how .how-step-card h3 {
+      width: 100%;
+      margin-bottom: 9px !important;
+      font-size: 1.05rem !important;
+      line-height: 1.25;
+      text-align: left !important;
+   }
+
+   #landing #how .how-step-card p {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      font-size: 0.86rem !important;
+      line-height: 1.55;
+      text-align: left !important;
+   }
+
+   #landing #how .landing-carousel-control-bar {
+      width: min(100%, 420px);
+      min-height: 52px;
+      margin: 14px auto 0;
+      padding: 4px 6px;
+      gap: 4px;
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--sf, #ffffff) 94%, transparent);
+      border-color: var(--how-card-border);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+   }
+
+   html:not(.lm) #landing #how .landing-carousel-control-bar {
+      background: color-mix(in srgb, var(--sf, #171d2d) 92%, transparent);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+   }
+
+   #landing #how .landing-carousel-control-bar > .landing-how-prev,
+   #landing #how .landing-carousel-control-bar > .landing-how-next {
+      position: static !important;
+      inset: auto !important;
+      transform: none !important;
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 40px;
+      width: 40px !important;
+      height: 40px !important;
+      min-width: 40px !important;
+      min-height: 40px !important;
+      margin: 0 !important;
+      border: 1px solid var(--how-card-border);
+      border-radius: 11px;
+      background: color-mix(in srgb, var(--how-accent) 7%, transparent);
+      color: var(--how-accent);
+   }
+
+   #landing #how .landing-carousel-control-bar > .landing-how-prev::after,
+   #landing #how .landing-carousel-control-bar > .landing-how-next::after {
+      font-size: 0.78rem;
+      font-weight: 900;
+   }
+
+   #landing #how .landing-carousel-control-bar > .landing-how-prev.swiper-button-disabled,
+   #landing #how .landing-carousel-control-bar > .landing-how-next.swiper-button-disabled {
+      opacity: 0.35;
+   }
+
+   #landing #how .how-step-progress {
+      flex: 0 0 auto;
+      min-width: 68px;
+      color: var(--how-heading);
+      font-size: 0.69rem;
+      font-weight: 850;
+      line-height: 1.15;
+      text-align: center;
+      white-space: nowrap;
+   }
+
+   #landing #how .landing-carousel-control-bar > .landing-how-pagination {
+      position: static !important;
+      inset: auto !important;
+      transform: none !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      flex: 1 1 auto;
+      width: auto !important;
+      min-width: 36px;
+      margin: 0 !important;
+      padding: 0 !important;
+      gap: 3px;
+      line-height: 1;
+   }
+
+   #landing #how .landing-how-pagination .swiper-pagination-bullet {
+      width: 6px !important;
+      height: 6px !important;
+      min-width: 6px !important;
+      max-width: 6px !important;
+      min-height: 6px !important;
+      max-height: 6px !important;
+      margin: 0 !important;
+      background: var(--landing-carousel-dot);
+      opacity: 1;
+   }
+
+   #landing #how .landing-how-pagination .swiper-pagination-bullet-active {
+      width: 18px !important;
+      min-width: 18px !important;
+      max-width: 18px !important;
+      border-radius: 999px !important;
+      background: var(--landing-carousel-dot-active);
+   }
+
+   #landing #how .landing-carousel-control-bar > .landing-how-autoplay-toggle {
+      position: static !important;
+      inset: auto !important;
+      transform: none !important;
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 36px;
+      width: 36px !important;
+      height: 36px !important;
+      min-width: 36px !important;
+      min-height: 36px !important;
+      margin: 0 !important;
+      border: 1px solid var(--how-card-border) !important;
+      border-radius: 10px !important;
+      background: transparent !important;
+      color: var(--how-accent);
+      box-shadow: none !important;
+   }
+
+   #landing #how .landing-how-autoplay-toggle:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+   }
+
+   #landing #how button:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--how-accent-2) 60%, transparent);
+      outline-offset: 2px;
+   }
+}
+
+@media (max-width: 374.98px) {
+   #landing #how .how-auto-carousel .swiper-slide > .how-step-card {
+      padding-left: 18px !important;
+      padding-right: 18px !important;
+   }
+
+   #landing #how .landing-carousel-control-bar {
+      gap: 2px;
+   }
+
+   #landing #how .landing-carousel-control-bar > .landing-how-prev,
+   #landing #how .landing-carousel-control-bar > .landing-how-next {
+      flex-basis: 36px;
+      width: 36px !important;
+      min-width: 36px !important;
+      height: 36px !important;
+      min-height: 36px !important;
+   }
+
+   #landing #how .how-step-progress {
+      min-width: 62px;
+      font-size: 0.66rem;
+   }
+
+   #landing #how .landing-carousel-control-bar > .landing-how-autoplay-toggle {
+      flex-basis: 32px;
+      width: 32px !important;
+      min-width: 32px !important;
+      height: 32px !important;
+      min-height: 32px !important;
+   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+   #landing #how .how-step-card {
+      transition: none;
+   }
+}

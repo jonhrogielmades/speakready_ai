@@ -24,6 +24,7 @@
       <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=27') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=5') }}" />
       <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=15') }}" />
+      <link rel="stylesheet" href="{{ asset('css/how-it-works.css?v=1') }}" />
       <style>
          :root,
          .lm,
@@ -230,45 +231,69 @@
                   <h2 class="stitle">From setup to <span class="gt">stronger answers</span></h2>
                </div>
 
-               <div class="row g-4 justify-content-center">
+               <div class="row g-4 justify-content-center how-step-grid">
                   <div class="col-md-4 col-sm-6 rv">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">1</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Set up</span>
+                           <span class="how-step-count">Step 1 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">1</div>
                         <h3 class="fs-5 fw-semibold mb-2">Open Interview Setup</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Start from your workspace and open the guided setup for a job-interview practice session.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.1s">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">2</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Set up</span>
+                           <span class="how-step-count">Step 2 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">2</div>
                         <h3 class="fs-5 fw-semibold mb-2">Pick Scenario And Role</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Select Job Interviews, then choose a target position so prompts match your hiring goal.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.2s">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">3</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Configure</span>
+                           <span class="how-step-count">Step 3 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">3</div>
                         <h3 class="fs-5 fw-semibold mb-2">Set Interview Structure</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Choose difficulty, question count, timer, question types, and response mode before starting.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.3s">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">4</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Configure</span>
+                           <span class="how-step-count">Step 4 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">4</div>
                         <h3 class="fs-5 fw-semibold mb-2">Select Support Controls</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Set Camera Detection, then choose Coaching On for help or Real Interview Mode for quiet practice.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.4s">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">5</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Practice</span>
+                           <span class="how-step-count">Step 5 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">5</div>
                         <h3 class="fs-5 fw-semibold mb-2">Practice The Session</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Answer each prompt by text, voice, or hybrid input while the system records your responses.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.5s">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">6</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Review</span>
+                           <span class="how-step-count">Step 6 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">6</div>
                         <h3 class="fs-5 fw-semibold mb-2">Review Next Steps</h3>
                          <p style="font-size:.875rem;color:var(--tx2)">Use evidence feedback, reports, modules, challenges, and trends to plan your next practice.</p>
                      </div>

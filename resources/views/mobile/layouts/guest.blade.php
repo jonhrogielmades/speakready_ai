@@ -26,6 +26,7 @@
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=41') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=7') }}" />
       <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=15') }}" />
+      <link rel="stylesheet" href="{{ asset('css/how-it-works.css?v=1') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
@@ -231,58 +232,83 @@
                </div>
 
                <div class="swiper landingHowSwiper landing-auto-carousel how-auto-carousel" aria-label="How it works carousel">
-                  <div class="row g-4 justify-content-center swiper-wrapper">
+                  <div class="row g-4 justify-content-center swiper-wrapper how-step-grid">
                   <div class="col-md-4 col-sm-6 rv swiper-slide">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">1</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Set up</span>
+                           <span class="how-step-count">Step 1 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">1</div>
                         <h3 class="fs-5 fw-semibold mb-2">Open Interview Setup</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Start from your workspace and open the guided setup for a job-interview practice session.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.1s">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">2</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Set up</span>
+                           <span class="how-step-count">Step 2 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">2</div>
                         <h3 class="fs-5 fw-semibold mb-2">Pick Scenario And Role</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Select Job Interviews, then choose a target position so prompts match your hiring goal.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.2s">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">3</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Configure</span>
+                           <span class="how-step-count">Step 3 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">3</div>
                         <h3 class="fs-5 fw-semibold mb-2">Set Interview Structure</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Choose difficulty, question count, timer, question types, and response mode before starting.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.3s">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">4</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Configure</span>
+                           <span class="how-step-count">Step 4 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">4</div>
                         <h3 class="fs-5 fw-semibold mb-2">Select Support Controls</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Set Camera Detection, then choose Coaching On for help or Real Interview Mode for quiet practice.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.4s">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">5</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Practice</span>
+                           <span class="how-step-count">Step 5 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">5</div>
                         <h3 class="fs-5 fw-semibold mb-2">Practice The Session</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Answer each prompt by text, voice, or hybrid input while the system records your responses.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.5s">
-                     <div class="gc p-4 h-100 text-center position-relative">
-                        <div class="hnum">6</div>
+                     <div class="gc p-4 h-100 text-center position-relative how-step-card">
+                        <div class="how-step-meta">
+                           <span class="how-step-phase">Review</span>
+                           <span class="how-step-count">Step 6 of 6</span>
+                        </div>
+                        <div class="hnum" aria-hidden="true">6</div>
                         <h3 class="fs-5 fw-semibold mb-2">Review Next Steps</h3>
                          <p style="font-size:.875rem;color:var(--tx2)">Use evidence feedback, reports, modules, challenges, and trends to plan your next practice.</p>
                      </div>
                   </div>
                   </div>
                   <div class="landing-carousel-control-bar">
-                     <div class="swiper-pagination landing-carousel-pagination landing-how-pagination"></div>
-                     <button type="button" class="landing-carousel-autoplay-toggle landing-how-autoplay-toggle" aria-label="Pause how it works carousel" data-pause-label="Pause how it works carousel" data-play-label="Play how it works carousel">
-                        <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                     <button type="button" class="swiper-button-prev landing-carousel-prev landing-how-prev" aria-label="Previous how it works step"></button>
+                     <span class="how-step-progress" aria-live="polite">Step 1 of 6</span>
+                     <div class="swiper-pagination landing-carousel-pagination landing-how-pagination" aria-label="How it works steps"></div>
+                     <button type="button" class="landing-carousel-autoplay-toggle landing-how-autoplay-toggle is-paused" aria-label="Play how it works carousel" data-pause-label="Pause how it works carousel" data-play-label="Play how it works carousel">
+                        <i class="fa-solid fa-play" aria-hidden="true"></i>
                      </button>
+                     <button type="button" class="swiper-button-next landing-carousel-next landing-how-next" aria-label="Next how it works step"></button>
                   </div>
-                  <button type="button" class="swiper-button-next landing-carousel-next landing-how-next" aria-label="Next how it works step"></button>
-                  <button type="button" class="swiper-button-prev landing-carousel-prev landing-how-prev" aria-label="Previous how it works step"></button>
                </div>
             </div>
          </section>
@@ -517,23 +543,15 @@
 
                  document.querySelectorAll(".landingHowSwiper").forEach(function(carouselEl) {
                      const landingSwiper = new Swiper(carouselEl, {
-                         slidesPerView: "auto",
-                         centeredSlides: true,
-                         spaceBetween: 16,
-                         speed: 180,
-                         effect: "coverflow",
-                         coverflowEffect: {
-                             rotate: 0,
-                             stretch: 62,
-                             depth: 92,
-                             modifier: 1,
-                             scale: 0.94,
-                             slideShadows: false,
-                         },
-                         loop: true,
-                         watchSlidesProgress: true,
+                         slidesPerView: 1,
+                         centeredSlides: false,
+                         spaceBetween: 0,
+                         speed: reduceMotion ? 0 : 260,
+                         effect: "slide",
+                         loop: false,
+                         watchSlidesProgress: false,
                          autoplay: reduceMotion ? false : {
-                             delay: 2200,
+                             delay: 5000,
                              disableOnInteraction: false,
                              pauseOnMouseEnter: true,
                          },
@@ -547,29 +565,44 @@
                          },
                      });
 
+                     const totalSteps = carouselEl.querySelectorAll(".swiper-slide").length;
+                     const stepProgress = carouselEl.querySelector(".how-step-progress");
+                     const updateStepProgress = function(swiper) {
+                         if (!stepProgress || !totalSteps) return;
+                         const activeStep = Math.min(swiper.activeIndex + 1, totalSteps);
+                         stepProgress.textContent = "Step " + activeStep + " of " + totalSteps;
+                     };
+
+                     updateStepProgress(landingSwiper);
+                     landingSwiper.on("slideChange", updateStepProgress);
+
                      const carouselToggle = carouselEl.querySelector(".landing-carousel-autoplay-toggle");
                      if (carouselToggle) {
                          const icon = carouselToggle.querySelector("i");
+                         const setAutoplayState = function(paused) {
+                             carouselToggle.classList.toggle("is-paused", paused);
+                             carouselToggle.setAttribute("aria-label", paused ? (carouselToggle.dataset.playLabel || "Play carousel") : (carouselToggle.dataset.pauseLabel || "Pause carousel"));
+                             icon?.classList.toggle("fa-play", paused);
+                             icon?.classList.toggle("fa-pause", !paused);
+                         };
+
+                         landingSwiper.autoplay?.stop();
+                         setAutoplayState(true);
 
                          if (reduceMotion) {
-                             carouselToggle.classList.add("is-paused");
-                             carouselToggle.setAttribute("aria-label", carouselToggle.dataset.playLabel || "Play carousel");
-                             icon?.classList.remove("fa-pause");
-                             icon?.classList.add("fa-play");
+                             carouselToggle.disabled = true;
+                             carouselToggle.title = "Autoplay is disabled when reduced motion is enabled";
                          }
 
                          carouselToggle.addEventListener("click", function() {
+                             if (reduceMotion) return;
                              const paused = carouselToggle.classList.toggle("is-paused");
                              if (paused) {
                                  landingSwiper.autoplay?.stop();
-                                 carouselToggle.setAttribute("aria-label", carouselToggle.dataset.playLabel || "Play carousel");
-                                 icon?.classList.remove("fa-pause");
-                                 icon?.classList.add("fa-play");
+                                 setAutoplayState(true);
                              } else {
                                  landingSwiper.autoplay?.start();
-                                 carouselToggle.setAttribute("aria-label", carouselToggle.dataset.pauseLabel || "Pause carousel");
-                                 icon?.classList.remove("fa-play");
-                                 icon?.classList.add("fa-pause");
+                                 setAutoplayState(false);
                              }
                          });
                      }
