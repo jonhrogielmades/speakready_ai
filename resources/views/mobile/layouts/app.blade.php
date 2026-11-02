@@ -4530,6 +4530,95 @@
              transition-duration: 0.16s !important;
          }
 
+          /* Keep the mobile navigation dock readable in both day and night themes. */
+          @media (max-width: 991px) {
+             html:not(.lm) body.user-mobile-shell #mob-bottom-nav {
+                --mob-dock-surface: rgba(15, 23, 42, 0.97);
+                --mob-dock-surface-strong: rgba(30, 41, 59, 0.98);
+                --mob-dock-ink: #f8fafc;
+                --mob-dock-muted: #cbd5e1;
+                --mob-dock-line: rgba(148, 163, 184, 0.42);
+                --mob-dock-tile: rgba(51, 65, 85, 0.92);
+                --mob-dock-tile-border: rgba(148, 163, 184, 0.56);
+                --mob-dock-active: #93c5fd;
+                --mob-dock-primary: #2563eb;
+                --mob-dock-primary-2: #06b6d4;
+                --mob-dock-fab-ring: rgba(15, 23, 42, 0.98);
+             }
+
+             html:not(.lm) body.user-mobile-shell #mob-bottom-nav::before {
+                background: radial-gradient(circle, rgba(30, 41, 59, 0.98) 0 58%, rgba(15, 23, 42, 0.96) 59% 100%) !important;
+                box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.28) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell #mob-bottom-nav::after {
+                border-color: var(--mob-dock-line) !important;
+                background: linear-gradient(135deg, var(--mob-dock-surface), var(--mob-dock-surface-strong)) !important;
+                box-shadow: 0 16px 36px rgba(2, 6, 23, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell #mob-bottom-nav .mob-nav-item {
+                color: var(--mob-dock-muted) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell #mob-bottom-nav .mob-nav-item:not(.mob-nav-primary).active,
+             html:not(.lm) body.user-mobile-shell #mob-bottom-nav #mobnav-more[aria-expanded="true"] {
+                border-color: var(--mob-dock-tile-border) !important;
+                background: linear-gradient(135deg, rgba(51, 65, 85, 0.98), rgba(30, 41, 59, 0.92)) !important;
+                color: var(--mob-dock-ink) !important;
+                box-shadow: 0 10px 22px rgba(2, 6, 23, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell #mob-bottom-nav .mob-nav-primary,
+             html:not(.lm) body.user-mobile-shell #mob-bottom-nav .mob-nav-primary > span:last-child {
+                color: var(--mob-dock-active) !important;
+                -webkit-text-fill-color: var(--mob-dock-active) !important;
+             }
+
+             html.lm body.user-mobile-shell #mob-bottom-nav {
+                --mob-dock-surface: rgba(246, 252, 255, 0.96);
+                --mob-dock-surface-strong: rgba(231, 244, 255, 0.96);
+                --mob-dock-ink: #0f172a;
+                --mob-dock-muted: #475569;
+                --mob-dock-line: rgba(37, 99, 235, 0.28);
+                --mob-dock-tile: rgba(248, 252, 255, 0.94);
+                --mob-dock-tile-border: rgba(37, 99, 235, 0.22);
+                --mob-dock-active: #1d4ed8;
+                --mob-dock-primary: #2563eb;
+                --mob-dock-primary-2: #06b6d4;
+                --mob-dock-fab-ring: rgba(255, 255, 255, 0.98);
+             }
+
+             html.lm body.user-mobile-shell #mob-bottom-nav::before {
+                background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0 58%, rgba(219, 234, 254, 0.86) 59% 100%) !important;
+                box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18) !important;
+             }
+
+             html.lm body.user-mobile-shell #mob-bottom-nav::after {
+                border-color: var(--mob-dock-line) !important;
+                background: linear-gradient(135deg, var(--mob-dock-surface), var(--mob-dock-surface-strong)) !important;
+                box-shadow: 0 16px 36px rgba(37, 99, 235, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.94) !important;
+             }
+
+             html.lm body.user-mobile-shell #mob-bottom-nav .mob-nav-item {
+                color: var(--mob-dock-muted) !important;
+             }
+
+             html.lm body.user-mobile-shell #mob-bottom-nav .mob-nav-item:not(.mob-nav-primary).active,
+             html.lm body.user-mobile-shell #mob-bottom-nav #mobnav-more[aria-expanded="true"] {
+                border-color: var(--mob-dock-tile-border) !important;
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), var(--mob-dock-tile)) !important;
+                color: var(--mob-dock-ink) !important;
+                box-shadow: 0 10px 22px rgba(37, 99, 235, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.98) !important;
+             }
+
+             html.lm body.user-mobile-shell #mob-bottom-nav .mob-nav-primary,
+             html.lm body.user-mobile-shell #mob-bottom-nav .mob-nav-primary > span:last-child {
+                color: var(--mob-dock-active) !important;
+                -webkit-text-fill-color: var(--mob-dock-active) !important;
+             }
+          }
+
       </style>
       @include('shared.user.first-steps-modal-styles')
       @stack('styles')
