@@ -1031,6 +1031,12 @@ html, body {
             will-change: auto;
          }
 
+         #landing .hero-video-shell .mobile-hero-image {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+         }
+
          html:not(.lm) #landing .mobile-hero-image {
             filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.5));
          }
