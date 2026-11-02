@@ -46,6 +46,192 @@
             }
          }
       </style>
+      <style data-guest-theme-visibility>
+         body.guest-shell {
+            --guest-page-bg: #f1f6fb;
+            --guest-section-bg: #edf5fc;
+            --guest-section-alt: #f7fbff;
+            --guest-card-bg: rgba(255, 255, 255, 0.96);
+            --guest-card-border: rgba(37, 99, 235, 0.18);
+            --guest-nav-bg: rgba(255, 255, 255, 0.94);
+            --guest-control-bg: rgba(255, 255, 255, 0.84);
+            --guest-input-bg: #ffffff;
+            --guest-ink: #153b63;
+            --guest-copy: #475f7b;
+            --guest-muted: #64748b;
+         }
+
+         html:not(.lm) body.guest-shell {
+            color-scheme: dark;
+            --guest-page-bg: #08111f;
+            --guest-section-bg: #0d1b2f;
+            --guest-section-alt: #132945;
+            --guest-card-bg: rgba(15, 23, 42, 0.94);
+            --guest-card-border: rgba(148, 163, 184, 0.28);
+            --guest-nav-bg: rgba(8, 17, 31, 0.94);
+            --guest-control-bg: rgba(30, 41, 59, 0.9);
+            --guest-input-bg: rgba(15, 23, 42, 0.92);
+            --guest-ink: #f8fafc;
+            --guest-copy: #dbeafe;
+            --guest-muted: #b6c7da;
+         }
+
+         html.lm body.guest-shell {
+            color-scheme: light;
+         }
+
+         body.guest-shell,
+         body.guest-shell #landing {
+            background: var(--guest-page-bg) !important;
+            color: var(--guest-ink) !important;
+         }
+
+         body.guest-shell #nbar {
+            background: var(--guest-nav-bg) !important;
+            border-bottom-color: var(--guest-card-border) !important;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1) !important;
+         }
+
+         html:not(.lm) body.guest-shell #nbar {
+            box-shadow: 0 14px 34px rgba(2, 6, 23, 0.34) !important;
+         }
+
+         body.guest-shell #nbar :is(.guest-brand, .guest-brand-name, .nav-link),
+         body.guest-shell #nbar :is(.boc, #thbtn, #mbtog) {
+            color: var(--guest-ink) !important;
+            -webkit-text-fill-color: var(--guest-ink) !important;
+         }
+
+         body.guest-shell #nbar :is(.boc, #thbtn, #mbtog) {
+            background: var(--guest-control-bg) !important;
+            border-color: var(--guest-card-border) !important;
+         }
+
+         body.guest-shell #nbar :is(.boc, #thbtn, #mbtog):hover,
+         body.guest-shell #nbar :is(.boc, #thbtn, #mbtog):focus-visible,
+         body.guest-shell #nbar .nav-link:hover,
+         body.guest-shell #nbar .nav-link:focus-visible {
+            background: rgba(37, 99, 235, 0.14) !important;
+            border-color: rgba(96, 165, 250, 0.5) !important;
+            color: var(--guest-ink) !important;
+         }
+
+         body.guest-shell #nbar .guest-header-clock {
+            color: var(--guest-muted) !important;
+            -webkit-text-fill-color: var(--guest-muted) !important;
+         }
+
+         body.guest-shell #landing :is(#about, #developers) {
+            background: var(--guest-section-bg) !important;
+         }
+
+         body.guest-shell #landing :is(#how, #faq, #contact) {
+            background: var(--guest-section-alt) !important;
+         }
+
+         body.guest-shell #landing #hero {
+            color: var(--guest-ink) !important;
+         }
+
+         html.lm body.guest-shell #landing #hero {
+            background: #f7fbff !important;
+         }
+
+         html:not(.lm) body.guest-shell #landing #hero {
+            background: #08111f !important;
+         }
+
+         body.guest-shell #landing :is(h1, h2, h3, h4, h5, h6, .stitle, .footer-heading),
+         body.guest-shell #landing :is(.developer-card h6, .about-feature-card h4, .how-step-card h3) {
+            color: var(--guest-ink) !important;
+            -webkit-text-fill-color: var(--guest-ink) !important;
+         }
+
+         body.guest-shell #landing :is(p, .ssub, .hero-home-copy-text, .hero-trust-row, .developer-role, .developer-bio, .footer-copy, .footer-action p) {
+            color: var(--guest-copy) !important;
+            -webkit-text-fill-color: var(--guest-copy) !important;
+         }
+
+         body.guest-shell #landing :is(.gc, .about-system-panel, .about-feature-card, .contact-card, .developer-card, .accordion-item) {
+            background: var(--guest-card-bg) !important;
+            border-color: var(--guest-card-border) !important;
+            color: var(--guest-ink) !important;
+         }
+
+         body.guest-shell #landing :is(.ftag, .hnum, .ftico, .footer-social-link) {
+            background: var(--guest-section-alt) !important;
+            border-color: var(--guest-card-border) !important;
+            color: var(--guest-ink) !important;
+         }
+
+         body.guest-shell #landing :is(.form-control, .form-select, textarea) {
+            background: var(--guest-input-bg) !important;
+            border-color: var(--guest-card-border) !important;
+            color: var(--guest-ink) !important;
+            -webkit-text-fill-color: var(--guest-ink) !important;
+            caret-color: var(--pur);
+         }
+
+         body.guest-shell #landing :is(.form-control, .form-select, textarea)::placeholder {
+            color: var(--guest-muted) !important;
+            -webkit-text-fill-color: var(--guest-muted) !important;
+            opacity: 1;
+         }
+
+         body.guest-shell #landing :is(.form-control, .form-select, textarea):focus {
+            border-color: var(--pur) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+         }
+
+         html:not(.lm) body.guest-shell #landing .alert-success {
+            background: rgba(22, 101, 52, 0.34) !important;
+            border-color: rgba(74, 222, 128, 0.42) !important;
+            color: #bbf7d0 !important;
+         }
+
+         html:not(.lm) body.guest-shell #landing .alert-danger {
+            background: rgba(127, 29, 29, 0.36) !important;
+            border-color: rgba(248, 113, 113, 0.44) !important;
+            color: #fecaca !important;
+         }
+
+         body.guest-shell #landing #foot {
+            color: var(--guest-ink) !important;
+         }
+
+         body.guest-shell #landing :is(.ucp-dialog, .ucp-close, .ucp-result, .ucp-footer, .ucp-guest-login) {
+            color: var(--guest-ink) !important;
+         }
+
+         html.lm body.guest-shell :is(.ucp-dialog, .ucp-close) {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(237, 245, 252, 0.98)) !important;
+            border-color: rgba(37, 99, 235, 0.2) !important;
+         }
+
+         html.lm body.guest-shell .ucp-result:hover,
+         html.lm body.guest-shell .ucp-result.is-active {
+            background: rgba(37, 99, 235, 0.1) !important;
+            border-color: rgba(37, 99, 235, 0.28) !important;
+         }
+
+         html:not(.lm) body.guest-shell :is(.ucp-dialog, .ucp-close) {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.96)) !important;
+            border-color: rgba(148, 163, 184, 0.32) !important;
+         }
+
+         html:not(.lm) body.guest-shell .ucp-result:hover,
+         html:not(.lm) body.guest-shell .ucp-result.is-active {
+            background: rgba(37, 99, 235, 0.22) !important;
+            border-color: rgba(96, 165, 250, 0.48) !important;
+         }
+
+         body.guest-mobile-shell #nbar .mobile-topbar-login {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: linear-gradient(135deg, #2563eb, #0ea5e9) !important;
+            border-color: rgba(96, 165, 250, 0.48) !important;
+         }
+      </style>
    </head>
    <body class="guest-shell guest-mobile-shell" data-layout-shell="mobile" data-guest-layout="mobile">
       @include('mobile.partials.viewport-mobile-cookie')

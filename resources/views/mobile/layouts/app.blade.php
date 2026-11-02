@@ -4829,6 +4829,11 @@
                 background: rgba(30, 64, 175, 0.46) !important;
                 color: #bfdbfe !important;
              }
+
+             /* Keep the raised Interview label on the same baseline as Feedback. */
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary > span:last-child {
+                transform: translateY(2px) !important;
+             }
           }
 
       </style>
