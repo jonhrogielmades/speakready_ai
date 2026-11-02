@@ -14,7 +14,7 @@
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=8') }}">
-      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=25') }}" data-page-style="auth-page-shared">
+      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=28') }}" data-page-style="auth-page-shared">
       <link rel="stylesheet" href="{{ asset('css/shared/legal-page.css?v=1') }}" data-page-style="legal-page">
       <script src="{{ asset('js/auth-page.js?v=5') }}" defer></script>
    </head>
@@ -55,8 +55,10 @@
          </article>
 
          <footer class="auth-page-footer legal-page-footer">
-            <span>&copy; {{ date('Y') }} SpeakReady AI</span><span aria-hidden="true">&bull;</span>
-            <a href="{{ route('legal.privacy') }}">Privacy</a><a href="{{ route('legal.terms') }}">Terms</a>
+            <span class="auth-page-footer-brand"><i class="fa-regular fa-copyright" aria-hidden="true"></i><span>&copy; {{ date('Y') }} SpeakReady AI</span></span>
+            <span class="auth-page-footer-divider" aria-hidden="true"></span>
+            <a href="{{ route('legal.privacy') }}"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Privacy</span></a>
+            <a href="{{ route('legal.terms') }}"><i class="fa-solid fa-file-lines" aria-hidden="true"></i><span>Terms</span></a>
          </footer>
       </main>
    </body>

@@ -80,7 +80,7 @@
                      <label for="resetEmail">Email address</label>
                      <div class="auth-page-input-wrap">
                         <i class="fa-regular fa-envelope" aria-hidden="true"></i>
-                        <input class="auth-page-input" id="resetEmail" type="email" name="email" value="{{ old('email', $email) }}" placeholder="you@example.com" autocomplete="email" required autofocus>
+                        <input class="auth-page-input" id="resetEmail" type="email" name="email" value="{{ old('email', $email) }}" placeholder="you@example.com" autocomplete="email" required>
                      </div>
                   </div>
 
@@ -128,7 +128,7 @@
                      <label for="recoveryUsername">Username</label>
                      <div class="auth-page-input-wrap">
                         <i class="fa-regular fa-user" aria-hidden="true"></i>
-                        <input class="auth-page-input" id="recoveryUsername" type="text" name="username" value="{{ old('username') }}" placeholder="your_username" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+                        <input class="auth-page-input" id="recoveryUsername" type="text" name="username" value="{{ old('username') }}" placeholder="your_username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
                      </div>
                   </div>
 
@@ -187,13 +187,18 @@
                @endif
             @endif
 
-            <p class="auth-page-security-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>Your information is encrypted and handled securely.</p>
+            <p class="auth-page-security-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Your information is encrypted and handled securely.</span></p>
             <div class="auth-page-support-footer"><a href="{{ route('login', $layoutQuery) }}">Return to login</a><span aria-hidden="true">&bull;</span><a href="{{ route('legal.privacy') }}">Privacy</a><a href="{{ route('legal.terms') }}">Terms</a></div>
          </div>
       </div>
    </section>
 
-   <footer class="auth-page-footer"><span>&copy; {{ date('Y') }} {{ $brandName }}</span><span aria-hidden="true">&bull;</span><span>Secure account recovery</span></footer>
+   <footer class="auth-page-footer">
+      <span class="auth-page-footer-brand"><i class="fa-regular fa-copyright" aria-hidden="true"></i><span>&copy; {{ date('Y') }} {{ $brandName }}</span></span>
+      <span class="auth-page-footer-divider" aria-hidden="true"></span>
+      <a href="{{ route('legal.privacy') }}"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Privacy</span></a>
+      <a href="{{ route('legal.terms') }}"><i class="fa-solid fa-file-lines" aria-hidden="true"></i><span>Terms</span></a>
+   </footer>
 </main>
 
 <div id="authTransitionOverlay" class="auth-page-transition" role="status" aria-live="polite" aria-busy="true" hidden>

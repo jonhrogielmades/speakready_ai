@@ -223,7 +223,7 @@
                      <label for="loginUsername">Username</label>
                      <div class="auth-page-input-wrap">
                         <i class="fa-regular fa-user" aria-hidden="true"></i>
-                        <input class="auth-page-input" type="text" name="username" id="loginUsername" placeholder="Enter your username" required autocomplete="username" autocapitalize="none" spellcheck="false" value="{{ old('username') }}" aria-invalid="{{ $errors->has('username') ? 'true' : 'false' }}" @if($errors->has('username')) aria-describedby="loginUsernameError" @endif autofocus>
+                        <input class="auth-page-input" type="text" name="username" id="loginUsername" placeholder="Enter your username" required autocomplete="username" autocapitalize="none" spellcheck="false" value="{{ old('username') }}" aria-invalid="{{ $errors->has('username') ? 'true' : 'false' }}" @if($errors->has('username')) aria-describedby="loginUsernameError" @endif>
                      </div>
                      @error('username')<small class="auth-page-field-error" id="loginUsernameError"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ $message }}</small>@enderror
                   </div>
@@ -257,14 +257,16 @@
                <a href="{{ $isRegister ? $loginPageUrl : $registerPageUrl }}">{{ $isRegister ? 'Log in' : 'Create an account' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             </div>
 
-            <p class="auth-page-security-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>Your information is encrypted and handled securely.</p>
+            <p class="auth-page-security-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Your information is encrypted and handled securely.</span></p>
          </div>
       </div>
    </section>
 
    <footer class="auth-page-footer">
-      <span>&copy; {{ date('Y') }} {{ $brandName }}</span><span aria-hidden="true">&bull;</span>
-      <a href="{{ route('legal.privacy') }}">Privacy</a><a href="{{ route('legal.terms') }}">Terms</a>
+      <span class="auth-page-footer-brand"><i class="fa-regular fa-copyright" aria-hidden="true"></i><span>&copy; {{ date('Y') }} {{ $brandName }}</span></span>
+      <span class="auth-page-footer-divider" aria-hidden="true"></span>
+      <a href="{{ route('legal.privacy') }}"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Privacy</span></a>
+      <a href="{{ route('legal.terms') }}"><i class="fa-solid fa-file-lines" aria-hidden="true"></i><span>Terms</span></a>
    </footer>
 </main>
 

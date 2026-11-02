@@ -171,6 +171,14 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('.auth-page-input:-webkit-autofill', $css);
         $this->assertStringContainsString('-webkit-text-fill-color: var(--auth-control-text) !important;', $css);
         $this->assertStringContainsString('.auth-page-input:focus-visible { outline: 0 !important;', $css);
+        $this->assertStringContainsString('.auth-page-input-wrap:focus-within {', $css);
+        $this->assertStringContainsString('box-shadow: none;', $css);
+        $this->assertStringContainsString('.auth-page-input-wrap:has(.auth-page-input:focus-visible)', $css);
+        $this->assertStringContainsString('.auth-page-security-note > span', $css);
+        $this->assertStringContainsString('background: color-mix(in srgb, var(--auth-link) 9%, transparent);', $css);
+        $this->assertStringContainsString('fa-shield-halved', $markup);
+        $this->assertStringContainsString('.auth-page-footer-brand', $css);
+        $this->assertStringContainsString('fa-file-lines', $markup);
         $this->assertStringContainsString('linear-gradient(120deg, #020617 0%, #071b2f 48%, #063044 100%)', $css);
         $this->assertStringContainsString('linear-gradient(120deg, #f8fcff 0%, #edfaff 46%, #dff5ff 100%)', $css);
         $this->assertStringContainsString('--auth-form-surface: #ffffff;', $css);
