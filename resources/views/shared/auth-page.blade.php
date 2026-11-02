@@ -54,7 +54,7 @@
             </ul>
          </div>
          <div class="auth-page-promo-footer">
-            <span><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Secure access</span>
+            <span><i class="fa-solid fa-shield-check" aria-hidden="true"></i> Secure access</span>
             <span><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Works on any device</span>
          </div>
       </aside>
@@ -257,15 +257,15 @@
                <a href="{{ $isRegister ? $loginPageUrl : $registerPageUrl }}">{{ $isRegister ? 'Log in' : 'Create an account' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             </div>
 
-            <p class="auth-page-security-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Your information is encrypted and handled securely.</span></p>
+            <p class="auth-page-security-note"><i class="fa-solid fa-shield-check" aria-hidden="true"></i><span>Your information is encrypted and handled securely.</span></p>
          </div>
       </div>
    </section>
 
    <footer class="auth-page-footer">
-      <span class="auth-page-footer-brand"><i class="fa-regular fa-copyright" aria-hidden="true"></i><span>&copy; {{ date('Y') }} {{ $brandName }}</span></span>
+      <span class="auth-page-footer-brand"><span>&copy; {{ date('Y') }} {{ $brandName }}</span></span>
       <span class="auth-page-footer-divider" aria-hidden="true"></span>
-      <a href="{{ route('legal.privacy') }}"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Privacy</span></a>
+      <a href="{{ route('legal.privacy') }}"><i class="fa-solid fa-shield-check" aria-hidden="true"></i><span>Privacy</span></a>
       <a href="{{ route('legal.terms') }}"><i class="fa-solid fa-file-lines" aria-hidden="true"></i><span>Terms</span></a>
    </footer>
 </main>

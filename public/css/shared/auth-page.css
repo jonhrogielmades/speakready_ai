@@ -274,6 +274,10 @@ html[data-theme="light"] body.auth-page-body {
    --auth-muted: #536f8b;
    --auth-subtle: #6f849a;
    --auth-link: #1d4ed8;
+   --auth-security-text: #9a3412;
+   --auth-security-icon: #d97706;
+   --auth-security-surface: rgba(245, 158, 11, .11);
+   --auth-security-border: rgba(217, 119, 6, .34);
    --auth-border: rgba(35, 77, 119, .14);
    --auth-divider: #d7e1eb;
    --bg: #f1f6fb;
@@ -347,7 +351,7 @@ body.auth-page-body .auth-page-form-side .auth-page-security-note i {
    flex: 0 0 18px;
    color: #fff !important;
    -webkit-text-fill-color: #fff !important;
-   background: linear-gradient(135deg, #10b981, #059669);
+   background: var(--auth-security-icon);
    border-radius: 50%;
    font-size: .56rem;
 }
@@ -357,10 +361,10 @@ body.auth-page-body .auth-page-form-side .auth-page-security-note {
    margin-left: auto;
    margin-right: auto;
    padding: 5px 11px;
-   color: var(--auth-link) !important;
-   -webkit-text-fill-color: var(--auth-link) !important;
-   background: color-mix(in srgb, var(--auth-link) 9%, transparent);
-   border: 1px solid color-mix(in srgb, var(--auth-link) 24%, transparent);
+   color: var(--auth-security-text) !important;
+   -webkit-text-fill-color: var(--auth-security-text) !important;
+   background: var(--auth-security-surface);
+   border: 1px solid var(--auth-security-border);
    border-radius: 999px;
    font-weight: 650;
    line-height: 1.35;
@@ -554,6 +558,10 @@ html[data-theme="light"] .auth-page-form-side,
    --auth-control-icon: #7890a8;
    --auth-control-border: #c8d6e4;
    --auth-link: #1d4ed8;
+   --auth-security-text: #9a3412;
+   --auth-security-icon: #d97706;
+   --auth-security-surface: rgba(245, 158, 11, .11);
+   --auth-security-border: rgba(217, 119, 6, .34);
    --auth-divider: #d7e1eb;
    color-scheme: light;
    color: var(--auth-text);
@@ -576,6 +584,10 @@ html[data-theme="dark"] .auth-page-form-side,
    --auth-control-icon: #a6c4dc;
    --auth-control-border: rgba(220, 234, 245, .3);
    --auth-link: #7cc4ff;
+   --auth-security-text: #fcd34d;
+   --auth-security-icon: #f59e0b;
+   --auth-security-surface: rgba(245, 158, 11, .14);
+   --auth-security-border: rgba(251, 191, 36, .38);
    --auth-divider: rgba(220, 234, 245, .3);
    --pur: #60a5fa;
    --blu: #22d3ee;

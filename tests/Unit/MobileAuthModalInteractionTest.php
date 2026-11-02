@@ -175,8 +175,13 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('box-shadow: none;', $css);
         $this->assertStringContainsString('.auth-page-input-wrap:has(.auth-page-input:focus-visible)', $css);
         $this->assertStringContainsString('.auth-page-security-note > span', $css);
-        $this->assertStringContainsString('background: color-mix(in srgb, var(--auth-link) 9%, transparent);', $css);
-        $this->assertStringContainsString('fa-shield-halved', $markup);
+        $this->assertStringContainsString('background: var(--auth-security-surface);', $css);
+        $this->assertStringContainsString('--auth-security-text: #9a3412;', $css);
+        $this->assertStringContainsString('--auth-security-text: #fcd34d;', $css);
+        $this->assertStringContainsString('background: var(--auth-security-icon);', $css);
+        $this->assertStringContainsString('fa-shield-check', $markup);
+        $this->assertStringNotContainsString('fa-shield-halved', $markup);
+        $this->assertStringNotContainsString('fa-regular fa-copyright', $markup);
         $this->assertStringContainsString('.auth-page-footer-brand', $css);
         $this->assertStringContainsString('fa-file-lines', $markup);
         $this->assertStringContainsString('linear-gradient(120deg, #020617 0%, #071b2f 48%, #063044 100%)', $css);

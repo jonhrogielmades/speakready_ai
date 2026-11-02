@@ -32,7 +32,7 @@
          <div class="auth-page-orb auth-page-orb-one" aria-hidden="true"></div>
          <div class="auth-page-orb auth-page-orb-two" aria-hidden="true"></div>
          <div class="auth-page-promo-content">
-            <span class="auth-page-promo-kicker"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Secure account support</span>
+            <span class="auth-page-promo-kicker"><i class="fa-solid fa-shield-check" aria-hidden="true"></i> Secure account support</span>
             <h2>{{ $isReset ? 'Set a password you can trust.' : 'Get back to your practice.' }}</h2>
             <p>{{ $isReset ? 'Choose a strong password and return to interview practice with confidence.' : 'Recover your local account securely, then keep building the skills that make you memorable.' }}</p>
             <ul class="auth-page-benefits">
@@ -42,7 +42,7 @@
             </ul>
          </div>
          <div class="auth-page-promo-footer">
-            <span><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Secure access</span>
+            <span><i class="fa-solid fa-shield-check" aria-hidden="true"></i> Secure access</span>
             <span><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Works on any device</span>
          </div>
       </aside>
@@ -187,16 +187,18 @@
                @endif
             @endif
 
-            <p class="auth-page-security-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Your information is encrypted and handled securely.</span></p>
-            <div class="auth-page-support-footer"><a href="{{ route('login', $layoutQuery) }}">Return to login</a><span aria-hidden="true">&bull;</span><a href="{{ route('legal.privacy') }}">Privacy</a><a href="{{ route('legal.terms') }}">Terms</a></div>
+            <p class="auth-page-security-note"><i class="fa-solid fa-shield-check" aria-hidden="true"></i><span>Your information is encrypted and handled securely.</span></p>
+            @if (!$isReset)
+               <div class="auth-page-support-footer"><a href="{{ route('login', $layoutQuery) }}">Return to login</a><span aria-hidden="true">&bull;</span><a href="{{ route('legal.privacy') }}">Privacy</a><a href="{{ route('legal.terms') }}">Terms</a></div>
+            @endif
          </div>
       </div>
    </section>
 
    <footer class="auth-page-footer">
-      <span class="auth-page-footer-brand"><i class="fa-regular fa-copyright" aria-hidden="true"></i><span>&copy; {{ date('Y') }} {{ $brandName }}</span></span>
+      <span class="auth-page-footer-brand"><span>&copy; {{ date('Y') }} {{ $brandName }}</span></span>
       <span class="auth-page-footer-divider" aria-hidden="true"></span>
-      <a href="{{ route('legal.privacy') }}"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Privacy</span></a>
+      <a href="{{ route('legal.privacy') }}"><i class="fa-solid fa-shield-check" aria-hidden="true"></i><span>Privacy</span></a>
       <a href="{{ route('legal.terms') }}"><i class="fa-solid fa-file-lines" aria-hidden="true"></i><span>Terms</span></a>
    </footer>
 </main>

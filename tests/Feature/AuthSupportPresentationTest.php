@@ -19,11 +19,11 @@ class AuthSupportPresentationTest extends TestCase
         $this->get(route('password.request'))
             ->assertOk()
             ->assertSee('auth-support-page', false)
-            ->assertSee('css/shared/auth-page.css?v=28', false)
+            ->assertSee('css/shared/auth-page.css?v=29', false)
             ->assertSee('authPageThemeToggle', false)
             ->assertSee('Send Recovery Code');
 
-        $this->get(route('password.reset', [
+        $resetMarkup = $this->get(route('password.reset', [
             'token' => 'test-token',
             'email' => 'person@example.com',
         ]))
@@ -32,6 +32,8 @@ class AuthSupportPresentationTest extends TestCase
             ->assertSee('Create a new password')
             ->assertSee('data-password-strength', false)
             ->assertSee('authPageThemeToggle', false);
+
+        $this->assertStringNotContainsString('auth-page-support-footer', $resetMarkup->getContent());
     }
 
     public function test_auth_pages_do_not_autofocus_inputs_on_navigation(): void
@@ -68,7 +70,7 @@ class AuthSupportPresentationTest extends TestCase
             $this->get($url)
                 ->assertOk()
                 ->assertSee('legal-page-shell', false)
-                ->assertSee('css/shared/auth-page.css?v=28', false)
+                ->assertSee('css/shared/auth-page.css?v=29', false)
                 ->assertSee('css/shared/legal-page.css?v=1', false)
                 ->assertSee('authPageThemeToggle', false);
         }
