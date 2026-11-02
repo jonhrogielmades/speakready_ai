@@ -8427,6 +8427,13 @@ body.user-mobile-shell .sr-mobile-confirm-modal .modal-dialog {
     min-height: calc(100dvh - (var(--sr-mobile-panel-gap) * 2) - var(--mob-top-h, 64px) - var(--mob-nav-h, 72px) - env(safe-area-inset-bottom, 0px)) !important;
   }
 
+  /* Position pickers use the full viewport as their modal stage. */
+  body.user-mobile-shell .challenge-position-modal .modal-dialog,
+  body.user-mobile-shell .module-position-modal .modal-dialog {
+    align-items: center;
+    min-height: calc(100dvh - (var(--sr-mobile-panel-gap) * 2) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  }
+
   body.user-mobile-shell .modal-dialog-scrollable .modal-content {
     max-height: calc(100dvh - (var(--sr-mobile-panel-gap) * 2) - var(--mob-top-h, 64px) - var(--mob-nav-h, 72px) - env(safe-area-inset-bottom, 0px)) !important;
   }

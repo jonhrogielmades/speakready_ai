@@ -46,7 +46,7 @@
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=35') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=36') }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
       @include('mobile.partials.onboarding-styles')
       <style>
