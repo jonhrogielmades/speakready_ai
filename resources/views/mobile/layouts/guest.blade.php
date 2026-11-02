@@ -23,7 +23,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=42') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=43') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=7') }}" />
       <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=15') }}" />
       <link rel="stylesheet" href="{{ asset('css/how-it-works.css?v=1') }}" />
@@ -226,8 +226,8 @@
          }
 
          body.guest-mobile-shell #nbar .mobile-topbar-login {
-            color: #1d4ed8 !important;
-            -webkit-text-fill-color: #1d4ed8 !important;
+            color: #2563eb !important;
+            -webkit-text-fill-color: #2563eb !important;
             background: rgba(255, 255, 255, 0.92) !important;
             border: 2px solid #2563eb !important;
             box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
