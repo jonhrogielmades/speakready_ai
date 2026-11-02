@@ -132,7 +132,6 @@
 
                 @php
                    $heroVideo = asset('videos/speakready-ai-15s-product-ad.mp4').'?v=20261102';
-                   $mobileHeroPoster = asset('img/mobile-preview/01-home-dashboard-hd.webp').'?v=20261020';
                 @endphp
                 <div id="demo-preview" class="mobile-hero-preview-row mt-4 mb-3 afu" style="animation-delay:.48s">
                   <figure class="mobile-hero-image-frame mb-0" aria-label="SpeakReady AI mobile product overview video">
@@ -145,49 +144,10 @@
                         loop
                         playsinline
                         preload="metadata"
-                        poster="{{ $mobileHeroPoster }}"
                         aria-label="SpeakReady AI mobile product overview"
                      >
                         <source src="{{ $heroVideo }}" type="video/mp4">
-                        <img
-                           src="{{ $mobileHeroPoster }}"
-                           alt="SpeakReady AI mobile dashboard overview"
-                           width="1260"
-                           height="2520"
-                           loading="eager"
-                           decoding="async"
-                        >
                      </video>
-                     <div class="mobile-hero-context-card mobile-hero-context-card--top-left">
-                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-briefcase mobile-hero-context-kicker-icon" aria-hidden="true"></i> Practice</span>
-                        <strong>Role-ready drills</strong>
-                        <span>Job focus / Timing / Tone</span>
-                     </div>
-                     <div class="mobile-hero-context-card mobile-hero-context-card--middle-left">
-                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-chart-line mobile-hero-context-kicker-icon" aria-hidden="true"></i> Readiness</span>
-                        <strong>Live score pulse</strong>
-                        <span>Boost target / Trend</span>
-                     </div>
-                     <div class="mobile-hero-context-card mobile-hero-context-card--bottom-left">
-                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-clipboard-check mobile-hero-context-kicker-icon" aria-hidden="true"></i> Feedback</span>
-                        <strong>Actionable notes</strong>
-                        <span>Strengths / Next steps</span>
-                     </div>
-                     <div class="mobile-hero-context-card mobile-hero-context-card--top-right">
-                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-shield-alt mobile-hero-context-kicker-icon" aria-hidden="true"></i> Secure</span>
-                        <strong>Private practice</strong>
-                        <span>Camera / Mic controls</span>
-                     </div>
-                     <div class="mobile-hero-context-card mobile-hero-context-card--middle-right">
-                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-robot mobile-hero-context-kicker-icon" aria-hidden="true"></i> Coaching</span>
-                        <strong>AI session guide</strong>
-                        <span>Hints / Follow-up / Clarity</span>
-                     </div>
-                     <div class="mobile-hero-context-card mobile-hero-context-card--bottom-right">
-                        <span class="mobile-hero-context-kicker"><i class="fa-solid fa-bolt mobile-hero-context-kicker-icon" aria-hidden="true"></i> Progress</span>
-                        <strong>Streak momentum</strong>
-                        <span>Sessions / XP / Goals</span>
-                     </div>
                   </figure>
                 </div>
              </div>

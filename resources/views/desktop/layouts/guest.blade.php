@@ -21,7 +21,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=24') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=25') }}" />
       <style>
          :root,
          .lm,
@@ -122,7 +122,6 @@
                   <div class="col-xl-7 col-lg-7 col-md-11 hero-image-col">
                      @php
                         $heroVideo = asset('videos/speakready-ai-15s-product-ad.mp4').'?v=20261102';
-                        $desktopHeroPoster = asset('img/desktop-preview/01_Overview_Desktop_Preview_4K.webp').'?v=20261020';
                      @endphp
                      <div class="desktop-hero-image-row mt-3 mb-1 afu" style="animation-delay:.48s">
                         <figure class="desktop-hero-image-frame mb-0" aria-label="SpeakReady AI desktop product overview video">
@@ -135,49 +134,10 @@
                               loop
                               playsinline
                               preload="metadata"
-                              poster="{{ $desktopHeroPoster }}"
                               aria-label="SpeakReady AI desktop product overview"
                            >
                               <source src="{{ $heroVideo }}" type="video/mp4">
-                              <img
-                                 src="{{ $desktopHeroPoster }}"
-                                 alt="SpeakReady AI desktop dashboard overview"
-                                 width="3840"
-                                 height="2516"
-                                 loading="eager"
-                                 decoding="async"
-                              >
                            </video>
-                           <div class="hero-context-card hero-context-card--top-left">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-briefcase"></i> Practice</span>
-                              <strong>Role-ready drills</strong>
-                              <span>Job focus / Timing / Tone</span>
-                           </div>
-                           <div class="hero-context-card hero-context-card--middle-left">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-chart-line"></i> Readiness</span>
-                              <strong>Live score pulse</strong>
-                              <span>Boost target / Trend</span>
-                           </div>
-                           <div class="hero-context-card hero-context-card--bottom-left">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> Feedback</span>
-                              <strong>Actionable notes</strong>
-                              <span>Strengths / Next steps</span>
-                           </div>
-                           <div class="hero-context-card hero-context-card--top-right">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-shield-alt hero-context-kicker-icon" aria-hidden="true"></i> Secure</span>
-                              <strong>Private practice</strong>
-                              <span>Camera / Mic controls</span>
-                           </div>
-                           <div class="hero-context-card hero-context-card--middle-right">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-robot"></i> Coaching</span>
-                              <strong>AI session guide</strong>
-                              <span>Hints / Follow-up / Clarity</span>
-                           </div>
-                           <div class="hero-context-card hero-context-card--bottom-right">
-                              <span class="hero-context-kicker"><i class="fa-solid fa-bolt"></i> Progress</span>
-                              <strong>Streak momentum</strong>
-                              <span>Sessions / XP / Goals</span>
-                           </div>
                         </figure>
                      </div>
                   </div>
