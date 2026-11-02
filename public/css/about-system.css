@@ -414,6 +414,28 @@ html:not(.lm) #about .target-users-grid .ftag i {
    }
 }
 
+@media (max-width: 991.98px) {
+   #about .about-feature-card {
+      display: block;
+      gap: 0;
+   }
+
+   #about .about-feature-icon {
+      display: none !important;
+   }
+
+   #about .about-feature-card > div {
+      width: 100%;
+   }
+
+   #about .about-feature-card h4,
+   #about .about-feature-card p {
+      text-align: left;
+      text-align-last: left;
+      text-justify: initial;
+   }
+}
+
 @media (min-width: 992px) {
    #about > .container {
       width: min(100%, 1600px);
