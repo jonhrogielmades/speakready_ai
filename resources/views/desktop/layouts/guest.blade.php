@@ -89,14 +89,14 @@
             <div class="aur aur-a" style="bottom:-80px;left:45%;transform:translateX(-50%);opacity:.4"></div>
              <div class="container hero-home-container position-relative" style="z-index:2">
                 <div class="row hero-home-layout align-items-center g-4">
-                  <div class="col-xl-5 col-lg-5 col-md-10 hero-home-copy text-center">
+                  <div class="col-xl-6 col-lg-6 col-md-10 hero-home-copy text-center">
                      <div class="hero-badge-wrap afu" style="animation-delay:.05s">
                         <span class="hbadge">
                            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
-                           <span>AI-powered interview practice</span>
+                           <span>AI-Based Interview Practice System</span>
                         </span>
                      </div>
-                     <h1 id="hero-title" class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
+                     <h1 id="hero-title" class="h1 afu" style="animation-delay:.12s"><span class="hero-title-line">Practice Smarter.</span><br><span class="gt">Interview Better.</span></h1>
                      <p class="hero-home-copy-text afu" style="animation-delay:.2s">Practice realistic job interviews with AI-powered coaching, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                         <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6 hero-primary-cta">Start Practicing Free</a>
@@ -111,7 +111,7 @@
 
                   </div>
 
-                  <div class="col-xl-7 col-lg-7 col-md-11 hero-image-col">
+                  <div class="col-xl-6 col-lg-6 col-md-11 hero-image-col">
                      @php
                         $heroVideo = asset('videos/speakready-ai-15s-product-ad.mp4').'?v=20261102';
                      @endphp

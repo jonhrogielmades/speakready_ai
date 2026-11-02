@@ -101,12 +101,12 @@
                 <div class="text-center mt-3 pt-3 afu" style="animation-delay:.05s">
                     <span class="hbadge">
                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
-                       <span>AI-powered interview practice</span>
+                       <span>AI-Based Interview Practice System</span>
                     </span>
                 </div>
                 <div class="row align-items-center justify-content-center mt-4">
                   <div class="col-lg-7 col-md-10 text-center hero-home-copy">
-                     <h1 id="hero-title" class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
+                     <h1 id="hero-title" class="h1 afu" style="animation-delay:.12s"><span class="hero-title-line">Practice Smarter.</span><br><span class="gt">Interview Better.</span></h1>
                      <p class="hero-home-copy-text mx-auto afu" style="animation-delay:.2s">Practice realistic job interviews with AI-powered coaching, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                         <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6 hero-primary-cta">Start Practicing Free</a>
