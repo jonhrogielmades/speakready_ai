@@ -3160,9 +3160,9 @@ const stepsDesktop = [
  }
  if (started === false) return false;
 
- if (onboardingTour &&!onboardingTour.isCompleted()) {
+ if (onboardingTour && typeof onboardingTour.startIfFirstVisit === 'function') {
  setTimeout(() => {
- onboardingTour.start();
+ onboardingTour.startIfFirstVisit(0);
  }, 1000);
  }
  return started;

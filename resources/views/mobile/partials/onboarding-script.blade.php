@@ -1235,6 +1235,7 @@
                 getNativeTourFactory();
             const completionKey = config.completionKey;
             const scopedCompletionKey = accountScopedCompletionKey(completionKey);
+            const autoStartSeenKey = scopedCompletionKey ? `${scopedCompletionKey}::auto-started` : null;
             const registrationScope = normalizePageScope(config.pageScope) || getCurrentPageScope();
             const registrationKey = makeRegistrationKey(registrationScope, completionKey, isFallbackTour);
             const existingRegistration = getRegisteredTour();
@@ -1263,6 +1264,7 @@
             const registrationVersion = bumpTourRegistrationVersion();
             let activeTour = null;
             let isStarting = false;
+            let firstVisitStartScheduled = false;
             let completedInSession = Boolean(config.initiallyCompleted);
 
             function isTourCompleted() {
@@ -1273,6 +1275,27 @@
                 }
 
                 return Boolean(scopedCompletionKey && localStorage.getItem(scopedCompletionKey));
+            }
+
+            function hasAutoStartBeenSeen() {
+                if (isTourCompleted()) return true;
+                if (!autoStartSeenKey) return false;
+
+                try {
+                    return localStorage.getItem(autoStartSeenKey) === 'true';
+                } catch {
+                    return false;
+                }
+            }
+
+            function markAutoStartSeen() {
+                if (!autoStartSeenKey) return;
+
+                try {
+                    localStorage.setItem(autoStartSeenKey, 'true');
+                } catch {
+                    // Autoplay remains available for this visit when storage is unavailable.
+                }
             }
 
             function markTourCompleted() {
@@ -1409,6 +1432,8 @@
                         return false;
                     }
 
+                    markAutoStartSeen();
+
                     if (activeTour || isStarting) return true;
 
                     isStarting = true;
@@ -1462,6 +1487,25 @@
                     }, config.startDelay ?? 0);
 
                     return true;
+                },
+
+                startIfFirstVisit(delay) {
+                    if (!isCurrentTourScope(registrationScope)) {
+                        clearRegisteredTour(controller);
+                        return;
+                    }
+
+                    if (isTourCompleted() || hasAutoStartBeenSeen() || firstVisitStartScheduled) return;
+
+                    firstVisitStartScheduled = true;
+                    prefetchInitialTourVoiceover();
+                    window.setTimeout(() => {
+                        firstVisitStartScheduled = false;
+
+                        if (isCurrentTourScope(registrationScope) && !isTourCompleted() && !hasAutoStartBeenSeen()) {
+                            controller.start();
+                        }
+                    }, delay ?? config.autoStartDelay ?? 500);
                 },
 
                 startIfIncomplete(delay) {
@@ -1531,7 +1575,7 @@
             }
 
             if (config.autoStart === true) {
-                controller.startIfIncomplete(config.autoStartDelay);
+                controller.startIfFirstVisit(config.autoStartDelay);
             }
 
             return controller;

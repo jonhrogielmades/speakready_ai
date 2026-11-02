@@ -7252,7 +7252,7 @@ setFinishViewReviewReady(false);
  sessionTourAutoStartTimer = window.setTimeout(() => {
  sessionTourAutoStartTimer = null;
  if (!isInterviewWorkspaceVisible() || onboardingTour.isCompleted()) return;
- onboardingTour.start();
+ onboardingTour.startIfFirstVisit(0);
  }, delay);
  }
 
