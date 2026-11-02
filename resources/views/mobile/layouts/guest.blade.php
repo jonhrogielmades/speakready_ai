@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=44') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=7') }}" />
-      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=16') }}" />
+      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=15') }}" />
       <link rel="stylesheet" href="{{ asset('css/how-it-works.css?v=1') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
