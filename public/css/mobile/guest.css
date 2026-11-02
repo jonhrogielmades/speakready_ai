@@ -2875,11 +2875,47 @@ html, body {
           border-color: rgba(37, 99, 235, 0.24) !important;
       }
 
+      body.guest-mobile-shell #landing #hero .hero-cta-row > .hero-login-btn.hero-secondary-cta.boc.btn {
+          border: 2px solid #2563eb !important;
+          background: rgba(255, 255, 255, 0.74) !important;
+          color: #2563eb !important;
+          -webkit-text-fill-color: #2563eb !important;
+          box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
+      }
+
+      body.guest-mobile-shell #landing #hero .hero-cta-row > .hero-login-btn.hero-secondary-cta.boc.btn:hover,
+      body.guest-mobile-shell #landing #hero .hero-cta-row > .hero-login-btn.hero-secondary-cta.boc.btn:focus-visible {
+          border-color: #1d4ed8 !important;
+          background: rgba(239, 246, 255, 0.98) !important;
+          color: #1d4ed8 !important;
+          -webkit-text-fill-color: #1d4ed8 !important;
+      }
+
       html:not(.lm) body.guest-mobile-shell #landing #hero .hero-cta-row > :is(.hero-install-btn, .hero-learn-btn) {
           color: #f8fafc !important;
           -webkit-text-fill-color: #f8fafc !important;
           background: rgba(15, 23, 42, 0.68) !important;
           border-color: rgba(248, 250, 252, 0.28) !important;
+      }
+
+      html:not(.lm) body.guest-mobile-shell #landing #hero .hero-cta-row > .hero-login-btn.hero-secondary-cta.boc.btn {
+          border-color: #60a5fa !important;
+          background: rgba(15, 23, 42, 0.68) !important;
+          color: #bfdbfe !important;
+          -webkit-text-fill-color: #bfdbfe !important;
+      }
+
+      html:not(.lm) body.guest-mobile-shell #landing #hero .hero-cta-row > .hero-login-btn.hero-secondary-cta.boc.btn:hover,
+      html:not(.lm) body.guest-mobile-shell #landing #hero .hero-cta-row > .hero-login-btn.hero-secondary-cta.boc.btn:focus-visible {
+          border-color: #93c5fd !important;
+          background: rgba(30, 41, 59, 0.92) !important;
+          color: #dbeafe !important;
+          -webkit-text-fill-color: #dbeafe !important;
+      }
+
+      body.guest-mobile-shell #landing #hero .hero-login-btn i {
+          color: inherit !important;
+          -webkit-text-fill-color: inherit !important;
       }
 
       html.lm body.guest-mobile-shell #landing #hero .hero-cta-row > :is(.hero-install-btn, .hero-learn-btn) i {

@@ -23,7 +23,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=43') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=44') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=7') }}" />
       <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=15') }}" />
       <link rel="stylesheet" href="{{ asset('css/how-it-works.css?v=1') }}" />
@@ -268,9 +268,6 @@
                      <a href="#developers" class="nav-link">Developers</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                     <a href="{{ route('login', sr_layout_query()) }}" class="boc mobile-topbar-login d-flex align-items-center justify-content-center gap-1" aria-label="Log in">
-                     <i class="fa-regular fa-user fa-sm" aria-hidden="true"></i><span>Login</span>
-                     </a>
                      <button type="button" class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
@@ -306,6 +303,7 @@
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                         <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn hero-secondary-cta" id="heroInstallBtn"><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install App</button>
                         <a href="#how" class="boc btn px-4 py-3 fs-6 hero-learn-btn hero-secondary-cta hero-how-it-works-cta">How It Works?</a>
+                         <a href="{{ route('login', sr_layout_query()) }}" class="boc btn px-4 py-3 fs-6 hero-login-btn hero-secondary-cta" aria-label="Log in"><i class="fa-regular fa-user me-2" aria-hidden="true"></i>Login</a>
                      </div>
                      <div class="hero-trust-row" role="list" aria-label="What you can do with SpeakReady AI">
                         <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Guided setup</span>
