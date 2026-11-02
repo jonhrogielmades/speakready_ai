@@ -4618,45 +4618,6 @@
                 -webkit-text-fill-color: var(--mob-dock-active) !important;
              }
 
-             /* Refine the primary Interview action so the dock feels balanced on phones. */
-             body.user-mobile-shell #mob-bottom-nav {
-                --mob-dock-fab-size: clamp(56px, 15vw, 62px);
-             }
-
-             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary {
-                height: 94px !important;
-                min-height: 94px !important;
-                padding-bottom: 5px !important;
-                gap: 3px !important;
-             }
-
-             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary-icon {
-                width: var(--mob-dock-fab-size) !important;
-                height: var(--mob-dock-fab-size) !important;
-                border-width: 4px !important;
-                box-shadow:
-                   0 8px 18px rgba(37, 99, 235, 0.24),
-                   inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
-             }
-
-             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary-icon i {
-                font-size: clamp(1.28rem, 5.2vw, 1.65rem) !important;
-             }
-
-             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary > span:last-child {
-                margin-top: 1px !important;
-                font-size: clamp(0.62rem, 2.2vw, 0.72rem) !important;
-                line-height: 1.12 !important;
-                letter-spacing: 0.01em !important;
-             }
-
-             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary.active .mob-nav-primary-icon,
-             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary:active .mob-nav-primary-icon {
-                box-shadow:
-                   0 10px 22px rgba(37, 99, 235, 0.3),
-                   inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
-             }
-
              /* Final day/night contrast pass for the mobile chrome shown in the UI. */
              html:not(.lm) body.user-mobile-shell #mob-header {
                 --mobile-topbar-panel: rgba(15, 23, 42, 0.96);
