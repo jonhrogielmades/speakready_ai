@@ -94,6 +94,36 @@ html:not(.lm) #landing #hero .hbadge i {
    font-size: 0.7rem;
 }
 
+#landing #hero .hero-video-caption .hero-caption-green {
+   color: #15803d !important;
+   -webkit-text-fill-color: #15803d !important;
+}
+
+#landing #hero .hero-video-caption .hero-caption-yellow {
+   color: #a16207 !important;
+   -webkit-text-fill-color: #a16207 !important;
+}
+
+#landing #hero .hero-video-caption .hero-caption-blue {
+   color: #1d4ed8 !important;
+   -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+html:not(.lm) #landing #hero .hero-video-caption .hero-caption-green {
+   color: #4ade80 !important;
+   -webkit-text-fill-color: #4ade80 !important;
+}
+
+html:not(.lm) #landing #hero .hero-video-caption .hero-caption-yellow {
+   color: #fde047 !important;
+   -webkit-text-fill-color: #fde047 !important;
+}
+
+html:not(.lm) #landing #hero .hero-video-caption .hero-caption-blue {
+   color: #60a5fa !important;
+   -webkit-text-fill-color: #60a5fa !important;
+}
+
 html:not(.lm) #landing #hero .hero-trust-row {
    border-top-color: rgba(148, 163, 184, 0.22);
 }

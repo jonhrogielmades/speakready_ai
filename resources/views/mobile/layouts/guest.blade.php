@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=41') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=7') }}" />
-      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=10') }}" />
+      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=11') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
@@ -149,7 +149,7 @@
                               <source src="{{ $heroVideo }}" type="video/mp4">
                            </video>
                         </div>
-                        <p class="hero-video-caption">Practice interviews. Get real-time coaching. Improve with every session.</p>
+                        <p class="hero-video-caption"><span class="hero-caption-green">Practice interviews.</span> <span class="hero-caption-yellow">Get real-time coaching.</span> <span class="hero-caption-blue">Improve with every session.</span></p>
                         <div class="hero-benefit-row" role="list" aria-label="SpeakReady AI benefits">
                            <span class="hero-benefit-item" role="listitem"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><span>Role-focused practice</span></span>
                            <span class="hero-benefit-item" role="listitem"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Real-time feedback</span></span>
