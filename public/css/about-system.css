@@ -422,3 +422,66 @@ html:not(.lm) #about .target-users-grid .ftag i {
       background: rgba(37, 99, 235, 0.1);
    }
 }
+
+@media (min-width: 992px) {
+   #about .about-system-panel {
+      padding: clamp(30px, 3.4vw, 52px);
+   }
+
+   #about .about-system-panel-head {
+      gap: 0;
+   }
+
+   #about .about-system-panel-title {
+      max-width: none;
+      font-size: clamp(2.2rem, 3.2vw, 3.35rem);
+      line-height: 1.04;
+   }
+
+   #about .about-system-copy {
+      max-width: none;
+      font-size: clamp(1.12rem, 1.3vw, 1.34rem) !important;
+      line-height: 1.68;
+      text-align: justify;
+      text-align-last: left;
+   }
+
+   #about .about-system-proof-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(37, 99, 235, 0.14);
+      font-size: 0.9rem;
+   }
+
+   html:not(.lm) #about .about-system-proof-row {
+      border-top-color: rgba(148, 163, 184, 0.22);
+   }
+
+   #about .about-system-proof-row span {
+      min-height: 52px;
+      padding: 10px 12px;
+      border: 1px solid rgba(37, 99, 235, 0.12);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.56);
+   }
+
+   html:not(.lm) #about .about-system-proof-row span {
+      border-color: rgba(148, 163, 184, 0.2);
+      background: rgba(30, 41, 59, 0.56);
+   }
+
+   #about .about-system-proof-row i {
+      display: inline-flex;
+      flex: 0 0 30px;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.12);
+      font-size: 0.88rem;
+   }
+}
