@@ -21,7 +21,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=23') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=24') }}" />
       <style>
          :root,
          .lm,
@@ -298,15 +298,15 @@
             <div class="container">
                <div class="text-center mb-5 rv">
                   <span class="slbl">FAQ</span>
-                  <h2 class="stitle">Practice <span class="gt">Questions</span></h2>
+                  <h2 class="stitle">Sample Feedback <span class="gt">Detailed Review</span></h2>
                </div>
                <div class="row justify-content-center rv">
                   <div class="col-lg-8">
                      <div class="accordion acco" id="faqAcc">
                         <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1" aria-expanded="true" aria-controls="f1">What is SpeakReady AI?</button></h2>
+                           <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1" aria-expanded="true" aria-controls="f1">What does the sample feedback review show?</button></h2>
                            <div id="f1" class="accordion-collapse collapse show" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">SpeakReady AI is a job-interview practice system for setting up a scenario, choosing a target role, answering mock interview prompts, and reviewing evidence-based feedback, progress, and reports.</div>
+                               <div class="accordion-body">A sample review can show a readiness score, rubric breakdown, and evidence from your answer. For example: <strong>Strength:</strong> clear structure with a relevant example. <strong>Improve:</strong> add measurable results and tighten the conclusion. The review then suggests a focused next step so you know what to practice next.</div>
                            </div>
                         </div>
                         <div class="accordion-item">

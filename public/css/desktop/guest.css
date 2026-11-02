@@ -951,8 +951,8 @@
                --about-pill-bg: rgba(255, 255, 255, 0.82);
                --about-pill-border: rgba(37, 99, 235, 0.18);
                --about-pill-text: #0f172a;
-               padding-top: 74px;
-               padding-bottom: 76px;
+               padding-top: clamp(72px, 5.2vw, 92px);
+               padding-bottom: clamp(84px, 6vw, 112px);
             }
 
             html:not(.lm) #about.sp {
@@ -976,7 +976,7 @@
                max-width: 980px;
                margin-left: auto;
                margin-right: auto;
-               margin-bottom: 42px !important;
+               margin-bottom: 28px !important;
                text-align: center;
             }
 
@@ -985,18 +985,22 @@
             }
 
             #about .landing-section-heading .stitle {
-               max-width: 100%;
+               max-width: 1120px;
                margin-left: auto;
                margin-right: auto;
                color: var(--about-heading) !important;
                -webkit-text-fill-color: var(--about-heading) !important;
-               font-size: clamp(2.15rem, 3.2vw, 3.25rem);
-               line-height: 1.06;
+               font-size: clamp(2.55rem, 3.5vw, 3.75rem);
+               line-height: 1.04;
+               letter-spacing: -0.035em;
                text-align: center;
+               text-wrap: balance;
                text-shadow: 0 12px 22px rgba(15, 23, 42, 0.12);
             }
 
             #about .landing-section-heading .stitle .gt {
+               display: inline-block;
+               white-space: nowrap;
                -webkit-text-fill-color: transparent !important;
             }
 
@@ -1012,6 +1016,7 @@
 
             #about .row.justify-content-center.g-5 {
                --bs-gutter-x: 3.2rem;
+               --bs-gutter-y: 0;
                align-items: stretch !important;
             }
 
@@ -1024,19 +1029,20 @@
 
             #about .about-system-content {
                width: 100%;
-               max-width: 900px;
+               max-width: 1040px;
                margin-left: auto;
                margin-right: auto;
                text-align: center;
             }
 
             #about .about-system-copy {
-               max-width: 860px;
-               margin-bottom: 26px !important;
+               max-width: 1000px;
+               margin-bottom: 30px !important;
                color: var(--about-muted) !important;
                -webkit-text-fill-color: var(--about-muted) !important;
-               font-size: 1.02rem !important;
-               line-height: 1.72;
+               font-size: clamp(1.08rem, 1.15vw, 1.24rem) !important;
+               line-height: 1.68;
+               letter-spacing: 0.005em;
                text-align: center;
                text-align-last: center;
                text-indent: 0;
@@ -1047,7 +1053,7 @@
                margin-bottom: 16px !important;
                color: var(--about-heading) !important;
                -webkit-text-fill-color: var(--about-heading) !important;
-               font-size: 1.08rem !important;
+               font-size: clamp(1.18rem, 1.2vw, 1.36rem) !important;
                font-weight: 900;
                letter-spacing: 0;
                text-align: center;
@@ -1055,26 +1061,26 @@
 
             #about .target-users-grid {
                display: grid !important;
-               grid-template-columns: repeat(3, minmax(0, 1fr));
-               gap: 10px !important;
-               max-width: 760px;
+               grid-template-columns: repeat(5, minmax(0, 1fr));
+               gap: 12px !important;
+               max-width: 1020px;
                margin: 0 auto !important;
             }
 
             #about .target-users-grid .ftag {
                width: 100%;
-               min-height: 42px;
-               padding: 8px 12px !important;
+               min-height: 50px;
+               padding: 10px 14px !important;
                display: inline-flex;
                align-items: center;
                justify-content: center;
-               gap: 7px;
+               gap: 8px;
                border-radius: 999px;
                background: var(--about-pill-bg) !important;
                border-color: var(--about-pill-border) !important;
                color: var(--about-pill-text) !important;
                -webkit-text-fill-color: var(--about-pill-text) !important;
-               font-size: 0.74rem;
+               font-size: 0.86rem;
                font-weight: 800;
                line-height: 1.15;
                text-align: center;
@@ -1084,7 +1090,7 @@
             #about .target-users-grid .ftag i {
                margin-right: 0 !important;
                color: #2563eb;
-               font-size: 0.76rem;
+               font-size: 0.88rem;
             }
 
             html:not(.lm) #about .target-users-grid .ftag i {
