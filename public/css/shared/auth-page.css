@@ -534,20 +534,22 @@ html[data-theme="light"] .auth-page-form-side,
 html.dm .auth-page-form-side,
 html[data-theme="dark"] .auth-page-form-side,
 .auth-page-shell[data-auth-theme="dark"] .auth-page-form-side {
-   --auth-form-surface: #ffffff;
-   --auth-form-border: rgba(109, 145, 178, .46);
-   --auth-text: #123b63;
-   --auth-muted: #466985;
-   --auth-subtle: #617d96;
-   --auth-control: #f1f6fb;
-   --auth-control-focus: #ffffff;
-   --auth-control-text: #102f4e;
-   --auth-control-placeholder: #607b95;
-   --auth-control-icon: #6f8da7;
-   --auth-control-border: #b9cedf;
-   --auth-link: #1d4ed8;
-   --auth-divider: #c6d8e6;
-   color-scheme: light;
+   --auth-form-surface: #123a5f;
+   --auth-form-border: rgba(147, 197, 253, .32);
+   --auth-text: #f8fbff;
+   --auth-muted: #c8d9e8;
+   --auth-subtle: #a9bfd2;
+   --auth-control: #173f67;
+   --auth-control-focus: #1f527f;
+   --auth-control-text: #f8fbff;
+   --auth-control-placeholder: #a9bfd2;
+   --auth-control-icon: #a6c4dc;
+   --auth-control-border: rgba(220, 234, 245, .3);
+   --auth-link: #7cc4ff;
+   --auth-divider: rgba(220, 234, 245, .3);
+   --pur: #60a5fa;
+   --blu: #22d3ee;
+   color-scheme: dark;
    color: var(--auth-text);
    background: var(--auth-form-surface);
    border-left-color: var(--auth-form-border);

@@ -177,6 +177,8 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('color-scheme: light;', $css);
         $this->assertStringContainsString('html[data-theme="dark"] .auth-page-form-side', $css);
         $this->assertStringContainsString('.auth-page-shell[data-auth-theme="dark"] .auth-page-form-side', $css);
+        $this->assertStringContainsString('--auth-form-surface: #123a5f;', $css);
+        $this->assertStringContainsString('color-scheme: dark;', $css);
         $this->assertStringContainsString('--auth-mobile-promo-background:', $css);
         $this->assertStringContainsString('background: var(--auth-page-background);', $css);
         $this->assertStringContainsString('background: var(--auth-form-surface);', $css);
