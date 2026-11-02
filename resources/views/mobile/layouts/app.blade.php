@@ -4617,6 +4617,218 @@
                 color: var(--mob-dock-active) !important;
                 -webkit-text-fill-color: var(--mob-dock-active) !important;
              }
+
+             /* Refine the primary Interview action so the dock feels balanced on phones. */
+             body.user-mobile-shell #mob-bottom-nav {
+                --mob-dock-fab-size: clamp(56px, 15vw, 62px);
+             }
+
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary {
+                height: 94px !important;
+                min-height: 94px !important;
+                padding-bottom: 5px !important;
+                gap: 3px !important;
+             }
+
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary-icon {
+                width: var(--mob-dock-fab-size) !important;
+                height: var(--mob-dock-fab-size) !important;
+                border-width: 4px !important;
+                box-shadow:
+                   0 8px 18px rgba(37, 99, 235, 0.24),
+                   inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
+             }
+
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary-icon i {
+                font-size: clamp(1.28rem, 5.2vw, 1.65rem) !important;
+             }
+
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary > span:last-child {
+                margin-top: 1px !important;
+                font-size: clamp(0.62rem, 2.2vw, 0.72rem) !important;
+                line-height: 1.12 !important;
+                letter-spacing: 0.01em !important;
+             }
+
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary.active .mob-nav-primary-icon,
+             body.user-mobile-shell #mob-bottom-nav .mob-nav-primary:active .mob-nav-primary-icon {
+                box-shadow:
+                   0 10px 22px rgba(37, 99, 235, 0.3),
+                   inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+             }
+
+             /* Final day/night contrast pass for the mobile chrome shown in the UI. */
+             html:not(.lm) body.user-mobile-shell #mob-header {
+                --mobile-topbar-panel: rgba(15, 23, 42, 0.96);
+                --mobile-topbar-ink: #f8fafc;
+                --mobile-topbar-muted: #cbd5e1;
+                --mobile-topbar-line: rgba(148, 163, 184, 0.34);
+                --mobile-topbar-tile: rgba(30, 41, 59, 0.94);
+                --mobile-topbar-tile-border: rgba(148, 163, 184, 0.42);
+                --mobile-topbar-accent: #93c5fd;
+                --mobile-topbar-accent-2: #22d3ee;
+                background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.94)) !important;
+                border-bottom-color: var(--mobile-topbar-line) !important;
+                box-shadow: 0 10px 24px rgba(2, 6, 23, 0.3) !important;
+                color: var(--mobile-topbar-ink) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell #mob-header .mob-header-brand-pill,
+             html:not(.lm) body.user-mobile-shell #mob-header .mob-icon-btn {
+                border-color: var(--mobile-topbar-tile-border) !important;
+                background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(51, 65, 85, 0.84)) !important;
+                color: var(--mobile-topbar-ink) !important;
+                box-shadow: 0 8px 18px rgba(2, 6, 23, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
+                color: var(--mobile-topbar-ink) !important;
+                -webkit-text-fill-color: var(--mobile-topbar-ink) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text span,
+             html:not(.lm) body.user-mobile-shell #mob-header .mob-icon-btn i {
+                color: var(--mobile-topbar-accent) !important;
+                -webkit-text-fill-color: var(--mobile-topbar-accent) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell #mob-header .mob-avatar {
+                border-color: var(--mobile-topbar-tile-border) !important;
+                box-shadow: 0 8px 18px rgba(2, 6, 23, 0.24) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell #mob-header #mobNotifBadge {
+                border-color: #0f172a !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="account"],
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="pages"] {
+                --mobile-drawer-panel: rgba(15, 23, 42, 0.97);
+                --mobile-drawer-panel-strong: rgba(30, 41, 59, 0.98);
+                --mobile-drawer-ink: #f8fafc;
+                --mobile-drawer-muted: #cbd5e1;
+                --mobile-drawer-line: rgba(148, 163, 184, 0.32);
+                --mobile-drawer-tile: rgba(30, 41, 59, 0.9);
+                --mobile-drawer-tile-border: rgba(148, 163, 184, 0.4);
+                background:
+                   radial-gradient(circle at 84% 0%, rgba(96, 165, 250, 0.16), transparent 34%),
+                   linear-gradient(135deg, var(--mobile-drawer-panel), var(--mobile-drawer-panel-strong)) !important;
+                border-color: var(--mobile-drawer-tile-border) !important;
+                color: var(--mobile-drawer-ink) !important;
+                box-shadow: 0 24px 58px rgba(2, 6, 23, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="account"]::before,
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="pages"]::before {
+                border-color: rgba(148, 163, 184, 0.18) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-head,
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="pages"] .mob-profile-pages-close {
+                border-bottom-color: var(--mobile-drawer-line) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-role {
+                border-color: rgba(147, 197, 253, 0.38) !important;
+                background: rgba(30, 41, 59, 0.86) !important;
+                color: var(--mobile-drawer-muted) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-close,
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="pages"] .mob-profile-close {
+                border-color: var(--mobile-drawer-tile-border) !important;
+                background: linear-gradient(135deg, rgba(51, 65, 85, 0.96), rgba(30, 41, 59, 0.9)) !important;
+                color: var(--mobile-drawer-ink) !important;
+                box-shadow: 0 10px 22px rgba(2, 6, 23, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] :is(.mob-profile-link, .mob-profile-action, .mob-profile-language),
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="pages"] .mob-profile-link {
+                border-color: var(--mobile-drawer-tile-border) !important;
+                background: linear-gradient(135deg, rgba(51, 65, 85, 0.96), rgba(30, 41, 59, 0.86)) !important;
+                color: var(--mobile-drawer-ink) !important;
+                box-shadow: 0 8px 18px rgba(2, 6, 23, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-link.active,
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="pages"] .mob-profile-link.active {
+                border-color: rgba(96, 165, 250, 0.6) !important;
+                background: linear-gradient(135deg, rgba(30, 64, 175, 0.7), rgba(30, 41, 59, 0.92)) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-action.danger {
+                border-color: rgba(248, 113, 113, 0.42) !important;
+                background: linear-gradient(135deg, rgba(127, 29, 29, 0.62), rgba(69, 10, 10, 0.72)) !important;
+                color: #fda4af !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-notif-dropdown {
+                --mobile-notif-panel: rgba(15, 23, 42, 0.97);
+                --mobile-notif-ink: #f8fafc;
+                --mobile-notif-text: #e2e8f0;
+                --mobile-notif-muted: #cbd5e1;
+                --mobile-notif-line: rgba(148, 163, 184, 0.3);
+                --mobile-notif-tile: rgba(30, 41, 59, 0.9);
+                --mobile-notif-tile-border: rgba(148, 163, 184, 0.4);
+                --mobile-notif-accent: #93c5fd;
+                --mobile-notif-accent-2: #22d3ee;
+                --mobile-notif-danger: #fda4af;
+                --mobile-notif-danger-bg: rgba(127, 29, 29, 0.38);
+                --mobile-notif-danger-border: rgba(248, 113, 113, 0.42);
+                background:
+                   radial-gradient(circle at 84% 0%, rgba(96, 165, 250, 0.16), transparent 34%),
+                   linear-gradient(135deg, var(--mobile-notif-panel), rgba(30, 41, 59, 0.98)) !important;
+                border-color: var(--mobile-notif-tile-border) !important;
+                color: var(--mobile-notif-ink) !important;
+                box-shadow: 0 24px 58px rgba(2, 6, 23, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-notif-dropdown::before {
+                border-color: rgba(148, 163, 184, 0.18) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-notif-title > i,
+             html:not(.lm) body.user-mobile-shell .mob-notif-status i,
+             html:not(.lm) body.user-mobile-shell .mob-notif-empty i {
+                background: linear-gradient(135deg, rgba(37, 99, 235, 0.42), rgba(8, 145, 178, 0.36)) !important;
+                color: #bfdbfe !important;
+                -webkit-text-fill-color: #bfdbfe !important;
+                box-shadow: 0 8px 18px rgba(2, 6, 23, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-notif-action:not(.danger),
+             html:not(.lm) body.user-mobile-shell .mob-notif-view-all {
+                border-color: var(--mobile-notif-tile-border) !important;
+                background: linear-gradient(135deg, rgba(51, 65, 85, 0.96), rgba(30, 41, 59, 0.9)) !important;
+                color: var(--mobile-notif-ink) !important;
+                box-shadow: 0 8px 18px rgba(2, 6, 23, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-notif-action.danger,
+             html:not(.lm) body.user-mobile-shell .mob-notif-link-btn.danger,
+             html:not(.lm) body.user-mobile-shell .mob-notif-retry {
+                border-color: var(--mobile-notif-danger-border) !important;
+                background: var(--mobile-notif-danger-bg) !important;
+                color: var(--mobile-notif-danger) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-notif-item {
+                border-color: var(--mobile-notif-tile-border) !important;
+                background: linear-gradient(135deg, rgba(51, 65, 85, 0.96), rgba(30, 41, 59, 0.86)) !important;
+                box-shadow: 0 8px 18px rgba(2, 6, 23, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-notif-item.unread {
+                border-color: rgba(96, 165, 250, 0.58) !important;
+                background: linear-gradient(135deg, rgba(30, 64, 175, 0.64), rgba(30, 41, 59, 0.92)) !important;
+             }
+
+             html:not(.lm) body.user-mobile-shell .mob-notif-link-btn:not(.danger),
+             html:not(.lm) body.user-mobile-shell .mob-notif-retry:not(.danger) {
+                border-color: rgba(96, 165, 250, 0.46) !important;
+                background: rgba(30, 64, 175, 0.46) !important;
+                color: #bfdbfe !important;
+             }
           }
 
       </style>
