@@ -328,58 +328,6 @@
             </div>
          </section>
 
-         <!-- FAQ -->
-         <section id="faq" class="sp" style="background:var(--bg2)">
-            <div class="container">
-               <div class="text-center mb-5 rv">
-                  <span class="slbl">FAQ</span>
-                  <h2 class="stitle">Sample Feedback <span class="gt">Detailed Review</span></h2>
-               </div>
-               <div class="row justify-content-center rv">
-                  <div class="col-lg-8">
-                     <div class="accordion acco" id="faqAcc">
-                        <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1" aria-expanded="true" aria-controls="f1">What does the sample feedback review show?</button></h2>
-                           <div id="f1" class="accordion-collapse collapse show" data-bs-parent="#faqAcc">
-                               <div class="accordion-body">A sample review can show a readiness score, rubric breakdown, and evidence from your answer. For example: <strong>Strength:</strong> clear structure with a relevant example. <strong>Improve:</strong> add measurable results and tighten the conclusion. The review then suggests a focused next step so you know what to practice next.</div>
-                           </div>
-                        </div>
-                        <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2" aria-expanded="false" aria-controls="f2">What can I customize before starting?</button></h2>
-                           <div id="f2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                               <div class="accordion-body">You can choose the Job Interviews scenario, target position, difficulty, question count, timer, question types, response mode, live feedback mode, and Camera Detection setting.</div>
-                           </div>
-                        </div>
-                        <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3" aria-expanded="false" aria-controls="f3">What is Coaching On vs Real Interview Mode?</button></h2>
-                           <div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                               <div class="accordion-body">Coaching On gives live help during practice. Real Interview Mode keeps the session quieter so the experience feels closer to an actual interview before scoring and review.</div>
-                           </div>
-                        </div>
-                        <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4" aria-expanded="false" aria-controls="f4">How does Camera Detection work?</button></h2>
-                           <div id="f4" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Camera Detection is optional. When enabled, it supports coaching notes for delivery and movement, while readiness scoring stays focused on answer quality and does not infer confidence, honesty, or personality.</div>
-                           </div>
-                        </div>
-                        <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f5" aria-expanded="false" aria-controls="f5">Is my data secure?</button></h2>
-                           <div id="f5" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Interview records require account access. The application validates submitted data and checks that each user owns the session they open.</div>
-                           </div>
-                        </div>
-                        <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f6" aria-expanded="false" aria-controls="f6">What happens after a practice session?</button></h2>
-                           <div id="f6" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">You can review scores, answer evidence, coaching notes, recommended modules, challenge paths, readiness trends, reports, and session history.</div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </section>
-
          <!-- CONTACT US -->
          <section id="contact" class="sp position-relative">
             <div class="container position-relative" style="z-index:1">
@@ -492,7 +440,6 @@
                         <ul class="list-unstyled footer-links">
                            <li><a href="{{ route('login', sr_layout_query()) }}">Log In</a></li>
                            <li><a href="{{ route('register', sr_layout_query()) }}">Register</a></li>
-                           <li><a href="#faq">FAQ</a></li>
                            <li><a href="#contact">Contact</a></li>
                            <li><a href="{{ route('legal.privacy') }}">Privacy Policy</a></li>
                            <li><a href="{{ route('legal.terms') }}">Terms of Service</a></li>
