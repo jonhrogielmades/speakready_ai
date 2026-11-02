@@ -167,6 +167,10 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('--auth-action-gradient: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);', $css);
         $this->assertStringContainsString('background: var(--auth-action-gradient, linear-gradient(135deg, #2563eb, #0ea5e9));', $css);
         $this->assertStringContainsString('color: var(--auth-action-start, #2563eb);', $css);
+        $this->assertStringContainsString('animation: auth-page-form-float 5.5s ease-in-out infinite;', $css);
+        $this->assertStringContainsString('@keyframes auth-page-form-float', $css);
+        $this->assertStringContainsString('@keyframes auth-page-action-shine', $css);
+        $this->assertStringContainsString('.auth-page-form-wrap,', $css);
         $this->assertStringContainsString('body.auth-page-body.auth-desktop-shell { height: 100vh; height: 100dvh; overflow: hidden; }', $css);
         $this->assertStringContainsString('grid-template-rows: auto minmax(0, 1fr) auto;', $css);
         $this->assertStringContainsString('.auth-page-card { width: min(1180px, 100%); height: 100%; min-height: 0; flex: none; }', $css);

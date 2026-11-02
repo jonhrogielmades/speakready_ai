@@ -16,7 +16,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=8') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/auth/auth.css?v=2') }}" data-page-style="auth-desktop">
-      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=31') }}" data-page-style="auth-page-shared">
+      <link rel="stylesheet" href="{{ asset('css/shared/auth-page.css?v=32') }}" data-page-style="auth-page-shared">
       <script src="{{ asset('js/auth-page.js?v=5') }}" defer></script>
       <style>
          :root, .lm, body.auth-desktop-shell {

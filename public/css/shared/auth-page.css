@@ -384,13 +384,13 @@ body.auth-page-body .auth-page-form-side .auth-page-password-status.is-invalid {
    color: #dc2626 !important;
    -webkit-text-fill-color: #dc2626 !important;
 }
-.auth-page-form-wrap { width: 100%; max-width: 610px; margin: auto; }
+.auth-page-form-wrap { width: 100%; max-width: 610px; margin: auto; transform-origin: 50% 50%; animation: auth-page-form-float 5.5s ease-in-out infinite; will-change: transform; }
 .auth-page-shell[data-auth-mode="login"] .auth-page-form-wrap { max-width: 610px; }
 .auth-page-switch { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 15px 0 0; color: var(--auth-subtle); font-size: .74rem; text-align: center; }
 .auth-page-switch a { display: inline-flex; align-items: center; gap: 6px; color: var(--auth-link); font-weight: 750; text-decoration: none; }
 .auth-page-switch a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .auth-page-heading { display: flex; align-items: center; gap: 14px; }
-.auth-page-heading-icon { width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center; color: #fff; background: var(--auth-action-gradient, linear-gradient(135deg, #2563eb, #0ea5e9)); border: 1px solid rgba(255, 255, 255, .22); border-radius: 15px; box-shadow: 0 12px 28px rgba(37, 99, 235, .23); }
+.auth-page-heading-icon { width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center; color: #fff; background: var(--auth-action-gradient, linear-gradient(135deg, #2563eb, #0ea5e9)); border: 1px solid rgba(255, 255, 255, .22); border-radius: 15px; box-shadow: 0 12px 28px rgba(37, 99, 235, .23); animation: auth-page-form-icon-pulse 3.2s ease-in-out infinite; will-change: transform, box-shadow; }
 .auth-page-eyebrow { margin: 0 0 2px; color: var(--auth-link); font-size: .64rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .auth-page-heading h1 { margin: 0; color: var(--auth-text); font-size: clamp(1.48rem, 2.2vw, 1.9rem); font-weight: 780; letter-spacing: -.035em; line-height: 1.12; text-wrap: balance; }
 .auth-page-intro { max-width: 36rem; margin: 10px 0 18px; color: var(--auth-muted); font-size: .8rem; line-height: 1.5; text-wrap: pretty; }
@@ -484,11 +484,15 @@ body.auth-page-body .auth-page-form-side .auth-page-password-status.is-invalid {
 .auth-page-terms { margin-top: 1px; }
 .auth-page-terms-error { margin-top: -11px; }
 
-.auth-page-submit { min-height: 51px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 20px; color: #fff; font-family: inherit; font-size: .84rem; font-weight: 750; background: var(--auth-action-gradient, linear-gradient(135deg, #2563eb, #0ea5e9)); border: 0; border-radius: 13px; box-shadow: 0 12px 25px rgba(37, 99, 235, .2); cursor: pointer; transition: box-shadow .16s ease, transform .16s ease, filter .16s ease; }
+.auth-page-submit { min-height: 51px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 20px; color: #fff; font-family: inherit; font-size: .84rem; font-weight: 750; background: var(--auth-action-gradient, linear-gradient(135deg, #2563eb, #0ea5e9)); border: 0; border-radius: 13px; box-shadow: 0 12px 25px rgba(37, 99, 235, .2); cursor: pointer; transition: box-shadow .16s ease, transform .16s ease, filter .16s ease; position: relative; isolation: isolate; overflow: hidden; }
+.auth-page-submit > *,
+.auth-page-step-next > * { position: relative; z-index: 1; }
+.auth-page-submit::after,
+.auth-page-step-next::after { content: ""; position: absolute; z-index: 0; top: -40%; bottom: -40%; left: -38%; width: 28%; pointer-events: none; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .32), transparent); transform: translateX(-240%) skewX(-18deg); animation: auth-page-action-shine 5.2s ease-in-out infinite; }
 .auth-page-submit:hover { filter: saturate(1.12); box-shadow: 0 15px 30px rgba(37, 99, 235, .27); transform: translateY(-1px); }
 .auth-page-submit:disabled { opacity: .72; cursor: wait; transform: none; }
 .auth-page-security-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 13px 0 0; color: var(--auth-subtle); font-size: .62rem; text-align: center; }
-.auth-page-security-note i { color: #059669; }
+.auth-page-security-note i { color: #059669; animation: auth-page-form-icon-pulse 3.2s ease-in-out infinite; }
 .auth-page-footer { min-height: 34px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 7px 14px; padding: 4px 10px; color: var(--auth-subtle); font-size: .76rem; font-weight: 600; }
 .auth-page-footer-brand,
 .auth-page-footer a { display: inline-flex; align-items: center; gap: 6px; }
@@ -515,6 +519,20 @@ body.auth-page-body .auth-page-form-side .auth-page-password-status.is-invalid {
    .auth-page-transition-logo { width: 72px; height: 72px; margin-bottom: 18px; }
    .auth-page-transition-logo > span { border-width: 3px; }
    .auth-page-transition-logo img { width: 50px; height: 50px; border-radius: 15px; }
+}
+@keyframes auth-page-form-float {
+   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+   35% { transform: translate3d(0, -2px, 0) scale(1.002); }
+   70% { transform: translate3d(-1px, -1px, 0) scale(1.001); }
+}
+@keyframes auth-page-form-icon-pulse {
+   0%, 100% { transform: scale(1); }
+   50% { transform: scale(1.045); }
+}
+@keyframes auth-page-action-shine {
+   0%, 55% { transform: translateX(-240%) skewX(-18deg); opacity: 0; }
+   64% { opacity: 1; }
+   78%, 100% { transform: translateX(520%) skewX(-18deg); opacity: 0; }
 }
 @keyframes auth-page-spin { to { transform: rotate(360deg); } }
 
@@ -632,7 +650,7 @@ html[data-theme="dark"] .auth-page-form-side,
 .auth-register-stepper { display: none; }
 .auth-mobile-register-step { display: contents; }
 .auth-mobile-register-final { display: contents; }
-.auth-page-step-next { display: none; }
+.auth-page-step-next { display: none; position: relative; isolation: isolate; overflow: hidden; }
 
 @media (min-width: 981px) {
    body.auth-page-body.auth-desktop-shell { height: 100vh; height: 100dvh; overflow: hidden; }
@@ -830,6 +848,11 @@ html[data-theme="dark"] .auth-page-form-side,
 }
 
 @media (prefers-reduced-motion: reduce) {
+   .auth-page-form-wrap,
+   .auth-page-heading-icon,
+   .auth-page-security-note i,
+   .auth-page-submit::after,
+   .auth-page-step-next::after { animation: none !important; }
    .auth-page-skip,
    .auth-page-back,
    .auth-page-theme-toggle,
