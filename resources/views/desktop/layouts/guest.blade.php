@@ -14,7 +14,7 @@
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
-      <link rel="preload" href="{{ asset('videos/speakready-ai-15s-product-ad.mp4') }}?v=20261102" as="video" type="video/mp4" fetchpriority="high">
+      <link rel="preload" href="{{ asset('videos/speakready-ai-60s-product-tour.mp4') }}?v=20261102-60s" as="video" type="video/mp4" fetchpriority="high">
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <!-- all min css -->
@@ -115,14 +115,14 @@
 
                   <div class="col-xl-6 col-lg-6 col-md-11 hero-image-col">
                      @php
-                        $heroVideo = asset('videos/speakready-ai-15s-product-ad.mp4').'?v=20261102';
+                        $heroVideo = asset('videos/speakready-ai-60s-product-tour.mp4').'?v=20261102-60s';
                      @endphp
                      <div class="desktop-hero-image-row mt-3 mb-1 afu" style="animation-delay:.48s">
                         <figure class="desktop-hero-image-frame mb-0" aria-label="SpeakReady AI desktop product overview video">
                            <div class="hero-video-showcase">
                               <div class="hero-video-kicker">
                                  <span class="hero-video-kicker-title"><i class="fa-solid fa-play" aria-hidden="true"></i> See SpeakReady AI in action</span>
-                                 <span class="hero-video-kicker-meta">15-second product tour</span>
+                                 <span class="hero-video-kicker-meta">1-minute product tour</span>
                               </div>
                               <div class="hero-video-shell">
                                  <div class="hero-video-chrome" aria-hidden="true">
@@ -137,7 +137,7 @@
                                     muted
                                     loop
                                     playsinline
-                                    preload="metadata"
+                                    preload="auto"
                                     aria-label="SpeakReady AI desktop product overview"
                                  >
                                     <source src="{{ $heroVideo }}" type="video/mp4">

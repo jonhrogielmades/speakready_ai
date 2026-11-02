@@ -3,14 +3,14 @@
             <div class="aur aur-a" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
             <div class="container position-relative" style="z-index:1">
                @php
-                  $heroVideo = asset('videos/speakready-ai-15s-product-ad.mp4').'?v=20261102';
+                  $heroVideo = asset('videos/speakready-ai-60s-product-tour.mp4').'?v=20261102-60s';
                @endphp
                <div class="mobile-hero-preview-row rv">
                   <figure class="mobile-hero-image-frame mb-0" aria-label="SpeakReady AI mobile product overview video">
                      <div class="hero-video-showcase">
                         <div class="hero-video-kicker">
                            <span class="hero-video-kicker-title"><i class="fa-solid fa-play" aria-hidden="true"></i> See it in action</span>
-                           <span class="hero-video-kicker-meta">15-sec tour</span>
+                           <span class="hero-video-kicker-meta">1-min tour</span>
                         </div>
                         <div class="hero-video-shell">
                            <div class="hero-video-chrome" aria-hidden="true">
@@ -25,7 +25,7 @@
                               muted
                               loop
                               playsinline
-                              preload="metadata"
+                              preload="auto"
                               aria-label="SpeakReady AI mobile product overview"
                            >
                               <source src="{{ $heroVideo }}" type="video/mp4">
