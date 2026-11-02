@@ -136,6 +136,23 @@ html:not(.lm) #landing #hero .hero-trust-row span {
    -webkit-text-fill-color: #f8fafc !important;
 }
 
+#landing #hero .hero-video-kicker-title,
+#landing #hero .hero-video-kicker-meta,
+#landing #hero .hero-video-chrome-label,
+#landing #hero .hero-benefit-item > span {
+   color: #000000 !important;
+   -webkit-text-fill-color: #000000 !important;
+   font-weight: 800 !important;
+}
+
+html:not(.lm) #landing #hero .hero-video-kicker-title,
+html:not(.lm) #landing #hero .hero-video-kicker-meta,
+html:not(.lm) #landing #hero .hero-video-chrome-label,
+html:not(.lm) #landing #hero .hero-benefit-item > span {
+   color: #f8fafc !important;
+   -webkit-text-fill-color: #f8fafc !important;
+}
+
 #landing #hero .hero-cta-row > .btn {
    min-height: 50px;
    border-radius: 13px;
