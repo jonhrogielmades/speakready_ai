@@ -21,7 +21,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=24') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=25') }}" />
       <style>
          :root,
          .lm,
@@ -55,10 +55,10 @@
                      </span>
                   </a>
                   <div class="d-none d-xl-flex align-items-center gap-1 mx-auto">
-                     <a href="#hero" class="nav-link">Home</a>
-                     <a href="#about" class="nav-link">About the System</a>
+                     <a href="#about" class="nav-link">Features</a>
                      <a href="#how" class="nav-link">How It Works</a>
                      <a href="#developers" class="nav-link">Developers</a>
+                     <a href="#faq" class="nav-link">FAQ</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
                      <button type="button" class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">
@@ -69,7 +69,7 @@
                      <i class="fa-regular fa-user fa-sm"></i> Login
                      </a>
                      <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1">
-                     Register <i class="fa-solid fa-arrow-right fa-sm"></i>
+                     Get Started <i class="fa-solid fa-arrow-right fa-sm"></i>
                      </a>
                      <button class="boc d-xl-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
                      <i class="fa-solid fa-bars" aria-hidden="true"></i>
@@ -81,7 +81,7 @@
          @include('desktop.partials.user-command-palette', ['guestQuickNavigation' => true])
 
          <!-- HERO -->
-         <section id="hero">
+         <section id="hero" class="hero-reference-layout">
             <div class="aur aur-a" style="top:-80px;left:-120px"></div>
             <div class="aur aur-b" style="top:180px;right:-180px"></div>
             <div class="aur aur-a" style="bottom:-80px;left:45%;transform:translateX(-50%);opacity:.4"></div>
@@ -90,31 +90,25 @@
                   <div class="col-xl-5 col-lg-5 col-md-10 hero-home-copy text-center">
                      <div class="hero-badge-wrap afu" style="animation-delay:.05s">
                         <span class="hbadge">
-                     AI-Based Interview Practice System
+                           <span class="bdot" aria-hidden="true"></span>
+                           AI-Based Interview Practice System
                         </span>
                      </div>
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="hero-home-copy-text afu" style="font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI helps you practice role-focused job interviews with scenario setup, Coaching On or Real Interview Mode, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6">Get Started Free</a>
-                        <button type="button" class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
-                        <a href="#about" class="boc btn px-4 py-3 fs-6">Learn More</a>
+                        <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6">Get Started Free <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                        <a href="#how" class="boc btn px-4 py-3 fs-6"><i class="fa-solid fa-circle-play me-2" style="color:var(--pur)"></i>See How It Works</a>
                      </div>
+                     <button type="button" class="hero-install-link afu" id="heroInstallBtn" style="animation-delay:.34s"><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install the app for quick practice</button>
 
-                     <div class="hero-tech-card mt-4 mb-0 afu text-center" style="animation-delay:.4s">
-                        <p class="hero-tech-title" style="font-size:.71rem;color:var(--hero-tech-color, #000000);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
-                        <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-4 flex-wrap tech-icons" style="color:var(--hero-tech-color, #000000); font-size:1.5rem;">
-                           <a href="https://laravel.com" target="_blank" rel="noopener noreferrer" title="Laravel"><i class="fa-brands fa-laravel"></i></a>
-                           <a href="https://php.net" target="_blank" rel="noopener noreferrer" title="PHP"><i class="fa-brands fa-php"></i></a>
-                           <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer" title="MySQL"><i class="fa-solid fa-database"></i></a>
-                           @php
-                              $title = 'OpenAI';
-                              $link = 'https://openai.com';
-                           @endphp
-                           <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" title="{{ $title }}">
-                              <i class="fa-solid fa-robot"></i>
-                           </a>
-                           <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank" rel="noopener noreferrer" title="Web Speech API"><i class="fa-solid fa-microphone"></i></a>
+                     <div class="hero-tech-card hero-trust-row mt-4 mb-0 afu text-center" style="animation-delay:.4s">
+                        <p class="hero-tech-title">BUILT FOR EVERY STAGE OF THE JOB SEARCH</p>
+                        <div class="hero-trust-logos" aria-label="SpeakReady AI audience">
+                           <span>Students</span>
+                           <span>Fresh Graduates</span>
+                           <span>Job Seekers</span>
+                           <span>Career Shifters</span>
                         </div>
                      </div>
                   </div>
