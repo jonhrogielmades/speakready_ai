@@ -21,7 +21,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=25') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=26') }}" />
       <style>
          :root,
          .lm,
@@ -101,22 +101,6 @@
                         <a href="#about" class="boc btn px-4 py-3 fs-6">Learn More</a>
                      </div>
 
-                     <div class="hero-tech-card mt-4 mb-0 afu text-center" style="animation-delay:.4s">
-                        <p class="hero-tech-title" style="font-size:.71rem;color:var(--hero-tech-color, #000000);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
-                        <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-4 flex-wrap tech-icons" style="color:var(--hero-tech-color, #000000); font-size:1.5rem;">
-                           <a href="https://laravel.com" target="_blank" rel="noopener noreferrer" title="Laravel"><i class="fa-brands fa-laravel"></i></a>
-                           <a href="https://php.net" target="_blank" rel="noopener noreferrer" title="PHP"><i class="fa-brands fa-php"></i></a>
-                           <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer" title="MySQL"><i class="fa-solid fa-database"></i></a>
-                           @php
-                              $title = 'OpenAI';
-                              $link = 'https://openai.com';
-                           @endphp
-                           <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" title="{{ $title }}">
-                              <i class="fa-solid fa-robot"></i>
-                           </a>
-                           <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank" rel="noopener noreferrer" title="Web Speech API"><i class="fa-solid fa-microphone"></i></a>
-                        </div>
-                     </div>
                   </div>
 
                   <div class="col-xl-7 col-lg-7 col-md-11 hero-image-col">
@@ -150,6 +134,11 @@
                                  </video>
                               </div>
                               <p class="hero-video-caption">Practice interviews. Get real-time coaching. Improve with every session.</p>
+                              <div class="hero-benefit-row" role="list" aria-label="SpeakReady AI benefits">
+                                 <span class="hero-benefit-item" role="listitem"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><span>Role-focused practice</span></span>
+                                 <span class="hero-benefit-item" role="listitem"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Real-time feedback</span></span>
+                                 <span class="hero-benefit-item" role="listitem"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Evidence-based coaching</span></span>
+                              </div>
                            </div>
                         </figure>
                      </div>

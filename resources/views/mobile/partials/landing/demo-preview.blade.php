@@ -32,6 +32,11 @@
                            </video>
                         </div>
                         <p class="hero-video-caption">Practice interviews. Get real-time coaching. Improve with every session.</p>
+                        <div class="hero-benefit-row" role="list" aria-label="SpeakReady AI benefits">
+                           <span class="hero-benefit-item" role="listitem"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><span>Role-focused practice</span></span>
+                           <span class="hero-benefit-item" role="listitem"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Real-time feedback</span></span>
+                           <span class="hero-benefit-item" role="listitem"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Evidence-based coaching</span></span>
+                        </div>
                      </div>
                   </figure>
                </div>

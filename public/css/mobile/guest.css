@@ -557,6 +557,9 @@ html, body {
             }
 
             #landing #hero {
+               position: relative;
+               isolation: isolate;
+               overflow: hidden;
                min-height: auto;
                padding-top: calc(var(--nav) + env(safe-area-inset-top, 0px) + 28px);
                padding-bottom: 20px;
@@ -569,6 +572,15 @@ html, body {
                   linear-gradient(120deg, #f8fcff 0%, #edfaff 46%, #dff5ff 100%) !important;
             }
 
+            #landing #hero::after {
+               content: "";
+               position: absolute;
+               z-index: 0;
+               inset: 0;
+               pointer-events: none;
+               background: radial-gradient(ellipse at 50% 38%, transparent 0 34%, rgba(248, 252, 255, 0.14) 68%, rgba(248, 252, 255, 0.72) 100%);
+            }
+
             html:not(.lm) #landing #hero {
                background:
                   radial-gradient(circle at 14% 20%, rgba(34, 211, 238, 0.16), transparent 34%),
@@ -576,6 +588,10 @@ html, body {
                   linear-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px) 0 0 / 100% 42px,
                   linear-gradient(90deg, rgba(56, 189, 248, 0.08) 1px, transparent 1px) 0 0 / 48px 100%,
                   linear-gradient(120deg, #020617 0%, #071b2f 48%, #063044 100%) !important;
+            }
+
+            html:not(.lm) #landing #hero::after {
+               background: radial-gradient(ellipse at 50% 38%, transparent 0 34%, rgba(2, 6, 23, 0.08) 68%, rgba(2, 6, 23, 0.58) 100%);
             }
 
             #hero .container {
@@ -620,12 +636,13 @@ html, body {
             }
 
             #hero .h1 {
-               max-width: 350px;
+               max-width: 340px;
                margin-left: auto;
                margin-right: auto;
-               font-size: clamp(2rem, 8.4vw, 2.35rem) !important;
-               line-height: 1.04;
-               letter-spacing: 0;
+               font-size: clamp(1.9rem, 8vw, 2.25rem) !important;
+               line-height: 1.02;
+               letter-spacing: -0.02em;
+               text-wrap: balance;
             }
 
             #hero .h1 span {
@@ -1163,6 +1180,46 @@ html, body {
             text-align: center;
          }
 
+         #landing .hero-benefit-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            align-items: stretch;
+            gap: 5px;
+            width: 100%;
+            margin: 0 auto;
+         }
+
+         #landing .hero-benefit-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-width: 0;
+            min-height: 38px;
+            padding: 6px 4px;
+            border: 1px solid rgba(37, 99, 235, 0.13);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.68);
+            color: var(--tx2);
+            font-size: 0.51rem;
+            font-weight: 700;
+            line-height: 1.15;
+            text-align: center;
+            text-wrap: balance;
+         }
+
+         #landing .hero-benefit-item i {
+            color: var(--pur, #2563eb);
+            font-size: 0.58rem;
+            line-height: 1;
+         }
+
+         html:not(.lm) #landing .hero-benefit-item {
+            border-color: rgba(148, 163, 184, 0.26);
+            background: rgba(15, 23, 42, 0.5);
+         }
+
          #landing .mobile-hero-context-card {
             position: absolute;
             z-index: 5;
@@ -1683,6 +1740,16 @@ html, body {
 
             #landing .mobile-hero-image {
                width: clamp(158px, 52vw, 190px);
+            }
+
+            #landing .hero-benefit-item {
+               min-height: 35px;
+               padding: 5px 3px;
+               font-size: 0.47rem;
+            }
+
+            #landing .hero-benefit-item i {
+               font-size: 0.54rem;
             }
 
             #landing .mobile-hero-context-card {
