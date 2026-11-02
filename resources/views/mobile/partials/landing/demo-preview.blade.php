@@ -15,7 +15,7 @@
                         <div class="hero-video-shell">
                            <div class="hero-video-chrome" aria-hidden="true">
                               <span class="hero-video-chrome-dots"><i></i><i></i><i></i></span>
-                              <span class="hero-video-chrome-label">speakready.ai</span>
+                           <span class="hero-video-chrome-label">speakreadyai.online</span>
                            </div>
                            <video
                               class="mobile-hero-image mobile-hero-video"

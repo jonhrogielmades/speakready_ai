@@ -24,6 +24,8 @@
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=39') }}" />
       <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=39') }}" />
+      <link rel="stylesheet" href="{{ asset('css/about-system.css?v=1') }}" />
+      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=1') }}" />
       <style data-mobile-side-gutter="10px">
          :root,
          .lm {
@@ -78,8 +80,8 @@
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
                      </button>
-                     <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1">
-                     Register <i class="fa-solid fa-arrow-right fa-sm"></i>
+                     <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1 guest-nav-cta">
+                     Get Started <i class="fa-solid fa-arrow-right fa-sm"></i>
                      </a>
                      <button class="boc d-xl-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
                      <i class="fa-solid fa-bars" aria-hidden="true"></i>
@@ -91,24 +93,30 @@
          @include('mobile.partials.user-command-palette', ['guestQuickNavigation' => true])
 
          <!-- HERO -->
-         <section id="hero">
+         <section id="hero" aria-labelledby="hero-title">
             <div class="aur aur-a" style="top:-80px;left:-120px"></div>
             <div class="aur aur-b" style="top:180px;right:-180px"></div>
             <div class="aur aur-a" style="bottom:-80px;left:45%;transform:translateX(-50%);opacity:.4"></div>
              <div class="container position-relative" style="z-index:2">
                 <div class="text-center mt-3 pt-3 afu" style="animation-delay:.05s">
                     <span class="hbadge">
-                 AI-Based Interview Practice System
+                       <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                       <span>AI-powered interview practice</span>
                     </span>
                 </div>
                 <div class="row align-items-center justify-content-center mt-4">
-                  <div class="col-lg-7 col-md-10 text-center">
-                     <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
-                     <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI helps you practice role-focused job interviews with scenario setup, Coaching On or Real Interview Mode, camera detection, and evidence-based feedback.</p>
+                  <div class="col-lg-7 col-md-10 text-center hero-home-copy">
+                     <h1 id="hero-title" class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
+                     <p class="hero-home-copy-text mx-auto afu" style="animation-delay:.2s">Practice realistic job interviews with AI-powered coaching, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6">Register for Free</a>
-                        <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn" id="heroInstallBtn"><i class="fa-solid fa-download me-2"></i>Install App</button>
-                        <a href="#about" class="boc btn px-4 py-3 fs-6 hero-learn-btn">Learn More</a>
+                        <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6 hero-primary-cta">Start Practicing Free</a>
+                        <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn hero-secondary-cta" id="heroInstallBtn"><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install App</button>
+                        <a href="#about" class="boc btn px-4 py-3 fs-6 hero-learn-btn hero-secondary-cta">Explore Features</a>
+                     </div>
+                     <div class="hero-trust-row" role="list" aria-label="What you can do with SpeakReady AI">
+                        <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Guided setup</span>
+                        <span role="listitem"><i class="fa-solid fa-microphone" aria-hidden="true"></i>Text or voice practice</span>
+                        <span role="listitem"><i class="fa-solid fa-chart-line" aria-hidden="true"></i>Actionable feedback</span>
                      </div>
                     </div>
                  </div>
@@ -126,7 +134,7 @@
                         <div class="hero-video-shell">
                            <div class="hero-video-chrome" aria-hidden="true">
                               <span class="hero-video-chrome-dots"><i></i><i></i><i></i></span>
-                              <span class="hero-video-chrome-label">speakready.ai</span>
+                              <span class="hero-video-chrome-label">speakreadyai.online</span>
                            </div>
                            <video
                               class="mobile-hero-image mobile-hero-video"
@@ -163,19 +171,64 @@
                <div class="row justify-content-center g-5">
                   <div class="col-12 mx-auto rv about-system-content">
                      <div class="about-system-panel">
-                        <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI guides users through a complete job-interview practice flow: choose the Job Interviews scenario, select a target position, set the interview structure, choose support controls, answer by text, voice, or hybrid mode, and review evidence-based feedback. Coaching On and optional Camera Detection support practice, while Real Interview Mode keeps the session quieter and readiness scoring focused on answer quality.</p>
+                        <div class="about-system-panel-head">
+                           <div class="about-system-intro">
+                              <div class="about-system-kicker"><span class="about-system-kicker-icon" aria-hidden="true"><i class="fa-solid fa-sparkles"></i></span><span>Structured practice. Clear next steps.</span></div>
+                              <h3 class="about-system-panel-title">Practice with a plan. Improve with evidence.</h3>
+                              <p class="about-system-copy">SpeakReady AI guides users through a complete job-interview practice flow: choose the Job Interviews scenario, select a target position, set the interview structure, choose support controls, answer by text, voice, or hybrid mode, and review evidence-based feedback. Coaching On and optional Camera Detection support practice, while Real Interview Mode keeps the session quieter and readiness scoring focused on answer quality.</p>
+                              <div class="about-system-proof-row" role="list" aria-label="Practice options">
+                                 <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Role-specific prompts</span>
+                                 <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Text, voice, or hybrid</span>
+                                 <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Review after every session</span>
+                              </div>
+                           </div>
+                           <div class="about-system-highlight" aria-label="SpeakReady AI practice goal">
+                              <span class="about-system-highlight-icon" aria-hidden="true"><i class="fa-solid fa-bullseye"></i></span>
+                              <span class="about-system-highlight-label">Your practice goal</span>
+                              <strong>More confident, job-ready answers</strong>
+                              <span class="about-system-highlight-note">One focused session at a time.</span>
+                           </div>
+                        </div>
 
-                        <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
-                        <div class="target-users-grid d-flex flex-wrap gap-2 mb-4">
-                           <span class="ftag px-3 py-2"><i class="fa-solid fa-user-graduate me-2"></i>Students</span>
-                           <span class="ftag px-3 py-2"><i class="fa-solid fa-graduation-cap me-2"></i>Fresh Graduates</span>
-                           <span class="ftag px-3 py-2"><i class="fa-solid fa-briefcase me-2"></i>Job Seekers</span>
-                           <span class="ftag px-3 py-2"><i class="fa-solid fa-rotate me-2"></i>Career Shifters</span>
-                           <span class="ftag px-3 py-2"><i class="fa-solid fa-user-check me-2"></i>First-time Applicants</span>
+                        <div class="about-system-capabilities" role="list" aria-label="Core system capabilities">
+                           <article class="about-feature-card" role="listitem">
+                              <span class="about-feature-icon" aria-hidden="true"><i class="fa-solid fa-briefcase"></i></span>
+                              <div>
+                                 <h4>Role-focused setup</h4>
+                                 <p>Choose a target position and interview structure before practice begins.</p>
+                              </div>
+                           </article>
+                           <article class="about-feature-card" role="listitem">
+                              <span class="about-feature-icon" aria-hidden="true"><i class="fa-solid fa-sliders"></i></span>
+                              <div>
+                                 <h4>Flexible response modes</h4>
+                                 <p>Practice by text, voice, or hybrid mode with support controls that fit your goal.</p>
+                              </div>
+                           </article>
+                           <article class="about-feature-card" role="listitem">
+                              <span class="about-feature-icon" aria-hidden="true"><i class="fa-solid fa-chart-line"></i></span>
+                              <div>
+                                 <h4>Evidence-based review</h4>
+                                 <p>Use readiness signals and feedback to choose a clear focus for your next session.</p>
+                              </div>
+                           </article>
+                        </div>
+
+                        <div class="about-system-audience">
+                           <div class="about-system-audience-heading">
+                              <h4><i class="fa-solid fa-users" aria-hidden="true"></i> Target users</h4>
+                              <p>Whether you are starting out or changing direction, each session gives you a practical place to prepare.</p>
+                           </div>
+                           <div class="target-users-grid" role="list" aria-label="People who can use SpeakReady AI">
+                              <span class="ftag" role="listitem"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i>Students</span>
+                              <span class="ftag" role="listitem"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>Fresh Graduates</span>
+                              <span class="ftag" role="listitem"><i class="fa-solid fa-briefcase" aria-hidden="true"></i>Job Seekers</span>
+                              <span class="ftag" role="listitem"><i class="fa-solid fa-rotate" aria-hidden="true"></i>Career Shifters</span>
+                              <span class="ftag" role="listitem"><i class="fa-solid fa-user-check" aria-hidden="true"></i>First-time Applicants</span>
+                           </div>
                         </div>
                      </div>
                   </div>
-
                </div>
             </div>
          </section>
