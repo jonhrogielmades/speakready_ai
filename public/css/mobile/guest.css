@@ -2454,12 +2454,8 @@ html, body {
             }
 
             #about .about-system-panel h4::before {
-               content: "";
-               width: 8px;
-               height: 8px;
-               border-radius: 50%;
-               background: linear-gradient(135deg, #2563eb, #06b6d4);
-               box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.12);
+               content: none !important;
+               display: none !important;
             }
 
             #about .target-users-grid {
