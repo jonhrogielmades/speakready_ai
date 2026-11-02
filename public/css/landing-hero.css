@@ -1,5 +1,27 @@
 /* ======================== LANDING HERO POLISH ======================== */
 
+/* Keep the homepage hero clean and theme-safe. The earlier hero surface used
+   a grid texture that competed with the message and wrapped product preview. */
+#landing #hero {
+   background: #ffffff !important;
+}
+
+#landing #hero::after {
+   background: none !important;
+}
+
+#landing #hero .aur {
+   opacity: 0 !important;
+}
+
+html:not(.lm) #landing #hero {
+   background: #0b1220 !important;
+}
+
+html:not(.lm) #landing #hero .aur {
+   opacity: 0.1 !important;
+}
+
 #landing #hero .hbadge {
    display: inline-flex;
    align-items: center;
