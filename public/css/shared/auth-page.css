@@ -613,7 +613,7 @@ html[data-theme="dark"] .auth-page-brand-mark { border-color: rgba(148, 163, 184
    .auth-page-theme-toggle { width: 42px; height: 42px; }
    .auth-page-back { min-height: 42px; padding: 0 9px; }
    .auth-page-back span { display: none; }
-   .auth-page-card { flex: 1; overflow: visible; border: 0; border-radius: 20px; box-shadow: none; }
+   .auth-page-card { flex: 0 0 auto; height: auto; margin-top: auto; margin-bottom: auto; overflow: visible; border: 0; border-radius: 20px; box-shadow: none; }
    .auth-page-shell[data-auth-mode="login"] .auth-page-card { min-height: 0; }
    .auth-page-shell[data-auth-mode="register"] .auth-page-card { min-height: 0; }
    .auth-page-shell.auth-support-page .auth-page-card { min-height: 0; }

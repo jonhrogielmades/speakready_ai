@@ -37,6 +37,7 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('overflow-anchor: none;', $css);
         $this->assertStringContainsString('class="auth-mobile-document"', $mobileLayout);
         $this->assertStringContainsString('html.auth-mobile-document { overflow-y: clip; }', $css);
+        $this->assertStringContainsString('.auth-page-card { flex: 0 0 auto; height: auto; margin-top: auto; margin-bottom: auto;', $css);
         $this->assertStringContainsString('@media (max-width: 390px) and (max-height: 700px)', $css);
         $this->assertStringContainsString('var pageScrollTop = window.scrollY;', $script);
         $this->assertStringContainsString('authFormPanel.scrollTop = formScrollTop;', $script);
@@ -66,6 +67,7 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('aria-disabled="true" disabled', $markup);
         $this->assertStringContainsString('data-register-next="1"', $markup);
         $this->assertStringContainsString('data-register-next="2"', $markup);
+        $this->assertStringContainsString('Continue to create account', $markup);
 
         $this->assertStringContainsString('Array.from(value).length >= 8', $script);
         $this->assertStringContainsString('/\p{Ll}/u.test(value)', $script);

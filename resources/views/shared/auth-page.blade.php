@@ -142,7 +142,7 @@
                         @error('name')<small class="auth-page-field-error" id="signupNameError"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ $message }}</small>@enderror
                      </div>
                         @if($isMobile)
-                           <button type="button" class="auth-page-step-next" data-register-next="1"><span>Continue to account</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+                           <button type="button" class="auth-page-step-next" data-register-next="1"><span>Continue to create account</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
                         @endif
                      </div>
 
