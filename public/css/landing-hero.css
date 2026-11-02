@@ -362,8 +362,13 @@ html:not(.lm) #landing #hero .hero-trust-row {
    }
 
    body.guest-mobile-shell #landing #hero .hero-cta-row {
-      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      width: min(100%, 390px) !important;
+      display: flex !important;
+      grid-template-columns: none !important;
+      width: auto !important;
+      max-width: calc(100% - 20px);
+      align-items: stretch;
+      justify-content: center;
+      flex-wrap: nowrap !important;
       gap: 8px !important;
       margin-bottom: 0 !important;
    }
@@ -376,6 +381,25 @@ html:not(.lm) #landing #hero .hero-trust-row {
       font-size: 0.72rem !important;
       line-height: 1.1 !important;
       white-space: nowrap !important;
+      width: auto !important;
+      min-width: 0 !important;
+      flex: 0 1 auto;
+   }
+
+   body.guest-mobile-shell #landing #hero .hero-install-btn {
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      background: linear-gradient(135deg, #f97316, #c2410c) !important;
+      border-color: transparent !important;
+      box-shadow: 0 8px 18px rgba(194, 65, 12, 0.3);
+   }
+
+   body.guest-mobile-shell #landing #hero .hero-how-it-works-cta {
+      color: #1f2937 !important;
+      -webkit-text-fill-color: #1f2937 !important;
+      background: linear-gradient(135deg, #fde047, #eab308) !important;
+      border-color: rgba(161, 98, 7, 0.28) !important;
+      box-shadow: 0 8px 18px rgba(202, 138, 4, 0.25);
    }
 
    body.guest-mobile-shell #landing #hero .hero-how-it-works-cta {
