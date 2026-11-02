@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=34') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=35') }}" data-page-style="user-learning-2">
 <link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=3') }}" data-page-style="interview-prep-loader">
 @endpush
 
@@ -393,7 +393,7 @@
  </div>
 </div>
 
-<div class="modal fade challenge-position-modal" id="challengePositionModal" tabindex="-1" aria-labelledby="challengePositionModalTitle" aria-hidden="true" data-show-on-load="{{ ($showPositionModal || $errors->has('target_position'))? 'true': 'false' }}" data-require-choice="{{ $selectedChallengePosition === ''? 'true': 'false' }}">
+<div class="modal fade challenge-position-modal" id="challengePositionModal" tabindex="-1" aria-labelledby="challengePositionModalTitle" aria-describedby="challengePositionModalIntro" aria-hidden="true" data-show-on-load="{{ ($showPositionModal || $errors->has('target_position'))? 'true': 'false' }}" data-require-choice="{{ $selectedChallengePosition === ''? 'true': 'false' }}">
  <div class="modal-dialog modal-dialog-centered challenge-position-dialog">
  <form action="{{ route('user.learning.position') }}" method="POST" class="modal-content" data-sr-related-loader-form="challenges">
  @csrf
@@ -405,6 +405,7 @@
  <div class="challenge-position-heading">
  <div class="challenge-position-kicker">Interview Challenges</div>
  <h5 class="modal-title" id="challengePositionModalTitle">What position are you applying for?</h5>
+ <p class="position-modal-intro" id="challengePositionModalIntro">We’ll tailor challenges to the role you want to practice for.</p>
  </div>
  </div>
  </div>
@@ -414,7 +415,7 @@
  <div class="challenge-position-select-shell" data-position-select>
  <input type="hidden" id="challengeTargetPosition" name="target_position" value="{{ $challengePositionValue }}" data-position-select-input>
  <button type="button" class="challenge-position-select-button @error('target_position') is-invalid @enderror" id="challengeTargetPositionButton" aria-haspopup="listbox" aria-expanded="false" aria-controls="challengeTargetPositionMenu">
- <span data-position-select-label>{{ $challengePositionValue!== ''? $challengePositionValue: 'Choose a target position' }}</span>
+ <span data-position-select-label>{{ $challengePositionValue!== ''? $challengePositionValue: 'Select a position' }}</span>
  <span class="challenge-position-select-icon" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
  </button>
  <div class="challenge-position-dropdown" id="challengeTargetPositionMenu" role="listbox" aria-labelledby="challengeTargetPositionButton">
@@ -437,7 +438,7 @@
  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
  @endif
  <button type="submit" class="btn btn-primary challenge-position-submit-btn">
- <i class="fa-solid fa-filter me-1"></i> View Related Challenges
+ <i class="fa-solid fa-arrow-right me-1"></i> Continue to Challenges
  </button>
  </div>
  </form>
@@ -994,7 +995,7 @@
  const stepsMobile = [
  { element: '#challengePositionModal.show .modal-content', popover: { title: 'Choose Challenge Focus', description: 'Pick the target position so the challenge path can match the interview you are preparing for.', side: 'bottom', align: 'center' }},
  { element: '#challengePositionModal.show #challengeTargetPositionButton, #challengePositionModal.show #challengeTargetPosition', popover: { title: 'Target Position', description: 'Select the role that should guide the challenge levels.', side: 'bottom', align: 'start' }},
- { element: '#challengePositionModal.show .challenge-position-submit-btn, #challengePositionModal.show .modal-footer .btn-primary', popover: { title: 'View Related Challenges', description: 'Load the challenge journey for this position.', side: 'top', align: 'center' }},
+ { element: '#challengePositionModal.show .challenge-position-submit-btn, #challengePositionModal.show .modal-footer .btn-primary', popover: { title: 'Continue to Challenges', description: 'Open the tailored challenge journey for this position.', side: 'top', align: 'center' }},
  { element: '#gameResultModal.show .game-result-hero', popover: { title: 'Challenge Result', description: 'After a challenge, this summary shows whether you passed, your score, and the main next step.', side: 'bottom', align: 'center' }},
  { element: '#gameResultModal.show .game-result-stat', popover: { title: 'Attempt Details', description: 'Check the goal, best score, energy spent, and XP reward from the attempt.', side: 'bottom', align: 'center' }},
  { element: '#gameResultModal.show .ai-scorecard-panel', popover: { title: 'Feedback Scorecard', description: 'Use this breakdown to see which answer skills helped or held back the score.', side: 'top', align: 'center' }},
@@ -1013,7 +1014,7 @@
  const stepsDesktop = [
  { element: '#challengePositionModal.show .modal-content', popover: { title: 'Choose Challenge Focus', description: 'Pick the target position so the challenge path can match the interview you are preparing for.', side: 'bottom', align: 'center' }},
  { element: '#challengePositionModal.show #challengeTargetPositionButton, #challengePositionModal.show #challengeTargetPosition', popover: { title: 'Target Position', description: 'Select the role that should guide the challenge levels.', side: 'bottom', align: 'start' }},
- { element: '#challengePositionModal.show .challenge-position-submit-btn, #challengePositionModal.show .modal-footer .btn-primary', popover: { title: 'View Related Challenges', description: 'Load the challenge journey for this position.', side: 'top', align: 'center' }},
+ { element: '#challengePositionModal.show .challenge-position-submit-btn, #challengePositionModal.show .modal-footer .btn-primary', popover: { title: 'Continue to Challenges', description: 'Open the tailored challenge journey for this position.', side: 'top', align: 'center' }},
  { element: '#gameResultModal.show .game-result-hero', popover: { title: 'Challenge Result', description: 'After a challenge, this summary shows whether you passed, your score, and the main next step.', side: 'bottom', align: 'center' }},
  { element: '#gameResultModal.show .game-result-stat', popover: { title: 'Attempt Details', description: 'Check the goal, best score, energy spent, and XP reward from the attempt.', side: 'bottom', align: 'center' }},
  { element: '#gameResultModal.show .ai-scorecard-panel', popover: { title: 'Feedback Scorecard', description: 'Use this breakdown to see which answer skills helped or held back the score.', side: 'top', align: 'center' }},

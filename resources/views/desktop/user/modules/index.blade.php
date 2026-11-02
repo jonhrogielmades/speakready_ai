@@ -2,7 +2,7 @@
 @section('title', 'Interview Modules')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=16') }}" data-page-style="user-modules-index">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/index.css?v=17') }}" data-page-style="user-modules-index">
 <link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=3') }}" data-page-style="interview-prep-loader">
 @endpush
 
@@ -163,7 +163,7 @@
 </div>
 </div>
 
-<div class="modal fade module-position-modal" id="modulePositionModal" tabindex="-1" aria-labelledby="modulePositionModalTitle" aria-hidden="true" data-show-on-load="{{ ($showModulePositionModal || $errors->has('target_position'))? 'true': 'false' }}" data-require-choice="{{ $selectedModulePosition === ''? 'true': 'false' }}">
+<div class="modal fade module-position-modal" id="modulePositionModal" tabindex="-1" aria-labelledby="modulePositionModalTitle" aria-describedby="modulePositionModalIntro" aria-hidden="true" data-show-on-load="{{ ($showModulePositionModal || $errors->has('target_position'))? 'true': 'false' }}" data-require-choice="{{ $selectedModulePosition === ''? 'true': 'false' }}">
  <div class="modal-dialog modal-dialog-centered module-position-dialog">
  <form action="{{ route('user.modules.position') }}" method="POST" class="modal-content" data-sr-related-loader-form="modules">
  @csrf
@@ -176,6 +176,7 @@
  <div class="module-position-heading">
  <div class="module-position-kicker">Interview Modules</div>
  <h5 class="modal-title" id="modulePositionModalTitle">What position are you applying for?</h5>
+ <p class="position-modal-intro" id="modulePositionModalIntro">We’ll tailor modules to the role you want to prepare for.</p>
  </div>
  </div>
  </div>
@@ -185,7 +186,7 @@
  <div class="module-position-select-shell" data-position-select>
  <input type="hidden" id="moduleTargetPosition" name="target_position" value="{{ $modulePositionValue }}" data-position-select-input>
  <button type="button" class="module-position-select-button @error('target_position') is-invalid @enderror" id="moduleTargetPositionButton" aria-haspopup="listbox" aria-expanded="false" aria-controls="moduleTargetPositionMenu">
- <span data-position-select-label>{{ $modulePositionValue!== ''? $modulePositionValue: 'Choose a target position' }}</span>
+ <span data-position-select-label>{{ $modulePositionValue!== ''? $modulePositionValue: 'Select a position' }}</span>
  <span class="module-position-select-icon" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
  </button>
  <div class="module-position-dropdown" id="moduleTargetPositionMenu" role="listbox" aria-labelledby="moduleTargetPositionButton">
@@ -208,7 +209,7 @@
  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
  @endif
  <button type="submit" class="btn btn-primary module-position-submit-btn">
- <i class="fa-solid fa-filter me-1"></i> View Related Modules
+ <i class="fa-solid fa-arrow-right me-1"></i> Continue to Modules
  </button>
  </div>
  </form>
@@ -405,7 +406,7 @@
  const stepsMobile = [
  { element: '#modulePositionModal.show .modal-content', popover: { title: 'Choose Your Module Focus', description: 'Pick the target position so modules can match the interview path you are preparing for.', side: 'bottom', align: 'center' }},
  { element: '#modulePositionModal.show #moduleTargetPositionButton, #modulePositionModal.show #moduleTargetPosition', popover: { title: 'Target Position', description: 'Select the role you want these modules to support.', side: 'bottom', align: 'start' }},
- { element: '#modulePositionModal.show .module-position-submit-btn, #modulePositionModal.show .modal-footer .btn-primary', popover: { title: 'View Related Modules', description: 'Load modules connected to that target position.', side: 'top', align: 'center' }},
+ { element: '#modulePositionModal.show .module-position-submit-btn, #modulePositionModal.show .modal-footer .btn-primary', popover: { title: 'Continue to Modules', description: 'Open preparation modules matched to this position.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) #interview-modules-page .modules-page-hero, body:not(.modal-open) #interview-modules-page .modules-hero', popover: { title: 'Interview Modules', description: 'Use modules for focused preparation tasks like planning examples, improving structure, and polishing interview answers.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) .module-position-strip', popover: { title: 'Target Position', description: 'This controls which role-specific modules appear. Change it whenever your interview target changes.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) #moduleFiltersForm', popover: { title: 'Find A Module', description: 'Search by topic or skill, or filter by module category to narrow the list.', side: 'bottom', align: 'center' }},
@@ -416,7 +417,7 @@
  const stepsDesktop = [
  { element: '#modulePositionModal.show .modal-content', popover: { title: 'Choose Your Module Focus', description: 'Pick the target position so modules can match the interview path you are preparing for.', side: 'bottom', align: 'center' }},
  { element: '#modulePositionModal.show #moduleTargetPositionButton, #modulePositionModal.show #moduleTargetPosition', popover: { title: 'Target Position', description: 'Select the role you want these modules to support.', side: 'bottom', align: 'start' }},
- { element: '#modulePositionModal.show .module-position-submit-btn, #modulePositionModal.show .modal-footer .btn-primary', popover: { title: 'View Related Modules', description: 'Load modules connected to that target position.', side: 'top', align: 'center' }},
+ { element: '#modulePositionModal.show .module-position-submit-btn, #modulePositionModal.show .modal-footer .btn-primary', popover: { title: 'Continue to Modules', description: 'Open preparation modules matched to this position.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) #interview-modules-page .modules-page-hero, body:not(.modal-open) #interview-modules-page .modules-hero', popover: { title: 'Interview Modules', description: 'Use modules for focused preparation tasks like planning examples, improving structure, and polishing interview answers.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) .module-position-strip', popover: { title: 'Target Position', description: 'This controls which role-specific modules appear. Change it whenever your interview target changes.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) #moduleFiltersForm', popover: { title: 'Find A Module', description: 'Search by topic or skill, or filter by module category to narrow the list.', side: 'bottom', align: 'center' }},

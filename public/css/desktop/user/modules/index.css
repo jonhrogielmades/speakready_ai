@@ -4468,3 +4468,40 @@ html body.user-desktop-shell:not(.admin-shell) #interview-modules-page .module-s
         box-sizing: border-box !important;
     }
 }
+
+/* Professional position picker treatment. */
+.module-position-modal .position-modal-intro {
+    max-width: 38rem;
+    margin: 7px 0 0;
+    color: var(--tx2);
+    font-size: 0.82rem;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.module-position-modal .module-position-close-right {
+    width: 36px;
+    height: 36px;
+    top: 13px;
+    right: 14px;
+    border-radius: 11px;
+    background-color: var(--sf);
+}
+
+.module-position-modal .module-position-actions .btn {
+    min-height: 46px;
+    border-radius: 12px;
+}
+
+.module-position-modal .module-position-submit-btn {
+    border-color: #2563eb;
+    background: #2563eb;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.16);
+}
+
+.module-position-modal .module-position-submit-btn:hover,
+.module-position-modal .module-position-submit-btn:focus-visible {
+    border-color: #1d4ed8;
+    background: #1d4ed8;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
+}

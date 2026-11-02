@@ -3419,3 +3419,71 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
         text-align: center !important;
     }
 }
+
+/* Professional position picker treatment. */
+.challenge-position-modal .modal-content {
+    border-color: color-mix(in srgb, var(--bd) 82%, #60a5fa 18%);
+    border-radius: 18px;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.24);
+}
+
+.challenge-position-modal .modal-header {
+    padding: 20px 18px 17px;
+    background: color-mix(in srgb, var(--sf) 94%, #dbeafe 6%);
+}
+
+.challenge-position-modal .position-modal-intro {
+    max-width: 34rem;
+    margin: 6px 0 0;
+    color: var(--tx2);
+    font-size: 0.84rem;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.challenge-position-modal .modal-body {
+    padding: 18px;
+}
+
+.challenge-position-modal .form-label {
+    margin-bottom: 8px;
+}
+
+.challenge-position-modal .challenge-position-input {
+    min-height: 48px;
+    padding-inline: 14px;
+    background: var(--sf);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.challenge-position-modal .challenge-position-close:hover,
+.challenge-position-modal .challenge-position-close:focus-visible {
+    background-color: var(--sf);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+}
+
+.challenge-position-modal .modal-footer {
+    padding: 14px 18px 18px;
+    background: color-mix(in srgb, var(--sf) 94%, var(--bg3) 6%);
+}
+
+.challenge-position-modal .modal-footer .btn {
+    min-height: 48px;
+    border-radius: 12px;
+    font-size: 0.93rem;
+    font-weight: 800;
+}
+
+.challenge-position-modal .challenge-position-submit-btn {
+    border-color: #2563eb;
+    background: #2563eb;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.16);
+}
+
+.challenge-position-modal .challenge-position-submit-btn:hover,
+.challenge-position-modal .challenge-position-submit-btn:focus-visible {
+    border-color: #1d4ed8;
+    background: #1d4ed8;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
+}
