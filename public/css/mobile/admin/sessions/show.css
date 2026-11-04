@@ -249,3 +249,160 @@
             text-align: left !important;
         }
     }
+
+/* Session detail panels: keep the mobile page calm, readable, and evenly spaced. */
+#sec-admin-session-show {
+    --session-layout-gap: 16px;
+    --session-panel-radius: 16px;
+}
+
+#sec-admin-session-show .session-layout-grid {
+    display: flex !important;
+    flex-direction: column;
+    gap: var(--session-layout-gap);
+    margin: 0 !important;
+}
+
+#sec-admin-session-show .session-layout-grid > .session-layout-main,
+#sec-admin-session-show .session-layout-grid > .session-layout-side {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+    padding: 0 !important;
+    display: flex !important;
+    flex: none !important;
+    flex-direction: column;
+    gap: var(--session-layout-gap);
+}
+
+#sec-admin-session-show .session-summary-grid,
+#sec-admin-session-show .session-performance-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--session-layout-gap);
+    margin: 0 !important;
+}
+
+#sec-admin-session-show .session-summary-grid > .session-summary-column,
+#sec-admin-session-show .session-performance-grid > .session-performance-column {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+    padding: 0 !important;
+    display: block !important;
+}
+
+#sec-admin-session-show .session-panel {
+    width: 100%;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 16px !important;
+    border: 1px solid var(--bd) !important;
+    border-radius: var(--session-panel-radius) !important;
+    background: var(--sf) !important;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+}
+
+#sec-admin-session-show .session-panel > h6 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 22px;
+    margin: 0 0 16px !important;
+    font-size: 0.98rem;
+    line-height: 1.3;
+}
+
+#sec-admin-session-show .session-panel > h6 i {
+    flex: 0 0 auto;
+    margin-right: 0 !important;
+}
+
+#sec-admin-session-show .session-info-table {
+    margin: 0 !important;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#sec-admin-session-show .session-info-table th,
+#sec-admin-session-show .session-info-table td {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    line-height: 1.35;
+}
+
+#sec-admin-session-show .session-info-table tr:not(:last-child) > * {
+    border-bottom: 1px solid var(--bd) !important;
+}
+
+#sec-admin-session-show .session-results-summary {
+    min-height: 116px;
+    margin: 0 0 16px !important;
+    padding: 14px !important;
+    border-radius: 13px !important;
+}
+
+#sec-admin-session-show .session-results-score h3 {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+#sec-admin-session-show .session-results-stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0 !important;
+}
+
+#sec-admin-session-show .session-results-stats > .session-results-stat {
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0;
+    padding: 12px 6px !important;
+    border: 1px solid var(--bd);
+    border-radius: 11px;
+    background: var(--bg3);
+    display: block !important;
+}
+
+#sec-admin-session-show .session-performance-grid > .session-performance-column {
+    display: block !important;
+}
+
+#sec-admin-session-show .session-performance-column .mb-3 {
+    margin-bottom: 18px !important;
+}
+
+#sec-admin-session-show .session-performance-column .mb-3:last-child {
+    margin-bottom: 0 !important;
+}
+
+#sec-admin-session-show .session-status-row {
+    min-height: 54px;
+    padding: 12px 14px !important;
+    border-radius: 13px !important;
+}
+
+#sec-admin-session-show .session-timeline-panel {
+    flex: none;
+}
+
+#sec-admin-session-show .timeline {
+    padding-left: 34px;
+}
+
+#sec-admin-session-show .timeline::before {
+    left: 12px;
+}
+
+#sec-admin-session-show .timeline-icon {
+    left: -34px;
+}
+
+#sec-admin-session-show .timeline-item {
+    margin-bottom: 20px;
+}
+
+#sec-admin-session-show .timeline-event {
+    line-height: 1.4;
+}

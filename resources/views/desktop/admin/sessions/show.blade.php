@@ -47,11 +47,11 @@
     </div>
     @endif
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="row g-4 mb-4">
-                <div class="col-md-6">
-                    <div class="premium-card h-100">
+    <div class="row g-4 session-layout-grid">
+        <div class="col-lg-8 session-layout-main">
+            <div class="row g-4 mb-4 session-summary-grid">
+                <div class="col-md-6 session-summary-column">
+                    <div class="premium-card h-100 session-panel session-info-panel">
                         <h6 class="fw-bold mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i> Interview Information</h6>
                         <table class="table table-borderless mb-0 session-info-table" style="color:var(--tx);">
                             <tbody>
@@ -79,8 +79,8 @@
                         </table>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="premium-card h-100">
+                <div class="col-md-6 session-summary-column">
+                    <div class="premium-card h-100 session-panel session-results-panel">
                         <h6 class="fw-bold mb-3"><i class="fa-solid fa-square-poll-vertical text-success me-2"></i>Session Results</h6>
                         <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded session-results-summary" style="background:var(--bg3);border:1px solid var(--bd);">
                             <div class="session-results-score">
@@ -104,12 +104,12 @@
                                 </h5>
                             </div>
                         </div>
-                        <div class="row text-center mt-2">
-                            <div class="col-6">
+                        <div class="row text-center mt-2 session-results-stats">
+                            <div class="col-6 session-results-stat">
                                 <div class="fw-bold" style="font-size:1.2rem;">{{ $questionsAnswered }}</div>
                                 <div style="font-size:0.8rem;color:var(--tx2);">Questions Answered</div>
                             </div>
-                            <div class="col-6">
+                            <div class="col-6 session-results-stat">
                                 <div class="fw-bold text-danger" style="font-size:1.2rem;">{{ $questionsSkipped }}</div>
                                 <div style="font-size:0.8rem;color:var(--tx2);">Questions Skipped</div>
                             </div>
@@ -119,12 +119,12 @@
             </div>
 
             <!-- Performance Breakdown -->
-            <div class="premium-card mb-4">
+            <div class="premium-card mb-4 session-panel session-performance-panel">
                 <h6 class="fw-bold mb-4"><i class="fa-solid fa-chart-radar text-warning me-2"></i>Performance Breakdown</h6>
                 
                 @if($performance)
-                    <div class="row g-4">
-                        <div class="col-md-6">
+                    <div class="row g-4 session-performance-grid">
+                        <div class="col-md-6 session-performance-column">
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;">
                                     <span><i class="fa-solid fa-eye me-2" style="color:#60a5fa;"></i>Clarity</span>
@@ -147,7 +147,7 @@
                                 <div class="progress-track"><div class="progress-fill" style="width:{{ $performance->grammar_score }}%;background:#f472b6;"></div></div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 session-performance-column">
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;">
                                     <span><i class="fa-solid fa-user-tie me-2" style="color:#fbbf24;"></i>Professionalism</span>
@@ -173,9 +173,9 @@
             </div>
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-lg-4 session-layout-side">
             <!-- Session Status Tracking -->
-            <div class="premium-card mb-4">
+            <div class="premium-card mb-4 session-panel session-status-panel">
                 <h6 class="fw-bold mb-3">Session Status Tracking</h6>
                 <div class="d-flex justify-content-between align-items-center p-3 rounded session-status-row" style="background:var(--bg3);border:1px solid var(--bd);">
                     <div style="font-size:0.9rem;">Current Status:</div>
@@ -197,7 +197,7 @@
             </div>
 
             <!-- Session Timeline -->
-            <div class="premium-card mb-4">
+            <div class="premium-card mb-4 session-panel session-timeline-panel">
                 <h6 class="fw-bold mb-4"><i class="fa-solid fa-clock-rotate-left text-info me-2"></i>Session Timeline</h6>
                 <div class="timeline">
                     @forelse($timeline as $item)

@@ -249,3 +249,222 @@
             text-align: left !important;
         }
     }
+
+/* Session detail panels: keep the page balanced on wide admin screens. */
+#sec-admin-session-show {
+    --session-layout-gap: 24px;
+    --session-panel-radius: 18px;
+}
+
+#sec-admin-session-show .session-show-header {
+    gap: 20px;
+    margin-bottom: 28px !important;
+}
+
+#sec-admin-session-show .session-show-heading h4 {
+    margin: 0 !important;
+    line-height: 1.25;
+}
+
+#sec-admin-session-show .session-show-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+#sec-admin-session-show .session-layout-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+    align-items: stretch;
+    gap: var(--session-layout-gap);
+    margin: 0 !important;
+}
+
+#sec-admin-session-show .session-layout-grid > .session-layout-main,
+#sec-admin-session-show .session-layout-grid > .session-layout-side {
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0;
+    padding: 0 !important;
+    display: flex !important;
+    flex: none !important;
+    flex-direction: column;
+    gap: var(--session-layout-gap);
+}
+
+#sec-admin-session-show .session-summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--session-layout-gap);
+    margin: 0 !important;
+}
+
+#sec-admin-session-show .session-summary-grid > .session-summary-column {
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0;
+    padding: 0 !important;
+    display: block !important;
+}
+
+#sec-admin-session-show .session-panel {
+    width: 100%;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 24px !important;
+    border: 1px solid var(--bd) !important;
+    border-radius: var(--session-panel-radius) !important;
+    background: var(--sf) !important;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.07);
+}
+
+#sec-admin-session-show .session-info-panel,
+#sec-admin-session-show .session-results-panel {
+    height: 100% !important;
+}
+
+#sec-admin-session-show .session-panel > h6 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 24px;
+    margin: 0 0 20px !important;
+    font-size: 1.04rem;
+    line-height: 1.3;
+}
+
+#sec-admin-session-show .session-panel > h6 i {
+    flex: 0 0 auto;
+    margin-right: 0 !important;
+}
+
+#sec-admin-session-show .session-info-table {
+    margin: 0 !important;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#sec-admin-session-show .session-info-table th,
+#sec-admin-session-show .session-info-table td {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    line-height: 1.35;
+}
+
+#sec-admin-session-show .session-info-table tr:not(:last-child) > * {
+    border-bottom: 1px solid var(--bd) !important;
+}
+
+#sec-admin-session-show .session-results-summary {
+    min-height: 132px;
+    margin: 0 0 20px !important;
+    padding: 18px !important;
+    border-radius: 14px !important;
+}
+
+#sec-admin-session-show .session-results-score h3 {
+    font-size: 2.25rem;
+    line-height: 1;
+}
+
+#sec-admin-session-show .session-results-stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0 !important;
+}
+
+#sec-admin-session-show .session-results-stats > .session-results-stat {
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0;
+    padding: 14px 10px !important;
+    border: 1px solid var(--bd);
+    border-radius: 12px;
+    background: var(--bg3);
+    display: block !important;
+}
+
+#sec-admin-session-show .session-performance-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 28px;
+    margin: 0 !important;
+}
+
+#sec-admin-session-show .session-performance-grid > .session-performance-column {
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0;
+    padding: 0 !important;
+    display: block !important;
+}
+
+#sec-admin-session-show .session-performance-column .mb-3 {
+    margin-bottom: 20px !important;
+}
+
+#sec-admin-session-show .session-performance-column .mb-3:last-child {
+    margin-bottom: 0 !important;
+}
+
+#sec-admin-session-show .session-status-row {
+    min-height: 58px;
+    padding: 14px 16px !important;
+    border-radius: 14px !important;
+}
+
+#sec-admin-session-show .session-timeline-panel {
+    flex: 1 1 auto;
+}
+
+#sec-admin-session-show .timeline {
+    padding-left: 36px;
+}
+
+#sec-admin-session-show .timeline::before {
+    left: 13px;
+}
+
+#sec-admin-session-show .timeline-icon {
+    left: -36px;
+}
+
+#sec-admin-session-show .timeline-item {
+    margin-bottom: 24px;
+}
+
+#sec-admin-session-show .timeline-event {
+    line-height: 1.45;
+}
+
+@media (max-width: 1199.98px) and (min-width: 992px) {
+    #sec-admin-session-show .session-layout-grid {
+        grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr);
+    }
+}
+
+@media (max-width: 991.98px) {
+    #sec-admin-session-show .session-layout-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #sec-admin-session-show .session-layout-grid > .session-layout-side {
+        height: auto;
+    }
+
+    #sec-admin-session-show .session-timeline-panel {
+        flex: none;
+    }
+}
+
+@media (max-width: 767.98px) {
+    #sec-admin-session-show .session-summary-grid,
+    #sec-admin-session-show .session-performance-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #sec-admin-session-show .session-panel {
+        padding: 18px !important;
+        border-radius: 16px !important;
+    }
+}
