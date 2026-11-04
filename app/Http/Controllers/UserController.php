@@ -86,6 +86,8 @@ class UserController extends Controller
  'completed' => 100,
  ];
 
+ private const REPORTS_SERVER_SESSION_PAGINATION_THRESHOLD = 50;
+
  private const SCORE_METRICS = [
  'Clarity' => 'clarity_score',
  'Relevance' => 'relevance_score',
@@ -4019,8 +4021,7 @@ class UserController extends Controller
  $completedSessions = InterviewSession::where('user_id', $userId)
  ->where('interview_sessions.status', 'completed');
 
- $sessions = (clone $completedSessions)
-  ->select([
+ $sessionColumns = [
   'interview_sessions.id',
   'interview_sessions.category_id',
   'interview_sessions.difficulty',
@@ -4031,17 +4032,36 @@ class UserController extends Controller
   'interview_sessions.assessment_mode',
   'interview_sessions.score_eligible',
   'interview_sessions.created_at',
-  ])
-  ->with([
+ ];
+ $sessionRelations = [
   'score:id,interview_session_id,overall_readiness_score,clarity_score,relevance_score,grammar_score,professionalism_score',
   'category:id,title',
-  ])
+ ];
+
+ $sessions = (clone $completedSessions)
+  ->select($sessionColumns)
+  ->with($sessionRelations)
  ->orderBy('created_at', 'asc')
  ->get();
 
  // Reuse the already-loaded history instead of issuing the same eager-loaded
  // query a second time solely to reverse its presentation order.
  $recentSessions = $sessions->sortByDesc('created_at')->values();
+ $recentSessionsClientPager = true;
+
+ // Keep the normal in-place pager for typical histories, but switch large
+ // histories to server pagination so the browser does not receive duplicate
+ // desktop and mobile markup for every completed session.
+ if ($sessions->count() > self::REPORTS_SERVER_SESSION_PAGINATION_THRESHOLD) {
+  $recentSessions = (clone $completedSessions)
+   ->select($sessionColumns)
+   ->with($sessionRelations)
+   ->orderByDesc('created_at')
+   ->orderByDesc('id')
+   ->paginate(3, $sessionColumns, 'recent_sessions_page')
+   ->withQueryString();
+  $recentSessionsClientPager = false;
+ }
 
  $scoredSessions = $this->scoredSessions($sessions);
 
@@ -4059,6 +4079,7 @@ class UserController extends Controller
  'user',
  'sessions',
  'recentSessions',
+ 'recentSessionsClientPager',
  'scoredSessions',
  'hasScoreData',
  'latestSession',

@@ -248,7 +248,7 @@
  @endif
 
  @include('shared.user.recent-sessions-card', [
- 'recentSessionsClientPager' => true,
+ 'recentSessionsClientPager' => $recentSessionsClientPager ?? true,
  'recentSessionsPageSizeDesktop' => 3,
  'recentSessionsPageSizeMobile' => 3,
  ])

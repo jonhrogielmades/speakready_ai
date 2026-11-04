@@ -50,8 +50,8 @@
         <div class="col-6 col-md-4 col-xl-2">
             <div class="premium-card session-stat-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#34d399;margin-bottom:8px;"><i class="fa-solid fa-tower-broadcast"></i></div>
-                <div style="font-size:1.5rem;font-weight:700;">{{ number_format($activeSessionsToday) }}</div>
-                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Active Today</div>
+                <div style="font-size:1.5rem;font-weight:700;">{{ number_format($sessionsStartedToday) }}</div>
+                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Started Today</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
@@ -295,7 +295,6 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const deleteModalEl = document.getElementById('sessionDeleteConfirmModal');
@@ -359,10 +358,28 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    if (typeof window.Chart === 'undefined') return;
+    const showChartFallback = (canvasId, message) => {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas || !canvas.parentElement || canvas.parentElement.querySelector('[data-session-chart-fallback]')) return;
+        canvas.hidden = true;
+        const fallback = document.createElement('p');
+        fallback.className = 'session-chart-fallback';
+        fallback.dataset.sessionChartFallback = 'true';
+        fallback.setAttribute('role', 'status');
+        fallback.textContent = message;
+        canvas.parentElement.appendChild(fallback);
+    };
 
-    Chart.defaults.color = '#808090';
-    Chart.defaults.font.family = "'Inter', sans-serif";
+    if (typeof window.Chart === 'undefined') {
+        showChartFallback('dailySessionChart', 'Daily interview trend is temporarily unavailable.');
+        showChartFallback('readinessChart', 'Readiness distribution is temporarily unavailable.');
+        return;
+    }
+
+    const chartLibrary = window.Chart;
+
+    chartLibrary.defaults.color = '#808090';
+    chartLibrary.defaults.font.family = "'Inter', sans-serif";
 
     // Daily Sessions Chart
     const dailyCanvas = document.getElementById('dailySessionChart');
@@ -375,7 +392,7 @@ document.addEventListener("DOMContentLoaded", function() {
     gradientLine.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
     gradientLine.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
 
-    new Chart(dailyCtx, {
+    new chartLibrary(dailyCtx, {
         type: 'line',
         data: {
             labels: dailyLabels,
@@ -415,7 +432,7 @@ document.addEventListener("DOMContentLoaded", function() {
         {{ $readinessDistribution['Needs Improvement'] }}
     ];
 
-    new Chart(readCtx, {
+    new chartLibrary(readCtx, {
         type: 'doughnut',
         data: {
             labels: readLabels,

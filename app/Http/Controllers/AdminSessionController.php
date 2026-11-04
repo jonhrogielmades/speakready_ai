@@ -19,10 +19,10 @@ class AdminSessionController extends Controller
         $todayStart = today()->startOfDay();
         $tomorrowStart = today()->addDay()->startOfDay();
         $sessionStats = InterviewSession::query()
-            ->selectRaw('COUNT(*) as total_sessions, SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) as active_sessions_today, SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed_sessions, AVG(duration_seconds) as avg_duration', [$todayStart, $tomorrowStart, 'completed'])
+            ->selectRaw('COUNT(*) as total_sessions, SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) as sessions_started_today, SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed_sessions, AVG(duration_seconds) as avg_duration', [$todayStart, $tomorrowStart, 'completed'])
             ->first();
         $totalSessions = (int) ($sessionStats->total_sessions ?? 0);
-        $activeSessionsToday = (int) ($sessionStats->active_sessions_today ?? 0);
+        $sessionsStartedToday = (int) ($sessionStats->sessions_started_today ?? 0);
         $completedSessions = (int) ($sessionStats->completed_sessions ?? 0);
 
         $avgScore = DB::table('scores')->avg('overall_readiness_score') ?? 0;
@@ -78,7 +78,7 @@ class AdminSessionController extends Controller
         $sessions = $query->paginate(5)->withQueryString();
 
         return $this->mobileView('admin.sessions.index', compact(
-            'totalSessions', 'activeSessionsToday', 'completedSessions', 'avgScore', 'avgDuration',
+            'totalSessions', 'sessionsStartedToday', 'completedSessions', 'avgScore', 'avgDuration',
             'mostUsedCategory', 'sessionCompletionRate', 'dailySessionCount', 'readinessDistribution',
             'sessions'
         ));
