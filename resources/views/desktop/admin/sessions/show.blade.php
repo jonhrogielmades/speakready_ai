@@ -1,7 +1,7 @@
 @extends('desktop.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/sessions/show.css?v=1') }}" data-page-style="admin-sessions-show">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/sessions/show.css?v=2') }}" data-page-style="admin-sessions-show">
 @endpush
 
 @section('content')
@@ -53,18 +53,18 @@
                 <div class="col-md-6">
                     <div class="premium-card h-100">
                         <h6 class="fw-bold mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i> Interview Information</h6>
-                        <table class="table table-borderless mb-0" style="color:var(--tx);">
+                        <table class="table table-borderless mb-0 session-info-table" style="color:var(--tx);">
                             <tbody>
                                 <tr><th style="color:var(--tx3);width:40%;">Session ID</th><td class="fw-bold">#{{ $session->id }}</td></tr>
                                 <tr>
                                     <th style="color:var(--tx3);">User Name</th>
                                     <td>
                                         @if($session->user)
-                                            <div class="d-flex align-items-center gap-2">
+                                            <div class="d-flex align-items-center gap-2 session-info-user">
                                                 <div style="width:24px;height:24px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.6rem;">
                                                     {{ strtoupper(substr($session->user->name, 0, 2)) }}
                                                 </div>
-                                                {{ $session->user->name }}
+                                                <span class="session-info-user-name">{{ $session->user->name }}</span>
                                             </div>
                                         @else
                                             <span class="text-muted">Deleted User</span>
@@ -82,14 +82,14 @@
                 <div class="col-md-6">
                     <div class="premium-card h-100">
                         <h6 class="fw-bold mb-3"><i class="fa-solid fa-square-poll-vertical text-success me-2"></i>Session Results</h6>
-                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
-                            <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded session-results-summary" style="background:var(--bg3);border:1px solid var(--bd);">
+                            <div class="session-results-score">
                                 <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;">Overall Score</div>
                                 <h3 class="fw-bold m-0 {{ $performance && $performance->overall_readiness_score >= 80 ? 'text-success' : ($performance && $performance->overall_readiness_score >= 60 ? 'text-warning' : 'text-danger') }}">
                                     {{ $performance ? $performance->overall_readiness_score : 0 }}%
                                 </h3>
                             </div>
-                            <div class="text-end">
+                            <div class="text-end session-results-readiness">
                                 <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;">Interview Readiness</div>
                                 <h5 class="fw-bold m-0 text-primary">
                                     @if($performance)
@@ -177,7 +177,7 @@
             <!-- Session Status Tracking -->
             <div class="premium-card mb-4">
                 <h6 class="fw-bold mb-3">Session Status Tracking</h6>
-                <div class="d-flex justify-content-between align-items-center p-3 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
+                <div class="d-flex justify-content-between align-items-center p-3 rounded session-status-row" style="background:var(--bg3);border:1px solid var(--bd);">
                     <div style="font-size:0.9rem;">Current Status:</div>
                     @if($session->status == 'completed')
                         <span class="stat-badge success"><i class="fa-solid fa-check-circle me-1"></i>Completed</span>
@@ -205,8 +205,8 @@
                             <div class="timeline-icon bg-{{ $item['color'] }}">
                                 <i class="fa-solid {{ $item['icon'] }}"></i>
                             </div>
-                            <div style="font-size:0.9rem;color:var(--tx);font-weight:600;">{{ $item['event'] }}</div>
-                            <div style="font-size:0.75rem;color:var(--tx3);">{{ $item['time']->format('h:i:s A - M d, Y') }}</div>
+                            <div class="timeline-event" style="font-size:0.9rem;color:var(--tx);font-weight:600;">{{ $item['event'] }}</div>
+                            <div class="timeline-time" style="font-size:0.75rem;color:var(--tx3);">{{ $item['time']->format('h:i:s A - M d, Y') }}</div>
                         </div>
                     @empty
                         <div class="text-muted text-center">No timeline events recorded.</div>

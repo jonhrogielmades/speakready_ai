@@ -295,6 +295,18 @@
             font-size: 0.72rem !important;
             flex: 0 0 32px;
         }
+        .admin-dashboard-session-pagination {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        .admin-dashboard-session-pagination__actions {
+            justify-content: flex-start;
+            width: 100%;
+        }
+        .admin-dashboard-session-page-status {
+            flex: 1 1 auto;
+            text-align: center;
+        }
         .stat-badge {
             display: inline-flex;
             align-items: center;
@@ -580,6 +592,61 @@
 .dashboard-panel-table .table-responsive {
     max-height: 360px;
     overflow-y: auto;
+}
+
+.admin-dashboard-session-pagination {
+    align-items: center;
+    border-top: 1px solid var(--dash-panel-line, var(--bd));
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 12px;
+}
+
+.admin-dashboard-session-pagination__meta,
+.admin-dashboard-session-page-status {
+    color: var(--tx3);
+    font-size: 0.72rem;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.admin-dashboard-session-pagination__actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.admin-dashboard-session-page-btn {
+    align-items: center;
+    background: var(--bg3);
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    color: var(--tx2);
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 700;
+    justify-content: center;
+    min-height: 30px;
+    padding: 5px 9px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.admin-dashboard-session-page-btn:hover,
+.admin-dashboard-session-page-btn:focus-visible {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.36);
+    color: var(--tx);
+}
+
+.admin-dashboard-session-page-btn.disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    pointer-events: none;
 }
 
 #sec-overview.admin-dashboard-shell .custom-table {

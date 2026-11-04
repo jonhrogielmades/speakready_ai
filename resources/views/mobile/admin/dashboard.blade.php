@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/dashboard.css?v=6') }}" data-page-style="admin-dashboard">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/dashboard.css?v=7') }}" data-page-style="admin-dashboard">
 @endpush
 
 @section('content')
@@ -143,6 +143,26 @@
                         </tbody>
                     </table>
                 </div>
+                @if(method_exists($recentSessions, 'hasPages') && $recentSessions->hasPages())
+                    <nav class="admin-dashboard-session-pagination" aria-label="Recent interview sessions pagination">
+                        <div class="admin-dashboard-session-pagination__meta">
+                            Showing {{ $recentSessions->firstItem() }}-{{ $recentSessions->lastItem() }} of {{ $recentSessions->total() }}
+                        </div>
+                        <div class="admin-dashboard-session-pagination__actions">
+                            @if($recentSessions->onFirstPage())
+                                <span class="admin-dashboard-session-page-btn disabled" aria-disabled="true">Previous</span>
+                            @else
+                                <a href="{{ $recentSessions->previousPageUrl() }}" class="admin-dashboard-session-page-btn">Previous</a>
+                            @endif
+                            <span class="admin-dashboard-session-page-status">Page {{ $recentSessions->currentPage() }} of {{ $recentSessions->lastPage() }}</span>
+                            @if($recentSessions->hasMorePages())
+                                <a href="{{ $recentSessions->nextPageUrl() }}" class="admin-dashboard-session-page-btn">Next</a>
+                            @else
+                                <span class="admin-dashboard-session-page-btn disabled" aria-disabled="true">Next</span>
+                            @endif
+                        </div>
+                    </nav>
+                @endif
             </div>
 
             @include('shared.admin.dashboard-recent-user-updates')

@@ -43,6 +43,8 @@ class AdminController extends Controller
 
  private const MODULE_GENERATION_MAX_CHAPTERS = 8;
 
+ private const DASHBOARD_RECENT_SESSIONS_PER_PAGE = 5;
+
  public function dashboard()
  {
  $registeredUsersCount = $this->dashboardValue('registered_users', fn () => Schema::hasTable('users') ? \App\Models\User::count() : 0, 0);
@@ -84,8 +86,8 @@ class AdminController extends Controller
 
  return $query
  ->orderBy($orderColumn, 'desc')
- ->take(5)
- ->get();
+ ->paginate(self::DASHBOARD_RECENT_SESSIONS_PER_PAGE)
+ ->withQueryString();
  }, collect());
 
  $usersNeedingSupport = $this->dashboardValue('users_needing_support', function () {
