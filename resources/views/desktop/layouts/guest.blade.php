@@ -289,7 +289,7 @@
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                         <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6 hero-primary-cta">Start Practicing Free</a>
                         <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn hero-secondary-cta" id="heroInstallBtn"><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install App</button>
-                        <a href="#how" class="boc btn px-4 py-3 fs-6 hero-secondary-cta hero-how-it-works-cta">How Interview Setup Works?</a>
+                        <a href="#how" class="boc btn px-4 py-3 fs-6 hero-secondary-cta hero-how-it-works-cta">How Interview Works?</a>
                      </div>
                      <div class="hero-trust-row" role="list" aria-label="What you can do with SpeakReady AI">
                         <span role="listitem"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Guided setup</span>
