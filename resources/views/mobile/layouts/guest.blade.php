@@ -875,8 +875,9 @@
 
             const icon = installButton.querySelector('i');
             const label = isInstalled ? 'Already Installed' : 'Install App';
-            installButton.disabled = isInstalled;
-            installButton.classList.toggle('is-disabled', isInstalled);
+            installButton.hidden = isInstalled;
+            installButton.disabled = false;
+            installButton.classList.remove('is-disabled');
 
             if (icon) {
                installButton.replaceChildren(icon, document.createTextNode(label));
