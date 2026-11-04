@@ -10622,17 +10622,32 @@ body.user-desktop-shell:not(.admin-shell) .sr-saas-command-metric:focus-visible 
     outline-offset: 3px;
 }
 
-/* Keep the support cards content-sized so a taller sibling cannot create a
-   large empty area beneath the challenge or goal content. */
+/* Keep the three support cards aligned to the tallest card in the desktop row. */
 @media (min-width: 992px) {
     body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row {
-        align-items: start !important;
+        align-items: stretch !important;
         grid-auto-rows: auto !important;
     }
 
     body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row > .sr-card {
-        align-self: start !important;
-        height: auto !important;
+        align-self: stretch !important;
+        display: flex;
+        flex-direction: column;
+        height: 100% !important;
         min-height: 0 !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row #card-skill-radar .sr-radar-box,
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row #card-skill-radar .sr-radar-locked {
+        flex: 1 1 auto;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row #card-daily-challenge .sr-challenge-cta {
+        margin-top: auto;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-panel-row #card-current-goal .sr-goal-panel {
+        flex: 1 1 auto;
+        min-height: 0;
     }
 }
