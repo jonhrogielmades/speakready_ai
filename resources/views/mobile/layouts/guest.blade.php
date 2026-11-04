@@ -301,7 +301,7 @@
                      <h1 id="hero-title" class="h1 afu" style="animation-delay:.12s"><span class="hero-title-line">Practice Smarter.</span><br><span class="gt">Interview Better.</span></h1>
                      <p class="hero-home-copy-text mx-auto afu" style="animation-delay:.2s">Practice realistic job interviews with AI-powered coaching, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn hero-secondary-cta" id="heroInstallBtn"><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install App</button>
+                        <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn hero-secondary-cta" id="heroInstallBtn" hidden><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install App</button>
                         <a href="#how" class="boc btn px-4 py-3 fs-6 hero-learn-btn hero-secondary-cta hero-how-it-works-cta">How Interview Works?</a>
                          <a href="{{ route('login', sr_layout_query()) }}" class="boc btn px-4 py-3 fs-6 hero-login-btn hero-secondary-cta" aria-label="Log in"><i class="fa-regular fa-user me-2" aria-hidden="true"></i>Login</a>
                      </div>
