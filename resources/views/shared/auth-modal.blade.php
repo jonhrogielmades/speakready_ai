@@ -1,10 +1,12 @@
 @php
    $googleAuthLayoutQuery = ($isMobile ?? false) ? ['sr_layout' => 'mobile', 'sr_is_mobile' => '1'] : [];
+   $registerPageUrl = route('register', $googleAuthLayoutQuery);
    $authModalRequest = request('auth_modal');
    $authTab = old('auth_tab') ?: (in_array($authModalRequest, ['login', 'signup', 'register'], true) ? $authModalRequest : null);
    $showSignupAuthTab = in_array($authTab, ['signup', 'register'], true) || ($authTab === null && filled(old('name')));
+   $googleUnregisteredMessage = 'This Google account is not registered. Please click create account first.';
    $authQueryAlert = request('auth_alert') === 'google_login_unregistered'
-      ? 'This Google account is not registered. Please click create account first.'
+      ? $googleUnregisteredMessage
       : null;
    $loginAuthAlert = ! $showSignupAuthTab
       ? ($errors->first() ?: $authQueryAlert)
@@ -64,7 +66,16 @@
                         @csrf
                         <input type="hidden" name="auth_tab" value="login">
                         @if(($errors->any() || $loginAuthAlert) && !$errors->has('account_inactive') && ! $showSignupAuthTab)
-                           <div class="err-msg is-visible" role="alert"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i><span>{{ $loginAuthAlert }}</span></div>
+                           <div class="err-msg is-visible" role="alert">
+                              <i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i>
+                              <span>
+                                 @if($loginAuthAlert === $googleUnregisteredMessage)
+                                    This Google account is not registered. Please click <a href="{{ $registerPageUrl }}" class="auth-inline-link auth-create-account-link">create account</a> first.
+                                 @else
+                                    {{ $loginAuthAlert }}
+                                 @endif
+                              </span>
+                           </div>
                         @endif
                         <div class="auth-field">
                            <label class="olbl" for="loginUsername"><i class="fa-solid fa-user" aria-hidden="true"></i>Username</label>

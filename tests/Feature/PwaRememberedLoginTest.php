@@ -612,7 +612,10 @@ class PwaRememberedLoginTest extends TestCase
             ->assertOk()
             ->assertSee('id="authPage" class="auth-page-shell" data-auth-mode="login"', false)
             ->assertSee('id="loginForm"', false)
-            ->assertSee('This Google account is not registered. Please click create account first.');
+            ->assertSee('This Google account is not registered. Please click', false)
+            ->assertSee('class="auth-create-account-link"', false)
+            ->assertSee('create account</a> first.', false)
+            ->assertSee(route('register'), false);
     }
 
     public function test_legacy_google_unregistered_query_redirects_to_login_page_without_flashed_errors(): void
@@ -627,7 +630,10 @@ class PwaRememberedLoginTest extends TestCase
             ->assertOk()
             ->assertSee('id="authPage" class="auth-page-shell" data-auth-mode="login"', false)
             ->assertSee('id="loginForm"', false)
-            ->assertSee('This Google account is not registered. Please click create account first.');
+            ->assertSee('This Google account is not registered. Please click', false)
+            ->assertSee('class="auth-create-account-link"', false)
+            ->assertSee('create account</a> first.', false)
+            ->assertSee(route('register'), false);
     }
 
     public function test_google_login_uses_picture_fallback_for_profile_photo(): void

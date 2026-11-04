@@ -7,8 +7,9 @@
    $googleAuthUrl = $isRegister
       ? route('auth.google.register', $layoutQuery)
       : route('auth.google.login', $layoutQuery);
+   $googleUnregisteredMessage = 'This Google account is not registered. Please click create account first.';
    $authQueryAlert = request('auth_alert') === 'google_login_unregistered'
-      ? 'This Google account is not registered. Please click create account first.'
+      ? $googleUnregisteredMessage
       : null;
    $pageError = $errors->first() ?: $authQueryAlert;
    $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);
@@ -90,7 +91,16 @@
             @elseif($pageError)
                <div class="auth-page-alert auth-page-alert-error" role="alert" tabindex="-1" data-auth-error-summary>
                   <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
-                  <div><strong>{{ $isRegister ? 'Please review your details' : 'We could not log you in' }}</strong><p>{{ $pageError }}</p></div>
+                  <div>
+                     <strong>{{ $isRegister ? 'Please review your details' : 'We could not log you in' }}</strong>
+                     <p>
+                        @if($pageError === $googleUnregisteredMessage)
+                           This Google account is not registered. Please click <a href="{{ $registerPageUrl }}" class="auth-create-account-link">create account</a> first.
+                        @else
+                           {{ $pageError }}
+                        @endif
+                     </p>
+                  </div>
                </div>
             @endif
 

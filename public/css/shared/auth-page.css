@@ -405,6 +405,8 @@ body.auth-page-body .auth-page-form-side .auth-page-password-status.is-invalid {
 .auth-page-alert strong, .auth-page-alert p { display: block; margin: 0; }
 .auth-page-alert strong { font-size: .78rem; font-weight: 750; }
 .auth-page-alert p { margin-top: 2px; }
+.auth-page-alert .auth-create-account-link { color: var(--auth-link); font-weight: 750; text-decoration: underline; text-underline-offset: 2px; }
+.auth-page-alert .auth-create-account-link:hover { color: var(--auth-text); }
 .auth-page-alert-error { color: #b42318; background: #fff3f2; border-color: #ffd0cc; }
 .auth-page-alert-warning { color: #92400e; background: #fffbeb; border-color: #fde68a; }
 .auth-page-alert-success { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
