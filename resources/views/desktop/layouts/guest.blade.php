@@ -286,7 +286,7 @@
                      </div>
                      <h1 id="hero-title" class="h1 afu" style="animation-delay:.12s"><span class="hero-title-line">Practice Smarter.</span><br><span class="gt">Interview Better.</span></h1>
                      <p class="hero-home-copy-text afu" style="animation-delay:.2s">Practice realistic job interviews with AI-powered coaching, camera detection, and evidence-based feedback.</p>
-                     <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
+                     <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap">
                         <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6 hero-primary-cta">Start Practicing Free</a>
                         <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn hero-secondary-cta" id="heroInstallBtn" hidden><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install App</button>
                         <a href="#how" class="boc btn px-4 py-3 fs-6 hero-secondary-cta hero-how-it-works-cta">How Interview Works?</a>
