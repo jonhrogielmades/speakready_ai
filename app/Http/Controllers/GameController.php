@@ -202,6 +202,12 @@ class GameController extends Controller
  ->latest('id')
  ->first();
  if ($activeSession) {
+ if (str_starts_with((string) $activeSession->status, 'finishing:')) {
+ if ($activeSession->updated_at?->gte(now()->subMinutes(10))) {
+ return ['error' => 'finalizing'];
+ }
+ $activeSession->forceFill(['status' => 'in_progress'])->save();
+ }
  return ['session' => $activeSession, 'existing' => true];
  }
 
@@ -238,6 +244,9 @@ class GameController extends Controller
 
  if (($startResult['error']?? null) === 'energy') {
  return back()->with('error', 'Not enough energy to start this challenge. Your energy refills daily.');
+ }
+ if (($startResult['error']?? null) === 'finalizing') {
+ return back()->with('error', 'Your previous challenge is still being scored. Please try again shortly.');
  }
  if (($startResult['error']?? null) !== null) {
  return back()->with('error', 'Your challenge profile is not ready. Please try again.');
@@ -397,7 +406,7 @@ class GameController extends Controller
  return response()->json(['error' => 'No active Learning Game session'], 403);
  }
  if ($this->challengeExpired($gameSession)) {
- return response()->json(['error' => 'This timed challenge has expired. Submit the current answer or finish the challenge.'], 409);
+ return response()->json(['error' => 'This timed challenge has expired. Finish the challenge to view your result.'], 409);
  }
 
  $questions = array_values($gameSession->questions?? []);
@@ -902,6 +911,8 @@ class GameController extends Controller
  'game_session_id' => 'required|exists:game_sessions,id',
  'duration_seconds' => 'nullable|integer|min:0|max:28800',
  'notes' => 'nullable|string|max:10000',
+ 'final_question_index' => 'nullable|integer|min:0',
+ 'final_answer_text' => 'nullable|string|max:20000',
  ]);
 
  $claimToken = 'finishing:'.Str::uuid();
@@ -975,14 +986,27 @@ class GameController extends Controller
  $answersByIndex = GameAnswer::where('game_session_id', $gameSession->id)
  ->get()
  ->keyBy('question_index');
+ $finalIndex = isset($validated['final_question_index'])? (int) $validated['final_question_index']: -1;
+ $finalText = ! $this->challengeExpired($gameSession)
+ ? TranscriptService::clean((string) ($validated['final_answer_text']?? ''))
+ : '';
+ $savedDraftIndex = (int) data_get($gameSession->session_state, 'draft_question_index', -1);
+ $savedDraftText = mb_substr(
+ TranscriptService::clean((string) data_get($gameSession->session_state, 'draft_text', '')),
+ 0,
+ 20000
+ );
  foreach ($questions as $index => $questionText) {
  if (! $answersByIndex->has($index)) {
+ $answerText = $index === $finalIndex && $finalText !== ''
+ ? $finalText
+ : ($index === $savedDraftIndex? $savedDraftText: '');
  GameAnswer::create([
  'game_session_id' => $gameSession->id,
  'question_index' => $index,
  'question_text' => $questionText,
- 'answer_text' => '',
- 'is_skipped' => true,
+ 'answer_text' => $answerText,
+ 'is_skipped' => $answerText === '',
  'response_mode' => 'hybrid',
  ]);
  }
@@ -1400,7 +1424,7 @@ class GameController extends Controller
  return max(0, (int) ($session->duration_seconds?? 0));
  }
 
- $elapsed = max(0, now()->diffInSeconds($session->started_at));
+ $elapsed = max(0, $session->started_at->diffInSeconds(now()));
  $timeLimit = (int) ($session->time_limit?? 0);
 
  return $timeLimit > 0? min($elapsed, $timeLimit): $elapsed;

@@ -495,3 +495,105 @@ body.game-match-auto-fullscreen {
     from { opacity: 0.48; }
     to { opacity: 1; }
 }
+
+#sec-interview-session[data-game-session-root] .game-voice-analytics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 8px;
+    color: var(--tx2);
+    font-size: 0.72rem;
+}
+
+#sec-interview-session[data-game-session-root] .game-session-notes {
+    margin-top: 8px;
+    color: var(--tx2);
+    font-size: 0.78rem;
+}
+
+#sec-interview-session[data-game-session-root] .game-session-notes summary {
+    cursor: pointer;
+    font-weight: 700;
+}
+
+#sec-interview-session[data-game-session-root] .game-session-notes textarea {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px 10px;
+    border: 1px solid var(--bd);
+    border-radius: 10px;
+    background: var(--sf);
+    color: var(--tx);
+    resize: vertical;
+}
+
+#sec-interview-session[data-game-session-root] .game-camera-status {
+    margin: 0 0 10px;
+    color: var(--tx2);
+    font-size: 0.75rem;
+}
+
+#sec-interview-session[data-game-session-root] .game-camera-modal .modal-content {
+    background: var(--sf);
+    color: var(--tx);
+}
+
+#sec-interview-session[data-game-session-root] .game-camera-modal .stat-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--bd);
+    font-size: 0.82rem;
+}
+
+#sec-interview-session[data-game-session-root] .mobile-camera-cues-button {
+    position: absolute;
+    top: clamp(107px, calc(23vw + 20px), 135px);
+    right: clamp(10px, 3vw, 14px);
+    z-index: 80;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.85);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+}
+
+#sec-interview-session[data-game-session-root] .question-timer-anchor {
+    display: none !important;
+}
+
+#sec-interview-session[data-game-session-root] .game-mobile-status-strip {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: -12px 0 12px;
+    color: var(--tx);
+}
+
+#sec-interview-session[data-game-session-root] .game-mobile-status-strip .session-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: auto;
+    min-height: 29px;
+    padding: 5px 8px;
+    border: 1px solid var(--bd);
+    border-radius: 999px;
+    background: var(--sf);
+    color: var(--tx);
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+#sec-interview-session[data-game-session-root] .game-mobile-status-strip .session-chip.is-expired {
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
+html body.mobile-interview-fullscreen #sec-interview-session[data-game-session-root] .game-mobile-status-strip {
+    margin: 6px 0;
+}

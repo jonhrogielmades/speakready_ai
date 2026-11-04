@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=16') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/learning-2.css?v=17') }}" data-page-style="user-learning-2">
 <link rel="stylesheet" href="{{ asset('css/shared/interview-prep-loader.css?v=3') }}" data-page-style="interview-prep-loader">
 @endpush
 
@@ -127,6 +127,26 @@
 
  <div class="row g-4">
  <div class="col-lg-12">
+
+ <div class="learning-filters">
+ <div class="learning-filter-search">
+ <label for="learningSearchInput">Find a challenge</label>
+ <input id="learningSearchInput" type="search" autocomplete="off" placeholder="Search challenges, skills, scenarios...">
+ </div>
+ @if($categories->count() > 1)
+ <form action="{{ route('user.learning') }}" method="GET" class="learning-filter-category">
+ <label for="learningCategorySelect">Challenge path</label>
+ <div class="learning-filter-category-controls">
+ <select id="learningCategorySelect" name="category_id">
+ @foreach($categories as $category)
+ <option value="{{ $category->id }}" @selected((int) $selectedCategory?->id === (int) $category->id)>{{ $category->title }}</option>
+ @endforeach
+ </select>
+ <button type="submit">View path</button>
+ </div>
+ </form>
+ @endif
+ </div>
  
  <div class="journey-header d-flex justify-content-between align-items-center mb-3">
  <h5 class="journey-title" style="margin:0">Challenge Journey</h5>
@@ -414,7 +434,9 @@
  <h5 class="modal-title" id="challengePositionModalTitle">What position are you applying for?</h5>
  <p class="position-modal-intro" id="challengePositionModalIntro">We’ll tailor challenges to the role you want to practice for.</p>
  </div>
+ @if($selectedChallengePosition !== '')
  <button type="button" class="btn-close challenge-position-close" data-bs-dismiss="modal" aria-label="Close"></button>
+ @endif
  </div>
  <div class="modal-body">
  <label for="challengeTargetPosition" class="form-label">Target position</label>

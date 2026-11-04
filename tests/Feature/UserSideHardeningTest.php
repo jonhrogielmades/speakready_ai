@@ -116,14 +116,35 @@ class UserSideHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
  ->assertSee('css/mobile/user/learning.css?v=1', false)
- ->assertDontSee('id="learningSearchInput"', false)
- ->assertDontSee('Search challenges, skills, scenarios...', false)
+ ->assertSee('id="learningSearchInput"', false)
+ ->assertSee('Search challenges, skills, scenarios...', false)
  ->assertSee('data-search-text=', false)
  ->assertSee('learning-badge-row-active', false)
  ->assertSee('start-challenge-form', false)
  ->assertSee('Starting...', false)
  ->assertSee('autoStart: false', false)
  ->assertDontSee('mb-20px', false);
+ }
+
+ public function test_learning_pages_render_challenge_search_and_path_selector(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $first = $this->category(['type' => 'game', 'title' => 'Behavioral Path']);
+ $second = $this->category(['type' => 'game', 'title' => 'Technical Path']);
+ $this->gameLevel($first);
+ $this->gameLevel($second);
+
+ foreach (['Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148'] as $userAgent) {
+ $this->actingAs($user)
+ ->withHeader('User-Agent', $userAgent)
+ ->get(route('user.learning', ['category_id' => $first->id]))
+ ->assertOk()
+ ->assertSee('id="learningSearchInput"', false)
+ ->assertSee('id="learningCategorySelect"', false)
+ ->assertSee('Behavioral Path')
+ ->assertSee('Technical Path');
+ }
  }
 
  public function test_learning_position_modal_filters_challenges_by_user_position(): void
@@ -3445,6 +3466,116 @@ class UserSideHardeningTest extends TestCase
  $this->assertNull($session->duration_seconds);
  }
 
+ public function test_expired_game_challenge_finishes_with_saved_draft_and_releases_session(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category, ['required_score' => 0]);
+ $draft = 'I handled a delayed request, checked the records, and resolved it within an hour.';
+ $session = GameSession::create([
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'status' => 'in_progress',
+ 'num_questions' => 1,
+ 'questions' => ['Describe a result you achieved.'],
+ 'response_mode' => 'hybrid',
+ 'time_limit' => 2,
+ 'started_at' => now()->subSeconds(30),
+ 'current_question_index' => 0,
+ 'session_state' => ['revision' => 1, 'draft_question_index' => 0, 'draft_text' => $draft],
+ ]);
+
+ $this->actingAs($user)
+ ->post(route('user.game.answer'), [
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'answer_text' => 'Late answer',
+ ])
+ ->assertStatus(409);
+
+ $this->actingAs($user)
+ ->withSession(['active_game_session_id' => $session->id, 'game_level_id' => $level->id])
+ ->post(route('user.game.finish'), [
+ 'game_session_id' => $session->id,
+ 'final_question_index' => 0,
+ 'final_answer_text' => 'Late answer',
+ ])
+ ->assertRedirect(route('user.learning', ['category_id' => $category->id]));
+
+ $this->assertDatabaseHas('game_sessions', ['id' => $session->id, 'status' => 'completed', 'duration_seconds' => 2]);
+ $this->assertDatabaseHas('game_answers', [
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'answer_text' => $draft,
+ 'is_skipped' => false,
+ ]);
+ $this->assertNull(session('active_game_session_id'));
+ }
+
+ public function test_game_finish_uses_current_answer_before_the_deadline(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category, ['required_score' => 0]);
+ $session = GameSession::create([
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'status' => 'in_progress',
+ 'num_questions' => 1,
+ 'questions' => ['Describe a result you achieved.'],
+ 'response_mode' => 'hybrid',
+ 'time_limit' => 120,
+ 'started_at' => now(),
+ ]);
+ $answer = 'I planned the rollout, checked the result, and delivered it on time.';
+
+ $this->actingAs($user)
+ ->post(route('user.game.finish'), [
+ 'game_session_id' => $session->id,
+ 'final_question_index' => 0,
+ 'final_answer_text' => $answer,
+ ])
+ ->assertRedirect(route('user.learning', ['category_id' => $category->id]));
+
+ $this->assertDatabaseHas('game_answers', [
+ 'game_session_id' => $session->id,
+ 'question_index' => 0,
+ 'answer_text' => $answer,
+ 'is_skipped' => false,
+ ]);
+ }
+
+ public function test_stale_game_finalization_can_resume_without_spending_another_life(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $profile = Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category);
+ $session = GameSession::create([
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'status' => 'finishing:interrupted',
+ 'num_questions' => 1,
+ 'questions' => ['Describe a result you achieved.'],
+ 'response_mode' => 'hybrid',
+ 'time_limit' => 2,
+ 'started_at' => now()->subMinutes(20),
+ ]);
+ \Illuminate\Support\Facades\DB::table('game_sessions')
+ ->where('id', $session->id)
+ ->update(['updated_at' => now()->subMinutes(11)]);
+
+ $this->actingAs($user)
+ ->post(route('user.game.start', $level))
+ ->assertRedirect(route('user.game.match'));
+
+ $this->assertDatabaseHas('game_sessions', ['id' => $session->id, 'status' => 'in_progress']);
+ $this->assertSame($profile->energy, $profile->fresh()->energy);
+ $this->assertSame(1, GameSession::where('user_id', $user->id)->count());
+ }
+
  public function test_game_answer_and_finish_use_separate_game_session_flow(): void
  {
  Storage::fake('local');
@@ -4146,6 +4277,53 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('Add a stronger measurable result.');
  }
 
+ public function test_game_match_uses_session_time_limit_and_shows_camera_cues_on_mobile(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category, ['time_limit_seconds' => 120]);
+ $session = GameSession::create([
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'status' => 'in_progress',
+ 'num_questions' => 1,
+ 'questions' => ['Describe a result you achieved.'],
+ 'response_mode' => 'hybrid',
+ 'time_limit' => 150,
+ 'started_at' => now()->subSeconds(12),
+ 'accommodation_profile' => ['camera_coaching' => true],
+ ]);
+
+ foreach (['Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148'] as $userAgent) {
+ $response = $this->actingAs($user)
+ ->withSession(['active_game_session_id' => $session->id, 'game_level_id' => $level->id])
+ ->withHeader('User-Agent', $userAgent)
+ ->get(route('user.game.match'));
+
+ $response->assertOk()
+ ->assertSee('const gameTimeLimitSeconds = 150;', false)
+ ->assertSee('150s')
+ ->assertSee('id="mobileCameraCuesButton"', false)
+ ->assertSee('id="mobileCameraCuesModal"', false)
+ ->assertSee('id="mobileCameraAvailabilityStatus"', false);
+
+ if (str_contains($userAgent, 'iPhone')) {
+ $dom = new \DOMDocument();
+ libxml_use_internal_errors(true);
+ $dom->loadHTML($response->getContent());
+ libxml_clear_errors();
+ $xpath = new \DOMXPath($dom);
+ $layout = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " desktop-session-two-column ")]')->item(0);
+ $this->assertNotNull($layout);
+ $this->assertSame(1, $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " desktop-response-column ")]', $layout)->length);
+ $interviewPanel = $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " desktop-interview-panel ")]', $layout)->item(0);
+ $this->assertNotNull($interviewPanel);
+ $this->assertSame(1, $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " game-mobile-status-strip ")]', $interviewPanel)->length);
+ }
+ }
+ }
+
  public function test_learning_game_session_renders_game_only_finish_modal(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -4195,6 +4373,9 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('id="questionCaptionText"', false)
  ->assertSee('game-session-timer-stack', false)
  ->assertSee('id="responseFullscreenToggle"', false)
+ ->assertSee('id="sessionNotes"', false)
+ ->assertSee('id="voiceAnalyticsPanel"', false)
+ ->assertSee('id="formFinalAnswerText"', false)
  ->assertSee('game-voice-session-panel', false)
  ->assertSee('game-transcription-display', false)
  ->assertSee('hybrid-response-panel', false)
@@ -4307,7 +4488,7 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('class="user-mobile-shell mobile-shell"', false)
  ->assertSee('css/mobile/user/game-session-base.css?v=73', false)
  ->assertDontSee('css/mobile/interview/session.css?v=76', false)
- ->assertSee('css/mobile/user/game-session.css?v=2026102001', false)
+ ->assertSee('css/mobile/user/game-session.css?v=2026110401', false)
  ->assertSee('data-page-style="user-game-session"', false)
  ->assertSee('id="sec-interview-session"', false)
  ->assertSee('data-game-session-root', false)
@@ -4317,7 +4498,12 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('learning-game-interview-layout', false)
  ->assertSee('session-main-only', false)
  ->assertSee('desktop-session-two-column', false)
- ->assertSee('class="question-timer-anchor"', false)
+ ->assertSee('class="question-timer-anchor game-session-timer-stack"', false)
+ ->assertSee('class="game-mobile-status-strip"', false)
+ ->assertSee('id="gameRequiredScore"', false)
+ ->assertSee('id="challengeTimer"', false)
+ ->assertSee('id="sessionNotes"', false)
+ ->assertSee('id="voiceAnalyticsPanel"', false)
  ->assertSee('id="responseFullscreenToggle"', false)
  ->assertSee('game-voice-session-panel', false)
  ->assertSee('game-transcription-display', false)

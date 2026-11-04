@@ -2,7 +2,7 @@
 @section('title', 'Interview Challenge')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-base.css?v=73') }}" data-page-style="user-game-session-base">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026102001') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/game-session.css?v=2026110401') }}" data-page-style="user-game-session">
 <link rel="stylesheet" href="{{ asset('css/mobile/user/game-session-2.css?v=2') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
@@ -37,6 +37,9 @@
  $interviewerAvatarWebpImage = preg_replace('/\.png$/', '.webp', $interviewerAvatarImage);
  $interviewerPanelBackgroundImage = 'img/interviewer-panel-room-bg.png';
  $interviewerAvatarImageUrls = array_map(fn ($image) => asset($image), $interviewerAvatarImages);
+ $serverElapsedAtRender = $sessionRecord?->started_at
+ ? max(0, (int) $sessionRecord->started_at->diffInSeconds(now()))
+ : max(0, (int) ($sessionRecord?->duration_seconds ?? 0));
  @endphp
 
  @if($sessionRecord && $questions->count() > 0)
@@ -62,16 +65,15 @@
  <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">Ready</span>
  </div>
  <span class="badge interviewer-panel-badge"><i class="fa-solid fa-bolt me-1"></i> interviewer</span>
- <div class="question-timer-anchor" aria-label="Challenge progress">
- <span class="session-chip"><i class="fa-regular fa-clock"></i><span id="game-timer">{{ $gameLevel->time_limit_seconds ? $gameLevel->time_limit_seconds . 's' : 'Self-paced' }}</span></span>
- <span id="challengeTimer" class="visually-hidden">00:00</span>
- <span id="gameRequiredScore" class="visually-hidden">{{ $gameLevel->required_score }}%+</span>
+ <div class="question-timer-anchor game-session-timer-stack" aria-label="Challenge progress">
+ <span class="session-chip"><i class="fa-solid fa-stopwatch"></i><span id="game-timer">{{ $sessionRecord->time_limit ? $sessionRecord->time_limit . 's' : 'Self-paced' }}</span></span>
  </div>
  @if($cameraCoachingEnabled)
  <div class="mobile-camera-pip d-lg-none" aria-label="Camera preview">
  <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
  <div class="mobile-camera-placeholder" aria-hidden="true"><i class="fa-solid fa-video"></i></div>
  </div>
+ <button type="button" id="mobileCameraCuesButton" class="mobile-camera-cues-button d-lg-none" data-bs-toggle="modal" data-bs-target="#mobileCameraCuesModal" aria-label="View camera coaching cues">Camera cues</button>
  @endif
 
  <div id="aiAvatarContainer" class="interviewer-room-stage" style="--interviewer-panel-room-bg:url('{{ asset($interviewerPanelBackgroundImage) }}');width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
@@ -126,6 +128,13 @@
  </div>
  </div>
 
+ <div class="game-mobile-status-strip" aria-label="Challenge progress">
+ <span class="session-chip"><i class="fa-solid fa-stopwatch"></i><span id="mobileGameTimer">{{ $sessionRecord->time_limit ? $sessionRecord->time_limit . 's' : 'Self-paced' }}</span></span>
+ <span class="session-chip"><i class="fa-solid fa-bullseye"></i><span id="gameRequiredScore">{{ $gameLevel->required_score }}%+</span></span>
+ <span class="session-chip"><i class="fa-regular fa-clock"></i><span id="challengeTimer">00:00</span></span>
+ </div>
+ </div>
+
  <div class="desktop-response-column">
 
  <!-- Answer Response System -->
@@ -134,7 +143,7 @@
  <i class="fa-solid fa-pen-nib me-2"></i>
  <span class="panel-title-text">Your Response</span>
  <div class="response-title-actions game-response-actions" id="gameSessionControls">
- <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle d-md-none" onclick="toggleGameMatchFullscreen()" aria-label="Enter fullscreen" title="Enter fullscreen">
+ <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleGameMatchFullscreen()" aria-label="Enter fullscreen" title="Enter fullscreen">
  <i class="fa-solid fa-expand"></i>
  </button>
  <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()" aria-label="Submit answer" title="Submit answer">
@@ -192,6 +201,16 @@
  <div class="response-autosave-row">
  <span id="autoSaveIndicator" class="text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
  </div>
+ <div id="voiceAnalyticsPanel" class="game-voice-analytics" aria-label="Voice answer details">
+ <span>Recording <strong id="vaDuration">0s</strong></span>
+ <span>Speed <strong id="vaWpm">0</strong> wpm</span>
+ <span>Filler words <strong id="vaFillers">0</strong></span>
+ </div>
+ <details class="game-session-notes">
+ <summary>Session notes</summary>
+ <label for="sessionNotes" class="visually-hidden">Session notes</label>
+ <textarea id="sessionNotes" rows="2" maxlength="10000" placeholder="Optional notes for your challenge result">{{ $sessionRecord->notes }}</textarea>
+ </details>
 
  </form>
  </div>
@@ -206,6 +225,7 @@
  <!-- Optional body-language detection; never used in readiness scoring. -->
  <div class="panel d-none d-lg-block" id="cameraPanel">
  <div class="panel-title"><i class="fa-solid fa-camera-web me-2"></i> Body-Language Detection</div>
+ <p id="cameraAvailabilityStatus" class="game-camera-status" role="status" aria-live="polite">Preparing camera cues...</p>
  <div style="position:relative;background:#000;height:180px;border-radius:12px;margin-bottom:15px;overflow:hidden;display:flex;align-items:center;justify-content:center">
  <video id="userCamera" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
  <div class="face-scanner-box" id="faceScannerBox" style="display:none;position:absolute;width:120px;height:120px;border:2px solid #34d399;border-radius:12px;box-shadow:0 0 15px rgba(52,211,153,0.3);transition:all 0.3s ease;">
@@ -231,7 +251,30 @@
  <input type="hidden" name="game_session_id" value="{{ $sessionRecord->id }}">
  <input type="hidden" name="duration_seconds" id="formDuration">
  <input type="hidden" name="notes" id="formNotes">
+ <input type="hidden" name="final_question_index" id="formFinalQuestionIndex">
+ <input type="hidden" name="final_answer_text" id="formFinalAnswerText">
  </form>
+
+ @if($cameraCoachingEnabled)
+ <div class="modal fade game-camera-modal" id="mobileCameraCuesModal" tabindex="-1" aria-labelledby="mobileCameraCuesTitle" aria-hidden="true">
+ <div class="modal-dialog modal-dialog-centered">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h5 class="modal-title" id="mobileCameraCuesTitle">Camera coaching cues</h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+ </div>
+ <div class="modal-body">
+ <p id="mobileCameraAvailabilityStatus" class="game-camera-status" role="status" aria-live="polite">Preparing camera cues...</p>
+ <div class="stat-row"><span>Face in frame</span><span id="mobileStEyeContact">Waiting</span></div>
+ <div class="stat-row"><span>Shoulders / posture</span><span id="mobileStPose">Waiting</span></div>
+ <div class="stat-row"><span>Movement steadiness</span><span id="mobileStMovement">Waiting</span></div>
+ <div class="stat-row"><span>Head alignment</span><span id="mobileStPosture">Optional - not scored</span></div>
+ <p class="small mt-3 mb-0">Camera cues are optional and do not affect your challenge score.</p>
+ </div>
+ </div>
+ </div>
+ </div>
+ @endif
 
  <div class="modal fade challenge-finish-modal" id="challengeFinishModal" tabindex="-1" aria-labelledby="challengeFinishModalTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
  <div class="modal-dialog modal-dialog-centered">
@@ -290,15 +333,20 @@ const gameStateSaveUrl = @json(route('user.game.saveState'));
  const interviewerAvatarImages = @json($interviewerAvatarImageUrls);
  let activeInterviewerAvatarIndex = interviewerAvatarImages.indexOf(@json(asset($interviewerAvatarImage)));
  let currentQIdx = {{ $initialQuestionIndex }};
- let timerSeconds = {{ max(0, (int) ($sessionRecord->duration_seconds?? 0)) }};
+ let timerSeconds = {{ max(0, $serverElapsedAtRender) }};
+ const gameElapsedAtRender = timerSeconds;
+ const gameTimerRenderedAt = performance.now();
+ const gameTimerRenderedWallClock = Date.now();
  let timerInterval;
+ let gameDeadlineWarningShown = false;
  let isFinishingChallenge = false;
  let isChallengeTransitioning = false;
  let challengeSessionStarted = false;
 let gameStateAutosaveTimer = null;
 let gameStateSaveInFlight = false;
 let gameStateSavePending = false;
-const gameTimeLimitSeconds = {{ max(0, (int) ($gameLevel->time_limit_seconds ?? 0)) }};
+let gameAutoSaveIndicatorTimer = null;
+const gameTimeLimitSeconds = {{ max(0, (int) ($sessionRecord->time_limit ?? 0)) }};
 const gameVoiceFullTranscriptionTimeoutMs = {{ max(60000, min(300000, (int) config('services.ai_transcription.full_request_timeout_ms', 120000))) }};
 const gameVoiceAudioBitsPerSecond = {{ max(64000, min(256000, (int) config('services.ai_transcription.recording_audio_bitrate', 128000))) }};
  
@@ -336,6 +384,7 @@ const serverSpeechUrlCache = new Map();
  let gameAnswerWaveFrequencyData = null;
 window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
 let gameCameraMovementBaseline = null;
+let cameraTrackingInterval = null;
 let preRecordingText = '';
 let recordingAnswerTextAtStart = '';
 let recordingManualEditedSinceStart = false;
@@ -1308,6 +1357,9 @@ saveGameStateOnPageHide();
  if (!cameraCoachingEnabled) return;
  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
  navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+ setGameCameraStatus(window.faceFramingModelUnavailable || window.bodyLanguageModelState?.failed
+ ? 'Camera preview ready; coaching models are unavailable.'
+ : 'Camera ready. Calibrating cues...');
  let video = document.getElementById('userCamera');
  if (video) {
  video.srcObject = stream;
@@ -1318,22 +1370,32 @@ saveGameStateOnPageHide();
  mobileVideo.srcObject = stream;
  mobileVideo.play();
  }
+ document.querySelector('.mobile-camera-pip')?.classList.add('camera-ready');
  }).catch(function(err) {
  console.error("Error accessing camera: ", err);
+ setGameCameraStatus('Camera unavailable. You can continue without camera cues.');
+ window.SpeakReadyUiNotice?.('Camera access is unavailable. Your challenge can continue without it.');
  });
  } else {
  console.error("getUserMedia not supported");
+ setGameCameraStatus('Camera unavailable in this browser. You can continue.');
  }
+ }
+ function setGameCameraStatus(message) {
+ ['cameraAvailabilityStatus', 'mobileCameraAvailabilityStatus'].forEach(id => {
+ const element = document.getElementById(id);
+ if (element) element.textContent = message;
+ });
  }
  function setGameCameraStat(id, content, className = 'text-secondary', asHtml = false) {
- const element = document.getElementById(id);
+ const mobileId = 'mobile' + id.charAt(0).toUpperCase() + id.slice(1);
+ [id, mobileId].forEach(statId => {
+ const element = document.getElementById(statId);
  if (!element) return;
- if (asHtml) {
- element.innerHTML = content;
- } else {
- element.textContent = content;
- }
+ if (asHtml) element.innerHTML = content;
+ else element.textContent = content;
  element.className = className;
+ });
  }
 
  function gameVisibleLandmark(landmark, threshold = 0.35) {
@@ -1368,8 +1430,8 @@ saveGameStateOnPageHide();
 async function trackBodyLanguage() {
 const bodyLanguageState = window.bodyLanguageModelState || {};
 const canUseBodyModels = Boolean(bodyLanguageState.ready && bodyLanguageState.poseLandmarker);
-const canUseFaceModel = typeof faceapi!== 'undefined';
-if (!cameraCoachingEnabled || (!canUseBodyModels &&!canUseFaceModel)) return;
+const canUseFaceModel = Boolean(window.faceFramingModelReady && typeof faceapi!== 'undefined');
+if (!cameraCoachingEnabled || !canUseBodyModels || !canUseFaceModel) return;
 const video = document.getElementById('userCamera');
  if (!video ||!video.srcObject) return;
 
@@ -1438,6 +1500,7 @@ movementScore = Math.min(100, Math.round((distances.reduce((total, distance) => 
 gameCameraMovementBaseline = movementPoints;
 
 const highConfidenceFrame = Boolean(detection && faceConfidence !== null && faceConfidence >= 60 && poseDetected && shouldersVisible && poseCameraFacing !== null);
+setGameCameraStatus(highConfidenceFrame ? 'Camera cues ready.' : 'Camera ready. Move into frame for reliable cues.');
 setGameCameraStat('stEyeContact', highConfidenceFrame? '<i class="fa-solid fa-check me-1"></i>Reliable frame': (faceVisible? '<i class="fa-solid fa-circle-info me-1"></i>Signal checking': '<i class="fa-solid fa-circle-info me-1"></i>Move into frame'), highConfidenceFrame? 'text-success': 'text-warning', true);
 setGameCameraStat('stPosture', highConfidenceFrame? (poseCameraFacing === false? 'Head turned estimate': 'Camera-facing estimate'): 'Awaiting reliable signal', highConfidenceFrame? (poseCameraFacing === false? 'text-warning': 'text-success'): 'text-secondary');
 setGameCameraStat('stPose', highConfidenceFrame? (shouldersLevel && uprightPosture!== false? 'Balanced upper body': 'Posture cue available'): 'Awaiting reliable signal', highConfidenceFrame? (shouldersLevel && uprightPosture!== false? 'text-success': 'text-warning'): 'text-secondary');
@@ -1972,6 +2035,11 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  function startChallengeSession() {
  if (challengeSessionStarted) return false;
  challengeSessionStarted = true;
+ timerSeconds = elapsedGameSeconds();
+ if (gameTimeLimitSeconds > 0 && timerSeconds >= gameTimeLimitSeconds) {
+ finishChallenge();
+ return false;
+ }
  const workspaceWrapper = document.getElementById('workspaceWrapper');
  if (workspaceWrapper) workspaceWrapper.style.display = 'block';
  const interviewControls = document.getElementById('interviewControls');
@@ -1980,7 +2048,10 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  interviewControls.style.pointerEvents = 'auto';
  }
  enterGameMatchFullscreen({ auto: true, requestBrowser: false });
- if (cameraCoachingEnabled) initCamera();
+ if (cameraCoachingEnabled) {
+ initCamera();
+ cameraTrackingInterval = setInterval(trackBodyLanguage, 2000);
+ }
  
  if(isVoiceTranscriptionMode()) {
  const voiceControls = document.getElementById('voiceControls');
@@ -1988,19 +2059,21 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  const voiceAnalyticsPanel = document.getElementById('voiceAnalyticsPanel');
  if (answerTranscriptControls) answerTranscriptControls.hidden = false;
  if (voiceControls) voiceControls.style.display = 'block';
- if (voiceAnalyticsPanel) voiceAnalyticsPanel.style.display = 'block';
+ if (voiceAnalyticsPanel) voiceAnalyticsPanel.style.display = 'flex';
  }
 
  updateGameTimerDisplay();
+ if (isFinishingChallenge) return false;
+ updateChallengeElapsedDisplay();
  timerInterval = setInterval(() => {
- timerSeconds++;
- const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
- const s = (timerSeconds % 60).toString().padStart(2, '0');
- const challengeTimer = document.getElementById('challengeTimer');
- if (challengeTimer) challengeTimer.innerText = m + ':' + s;
+ timerSeconds = elapsedGameSeconds();
+ updateChallengeElapsedDisplay();
  updateGameTimerDisplay();
  
- if(timerSeconds % 30 === 0) autoSaveState(); // auto save every 30s
+ if(timerSeconds % 30 === 0 && timerSeconds !== lastPeriodicSaveSecond) {
+ lastPeriodicSaveSecond = timerSeconds;
+ autoSaveState();
+ }
  }, 1000);
 
  setRecordingControlButtons('idle');
@@ -2034,6 +2107,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  refreshGameVoiceSessionForQuestion(idx);
  
  await speakQuestion(questionText);
+ if (isFinishingChallenge) return;
  
  document.querySelectorAll('.end-challenge-btn-class').forEach(el => el.disabled = false);
  
@@ -2069,6 +2143,21 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  if (el) el.innerText = value;
  }
 
+let lastPeriodicSaveSecond = -1;
+
+function elapsedGameSeconds() {
+ const monotonicElapsed = Math.floor((performance.now() - gameTimerRenderedAt) / 1000);
+ const wallElapsed = Math.floor((Date.now() - gameTimerRenderedWallClock) / 1000);
+ return Math.max(timerSeconds, gameElapsedAtRender + Math.max(0, monotonicElapsed, wallElapsed));
+}
+
+function updateChallengeElapsedDisplay() {
+ const elapsed = gameTimeLimitSeconds > 0 ? Math.min(timerSeconds, gameTimeLimitSeconds) : timerSeconds;
+ const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+ const s = (elapsed % 60).toString().padStart(2, '0');
+ setElementText('challengeTimer', m + ':' + s);
+}
+
 function updateGameTimerDisplay() {
  const timer = document.getElementById('game-timer');
  if (!timer || gameTimeLimitSeconds <= 0) return;
@@ -2077,8 +2166,20 @@ function updateGameTimerDisplay() {
  const minutes = Math.floor(remaining / 60).toString().padStart(2, '0');
  const seconds = (remaining % 60).toString().padStart(2, '0');
  timer.textContent = `${minutes}:${seconds}`;
+ setElementText('mobileGameTimer', `${minutes}:${seconds}`);
  const chip = timer.closest('.session-chip');
  if (chip) chip.classList.toggle('is-expired', remaining === 0);
+ const mobileChip = document.getElementById('mobileGameTimer')?.closest('.session-chip');
+ if (mobileChip) mobileChip.classList.toggle('is-expired', remaining === 0);
+ if (remaining > 0 && remaining <= 10 && !gameDeadlineWarningShown) {
+ gameDeadlineWarningShown = true;
+ window.SpeakReadyUiNotice?.(isRecording || isRecordingPaused
+ ? '10 seconds left. Stop recording now to save your voice answer.'
+ : '10 seconds left. Submit your answer now.');
+ }
+ if (remaining === 0 && challengeSessionStarted && !isFinishingChallenge && !isChallengeTransitioning) {
+ finishChallenge();
+ }
 }
 
  function setElementHtml(id, value) {
@@ -2380,6 +2481,7 @@ function updateGameTimerDisplay() {
  if (!isVoiceTranscriptionMode()) return true;
 
  if (!voiceRecordingSupported()) {
+ setTranscriptionStatus('Voice recording is unavailable in this browser. You can type your answer.', '#fbbf24');
  if (!silent) window.SpeakReadyUiNotice?.('Voice recording is not supported in this browser.');
  return false;
  }
@@ -2450,6 +2552,7 @@ function updateGameTimerDisplay() {
  stopVoiceRecordingTracks();
  mediaRecorder = null;
  mediaRecorderChunks = [];
+ setTranscriptionStatus('Microphone unavailable. Allow access or type your answer.', '#fbbf24');
  if (!silent) window.SpeakReadyUiNotice?.('Microphone access is required for voice recording.');
  return false;
  }
@@ -2567,6 +2670,7 @@ function updateGameTimerDisplay() {
  async function startRecording(options = {}) {
  const silent = options && options.silent === true;
  if(!recognition &&!voiceRecordingSupported()) {
+ setTranscriptionStatus('Voice recording is unavailable in this browser. You can type your answer.', '#fbbf24');
  if(!silent) window.SpeakReadyUiNotice?.('Voice recording is not supported in this browser.');
  return;
  }
@@ -2623,11 +2727,6 @@ function updateGameTimerDisplay() {
  setElementText('vaWpm', wpm);
  answersData[currentQIdx].wpm = wpm;
  updateGameVoiceSessionPanel('recording', 'Recording');
-
- // Optional body-language detection is descriptive and never affects scoring.
- if (cameraCoachingEnabled && recTimerSeconds % 2 === 0) {
- trackBodyLanguage();
- }
 
  }, 1000);
 
@@ -2798,11 +2897,13 @@ function updateGameTimerDisplay() {
  let message = 'Answer save failed with status ' + response.status;
  try {
  const payload = await response.json();
- message = payload.message || message;
+ message = payload.error || payload.message || message;
  } catch (error) {
  // Keep the status-based message when the server did not return JSON.
  }
- throw new Error(message);
+ const requestError = new Error(message);
+ requestError.status = response.status;
+ throw requestError;
  }
 
  if (!isSkipped && voiceRecording && voiceRecording.blob) {
@@ -2839,8 +2940,11 @@ function scheduleAutoSaveState() {
 function showGameAutoSaveIndicator() {
  const indicator = document.getElementById('autoSaveIndicator');
  if (!indicator) return;
+ clearTimeout(gameAutoSaveIndicatorTimer);
+ indicator.className = 'text-success';
+ indicator.innerHTML = '<i class="fa-solid fa-check me-1"></i>Auto-saved';
  indicator.style.display = 'inline';
- setTimeout(() => indicator.style.display = 'none', 2000);
+ gameAutoSaveIndicatorTimer = setTimeout(() => indicator.style.display = 'none', 2000);
 }
 
 function autoSaveState() {
@@ -2856,14 +2960,33 @@ function autoSaveState() {
  method: 'POST',
  body: formData,
  headers: { 'X-Requested-With': 'XMLHttpRequest' }
- }).then(response => {
+ }).then(async response => {
  if (!response.ok) {
- throw new Error('Auto-save failed with status ' + response.status);
+ const requestError = new Error('Auto-save failed with status ' + response.status);
+ requestError.status = response.status;
+ try {
+ const payload = await response.json();
+ requestError.message = payload.error || payload.message || requestError.message;
+ } catch (parseError) {
+ // Keep the status message when the response is not JSON.
+ }
+ throw requestError;
  }
 
  showGameAutoSaveIndicator();
  }).catch(error => {
  console.error(error);
+ if (error.status === 409 && /expired/i.test(error.message || '')) {
+ finishChallenge();
+ return;
+ }
+ const indicator = document.getElementById('autoSaveIndicator');
+ if (indicator) {
+ clearTimeout(gameAutoSaveIndicatorTimer);
+ indicator.style.display = 'inline';
+ indicator.className = 'text-danger';
+ indicator.textContent = error.message || 'Auto-save failed. Check your connection; your draft is still on this page.';
+ }
  }).finally(() => {
  gameStateSaveInFlight = false;
  if (gameStateSavePending && !isFinishingChallenge) {
@@ -2971,6 +3094,11 @@ function saveGameStateOnPageHide() {
  await saveCurrentAnswer(false);
  if (submittedQuestionIndex < questions.length - 1) {
  await playGameInterviewerTransition(submittedQuestionIndex, false);
+ if (isFinishingChallenge) return;
+ if (gameTimeLimitSeconds > 0 && timerSeconds >= gameTimeLimitSeconds) {
+ finishChallenge();
+ return;
+ }
  await loadQuestion(submittedQuestionIndex + 1);
  setGameAdvanceActionsDisabled(false);
  document.querySelectorAll('.end-challenge-btn-class').forEach(el => el.disabled = false);
@@ -2980,6 +3108,10 @@ function saveGameStateOnPageHide() {
  }
  } catch(error) {
  console.error(error);
+ if (error.status === 409 && /expired/i.test(error.message || '')) {
+ finishChallenge();
+ return;
+ }
  hideChallengeFinishModal();
  setGameAdvanceActionsDisabled(false);
  document.querySelectorAll('.end-challenge-btn-class').forEach(el => el.disabled = false);
@@ -3002,6 +3134,10 @@ function saveGameStateOnPageHide() {
  finishChallenge();
  }).catch(error => {
  console.error(error);
+ if (error.status === 409 && /expired/i.test(error.message || '')) {
+ finishChallenge();
+ return;
+ }
  hideChallengeFinishModal();
  document.querySelectorAll('.next-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = false);
  isChallengeTransitioning = false;
@@ -3019,8 +3155,15 @@ function saveGameStateOnPageHide() {
  video.srcObject.getTracks().forEach(track => track.stop());
  }
  clearInterval(timerInterval);
+ clearInterval(cameraTrackingInterval);
+ clearTimeout(autoStartAfterQuestionTimer);
+ questionSpeechToken++;
+ cancelGameSpeechOutput();
+ stopVoiceRecordingTracks();
  document.getElementById('formDuration').value = timerSeconds;
  document.getElementById('formNotes').value = sessionNotesValue();
+ document.getElementById('formFinalQuestionIndex').value = currentQIdx;
+ document.getElementById('formFinalAnswerText').value = answersData[currentQIdx]?.text || recordingAnswerTextAtStart || '';
  window.setTimeout(() => document.getElementById('finishForm').submit(), 120);
  }
 
@@ -3077,13 +3220,18 @@ function saveGameStateOnPageHide() {
 @if(isset($cameraCoachingEnabled) && $cameraCoachingEnabled)
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
- Promise.all([
+ if (!window.faceapi) {
+ window.faceFramingModelUnavailable = true;
+ setGameCameraStatus('Camera preview ready; coaching models are unavailable.');
+ } else Promise.all([
  faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/'),
  faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/')
  ]).then(() => {
+ window.faceFramingModelReady = true;
  console.log("Optional face-framing models loaded");
  }).catch(err => {
  window.faceFramingModelUnavailable = true;
+ setGameCameraStatus('Camera preview ready; coaching models are unavailable.');
  console.error("Error loading optional face-framing models", err);
  });
 </script>
@@ -3119,6 +3267,7 @@ console.log("Optional pose model loaded");
 }).catch(err => {
 modelState.ready = false;
 modelState.failed = true;
+ setGameCameraStatus('Camera preview ready; coaching models are unavailable.');
  console.error("Error loading optional body-language models", err);
  });
 </script>
@@ -3132,7 +3281,7 @@ modelState.failed = true;
 const stepsMobile = [
 { element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each challenge question and guides the Learning Game flow.', side: 'bottom', align: 'start' }},
 { element: '#answerForm', popover: { title: 'Your Response', description: 'Use the voice controls to record each challenge answer.', side: 'top', align: 'start' }},
-{ element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness or challenge scoring.', side: 'top', align: 'start' }}
+{ element: '#mobileCameraCuesButton', popover: { title: 'Body-Language Detection', description: 'Open the camera cues. Camera observations never affect readiness or challenge scoring.', side: 'top', align: 'start' }}
 ];
 
 const stepsDesktop = [
@@ -3173,6 +3322,12 @@ const stepsDesktop = [
  const countdownText = document.getElementById('countdown-text');
  const overlay = document.getElementById('get-ready-overlay');
  if (!countdownText ||!overlay) {
+ window.startChallengeSession();
+ return;
+ }
+ if (gameTimeLimitSeconds > 0 && elapsedGameSeconds() >= gameTimeLimitSeconds) {
+ overlay.hidden = true;
+ overlay.style.display = 'none';
  window.startChallengeSession();
  return;
  }
