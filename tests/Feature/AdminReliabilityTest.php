@@ -60,6 +60,66 @@ class AdminReliabilityTest extends TestCase
             ->assertOk();
     }
 
+    public function test_admin_session_table_shows_five_entries_per_page_without_an_id_column(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+
+        for ($i = 0; $i < 6; $i++) {
+            $createdAt = now()->subMinutes($i);
+            $this->sessionFor($user, $category, [
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.sessions.index'))
+            ->assertOk()
+            ->assertSee('Showing 1-5 of 6', false)
+            ->assertSee('Next', false)
+            ->assertDontSee('<th>ID</th>', false)
+            ->assertDontSee('data-label="ID"', false);
+    }
+
+    public function test_admin_dashboard_recent_sessions_are_paginated_at_five_entries(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+
+        for ($i = 0; $i < 6; $i++) {
+            $createdAt = now()->subMinutes($i);
+            $this->sessionFor($user, $category, [
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Recent Interview Sessions')
+            ->assertSee('Showing 1-5 of 6', false)
+            ->assertSee('Page 1 of 2', false)
+            ->assertSee('Next', false)
+            ->assertViewHas('recentSessions', function ($recentSessions): bool {
+                return method_exists($recentSessions, 'perPage')
+                    && $recentSessions->perPage() === 5
+                    && $recentSessions->count() === 5
+                    && $recentSessions->total() === 6;
+            });
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard', ['page' => 2]))
+            ->assertOk()
+            ->assertSee('Showing 6-6 of 6', false)
+            ->assertSee('Page 2 of 2', false)
+            ->assertSee('Previous', false)
+            ->assertDontSee('Showing 1-5 of 6', false);
+    }
+
     public function test_admin_cannot_set_inactive_ai_provider_as_primary(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);

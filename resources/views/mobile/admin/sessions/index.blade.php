@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/sessions/index.css?v=3') }}" data-page-style="admin-sessions-index">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/sessions/index.css?v=4') }}" data-page-style="admin-sessions-index">
 @endpush
 
 @section('content')
@@ -152,7 +152,6 @@
             <table class="table custom-table mb-0 w-100" id="mainSessionsTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>User</th>
                         <th>Category</th>
                         <th>Status</th>
@@ -165,7 +164,6 @@
                 <tbody>
                     @forelse($sessions as $session)
                     <tr>
-                        <td data-label="ID">#{{ $session->id }}</td>
                         <td data-label="User">
                             @if($session->user)
                                 <div class="d-flex align-items-center gap-2">
@@ -205,7 +203,7 @@
                         </td>
                         <td data-label="Duration">{{ gmdate("i:s", $session->duration_seconds) }}</td>
                         <td data-label="Date" style="color:var(--tx2);">{{ $session->created_at->format('M d, Y h:i A') }}</td>
-                        <td data-label="Actions" class="text-end session-action-cell">
+                        <td data-label="Actions" class="text-end session-action-cell session-actions-cell">
                             <a href="{{ route('admin.sessions.show', $session->id) }}" class="btn btn-sm session-row-action" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="View Details" aria-label="View Details"><i class="fa-solid fa-eye"></i></a>
                             <form action="{{ route('admin.sessions.doArchive', $session->id) }}" method="POST" class="d-inline session-row-action-form" id="archiveSessionForm{{ $session->id }}">
                                 @csrf
@@ -220,7 +218,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">No sessions found.</td>
+                        <td colspan="7" class="text-center py-4 text-muted">No sessions found.</td>
                     </tr>
                     @endforelse
                 </tbody>

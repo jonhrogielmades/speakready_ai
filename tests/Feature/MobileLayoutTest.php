@@ -358,7 +358,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-dashboard-title-text"', false)
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
-            ->assertSee('css/mobile/admin/dashboard.css?v=6', false)
+            ->assertSee('css/mobile/admin/dashboard.css?v=7', false)
             ->assertSee('id="mobFullscreenBtn"', false)
             ->assertSee('data-user-fullscreen-toggle', false)
             ->assertSee('js/user-ui.js?v=28', false)
@@ -456,7 +456,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-dashboard-title-text"', false)
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
-            ->assertSee('css/desktop/admin/dashboard.css?v=4', false)
+            ->assertSee('css/desktop/admin/dashboard.css?v=5', false)
             ->assertSee('sw.js?v=46', false)
             ->assertDontSee('SpeakReadyPushConfig', false)
             ->assertDontSee('\\/admin\\/notifications\\/push\\/key', false)
@@ -863,12 +863,12 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('class="admin-mobile-shell mobile-shell"', false)
             ->assertSee('id="sec-admin-sessions"', false)
-            ->assertSee('css/mobile/admin/sessions/index.css?v=3', false)
+            ->assertSee('css/mobile/admin/sessions/index.css?v=4', false)
             ->assertSee('session-stat-grid', false)
             ->assertSee('session-analytics-grid', false)
             ->assertSee('session-filter-form', false)
             ->assertSee('id="mainSessionsTable"', false)
-            ->assertSee('data-label="ID"', false)
+            ->assertDontSee('data-label="ID"', false)
             ->assertSee('data-label="User"', false)
             ->assertSee('data-label="Actions"', false)
             ->assertSee('session-action-cell', false)
@@ -912,7 +912,7 @@ class MobileLayoutTest extends TestCase
             'status' => 'active',
         ]);
 
-        InterviewAnswer::create([
+        $answer = InterviewAnswer::create([
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
             'answer_text' => 'I simplified the workflow and measured completion time.',
@@ -952,6 +952,18 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('scoresChart', false)
             ->assertDontSee('Export Report')
             ->assertDontSee('feedback-export-btn', false)
+            ->assertDontSee('class="db-sidebar"', false);
+
+        $this->actingAs($admin)
+            ->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('admin.feedback.show', $answer))
+            ->assertOk()
+            ->assertSee('class="admin-mobile-shell mobile-shell"', false)
+            ->assertSee('id="sec-admin-feedback-show"', false)
+            ->assertSee('css/mobile/admin/feedback/show.css?v=1', false)
+            ->assertSee('feedback-review-grid', false)
+            ->assertSee('feedback-review-score-grid', false)
+            ->assertSee('feedback-review-empty-audit', false)
             ->assertDontSee('class="db-sidebar"', false);
 
         $feedbackMobileCss = file_get_contents(public_path('css/mobile/admin/feedback/index.css'));
