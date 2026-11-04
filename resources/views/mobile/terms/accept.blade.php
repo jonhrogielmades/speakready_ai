@@ -11,7 +11,7 @@
       @include('shared.early-layout-shell-guard', ['serverLayout' => 'mobile'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
-      <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
+      <link rel="manifest" href="{{ asset('manifest.json?v=8') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

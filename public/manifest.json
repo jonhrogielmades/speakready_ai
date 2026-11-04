@@ -5,6 +5,13 @@
   "start_url": "/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1",
   "scope": "/",
   "display": "standalone",
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "/manifest.json"
+    }
+  ],
+  "prefer_related_applications": false,
   "background_color": "#f1f6fb",
   "theme_color": "#f1f6fb",
   "icons": [

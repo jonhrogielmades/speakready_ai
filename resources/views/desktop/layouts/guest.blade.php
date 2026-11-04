@@ -8,7 +8,7 @@
       @include('shared.early-layout-shell-guard', ['serverLayout' => 'desktop'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
-      <link rel="manifest" href="{{ asset('manifest.json?v=7') }}">
+      <link rel="manifest" href="{{ asset('manifest.json?v=8') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -723,35 +723,48 @@
 
          // PWA Install Prompt Logic
          let deferredPrompt;
+         let installButtonStateRequest = 0;
          const PWA_APP_INSTALLED_KEY = 'pwa_app_installed';
          const PWA_PROMPT_DISMISSED_KEY = 'pwa_prompt_dismissed';
          const PWA_PROMPT_AUTO_SHOWN_KEY = 'pwa_prompt_auto_shown';
          const PWA_PROMPT_LAST_SHOWN_KEY = 'pwa_prompt_last_shown_at';
 
-         function isPwaAlreadyInstalled() {
+         function isPwaRunningStandalone() {
             return window.matchMedia('(display-mode: standalone)').matches ||
-               window.navigator.standalone === true ||
+               window.navigator.standalone === true;
+         }
+
+         function isPwaAlreadyInstalled() {
+            return isPwaRunningStandalone() ||
                localStorage.getItem(PWA_APP_INSTALLED_KEY) === 'true';
          }
 
          async function detectPwaAlreadyInstalled() {
-            let isInstalled = isPwaAlreadyInstalled();
+            if (isPwaRunningStandalone()) {
+               localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
+               document.getElementById('pwa-install-prompt')?.style.setProperty('display', 'none');
+               return true;
+            }
 
-            if (!isInstalled && 'getInstalledRelatedApps' in navigator) {
+            if ('getInstalledRelatedApps' in navigator) {
                try {
                   const relatedApps = await navigator.getInstalledRelatedApps();
-                  isInstalled = relatedApps.length > 0;
+                  const isInstalled = relatedApps.length > 0;
+
+                  if (isInstalled) {
+                     localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
+                     document.getElementById('pwa-install-prompt')?.style.setProperty('display', 'none');
+                  } else {
+                     localStorage.removeItem(PWA_APP_INSTALLED_KEY);
+                  }
+
+                  return isInstalled;
                } catch (error) {
-                  isInstalled = isPwaAlreadyInstalled();
+                  // Fall back to the local marker when the browser cannot query related apps.
                }
             }
 
-            if (isInstalled) {
-               localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
-               document.getElementById('pwa-install-prompt')?.style.setProperty('display', 'none');
-            }
-
-            return isInstalled;
+            return localStorage.getItem(PWA_APP_INSTALLED_KEY) === 'true';
          }
 
          function shouldAutoShowPwaInstallPrompt() {
@@ -772,11 +785,9 @@
             localStorage.setItem(PWA_PROMPT_LAST_SHOWN_KEY, String(Date.now()));
          }
 
-         async function updateInstallButtonState() {
+         function renderInstallButtonState(isInstalled) {
             const installButton = document.getElementById('heroInstallBtn');
             if (!installButton) return;
-
-            const isInstalled = await detectPwaAlreadyInstalled();
 
             const icon = installButton.querySelector('i');
              const label = isInstalled ? 'Already Installed' : 'Install App';
@@ -793,17 +804,26 @@
             installButton.setAttribute('aria-label', label);
          }
 
-         window.addEventListener('beforeinstallprompt', async (e) => {
-            e.preventDefault();
-            if (await detectPwaAlreadyInstalled()) {
-               deferredPrompt = null;
-               updateInstallButtonState();
-               return;
-            }
+         async function updateInstallButtonState(forcedState = null) {
+            const installButton = document.getElementById('heroInstallBtn');
+            if (!installButton) return;
 
-            deferredPrompt = e;
+            const requestId = ++installButtonStateRequest;
+            const isInstalled = typeof forcedState === 'boolean'
+               ? forcedState
+               : await detectPwaAlreadyInstalled();
+
+            if (requestId !== installButtonStateRequest) return;
+            renderInstallButtonState(isInstalled);
+         }
+
+         window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            // This event is authoritative: the browser has just confirmed that the
+            // PWA can be installed again, including after the user uninstalled it.
             localStorage.removeItem(PWA_APP_INSTALLED_KEY);
-            updateInstallButtonState();
+            deferredPrompt = e;
+            updateInstallButtonState(false);
             if (shouldAutoShowPwaInstallPrompt()) {
                queuePwaInstallPrompt();
             }
@@ -813,7 +833,7 @@
             localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
             deferredPrompt = null;
             document.getElementById('pwa-install-prompt')?.style.setProperty('display', 'none');
-            updateInstallButtonState();
+            updateInstallButtonState(true);
          });
 
          const standaloneDisplayMode = window.matchMedia('(display-mode: standalone)');
