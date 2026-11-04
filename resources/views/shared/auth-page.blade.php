@@ -8,7 +8,7 @@
       ? route('auth.google.register', $layoutQuery)
       : route('auth.google.login', $layoutQuery);
    $authQueryAlert = request('auth_alert') === 'google_login_unregistered'
-      ? 'This Google account is not registered. Please register first.'
+      ? 'This Google account is not registered. Please click create account first.'
       : null;
    $pageError = $errors->first() ?: $authQueryAlert;
    $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);

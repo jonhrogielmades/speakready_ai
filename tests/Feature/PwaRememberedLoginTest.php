@@ -603,7 +603,7 @@ class PwaRememberedLoginTest extends TestCase
             ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('login', ['auth_alert' => 'google_login_unregistered']))
             ->assertSessionHasErrors([
-                'email' => 'This Google account is not registered. Please register first.',
+                'email' => 'This Google account is not registered. Please click create account first.',
             ])
             ->assertSessionHas('_old_input.auth_tab', 'login')
             ->assertSessionHas('_old_input.email', 'missing-google-login@example.com');
@@ -612,7 +612,7 @@ class PwaRememberedLoginTest extends TestCase
             ->assertOk()
             ->assertSee('id="authPage" class="auth-page-shell" data-auth-mode="login"', false)
             ->assertSee('id="loginForm"', false)
-            ->assertSee('This Google account is not registered. Please register first.');
+            ->assertSee('This Google account is not registered. Please click create account first.');
     }
 
     public function test_legacy_google_unregistered_query_redirects_to_login_page_without_flashed_errors(): void
@@ -627,7 +627,7 @@ class PwaRememberedLoginTest extends TestCase
             ->assertOk()
             ->assertSee('id="authPage" class="auth-page-shell" data-auth-mode="login"', false)
             ->assertSee('id="loginForm"', false)
-            ->assertSee('This Google account is not registered. Please register first.');
+            ->assertSee('This Google account is not registered. Please click create account first.');
     }
 
     public function test_google_login_uses_picture_fallback_for_profile_photo(): void
@@ -712,7 +712,7 @@ class PwaRememberedLoginTest extends TestCase
             ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('login', ['auth_alert' => 'google_login_unregistered']))
             ->assertSessionHasErrors([
-                'email' => 'This Google account is not registered. Please register first.',
+                'email' => 'This Google account is not registered. Please click create account first.',
             ]);
 
         $updatedUser = $user->fresh();

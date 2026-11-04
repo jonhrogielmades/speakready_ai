@@ -45,7 +45,7 @@ class AuthController extends Controller
 
     private const LOGIN_UNREGISTERED_ACCOUNT_MESSAGE = 'This account is not registered. Please register first.';
 
-    private const GOOGLE_LOGIN_UNREGISTERED_ACCOUNT_MESSAGE = 'This Google account is not registered. Please register first.';
+    private const GOOGLE_LOGIN_UNREGISTERED_ACCOUNT_MESSAGE = 'This Google account is not registered. Please click create account first.';
 
     private const GOOGLE_LOGIN_UNREGISTERED_ALERT_KEY = 'google_login_unregistered';
 

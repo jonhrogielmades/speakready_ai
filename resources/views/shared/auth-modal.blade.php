@@ -4,7 +4,7 @@
    $authTab = old('auth_tab') ?: (in_array($authModalRequest, ['login', 'signup', 'register'], true) ? $authModalRequest : null);
    $showSignupAuthTab = in_array($authTab, ['signup', 'register'], true) || ($authTab === null && filled(old('name')));
    $authQueryAlert = request('auth_alert') === 'google_login_unregistered'
-      ? 'This Google account is not registered. Please register first.'
+      ? 'This Google account is not registered. Please click create account first.'
       : null;
    $loginAuthAlert = ! $showSignupAuthTab
       ? ($errors->first() ?: $authQueryAlert)
