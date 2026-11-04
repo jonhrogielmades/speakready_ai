@@ -147,7 +147,7 @@ class AdminModuleEditorTest extends TestCase
         ]);
     }
 
-    public function test_resource_and_quiz_management_are_removed_from_the_module_editor(): void
+    public function test_resource_and_quiz_management_are_available_in_both_module_editors(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -177,20 +177,20 @@ class AdminModuleEditorTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.modules.edit', $module))
             ->assertOk()
-            ->assertDontSee('id="resources-tab"', false)
-            ->assertDontSee('id="quizzes-tab"', false)
-            ->assertDontSee('Existing Interview Checklist')
-            ->assertDontSee('Existing Confidence Quiz');
+            ->assertSee('id="resources-tab"', false)
+            ->assertSee('id="quizzes-tab"', false)
+            ->assertSee('Existing Interview Checklist')
+            ->assertSee('Existing Confidence Quiz');
 
         $iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
         $this->actingAs($admin)
             ->withHeader('User-Agent', $iphone)
             ->get(route('admin.modules.edit', $module))
             ->assertOk()
-            ->assertDontSee('id="resources-tab"', false)
-            ->assertDontSee('id="quizzes-tab"', false)
-            ->assertDontSee('Existing Interview Checklist')
-            ->assertDontSee('Existing Confidence Quiz');
+            ->assertSee('id="resources-tab"', false)
+            ->assertSee('id="quizzes-tab"', false)
+            ->assertSee('Existing Interview Checklist')
+            ->assertSee('Existing Confidence Quiz');
 
         foreach ([
             'admin.modules.resources.store',
@@ -203,7 +203,7 @@ class AdminModuleEditorTest extends TestCase
             'admin.modules.quizzes.questions.update',
             'admin.modules.quizzes.questions.destroy',
         ] as $routeName) {
-            $this->assertFalse(Route::has($routeName), "Removed module-management route still exists: {$routeName}");
+            $this->assertTrue(Route::has($routeName), "Module-management route is missing: {$routeName}");
         }
 
         $this->assertDatabaseHas('module_resources', ['id' => $resource->id]);

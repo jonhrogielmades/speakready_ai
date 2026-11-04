@@ -87,6 +87,7 @@
  @endif
  <span id="moduleSearchStatus" class="visually-hidden" role="status" aria-live="polite"></span>
  </form>
+ <p id="moduleSearchError" class="alert alert-danger mt-2 d-none" role="alert"></p>
 
 <div id="moduleResults" aria-live="polite">
  <div class="row g-4 mb-4 modules-card-grid">
@@ -167,10 +168,10 @@
  <div class="modal-dialog modal-dialog-centered module-position-dialog">
  <form action="{{ route('user.modules.position') }}" method="POST" class="modal-content" data-sr-related-loader-form="modules">
  @csrf
- <input type="hidden" name="category" value="{{ $currentCategory }}">
- <input type="hidden" name="search" value="{{ $currentSearch }}">
  <div class="modal-header">
+ @if($selectedModulePosition!== '')
  <button type="button" class="btn-close module-position-close-right" data-bs-dismiss="modal" aria-label="Close"></button>
+ @endif
  <div class="module-position-title-wrap">
  <span class="module-position-title-icon" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></span>
  <div class="module-position-heading">
@@ -247,6 +248,11 @@
  const controller = new AbortController();
  activeSearchRequest = controller;
  const results = document.getElementById('moduleResults');
+ const searchError = document.getElementById('moduleSearchError');
+ if (searchError) {
+ searchError.textContent = '';
+ searchError.classList.add('d-none');
+ }
  filtersForm.setAttribute('aria-busy', 'true');
  results?.classList.add('is-loading');
 
@@ -273,7 +279,7 @@
  syncClearLink(nextForm);
  currentResults.replaceWith(nextResults);
  window.SpeakReadyInterviewPrepLoader?.refresh?.();
- history.replaceState({}, '', url);
+ if (!updateFields && url !== window.location.href) history.pushState({}, '', url);
  window.scrollTo({ top: scrollTop, left: window.pageXOffset || 0, behavior: 'auto' });
  const count = nextResults.querySelectorAll('.module-card').length;
  const status = document.getElementById('moduleSearchStatus');
@@ -281,6 +287,10 @@
  } catch (error) {
  if (error.name !== 'AbortError') {
  console.error(error);
+ if (searchError) {
+ searchError.textContent = 'Search could not be updated. Check your connection and try again.';
+ searchError.classList.remove('d-none');
+ }
  const status = document.getElementById('moduleSearchStatus');
  if (status) status.textContent = 'Search could not be updated. Press Enter to try again.';
  }
@@ -364,6 +374,15 @@
  selectShell.classList.contains('is-open')? closeMenu(): openMenu();
  });
 
+ button.addEventListener('keydown', event => {
+ if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+ event.preventDefault();
+ openMenu();
+ const selected = options.findIndex(option => option.getAttribute('aria-selected') === 'true');
+ options[Math.max(0, selected)]?.focus();
+ }
+ });
+
  options.forEach(option => {
  option.addEventListener('click', () => {
  input.value = option.dataset.positionOption || option.textContent.trim();
@@ -376,6 +395,23 @@
  });
  closeMenu();
  button.focus();
+ });
+ option.addEventListener('keydown', event => {
+ const index = options.indexOf(option);
+ const target = event.key === 'ArrowDown' ? options[Math.min(options.length - 1, index + 1)]
+ : event.key === 'ArrowUp' ? options[Math.max(0, index - 1)]
+ : event.key === 'Home' ? options[0]
+ : event.key === 'End' ? options[options.length - 1]
+ : null;
+ if (target) {
+ event.preventDefault();
+ target.focus();
+ }
+ if (event.key === 'Escape') {
+ event.preventDefault();
+ closeMenu();
+ button.focus();
+ }
  });
  });
 

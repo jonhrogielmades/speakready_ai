@@ -48,7 +48,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="olbl" for="addChapterVideoUrl">Video URL (Optional YouTube Embed Link)</label>
+                        <label class="olbl" for="addChapterVideoUrl">Video URL (YouTube or other video link)</label>
                         <input
                             class="oinp w-100 {{ $addChapterErrors->has('video_url') ? 'is-invalid' : '' }}"
                             id="addChapterVideoUrl"
@@ -60,7 +60,7 @@
                             inputmode="url"
                             aria-describedby="addChapterVideoUrlHelp"
                         >
-                        <div class="form-text" id="addChapterVideoUrlHelp">Use a complete http:// or https:// address.</div>
+                        <div class="form-text" id="addChapterVideoUrlHelp">Add lesson text or a video URL. Use a complete http:// or https:// address.</div>
                         @if($addChapterErrors->has('video_url'))
                             <div class="invalid-feedback d-block">{{ $addChapterErrors->first('video_url') }}</div>
                         @endif
@@ -135,7 +135,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="olbl" for="editChapterVideoUrl{{ $chapter->id }}">Video URL (Optional YouTube Embed Link)</label>
+                            <label class="olbl" for="editChapterVideoUrl{{ $chapter->id }}">Video URL (YouTube or other video link)</label>
                             <input
                                 class="oinp w-100 {{ $editChapterErrors->has('video_url') ? 'is-invalid' : '' }}"
                                 id="editChapterVideoUrl{{ $chapter->id }}"
@@ -147,7 +147,7 @@
                                 inputmode="url"
                                 aria-describedby="editChapterVideoUrlHelp{{ $chapter->id }}"
                             >
-                            <div class="form-text" id="editChapterVideoUrlHelp{{ $chapter->id }}">Use a complete http:// or https:// address.</div>
+                            <div class="form-text" id="editChapterVideoUrlHelp{{ $chapter->id }}">Add lesson text or a video URL. Use a complete http:// or https:// address.</div>
                             @if($editChapterErrors->has('video_url'))
                                 <div class="invalid-feedback d-block">{{ $editChapterErrors->first('video_url') }}</div>
                             @endif

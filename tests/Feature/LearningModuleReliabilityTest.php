@@ -23,6 +23,7 @@ class LearningModuleReliabilityTest extends TestCase
             'type' => 'article',
             'status' => 'published',
         ]);
+        $module->chapters()->create(['title' => 'Preparation', 'content' => '<p>Practice the quiz topic.</p>', 'order' => 1]);
         $quiz = $module->quizzes()->create(['title' => 'Readiness check', 'passing_score' => 70]);
         $first = $quiz->questions()->create([
             'type' => 'multiple_choice',

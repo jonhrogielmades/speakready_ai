@@ -62,6 +62,7 @@ class LearningModuleSchemaRepairTest extends TestCase
             'category' => 'Interview Skills',
             'status' => 'published',
         ]);
+        $module->chapters()->create(['title' => 'Completion lesson', 'content' => '<p>Prepare and revise your answer.</p>', 'order' => 1]);
 
         Schema::dropIfExists('learning_progress');
 
@@ -99,6 +100,7 @@ class LearningModuleSchemaRepairTest extends TestCase
             'module_quizzes',
             'module_quiz_questions',
             'module_practice_activities',
+            'module_practice_submissions',
             'learning_module_game_level',
         ];
     }

@@ -81,6 +81,7 @@
  @endif
  <span id="moduleSearchStatus" class="visually-hidden" role="status" aria-live="polite"></span>
  </form>
+ <p id="moduleSearchError" class="alert alert-danger mt-2 d-none" role="alert"></p>
 
 <div id="moduleResults" aria-live="polite">
  <div class="row g-4 mb-4 modules-card-grid">
@@ -161,15 +162,15 @@
  <div class="modal-dialog modal-dialog-centered">
  <form action="{{ route('user.modules.position') }}" method="POST" class="modal-content" data-sr-related-loader-form="modules">
  @csrf
- <input type="hidden" name="category" value="{{ $currentCategory }}">
- <input type="hidden" name="search" value="{{ $currentSearch }}">
  <div class="modal-header">
  <div>
  <div class="module-position-kicker">Interview Modules</div>
  <h5 class="modal-title" id="modulePositionModalTitle">What position are you applying for?</h5>
  <p class="position-modal-intro" id="modulePositionModalIntro">We’ll tailor modules to the role you want to prepare for.</p>
  </div>
+ @if($selectedModulePosition!== '')
  <button type="button" class="btn-close module-position-close" data-bs-dismiss="modal" aria-label="Close"></button>
+ @endif
  </div>
  <div class="modal-body">
  <label for="moduleTargetPosition" class="form-label">Target position</label>
@@ -225,6 +226,11 @@
  const controller = new AbortController();
  activeSearchRequest = controller;
  const results = document.getElementById('moduleResults');
+ const searchError = document.getElementById('moduleSearchError');
+ if (searchError) {
+ searchError.textContent = '';
+ searchError.classList.add('d-none');
+ }
  filtersForm.setAttribute('aria-busy', 'true');
  results?.classList.add('is-loading');
 
@@ -251,13 +257,17 @@
  syncClearLink(nextForm);
  currentResults.replaceWith(nextResults);
  window.SpeakReadyInterviewPrepLoader?.refresh?.();
- history.replaceState({}, '', url);
+ if (!updateFields && url !== window.location.href) history.pushState({}, '', url);
  const count = nextResults.querySelectorAll('.module-card').length;
  const status = document.getElementById('moduleSearchStatus');
  if (status) status.textContent = `Showing ${count} matching module${count === 1 ? '' : 's'}.`;
  } catch (error) {
  if (error.name !== 'AbortError') {
  console.error(error);
+ if (searchError) {
+ searchError.textContent = 'Search could not be updated. Check your connection and try again.';
+ searchError.classList.remove('d-none');
+ }
  const status = document.getElementById('moduleSearchStatus');
  if (status) status.textContent = 'Search could not be updated. Press Enter to try again.';
  }

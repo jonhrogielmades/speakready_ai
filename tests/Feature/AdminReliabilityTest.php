@@ -294,7 +294,7 @@ class AdminReliabilityTest extends TestCase
         ]);
     }
 
-    public function test_module_edit_only_exposes_module_info_and_interview_lessons(): void
+    public function test_module_edit_exposes_lessons_resources_and_quizzes(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
         $module = LearningModule::create([
@@ -310,10 +310,10 @@ class AdminReliabilityTest extends TestCase
             ->assertOk()
             ->assertSee('Interview Module Info')
             ->assertSee('Interview Lessons')
-            ->assertDontSee('id="resources-tab"', false)
-            ->assertDontSee('Add Downloadable Resource')
-            ->assertDontSee('id="quizzes-tab"', false)
-            ->assertDontSee('Add Module Quiz')
+            ->assertSee('id="resources-tab"', false)
+            ->assertSee('Add resource')
+            ->assertSee('id="quizzes-tab"', false)
+            ->assertSee('Add quiz')
             ->assertDontSee('Linked Interview Games')
             ->assertDontSee('AI Generate Quiz');
     }

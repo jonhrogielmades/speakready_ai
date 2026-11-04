@@ -30,6 +30,7 @@ class LearningModuleSchema
             self::ensureModuleQuizzesTable();
             self::ensureModuleQuizQuestionsTable();
             self::ensureModulePracticeActivitiesTable();
+            self::ensureModulePracticeSubmissionsTable();
             self::ensureLearningModuleGameLevelTable();
         }
 
@@ -46,6 +47,7 @@ class LearningModuleSchema
             && Schema::hasTable('module_quizzes')
             && Schema::hasTable('module_quiz_questions')
             && Schema::hasTable('module_practice_activities')
+            && Schema::hasTable('module_practice_submissions')
             && Schema::hasTable('learning_module_game_level')
             && self::missingColumns('learning_modules', self::learningModuleColumns()) === []
             && self::missingColumns('learning_progress', self::learningProgressColumns()) === []
@@ -54,6 +56,7 @@ class LearningModuleSchema
             && self::missingColumns('module_quizzes', self::moduleQuizColumns()) === []
             && self::missingColumns('module_quiz_questions', self::moduleQuizQuestionColumns()) === []
             && self::missingColumns('module_practice_activities', self::modulePracticeActivityColumns()) === []
+            && self::missingColumns('module_practice_submissions', self::modulePracticeSubmissionColumns()) === []
             && self::missingColumns('learning_module_game_level', self::learningModuleGameLevelColumns()) === [];
     }
 
@@ -142,6 +145,9 @@ class LearningModuleSchema
                 $table->integer('progress_percentage')->default(0);
                 $table->integer('quiz_score')->nullable();
                 $table->decimal('learning_hours', 8, 2)->default(0);
+                $table->unsignedInteger('chapter_gate_seconds')->default(0);
+                $table->timestamp('chapter_gate_last_heartbeat_at')->nullable();
+                $table->json('quiz_results')->nullable();
                 $table->timestamps();
             });
 
@@ -169,6 +175,15 @@ class LearningModuleSchema
                 }
                 if (self::isMissing($missing, 'learning_hours')) {
                     $table->decimal('learning_hours', 8, 2)->default(0);
+                }
+                if (self::isMissing($missing, 'chapter_gate_seconds')) {
+                    $table->unsignedInteger('chapter_gate_seconds')->default(0);
+                }
+                if (self::isMissing($missing, 'chapter_gate_last_heartbeat_at')) {
+                    $table->timestamp('chapter_gate_last_heartbeat_at')->nullable();
+                }
+                if (self::isMissing($missing, 'quiz_results')) {
+                    $table->json('quiz_results')->nullable();
                 }
                 if (self::isMissing($missing, 'created_at')) {
                     $table->timestamp('created_at')->nullable();
@@ -397,6 +412,33 @@ class LearningModuleSchema
         }
     }
 
+    private static function ensureModulePracticeSubmissionsTable(): void
+    {
+        if (! Schema::hasTable('module_practice_submissions')) {
+            Schema::create('module_practice_submissions', function (Blueprint $table): void {
+                $table->id();
+                self::foreignId($table, 'user_id', 'users');
+                self::foreignId($table, 'module_practice_activity_id', 'module_practice_activities');
+                $table->text('response_text');
+                $table->timestamps();
+                $table->unique(['user_id', 'module_practice_activity_id'], 'module_practice_user_activity_unique');
+            });
+
+            return;
+        }
+
+        $missing = self::missingColumns('module_practice_submissions', self::modulePracticeSubmissionColumns());
+        if ($missing !== []) {
+            Schema::table('module_practice_submissions', function (Blueprint $table) use ($missing): void {
+                if (self::isMissing($missing, 'user_id')) self::foreignId($table, 'user_id', 'users', true);
+                if (self::isMissing($missing, 'module_practice_activity_id')) self::foreignId($table, 'module_practice_activity_id', 'module_practice_activities', true);
+                if (self::isMissing($missing, 'response_text')) $table->text('response_text')->nullable();
+                if (self::isMissing($missing, 'created_at')) $table->timestamp('created_at')->nullable();
+                if (self::isMissing($missing, 'updated_at')) $table->timestamp('updated_at')->nullable();
+            });
+        }
+    }
+
     private static function ensureLearningModuleGameLevelTable(): void
     {
         if (! Schema::hasTable('learning_module_game_level')) {
@@ -522,6 +564,9 @@ class LearningModuleSchema
             'progress_percentage',
             'quiz_score',
             'learning_hours',
+            'chapter_gate_seconds',
+            'chapter_gate_last_heartbeat_at',
+            'quiz_results',
             'created_at',
             'updated_at',
         ];
@@ -602,6 +647,11 @@ class LearningModuleSchema
             'created_at',
             'updated_at',
         ];
+    }
+
+    private static function modulePracticeSubmissionColumns(): array
+    {
+        return ['user_id', 'module_practice_activity_id', 'response_text', 'created_at', 'updated_at'];
     }
 
     /**

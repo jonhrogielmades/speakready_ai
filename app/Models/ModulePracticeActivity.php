@@ -20,4 +20,9 @@ class ModulePracticeActivity extends Model
     {
         return $this->belongsTo(LearningModule::class);
     }
+
+    public function submissions()
+    {
+        return $this->hasMany(ModulePracticeSubmission::class);
+    }
 }

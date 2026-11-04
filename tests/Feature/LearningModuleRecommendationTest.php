@@ -202,7 +202,7 @@ class LearningModuleRecommendationTest extends TestCase
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $module = $this->module('Quiz-Gated Module', 'Review the quiz before completion.', ['relevance']);
-        $module->quizzes()->create([
+        $quiz = $module->quizzes()->create([
             'title' => 'Readiness review',
             'passing_score' => 70,
         ]);
@@ -223,6 +223,20 @@ class LearningModuleRecommendationTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('user.modules.progress', $module->id), ['milestone' => 'quiz_reviewed'])
+            ->assertSessionHasErrors('milestone');
+
+        $question = $quiz->questions()->create([
+            'type' => 'true_false',
+            'question_text' => 'Should answers include examples?',
+            'options' => ['True', 'False'],
+            'correct_answer' => 'True',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module->id), [
+                'milestone' => 'quiz_reviewed',
+                'quiz_answers' => [$question->id => 'True'],
+            ])
             ->assertRedirect(route('user.modules.show', $module->id));
 
         $this->actingAs($user)
@@ -312,7 +326,7 @@ class LearningModuleRecommendationTest extends TestCase
 
     private function module(string $title, string $description, array $skills): LearningModule
     {
-        return LearningModule::create([
+        $module = LearningModule::create([
             'title' => $title,
             'description' => $description,
             'category' => 'Communication',
@@ -321,6 +335,9 @@ class LearningModuleRecommendationTest extends TestCase
             'status' => 'published',
             'mapped_skills' => $skills,
         ]);
+        $module->chapters()->create(['title' => 'Action lesson', 'content' => '<p>Practice and revise an answer.</p>', 'order' => 1]);
+
+        return $module;
     }
 
     private function completedSessionFor(User $user, Category $category): InterviewSession

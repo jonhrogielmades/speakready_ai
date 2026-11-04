@@ -14,6 +14,9 @@ use App\Models\GameProgress;
 use App\Models\InterviewSession;
 use App\Models\LearningModule;
 use App\Models\LearningProgress;
+use App\Models\ModulePracticeActivity;
+use App\Models\ModulePracticeSubmission;
+use App\Models\ModuleResource;
 use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
@@ -42,6 +45,8 @@ use App\Support\FeedbackEvidencePresenter;
 use App\Support\FeedbackCoachingRepair;
 use App\Support\GameSchema;
 use App\Support\LearningModuleSchema;
+use App\Support\ModuleChapterGate;
+use App\Support\ModuleLessonContent;
 use App\Support\PasswordRecovery;
 use App\Support\ScoreSchema;
 use App\Support\SystemSettings;
@@ -55,6 +60,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -5155,8 +5161,6 @@ class UserController extends Controller
 
  $validated = $request->validate([
  'target_position' => ['required', 'string', 'max:255'],
- 'category' => ['nullable', 'string', 'max:120'],
- 'search' => ['nullable', 'string', 'max:120'],
  ]);
 
  $position = $challengePositions->clean($validated['target_position']?? null);
@@ -5206,14 +5210,7 @@ class UserController extends Controller
  ? ($usedAi? "Generated {$createdCount} and saved role-specific learning module(s) for {$position} in Admin.": "Generated {$createdCount} and saved role-specific learning module(s) for {$position} in Admin with reliable fallback content while the AI provider was unavailable.")
  : "Showing saved admin interview modules for {$position}.";
 
- $redirectParams = collect([
- 'category' => (string) Str::of((string) ($validated['category']?? ''))->squish()->limit(120, ''),
- 'search' => (string) Str::of((string) ($validated['search']?? ''))->squish()->limit(120, ''),
- ])
- ->filter(fn (string $value): bool => $value!== '')
- ->all();
-
- $redirectUrl = route('user.modules.index', $redirectParams);
+ $redirectUrl = route('user.modules.index');
 
  if ($request->headers->get('X-SpeakReady-Loader-Wait') === '1') {
  $request->session()->flash('success', $message);
@@ -5318,6 +5315,14 @@ class UserController extends Controller
  'user_id' => Auth::id(),
  'learning_module_id' => $module->id,
  ]);
+ $quizResults = $moduleProgress->quiz_results;
+ if (($quizResults['signature'] ?? null) !== $this->moduleQuizSignature($module->quizzes)) {
+ $quizResults = null;
+ }
+ $practiceSubmissions = ModulePracticeSubmission::where('user_id', Auth::id())
+ ->whereIn('module_practice_activity_id', $module->activities->pluck('id'))
+ ->get()
+ ->keyBy('module_practice_activity_id');
  $recommendationCandidates = LearningModule::where('status', 'published')
  ->where('id', '!=', $module->id)
  ->orderByDesc('is_featured')
@@ -5328,7 +5333,78 @@ class UserController extends Controller
  $moduleRecommendations = app(LearningRecommendationService::class)
  ->forUser(Auth::id(), 3, $recommendationCandidates);
 
- return $this->mobileView('user.modules.show', compact('module', 'moduleProgress', 'moduleRecommendations'));
+ return $this->mobileView('user.modules.show', compact('module', 'moduleProgress', 'moduleRecommendations', 'quizResults', 'practiceSubmissions'));
+ }
+
+ public function updateModuleReading(Request $request, $id)
+ {
+ if (! Setting::enabled('ll_modules')) {
+ return response()->json(['message' => 'Learning modules are disabled.'], 403);
+ }
+
+ $module = LearningModule::with('chapters')->where('status', 'published')->findOrFail($id);
+ if (! ModuleChapterGate::enabled($module) || $module->chapters->count() < 2) {
+ return response()->json(['elapsed_seconds' => 0, 'unlocked_count' => $module->chapters->count()]);
+ }
+
+ $resume = $request->boolean('resume');
+ $progress = DB::transaction(function () use ($module, $resume): LearningProgress {
+ $progress = LearningProgress::firstOrCreate(
+ ['user_id' => Auth::id(), 'learning_module_id' => $module->id],
+ ['status' => 'enrolled', 'progress_percentage' => 0, 'learning_hours' => 0]
+ );
+ $progress = LearningProgress::whereKey($progress->id)->lockForUpdate()->firstOrFail();
+ $now = now();
+ $last = $progress->chapter_gate_last_heartbeat_at;
+ $elapsed = $last ? max(0, $now->getTimestamp() - $last->getTimestamp()) : 0;
+ if (! $resume && $elapsed > 0 && $elapsed <= 35) {
+ $progress->chapter_gate_seconds = min(
+ ModuleChapterGate::requiredSeconds($module),
+ max(0, (int) $progress->chapter_gate_seconds) + min(15, $elapsed)
+ );
+ }
+ $progress->chapter_gate_last_heartbeat_at = $now;
+ $progress->save();
+
+ return $progress;
+ });
+
+ return response()->json([
+ 'elapsed_seconds' => (int) $progress->chapter_gate_seconds,
+ 'unlocked_count' => ModuleChapterGate::unlockedCount($module, $progress),
+ ]);
+ }
+
+ public function submitModulePractice(Request $request, LearningModule $module, ModulePracticeActivity $activity)
+ {
+ abort_unless($module->status === 'published' && (int) $activity->learning_module_id === (int) $module->id, 404);
+ if (! Setting::enabled('ll_modules')) {
+ return redirect()->route('dashboard')->with('error', 'Learning modules are currently disabled by the administrator.');
+ }
+
+ $validated = $request->validate([
+ 'response_text' => ['required', 'string', 'min:20', 'max:5000'],
+ ]);
+ ModulePracticeSubmission::updateOrCreate(
+ ['user_id' => Auth::id(), 'module_practice_activity_id' => $activity->id],
+ ['response_text' => trim($validated['response_text'])]
+ );
+
+ return redirect()->to(route('user.modules.show', $module->id).'#activities')
+ ->with('success', 'Practice response saved.');
+ }
+
+ public function downloadModuleResource(LearningModule $module, ModuleResource $resource)
+ {
+ abort_unless($module->status === 'published' && (int) $resource->learning_module_id === (int) $module->id, 404);
+ if (! Setting::enabled('ll_modules') || ! Storage::disk('public')->exists($resource->file_path)) {
+ abort(404);
+ }
+
+ $extension = pathinfo($resource->file_path, PATHINFO_EXTENSION);
+ $filename = Str::slug($resource->title).($extension !== '' ? '.'.$extension : '');
+
+ return Storage::disk('public')->download($resource->file_path, $filename);
  }
 
  public function updateModuleProgress(Request $request, $id)
@@ -5339,7 +5415,7 @@ class UserController extends Controller
 
  LearningModuleSchema::ensure();
 
- $module = LearningModule::with(['quizzes.questions'])
+ $module = LearningModule::with(['chapters', 'quizzes.questions'])
  ->where('status', 'published')
  ->findOrFail($id);
 
@@ -5373,7 +5449,17 @@ class UserController extends Controller
  $quizQuestions = $quizzes->flatMap(fn ($quiz) => $quiz->questions)->values();
  $hasQuizzes = $quizzes->isNotEmpty();
  $quizScore = null;
+ $quizResults = null;
  $quizAnswers = $validated['quiz_answers']?? [];
+
+ if ($milestone === 'completed' && ! ModuleLessonContent::hasLesson($module)) {
+ return back()->withErrors(['milestone' => 'This module needs a lesson before it can be completed.']);
+ }
+
+ if (in_array($milestone, ['quiz_reviewed', 'completed'], true)
+ && $quizzes->contains(fn ($quiz): bool => $quiz->questions->isEmpty())) {
+ return back()->withErrors(['milestone' => 'A module quiz has no questions. Ask an administrator to complete it.']);
+ }
 
  if ($milestone === 'quiz_reviewed' && ! $hasQuizzes) {
  return back()->withErrors([
@@ -5401,7 +5487,8 @@ class UserController extends Controller
  ]);
  }
 
- $quizScore = $this->scoreModuleQuizAnswers($quizQuestions, $quizAnswers);
+ $quizResults = $this->scoreModuleQuizzes($quizzes, $quizAnswers);
+ $quizScore = $quizResults['score'];
  }
 
  $failureMessage = null;
@@ -5409,8 +5496,10 @@ class UserController extends Controller
  $module,
  $milestone,
  $hasQuizzes,
+ $quizzes,
  $quizQuestions,
  $quizScore,
+ $quizResults,
  &$failureMessage
  ): ?LearningProgress {
  $progress = LearningProgress::where('user_id', Auth::id())
@@ -5418,6 +5507,12 @@ class UserController extends Controller
  ->lockForUpdate()
  ->first();
  $previousPercentage = max(0, min(100, (int) ($progress->progress_percentage?? 0)));
+
+ if ($milestone === 'quiz_reviewed' && $previousPercentage >= 100) {
+ $failureMessage = 'This module is already completed.';
+
+ return null;
+ }
 
  if ($milestone === 'quiz_reviewed' && $previousPercentage < self::MODULE_PROGRESS_MILESTONES['started']) {
  $failureMessage = 'Mark the module as started before saving quiz review progress.';
@@ -5436,12 +5531,19 @@ class UserController extends Controller
  return null;
  }
 
- if ($milestone === 'completed' && $quizQuestions->isNotEmpty()) {
- $passingScore = $this->moduleQuizPassingScore($module);
- $storedQuizScore = $progress?->quiz_score;
+ if ($milestone === 'completed' && ModuleChapterGate::enabled($module)
+ && (int) ($progress->chapter_gate_seconds ?? 0) < ModuleChapterGate::requiredSeconds($module)) {
+ $failureMessage = 'Unlock every lesson chapter before marking this module completed.';
 
- if ($storedQuizScore === null || (int) $storedQuizScore < $passingScore) {
- $failureMessage = "Pass the module quiz with at least {$passingScore}% before marking the module as completed.";
+ return null;
+ }
+
+ if ($milestone === 'completed' && $quizQuestions->isNotEmpty()) {
+ $storedResults = $progress?->quiz_results;
+ if (! is_array($storedResults)
+ || ($storedResults['signature'] ?? null) !== $this->moduleQuizSignature($quizzes)
+ || ($storedResults['passed'] ?? false) !== true) {
+ $failureMessage = 'Pass every current module quiz before marking the module completed.';
 
  return null;
  }
@@ -5473,6 +5575,7 @@ class UserController extends Controller
 
  if ($quizScore !== null) {
  $progress->quiz_score = max(0, min(100, $quizScore));
+ $progress->quiz_results = $quizResults;
  }
 
  if (! $progress->exists) {
@@ -5497,36 +5600,52 @@ class UserController extends Controller
  false
  );
 
- $message = $progress->status === 'completed'
+ $message = $milestone === 'quiz_reviewed'
+ ? ($quizResults['passed'] ? 'All quizzes passed. You can now complete this module.' : 'Quiz scored. Review your results and retry the quizzes that need improvement.')
+ : ($progress->status === 'completed'
  ? 'Module marked as completed. Nice work keeping your learning trail honest.'
- : 'Module progress updated.';
+ : 'Module progress updated.');
 
  return redirect()->route('user.modules.show', $module->id)->with('success', $message);
  }
 
- private function scoreModuleQuizAnswers($questions, array $answers): int
+ private function scoreModuleQuizzes($quizzes, array $answers): array
  {
+ $items = [];
+ $allCorrect = 0;
+ $allQuestions = 0;
+ foreach ($quizzes as $quiz) {
  $correct = 0;
- $total = $questions->count();
-
- foreach ($questions as $question) {
- $questionId = (string) $question->id;
- $submittedAnswer = $this->normalizeModuleQuizAnswer($answers[$questionId]?? $answers[(int) $question->id]?? '');
- $correctAnswer = $this->normalizeModuleQuizAnswer($question->correct_answer?? '');
-
- if ($submittedAnswer !== '' && $submittedAnswer === $correctAnswer) {
+ foreach ($quiz->questions as $question) {
+ $submitted = $this->normalizeModuleQuizAnswer($answers[(string) $question->id] ?? '');
+ if ($submitted !== '' && $submitted === $this->normalizeModuleQuizAnswer($question->correct_answer ?? '')) {
  $correct++;
  }
  }
-
- return $total > 0 ? (int) round(($correct / $total) * 100) : 0;
+ $total = $quiz->questions->count();
+ $score = $total > 0 ? (int) round($correct / $total * 100) : 0;
+ $required = max(0, min(100, (int) $quiz->passing_score));
+ $items[] = ['id' => $quiz->id, 'title' => $quiz->title, 'score' => $score, 'required' => $required, 'passed' => $total > 0 && $score >= $required];
+ $allCorrect += $correct;
+ $allQuestions += $total;
  }
 
- private function moduleQuizPassingScore(LearningModule $module): int
+ return [
+ 'signature' => $this->moduleQuizSignature($quizzes),
+ 'score' => $allQuestions > 0 ? (int) round($allCorrect / $allQuestions * 100) : 0,
+ 'passed' => $items !== [] && collect($items)->every(fn (array $item): bool => $item['passed']),
+ 'items' => $items,
+ ];
+ }
+
+ private function moduleQuizSignature($quizzes): string
  {
- return max(0, min(100, (int) ($module->quizzes
- ->map(fn ($quiz): int => (int) ($quiz->passing_score?? 70))
- ->max()?? 70)));
+ return hash('sha256', json_encode($quizzes->map(fn ($quiz) => [
+ $quiz->id,
+ $quiz->title,
+ $quiz->passing_score,
+ $quiz->questions->map(fn ($question) => [$question->id, $question->type, $question->question_text, $question->correct_answer, $question->options])->all(),
+ ])->all()));
  }
 
  private function normalizeModuleQuizAnswer(mixed $answer): string

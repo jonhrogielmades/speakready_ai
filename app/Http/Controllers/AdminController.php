@@ -18,14 +18,17 @@ use App\Services\CsvExportService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\UserContentUpdateNotificationService;
 use App\Support\ModuleChapterHtml;
+use App\Support\ModuleLessonContent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
@@ -1273,6 +1276,10 @@ class AdminController extends Controller
  'title.unique' => 'A learning module with this title already exists.',
  ]);
 
+ if ($validated['status'] === 'published') {
+ throw ValidationException::withMessages(['status' => 'Create the module as a draft, add a lesson, then publish it from Manage.']);
+ }
+
  $module = DB::transaction(function () use ($validated): LearningModule {
  $this->ensureLearningCategory($validated['category']);
 
@@ -1494,20 +1501,30 @@ class AdminController extends Controller
 
  public function editModule(LearningModule $module)
  {
- $module->load(['chapters', 'activities']);
+ $module->load(['chapters', 'activities', 'resources', 'quizzes.questions']);
  $categories = $this->learningCategoryNames();
  return $this->mobileView('admin.module_edit', compact('module', 'categories'));
  }
 
  public function updateModule(Request $request, LearningModule $module, UserContentUpdateNotificationService $contentNotifications)
  {
- $request->validate([
+ $validated = $request->validate([
  'title' => 'required|string|max:255',
  'category' => 'nullable|string|max:255',
  'difficulty' => 'nullable|in:Beginner,Intermediate,Advanced',
  'description' => 'nullable|string',
  'status' => 'nullable|in:draft,published,archived',
  ]);
+
+ if (($validated['status'] ?? 'draft') === 'published') {
+ $hasLesson = ModuleLessonContent::hasLesson($module->load('chapters'));
+ if (! $hasLesson) {
+ throw ValidationException::withMessages(['status' => 'Add a lesson with text or video before publishing this module.']);
+ }
+ if ($module->quizzes()->withCount('questions')->get()->contains(fn ($quiz): bool => $quiz->questions_count < 1)) {
+ throw ValidationException::withMessages(['status' => 'Add a question to every quiz before publishing this module.']);
+ }
+ }
 
  $wasPublished = (string) $module->status === 'published';
  $this->ensureLearningCategory($request->category);
@@ -1530,7 +1547,9 @@ class AdminController extends Controller
 
  public function destroyModule(LearningModule $module)
  {
+ $resourcePaths = $module->resources()->pluck('file_path')->all();
  $module->delete();
+ Storage::disk('public')->delete($resourcePaths);
  return redirect()->back()->with('success', 'Module deleted successfully');
  }
 
@@ -1538,6 +1557,9 @@ class AdminController extends Controller
  public function storeModuleChapter(Request $request, LearningModule $module)
  {
  $validated = $request->validateWithBag('addChapter', $this->moduleChapterRules());
+ if (! ModuleLessonContent::hasContent($validated['content'] ?? null, $validated['video_url'] ?? null)) {
+ throw ValidationException::withMessages(['content' => 'Add lesson text or a video URL.'])->errorBag('addChapter');
+ }
 
  $module->chapters()->create([
  'title' => trim($validated['title']),
@@ -1555,6 +1577,9 @@ class AdminController extends Controller
  {
  $this->ensureModuleChapterOwnership($module, $chapter);
  $validated = $request->validateWithBag('editChapter'.$chapter->id, $this->moduleChapterRules());
+ if (! ModuleLessonContent::hasContent($validated['content'] ?? null, $validated['video_url'] ?? null)) {
+ throw ValidationException::withMessages(['content' => 'Add lesson text or a video URL.'])->errorBag('editChapter'.$chapter->id);
+ }
 
  $chapter->update([
  'title' => trim($validated['title']),
@@ -1609,6 +1634,11 @@ class AdminController extends Controller
  public function destroyModuleChapter(LearningModule $module, ModuleChapter $chapter)
  {
  $this->ensureModuleChapterOwnership($module, $chapter);
+ $hasOtherLesson = $module->chapters()->where('id', '!=', $chapter->id)->get()
+ ->contains(fn (ModuleChapter $other): bool => ModuleLessonContent::hasContent($other->content, $other->video_url));
+ if ($module->status === 'published' && ! $hasOtherLesson) {
+ throw ValidationException::withMessages(['chapter' => 'Publish at least one lesson before deleting this chapter.']);
+ }
  $chapter->delete();
 
  return redirect()->back()

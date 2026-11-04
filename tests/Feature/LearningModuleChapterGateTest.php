@@ -30,7 +30,7 @@ class LearningModuleChapterGateTest extends TestCase
             ->assertSee('Chapter 2 is locked')
             ->assertSee('Chapter 10 is locked')
             ->assertSee('Unlocks in 05:00')
-            ->assertSee('initModuleChapterGate', false);
+            ->assertSee('js/module-chapter-gate.js?v=1', false);
 
         $html = $response->getContent();
 

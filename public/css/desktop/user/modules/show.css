@@ -1184,3 +1184,14 @@
             grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         }
     }
+.module-lesson-video iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: 12px;
+}
+
+.module-lesson-video {
+    max-width: 800px;
+}

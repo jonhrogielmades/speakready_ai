@@ -25,7 +25,7 @@
     }
 
     function activateTab(target) {
-        if (target !== '#basic' && target !== '#chapters') {
+        if (!['#basic', '#chapters', '#resources', '#quizzes', '#practice'].includes(target)) {
             return;
         }
 
@@ -190,7 +190,7 @@
         document.querySelectorAll('#moduleEditTabs [data-bs-toggle="pill"]').forEach(function (tab) {
             tab.addEventListener('shown.bs.tab', function (event) {
                 var target = event.target.getAttribute('data-bs-target');
-                if (target === '#basic' || target === '#chapters') {
+                if (['#basic', '#chapters', '#resources', '#quizzes', '#practice'].includes(target)) {
                     storeTab(storageKey, target);
                 }
             });

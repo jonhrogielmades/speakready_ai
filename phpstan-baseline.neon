@@ -217,12 +217,6 @@ parameters:
 			path: app/Http/Controllers/AdminController.php
 
 		-
-			message: '#^Relation ''activities'' is not found in App\\Models\\LearningModule model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
 			message: '#^Relation ''answers'' is not found in App\\Models\\Question model\.$#'
 			identifier: larastan.relationExistence
 			count: 2
@@ -238,12 +232,6 @@ parameters:
 			message: '#^Relation ''category'' is not found in App\\Models\\Question model\.$#'
 			identifier: larastan.relationExistence
 			count: 3
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Relation ''chapters'' is not found in App\\Models\\LearningModule model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
 			path: app/Http/Controllers/AdminController.php
 
 		-
@@ -943,18 +931,6 @@ parameters:
 			path: app/Http/Controllers/UserController.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\LearningModule\:\:\$quizzes\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/UserController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\LearningModule\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\LearningModule\>\:\:\$quizzes\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/UserController.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\LearningProgress\:\:\$learningModule\.$#'
 			identifier: property.notFound
 			count: 1
@@ -1087,12 +1063,6 @@ parameters:
 			path: app/Http/Controllers/UserController.php
 
 		-
-			message: '#^Relation ''activities'' is not found in App\\Models\\LearningModule model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/UserController.php
-
-		-
 			message: '#^Relation ''answers'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
 			count: 5
@@ -1102,12 +1072,6 @@ parameters:
 			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
 			count: 7
-			path: app/Http/Controllers/UserController.php
-
-		-
-			message: '#^Relation ''chapters'' is not found in App\\Models\\LearningModule model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
 			path: app/Http/Controllers/UserController.php
 
 		-
@@ -1136,18 +1100,6 @@ parameters:
 
 		-
 			message: '#^Relation ''question'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/UserController.php
-
-		-
-			message: '#^Relation ''quizzes'' is not found in App\\Models\\LearningModule model\.$#'
-			identifier: larastan.relationExistence
-			count: 2
-			path: app/Http/Controllers/UserController.php
-
-		-
-			message: '#^Relation ''resources'' is not found in App\\Models\\LearningModule model\.$#'
 			identifier: larastan.relationExistence
 			count: 1
 			path: app/Http/Controllers/UserController.php

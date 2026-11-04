@@ -55,6 +55,15 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link oinp" id="chapters-tab" data-bs-toggle="pill" data-bs-target="#chapters" type="button" role="tab" style="width:auto;margin:0;">Interview Lessons</button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link oinp" id="resources-tab" data-bs-toggle="pill" data-bs-target="#resources" type="button" role="tab" style="width:auto;margin:0;">Resources</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link oinp" id="quizzes-tab" data-bs-toggle="pill" data-bs-target="#quizzes" type="button" role="tab" style="width:auto;margin:0;">Quizzes</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link oinp" id="practice-tab" data-bs-toggle="pill" data-bs-target="#practice" type="button" role="tab" style="width:auto;margin:0;">Practice</button>
+        </li>
     </ul>
 
     <div class="tab-content" id="moduleEditTabsContent">
@@ -177,6 +186,7 @@
             @endif
         </div>
 
+        @include('shared.admin.module-content-tabs')
     </div>
 </div>
 

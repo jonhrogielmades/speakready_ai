@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminModuleContentController;
 use App\Http\Controllers\AdminAccountController;
 use App\Http\Controllers\AdminSessionController;
 use App\Http\Controllers\AdminSettingController;
@@ -249,6 +250,14 @@ Route::middleware(['auth', 'user', 'auth.session'])->group(function () {
     Route::post('/modules/{id}/progress', [UserController::class, 'updateModuleProgress'])
         ->middleware('throttle:30,1')
         ->name('user.modules.progress');
+    Route::post('/modules/{id}/reading', [UserController::class, 'updateModuleReading'])
+        ->middleware('throttle:120,1')
+        ->name('user.modules.reading');
+    Route::post('/modules/{module}/activities/{activity}', [UserController::class, 'submitModulePractice'])
+        ->middleware('throttle:30,1')
+        ->name('user.modules.activities.submit');
+    Route::get('/modules/{module}/resources/{resource}', [UserController::class, 'downloadModuleResource'])
+        ->name('user.modules.resources.download');
     Route::get('/modules/{id}', [UserController::class, 'moduleShow'])->name('user.modules.show');
 
     // Arena Gamification Routes
@@ -349,6 +358,18 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/modules/{module}/chapters', [AdminController::class, 'storeModuleChapter'])->name('admin.modules.chapters.store');
     Route::put('/admin/modules/{module}/chapters/{chapter}', [AdminController::class, 'updateModuleChapter'])->name('admin.modules.chapters.update');
     Route::delete('/admin/modules/{module}/chapters/{chapter}', [AdminController::class, 'destroyModuleChapter'])->name('admin.modules.chapters.destroy');
+    Route::post('/admin/modules/{module}/resources', [AdminModuleContentController::class, 'storeResource'])->name('admin.modules.resources.store');
+    Route::put('/admin/modules/{module}/resources/{resource}', [AdminModuleContentController::class, 'updateResource'])->name('admin.modules.resources.update');
+    Route::delete('/admin/modules/{module}/resources/{resource}', [AdminModuleContentController::class, 'destroyResource'])->name('admin.modules.resources.destroy');
+    Route::post('/admin/modules/{module}/quizzes', [AdminModuleContentController::class, 'storeQuiz'])->name('admin.modules.quizzes.store');
+    Route::put('/admin/modules/{module}/quizzes/{quiz}', [AdminModuleContentController::class, 'updateQuiz'])->name('admin.modules.quizzes.update');
+    Route::delete('/admin/modules/{module}/quizzes/{quiz}', [AdminModuleContentController::class, 'destroyQuiz'])->name('admin.modules.quizzes.destroy');
+    Route::post('/admin/modules/{module}/quizzes/{quiz}/questions', [AdminModuleContentController::class, 'storeQuestion'])->name('admin.modules.quizzes.questions.store');
+    Route::put('/admin/modules/{module}/quizzes/{quiz}/questions/{question}', [AdminModuleContentController::class, 'updateQuestion'])->name('admin.modules.quizzes.questions.update');
+    Route::delete('/admin/modules/{module}/quizzes/{quiz}/questions/{question}', [AdminModuleContentController::class, 'destroyQuestion'])->name('admin.modules.quizzes.questions.destroy');
+    Route::post('/admin/modules/{module}/practice', [AdminModuleContentController::class, 'storePractice'])->name('admin.modules.practice.store');
+    Route::put('/admin/modules/{module}/practice/{activity}', [AdminModuleContentController::class, 'updatePractice'])->name('admin.modules.practice.update');
+    Route::delete('/admin/modules/{module}/practice/{activity}', [AdminModuleContentController::class, 'destroyPractice'])->name('admin.modules.practice.destroy');
 
     // Admin Session Monitoring
     Route::get('/admin/sessions', [AdminSessionController::class, 'index'])->name('admin.sessions.index');

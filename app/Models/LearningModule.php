@@ -4,7 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ModuleChapter> $chapters
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ModuleResource> $resources
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ModuleQuiz> $quizzes
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ModulePracticeActivity> $activities
+ */
 class LearningModule extends Model
 {
     protected $fillable = [
@@ -26,22 +33,26 @@ class LearningModule extends Model
         'mapped_skills' => 'array',
     ];
 
-    public function chapters()
+    /** @return HasMany<ModuleChapter, $this> */
+    public function chapters(): HasMany
     {
         return $this->hasMany(ModuleChapter::class)->orderBy('order')->orderBy('id');
     }
 
-    public function resources()
+    /** @return HasMany<ModuleResource, $this> */
+    public function resources(): HasMany
     {
         return $this->hasMany(ModuleResource::class)->orderBy('id');
     }
 
-    public function quizzes()
+    /** @return HasMany<ModuleQuiz, $this> */
+    public function quizzes(): HasMany
     {
         return $this->hasMany(ModuleQuiz::class)->orderBy('id');
     }
 
-    public function activities()
+    /** @return HasMany<ModulePracticeActivity, $this> */
+    public function activities(): HasMany
     {
         return $this->hasMany(ModulePracticeActivity::class)->orderBy('id');
     }

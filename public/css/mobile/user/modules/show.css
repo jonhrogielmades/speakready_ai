@@ -1282,3 +1282,14 @@
         line-height: 1.38 !important;
     }
 }
+.module-lesson-video iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: 12px;
+}
+
+.module-lesson-video {
+    max-width: 800px;
+}
