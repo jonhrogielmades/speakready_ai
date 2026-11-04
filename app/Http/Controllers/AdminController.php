@@ -65,8 +65,8 @@ class AdminController extends Controller
  return ActivityLog::dashboardUserUpdates()
  ->with('user')
  ->latest('id')
- ->take(5)
- ->get();
+ ->paginate(5, ['*'], 'user_updates_page')
+ ->withQueryString();
  }, collect());
 
  $recentSessions = $this->dashboardValue('recent_sessions', function () {

@@ -34,4 +34,10 @@
             <div class="text-center py-3" style="color:var(--tx3);">No recent user updates found.</div>
         @endforelse
     </div>
+
+    @if(method_exists($recentUserUpdates ?? null, 'hasPages') && $recentUserUpdates->hasPages())
+        <div class="mt-4 d-flex justify-content-center" aria-label="Recent user updates pagination">
+            {{ $recentUserUpdates->links('pagination::bootstrap-5') }}
+        </div>
+    @endif
 </div>

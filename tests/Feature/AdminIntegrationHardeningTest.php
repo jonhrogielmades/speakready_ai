@@ -180,6 +180,35 @@ class AdminIntegrationHardeningTest extends TestCase
         $feed->assertJsonPath('new_count', 1);
     }
 
+    public function test_dashboard_user_updates_are_paginated_five_per_page(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        foreach (range(1, 7) as $index) {
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'action' => 'learning_module_progress_updated',
+                'description' => "Dashboard update {$index}",
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Dashboard update 7')
+            ->assertSee('Dashboard update 3')
+            ->assertDontSee('Dashboard update 2')
+            ->assertSee('user_updates_page=2', false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard', ['user_updates_page' => 2]))
+            ->assertOk()
+            ->assertSee('Dashboard update 2')
+            ->assertSee('Dashboard update 1')
+            ->assertDontSee('Dashboard update 3');
+    }
+
     public function test_admin_cannot_demote_or_suspend_self_and_user_mutations_are_audited(): void
     {
         $admin = User::factory()->create([
