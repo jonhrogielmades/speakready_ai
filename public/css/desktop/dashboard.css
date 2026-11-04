@@ -10633,7 +10633,7 @@ body.user-desktop-shell:not(.admin-shell) .sr-saas-command-metric:focus-visible 
         align-self: stretch !important;
         display: flex;
         flex-direction: column;
-        height: 100% !important;
+        height: auto !important;
         min-height: 0 !important;
     }
 
