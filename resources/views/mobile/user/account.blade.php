@@ -12,6 +12,16 @@
     $accountUser = Auth::user();
     $accountPhotoUrl = $accountUser?->profile_photo_url;
     $accountTargetPosition = old('target_position', $accountUser?->target_position);
+    $accountExperienceLevel = old('experience_level', $onboardingState['experience_level'] ?? '');
+    $accountInterviewGoal = old('interview_goal', $onboardingState['interview_goal'] ?? '');
+    $accountExperienceLevels = [
+        'no_experience' => 'No experience',
+        'student' => 'Student / New graduate',
+        'entry' => 'Entry level',
+        'mid' => 'Mid level',
+        'senior' => 'Senior level',
+        'career_change' => 'Career changer',
+    ];
     $accountRecoveryCodeSaved = (bool) ($onboardingState['recovery_code_saved'] ?? false);
     $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);
     $accountJobPositionOptions = collect(\App\Services\QuestionDatasetProvider::targetPositionOptionGroups())
@@ -104,9 +114,9 @@
                     </div>
                     @endif
                     <div class="account-field">
-                        <label class="account-field-label" for="accountTargetPosition"><span class="account-label-icon"><i class="fa-solid fa-briefcase"></i></span>Target Job Position</label>
+                        <label class="account-field-label" for="accountTargetPosition"><span class="account-label-icon"><i class="fa-solid fa-briefcase"></i></span>Target role or position</label>
                         <select class="oinp" name="target_position" id="accountTargetPosition" autocomplete="organization-title">
-                            <option value="" {{ trim((string) $accountTargetPosition) === ''? 'selected': '' }}>Choose a target position</option>
+                            <option value="" {{ trim((string) $accountTargetPosition) === ''? 'selected': '' }}>Choose a target role or position</option>
                             @if(trim((string) $accountTargetPosition)!== '' && ! $accountJobPositionOptions->contains(fn ($positionOption): bool => strcasecmp((string) $positionOption, (string) $accountTargetPosition) === 0))
                                 <option value="{{ $accountTargetPosition }}" selected>{{ $accountTargetPosition }}</option>
                             @endif
@@ -114,6 +124,21 @@
                                 <option value="{{ $positionOption }}" {{ strcasecmp((string) $positionOption, (string) $accountTargetPosition) === 0? 'selected': '' }}>{{ $positionOption }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="account-field-label" for="accountExperienceLevel"><span class="account-label-icon"><i class="fa-solid fa-layer-group"></i></span>Experience level</label>
+                            <select class="oinp" name="experience_level" id="accountExperienceLevel">
+                                <option value="">Choose an experience level</option>
+                                @foreach($accountExperienceLevels as $value => $label)
+                                    <option value="{{ $value }}" @selected((string) $accountExperienceLevel === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="account-field-label" for="accountInterviewGoal"><span class="account-label-icon"><i class="fa-solid fa-bullseye"></i></span>Main interview goal</label>
+                            <input type="text" class="oinp" name="interview_goal" id="accountInterviewGoal" maxlength="255" value="{{ $accountInterviewGoal }}" placeholder="Example: Give clearer STAR answers">
+                        </div>
                     </div>
                     <div class="text-end">
                         <button type="submit" class="btn account-submit-btn btn-shine"><i class="fa-regular fa-floppy-disk"></i>Save Changes</button>

@@ -4688,6 +4688,8 @@ class UserController extends Controller
  Rule::in([(string) $user->email]),
  ],
  'target_position' => 'nullable|string|max:255',
+ 'experience_level' => ['nullable', Rule::in(['no_experience', 'student', 'entry', 'mid', 'senior', 'career_change'])],
+ 'interview_goal' => 'nullable|string|max:255',
  'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048|dimensions:max_width=2000,max_height=2000',
  'current_password' => $isLocalAccount && $recoveryEmailChanged
   ? ['required', 'current_password']
@@ -4714,6 +4716,16 @@ class UserController extends Controller
  }
  $user->target_position = $request->target_position;
 
+ $onboardingProgress = UserOnboardingProgress::forUser($user);
+ if ($request->exists('experience_level')) {
+  $onboardingProgress->experience_level = $request->input('experience_level') ?: null;
+ }
+ if ($request->exists('interview_goal')) {
+  $onboardingProgress->interview_goal = filled($request->input('interview_goal'))
+   ? trim((string) $request->input('interview_goal'))
+   : null;
+ }
+
  $previousPhoto = $user->profile_photo_path;
  $newPhotoPath = null;
 
@@ -4735,12 +4747,17 @@ class UserController extends Controller
  $user->profile_photo_path = $newPhotoPath;
  }
 
- if (! $user->isDirty()) {
+ if (! $user->isDirty() && ! $onboardingProgress->isDirty()) {
  return redirect()->back()->with('info', 'No changes to save.');
  }
 
  try {
- $user->save();
+ if ($user->isDirty()) {
+  $user->save();
+ }
+ if ($onboardingProgress->isDirty()) {
+  $onboardingProgress->save();
+ }
  } catch (\Throwable $error) {
  if ($newPhotoPath) {
  $photoStorage->delete($newPhotoPath);

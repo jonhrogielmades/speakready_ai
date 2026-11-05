@@ -129,6 +129,37 @@ class UserOnboardingProgressTest extends TestCase
         }
     }
 
+    public function test_personalization_values_are_rendered_in_account_management_on_both_layouts(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('user.onboarding.personalization'), [
+                'action' => 'save',
+                'target_position' => 'Research Operations Lead',
+                'experience_level' => 'mid',
+                'interview_goal' => 'Tell stronger research impact stories',
+            ])
+            ->assertOk();
+
+        $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+        foreach ([null, $mobileUserAgent] as $userAgent) {
+            $request = $this->actingAs($user);
+            if ($userAgent !== null) {
+                $request = $request->withHeader('User-Agent', $userAgent);
+            }
+
+            $request->get(route('user.account'))
+                ->assertOk()
+                ->assertSee('Target role or position')
+                ->assertSee('id="accountTargetPosition"', false)
+                ->assertSee('id="accountExperienceLevel"', false)
+                ->assertSee('<option value="mid" selected>Mid level</option>', false)
+                ->assertSee('id="accountInterviewGoal"', false)
+                ->assertSee('value="Tell stronger research impact stories"', false);
+        }
+    }
+
     public function test_personalization_can_be_skipped_without_overwriting_the_profile(): void
     {
         $user = User::factory()->create([
