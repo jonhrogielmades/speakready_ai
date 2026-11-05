@@ -169,7 +169,7 @@
  Practice Scenario
  </label>
  <div class="setup-select-wrap">
- <select class="oinp setup-input" name="category_id" id="valScenario" aria-describedby="scenarioHelp{{ $hasScenarioOptions? '': ' scenarioEmptyState' }}" aria-invalid="{{ $hasScenarioOptions? 'false': 'true' }}" required>
+ <select class="oinp setup-input" name="category_id" id="valScenario" aria-describedby="{{ $hasScenarioOptions? '': 'scenarioEmptyState' }}" aria-invalid="{{ $hasScenarioOptions? 'false': 'true' }}" required>
  @if($hasScenarioOptions)
  <option value="" disabled {{ $selectedScenario? '': 'selected' }}>Choose a practice scenario</option>
  @endif
@@ -187,13 +187,25 @@
  </select>
  </div>
  <input type="hidden" name="interview_focus" id="valFocus" value="{{ $setupDefaults['interview_focus'] }}" class="setup-input">
- <div class="desc-text" id="scenarioHelp">Choose a job interview practice scenario.</div>
  @unless($hasScenarioOptions)
  <div class="setup-inline-error setup-inline-error-visible" id="scenarioEmptyState" role="alert">No active interview scenarios are available. Ask an admin to activate at least one core category before starting.</div>
  @endunless
  </div>
 
- <div class="setup-card-field">
+ <div class="setup-card-field setup-category-field">
+ <label class="setup-card-label" for="jobCategoryFilter">Job Category</label>
+ <div class="setup-select-wrap">
+ <select class="oinp" id="jobCategoryFilter" name="role_category_filter" aria-describedby="jobCategoryHelp">
+ <option value="">All job categories</option>
+ @foreach($jobPositionOptionGroups->keys() as $targetCategory)
+ <option value="{{ $targetCategory }}">{{ $targetCategory }}</option>
+ @endforeach
+ </select>
+ </div>
+ <small id="jobCategoryHelp">Filter positions by the kind of work you want to practice.</small>
+ </div>
+
+ <div class="setup-card-field setup-target-position-field">
  <label class="setup-card-label" for="targetPositionDropdownButton">
  <span class="setup-card-label-icon" aria-hidden="true"><i class="fa-solid fa-bullseye-arrow"></i></span>
  <span id="targetPositionLabelText">{{ $targetFieldCopy['label'] }}</span>
@@ -234,19 +246,6 @@
  <small>Use a specific job title so your interview questions can match it.</small>
  </div>
  <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>{{ $targetFieldCopy['required_message'] }}</div>
- </div>
-
- <div class="setup-card-field setup-category-field">
- <label class="setup-card-label" for="jobCategoryFilter">Job Category</label>
- <div class="setup-select-wrap">
- <select class="oinp" id="jobCategoryFilter" name="role_category_filter" aria-describedby="jobCategoryHelp">
- <option value="">All job categories</option>
- @foreach($jobPositionOptionGroups->keys() as $targetCategory)
- <option value="{{ $targetCategory }}">{{ $targetCategory }}</option>
- @endforeach
- </select>
- </div>
- <small id="jobCategoryHelp">Filter positions by the kind of work you want to practice.</small>
  </div>
 
  <details class="setup-role-finder" id="roleFinderPanel">

@@ -1,7 +1,16 @@
 /* Role discovery controls in the desktop interview setup. */
-html body #sec-interview-setup #panel-basic .setup-category-field,
 html body #sec-interview-setup #panel-basic .setup-role-finder {
     grid-column: 1 / -1;
+    min-width: 0;
+}
+
+html body #sec-interview-setup #panel-basic .setup-target-position-field {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+html body #sec-interview-setup #panel-basic .setup-category-field {
+    grid-column: auto;
     min-width: 0;
 }
 

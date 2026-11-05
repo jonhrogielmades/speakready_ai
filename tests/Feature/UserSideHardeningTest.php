@@ -967,9 +967,16 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('id="roleQualifications"', false)
  ->assertSee('Experience level')
  ->assertSee('id="suggestRolesButton"', false)
+ ->assertDontSee('Choose a job interview practice scenario.')
+ ->assertSee('class="setup-card-field setup-target-position-field"', false)
  ->assertDontSee('data-target-dropdown-choice-kind="school"', false);
 
  $content = $response->getContent();
+ $categoryPosition = strpos($content, 'for="jobCategoryFilter"');
+ $targetPosition = strpos($content, 'for="targetPositionDropdownButton"');
+ $this->assertNotFalse($categoryPosition);
+ $this->assertNotFalse($targetPosition);
+ $this->assertLessThan($targetPosition, $categoryPosition);
  $this->assertSame($expectedJobChoiceCount, substr_count($content, 'data-target-dropdown-choice-kind="job"'));
  $this->assertSame(0, substr_count($content, 'data-target-dropdown-choice-kind="school"'));
  }
