@@ -421,12 +421,12 @@
                   <div class="col-md-4 col-sm-6 rv">
                      <div class="gc p-4 h-100 text-center position-relative how-step-card">
                         <div class="how-step-meta">
-                           <span class="how-step-phase">Details</span>
+                           <span class="how-step-phase">Role discovery</span>
                            <span class="how-step-count">Step 1 of 6</span>
                         </div>
                         <div class="hnum" aria-hidden="true">1</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Choose Scenario And Role</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Select an active practice scenario and target position so each prompt matches the role you want to rehearse.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Find Your Target Role</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Choose the Job Interviews scenario, then select a target position, enter your own role, or explore suggestions based on your skills, interests, or qualifications.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.1s">
@@ -437,7 +437,7 @@
                         </div>
                         <div class="hnum" aria-hidden="true">2</div>
                         <h3 class="fs-5 fw-semibold mb-2">Set Interview Structure</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Choose difficulty, question count, and time limit to shape a short drill or a complete interview run.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Set difficulty and question count, then choose a per-question timer or practice with no time limit.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.2s">
@@ -447,8 +447,8 @@
                            <span class="how-step-count">Step 3 of 6</span>
                         </div>
                         <div class="hnum" aria-hidden="true">3</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Configure Camera Detection</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Turn Camera On for local body-language signals, or keep it Off for answer-focused practice.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Set Camera Detection</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Choose Camera On for local body-language cues, or Camera Off for answer-focused practice.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.3s">
@@ -458,8 +458,8 @@
                            <span class="how-step-count">Step 4 of 6</span>
                         </div>
                         <div class="hnum" aria-hidden="true">4</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Choose Coaching And Question Mix</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Select Coaching On or Real Interview Mode, then choose Behavioral, Situational, Technical, or Personal questions.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Choose Coaching And Questions</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Use Coaching On for live help or Real Interview Mode for a quieter run, then pick Behavioral, Situational, Technical, or Personal questions.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.4s">
@@ -469,8 +469,8 @@
                            <span class="how-step-count">Step 5 of 6</span>
                         </div>
                         <div class="hnum" aria-hidden="true">5</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Choose Response Mode</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Answer in Text, Voice, or Hybrid Mode with speech-to-text and manual editing when needed.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Choose How To Answer</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Type in Text Mode, speak without a transcript in Voice Mode, or use Hybrid Mode for speech-to-text with manual editing.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.5s">
@@ -481,7 +481,7 @@
                         </div>
                         <div class="hnum" aria-hidden="true">6</div>
                         <h3 class="fs-5 fw-semibold mb-2">Practice And Review Results</h3>
-                         <p style="font-size:.875rem;color:var(--tx2)">Respond to each prompt, finish the session, and review role alignment, delivery evidence, coaching notes, scores, and next steps.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Start your interview, answer each prompt, then review scores, role alignment, delivery evidence, coaching notes, and next steps.</p>
                      </div>
                   </div>
                </div>
