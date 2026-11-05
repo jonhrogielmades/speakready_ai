@@ -15,6 +15,7 @@
         const personalizationFormStatus = modalElement.querySelector('[data-sr-first-steps-form-status]');
         const personalizationDetails = modalElement.querySelector('[data-sr-personalization-details]');
         const personalizationToggle = modalElement.querySelector('[data-sr-personalization-toggle]');
+        let skipConfirmationPending = false;
         // Named controls called "action" shadow HTMLFormElement.action and
         // return a RadioNodeList. Read the attribute to keep the real URL.
         const personalizationEndpoint = personalizationForm?.getAttribute('action')?.trim()
@@ -92,6 +93,32 @@
                 skipButton.removeAttribute('aria-busy');
                 if (footerCopy) footerCopy.textContent = error.message || 'Unable to skip setup. Please try again.';
             }
+        }
+
+        function confirmSkipFirstSteps() {
+            if (!skipButton || skipButton.disabled || skipConfirmationPending) return;
+
+            const desktopConfirm = window.SpeakReadyConfirm?.show;
+            const mobileConfirm = window.SpeakReadyMobileConfirm?.show;
+            const showConfirmation = desktopConfirm || mobileConfirm;
+
+            if (!showConfirmation) {
+                skipFirstSteps();
+                return;
+            }
+
+            skipConfirmationPending = true;
+            Promise.resolve(showConfirmation.call(desktopConfirm ? window.SpeakReadyConfirm : window.SpeakReadyMobileConfirm, {
+                title: 'Skip First Steps?',
+                message: 'Are you sure you want to skip setup? You can complete these steps later from your dashboard.',
+                action: 'Skip setup',
+                actionText: 'Skip setup',
+                variant: 'danger',
+            })).then((confirmed) => {
+                if (confirmed) skipFirstSteps();
+            }).finally(() => {
+                skipConfirmationPending = false;
+            });
         }
 
         window.openSpeakReadyFirstSteps = openFirstSteps;
@@ -205,7 +232,7 @@
             const skip = event.target.closest('[data-sr-first-steps-skip]');
             if (skip && modalElement.contains(skip)) {
                 event.preventDefault();
-                skipFirstSteps();
+                confirmSkipFirstSteps();
                 return;
             }
 

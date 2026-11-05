@@ -167,7 +167,7 @@
             <div class="modal-footer">
                 <p class="sr-first-steps-footer-copy" data-sr-first-steps-footer-copy>{{ $firstStepsComplete ? 'Setup complete. Your dashboard is ready.' : 'Complete all four steps to continue to your dashboard.' }}</p>
                 <div class="sr-first-steps-footer-actions">
-                    <button type="button" class="sr-first-steps-skip" data-sr-first-steps-skip>
+                    <button type="button" class="sr-first-steps-skip" data-sr-first-steps-skip aria-haspopup="dialog">
                         Skip
                     </button>
                     <button type="button" class="sr-first-steps-proceed" data-sr-first-steps-proceed @disabled(! $firstStepsComplete)>
