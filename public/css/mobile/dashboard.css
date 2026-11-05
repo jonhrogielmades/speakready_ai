@@ -10200,3 +10200,15 @@ html[data-theme="dark"] .sr-trend-note i,
 body.dm .sr-trend-note i {
     color: #93c5fd !important;
 }
+
+/* Give circular-meter glyphs more presence while keeping labels inside the
+   inset center of the ring. */
+.sr-dashboard .sr-stat-meter > i {
+    font-size: 1.1rem !important;
+    line-height: 1 !important;
+}
+
+.sr-dashboard .sr-stat-meter > span {
+    font-size: 0.82rem !important;
+    line-height: 1 !important;
+}
