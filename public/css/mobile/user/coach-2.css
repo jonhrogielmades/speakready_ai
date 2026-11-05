@@ -2181,7 +2181,11 @@ html body.user-mobile-shell:not(.admin-shell) #ai-coach-page .coach-avatar::befo
     position: absolute !important;
     inset: 0 !important;
     z-index: 0 !important;
-    background: url("/img/ai-coach-avatar-icon.png?v=2") center center / contain no-repeat !important;
+    background: url("/img/ai-coach-avatar-icon.png?v=3") center center / contain no-repeat !important;
+    background-image: image-set(
+        url("/img/ai-coach-avatar-icon.webp?v=3") type("image/webp") 1x,
+        url("/img/ai-coach-avatar-icon.png?v=3") type("image/png") 1x
+    ) !important;
     transform: none !important;
     transform-origin: center !important;
     pointer-events: none !important;
