@@ -204,14 +204,13 @@
  Job Category <span class="setup-optional-label">Optional</span>
  </label>
  <div class="setup-select-wrap">
- <select class="oinp" id="jobCategoryFilter" name="job_category" aria-describedby="jobCategoryHelp">
+ <select class="oinp" id="jobCategoryFilter" name="job_category">
  <option value="">All job categories</option>
  @foreach($jobPositionOptionGroups as $jobCategory => $targetChoices)
  <option value="{{ $jobCategory }}">{{ $jobCategory }}</option>
  @endforeach
  </select>
  </div>
- <div class="desc-text" id="jobCategoryHelp">Narrow the positions below by category.</div>
  </div>
 
  <div class="setup-card-field setup-target-position-field">
