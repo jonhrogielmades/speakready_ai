@@ -582,8 +582,20 @@ class InterviewController extends Controller
  if (! $question) {
  return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
  }
+ $chatReplyLock = Cache::lock("interview:chat-reply:{$session->id}:{$question->id}", 180);
+ try {
+ $chatReplyLock->block(30);
+ } catch (LockTimeoutException) {
+ return response()->json(['error' => 'The next question is still being prepared. Please try again shortly.'], 409);
+ }
+
+ try {
+ $session->refresh();
+ if ($session->status !== 'in_progress') {
+ return response()->json(['error' => 'Interview session is no longer active.'], 409);
+ }
+
  $validated['response_mode'] = $this->normalizeResponseMode($session->response_mode?? 'text');
- $candidateTurnText = trim((string) ($validated['answer_text']?? ''));
  $answerText = $this->cleanTranscribedAnswer($validated['answer_text']?? '');
  if (! $this->answerSubmissionHasContent($validated, $answerText)) {
  return response()->json([
@@ -593,10 +605,11 @@ class InterviewController extends Controller
  ],
  ], 422);
  }
- $interviewerInputText = $candidateTurnText!== ''? $candidateTurnText: $answerText;
- $conversationContext = $this->normalizedConversationContextFrom(
- $this->jsonPayloadFrom($validated['conversation_context']?? null)
- );
+ $previousAnswer = InterviewAnswer::where('interview_session_id', $session->id)
+ ->where('question_id', $question->id)
+ ->whereNull('retry_of_answer_id')
+ ->first();
+ $previousAnswerSignature = $previousAnswer? $this->interviewAnswerTurnSignature($previousAnswer): null;
 
  // 1. Save User's Answer
  try {
@@ -614,15 +627,15 @@ class InterviewController extends Controller
  ], 500);
  }
 
- $savedAnswerInput = $this->answerContentForAssessment($answer);
- if ($this->normalizeResponseMode($validated['response_mode']?? $session->response_mode?? 'text') === 'voice') {
- $interviewerInputText = $savedAnswerInput;
+ // Build the next turn from the answer that was actually saved. The submitted
+ // text may differ from the verified voice transcript or a cleaned hybrid edit.
+ $interviewerInputText = $this->answerTextForFeedback($answer);
+ if ($interviewerInputText === '' && (bool) ($answer->timed_out?? false)) {
+ $interviewerInputText = '(No answer before the time limit)';
  }
- if ($interviewerInputText === '' && $savedAnswerInput!== '') {
- $interviewerInputText = $savedAnswerInput;
- }
- if ($interviewerInputText === '' && $this->answerHasStoredVoiceRecording($answer)) {
- $interviewerInputText = 'The candidate submitted a saved voice recording, but automatic transcription was unavailable.';
+ if ($this->unavailableInterviewAnswerText($interviewerInputText)
+ || TranscriptService::wordCount($interviewerInputText) < 8) {
+ $followUpEnabled = false;
  }
 
  $questionSequence = $this->orderedQuestionsForSession($session);
@@ -631,6 +644,24 @@ class InterviewController extends Controller
 
  if ($currentQuestionIndex === null) {
  return response()->json(['error' => 'This question is not in the active interview sequence.'], 409);
+ }
+
+ $existingNextQuestion = $this->nextQuestionInSequence($questionSequence, $currentQuestionIndex, $targetQuestionCount);
+ if ($existingNextQuestion) {
+ $nextQuestionAlreadyAnswered = InterviewAnswer::where('interview_session_id', $session->id)
+ ->where('question_id', $existingNextQuestion->id)
+ ->whereNull('retry_of_answer_id')
+ ->exists();
+
+ // A retried request can arrive after its first response was lost. Reuse the
+ // question already generated for the same saved answer, keeping its ID valid.
+ // Once the next question has an answer, its wording is part of the record.
+ if ($nextQuestionAlreadyAnswered
+ || ($previousAnswerSignature !== null
+ && hash_equals($previousAnswerSignature, $this->interviewAnswerTurnSignature($answer))
+ && (int) ($session->current_question_index?? 0) > $currentQuestionIndex)) {
+ return $this->nextQuestionResponse($existingNextQuestion);
+ }
  }
 
  if ($currentQuestionIndex >= $targetQuestionCount - 1) {
@@ -685,7 +716,8 @@ class InterviewController extends Controller
 
  $dataset = $this->datasetForSession($session);
  try {
- $followUpText = $followUpEnabled? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), $conversationContext, $dataset): AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
+ // Persisted questions and answers are the authoritative conversation.
+ $followUpText = $followUpEnabled? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset): AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
  } catch (\Throwable $error) {
  Log::warning('Interview follow-up generation failed; using local fallback.', [
  'session_id' => $session->id,
@@ -700,15 +732,20 @@ class InterviewController extends Controller
  if (! $followUpText) {
  $followUpText = "Thank you for sharing that. Could you tell me more about the experience that prepares you for the {$session->target_position} role?"; // fallback
  }
+ $followUpText = trim($followUpText);
+ // A concrete reference to the candidate's answer already keeps a natural
+ // follow-up on topic; repeating the full job title in every turn sounds stiff.
+ if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText)) {
  $followUpText = $this->roleAlignedQuestionText(
  $followUpText,
  (string) $session->target_position,
  $this->candidateAskedInterviewerNameQuestion($interviewerInputText)
  );
+ }
 
  // Treat provider output as a draft, never as an unchecked interviewer turn.
- // The guard requires one clean question, role alignment, and a meaningful
- // connection to the candidate's latest answer. If a provider misses that
+ // The guard requires one clean question and a meaningful connection to the
+ // candidate's latest answer. If a provider misses that
  // bar, prefer a source-backed recommendation and finally a deterministic
  // answer-grounded fallback so the conversation cannot jump topics.
  $followUpSourceMetadata = $dataset? QuestionDatasetProvider::sourceMetadata($dataset): [];
@@ -813,6 +850,9 @@ class InterviewController extends Controller
  'error' => 'Your answer was saved, but the next question could not be prepared. Please refresh the interview and continue.',
  ], 503);
  }
+ } finally {
+ $chatReplyLock->release();
+ }
  }
 
 public function closing(Request $request)
@@ -912,7 +952,10 @@ return response()->json([
  $speechText = $question->question_text;
  }
 
- $speech = AIService::synthesizeSpeech($speechText, $this->currentLanguageConfig());
+ $speech = AIService::synthesizeSpeech($speechText, $this->currentLanguageConfig(), [
+ 'deadline_seconds' => 10,
+ 'attempts' => 1,
+ ]);
  if (! $speech) {
  return response()->json(['error' => 'AI speech is not available.'], 503);
  }
@@ -3859,35 +3902,6 @@ return response()->json([
  return is_array($decoded)? $decoded: null;
  }
 
- private function normalizedConversationContextFrom(?array $payload): array
- {
- if ($payload === null) {
- return [];
- }
-
- $messages = [];
- foreach (array_slice($payload, -16) as $item) {
- if (! is_array($item)) {
- continue;
- }
-
- $role = Str::lower((string) ($item['role']?? ''));
- $role = in_array($role, ['interviewer', 'user', 'candidate', 'ai'], true)? $role: '';
- $text = trim((string) ($item['text']?? $item['content']?? ''));
-
- if ($role === '' || $text === '') {
- continue;
- }
-
- $messages[] = [
- 'role' => $role === 'ai'? 'interviewer': ($role === 'candidate'? 'user': $role),
- 'content' => Str::limit(preg_replace('/\s+/u', ' ', $text)?? $text, 400, ''),
- ];
- }
-
- return $messages;
- }
-
  private function createInterviewQuestion(
  InterviewSession $session,?Category $category,
  $questionText,
@@ -4719,19 +4733,50 @@ return response()->json([
  }
 
  $position = trim((string) $session->target_position);
- if ($position === '' || ! Str::contains(Str::lower($questionText), Str::lower($position))) {
+ if ($position === '') {
  return false;
  }
 
- $questionTokens = $this->interviewContentTokens($questionText);
- $answerTokens = $this->interviewContentTokens($latestAnswer);
+ $mentionsPosition = Str::contains(Str::lower($questionText), Str::lower($position));
+ $answerTokens = $this->interviewGroundingTokens($latestAnswer, $position);
+ $questionTokens = $this->interviewGroundingTokens($questionText, $position);
  $overlap = count(array_intersect($answerTokens, $questionTokens));
  $hasEvidenceProbe = preg_match('/\b(?:specific|example|situation|experience|result|outcome|impact|decision|action|responsib\w*|role|tradeoff|constraint|stakeholder|tool|process|metric|lesson|learn\w*|improv\w*|verif\w*|risk|priorit\w*|challenge|handle|apply|evidence|fit|strength|motivat\w*|weakness|ownership|personally|describe|walk|explain|tell|detail|approach)\b/i', $questionText) === 1;
- $hasStrongFollowUpProbe = preg_match('/\b(?:result|outcome|impact|decision|tradeoff|constraint|metric|lesson|learn\w*|improv\w*|verif\w*|risk|challenge|evidence|personally|ownership)\b/i', $questionText) === 1;
 
- // Short answers do not contain enough reliable lexical anchors. In that case,
- // require a concrete evidence probe instead of letting a generic topic change through.
- return count($answerTokens) < 8? $hasEvidenceProbe: ($overlap > 0 || $hasStrongFollowUpProbe);
+ // A short or unavailable answer cannot support a claim about what happened.
+ // Ask for evidence in the target role instead of treating a generic probe as
+ // proof that an unrelated generated question follows the conversation.
+ if ($this->unavailableInterviewAnswerText($latestAnswer) || count($answerTokens) < 4) {
+ return $mentionsPosition && $hasEvidenceProbe;
+ }
+
+ return $hasEvidenceProbe && $overlap > 0;
+ }
+
+ private function unavailableInterviewAnswerText(string $answerText): bool
+ {
+ $answerText = trim($answerText);
+
+ return $answerText === ''
+ || str_starts_with($answerText, '(Skipped or no answer)')
+ || str_starts_with($answerText, '(No answer before the time limit)')
+ || str_starts_with($answerText, '[Voice answer saved for playback.');
+ }
+
+ private function interviewGroundingTokens(string $text, string $position): array
+ {
+ $roleTokens = $this->interviewContentTokens($position);
+ $genericTokens = [
+ 'answer', 'asked', 'background', 'candidate', 'detail', 'evidence', 'example',
+ 'experience', 'impact', 'interview', 'interviewer', 'question', 'result',
+ 'role', 'specific', 'situation', 'target', 'yourself',
+ ];
+
+ return array_values(array_diff(
+ $this->interviewContentTokens($text),
+ $roleTokens,
+ $genericTokens
+ ));
  }
 
  private function interviewContentTokens(string $text): array
@@ -6003,6 +6048,16 @@ return response()->json([
  }
 
  return '';
+ }
+
+ private function interviewAnswerTurnSignature(InterviewAnswer $answer): string
+ {
+ return hash('sha256', serialize([
+ $this->normalizeResponseMode($answer->response_mode?? 'text'),
+ $this->answerTextForFeedback($answer),
+ (bool) ($answer->is_skipped?? false),
+ (bool) ($answer->timed_out?? false),
+ ]));
  }
 
  private function answerContentForAssessment(InterviewAnswer $answer): string
