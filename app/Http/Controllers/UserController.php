@@ -4366,7 +4366,7 @@ class UserController extends Controller
   $validated = $request->validate([
    'action' => ['required', Rule::in(['save', 'skip'])],
    'target_position' => [Rule::requiredIf($saving), 'nullable', 'string', 'max:255'],
-   'preferred_language' => [Rule::requiredIf($saving), 'nullable', 'string', Rule::in(array_keys(Setting::supportedLanguages()))],
+   'preferred_language' => ['nullable', 'string', Rule::in(array_keys(Setting::supportedLanguages()))],
    'experience_level' => [Rule::requiredIf($saving), 'nullable', Rule::in(['no_experience', 'student', 'entry', 'mid', 'senior', 'career_change'])],
    'interview_goal' => ['nullable', 'string', 'max:255'],
    'interview_date' => ['nullable', 'date', 'after_or_equal:today'],
@@ -4382,18 +4382,25 @@ class UserController extends Controller
 
    $message = 'Personalization skipped. You can complete it from your dashboard anytime.';
   } else {
+   $preferredLanguage = $validated['preferred_language'] ?? $user->preferred_language ?? 'en';
+   if (! array_key_exists($preferredLanguage, Setting::supportedLanguages())) {
+    $preferredLanguage = 'en';
+   }
+
    $user->forceFill([
     'target_position' => trim((string) $validated['target_position']),
-    'preferred_language' => $validated['preferred_language'],
+    'preferred_language' => $preferredLanguage,
    ])->save();
-   session(['preferred_language' => $validated['preferred_language']]);
+   session(['preferred_language' => $preferredLanguage]);
 
    $progress->forceFill([
     'profile_personalized_at' => $progress->profile_personalized_at ?: now(),
     'personalization_skipped_at' => null,
     'experience_level' => $validated['experience_level'],
     'interview_goal' => filled($validated['interview_goal']?? null) ? trim((string) $validated['interview_goal']) : null,
-    'interview_date' => $validated['interview_date']?? null,
+    'interview_date' => array_key_exists('interview_date', $validated)
+     ? ($validated['interview_date'] ?? null)
+     : $progress->interview_date,
    ])->save();
 
    $message = 'Your interview goal has been saved.';

@@ -19,12 +19,9 @@
     $firstStepsComplete = $firstStepsCompletedCount === 4;
     $firstStepsPercent = (int) round(($firstStepsCompletedCount / 4) * 100);
     $firstStepsUser = Auth::user();
-    $firstStepsLanguages = $supportedLanguages ?? \App\Models\Setting::supportedLanguages();
     $firstStepsSelectedPosition = old('target_position', $firstStepsUser?->target_position);
-    $firstStepsSelectedLanguage = old('preferred_language', $firstStepsUser?->preferred_language ?? 'en');
     $firstStepsSelectedExperience = old('experience_level', $firstStepsState['experience_level'] ?? '');
     $firstStepsSelectedGoal = old('interview_goal', $firstStepsState['interview_goal'] ?? '');
-    $firstStepsSelectedDate = old('interview_date', $firstStepsState['interview_date'] ?? '');
     $firstStepsLayoutQuery = sr_layout_query(request());
     $firstStepsAccountUrl = route('user.account', $firstStepsLayoutQuery).'#password-recovery-code';
     $firstStepsDashboardUrl = route('dashboard', $firstStepsLayoutQuery);
@@ -89,7 +86,7 @@
                         <span class="sr-first-steps-step-icon"><i class="fa-solid {{ $firstStepsProfileHandled ? 'fa-check' : 'fa-bullseye' }}" aria-hidden="true"></i></span>
                         <span class="sr-first-steps-step-copy">
                             <strong>2. Personalize your practice</strong>
-                            <small data-sr-personalization-summary>{{ $firstStepsPersonalized ? 'Your role and practice goal are ready.' : ($firstStepsPersonalizationSkipped ? 'Skipped for now; you can update it anytime.' : 'Choose your role, goal, experience, and language.') }}</small>
+                            <small data-sr-personalization-summary>{{ $firstStepsPersonalized ? 'Your role and practice goal are ready.' : ($firstStepsPersonalizationSkipped ? 'Skipped for now; you can update it anytime.' : 'Choose your role, goal, and experience.') }}</small>
                         </span>
                         <span class="sr-first-steps-step-actions" data-sr-step-status-actions @if(! $firstStepsProfileHandled) hidden @endif>
                             @if($firstStepsProfileHandled)<span class="sr-first-steps-status" data-sr-personalization-status>{{ $firstStepsPersonalized ? 'Complete' : 'Skipped' }}</span>@endif
@@ -100,8 +97,8 @@
                                 @csrf
                                 <div class="sr-first-steps-form-grid">
                                     <div class="sr-first-steps-field">
-                                        <label for="firstStepsTargetPosition">Target position</label>
-                                        <input id="firstStepsTargetPosition" name="target_position" type="text" maxlength="255" required value="{{ $firstStepsSelectedPosition }}" placeholder="Enter the position you want">
+                                        <label for="firstStepsTargetPosition">Target role or position</label>
+                                        <input id="firstStepsTargetPosition" name="target_position" type="text" maxlength="255" required value="{{ $firstStepsSelectedPosition }}" placeholder="Enter the role or position you want">
                                     </div>
                                     <div class="sr-first-steps-field">
                                         <label for="firstStepsExperienceLevel">Experience level</label>
@@ -115,18 +112,6 @@
                                     <div class="sr-first-steps-field sr-first-steps-field-wide">
                                         <label for="firstStepsInterviewGoal">Main interview goal</label>
                                         <input id="firstStepsInterviewGoal" name="interview_goal" type="text" maxlength="255" required value="{{ $firstStepsSelectedGoal }}" placeholder="Example: Give clearer STAR answers">
-                                    </div>
-                                    <div class="sr-first-steps-field">
-                                        <label for="firstStepsPreferredLanguage">Preferred language</label>
-                                        <select id="firstStepsPreferredLanguage" name="preferred_language" required>
-                                            @foreach($firstStepsLanguages as $code => $language)
-                                                <option value="{{ $code }}" @selected((string) $firstStepsSelectedLanguage === (string) $code)>{{ $language['native_label'] ?? $language['label'] ?? strtoupper($code) }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="sr-first-steps-field">
-                                        <label for="firstStepsInterviewDate">Interview date (optional)</label>
-                                        <input id="firstStepsInterviewDate" name="interview_date" type="date" value="{{ $firstStepsSelectedDate }}" min="{{ now()->toDateString() }}">
                                     </div>
                                 </div>
                                 <p class="sr-first-steps-form-status" data-sr-first-steps-form-status role="status" aria-live="polite"></p>
