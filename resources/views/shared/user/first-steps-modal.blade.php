@@ -19,12 +19,6 @@
     $firstStepsComplete = $firstStepsCompletedCount === 4;
     $firstStepsPercent = (int) round(($firstStepsCompletedCount / 4) * 100);
     $firstStepsUser = Auth::user();
-    $firstStepsPositions = collect(\App\Services\QuestionDatasetProvider::targetPositionOptionGroups())
-        ->flatten()
-        ->map(fn ($position) => trim((string) $position))
-        ->filter()
-        ->unique(fn (string $position) => strtolower($position))
-        ->values();
     $firstStepsLanguages = $supportedLanguages ?? \App\Models\Setting::supportedLanguages();
     $firstStepsSelectedPosition = old('target_position', $firstStepsUser?->target_position);
     $firstStepsSelectedLanguage = old('preferred_language', $firstStepsUser?->preferred_language ?? 'en');
@@ -106,17 +100,13 @@
                                 <div class="sr-first-steps-form-grid">
                                     <div class="sr-first-steps-field">
                                         <label for="firstStepsTargetPosition">Target position</label>
-                                        <select id="firstStepsTargetPosition" name="target_position" required>
-                                            <option value="">Choose a position</option>
-                                            @foreach($firstStepsPositions as $position)
-                                                <option value="{{ $position }}" @selected((string) $firstStepsSelectedPosition === (string) $position)>{{ $position }}</option>
-                                            @endforeach
-                                        </select>
+                                        <input id="firstStepsTargetPosition" name="target_position" type="text" maxlength="255" required value="{{ $firstStepsSelectedPosition }}" placeholder="Enter the position you want">
                                     </div>
                                     <div class="sr-first-steps-field">
                                         <label for="firstStepsExperienceLevel">Experience level</label>
                                         <select id="firstStepsExperienceLevel" name="experience_level" required>
-                                            @foreach(['student' => 'Student / New graduate', 'entry' => 'Entry level', 'mid' => 'Mid level', 'senior' => 'Senior level', 'career_change' => 'Career changer'] as $value => $label)
+                                            <option value="" disabled @selected((string) $firstStepsSelectedExperience === '')>Choose an experience level</option>
+                                            @foreach(['no_experience' => 'No experience', 'student' => 'Student / New graduate', 'entry' => 'Entry level', 'mid' => 'Mid level', 'senior' => 'Senior level', 'career_change' => 'Career changer'] as $value => $label)
                                                 <option value="{{ $value }}" @selected((string) $firstStepsSelectedExperience === $value)>{{ $label }}</option>
                                             @endforeach
                                         </select>

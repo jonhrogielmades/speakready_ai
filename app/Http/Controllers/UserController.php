@@ -4367,7 +4367,7 @@ class UserController extends Controller
    'action' => ['required', Rule::in(['save', 'skip'])],
    'target_position' => [Rule::requiredIf($saving), 'nullable', 'string', 'max:255'],
    'preferred_language' => [Rule::requiredIf($saving), 'nullable', 'string', Rule::in(array_keys(Setting::supportedLanguages()))],
-   'experience_level' => [Rule::requiredIf($saving), 'nullable', Rule::in(['student', 'entry', 'mid', 'senior', 'career_change'])],
+   'experience_level' => [Rule::requiredIf($saving), 'nullable', Rule::in(['no_experience', 'student', 'entry', 'mid', 'senior', 'career_change'])],
    'interview_goal' => ['nullable', 'string', 'max:255'],
    'interview_date' => ['nullable', 'date', 'after_or_equal:today'],
   ]);

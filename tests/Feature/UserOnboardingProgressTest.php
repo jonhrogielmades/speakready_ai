@@ -94,6 +94,41 @@ class UserOnboardingProgressTest extends TestCase
         ]);
     }
 
+    public function test_custom_target_position_and_no_experience_are_saved_and_shown_on_both_layouts(): void
+    {
+        $user = User::factory()->create();
+        $position = 'Underwater Robotics Operator';
+
+        $this->actingAs($user)
+            ->postJson(route('user.onboarding.personalization'), [
+                'action' => 'save',
+                'target_position' => $position,
+                'preferred_language' => 'en',
+                'experience_level' => 'no_experience',
+            ])
+            ->assertOk()
+            ->assertJsonPath('onboarding.experience_level', 'no_experience');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'target_position' => $position,
+        ]);
+
+        $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+        foreach ([null, $mobileUserAgent] as $userAgent) {
+            $request = $this->actingAs($user);
+            if ($userAgent !== null) {
+                $request = $request->withHeader('User-Agent', $userAgent);
+            }
+
+            $request->get(route('user.account'))
+                ->assertOk()
+                ->assertSee('id="firstStepsTargetPosition" name="target_position" type="text" maxlength="255" required value="'.$position.'"', false)
+                ->assertDontSee('<select id="firstStepsTargetPosition"', false)
+                ->assertSee('<option value="no_experience" selected>No experience</option>', false);
+        }
+    }
+
     public function test_personalization_can_be_skipped_without_overwriting_the_profile(): void
     {
         $user = User::factory()->create([
