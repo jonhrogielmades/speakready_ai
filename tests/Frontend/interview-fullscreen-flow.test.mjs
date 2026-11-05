@@ -7,6 +7,10 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = relativePath => readFileSync(join(root, relativePath), 'utf8');
 const session = read('resources/views/desktop/interview/session.blade.php');
+const sessionViews = [
+    'resources/views/desktop/interview/session.blade.php',
+    'resources/views/mobile/interview/session.blade.php',
+];
 const sessionCss = read('public/css/desktop/interview/session.css');
 
 function functionSource(name, nextName) {
@@ -60,4 +64,13 @@ test('desktop fullscreen locks the outer viewport and keeps response scrolling i
     assert.match(sessionCss, /html\.interview-session-fullscreen-root[\s\S]*?overflow:\s*hidden !important;/);
     assert.match(sessionCss, /interview-session-browser-fullscreen #dashboard \.db-content[\s\S]*?overflow:\s*hidden !important;/);
     assert.match(sessionCss, /interview-session-browser-fullscreen \.desktop-response-column \.response-panel[\s\S]*?overflow-y:\s*auto !important;/);
+});
+
+test('Interview Session does not auto-start its onboarding tutorial on desktop or mobile', () => {
+    for (const relativePath of sessionViews) {
+        const source = read(relativePath);
+
+        assert.doesNotMatch(source, /onboarding_completed_interview_session/);
+        assert.doesNotMatch(source, /scheduleInterviewSessionTour/);
+    }
 });
