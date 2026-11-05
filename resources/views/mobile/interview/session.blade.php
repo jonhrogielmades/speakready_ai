@@ -4356,7 +4356,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  renderStaticQuestionCaption(text);
  document.getElementById('aiQuestionText').innerText = text;
  if (startTimerAfterSpeech) {
- startQuestionTimer();
  scheduleAutoTranscriptionStart(token);
  }
  resolveSpeechCompletion(token);
@@ -4521,7 +4520,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  } else {
  document.getElementById('aiQuestionText').innerText = text;
  renderStaticQuestionCaption(text);
- if (startTimerAfterSpeech) startQuestionTimer();
  if (startTimerAfterSpeech) scheduleAutoTranscriptionStart(token);
  resolveSpeechCompletion(token);
  }
@@ -4563,7 +4561,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function getQuestionElapsedSeconds() {
  if (!questionStartedAt) return questionElapsedSeconds || 0;
- return Math.max(0, Math.round((Date.now() - questionStartedAt) / 1000));
+ return Math.max(0, Math.floor((Date.now() - questionStartedAt) / 1000));
  }
 
  function updateQuestionTimerDisplay() {
@@ -4594,20 +4592,23 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  questionElapsedSeconds = answersData[currentQIdx]?.elapsed_seconds || 0;
  questionStartedAt = Date.now() - (questionElapsedSeconds * 1000);
  captureTranscriptTimeline('question_loaded', true);
- updateQuestionTimerDisplay();
  questionTimerInterval = setInterval(() => {
  updateQuestionTimerDisplay();
  if (getQuestionElapsedSeconds() - lastTimelineCaptureAt >= 5) {
  captureTranscriptTimeline('progress');
  }
  }, 1000);
+ updateQuestionTimerDisplay();
  }
 
  function stopQuestionTimer() {
  clearInterval(questionTimerInterval);
  questionTimerInterval = null;
+ if (questionStartedAt === null) return;
+ questionElapsedSeconds = getQuestionElapsedSeconds();
+ questionStartedAt = null;
  if (answersData[currentQIdx]) {
- answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
+ answersData[currentQIdx].elapsed_seconds = questionElapsedSeconds;
  }
  }
 
@@ -4645,9 +4646,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function handleQuestionTimeout() {
- clearInterval(questionTimerInterval);
- questionTimerInterval = null;
  if (!answerInputEnabled || isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted) return;
+ stopQuestionTimer();
  submitAnswer({ timedOut: true });
  }
 
@@ -5080,6 +5080,7 @@ return fallbackText;
 
  async function loadQuestion(idx, options = {}) {
  if (interviewTerminated || interviewEnding) return;
+ stopQuestionTimer();
  currentQIdx = idx;
  const q = questions[idx];
  if (!q) return;
@@ -5100,6 +5101,8 @@ return fallbackText;
  const restoredAnswerText = String(answerState.text || answerState.speech_transcript || '');
  answerState.text = restoredAnswerText;
  answersData[idx] = answerState;
+ questionElapsedSeconds = Math.max(0, Number(answerState.elapsed_seconds || 0));
+ updateQuestionTimerDisplay();
  setCurrentAnswerTextareaText(restoredAnswerText);
  applyResponseModeUi();
  resetSpeechRecognitionBufferFromTextarea();
@@ -5114,6 +5117,8 @@ return fallbackText;
  await speakQuestion(q.question_text, { startTimerAfterSpeech: true, questionId: q.id });
  if (interviewTerminated || interviewEnding) return;
  setAnswerInputEnabled(true);
+ startQuestionTimer();
+ if (isSubmittingAnswer) return;
  
  triggerAnalysis();
  scheduleStateSave();
@@ -5866,7 +5871,9 @@ return fallbackText;
  answersData[currentQIdx].text = currentAnswerTextareaText();
  }
  }
+ if (questionStartedAt !== null) {
  answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
+ }
  }
 
  const formData = new FormData();
@@ -5946,6 +5953,9 @@ return fallbackText;
  function placeNextQuestion(question) {
  const nextQuestionIndex = currentQIdx + 1;
  if (nextQuestionIndex < questions.length) {
+ if (String(questions[nextQuestionIndex]?.id) !== String(question.id)) {
+ answersData[nextQuestionIndex] = defaultAnswerState();
+ }
  questions[nextQuestionIndex] = question;
  } else {
  questions.push(question);
@@ -5961,6 +5971,7 @@ return fallbackText;
  async function submitAnswer(options = {}) {
  if (isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted) return;
  isSubmittingAnswer = true;
+ stopQuestionTimer();
  updateSendAnswerButtonState();
  try {
  await finalizeCurrentTranscriptionForSubmit();
@@ -5999,6 +6010,7 @@ return fallbackText;
  if(!answerText &&!timedOut &&!wasSkipped &&!hasSubmittableVoiceRecording) {
  isSubmittingAnswer = false;
  updateSendAnswerButtonState();
+ startQuestionTimer();
  showSessionNotice(hasLocalVoiceRecording? (isVoiceOnlyMode()? 'This recording cannot be submitted. Record your voice answer again before sending.': 'This recording cannot be submitted. Record again, generate the transcript, or type the answer before submitting.'): (isVoiceOnlyMode()? 'Record a voice answer before submitting.': 'Please provide an answer before submitting.'));
  focusAnswerTextarea();
  return;
@@ -6039,6 +6051,7 @@ return fallbackText;
  if (!interviewTerminated) {
  restoreSubmittedAnswerInput(answerText);
  setAnswerInputEnabled(true);
+ startQuestionTimer();
  showSessionNotice('We could not save your final answer. Please try again before finishing.');
  }
  }
@@ -6128,6 +6141,7 @@ return fallbackText;
  if (!interviewTerminated && err.name!== 'AbortError') {
  restoreSubmittedAnswerInput(answerText);
  setAnswerInputEnabled(true);
+ startQuestionTimer();
  showSessionNotice(err.message || 'Network error.');
  }
  }
