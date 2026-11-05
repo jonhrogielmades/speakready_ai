@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=76') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=77') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -3575,10 +3575,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  document.documentElement.style.setProperty('--sr-answer-viewport-h', `${visualHeight.toFixed(2)}px`);
  }
 
- // Textarea focus must not switch the interview into a different layout.
- // The browser handles keyboard visibility and native caret scrolling; forcing
- // a response-panel scroll here changes the stage/card composition on mobile.
- document.body.classList.remove('mobile-answer-focused', 'mobile-answer-keyboard-open');
+ const textareaFocused = document.activeElement === answerTextareaElement();
+ document.body.classList.toggle(
+ 'mobile-answer-focused',
+ textareaFocused && document.body.classList.contains('mobile-interview-fullscreen')
+ );
  }
 
  function queueMobileAnswerFocusSync() {
@@ -3593,11 +3594,13 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
  function handleMobileAnswerFocus() {
+ syncMobileAnswerFocusState();
  queueMobileAnswerFocusSync();
  setTimeout(() => queueMobileAnswerFocusSync(), 260);
  }
 
  function handleMobileAnswerBlur() {
+ document.body.classList.remove('mobile-answer-focused');
  setTimeout(() => queueMobileAnswerFocusSync(), 180);
  }
 

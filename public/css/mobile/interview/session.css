@@ -6114,3 +6114,62 @@ html body #sec-interview-session .ai-avatar-panel #questionTimerChip.danger {
         font-size: 0.68rem !important;
     }
 }
+
+/* Keep text answers readable when the on-screen keyboard reduces the visual viewport. */
+@media (max-width: 767.98px) {
+    html body #sec-interview-session .answer-transcript-stage #answerTextarea {
+        font-size: 16px !important;
+        line-height: 1.45 !important;
+    }
+
+    html body.mobile-answer-focused.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        scroll-padding-bottom: 20px;
+    }
+
+    html body.mobile-answer-focused.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceWrapper,
+    html body.mobile-answer-focused.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow,
+    html body.mobile-answer-focused.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] {
+        flex: 0 0 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+
+    html body.mobile-answer-focused.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] > .ai-avatar-panel {
+        flex: 0 0 120px !important;
+        height: 120px !important;
+        min-height: 120px !important;
+        max-height: 120px !important;
+        margin-bottom: 8px !important;
+    }
+
+    html body.mobile-answer-focused.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] > .response-panel {
+        position: relative !important;
+        flex: 0 0 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.mobile-answer-focused.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) .response-panel #answerForm,
+    html body.mobile-answer-focused.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) .response-panel .answer-transcript-stage {
+        flex: 0 0 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.mobile-answer-focused.mobile-interview-fullscreen #sec-interview-session:not([data-game-session-root]) #workspaceRow > [class*="col-"] > .response-panel .answer-transcript-stage #answerTextarea {
+        flex: 0 0 auto !important;
+        height: 160px !important;
+        min-height: 160px !important;
+        max-height: 160px !important;
+        overflow-y: auto !important;
+        resize: none !important;
+    }
+}
