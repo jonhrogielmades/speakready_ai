@@ -13,34 +13,44 @@ const sessionViews = [
 ];
 const sessionCss = read('public/css/desktop/interview/session.css');
 
-function functionSource(name, nextName) {
-    const start = session.indexOf(`function ${name}`);
-    const end = session.indexOf(`function ${nextName}`, start);
+function startupSource(source) {
+    const start = source.indexOf("document.addEventListener('DOMContentLoaded', () => {");
+    const end = source.indexOf('\n </script>', start);
 
-    assert.ok(start >= 0 && end > start, `${name} source was not found`);
+    assert.ok(start >= 0 && end > start, 'session startup source was not found');
 
-    return session.slice(start, end);
+    return source.slice(start, end);
 }
 
-test('desktop Begin Interview uses its user gesture before starting the session', () => {
-    const confirmSource = functionSource('confirmInterviewStart()', 'cancelInterviewStart()');
-    const fullscreenRequest = confirmSource.indexOf('enterInterviewFullscreen({ auto: true });');
-    const sessionStart = confirmSource.indexOf('startInterviewSession({ requestBrowserFullscreen: false });');
+test('interview session views omit the duplicate start dialog', () => {
+    for (const relativePath of sessionViews) {
+        const source = read(relativePath);
 
-    assert.match(session, /data-fullscreen-entry="user-gesture"/);
-    assert.ok(fullscreenRequest >= 0, 'Begin Interview must request fullscreen');
-    assert.ok(sessionStart > fullscreenRequest, 'fullscreen must be requested before the session starts');
+        assert.doesNotMatch(source, /id="interviewStartModal"/, `${relativePath} still renders the start dialog`);
+        assert.doesNotMatch(source, /<h4 id="interviewStartTitle">Interview Ready<\/h4>/);
+    }
 });
 
-test('desktop session load waits at the start gate instead of making a blocked fullscreen request', () => {
-    const startupStart = session.indexOf("document.addEventListener('DOMContentLoaded', () => {");
-    const startupEnd = session.indexOf('\n </script>', startupStart);
-    const startupSource = session.slice(startupStart, startupEnd);
+test('desktop session starts after entering the fullscreen layout and arming native fullscreen retry', () => {
+    const startup = startupSource(session);
+    const fullscreenLayout = startup.indexOf('enterInterviewFullscreen({ auto: setupRequestedFullscreen || !interviewTerminated, requestBrowser: false });');
+    const fullscreenRetry = startup.indexOf('armInterviewFullscreenRetry();');
+    const sessionStart = startup.indexOf('startInterviewSession({ requestBrowserFullscreen: false });');
 
-    assert.ok(startupStart >= 0 && startupEnd > startupStart, 'desktop session startup source was not found');
-    assert.match(startupSource, /requestBrowser:\s*false/);
-    assert.match(startupSource, /setInterviewStartModalVisible\(true\);/);
-    assert.doesNotMatch(startupSource, /startInterviewSession\(\);/);
+    assert.ok(fullscreenLayout >= 0, 'desktop session must enter the fullscreen layout');
+    assert.ok(fullscreenRetry > fullscreenLayout, 'native fullscreen retry must be armed after layout entry');
+    assert.ok(sessionStart > fullscreenRetry, 'desktop session must start without a second confirmation');
+    assert.doesNotMatch(startup, /setInterviewStartModalVisible\(/);
+});
+
+test('mobile session starts automatically after entering its fullscreen layout', () => {
+    const startup = startupSource(read('resources/views/mobile/interview/session.blade.php'));
+    const fullscreenLayout = startup.indexOf('enterMobileFullscreen({ requestBrowser: false });');
+    const sessionStart = startup.indexOf('startInterviewSession();');
+
+    assert.ok(fullscreenLayout >= 0, 'mobile session must enter the fullscreen layout');
+    assert.ok(sessionStart > fullscreenLayout, 'mobile session must start without a second confirmation');
+    assert.doesNotMatch(startup, /setInterviewStartModalVisible\(/);
 });
 
 test('desktop fullscreen keeps a CSS fallback and retries native fullscreen on a user gesture', () => {

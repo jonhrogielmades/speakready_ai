@@ -17,7 +17,6 @@
         'interview-setup-page',
         'interview-session-shell',
         'interview-start-modal-active',
-        'interview-ready-fullscreen',
         'interview-session-browser-fullscreen',
         'mobile-interview-fullscreen',
         'mobile-answer-focused',
@@ -40,7 +39,6 @@
         'setupTransitionOverlay',
         'targetPositionAlertModal',
         'roleFinderModal',
-        'interviewStartModal',
         'finishTransitionOverlay',
         'endSessionModal'
     ];

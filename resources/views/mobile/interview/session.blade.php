@@ -401,31 +401,6 @@
  </div>
  </div>
 
- <div id="interviewStartModal" class="interview-start-modal" role="dialog" aria-modal="true" aria-labelledby="interviewStartTitle" aria-describedby="interviewStartDescription">
- <div class="interview-start-dialog">
- <div class="interview-start-icon" aria-hidden="true">
- <i class="fa-solid fa-robot"></i>
- </div>
- <h4 id="interviewStartTitle">Interview Ready</h4>
- <p id="interviewStartDescription">{{ $hasSavedInterviewState? 'Your saved interview is ready to resume.': 'Your customized interview session is ready to begin.' }}</p>
- <div class="interview-start-meta interview-meta-line">
- <span class="session-chip"><i class="fa-solid fa-flag"></i>{{ $scenarioLabel }}</span>
- <span class="session-chip"><i class="fa-solid fa-microphone"></i>{{ ['text' => 'Text', 'voice' => 'Voice', 'hybrid' => 'Hybrid', 'voice_and_text' => 'Hybrid'][strtolower((string) $sessionRecord->response_mode)]?? 'Text' }} Mode</span>
- <span class="session-chip"><i class="fa-solid fa-brain"></i>{{ ($sessionRecord->live_feedback_mode?? 'coaching') === 'real_interview'? 'Real Interview': 'Coaching On' }}</span>
- <span class="session-chip"><i class="fa-solid fa-list-check"></i>{{ $num }} Questions</span>
- <span class="session-chip"><i class="fa-solid fa-video"></i>Camera {{ $cameraDetectionEnabled? 'ON': 'OFF' }}</span>
- </div>
- <div class="interview-start-actions">
- <button type="button" class="interview-start-button cancel" onclick="cancelInterviewStart()">
- <i class="fa-solid fa-xmark"></i> Cancel
- </button>
- <button type="button" id="confirmInterviewStartButton" class="interview-start-button begin" onclick="confirmInterviewStart()">
- {{ $hasSavedInterviewState? 'Resume Interview': 'Begin Interview' }} <i class="fa-solid fa-play"></i>
- </button>
- </div>
- </div>
- </div>
-
 <div id="endSessionModal" class="interview-start-modal interview-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="endSessionTitle" aria-describedby="endSessionDescription">
 <div class="interview-start-dialog">
 <div class="interview-start-icon danger" aria-hidden="true">
@@ -6322,7 +6297,7 @@ return fallbackText;
  }
 
  function activeInterviewModal() {
- return document.querySelector('#interviewStartModal.active, #endSessionModal.active, #sessionAlertModal.active');
+ return document.querySelector('#endSessionModal.active, #sessionAlertModal.active');
  }
 
  function syncInterviewModalBodyState() {
@@ -6760,29 +6735,6 @@ setFinishViewReviewReady(false);
  focusAnswerTextarea();
  }
 
- function setInterviewStartModalVisible(visible) {
- const modal = document.getElementById('interviewStartModal');
- if (!modal) return;
- if (visible && modal.parentElement!== document.body) {
- document.body.appendChild(modal);
- }
- modal.classList.toggle('active', visible);
- syncInterviewModalBodyState();
-
- if (visible) {
- focusFirstModalAction(modal, '#confirmInterviewStartButton');
- }
- }
-
- function confirmInterviewStart() {
- setInterviewStartModalVisible(false);
- startInterviewSession();
- }
-
- function cancelInterviewStart() {
- window.location.href = '{{ route("interview.setup") }}';
- }
-
  function ucfirst(str) {
  if(!str) return '';
  return str.charAt(0).toUpperCase() + str.slice(1);
@@ -6813,12 +6765,6 @@ setFinishViewReviewReady(false);
  return true;
  }
 
- if (modal?.id === 'interviewStartModal') {
- event.preventDefault();
- cancelInterviewStart();
- return true;
- }
-
  return false;
  }
 
@@ -6838,7 +6784,6 @@ setFinishViewReviewReady(false);
  }
  });
  if (!interviewStarted &&!interviewTerminated) {
- setInterviewStartModalVisible(false);
  startInterviewSession();
  }
  });
