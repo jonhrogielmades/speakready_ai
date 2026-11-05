@@ -245,7 +245,7 @@
  @endforeach
  @endforeach
  <p class="setup-target-empty" id="targetPositionEmpty" hidden>No matching positions. You can enter your own role below.</p>
- <button type="button" class="setup-target-custom-action" id="customTargetPositionAction"><i class="fa-solid fa-pen" aria-hidden="true"></i> My role isn’t listed</button>
+ <button type="button" class="setup-target-custom-action" id="customTargetPositionAction"><i class="fa-solid fa-pen" aria-hidden="true"></i> Click here to input your role!</button>
  </div>
  </div>
  <div class="setup-custom-position" id="customTargetPositionWrap" hidden>

@@ -236,7 +236,7 @@
  @endforeach
  </div>
  <p class="setup-target-empty" id="targetPositionEmpty" hidden>No positions match. You can enter your own role.</p>
- <button type="button" class="setup-target-custom-choice" id="targetPositionCustomChoice">My role isn’t listed</button>
+ <button type="button" class="setup-target-custom-choice" id="targetPositionCustomChoice">Click here to input your role!</button>
  </div>
  </div>
  <div class="setup-custom-position-wrap" id="customPositionWrap" hidden>
