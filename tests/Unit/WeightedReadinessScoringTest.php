@@ -529,10 +529,10 @@ class WeightedReadinessScoringTest extends TestCase
 
         $normalized = $this->invokePrivate('normalizeFeedbackResponse', [$response, $answers, []]);
 
-        $this->assertSame(60, $normalized['per_question_feedback'][0]['score']);
+        $this->assertSame(83, $normalized['per_question_feedback'][0]['score']);
         $this->assertSame(0, $normalized['per_question_feedback'][0]['star_method_score']);
-        $this->assertSame(60, $normalized['per_question_feedback'][1]['score']);
-        $this->assertSame(60, $normalized['session_feedback']['overall_readiness_score']);
+        $this->assertSame(70, $normalized['per_question_feedback'][1]['score']);
+        $this->assertSame(74, $normalized['session_feedback']['overall_readiness_score']);
         $this->assertSame(40, $normalized['session_feedback']['star_method_score']);
         $this->assertSame('ai_evidence_validated', $normalized['per_question_feedback'][0]['evaluation_source']);
         $this->assertStringContainsString($answers[0]['answer'], $normalized['per_question_feedback'][0]['ai_feedback']);
@@ -1016,7 +1016,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertNotSame($first['ai_feedback'], $second['ai_feedback']);
         $this->assertNotSame($first['follow_up_question'], $second['follow_up_question']);
         $this->assertStringContainsString('Answer focus: this strength answer', $first['ai_feedback']);
-        $this->assertStringContainsString('greatest and strength', $first['ai_feedback']);
+        $this->assertStringContainsString('cannot confirm whether it covers the main point', $first['ai_feedback']);
         $this->assertStringContainsString('Answer focus: this salary answer', $second['ai_feedback']);
         $this->assertStringContainsString('salary', $second['ai_feedback']);
         $this->assertStringNotContainsString($answers[0]['question'], $first['ai_feedback']);
@@ -1060,6 +1060,101 @@ class WeightedReadinessScoringTest extends TestCase
             ));
             $this->assertStringNotContainsString('what did you personally do', strtolower($normalized['follow_up_question']));
         }
+    }
+
+    public function test_concise_answer_that_covers_the_question_earns_a_strong_score(): void
+    {
+        $answer = [
+            'id' => 74,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I would inspect the query plan, check indexes, then time the query.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 90, 'directly_addressed');
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertSame('ai_evidence_validated', $normalized['evaluation_source']);
+        $this->assertSame('directly_addressed', $normalized['answer_alignment']);
+        $this->assertGreaterThanOrEqual(80, $normalized['relevance_score']);
+        $this->assertGreaterThanOrEqual(80, $normalized['score']);
+
+        $session = $this->invokePrivate('normalizeSessionFeedback', [[], [$normalized]]);
+        $this->assertGreaterThanOrEqual(80, $session['overall_readiness_score']);
+    }
+
+    public function test_local_fallback_rewards_a_concise_direct_answer_but_not_an_unrelated_one(): void
+    {
+        $direct = [
+            'id' => 78,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I would inspect the query plan, check indexes, then time the query.',
+        ];
+        $directResult = $this->invokePrivate('normalizeQuestionFeedback', [[], $direct, []]);
+
+        $this->assertSame('local_evidence', $directResult['evaluation_source']);
+        $this->assertGreaterThanOrEqual(80, $directResult['relevance_score']);
+        $this->assertGreaterThanOrEqual(80, $directResult['score']);
+
+        $unrelated = [
+            'id' => 79,
+            'question_type' => 'Personal',
+            'question' => 'What salary range are you expecting for this role?',
+            'answer' => 'I organized release checklists and coordinated handoffs for software deployments with the engineering team.',
+        ];
+        $unrelatedResult = $this->invokePrivate('normalizeQuestionFeedback', [[], $unrelated, []]);
+
+        $this->assertSame('local_evidence', $unrelatedResult['evaluation_source']);
+        $this->assertLessThan(50, $unrelatedResult['relevance_score']);
+        $this->assertLessThan(70, $unrelatedResult['score']);
+    }
+
+    public function test_validated_paraphrase_of_the_main_point_keeps_a_strong_relevance_score(): void
+    {
+        $answer = [
+            'id' => 75,
+            'question_type' => 'Technical',
+            'question' => 'What is database normalization and why is it useful?',
+            'answer' => 'It separates repeating facts into linked tables, preventing duplication and keeping updates consistent.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 92, 'directly_addressed');
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertSame('ai_evidence_validated', $normalized['evaluation_source']);
+        $this->assertSame('directly_addressed', $normalized['answer_alignment']);
+        $this->assertGreaterThanOrEqual(80, $normalized['relevance_score']);
+        $this->assertGreaterThanOrEqual(80, $normalized['score']);
+    }
+
+    public function test_empty_and_filler_answers_do_not_receive_high_scores_from_provider_claims(): void
+    {
+        $empty = [
+            'id' => 76,
+            'question_type' => 'Technical',
+            'question' => 'What is database normalization and why is it useful?',
+            'answer' => '',
+            'is_skipped' => true,
+        ];
+        $emptyFeedback = $this->v4FeedbackFor($empty, 95, 'directly_addressed');
+        $emptyResult = $this->invokePrivate('normalizeQuestionFeedback', [$emptyFeedback, $empty, []]);
+
+        $this->assertSame(0, $emptyResult['score']);
+        $this->assertSame(0, $emptyResult['relevance_score']);
+
+        $filler = [
+            'id' => 77,
+            'question_type' => 'Technical',
+            'question' => 'What is database normalization and why is it useful?',
+            'answer' => 'I think it is really good and very important because it helps in lots of different ways.',
+        ];
+        $fillerFeedback = $this->v4FeedbackFor($filler, 95, 'directly_addressed');
+        $fillerResult = $this->invokePrivate('normalizeQuestionFeedback', [$fillerFeedback, $filler, []]);
+
+        $this->assertSame('local_evidence', $fillerResult['evaluation_source']);
+        $this->assertLessThan(50, $fillerResult['relevance_score']);
+        $this->assertLessThan(60, $fillerResult['score']);
     }
 
     public function test_question_focus_and_unique_commentary_prevent_cross_question_feedback_reuse(): void
