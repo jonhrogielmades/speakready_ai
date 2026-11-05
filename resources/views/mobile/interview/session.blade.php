@@ -505,6 +505,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let interviewStarted = false;
  let answerListenersBound = false;
  let isSubmittingAnswer = false;
+ let pendingTimedOutSubmission = false;
  let finalAnswerSubmitted = false;
  let answerInputEnabled = false;
  let feedbackSubmissionInFlight = false;
@@ -2146,6 +2147,16 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  updateSendAnswerButtonState();
  }
 
+ function restoreFailedAnswerSubmission(answerText, chatHistoryBeforeSubmission, timedOut) {
+ interviewChatHistory = chatHistoryBeforeSubmission;
+ pendingTimedOutSubmission = Boolean(timedOut);
+ restoreChatHistory();
+ restoreSubmittedAnswerInput(answerText);
+ setAnswerInputEnabled(true);
+ if (!timedOut) startQuestionTimer();
+ scheduleStateSave();
+ }
+
  function showSessionNotice(message, type = 'error', focus = false) {
  const notice = document.getElementById('sessionNotice');
  if (!notice ||!message) return;
@@ -3476,11 +3487,13 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let preferredVoice = null;
  let autoStartAfterQuestionTimer = null;
  let questionSpeechToken = 0;
+ let questionLoadToken = 0;
  let activeQuestionAudio = null;
  let captionInterval = null;
  let activeSpeechCompletion = null;
  let serverVoiceUnavailable =!serverAiVoiceEnabled;
  const serverSpeechUrlCache = new Map();
+ const serverSpeechRequestCache = new Map();
 
  function isVoiceTranscriptionMode() {
  return canonicalResponseMode === 'voice' || canonicalResponseMode === 'hybrid';
@@ -4397,25 +4410,25 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (serverSpeechUrlCache.has(cacheKey)) {
  return serverSpeechUrlCache.get(cacheKey);
  }
+ if (serverSpeechRequestCache.has(cacheKey)) {
+ return serverSpeechRequestCache.get(cacheKey);
+ }
 
+ const request = (async () => {
  const formData = new FormData();
  formData.append('_token', '{{ csrf_token() }}');
  formData.append('session_id', interviewSessionId);
- if (questionId) {
- formData.append('question_id', questionId);
- }
- if (cleanSpeechText) {
- formData.append('speech_text', cleanSpeechText);
- }
+ if (questionId) formData.append('question_id', questionId);
+ if (cleanSpeechText) formData.append('speech_text', cleanSpeechText);
 
  const response = await managedFetch('{{ route("interview.speech") }}', {
  method: 'POST',
  body: formData,
  headers: {
- 'Accept': 'audio/mpeg',
+ 'Accept': 'audio/*',
  'X-Requested-With': 'XMLHttpRequest',
  },
- timeoutMs: 30000,
+ timeoutMs: 12000,
  });
 
  if (!response.ok) {
@@ -4430,8 +4443,14 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  const url = URL.createObjectURL(blob);
  serverSpeechUrlCache.set(cacheKey, url);
-
  return url;
+ })().catch(error => {
+ if (error?.name!== 'AbortError') console.warn('Server AI voice unavailable:', error);
+ return null;
+ }).finally(() => serverSpeechRequestCache.delete(cacheKey));
+
+ serverSpeechRequestCache.set(cacheKey, request);
+ return request;
  }
 
  async function speakWithServerVoice(text, token, startTimerAfterSpeech, questionId, speechText = '') {
@@ -4447,24 +4466,36 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  audio.defaultPlaybackRate = interviewerServerAudioPlaybackRate;
  audio.playbackRate = interviewerServerAudioPlaybackRate;
  activeQuestionAudio = audio;
+ let playbackReady = false;
 
- audio.addEventListener('play', () => {
- if (token!== questionSpeechToken) return;
+ audio.addEventListener('playing', () => {
+ if (token!== questionSpeechToken || activeQuestionAudio!== audio) return;
  startSpeakingUi(text);
  }, { once: true });
 
  audio.addEventListener('ended', () => {
+ if (activeQuestionAudio!== audio) return;
  activeQuestionAudio = null;
  finishSpeakingUi(text, token, startTimerAfterSpeech);
  }, { once: true });
 
  audio.addEventListener('error', () => {
+ if (activeQuestionAudio!== audio) return;
  activeQuestionAudio = null;
  if (token!== questionSpeechToken || interviewTerminated) return;
- speakWithDeviceVoice(text, token, startTimerAfterSpeech);
+ if (playbackReady) speakWithDeviceVoice(text, token, startTimerAfterSpeech);
  }, { once: true });
 
- await audio.play();
+ const deviceVoiceAvailable = 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+ const started = await Promise.race([
+ Promise.resolve(audio.play()).then(() => true, () => false),
+ new Promise(resolve => setTimeout(() => resolve(false), deviceVoiceAvailable? 700: 4000)),
+ ]);
+ if (!started) {
+ if (activeQuestionAudio === audio) cancelQuestionAudio();
+ return false;
+ }
+ playbackReady = true;
 
  return true;
  } catch (error) {
@@ -4490,8 +4521,17 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  utterance.pitch = 1.0;
 
  let speechUi = null;
+ let deviceSpeechStarted = false;
+ let deviceSpeechAbandoned = false;
+ const startupTimer = setTimeout(() => {
+ if (deviceSpeechStarted || token!== questionSpeechToken) return;
+ deviceSpeechAbandoned = true;
+ window.speechSynthesis.cancel();
+ finishSpeakingUi(text, token, startTimerAfterSpeech);
+ }, 1200);
 
  utterance.onboundary = function(e) {
+ if (deviceSpeechAbandoned || token!== questionSpeechToken) return;
  if(e.name === 'word' || (typeof e.charIndex === 'number' && e.charIndex >= 0)) {
  if (speechUi) speechUi.markBoundary(e.charIndex);
 
@@ -4500,20 +4540,31 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  };
 
  utterance.onstart = function() {
+ if (deviceSpeechAbandoned || token!== questionSpeechToken) return;
+ deviceSpeechStarted = true;
+ clearTimeout(startupTimer);
  speechUi = startSpeakingUi(text, true);
  };
 
  utterance.onend = function() {
+ clearTimeout(startupTimer);
+ if (deviceSpeechAbandoned || token!== questionSpeechToken) return;
+ deviceSpeechAbandoned = true;
  finishSpeakingUi(text, token, startTimerAfterSpeech);
  };
 
  utterance.onerror = function() {
+ clearTimeout(startupTimer);
+ if (deviceSpeechAbandoned || token!== questionSpeechToken) return;
+ deviceSpeechAbandoned = true;
  finishSpeakingUi(text, token, startTimerAfterSpeech);
  };
 
  try {
  window.speechSynthesis.speak(utterance);
  } catch (error) {
+ clearTimeout(startupTimer);
+ deviceSpeechAbandoned = true;
  console.warn('Device speech failed:', error);
  finishSpeakingUi(text, token, startTimerAfterSpeech);
  }
@@ -4529,6 +4580,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (interviewTerminated) return 'cancelled';
 
  cancelQuestionSpeechOutput();
+ const questionText = document.getElementById('aiQuestionText');
+ if (questionText) questionText.innerText = text;
+ renderStaticQuestionCaption(text);
  const token = ++questionSpeechToken;
  const startTimerAfterSpeech = options.startTimerAfterSpeech === true;
  const completion = new Promise(resolve => {
@@ -4544,7 +4598,21 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  await pauseRecording();
  }
 
- const usedServerVoice = serverAiVoiceEnabled? await speakWithServerVoice(text, token, startTimerAfterSpeech, options.questionId, options.speechText || ''): false;
+ let usedServerVoice = false;
+ const speechText = options.speechText || '';
+ const cleanSpeechText = cleanTranscriptText(speechText);
+ const cacheKey = options.questionId? `q:${options.questionId}`: `text:${cleanSpeechText}`;
+ const deviceVoiceAvailable = 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+ if (serverAiVoiceEnabled && (options.questionId || cleanSpeechText)) {
+ const serverReady = serverSpeechUrlCache.has(cacheKey)
+ || (!deviceVoiceAvailable && Boolean(await serverSpeechUrl(options.questionId, speechText)));
+ if (serverReady && token === questionSpeechToken) {
+ usedServerVoice = await speakWithServerVoice(text, token, startTimerAfterSpeech, options.questionId, speechText);
+ } else if (deviceVoiceAvailable && !serverVoiceUnavailable) {
+ // Keep the first prompt immediate; a completed request can serve a repeat.
+ void serverSpeechUrl(options.questionId, speechText);
+ }
+ }
  if (usedServerVoice || token!== questionSpeechToken || interviewTerminated) return completion;
 
  speakWithDeviceVoice(text, token, startTimerAfterSpeech);
@@ -5080,6 +5148,7 @@ return fallbackText;
 
  async function loadQuestion(idx, options = {}) {
  if (interviewTerminated || interviewEnding) return;
+ const loadToken = ++questionLoadToken;
  stopQuestionTimer();
  currentQIdx = idx;
  const q = questions[idx];
@@ -5115,7 +5184,7 @@ return fallbackText;
  speechText: q.question_text
  });
  await speakQuestion(q.question_text, { startTimerAfterSpeech: true, questionId: q.id });
- if (interviewTerminated || interviewEnding) return;
+ if (interviewTerminated || interviewEnding || loadToken!== questionLoadToken) return;
  setAnswerInputEnabled(true);
  startQuestionTimer();
  if (isSubmittingAnswer) return;
@@ -5980,7 +6049,7 @@ return fallbackText;
  }
  syncHybridAnswerStateFromTextarea();
  
- const timedOut = options.timedOut === true;
+ const timedOut = options.timedOut === true || pendingTimedOutSubmission;
  let answerText = currentAnswerTextareaText().trim();
  const localVoiceRecording = isVoiceTranscriptionMode()? voiceSessionRecordings.get(voiceSessionKeyFor()): null;
  const hasLocalVoiceRecording = isVoiceTranscriptionMode()
@@ -6006,7 +6075,7 @@ return fallbackText;
  );
  }
 
- const wasSkipped = options.skipped === true || (timedOut &&!answerText &&!hasSubmittableVoiceRecording);
+ const wasSkipped = options.skipped === true || (timedOut && (!answerText || answerText === '[Time expired with no answer]') &&!hasSubmittableVoiceRecording);
  if(!answerText &&!timedOut &&!wasSkipped &&!hasSubmittableVoiceRecording) {
  isSubmittingAnswer = false;
  updateSendAnswerButtonState();
@@ -6030,8 +6099,9 @@ return fallbackText;
  answersData[currentQIdx].timed_out = timedOut;
 
  const submittedDisplayText = answerText || (hasSubmittableVoiceRecording? (isVoiceOnlyMode()? 'Voice-only answer recorded.': 'Voice answer recorded (transcript unavailable).'): answerText);
- appendChatMessage('user', submittedDisplayText);
+ const chatHistoryBeforeSubmission = interviewChatHistory.slice();
  clearSubmittedAnswerInput();
+ appendChatMessage('user', submittedDisplayText);
 
  const answeredOpeningQuestion = isOpeningQuestion(questions[currentQIdx]);
  const isLastQuestion =!answeredOpeningQuestion && isLastScoredQuestion(currentQIdx);
@@ -6040,20 +6110,27 @@ return fallbackText;
  finalAnswerSubmitted = true;
  try {
  await saveCurrentAnswer(wasSkipped, timedOut, answerText);
- isSubmittingAnswer = false;
- updateSendAnswerButtonState();
- await concludeAndFinishInterview();
  } catch(error) {
  console.error(error);
  finalAnswerSubmitted = false;
  isSubmittingAnswer = false;
  updateSendAnswerButtonState();
  if (!interviewTerminated) {
- restoreSubmittedAnswerInput(answerText);
- setAnswerInputEnabled(true);
- startQuestionTimer();
+ restoreFailedAnswerSubmission(answerText, chatHistoryBeforeSubmission, timedOut);
  showSessionNotice('We could not save your final answer. Please try again before finishing.');
  }
+ return;
+ }
+
+ pendingTimedOutSubmission = false;
+ isSubmittingAnswer = false;
+ updateSendAnswerButtonState();
+ try {
+ await concludeAndFinishInterview();
+ } catch (error) {
+ console.error('Interview closing failed after saving the final answer:', error);
+ showSessionNotice('Your final answer was saved. Preparing the report now.', 'warning');
+ await finishInterview();
  }
  return;
  }
@@ -6102,6 +6179,7 @@ return fallbackText;
  formData.append('posture_score', answersData[currentQIdx].posture_score);
  formData.append('is_final_question', (!answeredOpeningQuestion && isPenultimateScoredQuestion(currentQIdx)));
 
+ let answerCommitted = false;
  try {
  const data = await postFormJsonWithRetry('{{ route("interview.chatReply") }}', formData, {
  attempts: 2,
@@ -6113,6 +6191,8 @@ return fallbackText;
  if (!data.success) {
  throw new Error(data.error || 'An error occurred.');
  }
+ answerCommitted = true;
+ pendingTimedOutSubmission = false;
 
  if (data.interview_completed) {
  finalAnswerSubmitted = true;
@@ -6138,11 +6218,14 @@ return fallbackText;
  isSubmittingAnswer = false;
  updateSendAnswerButtonState();
  console.error(err);
- if (!interviewTerminated && err.name!== 'AbortError') {
- restoreSubmittedAnswerInput(answerText);
- setAnswerInputEnabled(true);
- startQuestionTimer();
+ if (!interviewTerminated && !interviewEnding) {
+ if (answerCommitted) {
+ setAnswerInputEnabled(false);
+ showSessionNotice('Your answer was saved, but the next question could not load. Refresh to resume.');
+ } else {
+ restoreFailedAnswerSubmission(answerText, chatHistoryBeforeSubmission, timedOut);
  showSessionNotice(err.message || 'Network error.');
+ }
  }
  }
  }

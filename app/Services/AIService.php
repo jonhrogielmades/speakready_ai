@@ -638,7 +638,10 @@ class AIService
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
  $prompt.= 'The next interviewer turn must be based on the candidate answer immediately before it, not on a generic question list. When natural, briefly reference one concrete detail the candidate just mentioned before asking the next question. ';
- $prompt.= 'Use a confidence-building acknowledgement that helps the candidate keep answering, such as thanking them for a specific detail or naming the useful starting point they gave. Keep encouragement specific to effort or shared evidence, not performance scoring. ';
+ $prompt.= $liveFeedbackMode === 'real_interview'
+ ? 'Acknowledge the answer briefly and neutrally before the question. Do not assess or coach the candidate mid-interview. '
+ : 'Use a confidence-building acknowledgement that helps the candidate keep answering, such as thanking them for a specific detail or naming the useful starting point they gave. Keep encouragement specific to effort or shared evidence, not performance scoring. ';
+ $prompt.= 'If the latest answer says it was skipped, timed out, or saved as audio without a transcript, do not infer what the candidate said. Acknowledge the transition and ask one fresh role-relevant question. ';
  $prompt.= "If the candidate asks a brief human question such as your name, role, how you are doing, or what happens next, answer it naturally in one short clause as the AI interviewer, then smoothly continue with one interview question grounded in the candidate's latest answer. ";
  $prompt.= self::languageOutputInstruction($targetLanguage, 'the spoken interviewer reply');
  $prompt.= self::assistanceLevelInstruction($session->ai_assistance_level?? 'standard');
@@ -1211,7 +1214,18 @@ return [
  $liveFeedbackMode = self::normalizedLiveFeedbackMode($session->live_feedback_mode?? 'coaching');
  $isRealInterviewMode = $liveFeedbackMode === 'real_interview';
  $assistanceLevel = self::normalizedAssistanceLevel($session->ai_assistance_level?? 'standard');
- $acknowledgement = self::candidateSideQuestionReply($answerText).self::answerBasedAcknowledgement($answerText);
+ $answerUnavailable = $answerText === '' || preg_match('/^(?:\(Skipped or no answer\)|\(No answer before the time limit\)|\[User skipped the question\]|\[Time expired with no answer\])$/i', $answerText);
+ $voiceTranscriptUnavailable = str_starts_with($answerText, '[Voice answer saved for playback. Automatic transcription was unavailable');
+ $rapportReply = ! $answerUnavailable && ! $voiceTranscriptUnavailable? self::candidateSideQuestionReply($answerText): '';
+ if ($voiceTranscriptUnavailable) {
+ $acknowledgement = 'Thank you for recording your answer. ';
+ } elseif ($answerUnavailable) {
+ $acknowledgement = 'No problem. ';
+ } elseif ($rapportReply !== '' && $wordCount < 15) {
+ $acknowledgement = $rapportReply;
+ } else {
+ $acknowledgement = $rapportReply.self::answerBasedAcknowledgement($answerText);
+ }
 
  if ($isFinal) {
  $coachedFinalQuestion = match ($assistanceLevel) {
@@ -1225,7 +1239,17 @@ return [
  : "{$acknowledgement}{$coachedFinalQuestion}";
  }
 
- if ($answerText === '' || str_contains(strtolower($answerText), 'skipped') || $wordCount < 15) {
+ if ($answerUnavailable || $voiceTranscriptUnavailable) {
+ return $isRealInterviewMode
+ ? "{$acknowledgement}What specific experience best shows you can handle the {$targetPosition} role?"
+ : "{$acknowledgement}Could you share one specific project or situation that prepared you for the {$targetPosition} role?";
+ }
+
+ if ($wordCount < 15) {
+ if ($rapportReply !== '') {
+ return "{$rapportReply}To continue, what specific experience prepared you for the {$targetPosition} role?";
+ }
+
  if ($isRealInterviewMode) {
  return "To assess this fairly, let's make it concrete. What specific situation can you walk me through for the {$targetPosition} role?";
  }
