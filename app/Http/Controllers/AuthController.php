@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
+use App\Jobs\SendRecoveryEmailVerification;
 use App\Mail\PasswordRecoveryCodeMail;
 use App\Models\Profile;
 use App\Models\Setting;
 use App\Models\UserOnboardingProgress;
 use App\Services\AccountDeletionService;
 use App\Services\BrevoTransactionalMail;
-use App\Services\RecoveryEmailVerification;
 use App\Services\UserSessionRevoker;
 use App\Models\User;
 use App\Support\AccountNotificationSchema;
@@ -69,7 +69,7 @@ class AuthController extends Controller
 
     private const MOBILE_VIEWPORT_MAX = 820;
 
-    public function register(Request $request, RecoveryEmailVerification $emailVerification)
+    public function register(Request $request)
     {
         if (! Setting::enabled('acc_registration')) {
             return back()->withErrors([
@@ -126,7 +126,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         try {
-            $emailVerification->send($user);
+            SendRecoveryEmailVerification::dispatch((int) $user->getKey());
         } catch (Throwable $error) {
             Log::warning('Initial recovery email verification could not be delivered.', [
                 'user_id' => $user->getKey(),
@@ -151,7 +151,7 @@ class AuthController extends Controller
             ->with('recovery_code', $recoveryCode);
     }
 
-    public function login(Request $request, RecoveryEmailVerification $emailVerification)
+    public function login(Request $request)
     {
         $loginValue = $request->input('username', $request->input('email'));
 
@@ -211,7 +211,7 @@ class AuthController extends Controller
 
             if (! $user->is_admin && filled($user->email) && SystemSettings::enabled('acc_verify_email', false) && ! $user->hasVerifiedEmail()) {
                 try {
-                    $emailVerification->send($user);
+                    SendRecoveryEmailVerification::dispatch((int) $user->getKey());
                 } catch (Throwable $error) {
                     Log::warning('Required recovery email verification could not be delivered during login.', [
                         'user_id' => $user->getKey(),

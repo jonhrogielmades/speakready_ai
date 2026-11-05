@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
+use App\Jobs\GenerateDashboardBubbleMessages;
 use App\Jobs\RefreshDetailedFeedbackReview;
 use App\Models\ActivityLog;
 use App\Models\Category;
@@ -385,8 +386,9 @@ class UserController extends Controller
 
  private function dashboardBubbleMessages(array $context): array
  {
+ $fallback = AIService::fallbackDashboardBubbleMessages();
  if (! Setting::enabled('aic_enable')) {
- return AIService::fallbackDashboardBubbleMessages();
+ return $fallback;
  }
 
  $provider = AIService::defaultProviderKey();
@@ -398,7 +400,29 @@ class UserController extends Controller
  (int) floor(((int) ($context['completed_sessions']?? 0)) / 5),
  ]);
 
- return Cache::remember($cacheKey, now()->addHours(6), fn (): array => AIService::generateDashboardBubbleMessages($context, $provider));
+ $cached = Cache::get($cacheKey);
+ if (is_array($cached)) {
+ return $cached;
+ }
+
+ // The dashboard is the first page after login, so provider latency must stay
+ // outside this request. A short-lived marker prevents repeat queue writes
+ // while the generated message is still pending.
+ if (AIService::providerIsConfigured($provider)
+ && ! in_array(config('queue.default'), ['sync', 'null'], true)
+ && Cache::add($cacheKey.':pending', true, now()->addMinutes(10))) {
+ try {
+ GenerateDashboardBubbleMessages::dispatch($cacheKey, $context, $provider);
+ } catch (\Throwable $error) {
+ Cache::forget($cacheKey.':pending');
+ Log::warning('Dashboard bubble generation could not be queued.', [
+ 'provider' => $provider,
+ 'error_type' => $error::class,
+ ]);
+ }
+ }
+
+ return $fallback;
  }
 
  private function dashboardMockScenarios()

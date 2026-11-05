@@ -43,7 +43,7 @@
                 if (themeMeta && previousThemeColor) themeMeta.setAttribute('content', previousThemeColor);
             }, Math.max(0, 650 - (Date.now() - startedAt)));
         }
-        window.addEventListener('load', finishLaunch, { once: true });
+        window.addEventListener('DOMContentLoaded', finishLaunch, { once: true });
         window.setTimeout(finishLaunch, 4500);
     })();
 </script>

@@ -142,14 +142,18 @@ class SystemSettings
 
     public static function forView(): array
     {
+        $defaults = array_map(static fn (array $definition): mixed => $definition['value'], self::DEFINITIONS);
+
+        try {
+            $values = Setting::getValues($defaults);
+        } catch (\Throwable) {
+            $values = $defaults;
+        }
+
         $settings = [];
 
         foreach (self::DEFINITIONS as $key => $definition) {
-            try {
-                $value = Setting::getVal($key, $definition['value']);
-            } catch (\Throwable) {
-                $value = $definition['value'];
-            }
+            $value = $values[$key];
             $settings[$key] = $definition['type'] === 'boolean'
                 ? ($value ? 'true' : 'false')
                 : (string) $value;

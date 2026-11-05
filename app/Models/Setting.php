@@ -60,8 +60,45 @@ class Setting extends Model
      */
     public static function getVal($key, $default = null)
     {
-        $setting = self::settingFromRequestCache((string) $key);
-        
+        return self::valueFromSetting(self::settingFromRequestCache((string) $key), $default);
+    }
+
+    /**
+     * Read several settings in one query and refresh their request-local cache.
+     *
+     * @param array<string, mixed> $defaults
+     * @return array<string, mixed>
+     */
+    public static function getValues(array $defaults): array
+    {
+        if ($defaults === []) {
+            return [];
+        }
+
+        $settings = self::query()->whereIn('key', array_keys($defaults))->get()->keyBy('key');
+        $request = self::currentRequest();
+        $cache = $request?->attributes->get(self::REQUEST_SETTING_CACHE_KEY, []);
+        $cache = is_array($cache) ? $cache : [];
+        $values = [];
+
+        foreach ($defaults as $key => $default) {
+            $setting = $settings->get($key);
+            if ($setting instanceof self) {
+                $cache[$key] = $setting;
+            } else {
+                unset($cache[$key]);
+            }
+
+            $values[$key] = self::valueFromSetting($setting, $default);
+        }
+
+        $request?->attributes->set(self::REQUEST_SETTING_CACHE_KEY, $cache);
+
+        return $values;
+    }
+
+    private static function valueFromSetting(?self $setting, mixed $default): mixed
+    {
         if (!$setting) {
             return $default;
         }
