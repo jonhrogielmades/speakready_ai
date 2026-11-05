@@ -383,7 +383,7 @@ test('initializes event listeners and service-worker registration only once', as
     assert.equal(harness.documentRef.listenerCount('visibilitychange'), 1);
     assert.equal(harness.action.listenerCount('click'), 1);
     assert.deepEqual(harness.serviceWorkerCalls, [[
-        '/sw.js?v=49',
+        '/sw.js?v=50',
         { scope: '/' },
     ]]);
     assert.equal(harness.windowRef.SpeakReadyServiceWorkerRegistration, harness.registration);

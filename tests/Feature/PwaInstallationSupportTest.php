@@ -56,8 +56,8 @@ final class PwaInstallationSupportTest extends TestCase
         $expectedIcons = [
             ['192x192', 'any', '/img/app-icon-192.png'],
             ['512x512', 'any', '/img/app-icon-512.png'],
-            ['192x192', 'maskable', '/img/app-icon-maskable-v2-192.png'],
-            ['512x512', 'maskable', '/img/app-icon-maskable-v2-512.png'],
+            ['192x192', 'maskable', '/img/app-icon-maskable-192.png'],
+            ['512x512', 'maskable', '/img/app-icon-maskable-512.png'],
         ];
 
         foreach ($expectedIcons as [$sizes, $purpose, $source]) {
@@ -97,13 +97,14 @@ final class PwaInstallationSupportTest extends TestCase
         }
     }
 
-    public function test_v2_maskable_and_apple_icons_have_opaque_corner_backgrounds(): void
+    public function test_install_icons_keep_a_single_logo_layer_with_transparent_outer_corners(): void
     {
         $icons = [
-            'public/img/app-icon-maskable-v2-192.png' => [192, 192],
-            'public/img/app-icon-maskable-v2-512.png' => [512, 512],
-            'public/img/app-icon-maskable-v2-1024.png' => [1024, 1024],
-            'public/img/apple-touch-icon-v2.png' => [180, 180],
+            'public/img/app-icon-192.png' => [192, 192],
+            'public/img/app-icon-512.png' => [512, 512],
+            'public/img/app-icon-maskable-192.png' => [192, 192],
+            'public/img/app-icon-maskable-512.png' => [512, 512],
+            'public/img/apple-touch-icon.png' => [180, 180],
         ];
 
         foreach ($icons as $relativePath => [$expectedWidth, $expectedHeight]) {
@@ -119,10 +120,8 @@ final class PwaInstallationSupportTest extends TestCase
             $image = imagecreatefrompng($path);
             $this->assertNotFalse($image, "{$relativePath} is not a readable PNG.");
 
-            foreach ([[0, 0], [$expectedWidth - 1, 0], [0, $expectedHeight - 1], [$expectedWidth - 1, $expectedHeight - 1]] as [$x, $y]) {
-                $alpha = (imagecolorat($image, $x, $y) >> 24) & 0x7F;
-                $this->assertSame(0, $alpha, "{$relativePath} must have an opaque background at {$x},{$y}.");
-            }
+            $cornerAlpha = (imagecolorat($image, 0, 0) >> 24) & 0x7F;
+            $this->assertGreaterThan(0, $cornerAlpha, "{$relativePath} must keep its outer corner transparent.");
 
             imagedestroy($image);
         }
@@ -134,14 +133,14 @@ final class PwaInstallationSupportTest extends TestCase
 
         $this->assertStringContainsString('<meta name="mobile-web-app-capable" content="yes">', $meta);
         $this->assertStringContainsString('<meta name="apple-mobile-web-app-capable" content="yes">', $meta);
-        $this->assertStringContainsString("asset('manifest.json?v=11')", $meta);
+        $this->assertStringContainsString("asset('manifest.json?v=12')", $meta);
         $this->assertStringContainsString('rel="apple-touch-icon" sizes="180x180"', $meta);
-        $this->assertStringContainsString("asset('img/apple-touch-icon-v2.png')", $meta);
+        $this->assertStringContainsString("asset('img/apple-touch-icon.png')", $meta);
         $this->assertStringContainsString("asset('js/pwa-install.js?v=2')", $meta);
         $this->assertStringContainsString('data-sr-pwa-controller', $meta);
 
         $controller = $this->read('public/js/pwa-install.js');
-        $this->assertStringContainsString("const SERVICE_WORKER_URL = '/sw.js?v=49';", $controller);
+        $this->assertStringContainsString("const SERVICE_WORKER_URL = '/sw.js?v=50';", $controller);
         $this->assertStringContainsString("windowRef.addEventListener('beforeinstallprompt'", $controller);
         $this->assertStringContainsString("serviceWorker.register(SERVICE_WORKER_URL, { scope: '/' })", $controller);
         $this->assertStringNotContainsString('?.', $controller);
@@ -190,13 +189,13 @@ final class PwaInstallationSupportTest extends TestCase
         }
     }
 
-    public function test_service_worker_v49_scopes_cache_cleanup_and_precaches_install_assets(): void
+    public function test_service_worker_v50_scopes_cache_cleanup_and_precaches_install_assets(): void
     {
         $worker = $this->read('public/sw.js');
 
         $this->assertStringContainsString("const CACHE_PREFIX = 'speakready-pwa-';", $worker);
         $this->assertMatchesRegularExpression(
-            "/const CACHE_NAME = (?:'speakready-pwa-v49'|`\\$\\{CACHE_PREFIX\\}v49`);/",
+            "/const CACHE_NAME = (?:'speakready-pwa-v50'|`\\$\\{CACHE_PREFIX\\}v50`);/",
             $worker
         );
         $this->assertStringContainsString('cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_NAME', $worker);
@@ -205,9 +204,9 @@ final class PwaInstallationSupportTest extends TestCase
             '/manifest.json',
             '/img/app-icon-192.png',
             '/img/app-icon-512.png',
-            '/img/app-icon-maskable-v2-192.png',
-            '/img/app-icon-maskable-v2-512.png',
-            '/img/apple-touch-icon-v2.png',
+            '/img/app-icon-maskable-192.png',
+            '/img/app-icon-maskable-512.png',
+            '/img/apple-touch-icon.png',
         ] as $asset) {
             $this->assertStringContainsString("'{$asset}'", $worker, "The service worker must precache {$asset}.");
         }

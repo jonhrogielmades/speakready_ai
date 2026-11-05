@@ -5010,7 +5010,7 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=49')),
+            serviceWorkerUrl: @json(asset('sw.js?v=50')),
             csrfToken: @json(csrf_token())
          };
       </script>

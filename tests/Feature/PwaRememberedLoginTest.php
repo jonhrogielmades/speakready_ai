@@ -72,7 +72,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertSame('/', $manifest['scope'] ?? null);
         $this->assertSame('standalone', $manifest['display'] ?? null);
         $this->assertSame($manifest['id'], $manifest['related_applications'][0]['id'] ?? null);
-        $this->assertSame('/manifest.json?v=11', $manifest['related_applications'][0]['url'] ?? null);
+        $this->assertSame('/manifest.json?v=12', $manifest['related_applications'][0]['url'] ?? null);
     }
 
     public function test_pwa_service_worker_cache_version_is_bumped_and_code_assets_are_network_first(): void
@@ -80,7 +80,7 @@ class PwaRememberedLoginTest extends TestCase
         $worker = file_get_contents(public_path('sw.js'));
 
         $this->assertStringContainsString("const CACHE_PREFIX = 'speakready-pwa-';", $worker);
-        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v49';", $worker);
+        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v50';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';", $worker);
         $this->assertStringContainsString('const DEFAULT_NOTIFICATION_ACTIONS', $worker);
@@ -91,7 +91,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertStringContainsString("self.clients.matchAll({ type: 'window', includeUncontrolled: true })", $worker);
         $this->assertStringContainsString('cacheName.startsWith(CACHE_PREFIX)', $worker);
         $this->assertStringContainsString("'/manifest.json'", $worker);
-        $this->assertStringContainsString("'/img/app-icon-maskable-v2-512.png'", $worker);
+        $this->assertStringContainsString("'/img/app-icon-maskable-512.png'", $worker);
         $this->assertStringNotContainsString('client.navigate(nextUrl)', $worker);
         $this->assertStringNotContainsString('refreshControlledClients()', $worker);
         $this->assertStringNotContainsString('CLIENT_REFRESH_PARAM', $worker);

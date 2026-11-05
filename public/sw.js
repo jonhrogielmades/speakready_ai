@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'speakready-pwa-';
-const CACHE_NAME = 'speakready-pwa-v49';
+const CACHE_NAME = 'speakready-pwa-v50';
 const OFFLINE_PAGE = '/offline.html';
 const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';
 const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';
@@ -38,9 +38,9 @@ self.addEventListener('install', event => {
       '/img/logo.png',
       '/img/app-icon-192.png',
       '/img/app-icon-512.png',
-      '/img/app-icon-maskable-v2-192.png',
-      '/img/app-icon-maskable-v2-512.png',
-      '/img/apple-touch-icon-v2.png',
+      '/img/app-icon-maskable-192.png',
+      '/img/app-icon-maskable-512.png',
+      '/img/apple-touch-icon.png',
     ])).catch(() => undefined)
   );
   self.skipWaiting();
