@@ -4397,13 +4397,13 @@ class UserController extends Controller
     'profile_personalized_at' => $progress->profile_personalized_at ?: now(),
     'personalization_skipped_at' => null,
     'experience_level' => $validated['experience_level'],
-    'interview_goal' => filled($validated['interview_goal']?? null) ? trim((string) $validated['interview_goal']) : null,
+    'interview_goal' => filled($validated['interview_goal'] ?? null) ? trim((string) $validated['interview_goal']) : null,
     'interview_date' => array_key_exists('interview_date', $validated)
      ? ($validated['interview_date'] ?? null)
      : $progress->interview_date,
    ])->save();
 
-   $message = 'Your interview goal has been saved.';
+   $message = 'Your profile personalization has been saved.';
   }
 
   if ($request->expectsJson()) {

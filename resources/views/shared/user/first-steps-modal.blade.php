@@ -21,7 +21,6 @@
     $firstStepsUser = Auth::user();
     $firstStepsSelectedPosition = old('target_position', $firstStepsUser?->target_position);
     $firstStepsSelectedExperience = old('experience_level', $firstStepsState['experience_level'] ?? '');
-    $firstStepsSelectedGoal = old('interview_goal', $firstStepsState['interview_goal'] ?? '');
     $firstStepsLayoutQuery = sr_layout_query(request());
     $firstStepsAccountUrl = route('user.account', $firstStepsLayoutQuery).'#password-recovery-code';
     $firstStepsDashboardUrl = route('dashboard', $firstStepsLayoutQuery);
@@ -86,7 +85,7 @@
                         <span class="sr-first-steps-step-icon"><i class="fa-solid {{ $firstStepsProfileHandled ? 'fa-check' : 'fa-bullseye' }}" aria-hidden="true"></i></span>
                         <span class="sr-first-steps-step-copy">
                             <strong>2. Personalize your practice</strong>
-                            <small data-sr-personalization-summary>{{ $firstStepsPersonalized ? 'Your role and practice goal are ready.' : ($firstStepsPersonalizationSkipped ? 'Skipped for now; you can update it anytime.' : 'Choose your role, goal, and experience.') }}</small>
+                            <small data-sr-personalization-summary>{{ $firstStepsPersonalized ? 'Your role and experience are ready.' : ($firstStepsPersonalizationSkipped ? 'Skipped for now; you can update it anytime.' : 'Choose your role and experience.') }}</small>
                         </span>
                         <span class="sr-first-steps-step-actions" data-sr-step-status-actions @if(! $firstStepsProfileHandled) hidden @endif>
                             @if($firstStepsProfileHandled)<span class="sr-first-steps-status" data-sr-personalization-status>{{ $firstStepsPersonalized ? 'Complete' : 'Skipped' }}</span>@endif
@@ -108,10 +107,6 @@
                                                 <option value="{{ $value }}" @selected((string) $firstStepsSelectedExperience === $value)>{{ $label }}</option>
                                             @endforeach
                                         </select>
-                                    </div>
-                                    <div class="sr-first-steps-field sr-first-steps-field-wide">
-                                        <label for="firstStepsInterviewGoal">Main interview goal</label>
-                                        <input id="firstStepsInterviewGoal" name="interview_goal" type="text" maxlength="255" required value="{{ $firstStepsSelectedGoal }}" placeholder="Example: Give clearer STAR answers">
                                     </div>
                                 </div>
                                 <p class="sr-first-steps-form-status" data-sr-first-steps-form-status role="status" aria-live="polite"></p>

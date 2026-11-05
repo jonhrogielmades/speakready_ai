@@ -206,7 +206,7 @@
                 const summary = modalElement.querySelector('[data-sr-personalization-summary]');
                 if (summary) {
                     summary.textContent = state.profile_personalized
-                        ? 'Your role and practice goal are ready.'
+                        ? 'Your role and experience are ready.'
                         : 'Skipped for now; you can update it anytime.';
                 }
                 if (personalizationToggle) {

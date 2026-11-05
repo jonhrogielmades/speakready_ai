@@ -125,7 +125,9 @@ class UserOnboardingProgressTest extends TestCase
                 ->assertOk()
                 ->assertSee('id="firstStepsTargetPosition" name="target_position" type="text" maxlength="255" required value="'.$position.'"', false)
                 ->assertDontSee('<select id="firstStepsTargetPosition"', false)
-                ->assertSee('<option value="no_experience" selected>No experience</option>', false);
+                ->assertSee('<option value="no_experience" selected>No experience</option>', false)
+                ->assertDontSee('Main interview goal')
+                ->assertDontSee('id="firstStepsInterviewGoal"', false);
         }
     }
 
@@ -138,7 +140,6 @@ class UserOnboardingProgressTest extends TestCase
                 'action' => 'save',
                 'target_position' => 'Research Operations Lead',
                 'experience_level' => 'mid',
-                'interview_goal' => 'Tell stronger research impact stories',
             ])
             ->assertOk();
 
@@ -155,8 +156,8 @@ class UserOnboardingProgressTest extends TestCase
                 ->assertSee('id="accountTargetPosition"', false)
                 ->assertSee('id="accountExperienceLevel"', false)
                 ->assertSee('<option value="mid" selected>Mid level</option>', false)
-                ->assertSee('id="accountInterviewGoal"', false)
-                ->assertSee('value="Tell stronger research impact stories"', false);
+                ->assertDontSee('Main interview goal')
+                ->assertDontSee('id="accountInterviewGoal"', false);
         }
     }
 
